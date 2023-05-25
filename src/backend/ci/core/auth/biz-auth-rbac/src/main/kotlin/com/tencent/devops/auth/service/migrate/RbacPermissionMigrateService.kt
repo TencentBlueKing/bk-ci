@@ -52,6 +52,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 /**
@@ -75,9 +76,8 @@ class RbacPermissionMigrateService constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "allMembersName"
-        private const val MAX_RETRY_TIMES = 3
-        private const val IAM_NAME_CONFLICT_ERROR = 1902409L
-        private val executorService = Executors.newFixedThreadPool(2)
+        private val allToRbacExecutorService = Executors.newFixedThreadPool(2)
+        private val migrateProjectsExecutorService = Executors.newFixedThreadPool(10)
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -85,7 +85,7 @@ class RbacPermissionMigrateService constructor(
 
     override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
         logger.info("migrate $migrateProjects auth from v3 to rbac")
-        val dbProjectVos =
+        val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(
                 projectCodes = migrateProjects.map { it.projectCode }.toSet()
             ).data ?: run {
@@ -94,26 +94,32 @@ class RbacPermissionMigrateService constructor(
             }
         return v3ToRbacAuth(
             migrateProjects = migrateProjects,
-            dbProjectVos = dbProjectVos
+            projectVos = projectVos
         )
     }
 
     private fun v3ToRbacAuth(
         migrateProjects: List<MigrateProjectDTO>,
-        dbProjectVos: List<ProjectVO>
+        projectVos: List<ProjectVO>
     ): Boolean {
-        val migrateProjectRelationIds = dbProjectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
+        val migrateProjectRelationIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = migrateProjectRelationIds
         )
-        return migrateProjects.map { migrateProject ->
-            migrateToRbacAuth(
-                migrateProject = migrateProject,
-                migrateTaskId = 0,
-                authType = AuthSystemType.V3_AUTH_TYPE
+        migrateProjects.forEach { migrateProject ->
+            CompletableFuture.supplyAsync(
+                {
+                    migrateToRbacAuth(
+                        migrateProject = migrateProject,
+                        migrateTaskId = 0,
+                        authType = AuthSystemType.V3_AUTH_TYPE
+                    )
+                },
+                migrateProjectsExecutorService
             )
-        }.all { it }
+        }
+        return true
     }
 
     override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
@@ -122,17 +128,23 @@ class RbacPermissionMigrateService constructor(
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
             projectCodes = migrateProjects.map { it.projectCode }
         )
-        return migrateProjects.map { migrateProject ->
-            migrateToRbacAuth(
-                migrateProject = migrateProject,
-                migrateTaskId = migrateTaskId,
-                authType = AuthSystemType.V0_AUTH_TYPE
+        migrateProjects.forEach { migrateProject ->
+            CompletableFuture.supplyAsync(
+                {
+                    migrateToRbacAuth(
+                        migrateProject = migrateProject,
+                        migrateTaskId = migrateTaskId,
+                        authType = AuthSystemType.V0_AUTH_TYPE
+                    )
+                },
+                migrateProjectsExecutorService
             )
-        }.all { it }
+        }
+        return true
     }
 
     override fun allToRbacAuth(): Boolean {
-        executorService.submit {
+        allToRbacExecutorService.submit {
             var offset = 0
             val limit = 50
             do {
@@ -345,23 +357,14 @@ class RbacPermissionMigrateService constructor(
         iamApprover: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        val resourceName = projectInfo.projectName
-        for (suffix in 0..MAX_RETRY_TIMES) {
-            try {
-                permissionResourceService.resourceCreateRelation(
-                    userId = iamApprover,
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
-                    async = false
-                )
-                break
-            } catch (iamException: IamException) {
-                if (iamException.errorCode != IAM_NAME_CONFLICT_ERROR) throw iamException
-                if (suffix == MAX_RETRY_TIMES) throw iamException
-            }
-        }
+        permissionResourceService.resourceCreateRelation(
+            userId = iamApprover,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectInfo.projectName,
+            async = false
+        )
         return authResourceService.getOrNull(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
@@ -373,11 +376,11 @@ class RbacPermissionMigrateService constructor(
         approver: String?,
         projectCreator: String
     ): String {
-        val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
+        val isProjectCreatorLeaveOffice = deptService.getUserInfo(
             userId = "admin",
             name = projectCreator
         ) == null
-        if (isDbProjectCreatorLeaveOffice && approver == null) {
+        if (isProjectCreatorLeaveOffice && approver == null) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
                 defaultMessage = "project creator not exist $projectCreator"

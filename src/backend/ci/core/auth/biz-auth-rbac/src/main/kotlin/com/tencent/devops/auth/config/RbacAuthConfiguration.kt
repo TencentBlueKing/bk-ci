@@ -129,6 +129,7 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         permissionProjectService: PermissionProjectService,
         traceEventDispatcher: TraceEventDispatcher,
+        iamV2ManagerService: V2ManagerService,
         client: Client
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
@@ -138,6 +139,7 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         permissionProjectService = permissionProjectService,
         traceEventDispatcher = traceEventDispatcher,
+        iamV2ManagerService = iamV2ManagerService,
         client = client
     )
 
