@@ -211,6 +211,7 @@ class RbacPermissionMigrateService constructor(
                     defaultMessage = "project($projectCode) creator(${projectInfo.creator}) not exist"
                 )
             }
+            logger.info("project creator is $projectCreator")
             // 创建分级管理员
             watcher.start("createGradeManager")
             val gradeManagerId = authResourceService.getOrNull(
