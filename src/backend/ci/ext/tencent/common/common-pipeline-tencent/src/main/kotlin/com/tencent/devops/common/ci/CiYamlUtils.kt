@@ -156,9 +156,7 @@ object CiYamlUtils {
         val yamlNormal = formatYamlCustom(yamlStr)
 
         // replace anchor tag
-        val yaml = Yaml()
-        val obj = yaml.load(yamlNormal) as Any
-        return YamlUtil.toYaml(obj)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
 
     fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
