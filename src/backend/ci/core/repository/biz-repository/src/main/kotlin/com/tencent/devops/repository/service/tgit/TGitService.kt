@@ -304,7 +304,7 @@ class TGitService @Autowired constructor(
     ): List<GitCodeProjectInfo> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = ("${gitConfig.tGitApiUrl}/api/v3/projects?access_token=$accessToken" +
+        val url = ("${gitConfig.tGitApiUrl}/projects?access_token=$accessToken" +
             "&page=$pageNotNull&per_page=$pageSizeNotNull")
             .addParams(
                 mapOf(
