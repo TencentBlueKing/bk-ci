@@ -27,4 +27,8 @@
 
 subprojects {
     group = "com.tencent.bk.devops.ci.buildless"
+
+    configurations.forEach {
+        it.exclude("org.springframework.cloud", "spring-cloud-starter-consul-config")
+    }
 }

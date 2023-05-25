@@ -49,7 +49,7 @@ data class ModelDetail(
     val startTime: Long,
     @ApiModelProperty("End time", required = false)
     val endTime: Long?,
-    @ApiModelProperty("Build status", required = true)
+    @ApiModelProperty(value = "Build status", required = true)
     val status: String,
     @ApiModelProperty("Build Model", required = true)
     val model: Model,

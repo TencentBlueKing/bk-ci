@@ -59,6 +59,7 @@ class ClientAutoConfiguration {
     private val consulTag: String = "prod"
 
     @Bean
+    @ConditionalOnMissingBean(CommonConfig::class)
     fun commonConfig() = CommonConfig()
 
     @Bean

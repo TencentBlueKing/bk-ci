@@ -43,6 +43,8 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -73,19 +75,59 @@ interface ApigwTemplateInstanceResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("模板版本", required = true)
+        @ApiParam("模板版本（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
         @ApiParam("是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @ApiParam("创建实例", required = true)
+        @ApiParam(
+            "创建实例", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "如果我想简单的实例化两条无启动变量的流水线1和2",
+                        value = """
+                            [
+                                {
+                                    "pipelineName": "1",
+                                    "param": []
+                                },
+                                {
+                                    "pipelineName": "2",
+                                    "param": []
+                                }
+                            ]
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想实例化一条带启动变量param1的流水线3",
+                        value = """
+                            [
+                                {
+                                    "pipelineName": "3",
+                                    "param": [
+                                        {
+                                            "id": "param1",
+                                            "required": true,
+                                            "type": "STRING //可以是其他类型，以实际情况为准",
+                                            "defaultValue": "param1的值",
+                                            "desc": "",
+                                            "readOnly": false
+                                        }
+                                    ]
+                                }
+                            ]
+                                """
+                    )
+                ]
+            )
+        )
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
@@ -102,13 +144,13 @@ interface ApigwTemplateInstanceResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("版本名", required = true)
+        @ApiParam("版本名（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
         @ApiParam("是否应用模板设置")
@@ -131,7 +173,7 @@ interface ApigwTemplateInstanceResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)

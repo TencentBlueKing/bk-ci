@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
@@ -47,6 +48,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -61,6 +63,7 @@ class UpdateStateForStageCmdFinally(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val stageBuildDetailService: StageBuildDetailService,
+    private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchQueueControl: DispatchQueueControl
@@ -89,7 +92,8 @@ class UpdateStateForStageCmdFinally(
 
         // Stage 暂停或者 插件暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
-            if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
+            if (event.source != BS_STAGE_CANCELED_END_SOURCE && event.source != BS_CANCEL_BUILD_SOURCE) {
+                // 不是 stage cancel 或取消构建，则进行暂停逻辑
                 pipelineStageService.pauseStage(stage)
             } else {
                 nextOrFinish(event, stage, commandContext, false)
@@ -99,7 +103,7 @@ class UpdateStateForStageCmdFinally(
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
-                pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage)
+                pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage, inOrOut = false)
             }
             nextOrFinish(event, stage, commandContext, commandContext.buildStatus.isSuccess())
             sendStageEndCallBack(stage, event)
@@ -232,7 +236,8 @@ class UpdateStateForStageCmdFinally(
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = false
         )
     }
 
@@ -242,7 +247,8 @@ class UpdateStateForStageCmdFinally(
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) failed with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = false
         )
     }
 
@@ -255,7 +261,8 @@ class UpdateStateForStageCmdFinally(
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) passed with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = false
         )
     }
 
@@ -286,8 +293,9 @@ class UpdateStateForStageCmdFinally(
             if (commandContext.fastKill || commandContext.buildStatus.isFailure()) {
                 commandContext.buildStatus = BuildStatus.FAILED
             }
-            val allStageStatus = stageBuildDetailService.updateStageStatus(
-                projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
+            val allStageStatus = stageBuildRecordService.updateStageStatus(
+                projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
+                stageId = event.stageId, executeCount = commandContext.executeCount,
                 buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(

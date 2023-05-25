@@ -26,9 +26,6 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 mutexGroupName: {
-                    // rule: {
-                    //     mutualGroup: true
-                    // },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualGroupName'),
                     placeholder: this.$t('storeMap.mutualGroupNamePlaceholder'),
@@ -42,10 +39,11 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.queueEnable'),
                     default: false
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080, min_value: 1 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
+                    desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.mutualTimeoutPlaceholder'),
                     default: '900',
                     required: true,
@@ -191,8 +189,8 @@ const jobOptionConfigMixin = {
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),

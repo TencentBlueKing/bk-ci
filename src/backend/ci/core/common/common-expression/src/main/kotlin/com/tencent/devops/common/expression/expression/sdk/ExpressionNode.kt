@@ -40,6 +40,7 @@ import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.EvaluationResult
+import com.tencent.devops.common.expression.expression.ExpressionOutput
 import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.ITraceWriter
 import com.tencent.devops.common.expression.expression.ValueKind
@@ -68,13 +69,18 @@ abstract class ExpressionNode : IExpressionNode {
 
     protected abstract val traceFullyRealized: Boolean
 
-    override fun evaluate(trace: ITraceWriter?, state: Any?, options: EvaluationOptions?): EvaluationResult {
+    override fun evaluate(
+        trace: ITraceWriter?,
+        state: Any?,
+        options: EvaluationOptions?,
+        expressionOutput: ExpressionOutput?
+    ): EvaluationResult {
         if (container != null) {
             throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
         }
 
         val eTrace = EvaluationTraceWriter(trace)
-        val context = EvaluationContext(eTrace, state, options, this)
+        val context = EvaluationContext(eTrace, state, options, this, expressionOutput)
         eTrace.info("Evaluating: ${convertToExpression()}")
         val result = evaluate(context)
 
@@ -135,14 +141,15 @@ abstract class ExpressionNode : IExpressionNode {
         trace: ITraceWriter?,
         state: Any?,
         options: EvaluationOptions?,
-        subInfo: SubNameValueEvaluateInfo
+        subInfo: SubNameValueEvaluateInfo,
+        expressionOutput: ExpressionOutput?
     ): SubNameValueEvaluateResult {
         // 目前部分计算不涉及内存计算，未来启用内存计算时需要修改此处
         if (container != null) {
             throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
         }
         val eTrace = EvaluationTraceWriter(trace)
-        val context = EvaluationContext(eTrace, state, options, this)
+        val context = EvaluationContext(eTrace, state, options, this, expressionOutput)
 
         return subNameValueEvaluate(context)
     }

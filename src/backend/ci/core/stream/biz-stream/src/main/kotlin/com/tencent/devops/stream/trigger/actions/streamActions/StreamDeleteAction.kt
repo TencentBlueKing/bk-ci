@@ -112,6 +112,8 @@ class StreamDeleteAction(
 
     override fun needSendCommitCheck() = gitAction.needSendCommitCheck()
 
+    override fun needUpdateLastModifyUser(filePath: String) = false
+
     override fun sendCommitCheck(
         buildId: String,
         gitProjectName: String,

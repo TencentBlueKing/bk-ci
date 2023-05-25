@@ -12,9 +12,14 @@ server:
 # 是否开启apifilter和aspect功能
 api:
   gateway:
-    auth: false
+    pub:
+      file:
+       outer: __BK_CI_OPENAPI_API_PUB_OUTER__
+    auth: __BK_CI_OPENAPI_API_AUTH__
+  blueKing:
+    enable: __BK_CI_OPENAPI_API_BLUEKING_ENABLE__
 
 # 是否开启openAPI 切面内校验path内project的开关。打开后若openAPI接口内没有projectId相关字段，需要对应接口需要加@IgnoreProjectId
 openapi:
   verify:
-    project: false
+    project: __BK_CI_OPENAPI_VERIFY_PROJECT__

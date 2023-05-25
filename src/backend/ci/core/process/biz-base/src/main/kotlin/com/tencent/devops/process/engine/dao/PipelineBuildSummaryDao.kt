@@ -30,23 +30,26 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.TableField
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -153,7 +156,9 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
         pipelineFilterParamList: List<PipelineFilterParam>? = null,
-        permissionFlag: Boolean? = null
+        permissionFlag: Boolean? = null,
+        includeDelete: Boolean? = false,
+        userId: String
     ): Long {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -163,7 +168,9 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
-            permissionFlag = permissionFlag
+            permissionFlag = permissionFlag,
+            includeDelete = includeDelete,
+            userId = userId
         )
         return dslContext.selectCount().from(T_PIPELINE_INFO)
             .where(conditions)
@@ -183,7 +190,10 @@ class PipelineBuildSummaryDao {
         permissionFlag: Boolean? = null,
         page: Int? = null,
         pageSize: Int? = null,
-        pageOffsetNum: Int? = 0
+        pageOffsetNum: Int? = 0,
+        includeDelete: Boolean? = false,
+        collation: PipelineCollation = PipelineCollation.DEFAULT,
+        userId: String?
     ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -193,7 +203,9 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
-            permissionFlag = permissionFlag
+            permissionFlag = permissionFlag,
+            includeDelete = includeDelete,
+            userId = userId
         )
         return listPipelineInfoBuildSummaryByConditions(
             dslContext = dslContext,
@@ -202,7 +214,8 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             offset = page?.let { (it - 1) * (pageSize ?: 10) + (pageOffsetNum ?: 0) },
-            limit = if (pageSize == -1) null else pageSize
+            limit = if (pageSize == -1) null else pageSize,
+            collation = collation
         )
     }
 
@@ -214,13 +227,17 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String>,
         authPipelines: List<String>,
         pipelineFilterParamList: List<PipelineFilterParam>?,
-        permissionFlag: Boolean?
+        permissionFlag: Boolean?,
+        includeDelete: Boolean? = false,
+        userId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
         conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
-        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
-        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+        if (includeDelete == false) {
+            conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        }
+        if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
         }
         if (permissionFlag != null) {
@@ -230,16 +247,19 @@ class PipelineBuildSummaryDao {
                 conditions.add(T_PIPELINE_INFO.PIPELINE_ID.notIn(authPipelines))
             }
         }
-        if (pipelineFilterParamList != null && pipelineFilterParamList.isNotEmpty()) {
+        if (!pipelineFilterParamList.isNullOrEmpty()) {
             handleFilterParamCondition(pipelineFilterParamList[0], conditions)
         }
         when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
-            PIPELINE_VIEW_MY_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
+            PIPELINE_VIEW_MY_PIPELINES -> if (userId != null) conditions.add(T_PIPELINE_INFO.CREATOR.eq(userId))
+            PIPELINE_VIEW_MY_LIST_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
+
             else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) {
+                logger.warn("this view logic has deprecated , viewId:$viewId")
                 handleFilterParamCondition(pipelineFilterParamList[1], conditions)
             }
         }
@@ -337,19 +357,24 @@ class PipelineBuildSummaryDao {
             com.tencent.devops.process.pojo.classify.enums.Condition.LIKE -> field.contains(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_LIKE -> field.notLike(
                 "%$fieldValue%"
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.EQUAL -> field.eq(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_EQUAL -> field.ne(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.INCLUDE -> JooqUtils.strPosition(
                 field,
                 fieldValue
             ).gt(0)
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_INCLUDE -> JooqUtils.strPosition(
                 field,
                 fieldValue
@@ -367,25 +392,53 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        collation: PipelineCollation
     ): Result<TPipelineInfoRecord> {
         val baseStep = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.asc()
+                    T_PIPELINE_INFO.PIPELINE_NAME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.ASC) {
+                            it.asc()
+                        } else {
+                            it.desc()
+                        }
+                    }
                 }
+
                 PipelineSortType.CREATE_TIME -> {
-                    T_PIPELINE_INFO.CREATE_TIME.desc()
+                    T_PIPELINE_INFO.CREATE_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
+
                 PipelineSortType.UPDATE_TIME -> {
-                    T_PIPELINE_INFO.UPDATE_TIME.desc()
+                    T_PIPELINE_INFO.UPDATE_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
+
                 PipelineSortType.LAST_EXEC_TIME -> {
-                    T_PIPELINE_INFO.LATEST_START_TIME.desc()
+                    T_PIPELINE_INFO.LATEST_START_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
             }
-            baseStep.orderBy(sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
+            baseStep.orderBy(T_PIPELINE_INFO.DELETE.asc(), sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
         }
         return if (null != offset && null != limit && offset >= 0 && limit > 0) {
             baseStep.limit(limit).offset(offset).fetch()
@@ -416,16 +469,15 @@ class PipelineBuildSummaryDao {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 dslContext.update(this)
                     .set(LATEST_BUILD_ID, buildId)
+                    .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
                     .set(LATEST_TASK_COUNT, taskCount)
                     .set(LATEST_START_USER, userId)
                     .set(QUEUE_COUNT, QUEUE_COUNT - 1)
                     .set(RUNNING_COUNT, RUNNING_COUNT + 1)
                     .set(LATEST_START_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
-                dslContext.update(this)
-                    .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId))).execute()
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
+                    .execute()
             }
         }
     }
@@ -443,11 +495,10 @@ class PipelineBuildSummaryDao {
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
-                .set(LATEST_TASK_ID, currentTaskId)
-                .set(LATEST_TASK_NAME, currentTaskName)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(LATEST_BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
+                .set(LATEST_TASK_ID, currentTaskId) // 字段目前没有用，没有实质意义，不用考虑是否是当前的LATEST_BUILD_ID
+                .set(LATEST_TASK_NAME, currentTaskName) // 界面一闪而过的提示，没有实质意义，不用考虑是否是当前的LATEST_BUILD_ID
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                 .execute()
         }
     }
@@ -460,7 +511,7 @@ class PipelineBuildSummaryDao {
         latestRunningBuild: LatestRunningBuild,
         isStageFinish: Boolean
     ) {
-        val count = with(latestRunningBuild) {
+        return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =
                     dslContext.update(this)
@@ -471,24 +522,9 @@ class PipelineBuildSummaryDao {
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
 
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
-                update.where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId))
-                    .and(PROJECT_ID.eq(projectId))
+                update.where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                     .execute()
-            }
-        }
-        // 没更新到，可能是因为他不是当前最新一次构建，那么要做的一件事是对finishCount值做加1，同时runningCount值减1
-        if (count == 0) {
-            with(latestRunningBuild) {
-                with(T_PIPELINE_BUILD_SUMMARY) {
-                    val update =
-                        dslContext.update(this)
-                            .set(FINISH_COUNT, FINISH_COUNT + 1)
-                    if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
-                    update.where(PIPELINE_ID.eq(pipelineId))
-                        .and(PROJECT_ID.eq(projectId))
-                        .execute()
-                }
             }
         }
     }
@@ -504,25 +540,16 @@ class PipelineBuildSummaryDao {
         runningIncrement: Int = 1
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
-            val count = dslContext.selectCount().from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(LATEST_BUILD_ID.eq(buildId))
-                .fetchOne(0, Int::class.java)!!
+            val update = dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
 
-            val update =
-                dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
-
-            if (count > 0) {
-                // 如果本次构建是最新一次，则要把状态和完成时间也刷新
-                update.set(LATEST_END_TIME, LocalDateTime.now())
-                if (runningIncrement > 0) {
-                    update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
-                } else {
-                    update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
-                        .set(LATEST_END_TIME, LocalDateTime.now())
-                }
+            if (runningIncrement > 0) {
+                update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
+            } else {
+                update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
+                    .set(LATEST_END_TIME, LocalDateTime.now())
             }
-            update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            update.where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                 .execute()
         }
     }
@@ -540,5 +567,31 @@ class PipelineBuildSummaryDao {
             }
             dslContext.selectFrom(this).where(conditions).fetch()
         }
+    }
+
+    @Deprecated("改操作不安全，业务不要使用，仅限op使用")
+    fun fixPipelineSummaryCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        finishCount: Int,
+        runningCount: Int?,
+        queueCount: Int?
+    ): Boolean {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            val update = dslContext.update(this).set(FINISH_COUNT, FINISH_COUNT + finishCount)
+            if (runningCount != null) {
+                update.set(RUNNING_COUNT, RUNNING_COUNT + runningCount)
+            }
+            if (queueCount != null) {
+                update.set(QUEUE_COUNT, QUEUE_COUNT + queueCount)
+            }
+            return update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute() == 1
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBuildSummaryDao::class.java)
     }
 }

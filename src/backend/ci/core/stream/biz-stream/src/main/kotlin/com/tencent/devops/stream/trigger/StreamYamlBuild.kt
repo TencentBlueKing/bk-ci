@@ -33,11 +33,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
 import com.tencent.devops.process.yaml.modelCreate.inner.GitData
@@ -50,14 +53,14 @@ import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -87,6 +90,7 @@ class StreamYamlBuild @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService,
+    private val streamGitService: StreamGitService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val pipelineResourceDao: GitPipelineResourceDao,
@@ -193,6 +197,7 @@ class StreamYamlBuild @Autowired constructor(
 
             // 改名时保存需要修改名称
             realPipeline.displayName = pipeline.displayName
+            realPipeline.lastModifier = pipeline.lastModifier
             action.data.context.pipeline = realPipeline
 
             // 注册各种事件
@@ -346,9 +351,11 @@ class StreamYamlBuild @Autowired constructor(
             asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
+        // 兼容定时触发，取流水线最近修改人
+        if (updateLastModifyUser && action.getStartType() == StartType.TIME_TRIGGER) {
+            modelParams.webHookParams[PIPELINE_START_TIME_TRIGGER_USER_ID] = action.data.getUserId()
+        }
 
         return streamYamlBaseBuild.startBuild(
             action = action,
@@ -391,9 +398,7 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),
@@ -435,6 +440,7 @@ class StreamYamlBuild @Autowired constructor(
         val modelCreateEvent = ModelCreateEvent(
             userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
+            elementInstallUserId = action.data.setting.enableUser,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
                 repositoryUrl = streamGitProjectInfo.gitHttpUrl,
@@ -449,7 +455,8 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.getChangeSet(),
-            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
+            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action),
+            checkIfModify = action.checkIfModify()
         )
 
         return Pair(modelCreateEvent, modelParams)
@@ -484,7 +491,7 @@ class StreamYamlBuild @Autowired constructor(
                     templateId = yamlTransferData.templateData.templateId,
                     templateType = TemplateAcrossInfoType.JOB,
                     // 因为已经将jobId转为了map所以这里不保存，节省空间
-                    templateInstancesIds = emptyList(),
+                    templateInstancesIds = mutableListOf(),
                     targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
                 )
             }
@@ -498,6 +505,10 @@ class StreamYamlBuild @Autowired constructor(
                 job.runsOn.poolName = getEnvName(action, job.runsOn.poolName, yaml.resource?.pools)
             }
         }
+        // 替换finally中的构建机
+        yaml.finally?.forEach { fina ->
+            fina.runsOn.poolName = getEnvName(action, fina.runsOn.poolName, yaml.resource?.pools)
+        }
         return yaml
     }
 
@@ -508,29 +519,30 @@ class StreamYamlBuild @Autowired constructor(
 
         pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
             if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
+                val repoNameAndPool = it.from!!.split("@")
+                if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
+                    return@label
+                }
 
-                    val gitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                        gitProjectKey = repoNameAndPool[0],
-                        action = action,
-                        getProjectInfo = action.api::getGitProjectInfo
-                    )!!
-
-                    val result = GitCommonUtils.getCiProjectId(
-                        "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
-                        streamGitConfig.getScmType()
+                val gitProjectInfo = streamGitService.getProjectInfo(repoNameAndPool[0])
+                    ?: throw StreamTriggerException(
+                        action,
+                        TriggerReason.PIPELINE_PREPARE_ERROR,
+                        listOf(
+                            I18nUtil.getCodeLanMessage(
+                                CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
+                                I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
                     )
 
-                    logger.info("StreamYamlBuild|getEnvName|envName|$result")
-                    return result
-                } catch (e: Exception) {
-                    logger.warn("StreamYamlBuild|getEnvName|$poolName|error", e)
-                    return poolName
-                }
+                val result = GitCommonUtils.getCiProjectId(
+                    "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
+                    streamGitConfig.getScmType()
+                )
+
+                logger.info("StreamYamlBuild|getEnvName|envName|$result")
+                return result
             }
         }
         logger.info("StreamYamlBuild|getEnvName|no match. envName|$poolName")

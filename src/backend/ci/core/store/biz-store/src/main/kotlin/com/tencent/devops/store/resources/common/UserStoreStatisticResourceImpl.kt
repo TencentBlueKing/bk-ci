@@ -30,6 +30,7 @@ package com.tencent.devops.store.resources.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreStatisticResource
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -67,5 +68,13 @@ class UserStoreStatisticResourceImpl @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         ))
+    }
+
+    override fun getStoreErrorCodeInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<StoreErrorCodeInfo> {
+        return Result(storeTotalStatisticService.getStoreErrorCodeInfo(userId, storeType, storeCode))
     }
 }

@@ -50,7 +50,7 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
         return atomReleaseService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
     }
 
-    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<Boolean> {
+    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String> {
         return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
     }
 

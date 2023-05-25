@@ -30,7 +30,6 @@ rootProject.name = "bk-ci-backend"
 // 适用于project的plugins
 pluginManagement {
     repositories {
-        mavenLocal()
         if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
@@ -45,6 +44,7 @@ pluginManagement {
             mavenCentral()
             gradlePluginPortal()
         }
+        mavenLocal()
     }
 }
 
@@ -73,10 +73,14 @@ include(":core:common:common-stream")
 include(":core:common:common-expression")
 include(":core:common:common-test")
 include(":core:common:common-auth")
+include(":core:common:common-kubernetes")
 include(":core:common:common-auth:common-auth-api")
 include(":core:common:common-auth:common-auth-mock")
 include(":core:common:common-auth:common-auth-blueking")
 include(":core:common:common-auth:common-auth-v3")
+include(":core:common:common-wechatwork")
+include(":core:common:common-auth:common-auth-rbac")
+include(":core:common:common-pipeline-yaml")
 
 include(":core:common:common-notify")
 include(":core:common:common-websocket")
@@ -230,6 +234,7 @@ include(":core:dispatch-kubernetes")
 include(":core:dispatch-kubernetes:api-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs")
+include(":core:dispatch-kubernetes:biz-dispatch-kubernetes-sample")
 include(":core:dispatch-kubernetes:model-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:boot-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:common-dispatch-kubernetes")
@@ -255,6 +260,7 @@ include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
 include(":core:notify:biz-notify-wework")
+include(":core:notify:biz-notify-tencentcloud")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 
@@ -281,6 +287,7 @@ include(":core:auth:api-auth")
 include(":core:auth:api-auth-blueking")
 include(":core:auth:biz-auth")
 include(":core:auth:biz-auth-blueking")
+include(":core:auth:biz-auth-rbac")
 include(":core:auth:boot-auth")
 include(":core:auth:model-auth")
 

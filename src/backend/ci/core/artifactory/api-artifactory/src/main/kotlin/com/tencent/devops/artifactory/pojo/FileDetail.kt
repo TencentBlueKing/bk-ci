@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -49,5 +50,11 @@ data class FileDetail(
     @ApiModelProperty("文件摘要", required = true)
     val checksums: FileChecksums,
     @ApiModelProperty("meta数据", required = true)
-    val meta: Map<String, String>
+    val meta: Map<String, Any>,
+    @ApiModelProperty("nodeMetadata数据", required = true)
+    val nodeMetadata: List<MetadataModel> = emptyList(),
+    @ApiModelProperty("下载链接", required = false)
+    val url: String? = null,
+    @ApiModelProperty("移动客户端下载链接", required = false)
+    val shortUrl: String? = null
 )

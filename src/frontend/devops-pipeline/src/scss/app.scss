@@ -19,7 +19,7 @@
 
 // 整个站点样式
 
-@charset 'utf-8';
+@charset 'UTF-8';
 @import './conf';
 @import './mixins/clearfix';
 @import './mixins/ellipsis';
@@ -28,6 +28,7 @@
 @import './animation';
 @import './form';
 @import './mixins/scroller.scss';
+@import '@/scss/dialog-position';
 
 @include scroller(#a5a5a5, 9px);
 html,

@@ -36,8 +36,8 @@ data class PipelineCopy(
     val name: String,
     @ApiModelProperty("描述", required = false)
     val desc: String?,
-    @ApiModelProperty("分组名称", required = false)
-    val group: String = "",
-    @ApiModelProperty("是否收藏", required = false)
-    val hasCollect: Boolean? = false
+    @ApiModelProperty("流水线基础设置-基本信息中的标签", required = false)
+    var labels: List<String> = emptyList(),
+    @ApiModelProperty("配置静态流水线组，需要填写视图ID", required = false)
+    var staticViews: List<String> = emptyList()
 )

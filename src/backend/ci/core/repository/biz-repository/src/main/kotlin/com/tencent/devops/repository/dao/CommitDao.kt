@@ -72,7 +72,8 @@ class CommitDao {
                     COMMITTER,
                     COMMIT_TIME,
                     COMMENT,
-                    ELEMENT_ID
+                    ELEMENT_ID,
+                    URL
                 )
                     .values(
                         it.buildId,
@@ -87,7 +88,8 @@ class CommitDao {
                             ZoneId.systemDefault()
                         ),
                         it.comment,
-                        it.elementId
+                        it.elementId,
+                        it.url
                     )
             }
             return dslContext.batch(query).execute()

@@ -12,6 +12,7 @@ import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -50,7 +51,13 @@ internal class MarketAtomTaskTest {
         )
         Assertions.assertEquals(
             "1234",
-            EnvReplacementParser.parse("\${{ settings.a.password }}", variables, true, r)
+            EnvReplacementParser.parse(
+                value = "\${{ settings.a.password }}",
+                contextMap = variables,
+                onlyExpression = true,
+                contextPair = r,
+                functions = SpecialFunctions.functions
+            )
         )
     }
 
@@ -80,7 +87,8 @@ internal class MarketAtomTaskTest {
             atomParams[name] = EnvReplacementParser.parse(
                 value = JsonUtil.toJson(value),
                 contextMap = variables,
-                contextPair = Pair(context, nameValue)
+                contextPair = Pair(context, nameValue),
+                functions = SpecialFunctions.functions
             )
         }
         return atomParams

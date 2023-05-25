@@ -27,9 +27,11 @@
 
 package com.tencent.devops.scm.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_ACCESS_CHECK_FAIL
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -37,11 +39,12 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.net.URLEncoder
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
 
 @SuppressWarnings("TooManyFunctions")
 class CodeGitlabScmImpl constructor(
@@ -96,7 +99,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = USER_ACCESS_CHECK_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -110,7 +115,9 @@ class CodeGitlabScmImpl constructor(
             } catch (ignored: Throwable) {
                 logger.warn("Fail to check the private key of git", ignored)
                 throw ScmException(
-                    ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID),
+                    ignored.message ?: I18nUtil.getCodeLanMessage(
+                        GITLAB_INVALID
+                    ),
                     ScmType.CODE_GITLAB.name
                 )
             }
@@ -123,7 +130,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    USER_ACCESS_CHECK_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -132,13 +141,17 @@ class CodeGitlabScmImpl constructor(
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY),
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GITLAB_TOKEN_EMPTY
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
         if (hookUrl.isEmpty()) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY),
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GITLAB_HOOK_URL_EMPTY
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -148,7 +161,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GITLAB_TOKEN_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -160,7 +175,8 @@ class CodeGitlabScmImpl constructor(
         targetUrl: String,
         context: String,
         description: String,
-        block: Boolean
+        block: Boolean,
+        targetBranch: List<String>?
     ) = Unit
 
     override fun addMRComment(mrId: Long, comment: String) = Unit
@@ -185,6 +201,15 @@ class CodeGitlabScmImpl constructor(
     override fun getMrInfo(mrId: Long): GitMrInfo {
         val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId"
         return gitApi.getMrInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getProjectInfo(projectName: String): GitProjectInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}"
+        return gitApi.getProjectInfo(
             host = apiUrl,
             token = token,
             url = url

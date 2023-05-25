@@ -93,7 +93,6 @@
             },
             activeTabComp () {
                 const activeTab = this.tabs.find(tab => tab.tabName === this.curItemTab)
-                console.log(activeTab)
                 return activeTab && activeTab.comp ? activeTab.comp : null
             },
             projectId () {
@@ -150,7 +149,6 @@
                         theme
                     })
                 } finally {
-                    console.log('121221')
                     this.loading.isLoading = false
                 }
             },

@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -39,6 +40,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -71,7 +74,7 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("仓库类型", required = false)
@@ -92,10 +95,29 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @ApiParam(
+            value = "代码库模型", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "user00通过OAUTH认证给项目关联 Tencent/bk-ci 的github代码库",
+                        value = """
+                    {
+                      "@type": "github",
+                      "aliasName": "Tencent/bk-ci",
+                      "credentialId": "",
+                      "projectName": "Tencent/bk-ci",
+                      "url": "https://github.com/Tencent/bk-ci.git",
+                      "authType": "OAUTH",
+                      "userName": "user00"
+                    }
+                """
+                    )
+                ]
+            )
+        )
         repository: Repository
     ): Result<RepositoryId>
 
@@ -112,7 +134,7 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
@@ -133,13 +155,102 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
         @QueryParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @ApiParam(
+            value = "代码库模型", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "如果我想通过oauth关联codeGit类型的代码库",
+                        value = """
+                            {
+                                "@type": "codeGit",
+                                "aliasName": "devops/test",
+                                "credentialId": "",
+                                "projectName": "devops/test",
+                                "url": "https://www.xxx.com/devops/test.git",
+                                "authType": "OAUTH",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联TGIT类型的代码库，只能通过HTTP，需要使用凭据test",
+                        value = """
+                            {
+                                "@type": "codeTGit",
+                                "aliasName": "devops/test",
+                                "credentialId": "test",
+                                "projectName": "devops/test",
+                                "url": "https://git.tencent.com/devops/test.git",
+                                "authType": "HTTPS",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联GitHub类型的代码库，只能通过Oauth",
+                        value = """
+                            {
+                                "@type": "github",
+                                "aliasName": "Tencent/bk-ci",
+                                "credentialId": "",
+                                "projectName": "Tencent/bk-ci",
+                                "url": "https://github.com/Tencent/bk-ci.git",
+                                "authType": "OAUTH",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联P4类型的代码库，只能通过HTTP，需要使用凭据test",
+                        value = """
+                            {
+                                "@type": "codeP4",
+                                "aliasName": "devops/test",
+                                "credentialId": "test",
+                                "projectName": "localhost:1666",
+                                "url": "localhost:1666",
+                                "authType": "HTTP",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    )
+                ]
+            )
+        )
         repository: Repository
     ): Result<Boolean>
+
+    @ApiOperation("代码库详情", tags = ["v4_user_repository_get", "v4_app_repository_get"])
+    @GET
+    @Path("/repository/{repositoryId}")
+    fun get(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID货代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?
+    ): Result<Repository>
 }

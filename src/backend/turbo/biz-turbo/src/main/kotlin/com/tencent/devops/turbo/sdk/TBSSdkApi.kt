@@ -8,6 +8,7 @@ import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.turbo.config.TBSProperties
 import com.tencent.devops.turbo.dto.DistccRequestBody
 import com.tencent.devops.turbo.dto.DistccResponse
+import com.tencent.devops.turbo.dto.ParamEnumDto
 import com.tencent.devops.turbo.dto.TBSTurboStatDto
 import com.tencent.devops.turbo.dto.WhiteListDto
 import com.tencent.devops.web.util.SpringContextHolder
@@ -171,5 +172,23 @@ object TBSSdkApi {
             }
             return responseBody
         }
+    }
+
+    /**
+     * 查询编译加速地区关联的编译环境
+     */
+    fun queryTurboCompileList(engineCode: String, queryParam: Map<String, Any>): List<ParamEnumDto>{
+        val responseStr = tbsCommonRequest(
+            engineCode = engineCode,
+            resourceName = "images",
+            queryParam = queryParam
+        )
+        val response: DistccResponse<List<ParamEnumDto>> =
+            JsonUtil.to(responseStr, object : TypeReference<DistccResponse<List<ParamEnumDto>>>() {})
+        if (response.code != 0 || !response.result) {
+            logger.warn("response not success!")
+            throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "fail to invoke request")
+        }
+        return response.data ?: listOf()
     }
 }

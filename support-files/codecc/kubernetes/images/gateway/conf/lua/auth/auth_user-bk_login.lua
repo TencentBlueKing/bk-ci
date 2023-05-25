@@ -24,7 +24,7 @@ local bk_token, err = cookieUtil:get_cookie("bk_token")
 local bk_ticket, err = cookieUtil:get_cookie("bk_ticket")
 if bk_token == nil and bk_ticket == nil then
   ngx.log(ngx.STDERR, "failed to read user request bk_token and bk_ticket: ", err)
-  ngx.exit(401)
+  ngx.exit(0)
   return
 elseif bk_token ~= nil then
   ticket = oauthUtil:get_ticket(bk_token,"token")

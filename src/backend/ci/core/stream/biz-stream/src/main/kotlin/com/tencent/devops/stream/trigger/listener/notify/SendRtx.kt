@@ -27,18 +27,20 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyTemplateEnum
 import com.tencent.devops.stream.util.StreamPipelineUtils
 
 object SendRtx {
     fun getRtxSendRequest(
-        state: StreamCommitCheckState,
+        status: BuildStatus,
         receivers: Set<String>,
         projectName: String,
         branchName: String,
@@ -55,14 +57,13 @@ object SendRtx {
         gitProjectId: String,
         scmType: ScmType
     ): SendNotifyMessageTemplateRequest {
-        val isSuccess = state == StreamCommitCheckState.SUCCESS
         val titleParams = mapOf(
             "title" to ""
         )
         val bodyParams = mapOf(
             "content" to if (content.isNullOrBlank()) {
                 getRtxCustomContent(
-                    isSuccess = isSuccess,
+                    status = status,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
@@ -78,7 +79,7 @@ object SendRtx {
                 )
             } else {
                 getRtxCustomUserContent(
-                    isSuccess = isSuccess,
+                    status = status,
                     gitProjectId = gitProjectId,
                     pipelineId = pipelineId,
                     build = build,
@@ -99,29 +100,31 @@ object SendRtx {
 
     // 为用户的内容增加链接
     private fun getRtxCustomUserContent(
-        isSuccess: Boolean,
+        status: BuildStatus,
         gitProjectId: String,
         pipelineId: String,
         build: BuildHistory,
         content: String,
         streamUrl: String
     ): String {
-        val state = if (isSuccess) {
-            Triple("✔", "info", "success")
-        } else {
-            Triple("❌", "warning", "failed")
+        val state = when {
+            status.isSuccess() -> Triple("✔", "info", "success")
+            status.isCancel() -> Triple("❕", "warning", "cancel")
+            else -> Triple("❌", "warning", "failed")
         }
+
         val detailUrl = StreamPipelineUtils.genStreamV2BuildUrl(
             homePage = streamUrl,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = build.id
         )
-        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
+        return " <font color=\"${state.second}\"> ${state.first} </font>" +
+                " $content \n [${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
-        isSuccess: Boolean,
+        status: BuildStatus,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -135,35 +138,36 @@ object SendRtx {
         streamUrl: String,
         gitProjectId: String
     ): String {
-        val state = if (isSuccess) {
-            Triple("✔", "info", "success")
-        } else {
-            Triple("❌", "warning", "failed")
+        val state = when {
+            status.isSuccess() -> Triple("✔", "info", "success")
+            status.isCancel() -> Triple("❕", "warning", "cancel")
+            else -> Triple("❌", "warning", "failed")
         }
+
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                    "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +
-                    "pushed by $openUser \n"
+                        "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
-            "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
-            request +
-            costTime +
-            "[查看详情]" +
-            "(${
-            StreamPipelineUtils.genStreamV2BuildUrl(
-                homePage = streamUrl,
-                gitProjectId = gitProjectId,
-                pipelineId = pipelineId,
-                buildId = build.id
-            )
-            })"
+                "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
+                request +
+                costTime +
+                "[${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]" +
+                "(${
+                    StreamPipelineUtils.genStreamV2BuildUrl(
+                        homePage = streamUrl,
+                        gitProjectId = gitProjectId,
+                        pipelineId = pipelineId,
+                        buildId = build.id
+                    )
+                })"
     }
 }

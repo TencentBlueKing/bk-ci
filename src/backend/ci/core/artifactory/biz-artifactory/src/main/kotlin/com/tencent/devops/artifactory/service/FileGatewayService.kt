@@ -33,10 +33,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class FileGatewayService {
-    @Value("\${artifactory.fileDevnetGateway:}")
+    @Value("\${devopsGateway.fileDevnetGateway:}")
     private lateinit var fileDevnetGateway: String
 
-    @Value("\${artifactory.fileIdcGateway:}")
+    @Value("\${devopsGateway.fileIdcGateway:}")
     private lateinit var fileIdcGateway: String
 
     fun getFileGateway(): FileGatewayInfo {

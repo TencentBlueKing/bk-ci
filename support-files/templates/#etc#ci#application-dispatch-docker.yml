@@ -22,9 +22,9 @@ dispatch:
   agentLessRegistryPassword: __BK_CI_AGENTLESS_IMAGE_REGISTRY_PASSWORD__
   jobQuota:
     systemAlertReceiver: 
-    enable: false
+    enable: __BK_CI_DOCKER_JOB_QUOTA_ENABLE__
   # 默认的构建容器集群类型：VM, KUBERNETES, BCS
-  defaultDockerRoutingType: VM
+  defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
 
 codecc:
   path: __BK_CODECC_DATA_DIR__/tools

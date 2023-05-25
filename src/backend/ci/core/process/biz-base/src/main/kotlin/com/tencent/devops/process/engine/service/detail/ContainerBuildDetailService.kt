@@ -39,6 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -69,8 +70,12 @@ class ContainerBuildDetailService(
                 var update = false
                 override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
-                    logger.info("[$buildId]|containerPreparing|j($containerId)|${targetContainer?.startVMStatus}")
-                    if (targetContainer != null) {
+                    val containerStatus = targetContainer?.status
+                    val startVMStatus = targetContainer?.startVMStatus
+                    logger.info("[$buildId]|containerPreparing|j($containerId)|$containerStatus|$startVMStatus")
+                    if (targetContainer != null && (containerStatus == null ||
+                            !BuildStatus.valueOf(containerStatus).isFinish())
+                    ) {
                         targetContainer.startEpoch = System.currentTimeMillis()
                         targetContainer.status = BuildStatus.PREPARE_ENV.name
                         targetContainer.startVMStatus = BuildStatus.RUNNING.name
@@ -154,10 +159,10 @@ class ContainerBuildDetailService(
                                 is NormalContainer -> targetContainer.mutexGroup
                                 else -> null
                             }?.let {
-                                ContainerUtils.setMutexWaitName(targetContainer)
+                                container.name = ContainerUtils.getMutexWaitName(container.name)
                             }
                         } else {
-                            ContainerUtils.clearMutexContainerName(targetContainer)
+                            container.name = ContainerUtils.getMutexFixedContainerName(container.name)
                         }
                         targetContainer.status = buildStatus.name
                         targetContainer.executeCount = executeCount
@@ -238,9 +243,6 @@ class ContainerBuildDetailService(
                         update = true
                         targetContainer.status = BuildStatus.SKIP.name
                         targetContainer.startVMStatus = BuildStatus.SKIP.name
-                        targetContainer.elements.forEach {
-                            it.status = BuildStatus.SKIP.name
-                        }
                         return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
@@ -251,6 +253,34 @@ class ContainerBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING, operation = "containerSkip#$containerId"
+        )
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
+        update(
+            projectId = projectId,
+            buildId = buildId,
+            modelInterface = object : ModelInterface {
+                var update = false
+
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
+                        }
+                        update = true
+                        return Traverse.BREAK
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
+            buildStatus = BuildStatus.RUNNING,
+            operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
     }
 }

@@ -28,6 +28,7 @@ const state = {
     pageLoading: false,
     showViewManage: false,
     showViewCreate: false,
+    isManage: false,
     currentViewId: '',
     viewManageAuth: [],
     currentViewList: [],
@@ -129,13 +130,15 @@ const actions = {
             return response.data
         })
     },
-    checkViewManageAuth ({ commit }, { projectId }) {
-        return ajax.get(`/project/api/user/projects/${projectId}/hasPermission/VIEWS_MANAGER`).then(response => {
-            return response.data
-        }).catch(e => {
-            console.log(e)
+    async checkViewManageAuth ({ commit, state }, { projectId }) {
+        try {
+            const { data } = await ajax.get(`/auth/api/user/project/members/projectIds/${projectId}/checkManager`)
+            state.isManage = data
+            return data
+        } catch (error) {
+            console.error(error)
             return false
-        })
+        }
     }
 }
 

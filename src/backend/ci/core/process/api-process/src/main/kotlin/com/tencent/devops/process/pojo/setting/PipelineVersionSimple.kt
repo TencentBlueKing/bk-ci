@@ -38,8 +38,12 @@ data class PipelineVersionSimple(
     val creator: String,
     @ApiModelProperty("创建时间戳", required = true)
     val createTime: Long,
-    @ApiModelProperty("流水线版本号", required = false)
+    @ApiModelProperty("流水线版本号", required = true)
     val version: Int,
-    @ApiModelProperty("流水线版本名称", required = false)
-    val versionName: String
+    @ApiModelProperty("流水线版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("是否还有构建记录引用该版本标识", required = false)
+    val referFlag: Boolean? = null,
+    @ApiModelProperty("关联构建记录总数", required = false)
+    val referCount: Int? = null
 )

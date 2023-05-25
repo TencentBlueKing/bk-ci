@@ -78,7 +78,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
         val qualityInterceptionRate =
             if (executeNum == null || interceptionCount == null || executeNum == 0) null
         else {
-            if (executeNum == interceptionCount) 0.0
+            if (executeNum == interceptionCount) 100.0
             else String.format("%.2f", interceptionCount.toDouble() * 100 / executeNum.toDouble()).toDouble()
         }
             return ThirdPlatformOverviewInfoVO(

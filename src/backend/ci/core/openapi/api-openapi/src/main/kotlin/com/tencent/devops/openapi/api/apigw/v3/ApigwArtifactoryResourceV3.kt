@@ -68,7 +68,7 @@ interface ApigwArtifactoryResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("版本仓库类型", required = true)
@@ -79,7 +79,10 @@ interface ApigwArtifactoryResourceV3 {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据元数据获取文件", tags = ["v3_app_artifactory_list", "v3_user_artifactory_list"])
+    @ApiOperation(
+        "根据元数据获取文件(注意: 如果需要构建产物的下载url，请单独调用下载接口，如 v3_app_artifactory_userDownloadUrl)",
+        tags = ["v3_app_artifactory_list", "v3_user_artifactory_list"]
+    )
     @Path("/")
     @GET
     fun search(
@@ -92,7 +95,7 @@ interface ApigwArtifactoryResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -38,10 +37,12 @@ import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.handler.p4.P4ChangeTriggerHandler
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
 
@@ -55,7 +56,7 @@ class P4WebHookMatcherTest {
         projectId = "mht",
         repoHashId = "dfd"
     )
-    private val eventCacheService: EventCacheService = mock()
+    private val eventCacheService: EventCacheService = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -65,7 +66,7 @@ class P4WebHookMatcherTest {
     @Test
     @SuppressWarnings("LongMethod")
     fun p4CommitChangeEventTrigger() {
-        Mockito.`when`(
+        every {
             eventCacheService.getP4ChangelistFiles(
                 repo = repository,
                 projectId = "mht",
@@ -73,7 +74,17 @@ class P4WebHookMatcherTest {
                 repositoryType = RepositoryType.ID,
                 change = 1
             )
-        ).thenReturn(listOf("//demo/tt.txt"))
+        } returns (listOf("//demo/sRc/tt.txt"))
+        every {
+            eventCacheService.getP4ServerInfo(
+                repo = repository,
+                projectId = "mht",
+                repositoryId = "dfd",
+                repositoryType = RepositoryType.ID
+            )
+        } returns (P4ServerInfo(
+            caseSensitive = false
+        ))
         val classPathResource = ClassPathResource(
             "com/tencent/devops/common/webhook/service/code/p4/P4CommitChange.json"
         )
@@ -92,7 +103,7 @@ class P4WebHookMatcherTest {
                 repositoryName = null
             ),
             eventType = CodeEventType.CHANGE_COMMIT,
-            includePaths = "//demo/**",
+            includePaths = "//demo/src/**",
             excludePaths = ""
         )
         Assertions.assertTrue(
@@ -112,6 +123,26 @@ class P4WebHookMatcherTest {
             eventType = CodeEventType.CHANGE_COMMIT,
             includePaths = "//depot/**",
             excludePaths = ""
+        )
+        Assertions.assertFalse(
+            matcher.isMatch(
+                projectId = "mht",
+                pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+                repository = repository,
+                webHookParams = webHookParams
+            ).isMatch
+        )
+
+        webHookParams = WebHookParams(
+            repositoryConfig = RepositoryConfig(
+                repositoryHashId = "dfd",
+                repositoryType = RepositoryType.ID,
+                repositoryName = null
+            ),
+            eventType = CodeEventType.CHANGE_COMMIT,
+            includePaths = "//depot/**",
+            excludePaths = "",
+            version = "2.0.0"
         )
         Assertions.assertFalse(
             matcher.isMatch(

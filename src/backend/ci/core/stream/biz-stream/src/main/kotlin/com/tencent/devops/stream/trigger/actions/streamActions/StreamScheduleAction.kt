@@ -173,6 +173,8 @@ class StreamScheduleAction(
 
     override fun needSendCommitCheck() = true
 
+    override fun needUpdateLastModifyUser(filePath: String) = false
+
     override fun sendCommitCheck(
         buildId: String,
         gitProjectName: String,
@@ -210,4 +212,6 @@ class StreamScheduleAction(
     override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
 
     override fun getStartType() = StartType.TIME_TRIGGER
+
+    override fun checkIfModify() = true
 }

@@ -28,15 +28,18 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -46,6 +49,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
@@ -61,16 +65,19 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -83,11 +90,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineContextService: PipelineContextService
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -110,7 +119,16 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val fixParam = param.copy(customBuildEnv = buildEnv)
 
         try {
-            atomResponse = execute(task, fixParam)
+            atomResponse = if (!checkBeforeStart(task, param, context)) {
+                AtomResponse(
+                    BuildStatus.FAILED,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
+                    errorMsg = "check job start fail"
+                )
+            } else {
+                execute(task, fixParam)
+            }
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
@@ -169,7 +187,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             exception = BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = "流水线不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_NOT_EXISTS,
+                    I18nUtil.getDefaultLocaleLanguage()
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -182,7 +203,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             exception = BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = "流水线的模型中指定构建容器${vmNames}不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_NOT_EXISTS,
+                    I18nUtil.getDefaultLocaleLanguage(),
+                    arrayOf(vmNames)
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -192,8 +217,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
-
+        containerBuildRecordService.containerPreparing(
+            projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
+        )
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
@@ -247,6 +273,57 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
     }
 
+    /**
+     * job启动做一些特别参数的检查，检查失败时直接不启动容器
+     */
+    private fun checkBeforeStart(
+        task: PipelineBuildTask,
+        param: VMBuildContainer,
+        variables: Map<String, String>
+    ): Boolean {
+        param.buildEnv?.let { buildEnv ->
+            val asCode by lazy {
+                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(task.projectId, task.pipelineId)
+                val asCodeEnabled = asCodeSettings?.enable == true
+                val contextPair = if (asCodeEnabled) {
+                    EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                } else null
+                Pair(asCodeEnabled, contextPair)
+            }
+            buildEnv.forEach { env ->
+                if (!env.value.startsWith("$")) {
+                    return@forEach
+                }
+                val version = EnvReplacementParser.parse(
+                    value = env.value,
+                    contextMap = variables,
+                    onlyExpression = asCode.first,
+                    contextPair = asCode.second
+                )
+                val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
+                    name = env.key,
+                    version = version,
+                    os = param.baseOS.name.lowercase()
+                ).data
+                if (res == null) {
+                    buildLogPrinter.addRedLine(
+                        buildId = task.buildId,
+                        message = MessageUtil.getMessageByLocale(
+                            BK_ENV_NOT_YET_SUPPORTED,
+                            I18nUtil.getDefaultLocaleLanguage(),
+                            arrayOf(env.key, version)
+                        ),
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
 
         val dispatchType: DispatchType
@@ -262,13 +339,19 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             val envId = param.thirdPartyAgentEnvId ?: ""
             val workspace = param.thirdPartyWorkspace ?: ""
             dispatchType = if (agentId.isNotBlank()) {
-                ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentId,
+                    workspace = workspace,
+                    agentType = AgentType.ID,
+                    dockerInfo = null
+                )
             } else if (envId.isNotBlank()) {
                 ThirdPartyAgentEnvDispatchType(
                     envName = envId,
                     envProjectId = null,
                     workspace = workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {
@@ -338,7 +421,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 param.dispatchType is ThirdPartyAgentIDDispatchType
             ) {
-                thirdPartyAgentMnitorPrint(task)
+                thirdPartyAgentMonitorPrint(task)
             }
 
             AtomResponse(
@@ -350,7 +433,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun thirdPartyAgentMnitorPrint(task: PipelineBuildTask) {
+    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
         val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
         val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20

@@ -25,12 +25,22 @@
                     <bk-radio-button :value="true">{{$t('unread')}}</bk-radio-button>
                 </bk-radio-group>
                 <bk-button class="notifications-button" @click="readAll">{{$t('markRead')}}</bk-button>
+                <bk-search-select
+                    class="notifications-input rt50"
+                    clearable
+                    :show-condition="false"
+                    :show-popover-tag-change="true"
+                    :data="computedSearchList"
+                    v-model="searchValue"
+                >
+                    <span slot="nextfix" class="mr5"></span>
+                </bk-search-select>
             </section>
             <ul v-bkloading="{ isLoading }" class="notification-list">
                 <li v-for="(notification, index) in notificationList" :key="index" class="notification-time">
                     <span class="notification-item-header">{{ notification.time }}</span>
                     <bk-collapse slot="content">
-                        <bk-collapse-item :name="request.id" v-for="request in notification.records" :key="request.id" @click.native="readMessage(request)">
+                        <bk-collapse-item :name="String(request.id)" v-for="request in notification.records" :key="request.id" @click.native="readMessage(request)">
                             <span class="content-message">
                                 <span>
                                     <span :class="{ 'message-status': true, 'unread': !request.haveRead }"></span>
@@ -101,34 +111,85 @@
                 notificationList: [],
                 onlyUnread: false,
                 isLoading: false,
-                unreadNum: 0
+                unreadNum: 0,
+                searchValue: [],
+                messageId: '',
+                triggerUserId: ''
             }
         },
 
         computed: {
-            ...mapState(['projectId'])
+            ...mapState(['projectId']),
+
+            computedSearchList () {
+                const datas = [
+                    {
+                        name: '事件ID',
+                        id: 1,
+                        multiable: false
+                    },
+                    {
+                        name: '触发人',
+                        id: 2,
+                        multiable: false
+                    }
+                ]
+                return datas.filter(data => {
+                    return !this.searchValue.find(val => val.id === data.id)
+                })
+            }
         },
 
         watch: {
             onlyUnread () {
                 this.getMessages()
+            },
+            searchValue () {
+                this.messageId = ''
+                this.triggerUserId = ''
+                this.searchValue.forEach((val) => {
+                    if (val.id === 1) {
+                        this.messageId = val?.values[0]?.id
+                    }
+                    if (val.id === 2) {
+                        this.triggerUserId = val?.values[0]?.id
+                    }
+                })
+                this.getMessages()
             }
         },
 
         created () {
+            this.initData()
             this.getMessages()
             this.getUnreadNum()
             document.title = this.$t('notifications')
         },
 
         methods: {
+            initData () {
+                this.messageId = this.$route.query.id
+                if (this.messageId) {
+                    this.searchValue = [{
+                        id: 1,
+                        name: '事件ID',
+                        values: [{
+                            id: this.messageId,
+                            name: this.messageId
+                        }]
+                    }]
+                }
+            },
+
             getMessages () {
                 this.isLoading = true
                 const params = {
                     messageType: 'REQUEST',
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
-                    projectId: this.projectId
+                    projectId: this.projectId,
+                    messageId: this.messageId,
+                    triggerUserId: this.triggerUserId
                 }
                 if (this.onlyUnread) {
                     params.haveRead = false
@@ -204,6 +265,16 @@
                 margin-bottom: 20px;
                 .head-tab {
                     width: 200px;
+                }
+            }
+            .notifications-input {
+                width: 500px;
+                position: absolute;
+                &.rt275 {
+                    right: 275px;
+                }
+                &.rt50 {
+                    right: 50px
                 }
             }
             .notification-list {

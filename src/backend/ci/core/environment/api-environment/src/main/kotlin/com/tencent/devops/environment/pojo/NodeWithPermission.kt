@@ -30,7 +30,7 @@ package com.tencent.devops.environment.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("节点信息(权限)")
+@ApiModel("NodeWithPermission-节点信息(权限)")
 data class NodeWithPermission(
     @ApiModelProperty("环境 HashId", required = true)
     val nodeHashId: String,
@@ -60,6 +60,8 @@ data class NodeWithPermission(
     val canEdit: Boolean?,
     @ApiModelProperty("是否可以删除", required = false)
     val canDelete: Boolean?,
+    @ApiModelProperty("是否可以查看", required = false)
+    val canView: Boolean? = true,
     @ApiModelProperty("网关地域", required = false)
     val gateway: String?,
     @ApiModelProperty("显示名称", required = false)

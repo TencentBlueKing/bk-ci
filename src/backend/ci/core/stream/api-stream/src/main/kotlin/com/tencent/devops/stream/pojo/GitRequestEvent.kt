@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
@@ -107,7 +107,8 @@ data class GitRequestEvent(
 fun GitRequestEvent.isMr() = objectKind == StreamGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == StreamGitObjectKind.MERGE_REQUEST.value &&
+    return (objectKind == StreamGitObjectKind.MERGE_REQUEST.value ||
+        objectKind == StreamGitObjectKind.PULL_REQUEST.value) &&
         sourceGitProjectId != null &&
         sourceGitProjectId != gitProjectId
 }

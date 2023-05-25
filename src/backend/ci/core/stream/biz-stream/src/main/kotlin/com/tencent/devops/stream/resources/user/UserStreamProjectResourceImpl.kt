@@ -63,6 +63,10 @@ class UserStreamProjectResourceImpl @Autowired constructor(
     }
 
     override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
-        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
+        val fixPageSize = size?.coerceAtMost(maxPageSize)?.coerceAtLeast(defaultPageSize) ?: defaultPageSize
+        return Result(streamProjectService.getUserProjectHistory(userId, size = fixPageSize) ?: emptyList())
     }
+
+    private val maxPageSize = 10L
+    private val defaultPageSize = 4L
 }

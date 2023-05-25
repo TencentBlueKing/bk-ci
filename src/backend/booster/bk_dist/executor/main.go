@@ -26,6 +26,6 @@ func main() {
 		ToStdErr: true,
 	})
 
-	exitCode, _ := executor.NewDistExecutor().Run()
+	exitCode, _, _ := executor.NewDistExecutor().Run()
 	os.Exit(exitCode)
 }

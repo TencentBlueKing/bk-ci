@@ -30,7 +30,7 @@ package com.tencent.devops.environment.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("节点信息(权限)")
+@ApiModel("NodeBaseInfo-节点信息(权限)")
 data class NodeBaseInfo(
     @ApiModelProperty("环境 HashId", required = true)
     val nodeHashId: String,

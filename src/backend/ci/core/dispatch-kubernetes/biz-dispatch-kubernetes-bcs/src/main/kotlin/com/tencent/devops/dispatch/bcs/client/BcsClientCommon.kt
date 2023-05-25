@@ -27,17 +27,17 @@
 
 package com.tencent.devops.dispatch.bcs.client
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
 
 @Component
 class BcsClientCommon @Autowired constructor(
-    private val commonConfig: CommonConfig
+    private val commonService: CommonService
 ) {
 
     companion object {
@@ -51,11 +51,8 @@ class BcsClientCommon @Autowired constructor(
     val bcsApiUrl: String = ""
 
     fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(url(bcsApiUrl + url)).headers(headers(headers))
+        return Request.Builder().url(commonService.getProxyUrl(bcsApiUrl + url)).headers(headers(headers))
     }
-
-    fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
-        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 
     fun headers(otherHeaders: Map<String, String>? = null): Headers {
         val result = mutableMapOf<String, String>()
@@ -67,6 +64,6 @@ class BcsClientCommon @Autowired constructor(
             result.putAll(otherHeaders)
         }
 
-        return Headers.of(result)
+        return result.toHeaders()
     }
 }

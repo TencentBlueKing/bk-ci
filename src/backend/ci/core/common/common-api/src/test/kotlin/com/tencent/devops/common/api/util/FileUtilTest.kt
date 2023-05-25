@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -40,5 +41,14 @@ class FileUtilTest {
         assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file))
         assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file.readText()))
         assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file.readBytes()))
+    }
+
+    @Test
+    fun outFile() {
+        FileUtil.outFile("build/", "test", "test")
+        val file = File("build/test")
+        Assertions.assertEquals(file.exists(), true)
+        Assertions.assertEquals(file.name, "test")
+        Assertions.assertEquals(file.readText(), "test")
     }
 }

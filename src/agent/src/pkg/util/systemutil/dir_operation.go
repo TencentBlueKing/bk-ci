@@ -32,9 +32,10 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"os"
 	"syscall"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 // MkBuildTmpDir 创建构建提供的临时目录
@@ -61,7 +62,7 @@ func Chmod(file string, perm os.FileMode) error {
 	if err == nil {
 		logs.Info("chmod %o %s ok!", perm, file)
 	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err)
+		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
 	}
 	return err
 }

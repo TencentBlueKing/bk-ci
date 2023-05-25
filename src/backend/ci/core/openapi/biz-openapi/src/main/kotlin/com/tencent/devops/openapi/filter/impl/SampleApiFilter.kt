@@ -27,9 +27,6 @@ class SampleApiFilter constructor(
     private val apiFilterEnabled: Boolean? = false
 
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        if (apiFilterEnabled != true) {
-            return true
-        }
         val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
         if (accessToken.isNullOrBlank()) {
             logger.warn("OPENAPI|verifyJWT accessToken is blank|" +
@@ -58,6 +55,9 @@ class SampleApiFilter constructor(
     }
 
     override fun filter(requestContext: ContainerRequestContext) {
+        if (apiFilterEnabled != true) {
+            return
+        }
         if (!verifyJWT(requestContext)) {
             return
         }

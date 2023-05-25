@@ -27,7 +27,6 @@
 
 package com.tencent.devops.buildless.service
 
-import com.google.common.collect.Interners
 import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
@@ -50,11 +49,9 @@ class BuildLessTaskService(
     private val containerPoolExecutor: ContainerPoolExecutor
 ) {
 
-    private val stringPool = Interners.newWeakInterner<String>()
-
     @Async
     fun claimBuildLessTask(containerId: String): Future<BuildLessTask?> {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             var loopCount = 0
             while (loopCount < 100) {
                 // 校验当前容器状态是否正常
@@ -98,7 +95,7 @@ class BuildLessTaskService(
         containerId: String,
         deferredResult: DeferredResult<BuildLessTask?>
     ) {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             var loopCount = 0
             while (loopCount < 100) {
                 // 校验当前容器状态是否正常

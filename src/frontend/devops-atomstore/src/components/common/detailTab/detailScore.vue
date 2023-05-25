@@ -9,6 +9,7 @@
                     :toolbars-flag="false"
                     :box-shadow="false"
                     :external-link="false"
+                    :language="mavenLang"
                     preview-background="#fff"
                     v-model="detail.description"
                     v-show="detail.description"
@@ -96,6 +97,9 @@
 
             type () {
                 return this.$route.params.type
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

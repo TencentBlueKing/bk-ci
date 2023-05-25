@@ -55,11 +55,17 @@ func (d *Executor) Valid() bool {
 	return d.work.ID() != ""
 }
 
+// Update update with env
+func (d *Executor) Update() {
+	d.work = v1.NewSDK(dcSDK.GetControllerConfigFromEnv()).GetWork(env.GetEnv(env.KeyExecutorControllerWorkID))
+	d.taskID = env.GetEnv(env.KeyExecutorTaskID)
+}
+
 // Run main function entry
-func (d *Executor) Run(fullargs []string, workdir string) (int, error) {
+func (d *Executor) Run(fullargs []string, workdir string) (int, string, error) {
 	blog.Infof("ubtexecutor: command [%s] begins", strings.Join(fullargs, " "))
 	for i, v := range fullargs {
-		blog.Infof("ubtexecutor: arg[%d] : [%s]", i, v)
+		blog.Debugf("ubtexecutor: arg[%d] : [%s]", i, v)
 	}
 	defer blog.Infof("ubtexecutor: command [%s] finished", strings.Join(fullargs, " "))
 
@@ -67,19 +73,19 @@ func (d *Executor) Run(fullargs []string, workdir string) (int, error) {
 	return d.runWork(fullargs, workdir)
 }
 
-func (d *Executor) runWork(fullargs []string, workdir string) (int, error) {
+func (d *Executor) runWork(fullargs []string, workdir string) (int, string, error) {
 	// d.initStats()
 
 	// ignore argv[0], it's itself
-	r, err := d.work.Job(d.getStats(fullargs)).ExecuteLocalTask(fullargs, workdir)
-	if err != nil {
+	retcode, retmsg, r, err := d.work.Job(d.getStats(fullargs)).ExecuteLocalTask(fullargs, workdir)
+	if err != nil || retcode != 0 {
 		if r != nil {
-			blog.Errorf("ubtexecutor: execute failed, error: %v, exit code: -1, outmsg:%s,errmsg:%s,cmd:%v",
-				err, string(r.Stdout), string(r.Stderr), fullargs)
+			blog.Errorf("ubtexecutor: execute failed, error: %v, ret code: %d,retmsg:%s,outmsg:%s,errmsg:%s,cmd:%v",
+				err, retcode, retmsg, string(r.Stdout), string(r.Stderr), fullargs)
 		} else {
-			blog.Errorf("ubtexecutor: execute failed, error: %v,cmd:%v", err, fullargs)
+			blog.Errorf("ubtexecutor: execute failed, ret code:%d retmsg:%s error: %v,cmd:%v", retcode, retmsg, err, fullargs)
 		}
-		return -1, err
+		return retcode, retmsg, err
 	}
 
 	charcode := 0
@@ -152,10 +158,10 @@ func (d *Executor) runWork(fullargs []string, workdir string) (int, error) {
 	if r.ExitCode != 0 {
 		blog.Errorf("ubtexecutor: execute failed, error: %v, exit code: %d, outmsg:%s,errmsg:%s,cmd:%v",
 			err, r.ExitCode, string(r.Stdout), string(r.Stderr), fullargs)
-		return r.ExitCode, err
+		return r.ExitCode, retmsg, err
 	}
 
-	return 0, nil
+	return 0, retmsg, nil
 }
 
 func (d *Executor) getStats(fullargs []string) *dcSDK.ControllerJobStats {

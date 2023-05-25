@@ -20,10 +20,6 @@ gateway:
   url: 127.0.0.1:8081
 
 dispatch:
-  # 针对蓝盾流水线访问的超级权限token
-  apiToken:
-    key: Devops-Token
-    value: landun
   # 调度需要使用到的label，确定构建机唯一性
   label: bkci.dispatch.kubenetes/core
   # 通过k8s watch来观察构建机状态
@@ -83,3 +79,13 @@ buildAndPushImage:
     server:
     username:
     password:
+
+apiserver:
+  auth:
+    # 针对蓝盾流水线访问的超级权限token
+    apiToken:
+      key: Devops-Token
+      value: landun
+    rsaPrivateKey: |
+     # 在这里保存私钥用来解密apitoken
+     # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得

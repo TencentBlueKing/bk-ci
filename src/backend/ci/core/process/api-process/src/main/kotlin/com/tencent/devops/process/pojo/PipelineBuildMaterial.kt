@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,6 +36,8 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("")
 data class PipelineBuildMaterial(
+    @ApiModelProperty("代码库类型", required = false)
+    val scmType: String? = ScmType.CODE_TGIT.name,
     @ApiModelProperty("别名", required = false)
     val aliasName: String?,
     @ApiModelProperty("url 地址", required = false)

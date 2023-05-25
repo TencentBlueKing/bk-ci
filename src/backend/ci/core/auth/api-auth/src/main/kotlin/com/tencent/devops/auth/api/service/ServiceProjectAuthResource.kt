@@ -29,6 +29,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -46,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
+@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限--项目相关接口")
 @Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -95,6 +96,21 @@ interface ServiceProjectAuthResource {
     ): Result<List<String>>
 
     @GET
+    @Path("/users/{userId}/{action}")
+    @ApiOperation("获取用户有某种项目资源类型权限的项目Code")
+    fun getUserProjectsByPermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("userId")
+        @ApiParam("用户userId", required = true)
+        userId: String,
+        @PathParam("action")
+        @ApiParam("项目资源类型action", required = true)
+        action: String
+    ): Result<List<String>>
+
+    @GET
     @Path("/{projectCode}/users/{userId}/isProjectUsers")
     @ApiOperation("判断是否某个项目中某个组角色的成员")
     fun isProjectUser(
@@ -131,6 +147,21 @@ interface ServiceProjectAuthResource {
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/projectIds/{projectId}/checkManager")
+    @ApiOperation("判断是否是项目管理员或CI管理员")
+    fun checkManager(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目Id", required = true)
+        projectId: String
     ): Result<Boolean>
 
     @POST

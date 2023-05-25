@@ -36,7 +36,9 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -69,5 +71,25 @@ interface ServiceArchiveAtomResource {
         @ApiParam("插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新插件包文件内容")
+    @PUT
+    @Path("/projectCodes/{projectCode}/atoms/{atomCode}/file/content")
+    fun updateArchiveFile(
+        @ApiParam("项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件编码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("插件版本号", required = true)
+        @QueryParam("version")
+        version: String,
+        @ApiParam("文件名", required = true)
+        @QueryParam("fileName")
+        fileName: String,
+        @ApiParam("文件内容", required = true)
+        content: String
     ): Result<Boolean>
 }

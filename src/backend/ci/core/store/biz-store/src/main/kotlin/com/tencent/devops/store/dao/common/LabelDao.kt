@@ -28,10 +28,9 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TLabelRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -75,6 +74,13 @@ class LabelDao {
         }
     }
 
+    fun getIdsByCodes(dslContext: DSLContext, labelCodes: List<String>, type: Byte): List<String> {
+        with(TLabel.T_LABEL) {
+            return dslContext.select(ID).from(this).where(LABEL_CODE.`in`(labelCodes).and(TYPE.eq(type)))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun delete(dslContext: DSLContext, id: String) {
         with(TLabel.T_LABEL) {
             dslContext.deleteFrom(this)
@@ -114,16 +120,17 @@ class LabelDao {
 
     fun convert(record: TLabelRecord): Label {
         with(record) {
+            val type = StoreTypeEnum.getStoreType(type.toInt())
             // 标签信息名称没有配置国际化信息则取标签表里面的名称
-            val labelLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
+            val labelLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "$type.label.$labelCode",
                 defaultMessage = labelName
             )
             return Label(
                 id = id,
                 labelCode = labelCode,
                 labelName = labelLanName,
-                labelType = StoreTypeEnum.getStoreType(type.toInt()),
+                labelType = type,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )

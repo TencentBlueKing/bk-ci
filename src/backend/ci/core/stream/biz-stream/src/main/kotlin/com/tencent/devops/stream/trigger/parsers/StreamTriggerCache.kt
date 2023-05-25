@@ -86,7 +86,8 @@ class StreamTriggerCache @Autowired constructor(
         } catch (e: ErrorCodeException) {
             logger.warn(
                 "Get project info error|$gitProjectKey|${cred != null}|" +
-                    "${action.data.context.repoTrigger?.buildUserID}|${action.data.setting.enableUser}", e
+                    "${action.data.context.repoTrigger?.buildUserID}|${action.data.setting.enableUser}",
+                e
             )
             return null
         }
@@ -101,7 +102,9 @@ class StreamTriggerCache @Autowired constructor(
             description = gitProjectInfo.description,
             avatarUrl = gitProjectInfo.avatarUrl,
             pathWithNamespace = gitProjectInfo.pathWithNamespace,
-            nameWithNamespace = gitProjectInfo.nameWithNamespace
+            nameWithNamespace = gitProjectInfo.nameWithNamespace,
+            repoCreatedTime = gitProjectInfo.repoCreatedTime,
+            repoCreatorId = gitProjectInfo.repoCreatorId
         )
 
         saveRequestGitProjectInfo(

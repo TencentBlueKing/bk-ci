@@ -63,6 +63,9 @@ interface UserAuditResource {
         @ApiParam("状态", required = false)
         @QueryParam("status")
         status: String?,
+        @ApiParam("按流水线ID过滤（精确)", required = false)
+        @QueryParam("resourceId")
+        resourceId: String?,
         @ApiParam("按流水线名称过滤", required = false)
         @QueryParam("resourceName")
         resourceName: String?,

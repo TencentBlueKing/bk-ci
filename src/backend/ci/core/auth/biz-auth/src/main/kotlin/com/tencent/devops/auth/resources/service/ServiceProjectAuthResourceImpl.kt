@@ -69,6 +69,15 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(permissionProjectService.getUserProjects(userId))
     }
 
+    override fun getUserProjectsByPermission(token: String, userId: String, action: String): Result<List<String>> {
+        return Result(
+            permissionProjectService.getUserProjectsByPermission(
+                userId = userId,
+                action = action
+            )
+        )
+    }
+
     override fun isProjectUser(
         token: String,
         type: String?,
@@ -83,6 +92,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
                 group = group
             )
         )
+    }
+
+    override fun checkManager(token: String, userId: String, projectId: String): Result<Boolean> {
+        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
+            permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
+        return Result(result)
     }
 
     override fun checkProjectManager(

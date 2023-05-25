@@ -44,7 +44,6 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.trigger.actions.data.context.getBuildStatus
-import com.tencent.devops.stream.trigger.actions.data.context.getGitCommitCheckState
 import com.tencent.devops.stream.trigger.actions.data.context.isSuccess
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
@@ -157,12 +156,12 @@ class SendNotify @Autowired constructor(
         if (realReceivers.isEmpty()) {
             realReceivers = mutableSetOf(action.data.eventCommon.userId)
         }
-        val state = action.data.context.finishData!!.getGitCommitCheckState()
+        val status = action.data.context.finishData!!.getBuildStatus()
 
         when (notifyType) {
             StreamNotifyType.EMAIL -> {
                 val request = SendEmail.getEmailSendRequest(
-                    state = state,
+                    status = status,
                     receivers = realReceivers,
                     projectName = projectName,
                     branchName = branchName,
@@ -187,7 +186,7 @@ class SendNotify @Autowired constructor(
                 val (rtxReceivers, receiversType) = Pair(realReceivers, ReceiverType.SINGLE)
 
                 SendRtx.getRtxSendRequest(
-                    state = state,
+                    status = status,
                     receivers = rtxReceivers,
                     projectName = projectName,
                     branchName = branchName,
@@ -262,11 +261,9 @@ class SendNotify @Autowired constructor(
 
         val vars = mutableSetOf<String>()
         value.forEach { re ->
-            if (!re.contains(',')) {
-                vars.add(re)
-                return@forEach
-            }
-            vars.addAll(re.split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet())
+            vars.addAll(re.parseEnv(variables)
+                .split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet()
+            )
         }
 
         if (variables.isNullOrEmpty()) {
@@ -276,6 +273,9 @@ class SendNotify @Autowired constructor(
             EnvUtils.parseEnv(it, variables)
         }.toSet()
     }
+
+    private fun String.parseEnv(data: Map<String, String>?) =
+        if (!data.isNullOrEmpty()) EnvUtils.parseEnv(this, data) else this
 
     private fun getNoticeType(buildId: String, type: String?): StreamNotifyType? {
         return when (type) {

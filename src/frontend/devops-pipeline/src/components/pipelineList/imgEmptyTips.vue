@@ -60,8 +60,6 @@
     @import './../../scss/conf';
 
     .devops-empty-tips {
-        width: 913px;
-        margin: 0 auto;
         text-align: center;
         .title {
             color: #333C48;

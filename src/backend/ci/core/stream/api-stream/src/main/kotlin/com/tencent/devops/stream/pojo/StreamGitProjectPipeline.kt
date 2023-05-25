@@ -44,8 +44,6 @@ data class StreamGitProjectPipeline(
     val enabled: Boolean,
     @ApiModelProperty("创建人", required = false)
     val creator: String?,
-    @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: StreamBuildHistory?,
     @ApiModelProperty("自己一次构建分支", required = false)
     val latestBuildBranch: String?,
     @ApiModelProperty("git yaml文件链接", required = false)

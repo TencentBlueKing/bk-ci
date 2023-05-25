@@ -257,4 +257,18 @@ object FileUtil {
             }
         }
     }
+
+    /**
+     * 写文件
+     */
+    fun outFile(path: String, name: String, context: String) {
+        val inPath = File(path)
+        if (!inPath.exists()) {
+            inPath.mkdirs()
+        }
+        val file = File("$path/$name")
+        file.bufferedWriter().use { out ->
+            out.write(context)
+        }
+    }
 }

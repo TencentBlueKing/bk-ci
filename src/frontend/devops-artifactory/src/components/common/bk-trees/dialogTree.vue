@@ -111,7 +111,6 @@
                     parent = parent.$parent
                     roadMap = `${~~parent.roadMap},${roadMap}`
                 }
-                // console.log(roadMap.slice(2))
                 return roadMap.slice(2)
             },
             isActive (index) {

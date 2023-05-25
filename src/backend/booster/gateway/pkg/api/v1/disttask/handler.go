@@ -10,8 +10,10 @@
 package disttask
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -27,6 +29,52 @@ import (
 
 	"github.com/emicklei/go-restful"
 )
+
+// ListClientVersion handle the http request for listing client version
+func ListClientVersion(req *restful.Request, resp *restful.Response) {
+	filePath := "./data/VersionList.txt"
+	f, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		blog.Error("List Version error:(%v)", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+	s := string(f)
+	if strings.HasSuffix(s, "\n") {
+		s = s[:len(s)-1]
+	}
+	result := strings.Split(s, "\n")
+
+	sort.Sort(sort.Reverse(sort.StringSlice(result)))
+	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
+}
+
+// ListWorkerImages handle the http request for listing worker images
+func ListWorkerImages(req *restful.Request, resp *restful.Response) {
+	args := req.Request.URL.Query()
+	queueName := args.Get("queue_name")
+
+	filePath := "./data/DisttaskWorkerList.json"
+
+	result := commonTypes.WorkerImage{
+		Mesos: make([]commonTypes.Image, 0, 100),
+		K8s:   make([]commonTypes.Image, 0, 100),
+	}
+	data, _ := ioutil.ReadFile(filePath)
+	err := json.Unmarshal([]byte(data), &result)
+	if err != nil {
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+
+	switch queueName {
+	case "shenzhen", "shanghai", "chengdu", "tianjin":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.Mesos})
+	case "K8S://gd":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.K8s})
+	default:
+		message := fmt.Sprintf("unknown queue name : %s", queueName)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: message})
+	}
+}
 
 // ListTask handle the http request for listing task with conditions.
 func ListTask(req *restful.Request, resp *restful.Response) {

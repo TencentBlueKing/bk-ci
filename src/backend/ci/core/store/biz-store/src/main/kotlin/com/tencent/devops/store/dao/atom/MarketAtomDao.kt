@@ -110,7 +110,11 @@ class MarketAtomDao : AtomBaseDao() {
         val conditions = setAtomVisibleCondition(ta)
         conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (!keyword.isNullOrEmpty()) {
-            conditions.add(ta.NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
+            conditions.add(
+                ta.NAME.contains(keyword)
+                .or(ta.SUMMARY.contains(keyword))
+                .or(ta.ATOM_CODE.contains(keyword))
+            )
         }
         if (rdType != null) {
             conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
@@ -154,6 +158,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.CLASSIFY_ID,
             ta.CATEGROY,
             ta.ATOM_CODE,
+            ta.VERSION,
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,

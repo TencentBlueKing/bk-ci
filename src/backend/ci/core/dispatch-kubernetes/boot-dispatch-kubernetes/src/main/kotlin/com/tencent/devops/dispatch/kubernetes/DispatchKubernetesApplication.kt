@@ -35,8 +35,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @MicroService
 @EnableScheduling
 @ComponentScan(
-    "com.tencent.devops.dispatch.bcs",
-    "com.tencent.devops.dispatch.common",
+    "com.tencent.devops.dispatch",
     "com.tencent.devops.common.dispatch.sdk"
 )
 class DispatchKubernetesApplication

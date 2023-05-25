@@ -80,9 +80,9 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
-                tag = tag ?: "",
+                tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount
             )
         )
@@ -106,9 +106,9 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
-                tag = tag ?: "",
+                tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount,
                 logStorageMode = logStorageMode
             )

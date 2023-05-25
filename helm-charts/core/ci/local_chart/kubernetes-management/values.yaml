@@ -1,0 +1,164 @@
+# 是否安装configmap
+configmap:
+  enabled: true
+
+# 初始化配置
+init:
+  # 初始化数据库
+  sql: true
+
+# 多集群开关
+multiCluster:
+  enabled: false
+  # 兜底策略, 为空则不用兜底
+  defaultNamespace: ""
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent
+
+# 内部数据源配置
+mysql:
+  enabled: true
+  image:
+    tag: 5.7.35
+  auth:
+    # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
+    rootPassword: blueking
+  primary:
+    persistence:
+      size: 10Gi
+    configuration: |-
+      [mysqld]
+      default_authentication_plugin=mysql_native_password
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mysql
+      plugin_dir=/opt/bitnami/mysql/lib/plugin
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      datadir=/bitnami/mysql/data
+      tmpdir=/opt/bitnami/mysql/tmp
+      max_allowed_packet=16M
+      bind-address=0.0.0.0
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+      log-error=/opt/bitnami/mysql/logs/mysqld.log
+      character-set-server=UTF8
+      collation-server=utf8_general_ci
+      max_connections=2000
+      default-time-zone='+08:00'
+      [client]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      default-character-set=UTF8
+      plugin_dir=/opt/bitnami/mysql/lib/plugin
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+
+redis:
+  enabled: true
+  auth:
+    password: bluking
+  replica:
+    replicaCount: 1
+    persistence:
+      size: 10Gi
+  master:
+    persistence:
+      size: 10Gi
+
+#外部数据库
+externalMysql:
+  host: localhost
+  port: 3306
+  username: bkci
+  password: bkci
+externalRedis:
+  host: localhost
+  port: 6379
+  password: bkci
+
+# kubernetesManager service
+service:
+  # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+  serviceType: NodePort
+  # 部署的service的annotations:
+  serviceAnnotations:
+  # 部署的service对外暴露的端口
+  port: 80
+  # nodeport模式下nodeport的端口
+  nodePort: 30004
+
+# kubernetesManager Deployment
+kubernetesManager:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  nodeSelector: {}
+  tolerations: []
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+  # 使用的镜像
+  image: bkci/kubernetes-manager:0.0.31
+  # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
+  builderNamespace:
+  redis:
+    db: 0
+  gateway:
+    # manager api服务的访问地址，给客户端返回登录调试地址需要使用
+    url: 127.0.0.1:30004
+  # 真实调度资源相关，依赖 scheduler-plugin
+  realResource:
+    # 监控构建机容器资源使用的 prometheus api地址， 字段为空则不开启realResource优化
+    # 注：集群内为 <service>.<namespace>.svc.cluster.local:<port>
+    prometheusUrl: 
+  # 构建并推送镜像相关
+  buildAndPushImage:
+    image: gcr.io/kaniko-project/executor:v1.9.0
+    # 拉取kaniko需要的凭据，如果不填视为没有
+    pullImageRegistry:
+      server:
+      username:
+      password:
+  apiserver:
+    auth:
+      # 针对蓝盾流水线访问的超级权限token
+      apiToken:
+        key: Devops-Token
+        value: landun
+      rsaPrivateKey: |
+  volumeMount:
+      # 流水线构建工作空间和agent日志在容器内的挂载点
+      dataPath: /data/devops/workspace
+      logPath: /data/devops/logs
+dockerInit:
+  # 是否使用当前chart的 dockerinit.sh
+  useDockerInit: true
+
+kubeConfig:
+  # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
+  useKubeConfig: false
+  # 配置的kubeConfig文件内容
+  content: |
+    # useKubeConfig开启时，这里需要填写kubeconfig

@@ -31,5 +31,8 @@ package com.tencent.devops.stream.pojo.message
  * 用户消息通知的类型
  */
 enum class UserMessageType {
-    REQUEST
+    // 有失败的消息组
+    REQUEST,
+    // 只有成功的消息组
+    ONLY_SUCCESS
 }

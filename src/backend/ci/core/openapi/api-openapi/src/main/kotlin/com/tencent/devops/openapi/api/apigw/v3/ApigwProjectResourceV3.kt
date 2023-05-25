@@ -90,7 +90,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
@@ -158,14 +158,14 @@ interface ApigwProjectResourceV3 {
         @ApiParam("项目名称或者项目英文名")
         @QueryParam("name")
         name: String,
-        @ApiParam("项目ID")
+        @ApiParam("项目ID(项目英文名)")
         @QueryParam("english_name")
         projectId: String?
     ): Result<Boolean>
 
     @POST
     @Path("/{projectId}/createUser")
-    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v3_app_project_create_users", "v3_user_project_create_users"])
+    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v3_app_project_create_users"])
     fun createProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -173,6 +173,9 @@ interface ApigwProjectResourceV3 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
+        @ApiParam("userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,

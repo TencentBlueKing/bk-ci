@@ -29,5 +29,15 @@ package com.tencent.devops.process.pojo.classify.enums
 
 enum class Logic {
     AND,
-    OR
+    OR;
+
+    companion object {
+        fun of(value: String): Logic {
+            return try {
+                valueOf(value)
+            } catch (e: Exception) {
+                return AND
+            }
+        }
+    }
 }

@@ -30,19 +30,24 @@ package com.tencent.devops.common.client.ms
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
+import com.tencent.devops.common.api.constant.CommonMessageCode.SERVICE_PROVIDER_NOT_FOUND
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.KubernetesUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Request
 import feign.RequestTemplate
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 class MicroServiceTarget<T> constructor(
@@ -61,44 +66,36 @@ class MicroServiceTarget<T> constructor(
                 }
             })
 
-    private val errorInfo =
-        MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
+    private fun getErrorInfo() = Result(
+        ERROR_SERVICE_NO_FOUND.toInt(),
+        MessageUtil.getMessageByLocale(
+            messageCode = ERROR_SERVICE_NO_FOUND,
+            params = arrayOf(serviceName),
+            language = DEFAULT_LOCALE_LANGUAGE
+        ),
+        null
+    )
 
     private fun choose(serviceName: String): ServiceInstance {
         val discoveryTag = bkTag.getFinalTag()
 
         val instances = if (KubernetesUtils.inContainer()) {
             val namespace = discoveryTag.replace("kubernetes-", "")
-            val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
-            pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
-                if (StringUtils.isNotBlank(KubernetesUtils.getDefaultNamespace())) {
-                    pods.filter { inNamespace(it.metadata, KubernetesUtils.getDefaultNamespace()) }
-                } else {
-                    emptyList()
-                }
-            }
+            msCache.get(KubernetesUtils.getSvrName(serviceName, namespace))
         } else {
             msCache.get(serviceName).filter { it is ConsulServiceInstance && it.tags.contains(discoveryTag) }
         }
 
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
+            throw ClientException(
+                getErrorInfo().message ?: MessageUtil.getMessageByLocale(
+                    messageCode = SERVICE_PROVIDER_NOT_FOUND,
+                    language = SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage,
+                    params = arrayOf(serviceName, discoveryTag)
+                )
+            )
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
-    }
-
-    /**
-     * 判断是否在集群中
-     */
-    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
-        for (entry in metadata) {
-            if (entry.key.contains("namespace")) {
-                if (entry.value == namespace) {
-                    return true
-                }
-            }
-        }
-        return false
     }
 
     override fun apply(input: RequestTemplate?): Request {
@@ -114,7 +111,12 @@ class MicroServiceTarget<T> constructor(
 
     override fun name() = serviceName
 
-    private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+    private fun ServiceInstance.url(): String {
+        val finalHost = if (StringUtils.isNotBlank(host) && host.contains(":") && !host.startsWith("[")) {
+            "[$host]" // 兼容IPv6
+        } else host
+        return "${if (isSecure) "https" else "http"}://$finalHost:$port/api"
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)

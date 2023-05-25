@@ -37,19 +37,30 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_CONCURRENCY
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_SINGLE
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -63,9 +74,14 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -73,12 +89,13 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import kotlin.math.max
 
 /**
@@ -86,7 +103,7 @@ import kotlin.math.max
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount", "NestedBlockDepth")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -94,12 +111,18 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val pipelineRecordService: PipelineBuildRecordService,
+    private val stageRecordService: StageBuildRecordService,
+    private val containerRecordService: ContainerBuildRecordService,
+    private val taskRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
 
     companion object {
@@ -222,7 +245,7 @@ class BuildStartControl @Autowired constructor(
                     message = "Build #${buildInfo.buildNum} preparing",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
-                handleBuildNo()
+                handleBuildNo(buildInfo)
                 pipelineRuntimeService.startLatestRunningBuild(
                     latestRunningBuild = LatestRunningBuild(
                         projectId = projectId,
@@ -233,7 +256,7 @@ class BuildStartControl @Autowired constructor(
                         taskCount = buildInfo.taskCount,
                         buildNum = buildInfo.buildNum
                     ),
-                    retry = (actionType == ActionType.RETRY)
+                    executeCount = executeCount
                 )
                 broadcastStartEvent(buildInfo)
             }
@@ -249,7 +272,7 @@ class BuildStartControl @Autowired constructor(
         executeCount: Int
     ): Boolean {
         var checkStart = true
-        val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
+        val concurrencyGroup = buildInfo.concurrencyGroup ?: pipelineId
         ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
             groupLock.lock()
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
@@ -261,20 +284,50 @@ class BuildStartControl @Autowired constructor(
                 )?.buildId == buildId
             }
             // #6521 并发组中需要等待其他流水线
-            val concurrencyGroupRunningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            val concurrencyGroupRunning = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                 projectId = projectId,
                 concurrencyGroup = concurrencyGroup,
                 status = listOf(BuildStatus.RUNNING)
-            ).size
+            ).toMutableList()
 
-            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
-            if (concurrencyGroupRunningCount > 0) {
+            // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 #8143
+            if (concurrencyGroup == pipelineId) {
+                concurrencyGroupRunning.addAll(
+                    0,
+                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        status = listOf(BuildStatus.RUNNING)
+                    )
+                )
+            }
+
+            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|${concurrencyGroupRunning.count()}")
+            if (concurrencyGroupRunning.isNotEmpty()) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId,
+                    buildId = buildId,
+                    oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = I18nUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_CONCURRENCY,
+                        defaultMessage = "QUEUE: concurrency for group($concurrencyGroup)",
+                        params = arrayOf(concurrencyGroup)
+                    )
+                )
+                val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                    projectCode = projectId,
+                    pipelineId = concurrencyGroupRunning.first().first,
+                    buildId = concurrencyGroupRunning.first().second,
+                    position = null,
+                    stageId = null,
+                    needShortUrl = false
+                )
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}," +
-                        "concurrency for group(${setting.concurrencyGroup}[$concurrencyGroup]) " +
-                        "and queue: $concurrencyGroupRunningCount",
+                        "concurrency for group($concurrencyGroup) " +
+                        "and queue: ${concurrencyGroupRunning.count()}, now waiting for " +
+                        "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
                 checkStart = false
@@ -298,7 +351,13 @@ class BuildStartControl @Autowired constructor(
 
             if (buildSummaryRecord!!.runningCount > 0) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = I18nUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_SINGLE,
+                        defaultMessage = "QUEUE: The current build is queued"
+                    )
+                )
 
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",
@@ -315,28 +374,52 @@ class BuildStartControl @Autowired constructor(
         return checkStart
     }
 
-    private fun PipelineBuildStartEvent.handleBuildNo() {
-        if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
-            // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
-            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
-            try {
-                buildNoLock.lock()
-                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(
+    /**
+     * 防止"每次构建成功+1"读取到相同buildNo的情况：在排队过程中，前面的构建成功结束了，会加1，所以正式启动前设置最新的buildNo
+     *
+     * 注：重试不会执行
+     */
+    private fun PipelineBuildStartEvent.handleBuildNo(buildInfo: BuildInfo) {
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        if (retryFlag || buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT) { // 重试不重新写
+            return
+        }
+        // 防止"每次构建成功+1"读取到相同buildNo的情况：在排队过程中，前面的构建成功结束了，会加1，所以正式启动前设置最新的buildNo
+        PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
+            buildNoLock.lock()
+
+            val buildNo = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId = pipelineId)?.buildNo
+
+            if (buildNo != null) {
+                buildVariableService.setVariable(
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    varName = BUILD_NO,
+                    varValue = buildNo
                 )
-                val buildNo = buildSummary?.buildNo
-                if (buildNo != null) {
-                    buildVariableService.setVariable(
+
+                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId = buildId)
+                val startParamMap = mutableMapOf<String, BuildParameters>()
+                parameters.associateByTo(startParamMap) { it.key }
+                startParamMap[BUILD_NO] = BuildParameters(key = BUILD_NO, value = buildNo, readOnly = true)
+                parameters = startParamMap.values.toList()
+
+                val recommendVersionPrefix = PipelineVarUtil.getRecommendVersionPrefix(parameters)
+                if (recommendVersionPrefix != null) {
+                    pipelineRuntimeService.updateRecommendVersion(
                         projectId = projectId,
-                        pipelineId = pipelineId,
                         buildId = buildId,
-                        varName = BUILD_NO,
-                        varValue = buildNo
+                        recommendVersion = "$recommendVersionPrefix.$buildNo"
                     )
                 }
-            } finally {
-                buildNoLock.unlock()
+
+                pipelineRuntimeService.updateBuildParameters(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = parameters
+                )
             }
         }
     }
@@ -370,7 +453,7 @@ class BuildStartControl @Autowired constructor(
         val stage = model.stages[0]
         val container = stage.containers[0]
         run lit@{
-            ContainerUtils.clearQueueContainerName(container)
+            container.name = ContainerUtils.getClearedQueueContainerName(container.name)
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineContainerService.updateContainerStatus(
@@ -381,6 +464,17 @@ class BuildStartControl @Autowired constructor(
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
+                    )
+                    taskRecordService.updateTaskStatus(
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildInfo.buildId,
+                        stageId = stage.id!!,
+                        containerId = container.containerId!!,
+                        taskId = taskId,
+                        buildStatus = BuildStatus.SUCCEED,
+                        executeCount = executeCount,
+                        operation = "updateTriggerElement#$taskId"
                     )
                     it.status = BuildStatus.SUCCEED.name
                     buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
@@ -397,24 +491,60 @@ class BuildStartControl @Autowired constructor(
             checkIn = stage.checkIn,
             checkOut = stage.checkOut
         )
-
+        pipelineRecordService.updateModelRecord(
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            executeCount = executeCount, buildStatus = null, modelVar = mutableMapOf(),
+            timestamps = mapOf(
+                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+            ),
+            startTime = LocalDateTime.now(), endTime = null
+        )
+        stageRecordService.updateStageRecord(
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
+            stageVar = mutableMapOf(
+                Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
+            )
+        )
+        val nowMills = now.timestampmilli()
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
+        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
-        container.startEpoch = now.timestampmilli()
+        container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount
         container.startVMStatus = BuildStatus.SUCCEED.name
+        containerRecordService.updateContainerRecord(
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
+            containerVar = mutableMapOf(
+                Container::startEpoch.name to nowMills,
+                Container::systemElapsed.name to (stage.elapsed ?: 0),
+                Container::elementElapsed.name to 0,
+                Container::startVMStatus.name to BuildStatus.SUCCEED.name,
+                Container::name.name to container.name, // 名字刷新成非队列中
+                Container::timeCost.name to BuildRecordTimeCost()
+            )
+        )
 
         buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
-            message = "触发人(trigger user): ${buildInfo.triggerUser}, 执行人(start user): ${buildInfo.startUser}",
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = BK_TRIGGER_USER,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + ": ${buildInfo.triggerUser}, " +
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_START_USER,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + ": ${buildInfo.startUser}",
             buildId = buildInfo.buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
     }
 
     @Suppress("ALL")
+    @Deprecated("后台内置插件特殊处理，后续不再维护")
     private fun supplementModel(
         projectId: String,
         pipelineId: String,
@@ -459,6 +589,7 @@ class BuildStartControl @Autowired constructor(
                                     return@nextElement
                                 }
                             }
+
                             is CodeGitElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -468,11 +599,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is CodeGitlabElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -482,11 +615,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is GithubElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -496,10 +631,12 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             else -> return@nextElement
                         }
 
@@ -519,6 +656,7 @@ class BuildStartControl @Autowired constructor(
                                     ele.revision = latestRevision.data!!.revision
                                     ele.specifyRevision = true
                                 }
+
                                 is CodeGitElement -> ele.revision = latestRevision.data!!.revision
                                 is GithubElement -> ele.revision = latestRevision.data!!.revision
                                 is CodeGitlabElement -> ele.revision = latestRevision.data!!.revision
@@ -570,6 +708,8 @@ class BuildStartControl @Autowired constructor(
                 varName = PIPELINE_TIME_START,
                 varValue = System.currentTimeMillis().toString()
             )
+            // 增加Model版本引用计数
+            pipelineRepositoryVersionService.addVerRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
         }
 
         val stages = model.stages

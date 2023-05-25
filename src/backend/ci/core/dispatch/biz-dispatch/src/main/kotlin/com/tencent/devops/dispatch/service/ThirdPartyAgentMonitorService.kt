@@ -27,29 +27,38 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.BK_BUILD_AGENT_DETAIL_LINK_ERROR
+import com.tencent.devops.dispatch.constants.BK_DOCKER_BUILD_VOLUME
+import com.tencent.devops.dispatch.constants.BK_DOCKER_WAS_RECENTLY_BUILT
+import com.tencent.devops.dispatch.constants.BK_HEARTBEAT_TIME
+import com.tencent.devops.dispatch.constants.BK_MAXIMUM_PARALLELISM
+import com.tencent.devops.dispatch.constants.BK_TASK_FETCHING_TIMEOUT
+import com.tencent.devops.dispatch.constants.BK_UNLIMITED
+import com.tencent.devops.dispatch.constants.BK_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 三方构建机的业务监控拓展
  */
+@Suppress("ALL")
 @Service
 class ThirdPartyAgentMonitorService @Autowired constructor(
     private val client: Client,
@@ -59,7 +68,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
 
-    @Suppress("LongMethod", "NestedBlockDepth")
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
@@ -75,46 +83,121 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         val agentDetail = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentDetail(userId = event.userId, projectId = event.projectId, agentHashId = record.agentId)
-            .data
+            .data ?: return
 
-        if (agentDetail != null) {
-            val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
-            val heartbeatInfo = agentDetail.heartbeatInfo
+        val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
+        val heartbeatInfo = agentDetail.heartbeatInfo
 
+        logMessage.append(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
+                params = arrayOf(event.projectId, agentDetail.nodeId),
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+        )
+
+        // #7748 agent使用docker作为构建机
+        var parallelTaskCount = agentDetail.parallelTaskCount
+        var busyTaskSize = heartbeatInfo?.busyTaskSize
+        if (record.dockerInfo != null) {
+            parallelTaskCount = agentDetail.dockerParallelTaskCount
+            busyTaskSize = heartbeatInfo?.dockerBusyTaskSize
+        }
+
+        if (record.dockerInfo != null) {
             logMessage.append(
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(event.projectId, agentDetail.nodeId)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DOCKER_BUILD_VOLUME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
-            logMessage.append("|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
-            if (agentDetail.parallelTaskCount != "0") {
-                logMessage.append(agentDetail.parallelTaskCount).append("/").append(heartbeatInfo?.busyTaskSize ?: 0)
-            }
+        } else {
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_MAXIMUM_PARALLELISM,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
+        }
+        if (parallelTaskCount != "0") {
+            logMessage.append(parallelTaskCount).append("/")
+                .append(busyTaskSize ?: 0)
+        }
 
-            if (agentDetail.parallelTaskCount == "0") {
-                logMessage.append("无限制(unlimited), 注意负载(Attention)")
-            }
-            log(event, logMessage, tag)
+        if (parallelTaskCount == "0") {
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_UNLIMITED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
+        }
+        log(event, logMessage, tag)
 
-            if (heartbeatInfo != null) {
+        if (heartbeatInfo == null) {
+            return
+        }
 
-                heartbeatInfo.heartbeatTime?.let { self ->
-                    logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
-                }
+        heartbeatInfo.heartbeatTime?.let { self ->
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_HEARTBEAT_TIME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " ${DateTimeUtil.formatDate(Date(self))}"
+            )
+        }
 
-                logMessage.append("|最近${heartbeatInfo.taskList.size}次运行中的构建:\n")
+        if (record.dockerInfo != null) {
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DOCKER_WAS_RECENTLY_BUILT,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("${heartbeatInfo.dockerTaskList?.size ?: 0}")
+                )
+            )
+        } else {
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_WAS_RECENTLY_BUILT,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("${heartbeatInfo.taskList?.size ?: 0}")
+                )
+            )
+        }
 
-                heartbeatInfo.taskList.forEach {
-                    thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
-                        logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
-                        logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+        if (record.dockerInfo != null) {
+            heartbeatInfo.dockerTaskList?.forEach dockerInfoFor@{
+                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                    if (r1.dockerInfo == null) {
+                        return@dockerInfoFor
                     }
+                    logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
+                    logMessage.append(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_RUNNING,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + " #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n"
+                    )
                 }
-
-                log(event, logMessage, tag)
+            }
+        } else {
+            heartbeatInfo.taskList?.forEach taskInfoFor@{
+                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                    if (r1.dockerInfo != null) {
+                        return@taskInfoFor
+                    }
+                    logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
+                    logMessage.append(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_RUNNING,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + " #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n"
+                    )
+                }
             }
         }
+
+        log(event, logMessage, tag)
     }
 
     private fun log(event: AgentStartMonitor, sb: StringBuilder, tag: String) {
@@ -134,7 +217,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     /**
-     * 3分钟如果Agent端发起了构建任务领取后还没启动，尝试回退到队列让其以便能重新领取到。
+     * 3分钟如果Agent端发起了构建任务领取后还没启动，尝试回退到队列让其以便能重新领取到。(docker 10min)
      * 用于解决Agent端几类极端问题场景：
      *  1、网络问题导致Agent侧领取中断，数据包丢失，没有收到领取任务，但任务已经被改成RUNNING，需要回退。
      *  2、Agent领取后未处理构建前，进程意外退出
@@ -147,10 +230,21 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         record.updatedTime?.let { self ->
+            val outTime = if (record.dockerInfo != null) {
+                System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(DOCKER_ROLLBACK_MIN)
+            } else {
+                System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(ROLLBACK_MIN)
+            }
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
-            if (System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(ROLLBACK_MIN)) {
+            if (outTime) {
                 thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
-                sb.append("任务领取超过$ROLLBACK_MIN 分钟没有启动, 可能存在异常，开始重置")
+                sb.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_TASK_FETCHING_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("$ROLLBACK_MIN")
+                    )
+                )
                     .append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
                 log(event, sb, VMUtils.genStartVMTaskId(event.vmSeqId))
             }
@@ -159,5 +253,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
     companion object {
         private const val ROLLBACK_MIN = 3L // 3分钟如果构建任务领取后没启动，尝试回退状态
+        private const val DOCKER_ROLLBACK_MIN = 10L // 针对docker构建场景增加拉镜像可能需要的时间
     }
 }

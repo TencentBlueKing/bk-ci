@@ -42,13 +42,7 @@ class WsController @Autowired constructor(
 
     @MessageMapping("/changePage")
     fun changePage(changePage: ChangePageDTO) {
-        websocketService.changePage(
-            userId = changePage.userId,
-            sessionId = changePage.sessionId,
-            newPage = changePage.page,
-            projectId = changePage.projectId,
-            needCheckProject = changePage.showProjectList
-        )
+        websocketService.changePage(changePage)
     }
 
     @MessageMapping("/loginOut")

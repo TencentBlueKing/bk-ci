@@ -27,12 +27,17 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
@@ -44,9 +49,14 @@ class BuildAgentBuildResourceImpl constructor(
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : BuildAgentBuildResource {
 
-    override fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
+    override fun startBuild(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildType: String?
+    ): AgentResult<ThirdPartyBuildInfo?> {
         checkParam(projectId, agentId, secretKey)
-        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey, BuildJobType.toEnum(buildType))
     }
 
     override fun upgrade(
@@ -74,10 +84,10 @@ class BuildAgentBuildResourceImpl constructor(
     ): AgentResult<UpgradeItem> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.checkIfCanUpgradeByVersionNew(
-            projectId,
-            agentId,
-            secretKey,
-            info
+            projectId = projectId,
+            agentId = agentId,
+            secretKey = secretKey,
+            info = info
         )
     }
 
@@ -104,13 +114,31 @@ class BuildAgentBuildResourceImpl constructor(
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
         if (projectId.isBlank()) {
-            throw ParamBlankException("无效的项目ID")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getDefaultLocaleLanguage(),
+                    arrayOf("projectId")
+                )
+            )
         }
         if (agentId.isBlank()) {
-            throw ParamBlankException("无效的Agent ID")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getDefaultLocaleLanguage(),
+                    arrayOf("agentId")
+                )
+            )
         }
         if (secretKey.isBlank()) {
-            throw ParamBlankException("Agent SecretKey 为空")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_NEED_PARAM_,
+                    I18nUtil.getDefaultLocaleLanguage(),
+                    arrayOf("secretKey")
+                )
+            )
         }
     }
 }

@@ -92,11 +92,12 @@ class StreamDetailService @Autowired constructor(
         }?.pathWithNamespace
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, pathWithNamespace)
 
-        val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
+        val modelDetail = client.get(ServiceBuildResource::class).getBuildRecordByExecuteCount(
             userId = userId,
             projectId = conf.projectCode!!,
             pipelineId = eventBuildRecord.pipelineId,
             buildId = eventBuildRecord.buildId,
+            executeCount = null,
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
@@ -121,11 +122,12 @@ class StreamDetailService @Autowired constructor(
         }?.pathWithNamespace
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, pathWithNamespace)
 
-        val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
+        val modelDetail = client.get(ServiceBuildResource::class).getBuildRecordByExecuteCount(
             userId = userId,
             projectId = conf.projectCode!!,
             pipelineId = eventBuildRecord.pipelineId,
             buildId = buildId,
+            executeCount = null,
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
@@ -222,7 +224,6 @@ class StreamDetailService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null,
             latestBuildBranch = null
         )
     }

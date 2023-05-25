@@ -39,5 +39,13 @@ data class ThirdPartyBuildInfo(
     @ApiModelProperty("构建机编排序号")
     val vmSeqId: String,
     @ApiModelProperty("工作空间")
-    val workspace: String
+    val workspace: String,
+    @ApiModelProperty("流水线ID")
+    val pipelineId: String?,
+    @ApiModelProperty("docker构建相关信息")
+    val dockerBuildInfo: ThirdPartyBuildDockerInfo?,
+    @ApiModelProperty("流水线执行次数")
+    val executeCount: Int?,
+    @ApiModelProperty("容器hashId日志使用")
+    val containerHashId: String?
 )

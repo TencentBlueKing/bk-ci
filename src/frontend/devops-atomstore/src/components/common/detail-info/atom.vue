@@ -1,37 +1,63 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <honer-img
+            class="detail-pic atom-logo"
+            :detail="detail"
+            :is-big="true"
+        />
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
-                <div class="canvas-contain">
-                    <canvas class="atom-chart" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length" width="64" height="18"></canvas>
-                    <icon v-else class="chart-empty" name="empty" size="16" v-bk-tooltips="{ content: $t('store.最近七天暂无执行') }" />
-                </div>
-                <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
-                    <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
-                        <icon class="detail-img" name="cooperation" size="16" />
-                        <span class="approve-msg">{{approveMsg}}</span>
-                    </h5>
-                </template>
-                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAMLV2')">
-                    <icon class="detail-img" name="yaml" size="16" />
-                    <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
-                </h5>
+                <span
+                    :class="{ 'not-recommend': detail.recommendFlag === false }"
+                    :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''"
+                >{{detail.name}}</span>
+                <honer-tag :detail="detail" :max-num="2" class="ml16"></honer-tag>
+                <img
+                    v-for="indexInfo in detail.indexInfos"
+                    v-bk-tooltips="{
+                        allowHTML: true,
+                        content: indexInfo.hover
+                    }"
+                    :key="indexInfo.indexCode"
+                    :src="indexInfo.iconUrl"
+                    :style="{
+                        color: indexInfo.iconColor,
+                        height: '16px',
+                        width: '16px',
+                        marginRight: '8px',
+                        cursor: 'pointer'
+                    }"
+                >
+                <section class="num-wraper ml16">
+                    <p class="score-group">
+                        <comment-rate
+                            :max-stars="1"
+                            :rate="1"
+                            :width="16"
+                            :height="16"
+                            :style="{ width: starWidth }"
+                            class="score-real"
+                        />
+                        <comment-rate
+                            :max-stars="1"
+                            :rate="0"
+                            :width="16"
+                            :height="16"
+                        />
+                    </p>
+                    <span class="ml6">{{ detail.score }}</span>
+                </section>
+                <section class="num-wraper">
+                    <img v-if="detail.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
+                    <img v-else class="hot-icon" src="../../../images/hot.png">
+                    <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
+                </section>
             </h3>
             <h5 class="detail-info">
                 <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
                 <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
-            </h5>
-            <h5 class="detail-info detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
-                <span> {{ $t('store.评分：') }} </span>
-                <p class="score-group">
-                    <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
-                    <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
-                </p>
-                <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
                 <span> {{ $t('store.Job类型：') }} </span>
@@ -45,9 +71,6 @@
             <h5 class="detail-info">
                 <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
-            <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.recentExecuteNum || 0}}</span>
-            </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
@@ -58,13 +81,24 @@
             </h5>
         </hgroup>
 
-        <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
-            <template slot="content">
-                <p>{{buttonInfo.des}}</p>
-            </template>
-        </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+        <section>
+            <bk-popover placement="top" v-if="buttonInfo.disable">
+                <button class="bk-button bk-primary" type="button" disabled> {{ detail.defaultFlag ? $t('store.已安装') : $t('store.安装')}} </button>
+                <template slot="content">
+                    <p>{{buttonInfo.des}}</p>
+                </template>
+            </bk-popover>
+            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+
+            <section class="click-area">
+                <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
+                    <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']" @click="cooperation">
+                        <icon class="detail-img mr4" name="cooperation" size="16" />
+                        <span class="approve-msg">{{approveMsg}}</span>
+                    </h5>
+                </template>
+            </section>
+        </section>
 
         <bk-dialog v-model="showCooperDialog" :title="$t('store.申请成为协作者')" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
             <bk-form label-width="90" ref="validateForm" :model="cooperData" v-if="showCooperDialog">
@@ -100,15 +134,18 @@
 </template>
 
 <script>
-    import BKChart from '@blueking/bkcharts'
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
+    import HonerImg from '../../honer-img.vue'
+    import HonerTag from '../../honer-tag.vue'
     import api from '@/api'
 
     export default {
         components: {
             commentRate,
-            formTips
+            formTips,
+            HonerImg,
+            HonerTag
         },
 
         filters: {
@@ -148,10 +185,13 @@
 
         computed: {
             starWidth () {
-                const integer = Math.floor(this.detail.score)
-                const fixWidth = 17 * integer
-                const rateWidth = 14 * (this.detail.score - integer)
-                return `${fixWidth + rateWidth}px`
+                if (this.detail.score >= 5) {
+                    return '16px'
+                } else if (this.detail.score <= 0) {
+                    return '0px'
+                } else {
+                    return '8px'
+                }
             },
 
             approveMsg () {
@@ -189,10 +229,6 @@
 
         mounted () {
             this.initData()
-            const chartData = this.drawTrend()
-            this.$once('hook:beforeDestroy', () => {
-                if (chartData && chartData.destroy) chartData.destroy()
-            })
         },
 
         methods: {
@@ -210,75 +246,6 @@
 
             closeDialog () {
                 this.clearFormData()
-            },
-
-            drawTrend () {
-                const dailyStatisticList = this.detail.dailyStatisticList
-                if (!dailyStatisticList || dailyStatisticList.length <= 0) return
-                const context = document.querySelector('.atom-chart')
-                const chartDatas = []
-                const chartLabels = []
-                const backgroundColors = []
-                dailyStatisticList.forEach((statis) => {
-                    const val = statis.dailySuccessRate
-                    const isEmpty = [0, undefined, null].includes(val)
-                    const isUndefinedOrNull = [undefined, null].includes(val)
-                    const data = isEmpty ? 2 : val
-                    const lableVal = isUndefinedOrNull ? '--' : val
-                    const color = isEmpty ? '#b4b4b4' : 'rgba(90, 159, 247, 1)'
-                    chartDatas.push(data)
-                    chartLabels.push(`${this.$t('store.执行成功率')}：${lableVal}%`)
-                    backgroundColors.push(color)
-                })
-                return new BKChart(context, {
-                    type: 'bar',
-                    data: {
-                        labels: dailyStatisticList.map(x => x.statisticsTime),
-                        datasets: [
-                            {
-                                barThickness: 6,
-                                label: this.$t('store.执行成功率'),
-                                backgroundColor: backgroundColors,
-                                lineTension: 0,
-                                borderWidth: 0,
-                                pointRadius: 0,
-                                pointHitRadius: 3,
-                                pointHoverRadius: 3,
-                                data: chartDatas
-                            }
-                        ]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                display: false
-                            },
-                            y: {
-                                display: false,
-                                min: 0,
-                                max: 100
-                            }
-                        },
-                        plugins: {
-                            tooltip: {
-                                mode: 'x',
-                                intersect: false,
-                                singleInRange: true,
-                                callbacks: {
-                                    label (context) {
-                                        const index = context.dataIndex
-                                        const label = chartLabels[index]
-                                        return label
-                                    }
-                                }
-                            },
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                })
             },
 
             confirmDialog () {
@@ -343,6 +310,14 @@
                         from: 'details'
                     }
                 })
+            },
+
+            getShowNum (num) {
+                if (+num > 10000) {
+                    return Math.floor(+num / 10000) + 'W+'
+                } else {
+                    return num
+                }
             }
         }
     }
@@ -362,6 +337,7 @@
         padding: 32px;
         .detail-pic {
             width: 130px;
+            height: 130px;
         }
         .atom-icon {
             height: 160px;
@@ -372,20 +348,20 @@
             width: 120px;
             height: 40px;
         }
-        .detail-install {
-            background: $primaryColor;
-            border: none;
-            font-size: 14px;
-            color: $white;
-            line-height: 40px;
-            text-align: center;
-            &.opicity-hidden {
-                opacity: 0;
-                user-select: none;
-            }
-            &:active {
-                transform: scale(.97)
-            }
+    }
+    .detail-install {
+        background: $primaryColor;
+        border: none;
+        font-size: 14px;
+        color: $white;
+        line-height: 40px;
+        text-align: center;
+        &.opicity-hidden {
+            opacity: 0;
+            user-select: none;
+        }
+        &:active {
+            transform: scale(.97)
         }
     }
     .detail-info-group {
@@ -426,34 +402,31 @@
             line-height: 29px;
             color: $fontBlack;
         }
-        .detail-score {
-            display: flex;
-            align-items: center;
-            .score-group {
-                position: relative;
-                margin-top: -2px;
-                .score-real {
-                    position: absolute;
-                    overflow: hidden;
-                    left: 0;
-                    top: 0;
-                    height: 14px;
-                    display: flex;
-                    .yellow {
-                        min-width: 14px;
-                    }
+        .score-group {
+            position: relative;
+            .score-real {
+                position: absolute;
+                overflow: hidden;
+                left: 0;
+                top: 0;
+                display: flex;
+                .yellow {
+                    min-width: 14px;
                 }
             }
-            .rate-num {
-                margin-left: 6px;
-                color: $fontWeightColor;
-            }
+        }
+        .ml4 {
+            margin-left: 4px;
+        }
+        .rate-num {
+            margin-left: 6px;
+            color: $fontWeightColor;
         }
         .detail-info {
             float: left;
             display: flex;
             padding-top: 7px;
-            width: 33.33%;
+            width: 25%;
             font-size: 14px;
             font-weight: normal;
             line-height: 20px;
@@ -476,6 +449,7 @@
         .title-with-img {
             display: flex;
             align-items: center;
+            margin-bottom: 15px;
             .not-recommend {
                 text-decoration: line-through;
             }
@@ -486,9 +460,6 @@
                 cursor: pointer;
                 background: rgba(21, 146, 255, 0.08);
                 color: #1592ff;
-                .detail-img {
-                    fill: #1592ff;
-                }
                 span {
                     font-weight: normal;
                     font-size: 12px;
@@ -501,21 +472,34 @@
                 line-height: 20px;
                 font-weight: normal;
             }
-            .detail-img {
-                vertical-align: middle;
-            }
-            h5.not-public {
-                cursor: auto;
-                background: none;
-                color: #9e9e9e;
-                .detail-img {
-                    fill: #9e9e9e;
-                }
-            }
             h5.nomal-title {
                 cursor: auto;
                 background: none;
                 color: #333C48;
+            }
+            .num-wraper {
+                height: 22px;
+                background: #F5F7FA;
+                padding: 0 8px;
+                margin-right: 8px;
+                display: flex;
+                align-items: center;
+                font-weight: normal;
+                font-size: 14px;
+                line-height: 18px;
+            }
+            .ml16 {
+                margin-left: 16px;
+            }
+            .ml6 {
+                margin-left: 6px;
+            }
+            .ml3 {
+                margin-left: 3px;
+            }
+            .hot-icon {
+                height: 18px;
+                width: 18px;
             }
         }
         .detail-info.detail-label {
@@ -551,6 +535,32 @@
             width: auto;
             padding-top: 0;
         }
+    }
+    .click-area {
+        display: flex;
+        align-items: center;
+        color: #63656E;
+        margin-top: 16px;
+        .click-button {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+            &.not-public {
+                cursor: auto;
+                background: none;
+                color: #9e9e9e;
+            }
+        }
+        .mr4 {
+            margin-right: 4px;
+        }
+    }
+    .mb16 {
+        margin-bottom: 16px;
+    }
+    .mr8 {
+        margin-right: 8px;
     }
     ::v-deep .is-error .big-select {
         border: 1px solid $dangerColor;

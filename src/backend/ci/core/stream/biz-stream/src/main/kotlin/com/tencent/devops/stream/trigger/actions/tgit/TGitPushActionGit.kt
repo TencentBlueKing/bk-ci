@@ -48,7 +48,6 @@ import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -95,7 +94,6 @@ class TGitPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitPushEvent
 
     override val api: TGitApiService
@@ -248,6 +246,8 @@ class TGitPushActionGit(
         )
     }
 
+    override fun checkIfModify() = true
+
     override fun getChangeSet(): Set<String>? {
         // 使用null和empty的区别来判断是否调用过获取函数
         if (this.data.context.changeSet != null) {
@@ -348,7 +348,7 @@ class TGitPushActionGit(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             checkCreateAndUpdate = event().create_and_update
         )
         return TriggerResult(

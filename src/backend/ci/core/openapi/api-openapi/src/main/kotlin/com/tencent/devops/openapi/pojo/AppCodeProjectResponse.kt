@@ -35,7 +35,7 @@ data class AppCodeProjectResponse(
     val id: Long,
     @ApiModelProperty("appCode")
     val appCode: String,
-    @ApiModelProperty("项目ID")
+    @ApiModelProperty("项目ID(项目英文名)")
     val projectId: String,
     @ApiModelProperty("创建人")
     val creator: String?,

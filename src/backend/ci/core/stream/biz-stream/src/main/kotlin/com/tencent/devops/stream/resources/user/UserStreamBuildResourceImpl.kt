@@ -29,6 +29,7 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.api.user.UserStreamBuildResource
@@ -53,7 +54,12 @@ class UserStreamBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId)
-        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.EDIT
+        )
         return Result(
             streamTriggerService.retry(
                 userId = userId,
@@ -74,7 +80,12 @@ class UserStreamBuildResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId)
-        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.EDIT
+        )
         return Result(
             streamTriggerService.manualShutdown(
                 userId = userId,

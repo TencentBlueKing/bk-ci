@@ -44,7 +44,7 @@ class PipelineRedisService @Autowired constructor(
         redisOperation.set("$RESTART_KEY$buildId", "run", Timeout.transMinuteTimeoutToSec(Timeout.DEFAULT_TIMEOUT_MIN))
     }
 
-    fun deleteRestartBuild(buildId: String) {
+    fun deleteRestartBuild(buildId: String): Boolean {
         return redisOperation.delete("$RESTART_KEY$buildId")
     }
 

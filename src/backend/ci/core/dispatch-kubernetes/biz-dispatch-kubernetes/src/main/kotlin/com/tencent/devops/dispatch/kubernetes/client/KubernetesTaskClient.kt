@@ -32,7 +32,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_EXECUTE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_EXCEPTION
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusResp
@@ -40,10 +44,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
+import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesTaskClient @Autowired constructor(
@@ -64,18 +68,21 @@ class KubernetesTaskClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (response.isSuccessful) {
                     logger.info("Get task: $taskId status response: ${JsonUtil.toJson(responseContent)}")
                     return objectMapper.readValue(responseContent)
                 }
 
-                logger.error("Get task: $taskId status failed, responseCode: ${response.code()}")
+                logger.error("Get task: $taskId status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "获取kubernetes task($taskId)状态接口异常：http response code: ${response.code()}"
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_KUBERNETES_TASK_STATUS_API_EXCEPTION,
+                        params = arrayOf(taskId)
+                    ) + "：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -86,10 +93,10 @@ class KubernetesTaskClient @Autowired constructor(
             } else {
                 logger.error("$taskId get task status failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取kubernetes task状态接口超时, url: $url"
+                    errorType = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorMessage = "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
                 )
             }
         }
@@ -100,7 +107,10 @@ class KubernetesTaskClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("$taskId kubernetes task timeout")
-                return Pair(TaskStatusEnum.TIME_OUT, "获取kubernetes任务执行超时（10min）")
+                return Pair(
+                    TaskStatusEnum.TIME_OUT,
+                    "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_EXECUTE_TIMEOUT)}（10min）"
+                )
             }
             Thread.sleep(1 * 1000)
             val (status, errorMsg) = getTaskResult(userId, taskId).apply {

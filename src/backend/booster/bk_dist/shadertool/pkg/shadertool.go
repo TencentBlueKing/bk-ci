@@ -12,6 +12,7 @@ package pkg
 import (
 	"container/list"
 	"context"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -28,9 +29,11 @@ import (
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
 	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
 	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
 	v1 "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/shadertool/common"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
 
 	"github.com/google/shlex"
@@ -95,6 +98,8 @@ type ShaderTool struct {
 	actionlist  *list.List
 	actionindex uint64
 	actionchan  chan common.Actionresult
+
+	lasttoolchain *dcSDK.Toolchain
 
 	// finishednumberlock sync.Mutex
 	finishednumber int32
@@ -385,6 +390,11 @@ func (h *ShaderTool) tryExecuteActions(ctx context.Context) error {
 		select {
 		case r := <-h.actionchan:
 			blog.Infof("ShaderTool: got action result:%+v", r)
+			if r.Exitcode != 0 {
+				err := fmt.Errorf("exit code:%d", r.Exitcode)
+				blog.Errorf("ShaderTool: %v", err)
+				return err
+			}
 			if r.Finished {
 				h.onActionFinished(r.Index)
 			}
@@ -437,12 +447,26 @@ func (h *ShaderTool) executeOneAction(action *common.Action, actionchan chan com
 	fullargs = append(fullargs, args...)
 
 	// try again if failed after sleep some time
+	var retcode int
+	retmsg := ""
 	waitsecs := 5
 	var err error
 	for try := 0; try < 6; try++ {
-		_, err := h.executor.Run(fullargs, "")
+		retcode, retmsg, err = h.executor.Run(fullargs, "")
+		if retcode != int(api.ServerErrOK) {
+			blog.Warnf("ShaderTool: failed to execute action with ret code:%d error [%+v] for %d times, actions:%+v", retcode, err, try+1, action)
+
+			if retcode == int(api.ServerErrWorkNotFound) {
+				h.dealWorkNotFound(retcode, retmsg)
+			}
+
+			time.Sleep(time.Duration(waitsecs) * time.Second)
+			waitsecs = waitsecs * 2
+			continue
+		}
+
 		if err != nil {
-			blog.Warnf("ShaderTool: failed to execute action with error [%+v] for %d times, actions:%+v", err, try, *action)
+			blog.Warnf("ShaderTool: failed to execute action with error [%+v] for %d times, actions:%+v", err, try+1, *action)
 			time.Sleep(time.Duration(waitsecs) * time.Second)
 			waitsecs = waitsecs * 2
 			continue
@@ -456,6 +480,7 @@ func (h *ShaderTool) executeOneAction(action *common.Action, actionchan chan com
 		Succeed:   err == nil,
 		Outputmsg: "",
 		Errormsg:  "",
+		Exitcode:  retcode,
 	}
 
 	actionchan <- r
@@ -769,6 +794,8 @@ func (h *ShaderTool) shaders(actions *common.UE4Action) error {
 		return err
 	}
 
+	h.lasttoolchain = &actions.ToolJSON
+
 	blog.Infof("ShaderTool: try lock action lock")
 	h.actionlock.Lock()
 	defer h.actionlock.Unlock()
@@ -794,6 +821,56 @@ func (h *ShaderTool) shaders(actions *common.UE4Action) error {
 		}
 
 		h.actionchan <- r
+	}
+
+	return nil
+}
+
+func (h *ShaderTool) setToolChain() error {
+	blog.Infof("ShaderTool: set toolchain in...")
+
+	var err error
+	if h.booster == nil {
+		h.booster, err = h.newBooster()
+		if err != nil || h.booster == nil {
+			blog.Errorf("ShaderTool: failed to new booster: %v", err)
+			return err
+		}
+	}
+
+	err = h.booster.SetToolChainWithJSON(h.lasttoolchain)
+	if err != nil {
+		blog.Errorf("ShaderTool: failed to set tool chain, error: %v", err)
+	}
+
+	return err
+}
+
+func (h *ShaderTool) dealWorkNotFound(retcode int, retmsg string) error {
+	blog.Infof("ShaderTool: deal for work not found with code:%d, msg:%s", retcode, retmsg)
+
+	if retmsg == "" {
+		return nil
+	}
+
+	msgs := strings.Split(retmsg, "|")
+	if len(msgs) < 2 {
+		return nil
+	}
+
+	var workerid v1.WorkerChanged
+	if err := codec.DecJSON([]byte(msgs[1]), &workerid); err != nil {
+		blog.Errorf("UBTTool: decode param %s failed: %v", msgs[1], err)
+		return err
+	}
+
+	if workerid.NewWorkID != "" {
+		// update local workid with new workid
+		env.SetEnv(env.KeyExecutorControllerWorkID, workerid.NewWorkID)
+		h.executor.Update()
+
+		// set tool chain with new workid
+		h.setToolChain()
 	}
 
 	return nil

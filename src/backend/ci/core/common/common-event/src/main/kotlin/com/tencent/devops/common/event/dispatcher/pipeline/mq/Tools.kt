@@ -27,8 +27,7 @@
 
 package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -46,11 +45,11 @@ object Tools {
 
     private val logger = LoggerFactory.getLogger(Tools::class.java)!!
 
-    fun <T : IPipelineEvent> createSimpleMessageListenerContainer(
+    fun <T> createSimpleMessageListenerContainer(
         connectionFactory: ConnectionFactory,
         queue: Queue,
         rabbitAdmin: RabbitAdmin,
-        buildListener: BaseListener<T>,
+        buildListener: Listener<T>,
         messageConverter: Jackson2JsonMessageConverter,
         startConsumerMinInterval: Long,
         consecutiveActiveTrigger: Int,

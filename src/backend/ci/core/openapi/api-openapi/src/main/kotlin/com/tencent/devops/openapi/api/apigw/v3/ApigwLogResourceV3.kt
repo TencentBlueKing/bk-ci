@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["OPENAPI_LOG_V2"], description = "OPENAPI-构建日志资源")
+@Api(tags = ["OPENAPI_LOG_V3"], description = "OPENAPI-构建日志资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -67,7 +67,7 @@ interface ApigwLogResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -103,13 +103,13 @@ interface ApigwLogResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID (p-开头)", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String,
         @ApiParam("是否包含调试日志", required = false)
@@ -127,10 +127,10 @@ interface ApigwLogResourceV3 {
         @ApiParam("结尾行号", required = true)
         @QueryParam("end")
         end: Long,
-        @ApiParam("对应elementId", required = false)
+        @ApiParam("对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
+        @ApiParam("对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
         @ApiParam("执行次数", required = false)
@@ -151,25 +151,25 @@ interface ApigwLogResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID (p-开头)", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("起始行号", required = true)
+        @ApiParam("起始行号,请分阶段获取构建日志，是否有后续日志需关注返回的hasMore字段。", required = true)
         @QueryParam("start")
         start: Long,
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @ApiParam("对应elementId", required = false)
+        @ApiParam("对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
+        @ApiParam("对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
         @ApiParam("执行次数", required = false)
@@ -177,7 +177,10 @@ interface ApigwLogResourceV3 {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("下载日志接口", tags = ["v3_user_log_download", "v3_app_log_download"])
+    @ApiOperation(
+        "下载日志接口(注意: 接口返回application/octet-stream数据，Request Header Accept 类型不一致将导致错误)",
+        tags = ["v3_user_log_download", "v3_app_log_download"]
+    )
     @GET
     @Path("/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -191,19 +194,19 @@ interface ApigwLogResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID (p-开头)", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("对应element ID", required = false)
+        @ApiParam("对应element ID (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
+        @ApiParam("对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
         @ApiParam("执行次数", required = false)
@@ -224,16 +227,16 @@ interface ApigwLogResourceV3 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID (p-开头)", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("对应elementId", required = true)
+        @ApiParam("对应elementId (e-开头)", required = true)
         @QueryParam("tag")
         tag: String,
         @ApiParam("执行次数", required = false)
@@ -248,13 +251,13 @@ interface ApigwLogResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID (p-开头)", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<QueryLogLineNum>

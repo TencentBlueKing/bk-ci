@@ -102,7 +102,7 @@ class PipelineWebhookBuildLogDetailDao {
             }
             where.orderBy(CREATED_TIME.desc())
                 .limit(offset, limit).fetch()
-        }?.map { convert(it) } ?: emptyList()
+        }.map { convert(it) }
     }
 
     fun countByPage(

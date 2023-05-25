@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import org.jooq.DSLContext
+import org.jooq.util.mysql.MySQLDSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -79,8 +80,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                 baseStep.set(VAR_TYPE, valueType)
             }
             return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
-                    .and(PROJECT_ID.eq(projectId)))
+                .where(
+                    BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
+                        .and(PROJECT_ID.eq(projectId))
+                )
                 .execute()
         }
     }
@@ -162,38 +165,29 @@ class PipelineBuildVarDao @Autowired constructor() {
     ) {
         with(T_PIPELINE_BUILD_VAR) {
             val maxLength = VALUE.dataType.length()
-            variables.forEach { v ->
-                val valueString = v.value.toString()
-                if (valueString.length > maxLength) {
-                    LOG.error("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
-                    return@forEach
+            dslContext.insertInto(this, BUILD_ID, KEY, VALUE, PROJECT_ID, PIPELINE_ID, VAR_TYPE, READ_ONLY)
+                .also {
+                    variables.forEach { v ->
+                        val valueString = v.value.toString()
+                        if (valueString.length > maxLength) {
+                            LOG.warn("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
+                            return@forEach
+                        }
+                        it.values(
+                            buildId,
+                            v.key,
+                            valueString,
+                            projectId,
+                            pipelineId,
+                            v.valueType?.name ?: "STRING",
+                            v.readOnly
+                        )
+                    }
                 }
-                if (v.valueType != null) {
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectId)
-                        .set(PIPELINE_ID, pipelineId)
-                        .set(BUILD_ID, buildId)
-                        .set(KEY, v.key)
-                        .set(VALUE, v.value.toString())
-                        .set(VAR_TYPE, v.valueType!!.name)
-                        .set(READ_ONLY, v.readOnly)
-                        .onDuplicateKeyUpdate()
-                        .set(VALUE, v.value.toString())
-                        .set(VAR_TYPE, v.valueType!!.name)
-                        .execute()
-                } else {
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectId)
-                        .set(PIPELINE_ID, pipelineId)
-                        .set(BUILD_ID, buildId)
-                        .set(KEY, v.key)
-                        .set(VALUE, v.value.toString())
-                        .set(READ_ONLY, v.readOnly)
-                        .onDuplicateKeyUpdate()
-                        .set(VALUE, v.value.toString())
-                        .execute()
-                }
-            }
+                .onDuplicateKeyUpdate()
+                .set(VALUE, MySQLDSL.values(VALUE))
+                .set(VAR_TYPE, MySQLDSL.values(VAR_TYPE))
+                .execute()
         }
     }
 
@@ -211,7 +205,8 @@ class PipelineBuildVarDao @Autowired constructor() {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
                 baseStep.set(VALUE, v.value.toString()).where(
-                    BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(READ_ONLY.notEqual(true).and(PROJECT_ID.eq(projectId))
+                    BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(
+                        READ_ONLY.notEqual(true).and(PROJECT_ID.eq(projectId))
                     )
                 ).execute()
             }

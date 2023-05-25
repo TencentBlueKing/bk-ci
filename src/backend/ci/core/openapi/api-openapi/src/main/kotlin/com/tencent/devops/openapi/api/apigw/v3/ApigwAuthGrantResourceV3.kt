@@ -16,14 +16,14 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_AUTh_V3"], description = "OPENAPI-权限相关")
+@Api(tags = ["OPENAPI_AUTH_V3"], description = "OPENAPI-权限相关")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwAuthGrantResourceV3 {
 
-    @ApiOperation("实例授权", tags = ["v3_app_permission_grant", "v3_user_permission_grant"])
+    @ApiOperation("实例授权", tags = ["v3_app_permission_grant"])
     @POST
     @Path("/projects/{projectId}/instance/grant")
     fun grantInstancePermission(
@@ -36,7 +36,7 @@ interface ApigwAuthGrantResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目Id", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         grantInstance: GrantInstanceDTO

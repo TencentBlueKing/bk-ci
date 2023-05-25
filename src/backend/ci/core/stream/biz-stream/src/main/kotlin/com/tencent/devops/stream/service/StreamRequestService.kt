@@ -28,14 +28,17 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.StreamBuildHistory
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import com.tencent.devops.stream.pojo.StreamGitRequestHistory
@@ -54,9 +57,11 @@ class StreamRequestService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val streamUserMessageDao: StreamUserMessageDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val streamGitProjectInfoCache: StreamGitProjectInfoCache
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamRequestService::class.java)
@@ -70,14 +75,32 @@ class StreamRequestService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
         logger.info("StreamRequestService|getRequestList|gitProjectId|$gitProjectId")
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
-        val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
-        val requestList = gitRequestEventDao.getRequestList(
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+        val count = streamUserMessageDao.getMessageCount(
             dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull
+            projectId = projectId,
+            userId = null,
+            messageType = null,
+            messageId = null,
+            haveRead = null
         )
-        if (requestList.isEmpty() || count == 0L) {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
+        val messageData = streamUserMessageDao.getMessages(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = null,
+            messageType = null,
+            haveRead = null,
+            messageId = null,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        val requestList = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext,
+            requestIds = messageData?.map { it.messageId.toInt() }?.toSet() ?: emptySet(),
+            hasEvent = false
+        )
+        if (requestList.isEmpty() || count == 0) {
             logger.info("StreamRequestService|getRequestList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
@@ -188,7 +211,7 @@ class StreamRequestService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = count,
+            count = count.toLong(),
             records = resultList
         )
     }

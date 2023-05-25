@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("提交返回模型")
 data class CommitResponse(
-    @ApiModelProperty("名称")
+    @ApiModelProperty("仓库名称")
     val name: String,
     @ApiModelProperty("插件ID")
     val elementId: String,

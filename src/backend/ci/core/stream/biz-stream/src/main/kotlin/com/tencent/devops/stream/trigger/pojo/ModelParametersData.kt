@@ -31,5 +31,5 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 
 data class ModelParametersData(
     val userVariables: List<BuildFormProperty>,
-    val webHookParams: Map<String, String>
+    val webHookParams: MutableMap<String, String>
 )

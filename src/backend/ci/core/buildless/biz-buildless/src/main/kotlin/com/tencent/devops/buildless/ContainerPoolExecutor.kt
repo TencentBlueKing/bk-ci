@@ -1,6 +1,5 @@
 package com.tencent.devops.buildless
 
-import com.google.common.collect.Interners
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.exception.BuildLessException
@@ -12,9 +11,12 @@ import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.buildless.utils.ThreadPoolName
+import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
@@ -26,19 +28,10 @@ class ContainerPoolExecutor @Autowired constructor(
     private val buildLessContainerService: BuildLessContainerService
 ) {
 
-    private val stringPool = Interners.newWeakInterner<String>()
-
     fun execute(buildLessStartInfo: BuildLessStartInfo) {
         with(buildLessStartInfo) {
             if (requestRejected(this)) {
                 return
-            }
-
-            // FOLLOW或JUMP策略下，尝试创建超载容器
-            if (rejectedExecutionType == RejectedExecutionType.FOLLOW_POLICY ||
-                rejectedExecutionType == RejectedExecutionType.JUMP_POLICY
-            ) {
-                addContainer(true)
             }
 
             logger.info("$buildId|$vmSeqId|$executionCount left push buildLessReadyTask")
@@ -53,6 +46,13 @@ class ContainerPoolExecutor @Autowired constructor(
                     secretKey = secretKey
                 )
             )
+
+            // FOLLOW或JUMP策略下，尝试创建超载容器
+            if (rejectedExecutionType == RejectedExecutionType.FOLLOW_POLICY ||
+                rejectedExecutionType == RejectedExecutionType.JUMP_POLICY
+            ) {
+                addContainer(true)
+            }
         }
     }
 
@@ -61,19 +61,19 @@ class ContainerPoolExecutor @Autowired constructor(
         val maximumPoolSize = buildLessConfig.maxContainerPool
 
         val lock = mainLock
-        if (lock.tryLock(60, TimeUnit.SECONDS)) {
+        if (lock.tryLock(20, TimeUnit.SECONDS)) {
             try {
                 val runningContainerCount = buildLessContainerService.getRunningPoolSize(true)
                 logger.info("Container pool add container, running containers: $runningContainerCount")
 
-                // 非超载模式下，把容器池填满
+                // 非超载模式下，把容器池填满corePoolSize
                 if (!oversold && (runningContainerCount < corePoolSize)) {
                     createBuildLessPoolContainer(corePoolSize - runningContainerCount)
                 }
 
-                // 超载模式下，只创建一个容器
+                // 超载模式下，将容器池填充至maximumPoolSize
                 if (oversold && (runningContainerCount < maximumPoolSize)) {
-                    buildLessContainerService.createContainer()
+                    createBuildLessPoolContainer(maximumPoolSize - runningContainerCount)
                 }
             } finally {
                 lock.unlock()
@@ -84,7 +84,7 @@ class ContainerPoolExecutor @Autowired constructor(
     }
 
     fun getContainerStatus(containerId: String): BuildLessPoolInfo? {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             return redisUtils.getBuildLessPoolContainer(containerId)
         }
     }
@@ -92,16 +92,24 @@ class ContainerPoolExecutor @Autowired constructor(
     fun clearTimeoutContainers() {
         val containerList = buildLessContainerService.getDockerRunTimeoutContainers()
         containerList.forEach {
-            synchronized(stringPool.intern(CommonUtils.formatContainerId(it))) {
+            synchronized(CommonUtils.formatContainerId(it).intern()) {
                 buildLessContainerService.stopContainer("clear timeout", "", it)
             }
         }
     }
 
     private fun createBuildLessPoolContainer(index: Int = 1) {
+        val startTime = System.currentTimeMillis()
+        val latch = CountDownLatch(index)
         for (i in 1..index) {
-            buildLessContainerService.createContainer()
+            ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.ADD_CONTAINER.name).submit {
+                buildLessContainerService.createContainer()
+                latch.countDown()
+            }
         }
+
+        latch.await()
+        logger.info("Finish add container. count: $index, cost: ${System.currentTimeMillis() - startTime}")
     }
 
     private fun requestRejected(buildLessStartInfo: BuildLessStartInfo): Boolean {
@@ -111,7 +119,7 @@ class ContainerPoolExecutor @Autowired constructor(
                 throw BuildLessException(
                     errorType = ErrorCodeEnum.GET_LOCK_FAILED.errorType,
                     errorCode = ErrorCodeEnum.GET_LOCK_FAILED.errorCode,
-                    errorMsg = ErrorCodeEnum.GET_LOCK_FAILED.formatErrorMessage
+                    errorMsg = ErrorCodeEnum.GET_LOCK_FAILED.getFormatErrorMessage()
                 )
             }
 

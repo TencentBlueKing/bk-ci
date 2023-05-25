@@ -34,8 +34,6 @@ import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
-import com.tencent.devops.worker.common.AGENT_ID
-import com.tencent.devops.worker.common.AGENT_SECRET_KEY
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -144,20 +142,21 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    val responseBody = resp.body()?.string() ?: ""
+    val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
         buildLessTask.forEach { (t, u) ->
             when (t) {
-                "agentId" -> System.setProperty(AGENT_ID, u)
-                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
-                "projectId" -> System.setProperty("devops_project_id", u)
+                "agentId" -> DockerEnv.setAgentId(u)
+                "secretKey" -> DockerEnv.setAgentSecretKey(u)
+                "projectId" -> DockerEnv.setProjectId(u)
+                "buildId" -> DockerEnv.setBuildId(u)
             }
         }
         true
     } else {
-        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
         false
     }
 }

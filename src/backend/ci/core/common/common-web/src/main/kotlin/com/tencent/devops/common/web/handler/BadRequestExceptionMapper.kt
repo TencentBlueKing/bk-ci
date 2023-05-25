@@ -49,7 +49,7 @@ class BadRequestExceptionMapper : ExceptionMapper<BadRequestException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "错误的请求"
+            "Failed with bad request exception"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

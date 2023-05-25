@@ -120,6 +120,7 @@ data class BuildEvent(
     val pipelineName: String,
     val userId: String,
     val triggerUser: String? = null,
+    val cancelUserId: String? = null,
     val status: String,
     val startTime: Long = 0,
     val endTime: Long = 0,

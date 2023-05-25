@@ -223,10 +223,10 @@ func (l *LocalTaskExecuteResp) Write2Resp(resp *api.RestResponse) {
 }
 
 // Read parse LocalTaskExecuteResp from http response body
-func (l *LocalTaskExecuteResp) Read(data []byte) error {
+func (l *LocalTaskExecuteResp) Read(data []byte) (int, string, error) {
 	var r PBLocalExecuteResult
 	if err := proto.Unmarshal(data, &r); err != nil {
-		return err
+		return 0, "", err
 	}
 
 	l.Result = &dcSDK.LocalTaskResult{
@@ -236,5 +236,10 @@ func (l *LocalTaskExecuteResp) Read(data []byte) error {
 		Message:  string(r.GetMessage()),
 	}
 
-	return nil
+	return int(r.Basic.GetCode()), string(r.Basic.GetMessage()), nil
+}
+
+type WorkerChanged struct {
+	OldWorkID string `json:"old_work_id"`
+	NewWorkID string `json:"new_work_id"`
 }

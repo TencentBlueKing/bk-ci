@@ -187,6 +187,8 @@ func (cf *TaskCLFilter) preExecute(command []string) (*dcSDK.BKDistCommand, erro
 	blog.Infof("cf: after pre execute, got depend file: [%s], cl cmd:[%s]", cf.dependentFile, cf.cldArgs)
 
 	cf.clhandle.InitSandbox(cf.sandbox)
+	cf.clhandle.SetDepend(cf.dependentFile)
+
 	return cf.clhandle.PreExecute(args)
 }
 

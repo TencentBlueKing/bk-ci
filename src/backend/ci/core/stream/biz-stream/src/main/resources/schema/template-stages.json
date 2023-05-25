@@ -366,6 +366,27 @@
                         }, {
                           "type" : "string"
                         } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          }
+                        }
                       }
                     }
                   },
@@ -418,7 +439,7 @@
             "timeout-minutes" : {
               "type" : "integer",
               "minimum" : 1,
-              "maximum" : 480
+              "maximum" : 10080
             },
             "env" : {
               "$ref" : "#/definitions/env"
@@ -436,16 +457,7 @@
                     "type" : "object",
                     "additionalProperties" : {
                       "anyOf" : [ {
-                        "type" : "array",
-                        "items" : {
-                          "anyOf" : [ {
-                            "type" : "string"
-                          }, {
-                            "type" : "number"
-                          }, {
-                            "type" : "boolean"
-                          } ]
-                        }
+                        "type" : "array"
                       }, {
                         "type" : "string"
                       } ]
@@ -538,7 +550,7 @@
             "timeout-minutes" : {
               "type" : "integer",
               "minimum" : 1,
-              "maximum" : 480
+              "maximum" : 10080
             },
             "continue-on-error" : {
               "type" : "boolean"
@@ -559,6 +571,9 @@
             },
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "type" : "string"
             }
           },
           "allOf" : [ {

@@ -1,6 +1,7 @@
 {
   "name": "codecc-frontend",
   "version": "1.0.0",
+  "private": true,
   "description": "CodeCC企业版",
   "contributors": [
     "blueking"

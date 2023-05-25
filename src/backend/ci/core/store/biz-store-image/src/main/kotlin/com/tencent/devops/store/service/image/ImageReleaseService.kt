@@ -45,13 +45,14 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
@@ -66,8 +67,8 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
-import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.CLOSE
+import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
@@ -90,14 +91,14 @@ import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.time.LocalDateTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Base64
 
 @Suppress("ALL")
 @Service
@@ -148,6 +149,9 @@ abstract class ImageReleaseService {
     lateinit var imageFeatureDao: ImageFeatureDao
 
     @Autowired
+    lateinit var businessConfigDao: BusinessConfigDao
+
+    @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
 
     @Autowired
@@ -179,10 +183,11 @@ abstract class ImageReleaseService {
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageCode),
-                null
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(imageCode),
+                data = null,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val imageName = marketImageRelRequest.imageName
@@ -190,10 +195,11 @@ abstract class ImageReleaseService {
         val nameCount = imageDao.countByName(dslContext, imageName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageName),
-                null
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(imageName),
+                data = null,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         if (needAuth) {
@@ -205,12 +211,18 @@ abstract class ImageReleaseService {
                     .verifyUserProjectPermission(accessToken, projectCode, userId).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
         }
         val imageId = addMarketImageToDB(accessToken, userId, imageCode, marketImageRelRequest)
@@ -294,20 +306,26 @@ abstract class ImageReleaseService {
         val imageTag = marketImageUpdateRequest.imageTag
         // 判断镜像tag是否为latest
         if (checkLatest && imageTag == LATEST) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageTag))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageTag),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val imageCount = imageDao.countByCode(dslContext, imageCode)
         if (imageCount < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageCode)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val imageName = marketImageUpdateRequest.imageName
         // 判断更新的名称是否已存在
-        if (validateNameIsExist(imageCode, imageName)) return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_EXIST,
-            arrayOf(imageName)
+        if (validateNameIsExist(imageCode, imageName)) return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+            params = arrayOf(imageName),
+            language = I18nUtil.getLanguage(userId)
         )
         val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
         val imageSourceType = marketImageUpdateRequest.imageSourceType
@@ -344,7 +362,10 @@ abstract class ImageReleaseService {
                 val publicImageListResp = listPublicImagesResult.data
                 if ((null == publicImageListResp ||
                         publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
-                    return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                    return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PERMISSION_DENIED,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 }
             }
         }
@@ -357,9 +378,10 @@ abstract class ImageReleaseService {
             imageTag = imageTag
         ) == 0
         if (!relFlag) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageTag)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(imageTag),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 校验前端传的版本号是否正确
@@ -395,9 +417,10 @@ abstract class ImageReleaseService {
                 )
             }
         if (!requireVersionList.contains(version)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersionList.toString())
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+                params = arrayOf(version, requireVersionList.toString()),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
@@ -412,9 +435,10 @@ abstract class ImageReleaseService {
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
         if (!imageFinalStatusList.contains(imageStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                arrayOf(imageRecord.imageName, imageRecord.version)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(imageRecord.imageName, imageRecord.version),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         var imageId = UUIDUtil.generate()
@@ -460,8 +484,7 @@ abstract class ImageReleaseService {
                 runCheckImagePipeline(
                     context = context,
                     userId = userId,
-                    imageId = imageId,
-                    sendCheckResultNotify = sendCheckResultNotify
+                    imageId = imageId
                 )
             } else {
                 // 直接置为测试中状态
@@ -487,7 +510,12 @@ abstract class ImageReleaseService {
         val status = ImageStatusEnum.CHECKING.status.toByte()
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status, validateUserFlag)
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code!!,
+                params = params,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         runCheckImagePipeline(dslContext, userId, imageId)
         return Result(true)
@@ -502,10 +530,11 @@ abstract class ImageReleaseService {
     ): Result<Boolean> {
         logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageId),
-                false
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageId),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val imageCode = imageRecord.imageCode
@@ -520,7 +549,12 @@ abstract class ImageReleaseService {
             isNormalUpgrade = isNormalUpgrade
         )
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code!!,
+                params = params,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         if (isNormalUpgrade) {
             val imageFeature = imageFeatureDao.getImageFeature(dslContext, imageCode)
@@ -572,18 +606,16 @@ abstract class ImageReleaseService {
         runCheckImagePipeline(
             context = context,
             userId = userId,
-            imageId = imageId,
-            sendCheckResultNotify = false
+            imageId = imageId
         )
     }
 
     private fun runCheckImagePipeline(
         context: DSLContext,
         userId: String,
-        imageId: String,
-        sendCheckResultNotify: Boolean = true
+        imageId: String
     ) {
-        logger.info("runCheckImagePipeline params:[$userId|$imageId|$sendCheckResultNotify]")
+        logger.info("runCheckImagePipeline params:[$userId|$imageId]")
         val imageRecord = imageDao.getImage(context, imageId)!!
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
@@ -632,14 +664,27 @@ abstract class ImageReleaseService {
         }
         val imageSourceType = imageRecord.imageSourceType
         if (null == imagePipelineRelRecord) {
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = context,
+                business = StoreTypeEnum.IMAGE.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            var pipelineModel = pipelineModelConfig!!.configValue
+            val pipelineName = "am-$imageCode-${UUIDUtil.generate()}"
+            val paramMap = mapOf("pipelineName" to pipelineName)
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
+            }
             val checkImageInitPipelineReq = CheckImageInitPipelineReq(
+                pipelineModel = pipelineModel,
                 imageCode = imageCode,
                 imageName = dockerImageName,
                 version = version,
                 imageType = imageSourceType,
                 registryUser = userName,
-                registryPwd = password,
-                sendNotify = sendCheckResultNotify
+                registryPwd = password
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
@@ -664,15 +709,9 @@ abstract class ImageReleaseService {
             startParams["imageCode"] = imageCode
             startParams["imageName"] = dockerImageName
             startParams["version"] = version
-            if (null != imageSourceType) {
-                startParams["imageType"] = imageSourceType
-            }
-            if (null != userName) {
-                startParams["registryUser"] = userName
-            }
-            if (null != password) {
-                startParams["registryPwd"] = password
-            }
+            imageSourceType?.let { startParams["imageType"] = it }
+            userName?.let { startParams["registryUser"] = it }
+            password?.let { startParams["registryPwd"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,
@@ -771,7 +810,11 @@ abstract class ImageReleaseService {
         logger.info("getProcessInfo params: [$userId|$imageId]")
         val record = imageDao.getImage(dslContext, imageId)
         if (null == record) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageId),
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             val status = record.imageStatus.toInt()
             val imageCode = record.imageCode
@@ -808,7 +851,12 @@ abstract class ImageReleaseService {
         // 判断用户是否有权限
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status)
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code!!,
+                params = params,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         marketImageDao.updateImageStatusById(dslContext, imageId, status, userId, "cancel release")
         return Result(true)
@@ -955,20 +1003,25 @@ abstract class ImageReleaseService {
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             ) || !validateUserFlag)
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         if (!version.isNullOrEmpty()) {
             val imageRecord = imageDao.getImage(dslContext, validImageCode, validVersion!!)
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(validImageCode, validVersion),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             if (ImageStatusEnum.RELEASED.status.toByte() != imageRecord.imageStatus) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(validImageCode, validVersion),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
             dslContext.transaction { t ->
@@ -1185,9 +1238,10 @@ abstract class ImageReleaseService {
         val imageAgentTypes = mutableListOf<ImageAgentTypeInfo>()
         types.forEach { type ->
             val buildType = BuildType.valueOf(type)
-            val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+            val i18nTypeName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${buildType.name}",
-                defaultMessage = buildType.value
+                defaultMessage = buildType.value,
+                language = I18nUtil.getLanguage(userId)
             )
             imageAgentTypes.add(ImageAgentTypeInfo(buildType.name, i18nTypeName))
         }

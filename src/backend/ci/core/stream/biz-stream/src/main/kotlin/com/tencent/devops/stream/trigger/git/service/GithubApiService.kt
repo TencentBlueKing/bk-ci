@@ -58,6 +58,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GitHubMrStatus
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubChangeFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCommitDiffInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubFileInfo
@@ -188,7 +189,7 @@ class GithubApiService @Autowired constructor(
             ),
             token = cred.toToken()
         ).data?.let {
-            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level, it.user.login)
+            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.roleName).level, it.user.login)
         } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level, "no_user")
     }
 
@@ -414,6 +415,32 @@ class GithubApiService @Autowired constructor(
                 )
             }
         }
+    }
+
+    override fun getCommitDiff(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        sha: String
+    ): List<GithubCommitDiffInfo> {
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(),
+            log = "getCommitDiff $gitProjectId $sha fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
+        ) {
+            client.get(ServiceGithubCommitsResource::class).getCommit(
+                token = cred.toToken(),
+                request = GetCommitRequest(
+                    repoName = gitProjectId,
+                    ref = sha
+                )
+            )
+        }.data?.files?.map {
+            GithubCommitDiffInfo(
+                oldPath = it.filename,
+                newPath = it.filename
+            )
+        } ?: emptyList()
     }
 
     // 以下非StreamGitApiService接口实现

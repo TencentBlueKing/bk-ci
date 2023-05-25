@@ -31,17 +31,27 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
+import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineViewService: PipelineViewService) :
-    UserPipelineViewResource {
+class UserPipelineViewResourceImpl @Autowired constructor(
+    private val pipelineViewService: PipelineViewService,
+    private val pipelineViewGroupService: PipelineViewGroupService
+) : UserPipelineViewResource {
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
         return Result(pipelineViewService.getViewSettings(userId, projectId))
     }
@@ -56,27 +66,98 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
     }
 
     override fun getView(userId: String, projectId: String, viewId: String): Result<PipelineNewView> {
-        return Result(pipelineViewService.getView(userId, projectId, viewId))
+        return Result(pipelineViewGroupService.getView(userId, projectId, viewId))
     }
 
     override fun addView(
         userId: String,
         projectId: String,
-        pipelineView: PipelineNewViewCreate
+        pipelineView: PipelineViewForm
     ): Result<PipelineViewId> {
-        return Result(PipelineViewId(pipelineViewService.addView(userId, projectId, pipelineView)))
+        return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(projectId, userId, pipelineView)))
+    }
+
+    override fun listViewByPipelineId(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<PipelineNewViewSummary>> {
+        return Result(pipelineViewGroupService.listViewByPipelineId(userId, projectId, pipelineId))
+    }
+
+    override fun topView(
+        userId: String,
+        projectId: String,
+        viewId: String,
+        pipelineViewTopForm: PipelineViewTopForm
+    ): Result<Boolean> {
+        return Result(pipelineViewService.topView(userId, projectId, viewId, pipelineViewTopForm.enabled))
+    }
+
+    override fun preview(
+        userId: String,
+        projectId: String,
+        pipelineView: PipelineViewForm
+    ): Result<PipelineViewPreview> {
+        return Result(pipelineViewGroupService.preview(userId, projectId, pipelineView))
+    }
+
+    override fun dict(userId: String, projectId: String): Result<PipelineViewDict> {
+        return Result(pipelineViewGroupService.dict(userId, projectId))
+    }
+
+    override fun getHitFilters(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        viewId: String
+    ): Result<PipelineViewHitFilters> {
+        return Result(pipelineViewService.getHitFilters(userId, projectId, pipelineId, viewId))
+    }
+
+    override fun matchDynamicView(
+        userId: String,
+        projectId: String,
+        pipelineViewMatchDynamic: PipelineViewMatchDynamic
+    ): Result<List<String>> {
+        return Result(pipelineViewService.matchDynamicView(userId, projectId, pipelineViewMatchDynamic))
+    }
+
+    override fun listView(
+        userId: String,
+        projectId: String,
+        projected: Boolean?,
+        viewType: Int?
+    ): Result<List<PipelineNewViewSummary>> {
+        return Result(pipelineViewGroupService.listView(userId, projectId, projected, viewType))
+    }
+
+    override fun pipelineCount(userId: String, projectId: String, viewId: String): Result<PipelineViewPipelineCount> {
+        return Result(pipelineViewGroupService.pipelineCount(userId, projectId, viewId))
+    }
+
+    override fun listViewIdsByPipelineId(userId: String, projectId: String, pipelineId: String): Result<Set<Long>> {
+        return Result(pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId))
+    }
+
+    override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
+    }
+
+    override fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkRemove(userId, projectId, bulkRemove))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {
-        return Result(pipelineViewService.deleteView(userId, projectId, viewId))
+        return Result(pipelineViewGroupService.deleteViewGroup(projectId, userId, viewId))
     }
 
     override fun updateView(
         userId: String,
         projectId: String,
         viewId: String,
-        pipelineView: PipelineNewViewUpdate
+        pipelineView: PipelineViewForm
     ): Result<Boolean> {
-        return Result(pipelineViewService.updateView(userId, projectId, viewId, pipelineView))
+        return Result(pipelineViewGroupService.updateViewGroup(projectId, userId, viewId, pipelineView))
     }
 }

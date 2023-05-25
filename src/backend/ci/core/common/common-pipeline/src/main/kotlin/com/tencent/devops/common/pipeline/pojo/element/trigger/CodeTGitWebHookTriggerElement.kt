@@ -65,6 +65,7 @@ data class CodeTGitWebHookTriggerData(
     val input: CodeTGitWebHookTriggerInput
 )
 
+@ApiModel("TGit事件触发数据")
 data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
     val repositoryHashId: String?,

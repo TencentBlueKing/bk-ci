@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
  */
 class ThreadPoolUtils private constructor() {
 
+    @Volatile
     private var threadPoolMap = hashMapOf<String, ThreadPoolExecutor>()
 
     /**
@@ -52,23 +53,28 @@ class ThreadPoolUtils private constructor() {
 
     fun getThreadPool(poolName: String): ThreadPoolExecutor {
         var threadPoolExecutor = threadPoolMap[poolName]
-        if (threadPoolExecutor == null) {
-            threadPoolExecutor = ThreadPoolExecutor(
-                coolPoolSize,
-                maxPoolSize,
-                keepAliveTime,
-                TimeUnit.SECONDS,
-                ArrayBlockingQueue(queueSize),
-                Executors.defaultThreadFactory(),
-                RejectedExecutionHandler { _, _ ->
-                    logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
+        if (null == threadPoolExecutor) {
+            synchronized(SingleHolder::class.java) {
+                if (null == threadPoolExecutor) {
+                    threadPoolExecutor = ThreadPoolExecutor(
+                        coolPoolSize,
+                        maxPoolSize,
+                        keepAliveTime,
+                        TimeUnit.SECONDS,
+                        ArrayBlockingQueue(queueSize),
+                        Executors.defaultThreadFactory(),
+                        RejectedExecutionHandler { _, _ ->
+                            logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
+                        }
+                    )
+                    // 允许核心线程闲置超时时被回收
+                    threadPoolExecutor!!.allowCoreThreadTimeOut(true)
+                    threadPoolMap[poolName] = threadPoolExecutor!!
                 }
-            )
-            // 允许核心线程闲置超时时被回收
-            threadPoolExecutor.allowCoreThreadTimeOut(true)
-            threadPoolMap[poolName] = threadPoolExecutor
+            }
         }
-        return threadPoolExecutor
+
+        return threadPoolExecutor!!
     }
 
     /**
@@ -88,5 +94,15 @@ enum class ThreadPoolName {
     /**
      * 任务认领线程池
      */
-    CLAIM_TASK
+    CLAIM_TASK,
+
+    /**
+     * 构建结束处理线程池
+     */
+    BUILD_END,
+
+    /**
+     * 创建构建容器线程池
+     */
+    ADD_CONTAINER
 }

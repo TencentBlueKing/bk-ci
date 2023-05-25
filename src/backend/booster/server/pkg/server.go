@@ -11,6 +11,7 @@ package pkg
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/common"
@@ -98,72 +99,10 @@ func (s *Server) Start() error {
 		blog.Infof("wait db ready failed: %v", err)
 		return err
 	}
-
-	directResourceManager, err := s.initDirectResourceManager(&s.conf.DirectResourceConfig, s.rd)
+	engineList, err := s.initEngineList()
 	if err != nil {
-		blog.Errorf("init direct resource manager failed: %v", err)
 		return err
 	}
-
-	containerResourceManager, err := s.initContainerResourceManager(&s.conf.ContainerResourceConfig, s.rd)
-	if err != nil {
-		blog.Errorf("init container resource manager failed: %v", err)
-		return err
-	}
-
-	k8sContainerResourceManager, err := s.initContainerResourceManager(&s.conf.K8sContainerResourceConfig, s.rd)
-	if err != nil {
-		blog.Errorf("init k8s container resource manager failed: %v", err)
-		return err
-	}
-
-	dcMacContainerResourceManager, err := s.initContainerResourceManager(&s.conf.DCMacContainerResourceConfig, s.rd)
-	if err != nil {
-		blog.Errorf("init dc_mac container resource manager failed: %v", err)
-		return err
-	}
-
-	engineList := make([]engine.Engine, 0, 10)
-	egn, err := s.initDistccEngine(containerResourceManager)
-	if err != nil {
-		blog.Errorf("server start init distcc engines failed: %v", err)
-	} else {
-		engineList = append(engineList, egn)
-	}
-
-	egn, err = s.initDisttaskEngine(
-		containerResourceManager,
-		k8sContainerResourceManager,
-		dcMacContainerResourceManager,
-		directResourceManager)
-	if err != nil {
-		blog.Errorf("server start init disttask engines failed: %v", err)
-	} else {
-		engineList = append(engineList, egn)
-	}
-
-	egn, err = s.initDistccMacEngine(directResourceManager)
-	if err != nil {
-		blog.Errorf("server start init distcc_mac engines failed: %v", err)
-	} else {
-		engineList = append(engineList, egn)
-	}
-
-	egn, err = s.initApisEngine(k8sContainerResourceManager, directResourceManager)
-	if err != nil {
-		blog.Errorf("server start init apis engines failed: %v", err)
-	} else {
-		engineList = append(engineList, egn)
-	}
-
-	// init fast build engine
-	egn, err = s.initFastbuildEngine(directResourceManager)
-	if err != nil {
-		blog.Errorf("server start init fastbuild engines failed: %v", err)
-	} else {
-		engineList = append(engineList, egn)
-	}
-
 	// register role event
 	roleEvent := make(chan types.RoleType, 1)
 	if err = s.rd.AddObserver(roleEvent); err != nil {
@@ -326,6 +265,25 @@ func (s *Server) waitDBReady() error {
 		})
 	}
 
+	if s.conf.K8sResourceConfigList.Enable {
+		pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.K8sResourceConfigList.MySQLPwd))
+		if err != nil {
+			return fmt.Errorf("K8sResourceConfigList decrypt db failed: %v", err)
+		}
+
+		waitUntilReady(func() error {
+			_, err := crm.NewMySQL(crm.MySQLConf{
+				MySQLStorage:  s.conf.K8sResourceConfigList.MySQLStorage,
+				MySQLDatabase: s.conf.K8sResourceConfigList.MySQLDatabase,
+				MySQLUser:     s.conf.K8sResourceConfigList.MySQLUser,
+				MySQLPwd:      string(pwd),
+				MySQLTable:    s.conf.K8sResourceConfigList.MySQLTable,
+				SkipEnsure:    s.conf.K8sResourceConfigList.MysqlSkipEnsure,
+			})
+			return err
+		})
+	}
+
 	if s.conf.DCMacContainerResourceConfig.Enable {
 		pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.DCMacContainerResourceConfig.MySQLPwd))
 		if err != nil {
@@ -419,18 +377,194 @@ func (s *Server) getEngineQueueBriefInfoList() []engine.QueueBriefInfo {
 	return l
 }
 
-func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) {
+func (s *Server) getK8sInstaceList() map[string]*config.InstanceType {
+	l := make(map[string]*config.InstanceType)
+	//TODO: now just disttask and distcc engine
+	for _, queueName := range s.conf.DisttaskQueueList {
+		if ist := disttask.GetK8sInstanceKey(queueName); ist != nil {
+			l[queueName] = ist
+		}
+	}
+	for _, queueName := range s.conf.DistCCQueueList {
+		if ist := distcc.GetK8sInstanceKey(queueName); ist != nil {
+			if _, ok := l[queueName]; !ok {
+				l[queueName] = ist
+			}
+		}
+	}
+	return l
+}
+
+func initInstanceType(confItem *config.ContainerResourceConfig, ist *config.InstanceType) {
+	for _, item := range confItem.InstanceType {
+		if item.Platform == ist.Platform && item.Group == ist.Group {
+			return
+		}
+	}
+
+	ist.CPUPerInstance = confItem.BcsCPUPerInstance
+	ist.MemPerInstance = confItem.BcsMemPerInstance
+	ist.CPULimitPerInstance = confItem.BcsCPUPerInstance
+	ist.MemLimitPerInstance = confItem.BcsMemPerInstance
+	if confItem.BcsCPULimitPerInstance > 0.0 {
+		ist.CPULimitPerInstance = confItem.BcsCPULimitPerInstance
+	}
+	if confItem.BcsMemLimitPerInstance > 0.0 {
+		ist.MemLimitPerInstance = confItem.BcsMemLimitPerInstance
+	}
+	confItem.InstanceType = append(confItem.InstanceType, *ist)
+}
+
+func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
+	k8sRmList map[string]crm.ResourceManager, err error) {
+	k8sQueueIstList := s.getK8sInstaceList()
+	curQueueMap := make(map[string]bool)
+	k8sRmList = make(map[string]crm.ResourceManager)
+	k8sconfList := s.conf.K8sResourceConfigList
+	if k8sconfList.Enable && k8sconfList.K8sClusterList != nil {
+		for key, confItem := range k8sconfList.K8sClusterList {
+			if confItem.MySQLStorage == "" {
+				confItem.MySQLStorage = k8sconfList.MySQLStorage
+				confItem.MySQLDatabase = k8sconfList.MySQLDatabase
+				confItem.MySQLPwd = k8sconfList.MySQLPwd
+				confItem.MySQLTable = k8sconfList.MySQLTable
+				confItem.MySQLUser = k8sconfList.MySQLUser
+				confItem.MysqlSkipEnsure = k8sconfList.MysqlSkipEnsure
+			}
+			confItem.Enable = k8sconfList.Enable
+			confItem.Operator = k8sconfList.Operator
+			//add node selector for sync resource
+			for _, queueName := range strings.Split(key, ",") {
+				queueName = strings.TrimSpace(queueName)
+				if ist, ok := k8sQueueIstList[queueName]; ok {
+					curQueueMap[queueName] = true
+					initInstanceType(confItem, ist)
+				}
+			}
+			k8sResourceManager, err1 := s.initContainerResourceManager(confItem, s.rd)
+			if err1 != nil {
+				err = err1
+				blog.Errorf("init k8s(clusterID:%s) container resource manager failed: %v", confItem.BcsClusterID, err)
+				continue
+			}
+			k8sRmList[key] = k8sResourceManager
+		}
+	}
+
+	k8sConf := s.conf.K8sContainerResourceConfig
+	if k8sConf.Enable {
+		for queueName, istItem := range k8sQueueIstList {
+			if !curQueueMap[queueName] {
+				initInstanceType(&k8sConf, istItem)
+			}
+		}
+		k8sRm, err = s.initContainerResourceManager(&k8sConf, s.rd)
+	}
+	return
+}
+
+func (s *Server) initEngineList() ([]engine.Engine, error) {
+	engineList := make([]engine.Engine, 0, 10)
+	directResourceManager, err := s.initDirectResourceManager(&s.conf.DirectResourceConfig, s.rd)
+	if err != nil {
+		blog.Errorf("init direct resource manager failed: %v", err)
+		return engineList, err
+	}
+
+	containerResourceManager, err := s.initContainerResourceManager(&s.conf.ContainerResourceConfig, s.rd)
+	if err != nil {
+		blog.Errorf("init container resource manager failed: %v", err)
+		return engineList, err
+	}
+
+	k8sContainerResourceManager, k8sResourceManagerList, err := s.initK8sResourceManagers()
+	if err != nil {
+		blog.Errorf("init k8s container resource manager failed: %v", err)
+		return engineList, err
+	}
+
+	dcMacContainerResourceManager, err := s.initContainerResourceManager(&s.conf.DCMacContainerResourceConfig, s.rd)
+	if err != nil {
+		blog.Errorf("init dc_mac container resource manager failed: %v", err)
+		return engineList, err
+	}
+
+	egn, err := s.initDistccEngine(
+		containerResourceManager,
+		k8sContainerResourceManager,
+		k8sResourceManagerList)
+	if err != nil {
+		blog.Errorf("server start init distcc engines failed: %v", err)
+	} else {
+		engineList = append(engineList, egn)
+	}
+
+	if egn, err = s.initDisttaskEngine(
+		containerResourceManager,
+		k8sContainerResourceManager,
+		dcMacContainerResourceManager,
+		k8sResourceManagerList,
+		directResourceManager); err != nil {
+		blog.Errorf("server start init disttask engines failed: %v", err)
+	} else {
+		engineList = append(engineList, egn)
+	}
+
+	if egn, err = s.initDistccMacEngine(directResourceManager); err != nil {
+		blog.Errorf("server start init distcc_mac engines failed: %v", err)
+	} else {
+		engineList = append(engineList, egn)
+	}
+
+	if egn, err = s.initApisEngine(k8sContainerResourceManager, directResourceManager); err != nil {
+		blog.Errorf("server start init apis engines failed: %v", err)
+	} else {
+		engineList = append(engineList, egn)
+	}
+
+	// init fast build engine
+	if egn, err = s.initFastbuildEngine(directResourceManager); err != nil {
+		blog.Errorf("server start init fastbuild engines failed: %v", err)
+	} else {
+		engineList = append(engineList, egn)
+	}
+	return engineList, nil
+}
+
+func (s *Server) initDistccEngine(
+	r, k8sCr crm.ResourceManager,
+	k8sCrList map[string]crm.ResourceManager) (engine.Engine, error) {
 	if !s.conf.EngineDistCCConfig.Enable {
 		return nil, fmt.Errorf("engine %s not enable", distcc.EngineName)
 	}
-	if r == nil {
-		return nil, fmt.Errorf("crm not enable")
+	var err error
+	var dccResourceMgr crm.HandlerWithUser
+	if r != nil {
+		if dccResourceMgr, err = r.RegisterUser(distcc.EngineName); err != nil {
+			blog.Errorf("init engine(%s), get resource manager failed: %v", distcc.EngineName, err)
+			return nil, err
+		}
+	}
+	var k8sCrMgr crm.HandlerWithUser
+	if k8sCr != nil {
+		if k8sCrMgr, err = k8sCr.RegisterUser(distcc.EngineName); err != nil {
+			blog.Errorf("init engine(%s), get k8s container resource manager failed: %v",
+				distcc.EngineName, err)
+			return nil, err
+		}
 	}
 
-	dccResourceMgr, err := r.RegisterUser(distcc.EngineName)
-	if err != nil {
-		blog.Errorf("init engine(%s), get resource manager failed: %v", distcc.EngineName, err)
-		return nil, err
+	k8sListCrmMgr := map[string]crm.HandlerWithUser{}
+	if k8sCrList != nil {
+		for key, cr := range k8sCrList {
+			crMgrItem, err1 := cr.RegisterUser(distcc.EngineName)
+			if err1 != nil {
+				blog.Errorf("init engine(%s), queueName (%s), get k8s container resource manager failed: %v",
+					distcc.EngineName, key, err1)
+			} else {
+				k8sListCrmMgr[key] = crMgrItem
+			}
+		}
 	}
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineDistCCConfig.MySQLPwd))
@@ -438,8 +572,7 @@ func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) 
 		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", distcc.EngineName, err)
 		return nil, err
 	}
-
-	dccEngine, err := distcc.NewDistccEngine(distcc.EngineConfig{
+	engineConfig := distcc.EngineConfig{
 		MySQLConf: engine.MySQLConf{
 			MySQLStorage:     s.conf.EngineDistCCConfig.MySQLStorage,
 			MySQLDatabase:    s.conf.EngineDistCCConfig.MySQLDatabase,
@@ -449,14 +582,31 @@ func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) 
 			MysqlTableOption: s.conf.EngineDistCCConfig.MysqlTableOption,
 		},
 		QueueResourceAllocater: InitAllocater(s.conf.DistCCQueueList, s.conf.EngineDistCCConfig.QueueResourceAllocater),
+		QueueShareType:         s.conf.DistccQueueShareType,
 		Rd:                     s.rd,
 		ClusterID:              s.conf.ContainerResourceConfig.BcsClusterID,
 		CPUPerInstance:         s.conf.ContainerResourceConfig.BcsCPUPerInstance,
 		MemPerInstance:         s.conf.ContainerResourceConfig.BcsMemPerInstance,
+		K8SCRMClusterID:        s.conf.K8sContainerResourceConfig.BcsClusterID,
+		K8SCRMCPUPerInstance:   s.conf.K8sContainerResourceConfig.BcsCPUPerInstance,
+		K8SCRMMemPerInstance:   s.conf.K8sContainerResourceConfig.BcsMemPerInstance,
 		LeastJobServer:         s.conf.EngineDistCCConfig.LeastJobServer,
 		JobServerTimesToCPU:    s.conf.EngineDistCCConfig.JobServerTimesToCPU,
 		Brokers:                s.conf.EngineDistCCConfig.BrokerConfig,
-	}, dccResourceMgr)
+	}
+
+	if s.conf.K8sResourceConfigList.K8sClusterList != nil {
+		engineConfig.K8SClusterList = make(map[string]distcc.K8sClusterInfo)
+		for key, cluster := range s.conf.K8sResourceConfigList.K8sClusterList {
+			conf := distcc.K8sClusterInfo{
+				K8SCRMClusterID:      cluster.BcsClusterID,
+				K8SCRMCPUPerInstance: cluster.BcsCPUPerInstance,
+				K8SCRMMemPerInstance: cluster.BcsMemPerInstance,
+			}
+			engineConfig.K8SClusterList[key] = conf
+		}
+	}
+	dccEngine, err := distcc.NewDistccEngine(engineConfig, dccResourceMgr, k8sCrMgr, k8sListCrmMgr)
 	if err != nil {
 		blog.Errorf("init engine(%s) failed: %v", distcc.EngineName, err)
 		return nil, err
@@ -467,9 +617,8 @@ func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) 
 }
 
 func (s *Server) initDisttaskEngine(
-	cr crm.ResourceManager,
-	k8sCr crm.ResourceManager,
-	dcMacCr crm.ResourceManager,
+	cr, k8sCr, dcMacCr crm.ResourceManager,
+	k8sCrList map[string]crm.ResourceManager,
 	dr direct.ResourceManager) (engine.Engine, error) {
 	if !s.conf.EngineDisttaskConfig.Enable {
 		return nil, fmt.Errorf("engine %s not enable", disttask.EngineName)
@@ -494,6 +643,16 @@ func (s *Server) initDisttaskEngine(
 		}
 	}
 
+	k8sListCrmMgr := map[string]crm.HandlerWithUser{}
+	if k8sCrList != nil {
+		for key, cr := range k8sCrList {
+			if crMgrItem, err1 := cr.RegisterUser(disttask.EngineName); err1 != nil {
+				blog.Errorf("init engine(%s), queueName(%s), get k8s resource manager failed: %v", disttask.EngineName, key, err1)
+			} else {
+				k8sListCrmMgr[key] = crMgrItem
+			}
+		}
+	}
 	var dcMacMgr crm.HandlerWithUser
 	if dcMacCr != nil {
 		if dcMacMgr, err = dcMacCr.RegisterUser(disttask.EngineName); err != nil {
@@ -518,7 +677,7 @@ func (s *Server) initDisttaskEngine(
 		return nil, err
 	}
 
-	dtEngine, err := disttask.NewDisttaskEngine(disttask.EngineConfig{
+	engineConfig := disttask.EngineConfig{
 		MySQLConf: engine.MySQLConf{
 			MySQLStorage:     s.conf.EngineDisttaskConfig.MySQLStorage,
 			MySQLDatabase:    s.conf.EngineDisttaskConfig.MySQLDatabase,
@@ -541,7 +700,20 @@ func (s *Server) initDisttaskEngine(
 		VMCRMCPUPerInstance:    s.conf.DCMacContainerResourceConfig.BcsCPUPerInstance,
 		VMCRMMemPerInstance:    s.conf.DCMacContainerResourceConfig.BcsMemPerInstance,
 		Brokers:                s.conf.EngineDisttaskConfig.BrokerConfig,
-	}, crMgr, k8sCrMgr, dcMacMgr, drMgr)
+	}
+	if s.conf.K8sResourceConfigList.K8sClusterList != nil {
+		engineConfig.K8SClusterList = make(map[string]disttask.K8sClusterInfo)
+		for key, cluster := range s.conf.K8sResourceConfigList.K8sClusterList {
+			conf := disttask.K8sClusterInfo{
+				K8SCRMClusterID:      cluster.BcsClusterID,
+				K8SCRMCPUPerInstance: cluster.BcsCPUPerInstance,
+				K8SCRMMemPerInstance: cluster.BcsMemPerInstance,
+			}
+			engineConfig.K8SClusterList[key] = conf
+		}
+	}
+
+	dtEngine, err := disttask.NewDisttaskEngine(engineConfig, crMgr, k8sCrMgr, dcMacMgr, k8sListCrmMgr, drMgr)
 	if err != nil {
 		blog.Errorf("init engine(%s) failed: %v", disttask.EngineName, err)
 		return nil, err
@@ -551,7 +723,9 @@ func (s *Server) initDisttaskEngine(
 	return dtEngine, nil
 }
 
-func InitAllocater(queueList []string, resourceMap map[string]config.ResourceAllocater) map[string]config.ResourceAllocater {
+//InitAllocater define
+func InitAllocater(queueList []string,
+	resourceMap map[string]config.ResourceAllocater) map[string]config.ResourceAllocater {
 	allocater := make(map[string]config.ResourceAllocater, len(queueList))
 
 	for _, queue := range queueList {

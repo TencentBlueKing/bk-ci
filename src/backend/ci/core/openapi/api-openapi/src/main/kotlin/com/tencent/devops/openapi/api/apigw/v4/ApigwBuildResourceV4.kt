@@ -51,6 +51,8 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -81,14 +83,26 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数：map<变量名(string),变量值(string)>", required = true)
-        values: Map<String, String>,
+        @ApiParam(
+            "启动参数：map<变量名(string),变量值(string)>", required = false,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "当需要指定启动时流水线变量 var1 为 foobar 时", value = "{\"var1\": \"foobar\"}"
+                    ),
+                    ExampleProperty(
+                        mediaType = "若流水线没有设置输入变量，则填空", value = "{}"
+                    )
+                ]
+            )
+        )
+        values: Map<String, String>?,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
         buildNo: Int? = null
@@ -107,7 +121,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -131,15 +145,18 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildId")
-        buildId: String,
+        buildId: String?,
+        @ApiParam("构建号(构建ID和构建号，二选其一填入)", required = false)
+        @QueryParam("buildNumber")
+        buildNumber: Int?,
         @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
@@ -164,7 +181,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = false)
@@ -188,7 +205,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -227,22 +244,22 @@ interface ApigwBuildResourceV4 {
         @ApiParam("触发方式", required = false)
         @QueryParam("trigger")
         trigger: List<StartType>?,
-        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @ApiParam("排队于-开始时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("queueTimeStartTime")
         queueTimeStartTime: Long?,
-        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @ApiParam("排队于-结束时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long?,
-        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long?,
-        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long?,
-        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long?,
-        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?,
         @ApiParam("耗时最小值", required = false)
@@ -263,7 +280,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String?,
-        @ApiParam("触发人", required = false)
+        @ApiParam("执行人", required = false)
         @QueryParam("startUser")
         startUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
@@ -281,7 +298,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -302,7 +319,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -326,7 +343,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = false)
@@ -345,7 +362,10 @@ interface ApigwBuildResourceV4 {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取构建中的变量值", tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"])
+    @ApiOperation(
+        "获取构建中的变量值(注意：变量具有时效性，只能获取最近一个月的任务数据)",
+        tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"]
+    )
     @POST
     @Path("/build_variables")
     fun getVariableValue(
@@ -358,7 +378,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = false)
@@ -367,7 +387,19 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("变量名列表", required = true)
+        @ApiParam(
+            "变量名列表", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
+                        value = """
+                            ["variable1"]
+                                """
+                    )
+                ]
+            )
+        )
         variableNames: List<String>
     ): Result<Map<String, String>>
 
@@ -378,7 +410,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = false)
@@ -398,7 +430,7 @@ interface ApigwBuildResourceV4 {
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @BkField(required = true)
         @PathParam("projectId")
         projectId: String,
@@ -443,16 +475,16 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = false)
+        @ApiParam("流水线ID（p-开头）", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id", required = true)
+        @ApiParam("步骤Id（e-开头）", required = true)
         @QueryParam("elementId")
         elementId: String,
         @ApiParam("审核信息", required = true)
@@ -472,7 +504,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
@@ -484,4 +516,24 @@ interface ApigwBuildResourceV4 {
         @ApiParam("请求参数", required = true)
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>
+
+    @ApiOperation(
+        "尝试将异常导致流水线中断的继续运转下去（结果可能是：失败结束 or 继续运行）",
+        tags = ["v4_app_try_fix_stuck_builds", "v4_user_try_fix_stuck_builds"]
+    )
+    @POST
+    @Path("/try_fix_stuck_builds")
+    fun tryFinishStuckBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
+        buildIds: Set<String>
+    ): Result<Boolean>
 }

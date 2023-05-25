@@ -6,6 +6,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import io.swagger.annotations.ApiModelProperty
 
 data class PublicBcsDispatchType(
     @JsonProperty("value") var image: String?,
@@ -13,11 +14,11 @@ data class PublicBcsDispatchType(
     override var imageType: ImageType? = ImageType.BKDEVOPS,
     override var credentialId: String? = "",
     override var credentialProject: String? = "",
-    // 商店镜像代码
+    @ApiModelProperty("商店镜像代码")
     override var imageCode: String? = "",
-    // 商店镜像版本
+    @ApiModelProperty("商店镜像版本")
     override var imageVersion: String? = "",
-    // 商店镜像名称
+    @ApiModelProperty("商店镜像名称")
     override var imageName: String? = ""
 ) : StoreDispatchType(
     dockerBuildVersion = if (image.isNullOrBlank())

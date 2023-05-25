@@ -101,7 +101,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
@@ -109,7 +109,10 @@ interface ApigwTemplateResourceV4 {
         templateId: String,
         @ApiParam("模板版本", required = false)
         @QueryParam("version")
-        version: Long?
+        version: Long?,
+        @ApiParam("模板版本名称", required = false)
+        @QueryParam("versionName")
+        versionName: String?
     ): Result<TemplateModelDetail>
 
     @ApiOperation("模版管理-获取模版列表", tags = ["v4_user_template_list", "v4_app_template_list"])
@@ -125,7 +128,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模版类型", required = false)
@@ -156,7 +159,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板", required = true)
@@ -176,7 +179,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
@@ -197,7 +200,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
@@ -221,7 +224,7 @@ interface ApigwTemplateResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)

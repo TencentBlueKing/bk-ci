@@ -28,22 +28,22 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
-import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
+import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
-import com.tencent.devops.model.metrics.tables.records.TErrorCodeInfoRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineStageOverviewDataRecord
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class MetricsDataQueryDao {
@@ -143,14 +143,16 @@ class MetricsDataQueryDao {
         }
     }
 
-    fun getErrorCodes(
+    fun getAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
-        errorCodes: List<Int>
-    ): Result<TErrorCodeInfoRecord>? {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
+        statisticsTime: LocalDateTime,
+        atomCode: String
+    ): TAtomIndexStatisticsDailyRecord? {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
             return dslContext.selectFrom(this)
-                .where(ERROR_CODE.`in`(errorCodes))
-                .fetch()
+                .where(STATISTICS_TIME.eq(statisticsTime))
+                .and(ATOM_CODE.eq(atomCode))
+                .fetchOne()
         }
     }
 }

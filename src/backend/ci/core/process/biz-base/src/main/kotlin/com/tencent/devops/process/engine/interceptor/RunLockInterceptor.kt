@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_LOCK
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -49,12 +50,12 @@ class RunLockInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = task.setting
-        val runLockType = setting?.runLockType
-        val concurrencyGroup = setting?.concurrencyGroup
+        val runLockType = task.runLockType
+        val concurrencyGroup = task.concurrencyGroup
         return checkRunLock(runLockType, projectId, pipelineId, concurrencyGroup)
     }
 
+    @Suppress("ComplexMethod")
     fun checkRunLock(
         runLockType: PipelineRunLockType?,
         projectId: String,
@@ -62,25 +63,44 @@ class RunLockInterceptor @Autowired constructor(
         concurrencyGroup: String?
     ): Response<BuildStatus> {
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
-            Response(ERROR_PIPELINE_LOCK.toInt(), "当前流水线已被锁定，无法执行，请解锁后重试")
+            Response(
+                ERROR_PIPELINE_LOCK.toInt(),
+                I18nUtil.getCodeLanMessage(ERROR_PIPELINE_LOCK)
+            )
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
-            return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
-                logger.info("[$pipelineId] 当前流水线已设置为同时只能运行一个构建任务，开始排队！")
+            return if ((buildSummaryRecord?.runningCount ?: 0) >= 1) {
+                logger.info(
+                    "[$pipelineId] The current pipeline is set to run only one build task at a time, start queuing!"
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)
             }
         } else if (runLockType == PipelineRunLockType.GROUP_LOCK) {
-            val concurrencyGroupRunningCount = concurrencyGroup?.let {
-                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            val concurrencyGroupNotNull = concurrencyGroup ?: pipelineId
+            val concurrencyGroupRunningCount = concurrencyGroupNotNull.let {
+                var size = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = it,
                     status = listOf(BuildStatus.RUNNING)
                 ).size
+
+                // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
+                if (it == pipelineId) {
+                    size += pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        status = listOf(BuildStatus.RUNNING)
+                    ).size
+                }
+                return@let size
             } ?: 0
             if (concurrencyGroupRunningCount >= 1) {
-                logger.info("[$pipelineId] 当前互斥组[$concurrencyGroup]同时只能运行一个构建任务，开始排队！")
+                logger.info(
+                    "[$pipelineId] The current mutex group [$concurrencyGroup] " +
+                            "can only run one build task at a time to start queuing"
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)

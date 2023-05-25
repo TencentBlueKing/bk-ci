@@ -48,5 +48,7 @@ data class HeartbeatResponse(
     @ApiModelProperty("文件网关路径")
     val fileGateway: String? = "",
     @ApiModelProperty("Agent的一些属性配置")
-    val props: Map<String, Any>
+    val props: Map<String, Any>,
+    @ApiModelProperty("docker最大任务数量")
+    val dockerParallelTaskCount: Int
 )

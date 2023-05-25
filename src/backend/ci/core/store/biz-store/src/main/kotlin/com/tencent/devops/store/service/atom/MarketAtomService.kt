@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 
 @Suppress("ALL")
@@ -186,4 +187,13 @@ interface MarketAtomService {
      * 根据插件标识获取插件回显版本信息
      */
     fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo>
+
+    /**
+     * 更新插件自定义错误码信息
+     */
+    fun updateAtomErrorCodeInfo(
+        userId: String,
+        projectCode: String,
+        storeErrorCodeInfo: StoreErrorCodeInfo
+    ): Result<Boolean>
 }

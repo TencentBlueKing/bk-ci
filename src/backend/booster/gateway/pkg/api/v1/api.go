@@ -59,7 +59,13 @@ func initDCCActions() {
 		Params:  nil,
 		Handler: api.NoLimit(distcc.ListTask),
 	})
-
+	// distcc worker images
+	api.RegisterV1Action(api.Action{
+		Verb:    "GET",
+		Path:    "/distcc/resource/images",
+		Params:  nil,
+		Handler: api.NoLimit(distcc.ListWorkerImages),
+	})
 	// distcc project
 	api.RegisterV1Action(api.Action{
 		Verb:    "GET",
@@ -239,6 +245,21 @@ func initDistTaskActions() {
 	if api.GetDistTaskServerAPIResource().MySQL == nil {
 		return
 	}
+	// disttask client version
+	api.RegisterV1Action(api.Action{
+		Verb:    "GET",
+		Path:    "/disttask/resource/version",
+		Params:  nil,
+		Handler: api.NoLimit(disttask.ListClientVersion),
+	})
+
+	// disttask worker images
+	api.RegisterV1Action(api.Action{
+		Verb:    "GET",
+		Path:    "/disttask/resource/images",
+		Params:  nil,
+		Handler: api.NoLimit(disttask.ListWorkerImages),
+	})
 
 	// disttask task
 	api.RegisterV1Action(api.Action{

@@ -2,332 +2,218 @@ name: Tag Release
 on:
   push:
     tags:
-      - "v*"
+    - "v*"
 
 jobs:
   frontend:
     name: Build frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16"
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/cache@v3
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
-      - name: Install project dependencies
-        run: yarn --prefer-offline
-      - run: yarn install && yarn start && yarn public
-        working-directory: src/frontend
-      - uses: actions/upload-artifact@v1
-        with:
-          name: frontend
-          path: src/frontend/frontend/
+    - uses: actions/checkout@v3
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Install project dependencies
+      run: yarn --prefer-offline
+    - run: yarn install && yarn start && yarn public
+      working-directory: src/frontend
+    - uses: actions/upload-artifact@v1
+      with:
+        name: frontend
+        path: src/frontend/frontend/
 
   agent:
     name: Build agent on ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.17.11
-      - uses: actions/checkout@v2
-      - run: make clean all
-        working-directory: src/agent/
-      - uses: actions/upload-artifact@v1
-        with:
-          name: agent
-          path: src/agent/bin/
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.19.6
+    - run: make clean all
+      working-directory: src/agent/
+    - uses: actions/upload-artifact@v1
+      with:
+        name: agent
+        path: src/agent/bin/
 
   backend:
-    needs: [frontend, agent]
     name: Build backend and release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
-          - 3306
+        - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - uses: actions/checkout@v2
-      - name: init mysql
-        run: |
-          export MYSQL_PWD=root
-          for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
-        working-directory: support-files/sql
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: false
-      - name: Gradle Build Backend Service
-        working-directory: src/backend/ci
-        run: |
-          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
-          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-      - name: Gradle Build Turbo Service
-        working-directory: src/backend/turbo
-        run: |
-          ./gradlew clean copyToRelease
-          # copy jar to ci release dir
-          cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
-          # copy turbo service config template to ci templates dir
-          cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
-      - name: Create artifact - Step1:init
-        run: |
-          true  # 暂无init需求, 保留此步骤.
-      - name: Create artifact - Step2:get Agent
-        uses: actions/download-artifact@v1
-        with:
-          name: agent
-          path: src/agent/bin/
-      - name: Create artifact - Step3:get Frontend
-        uses: actions/download-artifact@v1
-        with:
-          name: frontend
-          path: src/frontend/frontend
-      - name: Create artifact - Step4:make package
-        id: create-artifact
-        run: |
-          version="$(basename $GITHUB_REF)"
-          echo "::set-output name=version::$version"
-          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
-      - uses: actions/upload-artifact@v1
-        with:
-          name: bkci
-          path: bkci-slim.tar.gz
+    - uses: actions/checkout@v3
+    - name: init mysql
+      run: |
+        export MYSQL_PWD=root
+        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
+      working-directory: support-files/sql
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v3
+      with:
+        distribution: "temurin"
+        java-version: "8"
+    - name: Gradle Build Backend Service
+      working-directory: src/backend/ci
+      run: |
+        ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
+    - name: Gradle Build Turbo Service
+      working-directory: src/backend/turbo
+      run: |
+        ./gradlew clean copyToRelease
+        # copy jar to ci release dir
+        cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
+        # copy turbo service config template to ci templates dir
+        cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
+    - name: Create artifact - Step1:init
+      run: |
+        true  # 暂无init需求, 保留此步骤.
+    - name: Create artifact - Step2:get Agent
+      uses: actions/download-artifact@v1
+      with:
+        name: agent
+        path: src/agent/bin/
+    - name: Create artifact - Step3:get Frontend
+      uses: actions/download-artifact@v1
+      with:
+        name: frontend
+        path: src/frontend/frontend
+    - name: Create artifact - Step4:make package
+      id: create-artifact
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: bkci
+        path: bkci-slim.tar.gz
 
   cloudNative:
-    needs: [frontend, agent]
     name: Build image and helm chart
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
-          - 3306
+        - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - uses: actions/checkout@v2
-      - name: init mysql
-        run: |
-          export MYSQL_PWD=root
-          for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
-        working-directory: support-files/sql
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: false
-      - name: Gradle Build Backend Service -- CLOUD NATIVE
-        working-directory: src/backend/ci
-        run: |
-          ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=K8S \
-          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-      - name: Get Agent - CLOUD NATIVE
-        uses: actions/download-artifact@v1
-        with:
-          name: agent
-          path: src/agent/bin/
-      - name: Get Frontend - CLOUD NATIVE
-        uses: actions/download-artifact@v1
-        with:
-          name: frontend
-          path: src/frontend/frontend
-      - name: Create artifact - CLOUD NATIVE
-        run: |
-          version="$(basename $GITHUB_REF)"
-          echo "::set-output name=version::$version"
-          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
-      - name: Setup Docker -- CLOUD NATIVE
-        uses: docker-practice/actions-setup-docker@master
-      - name: Create Docker Image -- CLOUD NATIVE
-        working-directory: docker-images/core/ci
-        run: |
-          version="$(basename $GITHUB_REF)"
-          docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
-          ./0.get_release.sh
-          ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
-          ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
-      - name: Setup Python -- CLOUD NATIVE
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.6.8"
-      - name: Generate Helm Chart -- CLOUD NATIVE
-        working-directory: helm-charts/core/ci
-        run: |
-          version="$(basename $GITHUB_REF)"
-          echo 'python build'
-          pip install pyhumps
-          python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version
-      - name: Install Helm -- CLOUD NATIVE
-        uses: azure/setup-helm@v1
-        with:
-          version: v3.8.1
-      - name: Package Helm Chart -- CLOUD NATIVE
-        working-directory: helm-charts/core/ci
-        run: |
-          version="$(basename $GITHUB_REF)"
-          helm package . --version $version --app-version $version
-          mv bk-ci-$version.tgz bk-ci-charts.tgz
-      - uses: actions/upload-artifact@v1
-        with:
-          name: bkci-chart
-          path: helm-charts/core/ci/bk-ci-charts.tgz
-
-  codecc:
-    name: Build CodeCC
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: false
-      - name: Gradle Build
-        id: codecc-backend
-        working-directory: src/backend/codecc
-        run: |
-          chmod +x gradlew
-          ./gradlew clean copyToRelease
-      - name: frontend
-        id: codecc-frontend
-        run: |
-          cd src/frontend/devops-codecc
-          rm -rf dist
-          npm i
-          npm run build
-          if [ -f dist/index.html ]; then
-            mv dist/index.html dist/frontend#index.html
-          fi
-      - name: Create artifact - make package
-        id: create-artifact
-        run: |
-          version="$(basename $GITHUB_REF)"
-          echo "::set-output name=version::$version"
-          codecc_pkg_dir=/dev/shm/codecc ./scripts/deploy-codecc/packager-codecc.sh "$version" bkcodecc-slim.tar.gz "$PWD"
-      - uses: actions/upload-artifact@v1
-        with:
-          name: codecc
-          path: bkcodecc-slim.tar.gz
-
-  bkrepo:
-    name: Build BkRepo
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "8"
-          cache: "gradle"
-      - name: Create artifact - make package
-        id: create-artifact
-        run: |
-          cd scripts/deploy-storage
-          ./build.sh
-      - uses: actions/upload-artifact@v1
-        with:
-          name: bkrepo
-          path: bin/bkrepo-slim.tar.gz
+    - uses: actions/checkout@v3
+    - name: init mysql
+      run: |
+        export MYSQL_PWD=root
+        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
+      working-directory: support-files/sql
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v3
+      with:
+        distribution: "temurin"
+        java-version: "8"
+    - name: Gradle Build Backend Service -- CLOUD NATIVE
+      working-directory: src/backend/ci
+      run: |
+        ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
+    - name: Get Agent - CLOUD NATIVE
+      uses: actions/download-artifact@v1
+      with:
+        name: agent
+        path: src/agent/bin/
+    - name: Get Frontend - CLOUD NATIVE
+      uses: actions/download-artifact@v1
+      with:
+        name: frontend
+        path: src/frontend/frontend
+    - name: Create artifact - CLOUD NATIVE
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
+    - name: Setup Docker -- CLOUD NATIVE
+      uses: docker-practice/actions-setup-docker@master
+    - name: Create Docker Image -- CLOUD NATIVE
+      working-directory: docker-images/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
+        ./0.get_release.sh
+        ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+        ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+        ./3.build_frontend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+    - name: Setup Python -- CLOUD NATIVE
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.7.15"
+    - name: Generate Helm Chart -- CLOUD NATIVE
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo 'python build'
+        pip install pyhumps
+        pip install PyYAML
+        python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version $version
+    - name: Install Helm -- CLOUD NATIVE
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.8.1
+    - name: Package Helm Chart -- CLOUD NATIVE
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        helm package . --version $version --app-version $version
+        mv bk-ci-$version.tgz bk-ci-charts.tgz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: bkci-chart
+        path: helm-charts/core/ci/bk-ci-charts.tgz
 
   releaseAll:
     name: Release All
-    runs-on: ubuntu-latest
-    if: ${{ always() }}
-    needs: [backend, cloudNative, codecc, bkrepo]
+    runs-on: ubuntu-20.04
+    needs: [frontend, agent, backend, cloudNative]
     steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: bk-ci ${{ github.ref }}
-          draft: true
-          prerelease: true
-      ## bkci
-      - name: download bkci
-        uses: actions/download-artifact@v1
-        with:
-          name: bkci
-          path: ./
-      - name: Upload Release Asset -- BKCI
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkci-slim.tar.gz
-          asset_name: bkci-slim.tar.gz
-          asset_content_type: application/gzip
+    ## bkci
+    - name: download bkci
+      uses: actions/download-artifact@v1
+      with:
+        name: bkci
+        path: ./
+    - name: download bkci-chart
       ## bkci helm chart
-      - name: download bkci-chart
-        uses: actions/download-artifact@v1
-        with:
-          name: bkci-chart
-          path: ./
-      - name: Upload Helm Chart -- CLOUD NATIVE
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bk-ci-charts.tgz
-          asset_name: bk-ci-charts.tgz
-          asset_content_type: application/gzip
-      ## codecc
-      - name: download codecc
-        uses: actions/download-artifact@v1
-        with:
-          name: codecc
-          path: ./
-      - name: Upload Release Asset -- CODECC
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkcodecc-slim.tar.gz
-          asset_name: bkcodecc-slim.tar.gz
-          asset_content_type: application/gzip
-      ## bkrepo
-      - name: download bkrepo
-        uses: actions/download-artifact@v1
-        with:
-          name: bkrepo
-          path: ./
-      - name: Upload Release Asset -- BKREPO
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkrepo-slim.tar.gz
-          asset_name: bkrepo-slim.tar.gz
-          asset_content_type: application/gzip
+      uses: actions/download-artifact@v1
+      with:
+        name: bkci-chart
+        path: ./
+    - name: get change log file
+      id: get_version_file
+      run: |
+        version=${{ github.ref_name }}
+        version=$(echo ${version:1})
+        version=`echo $version | sed 's/-/./g'`
+        major=`echo $version | cut -d. -f1`
+        minor=`echo $version | cut -d. -f2`
+        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md"
+        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md" >> $GITHUB_OUTPUT
+    - name: Create Release
+      ## 创建release
+      id: create_release
+      uses: ncipollo/release-action@v1.12.0
+      with:
+        name: "bk-ci ${{ github.ref_name }}"
+        draft: true
+        prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        body: "See <a href='https://github.com/TencentBlueKing/bk-ci/blob/master/${{steps.get_version_file.outputs.version_file}}'>the CHANGELOG</a> for more details."
+        artifacts: "bkci-slim.tar.gz,bk-ci-charts.tgz"

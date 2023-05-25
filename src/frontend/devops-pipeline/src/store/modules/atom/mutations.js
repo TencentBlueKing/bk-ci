@@ -209,6 +209,8 @@ export default {
             const preVerModelProps = preVerAtomModal.props || {}
             const diffRes = diffAtomVersions(preVerData.input, preVerModelProps.input, atomModal.props.input, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
+            const canPause = atomModal.props.config?.canPauseBeforeRun === true
+
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
@@ -225,7 +227,12 @@ export default {
                     },
                     namespace: isChangeAtom ? '' : preVerData.namespace || '',
                     config: atomModal.props.config
-                }
+                },
+                additionalOptions: canPause
+                    ? {
+                        pauseBeforeExec: true
+                    }
+                    : {}
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -252,7 +259,7 @@ export default {
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
             logoUrl: atomModal.logoUrl,
-            additionalOptions: isChangeAtom ? {} : { ...preVerEle.additionalOptions }
+            additionalOptions: isChangeAtom ? (atom.additionalOptions ?? {}) : { ...preVerEle.additionalOptions }
         })
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {

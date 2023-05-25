@@ -30,10 +30,15 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -43,6 +48,9 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitOperationFile
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.Ip4Service
@@ -348,6 +356,51 @@ class RepoFileService @Autowired constructor(
             authType = RepoAuthType.HTTPS,
             token = token,
             ref = ref
+        )
+    }
+
+    fun updateTGitFileContent(
+        repositoryConfig: RepositoryConfig,
+        userId: String,
+        gitOperationFile: GitOperationFile
+    ): Result<Boolean> {
+        val repo = repositoryService.serviceGet("", repositoryConfig)
+        return updateTGitSingleFile(
+            repoUrl = repo.url,
+            repoName = repo.projectName,
+            token = getAndCheckOauthToken(userId).accessToken,
+            gitOperationFile = GitOperationFile(
+                filePath = gitOperationFile.filePath,
+                branch = gitOperationFile.branch,
+                encoding = gitOperationFile.encoding,
+                content = gitOperationFile.content,
+                commitMessage = gitOperationFile.commitMessage
+            ),
+            tokenType = TokenTypeEnum.OAUTH
+        )
+    }
+
+    fun getAndCheckOauthToken(
+        userId: String
+    ): GitToken {
+        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
+            message = I18nUtil.getCodeLanMessage(NOT_AUTHORIZED_BY_OAUTH)
+        )
+    }
+
+    private fun updateTGitSingleFile(
+        repoUrl: String?,
+        repoName: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.tGitUpdateFile(
+            repoUrl = repoUrl,
+            repoName = repoName,
+            token = token,
+            gitOperationFile = gitOperationFile,
+            tokenType = tokenType
         )
     }
 

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -88,9 +89,21 @@ interface ServiceMarketAtomResource {
         projectCode: String
     ): Result<Map<String/* atomCode */, String/* cnName */>>
 
+    @ApiOperation("获取所有默认插件和自定义插件信息")
+    @GET
+    @Path("/project/{projectCode}/projectElementInfo")
+    fun getProjectElementsInfo(
+        @ApiParam("项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<Map<String/* atomCode */, String/* installType */>>
+
     @ApiOperation("根据插件代码获取插件详细信息")
     @GET
     @Path("/{atomCode}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
     fun getAtomByCode(
         @ApiParam("插件代码", required = true)
         @PathParam("atomCode")

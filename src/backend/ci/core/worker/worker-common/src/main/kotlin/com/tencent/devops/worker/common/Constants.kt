@@ -31,10 +31,6 @@ const val BUILD_ID = "devops.build.id"
 
 const val BUILD_TYPE = "build.type"
 
-const val AGENT_ID = "devops_agent_id"
-
-const val AGENT_SECRET_KEY = "devops_agent_secret_key"
-
 const val WORKSPACE_ENV = "WORKSPACE"
 
 const val COMMON_ENV_CONTEXT = "common_env"
@@ -69,7 +65,7 @@ const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
 
 const val LOG_UPLOAD_BUFFER_SIZE = 200
 
-const val LOG_MESSAGE_LENGTH_LIMIT = 32000
+const val LOG_MESSAGE_LENGTH_LIMIT = 16 * 1024 // 16KB
 
 const val LOG_TASK_LINE_LIMIT = 1000000
 

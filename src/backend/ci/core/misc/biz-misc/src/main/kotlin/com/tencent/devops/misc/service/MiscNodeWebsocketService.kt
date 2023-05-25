@@ -47,12 +47,13 @@ class MiscNodeWebsocketService @Autowired constructor(
         userId: String
     ): MiscNodeWebsocketPush {
         val page = NodePath().buildPage(
-                buildPageInfo = BuildPageInfo(
-                        buildId = null,
-                        pipelineId = null,
-                        projectId = projectId,
-                        atomId = null
-                )
+            buildPageInfo = BuildPageInfo(
+                buildId = null,
+                pipelineId = null,
+                projectId = projectId,
+                atomId = null,
+                executeCount = null
+            )
         )
         logger.info("nodeList websocket: page[$page],project:[$projectId]")
         return MiscNodeWebsocketPush(

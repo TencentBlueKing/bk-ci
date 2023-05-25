@@ -27,8 +27,11 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataClearDao
+import com.tencent.devops.misc.lock.PipelineVersionLock
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +41,8 @@ import org.springframework.stereotype.Service
 class ProcessDataClearService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao,
-    private val processDataClearDao: ProcessDataClearDao
+    private val processDataClearDao: ProcessDataClearDao,
+    private val redisOperation: RedisOperation
 ) {
 
     /**
@@ -64,6 +68,7 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deleteTemplatePipelineByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deletePipelineTemplateAcrossInfo(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineViewGroup(context, projectId, pipelineId)
             // 添加删除记录，插入要实现幂等
             processDao.addPipelineDataClear(
                 dslContext = context,
@@ -109,9 +114,15 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, buildId)
+            JooqUtils.retryWhenDeadLock {
+                processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, pipelineId, buildId)
+            }
             processDataClearDao.deleteBuildWebhookParameter(context, projectId, buildId)
             processDataClearDao.deleteBuildCommits(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordPipelineByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordStageByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordContainerByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordTaskByBuildId(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,
@@ -119,7 +130,48 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deleteBuildHistoryByBuildId(context, projectId, buildId)
+            val version = processDao.getPipelineVersionByBuildId(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+            val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
+            try {
+                pipelineVersionLock.lock()
+                processDataClearDao.deleteBuildHistoryByBuildId(context, projectId, buildId)
+                // 查询流水线版本记录
+                val pipelineVersionInfo = processDao.getPipelineVersionSimple(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version
+                )
+                var referCount = pipelineVersionInfo?.referCount
+                referCount = if (referCount == null) {
+                    // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
+                    processDao.countBuildNumByVersion(
+                        dslContext = context,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = version
+                    )
+                } else {
+                    referCount - 1
+                }
+                val referFlag = referCount > 0
+                // 更新流水线版本关联构建记录信息
+                processDao.updatePipelineVersionReferInfo(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    referCount = referCount,
+                    referFlag = referFlag
+                )
+            } finally {
+                pipelineVersionLock.unlock()
+            }
         }
     }
 }

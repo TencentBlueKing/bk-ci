@@ -27,14 +27,20 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 /**
  * deng
  * 2019-01-08
  */
-enum class TemplateType(val value: String) {
-    CUSTOMIZE("自定义模板"),
-    CONSTRAINT("来自商店"),
-    PUBLIC("公共模版");
+enum class TemplateType(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "templateType", reusePrefixFlag = false)
+    val value: String
+) {
+    CUSTOMIZE("customize"), // 自定义模板
+    CONSTRAINT("constraint"), // 来自商店
+    PUBLIC("public"); // 公共模版
 
     companion object {
         fun getTemplateTypeDesc(type: String): String {

@@ -29,7 +29,9 @@ package com.tencent.devops.stream.service.transfer
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AppInstallationResult
@@ -38,9 +40,10 @@ import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitCreateFile
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.constant.StreamMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -68,13 +71,15 @@ class StreamTGitTransferService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTGitTransferService::class.java)
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 20
     }
 
     fun getAndCheckOauthToken(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = MessageUtil.getMessageByLocale(NOT_AUTHORIZED_BY_OAUTH, I18nUtil.getLanguage(userId))
         )
     }
 
@@ -183,8 +188,8 @@ class StreamTGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).getMembers(
             token = getAndCheckOauthToken(userId).accessToken,
             gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            page = page ?: DEFAULT_PAGE,
+            pageSize = pageSize ?: DEFAULT_PAGE_SIZE,
             search = search,
             tokenType = TokenTypeEnum.OAUTH
         ).data?.map {
@@ -200,15 +205,25 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
+        // 更改为每次都进行重定向授权
         return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
             gitProjectId = gitProjectId,
-            refreshToken = refreshToken
+            refreshToken = true
+        )
+    }
+
+    override fun enableCi(userId: String, projectName: String, enable: Boolean?): Result<Boolean> {
+        return client.get(ServiceGitResource::class).enableCi(
+            projectName = projectName,
+            token = getAndCheckOauthToken(userId).accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            enable = enable
         )
     }
 
@@ -239,7 +254,7 @@ class StreamTGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).gitCreateFile(
             gitProjectId = gitProjectId,
             token = getAndCheckOauthToken(userId).accessToken,
-            gitCreateFile = GitCreateFile(
+            gitOperationFile = GitOperationFile(
                 filePath = streamCreateFile.filePath,
                 branch = streamCreateFile.branch,
                 encoding = when (streamCreateFile.encoding) {

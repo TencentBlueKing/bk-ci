@@ -93,6 +93,11 @@ func (m *mgr) RegisterWork(config *types.WorkRegisterConfig) (*types.WorkInfo, b
 				work.Basic().IncRegistered()
 				blog.Infof("mgr: success get a existing work(%s) with batch mode for project(%s) scene(%s)",
 					work.ID(), config.Apply.ProjectID, config.Apply.Scene)
+
+				// TOOD : apply resource if need
+				if !work.Resource().HasAvailableWorkers() {
+					work.Basic().ApplyResource(config)
+				}
 				return info, false, nil
 			}
 			work.Unlock()
@@ -848,4 +853,14 @@ func (m *mgr) checkRunWithLocalResource(work *types.Work) bool {
 
 func (m *mgr) decLocalResourceTask() {
 	atomic.AddInt32(&m.localResourceTaskNum, -1)
+}
+
+// Get first workid
+func (m *mgr) GetFirstWorkID() (string, error) {
+	work, err := m.worksPool.getFirstWork()
+	if err == nil {
+		return work.ID(), nil
+	} else {
+		return "", err
+	}
 }

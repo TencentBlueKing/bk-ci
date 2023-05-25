@@ -28,7 +28,7 @@
 package config
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const ActionUpgrade = "upgrade"
@@ -68,6 +68,8 @@ const (
 	WorkAgentFile = "worker-agent.jar"
 
 	JdkClientFile = "jdk.zip"
+
+	DockerInitFile = "agent_docker_init.sh"
 )
 
 // Auth Header

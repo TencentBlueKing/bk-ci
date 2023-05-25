@@ -28,7 +28,7 @@ data class CheckRunResponse(
     @JsonProperty("pull_requests")
     val pullRequests: List<SamplePullRequestResponse>,
     @JsonProperty("started_at")
-    val startedAt: String,
+    val startedAt: String?,
     val status: String,
     val url: String
 )

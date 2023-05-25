@@ -30,14 +30,18 @@ package com.tencent.devops.common.auth.api.pojo
 /**
  * 项目角色组
  */
-enum class BkAuthGroup(val value: String) {
-    CIADMIN("ciAdmin"), // CI管理员
-    MANAGER("manager"), // 管理员
-    DEVELOPER("developer"), // 开发人员
-    MAINTAINER("maintainer"), // 运维人员
-    TESTER("tester"), // 测试人员
-    PM("pm"), // 产品人员
-    QC("qc"); // 质量管理员
+enum class BkAuthGroup(
+    val value: String,
+    val groupName: String
+) {
+    CIADMIN("ciAdmin", "CI管理员"), // CI管理员
+    MANAGER("manager", "管理员"), // 管理员
+    DEVELOPER("developer", "开发人员"), // 开发人员
+    MAINTAINER("maintainer", "运维人员"), // 运维人员
+    TESTER("tester", "测试人员"), // 测试人员
+    PM("pm", "产品人员"), // 产品人员
+    QC("qc", "质量管理员"), // 质量管理员
+    CI_MANAGER("ci_manager", "CI管理员,流水线组使用"); // CI 管理员
 
     companion object {
         fun get(value: String): BkAuthGroup {

@@ -98,4 +98,19 @@ class BuildLessConfig {
 
     @Value("\${containerPool.baseImage:blueking/bk-ci}")
     var containerPoolBaseImage: String = "blueking/bk-ci" // 容器池默认镜像
+
+    @Value("\${gatewayHeaderTag:#{null}}")
+    var gatewayHeaderTag: String? = null
+
+    /**
+     * 蓝盾网关配置
+     */
+    @Value("\${devopsGateway.idc:#{null}}")
+    var idcGateway: String? = null
+
+    /**
+     * bkrepo网关配置
+     */
+    @Value("\${devopsGateway.fileIdcGateway:#{null}}")
+    var fileIdcGateway: String? = null
 }

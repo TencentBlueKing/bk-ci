@@ -478,8 +478,23 @@ func executeLocalTask(req *restful.Request, resp *restful.Response) {
 
 	result, err := defaultManager.ExecuteLocalTask(workID, config)
 	if err != nil {
-		blog.Errorf("api: executeLocalTask execute local task failed, work: %s, err: %v", workID, err)
-		r.Write2Resp(&api.RestResponse{Resp: resp, ErrCode: api.ServerErrExecuteLocalTaskFailed, Message: err.Error()})
+		// blog.Errorf("api: executeLocalTask execute local task failed, work: %s, err: %v", workID, err)
+		errcode := api.ServerErrExecuteLocalTaskFailed
+		message := err.Error()
+		if err == types.ErrWorkNoFound {
+			errcode = api.ServerErrWorkNotFound
+			newworkid, _ := defaultManager.GetFirstWorkID()
+			workerchanged := WorkerChanged{
+				OldWorkID: workID,
+				NewWorkID: newworkid,
+			}
+			var data []byte
+			_ = codec.EncJSON(&workerchanged, &data)
+			message = string(data)
+		}
+		blog.Errorf("api: executeLocalTask execute local task failed, work: %s, err: %v, return code:%d message: %s",
+			workID, err, errcode, message)
+		r.Write2Resp(&api.RestResponse{Resp: resp, ErrCode: errcode, Message: message})
 		return
 	}
 

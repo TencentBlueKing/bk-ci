@@ -30,11 +30,10 @@ package com.tencent.devops.artifactory.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.JOB_EXECUTE_FAIL
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -57,7 +56,7 @@ class JobServiceExt @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.warn("start jobDevOpsFastPushfile failed")
-            throw ErrorCodeException(errorCode = MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
+            throw ErrorCodeException(errorCode = JOB_EXECUTE_FAIL)
         }
         return taskInstanceId
     }
@@ -70,7 +69,7 @@ class JobServiceExt @Autowired constructor(
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             logger.info("response body: $responseStr")
 
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -82,7 +81,7 @@ class JobServiceExt @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.warn("start job failed, msg: $msg")
-                throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
+                throw ErrorCodeException(errorCode = JOB_EXECUTE_FAIL, params = arrayOf(msg))
             }
         }
     }
@@ -92,7 +91,7 @@ class JobServiceExt @Autowired constructor(
             val url = "$jobUrl/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
 //            val responseStr = HttpUtils.get(url)
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -116,12 +115,12 @@ class JobServiceExt @Autowired constructor(
                 } else {
                     val msg = response["message"] as String
                     logger.error("BKSystemErrorMonitor|JobService|error=$msg")
-                    throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
+                    throw ErrorCodeException(errorCode = JOB_EXECUTE_FAIL, params = arrayOf(msg))
                 }
             }
         } catch (e: Exception) {
             logger.error("BKSystemErrorMonitor|JobService|error=${e.message}", e)
-            throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(e.message ?: ""))
+            throw ErrorCodeException(errorCode = JOB_EXECUTE_FAIL, params = arrayOf(e.message ?: ""))
         }
     }
 

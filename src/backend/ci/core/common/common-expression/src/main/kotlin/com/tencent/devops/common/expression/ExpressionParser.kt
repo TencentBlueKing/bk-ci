@@ -76,7 +76,7 @@ object ExpressionParser {
         fetchValue: Boolean
     ): Any? {
         val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
-            .evaluate(null, context, null)
+            .evaluate(null, context, null, null)
         if (!fetchValue) {
             return result
         }
@@ -93,7 +93,7 @@ object ExpressionParser {
         fillContextByMap(contextMap, context, nameValue)
 
         val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
-            .evaluate(null, context, null)
+            .evaluate(null, context, null, null)
 
         if (!fetchValue) {
             return result

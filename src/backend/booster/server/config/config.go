@@ -44,8 +44,9 @@ type ServerConfig struct {
 	EngineApisJobConfig EngineApisJobConfig `json:"engine_apisjob"`
 
 	// engine distcc settings
-	DistCCQueueList    []string           `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
-	EngineDistCCConfig EngineDistCCConfig `json:"engine_distcc"`
+	DistCCQueueList      []string                         `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
+	DistccQueueShareType map[string]engine.QueueShareType `json:"distcc_queue_share_type" usage:"queue name map for share type, default is all allowed"`
+	EngineDistCCConfig   EngineDistCCConfig               `json:"engine_distcc"`
 
 	DisttaskQueueList      []string                         `json:"disttask_queue_list" value:"[]" usage:"queue name list for engine disttask"`
 	DisttaskQueueShareType map[string]engine.QueueShareType `json:"disttask_queue_share_type" usage:"queue name map for share type, default is all allowed"`
@@ -64,6 +65,8 @@ type ServerConfig struct {
 	ContainerResourceConfig ContainerResourceConfig `json:"container_resource"`
 
 	K8sContainerResourceConfig ContainerResourceConfig `json:"k8s_container_resource"`
+
+	K8sResourceConfigList K8sResourceConfig `json:"k8s_resource_list"`
 
 	DCMacContainerResourceConfig ContainerResourceConfig `json:"dc_mac_container_resource"`
 
@@ -99,21 +102,25 @@ type InstanceType struct {
 
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable                 bool           `json:"crm_enable"`
-	Operator               string         `json:"crm_operator"`
-	BcsAPIToken            string         `json:"crm_bcs_api_token"`
-	BcsAPIAddress          string         `json:"crm_bcs_api_address"`
-	BcsCPUPerInstance      float64        `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance      float64        `json:"crm_bcs_mem_per_instance"`
-	BcsCPULimitPerInstance float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
-	BcsMemLimitPerInstance float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
-	InstanceType           []InstanceType `json:"instance_type"`
-	BcsClusterID           string         `json:"crm_bcs_cluster_id"`
-	BcsAppTemplate         string         `json:"crm_bcs_template_file"`
-	BcsGroupLabelKey       string         `json:"crm_bcs_group_label_key"`
-	BcsPlatformLabelKey    string         `json:"crm_bcs_platform_label_key"`
-	EnableBCSApiGw         bool           `json:"crm_bcs_apigw_enable" value:"false"`
-	BcsDisableWinHostNW    bool           `json:"crm_bcs_disable_win_host_network"`
+	Enable                     bool           `json:"crm_enable"`
+	Operator                   string         `json:"crm_operator"`
+	BcsAPIToken                string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress              string         `json:"crm_bcs_api_address"`
+	BcsNamespace               string         `json:"crm_bcs_namespace"`
+	EnableBCSApiGw             bool           `json:"crm_bcs_apigw_enable" value:"false"`
+	BcsCPUPerInstance          float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance          float64        `json:"crm_bcs_mem_per_instance"`
+	BcsStoragePerInstance      float64        `json:"crm_bcs_storage_per_instance,omitempty"`
+	BcsCPULimitPerInstance     float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
+	BcsMemLimitPerInstance     float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
+	BcsStorageLimitPerInstance float64        `json:"crm_bcs_storage_limit_per_instance,omitempty"`
+	InstanceType               []InstanceType `json:"instance_type"`
+	BcsClusterID               string         `json:"crm_bcs_cluster_id"`
+	BcsClusterType             string         `json:"crm_bcs_cluster_type"`
+	BcsAppTemplate             string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey           string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey        string         `json:"crm_bcs_platform_label_key"`
+	BcsDisableWinHostNW        bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`
@@ -124,6 +131,21 @@ type ContainerResourceConfig struct {
 	MysqlSkipEnsure  bool   `json:"crm_resource_mysql_skip_ensure"`
 
 	BcsAPIPool *net.ConnectPool
+}
+
+// K8sResourceConfig define new k8s with cluster list
+type K8sResourceConfig struct {
+	Enable         bool                                `json:"crm_enable"`
+	Operator       string                              `json:"crm_operator"`
+	K8sClusterList map[string]*ContainerResourceConfig `json:"k8s_cluster_list"`
+
+	MySQLStorage     string `json:"crm_resource_mysql"`
+	MySQLDatabase    string `json:"crm_resource_mysql_db"`
+	MySQLTable       string `json:"crm_resource_mysql_table"`
+	MySQLUser        string `json:"crm_resource_mysql_user"`
+	MySQLPwd         string `json:"crm_resource_mysql_pwd"`
+	MysqlTableOption string `json:"crm_resource_mysql_table_option"`
+	MysqlSkipEnsure  bool   `json:"crm_resource_mysql_skip_ensure"`
 }
 
 const (
@@ -302,14 +324,25 @@ func (dsc *ServerConfig) Parse() {
 	if dsc.ContainerResourceConfig.Enable {
 		token, _ := encrypt.DesDecryptFromBase([]byte(dsc.ContainerResourceConfig.BcsAPIToken))
 		dsc.ContainerResourceConfig.BcsAPIToken = string(token)
-		dsc.ContainerResourceConfig.BcsAPIPool = net.NewConnectPool(strings.Split(dsc.ContainerResourceConfig.BcsAPIAddress, ","))
+		dsc.ContainerResourceConfig.BcsAPIPool = net.NewConnectPool(
+			strings.Split(dsc.ContainerResourceConfig.BcsAPIAddress, ","))
 		dsc.ContainerResourceConfig.BcsAPIPool.Start()
 	}
 
 	if dsc.K8sContainerResourceConfig.Enable {
 		tokenK8S, _ := encrypt.DesDecryptFromBase([]byte(dsc.K8sContainerResourceConfig.BcsAPIToken))
 		dsc.K8sContainerResourceConfig.BcsAPIToken = string(tokenK8S)
-		dsc.K8sContainerResourceConfig.BcsAPIPool = net.NewConnectPool(strings.Split(dsc.K8sContainerResourceConfig.BcsAPIAddress, ","))
+		dsc.K8sContainerResourceConfig.BcsAPIPool = net.NewConnectPool(
+			strings.Split(dsc.K8sContainerResourceConfig.BcsAPIAddress, ","))
 		dsc.K8sContainerResourceConfig.BcsAPIPool.Start()
+	}
+
+	if dsc.K8sResourceConfigList.Enable {
+		for _, cluster := range dsc.K8sResourceConfigList.K8sClusterList {
+			tokenK8S, _ := encrypt.DesDecryptFromBase([]byte(cluster.BcsAPIToken))
+			cluster.BcsAPIToken = string(tokenK8S)
+			cluster.BcsAPIPool = net.NewConnectPool(strings.Split(cluster.BcsAPIAddress, ","))
+			cluster.BcsAPIPool.Start()
+		}
 	}
 }

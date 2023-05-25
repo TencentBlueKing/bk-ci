@@ -281,4 +281,9 @@ object JsonUtil {
     fun <T> anyTo(any: Any?, typeReference: TypeReference<T>): T = getObjectMapper().readValue(
         getObjectMapper().writeValueAsString(any), typeReference
     )
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> Any.deepCopy(): T {
+        return getObjectMapper().readValue(getObjectMapper().writeValueAsString(this), this.javaClass) as T
+    }
 }

@@ -45,3 +45,8 @@ const val ARCHIVE_PROPS_FILE_NAME = "fileName"
 const val ARCHIVE_PROPS_APP_ICON = "appIcon"
 const val ARCHIVE_PROPS_APP_SCHEME = "appScheme"
 const val ARCHIVE_PROPS_APP_NAME = "appName"
+
+const val REPO_PIPELINE = "pipeline"
+const val REPO_CUSTOM = "custom"
+const val REPO_REPORT = "report"
+const val REPO_LOG = "log"

@@ -46,7 +46,7 @@
                     <bk-table-column :label="$t('hostName')" prop="name"></bk-table-column>
                     <bk-table-column label="Ip" prop="ip"></bk-table-column>
                     <bk-table-column label="OS" prop="osName"></bk-table-column>
-                    <bk-table-column :label="$t('cancel')" prop="nodeStatus"></bk-table-column>
+                    <bk-table-column :label="$t('status')" prop="nodeStatus"></bk-table-column>
                     <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                         <template slot-scope="props">
                             <span class="update-btn" @click="showDelete(props.row)">{{$t('setting.agent.removeAgentTips')}}</span>

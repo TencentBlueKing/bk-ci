@@ -16,7 +16,7 @@
                                 v-model="atomForm.name"
                                 v-validate="{
                                     required: true,
-                                    max: 20
+                                    max: 40
                                 }"
                                 :class="{ 'is-danger': errors.has('atomName') }">
                             <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">{{ errors.first("atomName") }}</p>
@@ -24,7 +24,7 @@
                         <bk-popover placement="right">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件名称不超过20个字符') }} </p>
+                                <p> {{ $t('store.插件名称不超过40个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
@@ -55,7 +55,9 @@
                     <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-radio-group v-model="atomForm.jobType" class="radio-group">
-                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                            <span v-for="(entry, key) in jobTypeList" :key="key">
+                                <bk-radio v-show="entry.isShow" :value="entry.value" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                            </span>
                         </bk-radio-group>
                         <div v-if="formErrors.jobError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
                     </div>
@@ -90,19 +92,19 @@
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过70个字符')"
+                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
                                 required: true,
-                                max: 70
+                                max: 256
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
+                                <p> {{ $t('store.插件一句话简介，不超过256个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
                             </template>
                         </bk-popover>
@@ -119,6 +121,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             @imgAdd="addImage('mdHook', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -153,15 +156,9 @@
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('store.请输入')"
-                            name="publisher"
-                            v-model="atomForm.publisher"
-                            v-validate="{
-                                required: true,
-                                max: 20
-                            }"
-                            :class="{ 'is-danger': errors.has('publisher') }">
-                        <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
+                        <bk-select v-model="atomForm.publisher">
+                            <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                        </bk-select>
                     </div>
                 </div>
                 <div class="bk-form-item publish-form-item is-required" ref="releaseTypeError" v-if="atomForm.releaseType !== 'CANCEL_RE_RELEASE'">
@@ -240,7 +237,8 @@
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('store.版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <mavon-editor :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
+                        <mavon-editor
+                            :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
                             ref="versionMd"
                             v-model="atomForm.versionContent"
                             :toolbars="toolbarOptions"
@@ -249,6 +247,7 @@
                             preview-background="#fff"
                             name="versionContent"
                             v-validate="{ required: true }"
+                            :language="mavenLang"
                             @imgAdd="addImage('versionMd', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -272,7 +271,7 @@
     import bkFileUpload from '@/components/common/file-upload'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import api from '@/api'
-
+    
     export default {
         components: {
             selectLogo,
@@ -286,7 +285,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -295,8 +294,8 @@
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
                 jobTypeList: [
-                    { label: this.$t('store.编译环境'), value: 'AGENT' },
-                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS' }
+                    { label: this.$t('store.编译环境'), value: 'AGENT', isShow: true },
+                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS', isShow: true }
                 ],
                 envList: [
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
@@ -367,7 +366,9 @@
                     envError: false,
                     releaseTypeError: false
                 },
-                versionMap: {}
+                versionMap: {},
+                publishersList: [],
+                containerList: []
             }
         },
         computed: {
@@ -389,6 +390,12 @@
                     { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
                     { name }
                 ]
+            },
+            userName () {
+                return this.$store.state.user.username
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         watch: {
@@ -417,11 +424,19 @@
             }
         },
         async created () {
+            await this.fetchContainerList()
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
+            await this.fetchPublishersList(this.atomForm.atomCode)
             this.requestAtomClassify()
         },
         methods: {
+            fetchContainerList () {
+                this.$store.dispatch('store/getContainerList').then(res => {
+                    this.containerList = res
+                    this.jobTypeList[1].isShow = !!this.containerList.find(i => i.type === 'normal')
+                })
+            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',
@@ -435,6 +450,18 @@
                 this.$router.push({
                     name: 'atomHome'
                 })
+            },
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             },
             async requestAtomlabels () {
                 try {

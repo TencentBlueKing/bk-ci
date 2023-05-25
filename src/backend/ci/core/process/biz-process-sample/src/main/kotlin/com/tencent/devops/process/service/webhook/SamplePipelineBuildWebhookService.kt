@@ -27,12 +27,41 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.permission.PipelinePermissionService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
 
+    @Autowired
+    private lateinit var pipelinePermissionService: PipelinePermissionService
+
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        // 开源版暂不做权限校验
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
+    }
+
+    @BkTimed // 要aop生效必须在子类上拦截
+    override fun webhookTriggerPipelineBuild(
+        projectId: String,
+        pipelineId: String,
+        codeRepositoryType: String,
+        matcher: ScmWebhookMatcher
+    ): Boolean {
+        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
     }
 }

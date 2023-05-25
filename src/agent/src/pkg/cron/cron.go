@@ -29,18 +29,26 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func CleanJob() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent clean panic: ", err)
+		}
+	}()
+
 	intervalInHours := 2
 	TryCleanFile()
 	for {
@@ -115,4 +123,29 @@ func cleanLogFile(timeBeforeInHours int) {
 		}
 	}
 	logs.Info("clean log file done")
+
+	// 清理docker构建记录
+	dockerLogDir := job.LocalDockerWorkSpaceDirName + "/logs"
+	dockerFiles, err := ioutil.ReadDir(dockerLogDir)
+	if err != nil {
+		logs.Warn("read docker log dir error: ", err.Error())
+		return
+	}
+
+	// 因为docker构建机是按照buildId分类存储到文件夹中，所以只需要查看文件夹变更日期之后删除即可
+	for _, file := range dockerFiles {
+		if !file.IsDir() {
+			continue
+		}
+
+		if int(time.Since(file.ModTime()).Hours()) > timeBeforeInHours {
+			dockerFullName := dockerLogDir + "/" + file.Name()
+			err = os.RemoveAll(dockerFullName)
+			if err != nil {
+				logs.Warn(fmt.Sprintf("remove docker log file %s failed: ", dockerFullName))
+			} else {
+				logs.Info(fmt.Sprintf("docker log file %s removed", dockerFullName))
+			}
+		}
+	}
 }

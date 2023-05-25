@@ -40,7 +40,7 @@ import io.swagger.annotations.ApiModelProperty
 data class TemplateInstanceCreate(
     @ApiModelProperty("流水线名称", required = false)
     val pipelineName: String,
-    @ApiModelProperty("构建号", required = false)
+    @ApiModelProperty("构建号（推荐版本号）", required = false)
     val buildNo: BuildNo?,
     @ApiModelProperty("流水线变量列表", required = false)
     val param: List<BuildFormProperty>? = null

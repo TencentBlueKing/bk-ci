@@ -64,6 +64,12 @@
         "goToGit": "查看代码库"
     },
     "pipeline": {
+        "commitMsgWithEnter": "请输入提交消息后按回车键搜索",
+        "queue": "排队中",
+        "queueTimeout": "排队超时",
+        "running": "运行中",
+        "reviewing": "审批中",
+        "stageSuccess": "阶段性完成",
         "pipeline": "流水线",
         "allPipelines": "所有流水线",
         "nameRule": "由大写和小写英文字母、数字、下划线、下划线和点组成",
@@ -214,6 +220,8 @@
         "filterByName": "通过项目名称过滤"
     },
     "setting": {
+        "save": "保存",
+        "cancel": "取消",
         "settings": "设置",
         "baseSetting": "基本设置",
         "credentialSetting": "凭据设置",
@@ -242,6 +250,11 @@
         "crossRepoUse": "允许跨项目使用",
         "crossRepoUseTips": "仅支持通过模板共享凭据。如当前代码库下管理的模板A引用此凭据，其它项目下的流水线B引用模板A的场景下，流水线B运行时才能使用此凭据",
         "ticket": {
+            "oauthTokenDesc": "Oauth Token 一般用于上层平台调用 Stream 的场景。用户对上层平台进行了Oauth授权，上层平台使用 Stream 服务时使用用户授权进行操作",
+            "oauthTokenPlaceholder": "OauthToken用于上层平台调用 Stream服务时传递用户授权信息",
+            "credentialDesc": "在 YAML 中通过上下文 settings.<key>.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
+            "credentialType": "凭证类型",
+            "credentialKey": "凭据标识（key）",
             "addCredential": "新增凭据",
             "editCredential": "编辑凭据",
             "emptyCredential": "暂无凭据",

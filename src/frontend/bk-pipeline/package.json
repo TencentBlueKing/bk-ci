@@ -1,6 +1,6 @@
 {
   "name": "bkui-pipeline",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "devops pipeline",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
@@ -34,6 +34,7 @@
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "copy-webpack-plugin": "9.0.1",
     "css-loader": "^6.4.0",
+    "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-friendly-formatter": "~4.0.1",
@@ -47,14 +48,16 @@
     "mini-css-extract-plugin": "^2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
+    "semver": "6.3.0",
     "style-loader": "^3.3.1",
-    "vue-loader": "^15.9.8",
+    "terser-webpack-plugin": "^5.3.6",
+    "vue-loader": "15.9.8",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },
   "dependencies": {
     "vue": "2.6.12",
-    "bk-magic-vue": "^2.4.14",
+    "bk-magic-vue": "2.4.15-beta.7",
     "vuedraggable": "^2.24.3"
   },
   "repository": {

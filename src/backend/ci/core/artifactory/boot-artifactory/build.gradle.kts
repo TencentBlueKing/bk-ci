@@ -32,6 +32,5 @@ dependencies {
     api(project(":core:artifactory:biz-artifactory"))
     api(project(":core:artifactory:biz-artifactory-store")) // 对接研发商店
     api(project(":core:artifactory:biz-artifactory-sample")) // sample 是开源版实现
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }
-
-

@@ -1,0 +1,106 @@
+#kubernetes-manager Deployment
+{{ if .Values.kubernetesManager.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-manager
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: kubernetes-manager
+      app.kubernetes.io/component: kubernetes-manager
+      app.kubernetes.io/name: kubernetes-manager
+  {{- if not .Values.kubernetesManager.autoscaling.enabled }}
+  replicas: {{ .Values.kubernetesManager.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: kubernetes-manager
+        app.kubernetes.io/component: kubernetes-manager
+        app.kubernetes.io/name: kubernetes-manager
+    spec:
+      serviceAccountName: kubernetes-manager-account
+      {{- if .Values.kubernetesManager.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.kubernetesManager.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubernetesManager.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.kubernetesManager.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubernetesManager.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.kubernetesManager.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubernetesManager.priorityClassName }}
+      priorityClassName: {{ .Values.kubernetesManager.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.kubernetesManager.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.kubernetesManager.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: kubernetes-manager
+          image: {{ .Values.kubernetesManager.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.kubernetesManager.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.kubernetesManager.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.kubernetesManager.resources }}
+          resources: {{- toYaml .Values.kubernetesManager.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: kubernetes-manager
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+          workingDir: /data/workspace/kubernetes-manager
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          {{- if .Values.configmap.enabled}}
+          volumeMounts:
+            - name: kubernetes-manager-config
+              mountPath: /data/workspace/kubernetes-manager/config
+              readOnly: true
+          {{- end}}
+      {{- if .Values.configmap.enabled}}
+      volumes:
+        - name: kubernetes-manager-config
+          configMap:
+            name: kubernetes-manager
+            items:
+              - key: config.yaml
+                path: config.yaml
+              {{- if .Values.kubeConfig.useKubeConfig}}
+              - key: kubeConfig.yaml
+                path: kubeConfig.yaml
+      {{- end}}
+    {{- end}}
+{{- end -}}

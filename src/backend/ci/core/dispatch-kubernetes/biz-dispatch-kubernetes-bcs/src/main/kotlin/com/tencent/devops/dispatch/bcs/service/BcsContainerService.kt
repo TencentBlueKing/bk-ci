@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
-import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsDeleteBuilderParams
@@ -52,6 +52,7 @@ import com.tencent.devops.dispatch.bcs.pojo.isSuccess
 import com.tencent.devops.dispatch.bcs.pojo.readyToStart
 import com.tencent.devops.dispatch.bcs.utils.BcsCommonUtils
 import com.tencent.devops.dispatch.kubernetes.common.BUILDER_NAME
+import com.tencent.devops.dispatch.kubernetes.common.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
@@ -60,6 +61,13 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_BCS_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BCS_BUILD_CONTAINER_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_THIRD_SERVICE_BCS_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
@@ -72,6 +80,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.slf4j.LoggerFactory
@@ -83,7 +92,8 @@ import org.springframework.stereotype.Service
 class BcsContainerService @Autowired constructor(
     private val bcsBuilderClient: BcsBuilderClient,
     private val logsPrinter: LogsPrinter,
-    private val bcsTaskClient: BcsTaskClient
+    private val bcsTaskClient: BcsTaskClient,
+    private val commonConfig: CommonConfig
 ) : ContainerService {
 
     companion object {
@@ -92,10 +102,15 @@ class BcsContainerService @Autowired constructor(
 
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
-        readyStartLog = "准备创建BCS(蓝鲸容器平台)构建机...",
-        startContainerError = "启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 - "
+    override fun getLog() = DispatchBuildLog(
+        readyStartLog =
+        I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
+        startContainerError =
+        I18nUtil.getCodeLanMessage(BK_START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            BK_THIRD_SERVICE_BCS_BUILD_ERROR,
+            I18nUtil.getDefaultLocaleLanguage()
+        )
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -188,7 +203,7 @@ class BcsContainerService @Autowired constructor(
                 userId = userId,
                 bcsBuilder = BcsBuilder(
                     name = builderName,
-                    image = "$name:$tag",
+                    image = "$host/$name:$tag",
                     registry = DockerRegistry(host, userName, password),
                     cpu = cpu,
                     mem = mem,
@@ -201,7 +216,8 @@ class BcsContainerService @Autowired constructor(
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        BUILDER_NAME to builderName,
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
@@ -212,8 +228,10 @@ class BcsContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                "下发创建构建机请求成功，" +
-                    "builderName: $builderName 等待机器创建..."
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " builderName: $builderName "
             )
 
             val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
@@ -224,15 +242,23 @@ class BcsContainerService @Autowired constructor(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo create bcs " +
                         "vm success, wait vm start..."
                 )
-                logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
+                logsPrinter.printLogs(
+                    this,
+                    I18nUtil.getCodeLanMessage(
+                        BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
+                        I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName)
                 throw BuildFailureException(
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}构建机创建失败:${failedMsg ?: taskStatus.message}"
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode,
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode.toString()),
+                    I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
+                    ":${failedMsg ?: taskStatus.message}"
                 )
             }
             return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
@@ -262,7 +288,8 @@ class BcsContainerService @Autowired constructor(
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        BUILDER_NAME to builderName,
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )

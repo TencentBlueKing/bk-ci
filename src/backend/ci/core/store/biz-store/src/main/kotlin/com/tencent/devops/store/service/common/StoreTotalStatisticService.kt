@@ -27,9 +27,11 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreTotalStatisticService {
 
@@ -54,4 +56,6 @@ interface StoreTotalStatisticService {
         startTime: String,
         endTime: String
     ): StoreStatisticTrendData
+
+    fun getStoreErrorCodeInfo(userId: String, storeType: StoreTypeEnum, storeCode: String): StoreErrorCodeInfo
 }

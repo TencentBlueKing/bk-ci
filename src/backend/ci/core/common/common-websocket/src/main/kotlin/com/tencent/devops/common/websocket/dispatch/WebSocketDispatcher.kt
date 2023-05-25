@@ -27,10 +27,11 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
-import com.tencent.devops.common.websocket.utils.RedisUtlis
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
@@ -39,32 +40,39 @@ class WebSocketDispatcher(
 ) : EventDispatcher<WebsocketPush> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
+        private val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: WebsocketPush) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
-                val mqMessage = event.buildMqMessage()
-                if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
-                    event.buildNotifyMessage(mqMessage)
-//                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},page:
-//                   ${mqMessage.page}, sessionList:${mqMessage.sessionList}")
-                    rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
-                        if (eventType.delayMills > 0) { // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                        }
-                        message
+                send(event)
+            } catch (ignored: Exception) {
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
                     }
                 } else {
-                    val sessionList =
-                        RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page ?: "")
-//                    logger.debug("page:${event.page},sessionList:$sessionList,but nobody load page")
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
                 }
-            } catch (ignored: Exception) {
-                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
+            }
+        }
+    }
+
+    private fun send(event: WebsocketPush) {
+        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+        val routeKey = eventType.routeKey
+        val mqMessage = event.buildMqMessage()
+        if (mqMessage != null && !mqMessage.sessionList.isNullOrEmpty()) {
+            event.buildNotifyMessage(mqMessage)
+            rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
+                if (eventType.delayMills > 0) { // 事件类型固化默认值
+                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                }
+                message
             }
         }
     }

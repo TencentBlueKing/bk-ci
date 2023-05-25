@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.service
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -41,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/open/project/callback")
+@Path("/service/project/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthCallBackResource {
@@ -54,5 +55,5 @@ interface ServiceProjectAuthCallBackResource {
         token: String,
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO
-    ): CallbackBaseResponseDTO?
+    ): Result<CallbackBaseResponseDTO>
 }

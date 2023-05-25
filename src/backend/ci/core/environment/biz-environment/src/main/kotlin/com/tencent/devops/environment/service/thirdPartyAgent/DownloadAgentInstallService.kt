@@ -27,12 +27,13 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
-import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -137,7 +138,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 }
             }
 
-            jarFiles.plus(packageFiles).forEach {
+            (packageFiles?.let { jarFiles.plus(packageFiles) } ?: jarFiles).forEach {
                 zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
                 IOUtils.copy(FileInputStream(it), zipOut)
                 zipOut.closeArchiveEntry()
@@ -357,6 +358,57 @@ class DownloadAgentInstallService @Autowired constructor(
         }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = batch.zip")
             .build()
+    }
+
+    fun downloadUpgradeFile(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        file: String,
+        md5: String?
+    ): Response {
+
+        if (!checkAgent(projectId, agentId, secretKey)) {
+            logger.warn("The agent($agentId)'s is DELETE")
+            return Response.status(Response.Status.NOT_FOUND).build()
+        }
+
+        val upgradeFile = getUpgradeFile(file)
+        val fileName = upgradeFile.name
+
+        var modify = true
+        val existMD5 = getFileMD5(upgradeFile)
+        if (!upgradeFile.exists()) {
+            logger.warn("The upgrade of agent($agentId) file(${upgradeFile.absolutePath}) is not exist")
+            modify = false
+        } else {
+            if (md5 != null && existMD5 == md5) {
+                modify = false
+            }
+        }
+
+        return if (modify) {
+            logger.info("upgrade file($file) changed, server file md5: $existMD5")
+            Response.ok(upgradeFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("content-disposition", "attachment; filename = $fileName")
+                .header("X-Checksum-Md5", existMD5)
+                .build()
+        } else {
+            Response.status(Response.Status.NOT_MODIFIED).build()
+        }
+    }
+
+    private fun checkAgent(projectId: String, agentId: String, secretKey: String): Boolean {
+        val id = HashUtil.decodeIdToLong(agentId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
+            ?: return false
+
+        val key = SecurityUtil.decrypt(agentRecord.secretKey)
+        if (key != secretKey) {
+            return false
+        }
+
+        return AgentStatus.fromStatus(agentRecord.status) != AgentStatus.DELETE
     }
 
     companion object {

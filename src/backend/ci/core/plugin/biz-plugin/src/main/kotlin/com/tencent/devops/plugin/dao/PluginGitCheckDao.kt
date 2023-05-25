@@ -44,7 +44,8 @@ class PluginGitCheckDao {
         pipelineId: String,
         repositoryConfig: RepositoryConfig,
         commitId: String,
-        context: String
+        context: String,
+        targetBranch: String?
     ): TPluginGitCheckRecord? {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             val step = dslContext.selectFrom(this)
@@ -54,6 +55,11 @@ class PluginGitCheckDao {
             when (repositoryConfig.repositoryType) {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
+            }
+            if (targetBranch.isNullOrEmpty()) {
+                step.and(TARGET_BRANCH.isNull)
+            } else {
+                step.and(TARGET_BRANCH.eq(targetBranch))
             }
             return step.fetchAny()
         }
@@ -75,7 +81,8 @@ class PluginGitCheckDao {
                     COMMIT_ID,
                     CREATE_TIME,
                     UPDATE_TIME,
-                    CONTEXT
+                    CONTEXT,
+                    TARGET_BRANCH
                 ).values(
                     pipelineId,
                     buildNumber,
@@ -84,7 +91,8 @@ class PluginGitCheckDao {
                     commitId,
                     now,
                     now,
-                    context
+                    context,
+                    targetBranch
                 ).execute()
             }
         }

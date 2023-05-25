@@ -1,7 +1,7 @@
 <template>
     <section class="devops-empty-tips">
-        <h2 class="title">{{ title }}</h2>
-        <p class="desc">{{ desc }}</p>
+        <h2 class="title">{{title}}</h2>
+        <p class="desc">{{desc}}</p>
         <p class="btns-row">
             <slot name="btns">
                 <template v-if="btns.length">
@@ -10,7 +10,7 @@
                         :key="index"
                         :class="[`bk-${btn.type}`, `bk-button-${btn.size}`]"
                         @click="btn.handler">
-                        {{ btn.text }}
+                        {{btn.text}}
                     </button>
                 </template>
             </slot>

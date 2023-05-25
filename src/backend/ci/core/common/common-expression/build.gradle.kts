@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api(project(":core:common:common-api"))
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")

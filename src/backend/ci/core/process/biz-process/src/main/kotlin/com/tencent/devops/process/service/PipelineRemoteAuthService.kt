@@ -28,18 +28,23 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_CALL_SOURCE_IP
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_MATCHING_PIPELINE
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
+import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
@@ -66,7 +71,7 @@ class PipelineRemoteAuthService @Autowired constructor(
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
-        val redisLock = RedisLock(redisOperation, "process_pipeline_remote_token_lock_key_$pipelineId", 10)
+        val redisLock = PipelineRemoteAuthLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
             val record = pipelineRemoteAuthDao.getByPipelineId(dslContext, projectId, pipelineId)
@@ -79,7 +84,9 @@ class PipelineRemoteAuthService @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to generate the remote pipeline token of pipeline $pipelineId - $projectId", ignored)
-            throw OperationException("生成远程触发token失败")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED, I18nUtil.getLanguage(userId))
+            )
         } finally {
             redisLock.unlock()
         }
@@ -98,7 +105,9 @@ class PipelineRemoteAuthService @Autowired constructor(
         val pipeline = getPipeline(auth)
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
-            throw OperationException("没有找到对应的流水线")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
+            )
         }
         var userId = pipelineReportService.getPipelineInfo(pipeline.projectId, pipeline.pipelineId)?.lastModifyUser
 
@@ -137,13 +146,18 @@ class PipelineRemoteAuthService @Autowired constructor(
             if (taskId != null) {
                 buildLogPrinter.addLine(
                     buildId = buildId.id,
-                    message = "本次远程调用的来源IP是[$sourceIp]",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_REMOTE_CALL_SOURCE_IP,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf("$sourceIp")
+                    ),
                     tag = taskId,
                     executeCount = 1
                 )
             }
             BuildId(
                 id = buildId.id,
+                executeCount = 1,
                 pipelineId = pipeline.pipelineId,
                 projectId = pipeline.projectId
             )

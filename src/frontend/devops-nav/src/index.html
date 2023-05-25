@@ -22,15 +22,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
     <link
       rel="shortcut icon"
-      href="/console/static/favicon.ico"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico"
       type="image/x-icon"
     />
-    <link rel="preload" as="script" href="/console/static/vue.min.js" />
-    <link rel="preload" as="script" href="/console/static/vuex.min.js" />
-    <link rel="preload" as="script" href="/console/static/vue-router.min.js" />
+    <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js" />
+    <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
+    <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
 
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -46,25 +46,15 @@
     <% for (key in htmlWebpackPlugin.files.css) { %>
     <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
     <% } %>
+    
+    
     <!-- end devops:css -->
-    <title>持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 首页</title>
+    <title></title>
   </head>
   <body>
-    <script>
-      var ajax = new XMLHttpRequest()
-      ajax.open(
-        'GET',
-        '/svg-sprites/devops_sprite.svg?t=' + Math.random(),
-        true
-      )
-      ajax.send()
-      ajax.onload = function (e) {
-        var div = document.createElement('div')
-        div.setAttribute('style', 'position: absolute; width: 0; height: 0')
-        div.innerHTML = ajax.responseText
-        document.body.insertBefore(div, document.body.childNodes[0])
-      }
-    </script>
+    <!-- gulp inject: svg sprite js -->
+    <!-- inject:js -->
+    <!-- endinject -->
     <div id="devops-root">
       <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">
@@ -78,24 +68,26 @@
         </div>
       </div>
     </div>
-    <script src="/console/static/vue.min.js"></script>
-    <script src="/console/static/vuex.min.js"></script>
-    <script src="/console/static/vue-router.min.js"></script>
+    <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js"></script>
+    <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
+    <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+    
     <!-- devops:assets -->
     <!-- end devops:assets -->
 
     <script>
       var API_URL_PREFIX = '/ms' // api接口前缀
+      var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
       var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
       var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
       var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
+      var INIT_LOCALE = '__BK_CI_INIT_LOCALE__' // 国际化配置占位符
       var DEVOPS_LS_VERSION =
         '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
       var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
       var BK_CI_VERSION = '__BK_CI_VERSION__'
       var ENTERPRISE_VERSION = false
     </script>
-
     <script>
       // 动态加载js
       function importScript(src, oHead, fOnload) {
@@ -241,7 +233,7 @@
         return LOGIN_SERVICE_URL
       }
 
-      function asyncGet(url, pid) {
+      function asyncGet(url, pid, includeCredentials) {
         return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest()
           xhr.onreadystatechange = function () {
@@ -262,7 +254,7 @@
             }
           }
 
-          xhr.withCredentials = true
+          xhr.withCredentials = typeof includeCredentials === 'boolean' ? includeCredentials : true
           xhr.open('GET', url)
           pid && xhr.setRequestHeader(X_DEVOPS_PROJECT_ID, pid)
           xhr.send()
@@ -273,8 +265,8 @@
         return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
       }
 
-      function fetchAssetsJSON() {
-        return asyncGet('/assets_bundle.json?t=' + Math.random())
+      function getLocaleBackend() {
+        return asyncGet(API_URL_PREFIX + '/project/api/user/locales/get')
       }
 
       function fetchAllProjects() {
@@ -375,11 +367,11 @@
         }
       }
 
-      function init(projectList, allServices, userInfo, assetsJSON) {
+      function init(projectList, allServices, userInfo) {
         var path = location.pathname.replace('/console', '')
         var headTag = document.head || document.getElementsByTagName('head')[0]
         var pathReg = /^\/(\w+)\/?/
-        var serviceObject = getServiceObject(allServices, assetsJSON)
+        var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
         var serviceMap = serviceObject.serviceMap
         var serviceMatchResult = path.match(pathReg)
         var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
@@ -404,8 +396,8 @@
           var css_url = page.css_url
           var title = page.title
 
-          importScript(js_url, document.body, loadJsAssets)
-          importStyle(css_url, headTag)
+          importScript(window.PUBLIC_URL_PREFIX + js_url, document.body, loadJsAssets)
+          importStyle(window.PUBLIC_URL_PREFIX + css_url, headTag)
         } else {
           loadJsAssets()
         }
@@ -436,18 +428,18 @@
       }
 
       function fetchData() {
-        console.log(pathPid)
         return Promise.all([
           fetchAllProjects(),
           fetchAllServices(),
           requestUser(),
-          fetchAssetsJSON(),
+          getLocaleBackend(),
           fetchProjectById(pathPid),
         ]).then((response) => {
           var project = response.pop()
           var cahceArray = ['projectList', 'allServices', 'userInfo']
           var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
           var projectList = response[0]
+          window.INIT_LOCALE = response.pop().language
 
           if (project && project.projectCode) {
             for (var j = 0; j < projectList.length; j++) {
@@ -513,7 +505,7 @@
             : '后端服务异常，请稍后重试'
         document.writeln(
           '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' +
-            '<img src="/console/static/' +
+            '<img src="<%= PUBLIC_PATH_PREFIX %>/console/static/' +
             (status || 503) +
             '.png" />' +
             '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' +

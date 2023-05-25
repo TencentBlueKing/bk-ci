@@ -64,32 +64,34 @@ data class DetailWebsocketPush(
         private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
     }
 
-    override fun findSession(page: String): List<String>? {
+    override fun findSession(page: String): Set<String>? {
         if (page == "") {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
         return super.findSession(page)
     }
 
-    override fun buildMqMessage(): SendMessage? {
+    override fun buildMqMessage(): SendMessage {
         return PipelineMessage(
-                buildId = buildId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                notifyPost = notifyPost,
-                userId = userId,
-                page = page,
-                sessionList = findSession(page ?: ""),
-                startTime = System.currentTimeMillis()
+            buildId = buildId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            notifyPost = notifyPost,
+            userId = userId,
+            page = page,
+            sessionList = findSession(page ?: ""),
+            startTime = System.currentTimeMillis()
         )
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
         try {
-            val modelDetail = pipelineBuildService.getBuildDetail(
+            // #7983 将详情页动态刷新数据直接调整为最新一次执行的record
+            val modelDetail = pipelineBuildService.getBuildRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId!!,
+                executeCount = null,
                 channelCode = ChannelCode.BS
             )
             message.notifyPost.message = JsonUtil.toJson(modelDetail, formatted = false)

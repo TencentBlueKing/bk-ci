@@ -80,9 +80,9 @@ object GithubRequestEventHandle {
             sourceGitProjectId = gitMrEvent.pullRequest.head.repo.id.toLong(),
             // Merged动作使用目标分支，因为源分支可能已被删除
             branch = if (gitMrEvent.pullRequest.merged == true) {
-                gitMrEvent.pullRequest.head.ref
-            } else {
                 gitMrEvent.pullRequest.base.ref
+            } else {
+                gitMrEvent.pullRequest.head.ref
             },
             targetBranch = gitMrEvent.pullRequest.base.ref,
             commitId = gitMrEvent.pullRequest.head.sha,

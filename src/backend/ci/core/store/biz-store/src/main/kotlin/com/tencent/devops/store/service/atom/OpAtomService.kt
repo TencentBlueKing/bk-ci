@@ -34,6 +34,8 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 interface OpAtomService {
 
@@ -42,6 +44,7 @@ interface OpAtomService {
      */
     fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -50,8 +53,8 @@ interface OpAtomService {
         atomStatus: AtomStatusEnum?,
         sortType: OpSortTypeEnum?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<Atom>?>
 
     /**
@@ -68,4 +71,19 @@ interface OpAtomService {
      * 审核插件
      */
     fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
+
+    /**
+     * 一键部署发布插件
+     */
+    fun releaseAtom(
+        userId: String,
+        atomCode: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
+    /**
+     * 将插件设置为默认
+     */
+    fun setDefault(userId: String, atomCode: String): Boolean
 }

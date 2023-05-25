@@ -28,6 +28,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-event"))
     api(project(":core:common:common-expression"))
+    api("org.apache.ant:ant")
     api("org.apache.commons:commons-text")
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")

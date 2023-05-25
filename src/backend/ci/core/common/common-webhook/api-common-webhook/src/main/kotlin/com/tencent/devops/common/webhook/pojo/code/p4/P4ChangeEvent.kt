@@ -29,17 +29,35 @@ package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class P4ChangeEvent(
     val change: Int,
     val p4Port: String,
     @JsonProperty("event_type")
-    val eventType: CodeEventType,
-    val user: String? = null
-) : P4Event() {
+    val eventType: String,
+    val user: String? = null,
+    @ApiModelProperty("文件变更列表")
+    val files: List<String>? = null,
+    @ApiModelProperty("路径是否区分大小写，默认区分大小写")
+    val caseSensitive: Boolean? = true,
+    // 指定项目触发
+    override val projectId: String? = null
+) : P4Event(projectId = projectId) {
     companion object {
-        const val classType = "CHANGE"
+        const val CHANGE_COMMIT = "change-commit"
+        const val CHANGE_CONTENT = "change-content"
+        const val CHANGE_SUBMIT = "change-submit"
+    }
+
+    /**
+     * 是否由用户自己配置触发器,2.0以后的插件,都由用户配置p4 trigger,插件不再主动注册
+     */
+    override fun isCustomTrigger(): Boolean {
+        return when (eventType) {
+            CHANGE_COMMIT, CHANGE_CONTENT, CHANGE_SUBMIT -> true
+            else -> false
+        }
     }
 }

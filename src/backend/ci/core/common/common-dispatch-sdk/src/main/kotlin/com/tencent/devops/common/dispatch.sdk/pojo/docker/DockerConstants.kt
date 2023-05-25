@@ -32,4 +32,29 @@ object DockerConstants {
      * docker路由Key
      */
     const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
+
+    const val ENV_KEY_BUILD_ID = "devops_build_id"
+    const val ENV_KEY_PROJECT_ID = "devops_project_id"
+    const val ENV_KEY_AGENT_ID = "devops_agent_id"
+    const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
+    const val ENV_KEY_GATEWAY = "devops_gateway"
+
+    const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+
+    // 当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，将延迟{1}s 后重试，当前重试次数：{2}
+    const val BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY = "bkJobReachedMaxQuotaSoonRetry"
+    // 当前项目下正在执行的【{0}】JOB数量已经达到配额最大值,并已延迟等待{1}次，将放入降级队列执行.
+    const val BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED = "bkJobReachedMaxQuotaAndAlreadyDelayed"
+    // 当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，将延迟 {1}s 后在降级队列重试，当前重试次数：{2}
+    const val BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED = "bkJobReachedMaxQuotaAndSoonDelayed"
+
+    /**
+     * bkrepo网关配置
+     */
+    const val ENV_DEVOPS_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+
+    /**
+     * 蓝盾网关配置
+     */
+    const val ENV_DEVOPS_GATEWAY = "DEVOPS_GATEWAY"
 }

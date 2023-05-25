@@ -27,9 +27,12 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -42,6 +45,9 @@ import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -88,10 +94,16 @@ interface OpAtomResource {
     @ApiOperation("获取所有流水线插件信息")
     @GET
     @Path("/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun listAllPipelineAtoms(
         @ApiParam("插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
+        @ApiParam("插件标识", required = false)
+        @QueryParam("atomCode")
+        atomCode: String?,
         @ApiParam("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: AtomTypeEnum?,
@@ -118,15 +130,17 @@ interface OpAtomResource {
         desc: Boolean?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int = 1,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<AtomResp<Atom>?>
 
     @ApiOperation("根据ID获取流水线插件信息")
     @GET
     @Path("/{id}")
+    @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getPipelineAtomById(
         @ApiParam("流水线插件ID", required = true)
         @QueryParam("id")
@@ -186,5 +200,35 @@ interface OpAtomResource {
         atomCode: String,
         @ApiParam("下架插件请求报文")
         atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean>
+
+    @ApiOperation("根据插件包一键部署插件")
+    @POST
+    @Path("/deploy")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun releaseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @FormDataParam("atomCode")
+        atomCode: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
+    @ApiOperation("设置插件为默认插件")
+    @POST
+    @Path("/default/atomCodes/{atomCode}")
+    fun setDefault(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
     ): Result<Boolean>
 }

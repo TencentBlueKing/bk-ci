@@ -39,6 +39,7 @@ import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
@@ -115,5 +116,16 @@ class ServiceNotifyResourceImpl @Autowired constructor(
         )
         weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
+    }
+
+    override fun sendWeworkRobotNotify(weworkRobotNotifyMessage: WeworkRobotNotifyMessage): Result<Boolean> {
+        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+            receivers = weworkRobotNotifyMessage.receivers.split(",|;".toRegex()),
+            receiverType = weworkRobotNotifyMessage.receiverType,
+            textType = weworkRobotNotifyMessage.textType,
+            message = weworkRobotNotifyMessage.message,
+            attachments = weworkRobotNotifyMessage.attachments
+        )
+        return Result(weworkService.sendTextMessage(weworkNotifyTextMessage))
     }
 }

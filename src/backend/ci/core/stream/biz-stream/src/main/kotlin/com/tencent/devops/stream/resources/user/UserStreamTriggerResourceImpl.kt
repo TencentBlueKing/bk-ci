@@ -30,6 +30,7 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
@@ -63,7 +64,12 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
         checkParam(userId)
-        permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = triggerBuildReq.projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.EDIT
+        )
         return Result(
             manualTriggerService.triggerBuild(
                 userId, pipelineId,
@@ -73,7 +79,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                     customCommitMsg = triggerBuildReq.customCommitMsg,
                     yaml = triggerBuildReq.yaml,
                     description = null,
-                    commitId = triggerBuildReq.commitId,
+                    commitId = if (triggerBuildReq.useCommitId) triggerBuildReq.commitId else null,
                     payload = null,
                     eventType = null,
                     inputs = ManualTriggerService.parseInputs(triggerBuildReq.inputs)
@@ -90,6 +96,11 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         commitId: String?
     ): Result<ManualTriggerInfo> {
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         try {
             return Result(
                 manualTriggerService.getManualTriggerInfo(
@@ -121,6 +132,11 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         commitId: String?
     ): Result<List<DynamicParameterInfo>> {
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
         try {
             return Result(
@@ -152,6 +168,11 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     override fun getYamlByBuildId(userId: String, projectId: String, buildId: String): Result<V2BuildYaml?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(streamYamlService.getYamlV2(gitProjectId, buildId))
     }
 

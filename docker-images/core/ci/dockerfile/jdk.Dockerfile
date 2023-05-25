@@ -1,31 +1,31 @@
-FROM centos:7
+FROM bkci/os:0.0.1
 
 LABEL maintainer="Tencent BlueKing Devops"
 
-# 安装JDK
+## 安装JDK
 RUN mkdir -p /data && \
     cd /data/ &&\
-    curl -OL https://github.com/Tencent/TencentKona-8/releases/download/8.0.11-GA/TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz &&\
-    tar -xzf TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz &&\
-    rm -f TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz
-ENV JAVA_HOME=/data/TencentKona-8.0.11-345
+    curl -OL https://github.com/Tencent/TencentKona-8/releases/download/8.0.13-GA/TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz &&\
+    tar -xzf TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz &&\
+    rm -f TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz
+ENV JAVA_HOME=/data/TencentKona-8.0.13-362
 ENV PATH=${JAVA_HOME}/bin:$PATH
 ENV CLASSPATH=.:${JAVA_HOME}/lib
 
-# yum安装软件
-RUN yum install -y procps && \
-    yum install -y vi && \
-    yum install -y vim && \
-    yum install -y less && \
-    yum install -y wget
+# 安装软件
+RUN yum update -y &&\
+    yum install -y epel-release &&\
+    yum install -y mysql &&\
+    yum install -y redis &&\
+    yum install -y python3 &&\
+    pip3 install requests 
 
-# 第三方工具
+# 安装Java工具
 RUN mkdir -p /data/tools && \
     curl -o /data/tools/arthas.jar https://arthas.aliyun.com/arthas-boot.jar  && \
     curl -o /data/tools/ot-agent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar -L
 
-# 操作系统相关
-RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo 'alias ls="ls --color=auto"' >> ~/.bashrc && \
-    echo 'alias ll="ls -l"' >> ~/.bashrc && \
-    echo 'alias tailf="tail -f"' >> ~/.bashrc
+# 安装第三方构建机JRE
+RUN wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
+    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
+    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ 

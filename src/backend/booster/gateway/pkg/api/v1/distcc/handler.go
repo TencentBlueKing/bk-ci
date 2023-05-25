@@ -10,6 +10,7 @@
 package distcc
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -45,6 +46,34 @@ func ListTask(req *restful.Request, resp *restful.Response) {
 	}
 
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: taskList, Extra: map[string]interface{}{"length": length}})
+}
+
+// ListWorkerImages handle the http request for listing worker images
+func ListWorkerImages(req *restful.Request, resp *restful.Response) {
+	args := req.Request.URL.Query()
+	queueName := args.Get("queue_name")
+
+	filePath := "./data/DistccWorkerList.json"
+	result := commonTypes.WorkerImage{
+		Mesos: make([]commonTypes.Image, 0, 100),
+		K8s:   make([]commonTypes.Image, 0, 100),
+	}
+
+	data, _ := ioutil.ReadFile(filePath)
+	err := json.Unmarshal([]byte(data), &result)
+	if err != nil {
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+
+	switch queueName {
+	case "shenzhen", "shanghai", "chengdu", "tianjin":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.Mesos})
+	case "K8S://gd":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.K8s})
+	default:
+		message := fmt.Sprintf("unknown queue name : %s", queueName)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: message})
+	}
 }
 
 // ListProject handle the http request for listing project with conditions.

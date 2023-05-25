@@ -33,19 +33,21 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"gopkg.in/ini.v1"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"gopkg.in/ini.v1"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (
@@ -63,25 +65,32 @@ const (
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
+	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
+	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
+	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
+	keyEnableDockerBuild = "devops.docker.enable"
 )
 
 // AgentConfig Agent 配置
 type AgentConfig struct {
-	Gateway           string
-	FileGateway       string
-	BuildType         string
-	ProjectId         string
-	AgentId           string
-	SecretKey         string
-	ParallelTaskCount int
-	EnvType           string
-	SlaveUser         string
-	CollectorOn       bool
-	TimeoutSec        int64
-	DetectShell       bool
-	IgnoreLocalIps    string
-	BatchInstallKey   string
-	LogsKeepHours     int
+	Gateway                 string
+	FileGateway             string
+	BuildType               string
+	ProjectId               string
+	AgentId                 string
+	SecretKey               string
+	ParallelTaskCount       int
+	EnvType                 string
+	SlaveUser               string
+	CollectorOn             bool
+	TimeoutSec              int64
+	DetectShell             bool
+	IgnoreLocalIps          string
+	BatchInstallKey         string
+	LogsKeepHours           int
+	JdkDirPath              string
+	DockerParallelTaskCount int
+	EnableDockerBuild       bool
 }
 
 // AgentEnv Agent 环境配置
@@ -99,8 +108,11 @@ var GAgentConfig *AgentConfig
 var GEnvVars map[string]string
 var UseCert bool
 
+var IsDebug bool = false
+
 // Init 加载和初始化配置
-func Init() {
+func Init(isDebug bool) {
+	IsDebug = isDebug
 	err := LoadAgentConfig()
 	if err != nil {
 		logs.Error("load agent config err: ", err)
@@ -190,6 +202,9 @@ func DetectWorkerVersionByDir(workDir string) string {
 
 // parseWorkerVersion 解析worker版本
 func parseWorkerVersion(output string) string {
+	// 用函数匹配正确的版本信息, 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
+	// 兼容旧版本，防止新agent发布后无限升级
+	versionRegexp := regexp.MustCompile(`^v(\d+\.)(\d+\.)(\d+)((-RELEASE)|(-SNAPSHOT)?)$`)
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -197,11 +212,84 @@ func parseWorkerVersion(output string) string {
 			if len(line) > 64 {
 				line = line[:64]
 			}
-			logs.Info("worker version: ", line)
-			return line
+			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
+			if matchWorkerVersion(line) {
+				logs.Info("worker version: ", line)
+				return line
+			} else {
+				if versionRegexp != nil {
+					if versionRegexp.MatchString(line) {
+						logs.Info("worker version: ", line)
+						return line
+					} else {
+						continue
+					}
+				} else {
+					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
+					logs.Info("worker version: ", line)
+					return line
+				}
+			}
 		}
 	}
 	return ""
+}
+
+// matchWorkerVersion 匹配worker版本信息
+// 版本号为 v数字.数字.数字 || v数字.数字.数字-字符.数字
+// 只匹配以v开头的数字版本即可
+func matchWorkerVersion(line string) bool {
+	if !strings.HasPrefix(line, "v") {
+		logs.Warnf("line %s matchWorkerVersion no start 'v'", line)
+		return false
+	}
+
+	// 去掉v方便后面计算
+	subline := strings.Split(strings.TrimPrefix(line, "v"), ".")
+	sublen := len(subline)
+	if sublen < 3 || sublen > 4 {
+		logs.Warnf("line %s matchWorkerVersion len no match", line)
+		return false
+	}
+
+	// v数字.数字.数字 这种去掉v后应该全是数字
+	if sublen == 3 {
+		return checkNumb(subline, line)
+	}
+
+	// v数字.数字.数字-字符.数字，按照 - 分隔，前面的与len 3一致，后面的两个分别判断，不是数字的是字符，不是字符的是数字
+	fSubline := strings.Split(strings.TrimPrefix(line, "v"), "-")
+	if len(fSubline) != 2 {
+		logs.Warnf("line %s matchWorkerVersion len no match", line)
+		return false
+	}
+
+	if !checkNumb(strings.Split(fSubline[0], "."), line) {
+		return false
+	}
+
+	fSubline2 := strings.Split(fSubline[1], ".")
+	if checkNumb([]string{fSubline2[0]}, line) {
+		logs.Warnf("line %s matchWorkerVersion not char", line)
+		return false
+	}
+
+	if !checkNumb([]string{fSubline2[1]}, line) {
+		return false
+	}
+
+	return true
+}
+
+func checkNumb(subs []string, line string) bool {
+	for _, s := range subs {
+		_, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			logs.Warnf("line %s matchWorkerVersion not numb", line)
+			return false
+		}
+	}
+	return true
 }
 
 // BuildAgentJarPath 生成jar寻址路径
@@ -279,6 +367,23 @@ func LoadAgentConfig() error {
 		logsKeepHours = 96
 	}
 
+	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
+	// 如果路径为空，是第一次，需要主动去拿一次
+	if jdkDirPath == "" {
+		jdkDirPath = getJavaDir()
+	}
+
+	// 兼容旧版本 .agent.properties 没有这个键
+	dockerParallelTaskCount := 4
+	if conf.Section("").HasKey(KeyDockerTaskCount) {
+		dockerParallelTaskCount, err = conf.Section("").Key(KeyDockerTaskCount).Int()
+		if err != nil || dockerParallelTaskCount < 0 {
+			return errors.New("invalid dockerParallelTaskCount")
+		}
+	}
+
+	enableDocker := conf.Section("").Key(keyEnableDockerBuild).MustBool(false)
+
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
@@ -312,12 +417,26 @@ func LoadAgentConfig() error {
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
+	GAgentConfig.JdkDirPath = jdkDirPath
+	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
+	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
+	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
+	GAgentConfig.EnableDockerBuild = enableDocker
+	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
 
+// 可能存在不同协诚写入文件的操作，加上锁保险些
+var saveConfigLock = sync.Mutex{}
+
 // SaveConfig 将配置回写到agent.properties文件保存
 func (a *AgentConfig) SaveConfig() error {
+	saveConfigLock.Lock()
+	defer func() {
+		saveConfigLock.Unlock()
+	}()
+
 	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
 	content := bytes.Buffer{}
@@ -333,8 +452,11 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
+	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
+	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
+	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 
-	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
+	err := os.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")
@@ -354,33 +476,44 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 
 // GetJava 获取本地java命令路径
 func GetJava() string {
-	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
-		if _, err := os.Stat(workDir + "/jdk/Contents/Home/bin/java"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/Contents/Home/bin/java"
-		}
-		return workDir + "/jdk/Contents/Home/bin/java"
-	} else if systemutil.IsWindows() {
-		// win程序在获取文件状态时需要指定文件扩展名，但是运行时非shell应用不需要
-		if _, err := os.Stat(workDir + "/jdk/bin/java.exe"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/bin/java"
-		}
-		return workDir + "/jdk/bin/java"
+		return GAgentConfig.JdkDirPath + "/Contents/Home/bin/java"
 	} else {
-		if _, err := os.Stat(workDir + "/jdk/bin/java"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/bin/java"
-		}
-		return workDir + "/jdk/bin/java"
+		return GAgentConfig.JdkDirPath + "/bin/java"
 	}
 }
 
-// GetJavaDir 获取本地java文件夹
-func GetJavaDir() string {
+func SaveJdkDir(dir string) {
+	if dir == GAgentConfig.JdkDirPath {
+		return
+	}
+	GAgentConfig.JdkDirPath = dir
+	err := GAgentConfig.SaveConfig()
+	if err != nil {
+		logs.Error("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
+		return
+	}
+}
+
+// getJavaDir 获取本地java文件夹
+func getJavaDir() string {
 	workDir := systemutil.GetWorkDir()
 	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 		return workDir + "/jre"
 	}
 	return workDir + "/jdk"
+}
+
+func GetDockerInitFilePath() string {
+	return systemutil.GetWorkDir() + "/" + DockerInitFile
+}
+
+func GetGateWay() string {
+	if strings.HasPrefix(GAgentConfig.Gateway, "http") || strings.HasPrefix(GAgentConfig.Gateway, "https") {
+		return GAgentConfig.Gateway
+	} else {
+		return "http://" + GAgentConfig.Gateway
+	}
 }
 
 // initCert 初始化证书
@@ -398,7 +531,7 @@ func initCert() {
 		return
 	}
 	// Load client cert
-	caCert, err := ioutil.ReadFile(AbsCertFilePath)
+	caCert, err := os.ReadFile(AbsCertFilePath)
 	if err != nil {
 		logs.Warn("Reading server certificate: %s", err)
 		return

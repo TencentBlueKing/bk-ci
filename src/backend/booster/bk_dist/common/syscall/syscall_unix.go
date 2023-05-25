@@ -116,6 +116,12 @@ func (s *Sandbox) ExecScripts(src string) (int, error) {
 	return s.ExecCommand(caller, options, src)
 }
 
+// ExecScriptsWithMessage run the scripts and return the output
+func (s *Sandbox) ExecScriptsWithMessage(src string) (int, []byte, []byte, error) {
+	caller, options := GetCallerAndOptions()
+	return s.ExecCommandWithMessage(caller, options, src)
+}
+
 // StartScripts run the scripts
 func (s *Sandbox) StartScripts(src string) (*exec.Cmd, error) {
 	caller, options := GetCallerAndOptions()

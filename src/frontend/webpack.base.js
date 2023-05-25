@@ -1,5 +1,6 @@
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
@@ -41,11 +42,26 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => {
+                                console.log(resourcePath, 111)
+                                return ''
+                            }
+                        }
+                    }, 'css-loader']
                 },
                 {
                     test: /\.scss$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => {
+                                return ''
+                            }
+                        }
+                    }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -71,10 +87,10 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         }
                     },
                     generator: {
+                        // publicPath: 'auto',
                         filename: '[name].[contenthash].[ext]'
                     }
                 }
-                
             ]
         },
         plugins: [
@@ -103,7 +119,21 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         optimization: {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
-            minimize: !isDev
+            minimize: !isDev,
+            minimizer: [
+                new CssMinimizerPlugin({
+                    minimizerOptions: {
+                        preset: [
+                            'default',
+                            {
+                                discardComments: { removeAll: true },
+                                discardDuplicates: true,
+                                normalizeCharset: true
+                            }
+                        ]
+                    }
+                })
+            ]
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],

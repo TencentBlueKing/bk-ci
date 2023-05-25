@@ -1,7 +1,9 @@
 package com.tencent.devops.turbo.api
 
 import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.turbo.pojo.ParamEnumModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.validate.TurboEngineConfigGroup
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 
 @Api(tags = ["TURBO_ENGINE_CONFIG"], description = "编译加速模式配置接口")
 @RequestMapping("/user/turboEngineConfig")
@@ -124,4 +127,21 @@ interface IUserTurboEngineConfigController {
         @PathVariable("planId")
         planId: String
     ): Response<TurboEngineConfigVO?>
+
+    @ApiOperation("根据区域队列名获取对应的编译器版本清单")
+    @GetMapping(
+        "/{engineCode}/compilerVersions",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getCompilerVersionListByQueueName(
+        @ApiParam(value = "引擎标识", required = true)
+        @PathVariable("engineCode")
+        engineCode: String,
+        @ApiParam(value = "项目id", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "队列名称", required = false)
+        @RequestParam("queueName")
+        queueName: String?
+    ): Response<List<ParamEnumModel>>
 }

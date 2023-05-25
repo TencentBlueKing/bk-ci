@@ -169,6 +169,12 @@ func (m *Mgr) Register(config *types.WorkRegisterConfig) error {
 	return nil
 }
 
+func (m *Mgr) ApplyResource(config *types.WorkRegisterConfig) error {
+	m.applyResource(config)
+
+	return nil
+}
+
 func (m *Mgr) applyResource(config *types.WorkRegisterConfig) {
 	blog.Infof("basic: going to apply resource for work(%s) with project(%s) scene(%s)",
 		m.work.ID(), config.Apply.ProjectID, config.Apply.Scene)
@@ -244,6 +250,8 @@ func (m *Mgr) handleUnregisteredProcess(config *types.WorkUnregisterConfig) {
 // Start do start work
 func (m *Mgr) Start() error {
 	if m.info.IsWorking() {
+		blog.Infof("basic: workinfo(%s) is working now, do nothing now",
+			m.info.WorkID())
 		return nil
 	}
 
@@ -256,8 +264,11 @@ func (m *Mgr) Start() error {
 	// work正式启动后, 需要初始化一系列manager,
 	// local:  启动本地的持锁队列
 	// remote: 启动远程连接池
-	m.work.Local().Init()
-	m.work.Remote().Init()
+	// change from Init to Start
+	// m.work.Local().Init()
+	// m.work.Remote().Init()
+	m.work.Local().Start()
+	m.work.Remote().Start()
 
 	go m.syncBriefStats()
 	return nil
@@ -346,6 +357,11 @@ func (m *Mgr) GetDetails(jobIndex int) *types.WorkStatsDetail {
 // AnalysisStatus return the analysis status
 func (m *Mgr) AnalysisStatus() *types.WorkAnalysisStatus {
 	return m.analysisStatus
+}
+
+// ResetStat reset stat
+func (m *Mgr) ResetStat() error {
+	return m.analysisStatus.Reset()
 }
 
 // SetToolChain : save the ToolChain if local file list changed, do not care remote path change now

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
@@ -39,23 +40,17 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
-import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.listOf
-import kotlin.collections.set
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -77,7 +72,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -107,9 +102,9 @@ object CommonUtils {
                 }
             }
         } catch (e: SocketException) {
-            logger.error("获取网卡失败", e)
+            logger.error("Failed to obtain NIC", e)
         } catch (ignore: NullPointerException) {
-            logger.error("获取网卡失败", ignore)
+            logger.error("Failed to obtain NIC", ignore)
         }
 
         return allIp
@@ -123,7 +118,7 @@ object CommonUtils {
         val netInterfaceName = netInterface.name
         // 过滤掉127.0.0.1的IP
         if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) {
-            logger.info("loopback地址或网卡名称为空")
+            logger.info("The loopback address or NIC name is empty")
         } else {
             val addresses = netInterface.inetAddresses
             while (addresses.hasMoreElements()) {
@@ -142,16 +137,21 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false
+        logo: Boolean = false,
+        language: String
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
                 "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = language
+                )
+                Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }

@@ -1,0 +1,28 @@
+.bk-dialog-wrapper.auto-height-dialog {
+    .bk-dialog {
+        top: 10%;
+        .bk-dialog-content {
+            min-height: 480px;
+            max-height: calc(80vh - 50px);
+            display: flex;
+            flex-direction: column;
+            .bk-dialog-tool,
+            .bk-dialog-header {
+                flex-shrink: 0;
+            }
+            .bk-dialog-body {
+                flex: 1;
+                overflow: auto;
+            }
+        }
+    }
+}
+
+.bk-devops-center-align-dialog.bk-dialog-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .bk-dialog {
+        top: 0;
+    }
+}

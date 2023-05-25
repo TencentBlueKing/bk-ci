@@ -51,12 +51,12 @@
             },
 
             showDebugBtn () {
-                return this.job.dispatchType && this.job.dispatchType.buildType === 'GIT_CI' && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
+                return this.job.dispatchType && (this.job.dispatchType.buildType === 'GIT_CI' || this.job.dispatchType.buildType === 'PUBLIC_DEVCLOUD') && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
             },
 
             downLoadJobLink () {
                 const fileName = encodeURI(encodeURI(`${this.stageIndex + 1}-${this.jobIndex + 1}-${this.job.name}`))
-                const jobId = this.job.containerHashid
+                const jobId = this.job.containerHashId
                 const { pipelineId, buildId } = this.$route.params
                 return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
             },
@@ -73,10 +73,10 @@
         },
         methods: {
             startDebug () {
-                const vmSeqId = this.job.containerId || this.getRealSeqId()
+                const vmSeqId = this.job.id || this.getRealSeqId()
                 let url = ''
                 const tab = window.open('about:blank')
-                const dispatchType = 'GIT_CI'
+                const dispatchType = this.job.dispatchType.buildType || 'GIT_CI'
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
                 url = `/webConsole?pipelineId=${this.pipelineId}&dispatchType=${dispatchType}&vmSeqId=${vmSeqId}${buildIdStr}${this.hashId}`
                 tab.location = url

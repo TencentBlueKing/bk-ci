@@ -30,6 +30,7 @@ package com.tencent.devops.common.dispatch.sdk.service
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.DOCKER_ROUTING_KEY_PREFIX
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
 class DockerRoutingSdkService constructor(
@@ -41,6 +42,11 @@ class DockerRoutingSdkService constructor(
 
     fun getDockerRoutingType(projectId: String): DockerRoutingType {
         val routingTypeStr = redisOperation.hget(DOCKER_ROUTING_KEY_PREFIX, projectId)
+        logger.info("Project: $projectId get dockerRoutingType $routingTypeStr")
         return DockerRoutingType.valueOf(routingTypeStr ?: defaultDockerRoutingType!!)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DockerRoutingSdkService::class.java)
     }
 }

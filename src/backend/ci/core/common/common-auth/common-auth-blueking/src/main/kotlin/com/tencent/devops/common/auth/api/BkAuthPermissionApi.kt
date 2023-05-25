@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkUserAuthVerifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkUserAuthVerifyResponse
 import com.tencent.devops.common.auth.api.pojo.BkUserResourcesAuthRequest
@@ -70,6 +71,23 @@ class BkAuthPermissionApi constructor(
             resourceType = resourceType,
             projectCode = projectCode,
             resourceCode = "*",
+            permission = permission
+        )
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
             permission = permission
         )
     }
@@ -254,6 +272,27 @@ class BkAuthPermissionApi constructor(
 
             resultMap[bkAuthPermission] = resources.toList()
         }
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     companion object {

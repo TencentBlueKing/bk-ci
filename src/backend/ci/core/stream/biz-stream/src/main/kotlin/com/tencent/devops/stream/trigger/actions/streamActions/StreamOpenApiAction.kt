@@ -85,6 +85,8 @@ class StreamOpenApiAction(
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 
+    override fun checkIfModify() = action.checkIfModify()
+
     fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
@@ -102,6 +104,8 @@ class StreamOpenApiAction(
     override fun needSaveOrUpdateBranch() = action.needSaveOrUpdateBranch()
 
     override fun needSendCommitCheck() = false
+
+    override fun needUpdateLastModifyUser(filePath: String) = false
 
     override fun sendCommitCheck(
         buildId: String,

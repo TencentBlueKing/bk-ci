@@ -129,10 +129,10 @@ class AtomMarketInitPipelineService @Autowired constructor(
                 checkPermission = false,
                 isMobile = false,
                 startByMessage = null
-            )
+            ).id
             logger.info("atomMarketBuildManualStartup result is:$buildId")
-        } catch (e: Exception) {
-            logger.error("buildManualStartup error is :${e.message}", e)
+        } catch (t: Throwable) {
+            logger.error("$pipelineId buildManualStartup error:", t)
             atomBuildStatus = AtomStatusEnum.BUILD_FAIL
         }
         return Result(AtomMarketInitPipelineResp(pipelineId, buildId, atomBuildStatus))

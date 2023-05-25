@@ -18,7 +18,7 @@
                 <router-link
                     class="stream-link"
                     :to="{ name: 'metric' }"
-                    @click.native="setTitle($t('header.metrics'))"
+                    @click="setTitle($t('header.metrics'))"
                 >
                     <icon
                         name="metric-link"
@@ -35,7 +35,7 @@
                     }"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
-                    @click.native="setTitle($t('header.settings'))"
+                    @click="setTitle($t('header.settings'))"
                 >
                     <icon
                         name="setting-link"

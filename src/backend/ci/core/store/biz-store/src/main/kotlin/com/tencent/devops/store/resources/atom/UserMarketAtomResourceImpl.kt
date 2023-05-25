@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomService
@@ -107,7 +108,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomById(atomId, userId)
     }
 
-    override fun getAtomByCode(userId: String, bk_ticket: String, atomCode: String): Result<AtomVersion?> {
+    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getAtomByCode(userId, atomCode)
     }
 
@@ -157,5 +158,13 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomOutput(userId: String, atomCode: String): Result<List<AtomOutput>> {
         return Result(marketAtomService.getAtomOutput(atomCode))
+    }
+
+    override fun updateAtomErrorCodeInfo(
+        userId: String,
+        projectCode: String,
+        storeErrorCodeInfo: StoreErrorCodeInfo
+    ): Result<Boolean> {
+        return marketAtomService.updateAtomErrorCodeInfo(userId, projectCode, storeErrorCodeInfo)
     }
 }

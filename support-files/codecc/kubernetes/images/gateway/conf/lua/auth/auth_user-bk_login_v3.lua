@@ -22,7 +22,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 local bk_token, err = cookieUtil:get_cookie("bk_token")
 if not bk_token then
   ngx.log(ngx.STDERR, "failed to read user request bk_token: ", err)
-  ngx.exit(401)
+  ngx.exit(0)
   return
 end
 local ticket = oauthUtil:get_ticket(bk_token)

@@ -34,9 +34,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TContainerRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
@@ -45,10 +44,12 @@ import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
+import com.tencent.devops.store.pojo.container.ContainerOsInfo
 import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
@@ -102,6 +103,25 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     }
 
     /**
+     * 获取容器信息
+     */
+    override fun getAllContainers(): Result<List<ContainerType>?> {
+        val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
+        val containerTypes = containers?.groupBy { it.type }?.map {
+            val list = it.value.map {
+                ContainerOsInfo(
+                    os = it.os,
+                    name = it.name
+                )
+            }
+            ContainerType(
+                type = it.key,
+                osInfos = list
+            )
+        }
+        return Result(containerTypes)
+    }
+    /**
      * 获取构建容器信息
      */
     override fun getAllContainerInfos(
@@ -146,11 +166,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
-                    // 构建资源国际化转换
-                    val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
-                        defaultMessage = type.value
-                    )
                     var enableFlag: Boolean? = null
                     if (buildTypeConfig != null) {
                         val buildTypeConfigMap = JsonUtil.toMap(buildTypeConfig)
@@ -159,7 +174,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                     }
                     typeList.add(ContainerBuildType(
                         type = type.name,
-                        name = i18nTypeName,
+                        name = type.name,
                         enableApp = type.enableApp,
                         disabled = !clickable(buildType = type, projectCode = projectCode, enableFlag = enableFlag),
                         defaultBuildResource = buildResourceService.getDefaultBuildResource(type)
@@ -236,7 +251,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -256,7 +274,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|$containerId|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -283,10 +304,11 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
         if (count > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(name),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(name),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         dslContext.transaction { t ->
@@ -315,10 +337,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             // 判断更新的容器名称是否属于自已
             val pipelineContainer = containerDao.getPipelineContainer(dslContext, id)
             if (null != pipelineContainer && name != pipelineContainer.name) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(name),
-                    false
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(name),
+                    data = false
                 )
             }
         }

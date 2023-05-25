@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 @Service
 class StreamProjectService @Autowired constructor(
@@ -242,10 +243,7 @@ class StreamProjectService @Autowired constructor(
         }
     }
 
-    fun addUserProjectHistory(
-        userId: String,
-        projectId: String
-    ) {
+    fun addUserProjectHistory(userId: String, projectId: String) {
         val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
         redisOperation.zadd(key, projectId, LocalDateTime.now().timestamp().toDouble())
         val size = redisOperation.zsize(key) ?: 0
@@ -253,30 +251,26 @@ class StreamProjectService @Autowired constructor(
             // redis zset rank 是从小到大排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
             redisOperation.zremoveRange(key, 0, size - MAX_STREAM_USER_HISTORY_LENGTH - 1)
         }
+        // 连续90天未访问应该让该Key失效，因各种原因可能不再访问这项服务，所以不应该永久保留Key成为无用脏数据
+        redisOperation.expire(key, expiredInSecond = TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS))
     }
 
-    fun getUserProjectHistory(
-        userId: String,
-        size: Long
-    ): List<StreamProjectCIInfo>? {
+    fun getUserProjectHistory(userId: String, size: Long): List<StreamProjectCIInfo>? {
         val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
         // 先清理3个月前过期数据
         val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
         redisOperation.zremoveRangeByScore(key, 0.0, expiredTime.toDouble())
+
         val gitProjectIds = redisOperation.zrevrange(
             key = key,
             start = 0,
-            end = if (size - 1 < 0) {
-                0
-            } else {
-                size - 1
-            }
-        )?.map { GitCommonUtils.getGitProjectId(it) }.let {
-            if (it.isNullOrEmpty()) {
-                return null
-            }
-            it
+            end = max(size - 1, 0)
+        )?.map { GitCommonUtils.getGitProjectId(it) }
+
+        if (gitProjectIds.isNullOrEmpty()) { // 防止let里的return产生的理解成本：到底是在let闭包返回，还是从当前函数返回
+            return null
         }
+
         val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
             .associateBy { it.id }
         val result = mutableListOf<StreamProjectCIInfo>()

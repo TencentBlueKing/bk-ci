@@ -64,6 +64,11 @@ class EvaluationResult(
 
                 ValueKind.String -> {
                     val str = value as String
+                    // 针对string是true和false做特殊处理
+                    if (str == "false" || str == "true") {
+                        return !str.toBoolean()
+                    }
+
                     return str.isBlank()
                 }
 

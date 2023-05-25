@@ -16,6 +16,7 @@ import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
@@ -54,7 +55,7 @@ Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
-const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/))
+const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
 
 // @ts-ignore
 Vue.use(VeeValidate, {
@@ -87,6 +88,7 @@ Vue.prototype.$localeList = localeList
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -104,7 +106,6 @@ Vue.mixin({
                     resourceId,
                     instanceId
                 }])
-                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

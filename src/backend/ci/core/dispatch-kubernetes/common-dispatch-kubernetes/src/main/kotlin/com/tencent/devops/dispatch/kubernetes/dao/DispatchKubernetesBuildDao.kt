@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesBuild
-import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchKubernetesBuildRecord
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesBuild
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchKubernetesBuildRecord
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field

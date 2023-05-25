@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("质量红线-拦截记录")
 data class RuleInterceptHistory(
-    @ApiModelProperty("hashId", required = true)
+    @ApiModelProperty("hashId 红线拦截记录在表中主键Id的哈希值，是唯一的", required = true)
     val hashId: String,
     @ApiModelProperty("项目里的序号", required = true)
     val num: Long,

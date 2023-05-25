@@ -21,59 +21,62 @@
                     </span>
                 </div>
                 <div class="template-content" :style="{ height: viewHeight }">
-                    <div v-show="!showPreview" v-if="tempList" class="left-temp-list">
-                        <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
-                            <div class="search-input-row">
-                                <input class="bk-form-input" type="text" :placeholder="$t('newlist.tempSearchTips')"
-                                    name="searchInput"
-                                    v-model="searchName"
-                                    @keyup.enter="search()">
-                                <i class="devops-icon icon-search" @click="search()"></i>
+                    <div :class="{
+                        'left-temp-list': true,
+                        'left-temp-preivew': showPreview && tempPipeline
+                    }">
+                        <template v-if="tempList.length && !showPreview">
+                            <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
+                                <div class="search-input-row">
+                                    <input class="bk-form-input" type="text" :placeholder="$t('newlist.tempSearchTips')"
+                                        name="searchInput"
+                                        v-model="searchName"
+                                        @keyup.enter="search()">
+                                    <i class="devops-icon icon-search" @click="search()"></i>
+                                </div>
+                                <div class="search-category">
+                                    <span v-for="category in categoryList"
+                                        :key="category.id"
+                                        :class="{ 'active': curCategory === category.categoryCode }"
+                                        @click="selectCategory(category.categoryCode)">
+                                        <img class="category-icon" :src="category.iconUrl" v-if="category.iconUrl">
+                                        {{ category.categoryName }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="search-category">
-                                <span v-for="category in categoryList"
-                                    :key="category.id"
-                                    :class="{ 'active': curCategory === category.categoryCode }"
-                                    @click="selectCategory(category.categoryCode)">
-                                    <img class="category-icon" :src="category.iconUrl" v-if="category.iconUrl">
-                                    {{ category.categoryName }}
-                                </span>
-                            </div>
-                        </div>
-                        <h2 v-if="(tempTypeIndex === tempTypeList.length - 1)">{{ $t('newlist.templateList') }}（{{ storeTemplateNum }}）</h2>
-                        <h2 v-else>{{ $t('newlist.templateList') }}（{{ tempList.length }}）</h2>
-                        <ul @scroll.passive="scrollLoadMore">
-                            <li v-for="(item, index) in tempList"
-                                :class="{
-                                    'temp-item': true,
-                                    'active': activeTempIndex === index && !item.isInstall,
-                                    'hover': item.isInstall,
-                                    'permission': !item.isFlag
-                                }"
-                                :key="item.name"
-                                @click="selectTemp(index)"
-                            >
-                                <span
-                                    v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
-                                    class="temp-tip"
-                                >{{ $t('newlist.store') }}</span>
-                                <i v-if="activeTempIndex === index && !item.isInstall" class="devops-icon icon-check-circle-shape"></i>
-                                <p class="temp-logo">
-                                    <logo size="50" :name="item.icon" v-if="item.icon"></logo>
-                                    <img class="temp-img" :src="item.logoUrl" v-else-if="item.logoUrl">
-                                    <i class="devops-icon icon-placeholder" v-else></i>
-                                </p>
-                                <p class="temp-title" :title="item.name">
-                                    {{ item.name }}
-                                </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
-                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
-                                <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
-                            </li>
-                        </ul>
-                    </div>
-                    <div v-if="showPreview && tempPipeline" class="pipeline-detail-preview">
-                        <bk-pipeline class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
+                            <h2 v-if="(tempTypeIndex === tempTypeList.length - 1)">{{ $t('newlist.templateList') }}（{{ storeTemplateNum }}）</h2>
+                            <h2 v-else>{{ $t('newlist.templateList') }}（{{ tempList.length }}）</h2>
+                            <ul @scroll.passive="scrollLoadMore">
+                                <li v-for="(item, index) in tempList"
+                                    :class="{
+                                        'temp-item': true,
+                                        'active': activeTempIndex === index && !item.isInstall,
+                                        'hover': item.isInstall,
+                                        'permission': !item.isFlag
+                                    }"
+                                    :key="item.name"
+                                    @click="selectTemp(index)"
+                                >
+                                    <span
+                                        v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
+                                        class="temp-tip"
+                                    >{{ $t('newlist.store') }}</span>
+                                    <i v-if="activeTempIndex === index && !item.isInstall" class="devops-icon icon-check-circle-shape"></i>
+                                    <p class="temp-logo">
+                                        <logo size="50" :name="item.icon" v-if="item.icon"></logo>
+                                        <img class="temp-img" :src="item.logoUrl" v-else-if="item.logoUrl">
+                                        <i class="devops-icon icon-placeholder" v-else></i>
+                                    </p>
+                                    <p class="temp-title" :title="item.name">
+                                        {{ item.name }}
+                                    </p>
+                                    <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                    <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
+                                    <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
+                                </li>
+                            </ul>
+                        </template>
+                        <bk-pipeline v-if="showPreview && tempPipeline" class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
@@ -94,16 +97,13 @@
                                             </bk-popover>
                                         </bk-radio-group>
                                     </div>
-                                    <section v-if="activeTemp.templateType === 'PUBLIC'">
-                                        <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
-                                            <label>{{filter.name}}</label>
-                                            <bk-select
-                                                v-model="filter.labelValue"
-                                                multiple="true">
-                                                <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
-                                                </bk-option>
-                                            </bk-select>
-                                        </div>
+                                    <section class="new-pipeline-group-selector" v-if="activeTemp.templateType === 'PUBLIC'">
+                                        <PipelineGroupSelector
+                                            v-model="groupValue"
+                                            :pipeline-name="newPipelineName"
+                                            ref="pipelineGroupSelector"
+                                            :has-manage-permission="isManage"
+                                        />
                                     </section>
                                     <div v-else style="margin-bottom: 15px">
                                         <label class="bk-form-checkbox template-setting-checkbox">
@@ -142,13 +142,15 @@
 
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
+    import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import Logo from '@/components/Logo'
 
     export default {
         name: 'pipeline-template-popup',
 
         components: {
-            Logo
+            Logo,
+            PipelineGroupSelector
         },
 
         props: {
@@ -182,7 +184,11 @@
                 storeTemplate: [],
                 storeTemplateNum: 0,
                 page: 1,
-                pageSize: 50
+                pageSize: 50,
+                groupValue: {
+                    labels: [],
+                    staticViews: []
+                }
             }
         },
 
@@ -190,6 +196,9 @@
             ...mapState('common', [
                 'pipelineTemplate',
                 'templateCategory'
+            ]),
+            ...mapState('pipelines', [
+                'isManage'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -284,6 +293,7 @@
                 } else {
                     clearTimeout(this.timer)
                     window.removeEventListener('resize', this.computPopupHeight)
+                    this.reset()
                 }
             }
         },
@@ -367,13 +377,20 @@
             },
             toggleTemplatePopup (isShow) {
                 this.togglePopup(isShow)
-                this.selectTemp(0)
-                this.togglePreview(false)
-                this.newPipelineName = ''
-                this.setPipeline(null)
             },
             togglePreview (showPreview) {
                 this.showPreview = showPreview
+            },
+            reset () {
+                this.selectTemp(0)
+                this.togglePreview(false)
+                this.newPipelineName = ''
+                this.groupValue = {
+                    labels: [],
+                    staticViews: []
+                }
+                this.$refs.pipelineGroupSelector?.reset?.()
+                this.setPipeline(null)
             },
             requestMarkTemplates (isReload) {
                 this.isLoadingMore = true
@@ -403,16 +420,12 @@
                     this.$showTips({ message: this.$t('pipelineNameTips'), theme: 'error' })
                     return false
                 }
-                
+
                 const { icon, ...pipeline } = this.activeTemp
                 Object.assign(pipeline, { name: this.newPipelineName })
 
                 if (this.activeTemp.templateType === 'PUBLIC') {
-                    let labels = []
-                    this.tagGroupList.forEach((item) => {
-                        if (item.labelValue) labels = labels.concat(item.labelValue)
-                    })
-                    Object.assign(pipeline, { labels })
+                    Object.assign(pipeline, this.groupValue)
                 }
 
                 const keys = Object.keys(this.activeTemp)
@@ -488,6 +501,9 @@
             padding: 0px;
         }
     }
+    .new-pipeline-group-selector {
+        margin-bottom: 27px;
+    }
     .pipeline-template {
         display: flex;
         flex-direction: column;
@@ -543,14 +559,9 @@
             transition: all .3s ease;
             max-height: 530px;
             min-height: 530px;
-            .pipeline-detail-preview,
-            .left-temp-list {
-                width: 704px;
-            }
             .search-row-content {
                 display: flex;
-                margin-top: 20px;
-                margin-left: 35px;
+                margin: 0 20px 20px 0;
             }
             .search-input-row {
                 padding: 0 10px;
@@ -558,6 +569,7 @@
                 height: 36px;
                 border: 1px solid #dde4eb;
                 background-color: #fff;
+                flex-shrink: 0;
                 .bk-form-input {
                     padding: 0;
                     border: 0;
@@ -577,8 +589,10 @@
             }
             .search-category {
                 margin-left: 10px;
+                display: flex;
+                flex: 1;
                 > span {
-                    width: 98px;
+                    flex: 1;
                     display: inline-block;
                     height: 36px;
                     line-height: 36px;
@@ -606,47 +620,40 @@
                     height: 16px;
                 }
             }
-            .pipeline-detail-preview{
-                padding: 40px;
-                overflow: auto;
-                .pipeline-preview {
-                    pointer-events: none;
-                    transform: scale(.75);
-                    transform-origin: left top;
-                }
+            .pipeline-preview {
+                pointer-events: none;
+                transform: scale(.75);
+                transform-origin: left top;
             }
             .left-temp-list {
                 position: relative;
                 display: flex;
                 flex-direction: column;
+                width: 666px;
+                padding: 20px 0 20px 20px;
+                &.left-temp-preivew {
+                    overflow: auto;
+                }
                 > h2 {
                     font-size: 12px;
-                    margin: 18px 0 10px 0;
+                    margin: 0 20px 18px 0;
                     color: $fontLighterColor;
-                    padding: 0 40px;
                 }
                 > ul {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-content: flex-start;
-                    padding: 0 36px;
-                    flex: 1;
+                    display: grid;
+                    grid-gap: 20px;
+                    grid-template-columns: repeat(3, 190px);
                     overflow: auto;
+                    padding-right: 20px;
                     .temp-item {
                         position: relative;
-                        width: 190px;
                         height: 150px;
                         transition: all .3s ease;
-                        box-shadow: 0px 2px 4px 0px rgba(51, 57, 72, 0.05);
                         border: 1px solid $borderWeightColor;
                         border-radius: 2px;
-                        margin: 0 25px 25px 0;
                         cursor: pointer;
                         box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
                         overflow: hidden;
-                        &:nth-child(3n) {
-                            margin-right: 0;
-                        }
                         .temp-tip {
                             position: absolute;
                             top: -33px;
@@ -739,17 +746,17 @@
                 }
             }
             .right-temp-info {
-                background-color: white;
-                width: 320px;
+                flex: 1;
                 border-left: 1px solid $borderWeightColor;
-                padding: 20px 20px 20px 19px;
+                padding: 20px 0 20px 20px;
                 display: flex;
                 flex-direction: column;
-                background-color: #fff;
+                background-color: white;
+                overflow: hidden;
+
                 .temp-info-detail {
                     overflow: auto;
-                    padding-right: 30px;
-                    margin-bottom: 30px;
+                    padding-right: 20px;
                     flex: 1;
                     .choose-tips {
                         padding: 20px 0;
@@ -760,9 +767,13 @@
                             font-size: 16px;
                         }
                     }
+                    .info-label {
+                        display: inline-block;
+                        margin-bottom: 8px;
+                    }
                     .template-type {
                         display: inline-block;
-                        margin-bottom: 17px;
+                        margin-bottom: 16px;
                         .form-radio {
                             margin-right: 30px;
                         }
@@ -772,7 +783,7 @@
                     }
                     .pipeline-input {
                         position: relative;
-                        margin-bottom: 27px;
+                        margin-bottom: 16px;
                         font-size: 16px;
                         color: #333C48;
                         input,
@@ -839,9 +850,7 @@
                     }
                 }
                 .temp-operation-bar {
-                    position: absolute;
                     padding-top: 20px;
-                    bottom: 10px;
                 }
                 .bk-button.bk-button-small {
                     padding: 0 15px;

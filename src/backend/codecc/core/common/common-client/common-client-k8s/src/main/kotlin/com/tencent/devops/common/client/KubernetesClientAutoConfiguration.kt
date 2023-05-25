@@ -30,6 +30,8 @@ package com.tencent.devops.common.client
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.client.discovery.DiscoveryUtils
+import com.tencent.devops.common.client.discovery.KubernetesDiscoveryUtils
 import com.tencent.devops.common.client.ms.KubernetesClient
 import com.tencent.devops.common.client.pojo.AllProperties
 import com.tencent.devops.common.client.proxy.DevopsProxy
@@ -41,10 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration
 import org.springframework.cloud.kubernetes.client.discovery.KubernetesInformerDiscoveryClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+
+import com.tencent.devops.common.service.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 import org.springframework.web.context.request.RequestContextHolder
@@ -117,5 +122,11 @@ class KubernetesClientAutoConfiguration {
             }
         }
     }
+
+    @Bean
+    @ConditionalOnMissingBean(DiscoveryUtils::class)
+    fun discoveryUtils(@Autowired discoveryClient: DiscoveryClient,
+                       @Autowired profile: Profile
+    ) = KubernetesDiscoveryUtils(discoveryClient,profile)
 
 }

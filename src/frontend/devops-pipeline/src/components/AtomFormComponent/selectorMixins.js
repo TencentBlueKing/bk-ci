@@ -32,6 +32,9 @@ export default {
         getAtomKeyModal: {
             type: Function,
             default: () => () => {}
+        },
+        container: {
+            type: Object
         }
     },
     data () {
@@ -44,7 +47,10 @@ export default {
             const { webUrl, urlParse, mergedOptionsConf: { itemTargetUrl }, $route: { params } } = this
             const originUrl = /^(http|https):\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
 
-            return urlParse(originUrl, params)
+            return urlParse(originUrl, {
+                bkPoolType: this?.container?.dispatchType?.buildType,
+                ...params
+            })
         },
         mergedOptionsConf () {
             return Object.assign({}, {
@@ -77,6 +83,7 @@ export default {
         queryParams () {
             const { atomValue = {}, $route: { params = {} } } = this
             return {
+                bkPoolType: this?.container?.dispatchType?.buildType,
                 ...params,
                 ...atomValue
             }

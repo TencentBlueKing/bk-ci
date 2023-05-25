@@ -29,7 +29,6 @@ package com.tencent.bk.codecc.defect.service.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.coverity.api.ServiceCovDefectRestResource;
 import com.tencent.bk.codecc.defect.component.GongfengFilterPathComponent;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
@@ -318,14 +317,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     @Override
     protected DefectDetailVO getFilesContent(DefectDetailVO defectDetailVO)
     {
-        Result<DefectDetailVO> result = client.get(ServiceCovDefectRestResource.class).getDefectDetail(defectDetailVO);
-
-        if (result.isNotOk() || null == result.getData())
-        {
-            log.error("get defect detail fail!");
-            throw new CodeCCException(TaskMessageCode.REGISTER_COV_PROJ_FAIL);
-        }
-        return result.getData();
+        return new DefectDetailVO();
     }
 
     @Override

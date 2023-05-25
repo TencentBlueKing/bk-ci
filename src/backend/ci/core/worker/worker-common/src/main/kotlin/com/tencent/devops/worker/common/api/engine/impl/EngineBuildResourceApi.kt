@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.api.engine.impl
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -37,7 +38,15 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import okhttp3.MediaType
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_FINISH_REQUEST_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_TIMEOUT_END_REQUEST_FAILURE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.HEARTBEAT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.NOTIFY_SERVER_START_BUILD_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.RECEIVE_BUILD_MACHINE_TASK_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_START_ERROR_INFO_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_TASK_FINISH_FAILURE
+import com.tencent.devops.worker.common.env.AgentEnv
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 @Suppress("UNUSED", "TooManyFunctions")
@@ -53,7 +62,10 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun setStarted(retryCount: Int): Result<BuildVariables> {
         val path = getRequestUrl(path = "api/build/worker/started", retryCount = retryCount)
         val request = buildPut(path)
-        val errorMessage = "通知服务端启动构建失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            NOTIFY_SERVER_START_BUILD_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -69,7 +81,10 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun claimTask(retryCount: Int): Result<BuildTask> {
         val path = getRequestUrl(path = "api/build/worker/claim", retryCount = retryCount)
         val request = buildGet(path)
-        val errorMessage = "领取构建机任务失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            RECEIVE_BUILD_MACHINE_TASK_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -83,11 +98,14 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/complete", retryCount = retryCount)
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)
-        val errorMessage = "报告任务完成失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            REPORT_TASK_FINISH_FAILURE,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -98,10 +116,17 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
+        if (envBuildId.isNotBlank()) {
+            buildId = envBuildId
+        }
+
         val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
         val request = buildPost(path)
-        val errorMessage = "构建完成请求失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            BUILD_FINISH_REQUEST_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -115,7 +140,9 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun heartbeat(executeCount: Int): Result<HeartBeatInfo> {
         val path = getRequestUrl(path = "api/build/worker/heartbeat/v1", executeCount = executeCount)
         val request = buildPost(path)
-        val errorMessage = "心跳失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            HEARTBEAT_FAIL, AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -129,7 +156,10 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun timeout(): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/timeout")
         val request = buildPost(path)
-        val errorMessage = "构建超时结束请求失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            BUILD_TIMEOUT_END_REQUEST_FAILURE,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -143,11 +173,14 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun submitError(errorInfo: ErrorInfo): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/submit_error")
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(errorInfo)
         )
         val request = buildPost(path, requestBody)
-        val errorMessage = "上报启动异常信息失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            REPORT_START_ERROR_INFO_FAIL,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -165,7 +198,10 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun getBuildDetailUrl(): Result<String> {
         val path = getRequestUrl(path = "api/build/worker/detail_url")
         val request = buildGet(path)
-        val errorMessage = "构建超时结束请求失败"
+        val errorMessage = MessageUtil.getMessageByLocale(
+            BUILD_TIMEOUT_END_REQUEST_FAILURE,
+            AgentEnv.getLocaleLanguage()
+        )
         val responseContent = try {
             request(
                 request = request,

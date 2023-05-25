@@ -30,22 +30,26 @@ package com.tencent.devops.plugin.codecc
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
-import okhttp3.MediaType
+import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
-import javax.ws.rs.HttpMethod
 
 @Suppress("ALL")
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
-    private val codeccApiProxyUrl: String
+    private val codeccApiProxyUrl: String,
+    private val codeccHost: String,
+    private val codeccGrayProjectId: String? = null
 ) {
 
     companion object {
@@ -63,7 +67,7 @@ open class CodeccApi constructor(
     ): String {
         val jsonBody = objectMapper.writeValueAsString(body)
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"), jsonBody
+            "application/json; charset=utf-8".toMediaTypeOrNull(), jsonBody
         )
 
         val builder = Request.Builder()
@@ -92,7 +96,7 @@ open class CodeccApi constructor(
         val request = builder.build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RemoteServiceException("Fail to invoke codecc request")
             }
@@ -177,5 +181,29 @@ open class CodeccApi constructor(
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
+    }
+
+    fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
+        val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        val headers = mutableMapOf<String, String>()
+        if (!codeccGrayProjectId.isNullOrBlank()) {
+            headers[AUTH_HEADER_PROJECT_ID] = codeccGrayProjectId
+        }
+        val httpReq = Request.Builder()
+            .url(url)
+            .headers(headers.toHeaders())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(httpReq).use { response ->
+            val body = response.body!!.string()
+            logger.info("codecc opensource measurement response: $body")
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    errorCode = response.code,
+                    errorMessage = "get codecc opensource measurement response fail.$body"
+                )
+            }
+            return objectMapper.readValue(body)
+        }
     }
 }

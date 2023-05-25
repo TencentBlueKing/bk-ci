@@ -223,6 +223,7 @@ const (
 	ServerErrUpdateWorkerFailed
 	ServerErrDeleteWorkerFailed
 	ServerErrListWorkStatsFailed
+	ServerErrListVersionFailed
 )
 
 var serverErrCode = map[ServerErrCode]string{

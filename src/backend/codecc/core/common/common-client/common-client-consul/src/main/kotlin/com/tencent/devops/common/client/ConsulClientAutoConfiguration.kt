@@ -30,6 +30,8 @@ package com.tencent.devops.common.client
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.client.discovery.ConsulDiscoveryUtils
+import com.tencent.devops.common.client.discovery.DiscoveryUtils
 import com.tencent.devops.common.client.ms.ConsulServiceClient
 import com.tencent.devops.common.client.pojo.AllProperties
 import com.tencent.devops.common.client.proxy.DevopsProxy
@@ -42,6 +44,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration
+import org.springframework.cloud.client.serviceregistry.Registration
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -116,6 +119,10 @@ class ConsulClientAutoConfiguration {
             }
         }
     }
+
+    @Bean
+    @ConditionalOnMissingBean(DiscoveryUtils::class)
+    fun discoveryUtils(@Autowired registration: Registration) = ConsulDiscoveryUtils(registration)
 
 
 }

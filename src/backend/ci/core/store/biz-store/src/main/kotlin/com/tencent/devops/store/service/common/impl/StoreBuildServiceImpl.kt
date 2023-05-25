@@ -30,8 +30,8 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
@@ -61,9 +61,10 @@ class StoreBuildServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(pipelineId)
+                params = arrayOf(pipelineId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         val storeType = storePipelineRelRecord.storeType
         val storeHandleBuildResultService =

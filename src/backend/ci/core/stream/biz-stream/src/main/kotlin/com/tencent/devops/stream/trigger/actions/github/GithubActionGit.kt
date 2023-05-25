@@ -28,14 +28,15 @@
 package com.tencent.devops.stream.trigger.actions.github
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService
@@ -46,8 +47,7 @@ import com.tencent.devops.stream.trigger.service.GitCheckService
  */
 abstract class GithubActionGit(
     override val api: GithubApiService,
-    private val gitCheckService: GitCheckService,
-    private val streamTriggerCache: StreamTriggerCache
+    private val gitCheckService: GitCheckService
 ) : GitBaseAction {
     override lateinit var data: ActionData
 
@@ -130,4 +130,11 @@ abstract class GithubActionGit(
 
     override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) =
         Unit
+
+    override fun parseStreamTriggerContext(cred: StreamGitCred?) {
+        // 格式化repoCreatedTime
+        this.data.context.repoCreatedTime = DateTimeUtil.formatDate(
+            DateTimeUtil.zoneDateToDate(this.data.context.repoCreatedTime)!!
+        )
+    }
 }
