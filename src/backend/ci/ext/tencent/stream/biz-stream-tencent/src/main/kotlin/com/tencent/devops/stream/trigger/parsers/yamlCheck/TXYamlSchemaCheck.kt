@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.stream.config.TXStreamGitConfig
