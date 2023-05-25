@@ -41,10 +41,10 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
-import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -52,13 +52,13 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
-import java.time.LocalDateTime
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
 /**
  * 将资源迁移到权限中心
@@ -68,20 +68,20 @@ class MigrateResourceService @Autowired constructor(
     private val resourceService: ResourceService,
     private val rbacCacheService: RbacCacheService,
     private val rbacPermissionResourceService: RbacPermissionResourceService,
+    private val migrateCreatorFixService: MigrateCreatorFixService,
     private val authResourceService: AuthResourceService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val tokenApi: AuthTokenApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
-    private val deptService: DeptService,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     @Suppress("SpreadOperator")
     fun migrateResource(
         projectCode: String,
-        iamApprover: String
+        projectCreator: String
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
@@ -100,7 +100,7 @@ class MigrateResourceService @Autowired constructor(
                         migrateResource(
                             projectCode = projectCode,
                             resourceType = resourceType,
-                            iamApprover = iamApprover
+                            projectCreator = projectCreator
                         )
                     },
                     executorService
@@ -125,7 +125,7 @@ class MigrateResourceService @Autowired constructor(
     private fun migrateResource(
         projectCode: String,
         resourceType: String,
-        iamApprover: String
+        projectCreator: String
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource|$projectCode|$resourceType")
@@ -133,7 +133,7 @@ class MigrateResourceService @Autowired constructor(
             createRbacResource(
                 resourceType = resourceType,
                 projectCode = projectCode,
-                iamApprover = iamApprover
+                projectCreator = projectCreator
             )
         } catch (ignore: Exception) {
             logger.error("Failed to migrate resource|$projectCode|$resourceType", ignore)
@@ -149,7 +149,7 @@ class MigrateResourceService @Autowired constructor(
     private fun createRbacResource(
         resourceType: String,
         projectCode: String,
-        iamApprover: String
+        projectCreator: String
     ) {
         var offset = 0L
         val limit = 100L
@@ -193,9 +193,9 @@ class MigrateResourceService @Autowired constructor(
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
-                                userId = buildIamApprover(
-                                    resourceCreator = it.iamApprover.firstOrNull(),
-                                    iamApprover = iamApprover
+                                userId = migrateCreatorFixService.getResourceCreator(
+                                    projectCreator = projectCreator,
+                                    resourceCreator = it.iamApprover.first(),
                                 ),
                                 projectCode = projectCode,
                                 resourceType = resourceType,
@@ -280,12 +280,6 @@ class MigrateResourceService @Autowired constructor(
             groupCount = count * groupConfigCount
         )
     }
-
-    private fun buildIamApprover(
-        resourceCreator: String?,
-        iamApprover: String
-    ): String = if (resourceCreator != null && deptService.getUserInfo("admin", resourceCreator) != null)
-        resourceCreator else iamApprover
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
