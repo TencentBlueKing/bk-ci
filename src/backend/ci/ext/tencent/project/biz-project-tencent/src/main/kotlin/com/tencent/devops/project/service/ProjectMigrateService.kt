@@ -6,6 +6,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.MigrateProjectInfo
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
@@ -22,6 +23,7 @@ class ProjectMigrateService @Autowired constructor(
         val migrateProjectInfoList = mutableListOf<MigrateProjectInfo>()
         var hasMore = true
         var offset = 0
+        logger.info("get migrate projectInfo start..")
         while (hasMore) {
             val migrateProjects = projectDao.listMigrateProjects(
                 dslContext = dslContext,
@@ -46,6 +48,7 @@ class ProjectMigrateService @Autowired constructor(
     }
 
     fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean {
+        logger.info("update project create start | $projectUpdateCreatorDtoList")
         projectUpdateCreatorDtoList.forEach {
             projectDao.getByEnglishName(
                 dslContext = dslContext,
@@ -58,5 +61,9 @@ class ProjectMigrateService @Autowired constructor(
             )
         }
         return true
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectMigrateService::class.java)
     }
 }
