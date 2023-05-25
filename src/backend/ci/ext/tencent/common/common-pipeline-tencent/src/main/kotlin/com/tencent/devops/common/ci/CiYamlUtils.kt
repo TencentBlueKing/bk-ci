@@ -56,6 +56,7 @@ import java.io.StringReader
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
+@Suppress("NestedBlockDepth")
 object CiYamlUtils {
 
     private val logger = LoggerFactory.getLogger(CiYamlUtils::class.java)
