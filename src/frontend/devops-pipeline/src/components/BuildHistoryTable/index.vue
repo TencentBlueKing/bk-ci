@@ -66,7 +66,7 @@
                             class="material-item"
                         >
                             <p
-                                v-bk-tooltips="{ content: generateMaterial(material) }"
+                                v-bk-tooltips="{ content: generateMaterial(material), delay: [300, 0] }"
                                 :class="{ 'show-commit-times': material.commitTimes > 1 }"
                                 @click="handleRowClick(props.row)"
                             >
@@ -141,7 +141,7 @@
                     <div class="remark-cell">
                         <span
                             :class="{ 'remark-span': true, active: props.row.active }"
-                            v-bk-tooltips="{ content: props.row.remark, disabled: !props.row.remark }"
+                            v-bk-tooltips="{ content: props.row.remark, disabled: !props.row.remark, delay: [300, 0] }"
                         >
                             {{ props.row.remark || "--" }}
                         </span>
@@ -202,7 +202,7 @@
                                 :name="item.icon"
                             />
                             <span
-                                v-bk-tooltips="{ content: item.title, maxWidth: 500 }"
+                                v-bk-tooltips="{ content: item.title, maxWidth: 500, delay: [300, 0] }"
                                 v-if="item.title"
                             >
                                 {{ item.title }}
