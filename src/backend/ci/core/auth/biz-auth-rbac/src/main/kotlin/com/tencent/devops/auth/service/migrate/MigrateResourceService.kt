@@ -195,7 +195,7 @@ class MigrateResourceService @Autowired constructor(
                             rbacPermissionResourceService.resourceCreateRelation(
                                 userId = migrateCreatorFixService.getResourceCreator(
                                     projectCreator = projectCreator,
-                                    resourceCreator = it.iamApprover.first(),
+                                    resourceCreator = it.iamApprover.first()
                                 ),
                                 projectCode = projectCode,
                                 resourceType = resourceType,
