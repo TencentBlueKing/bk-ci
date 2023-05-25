@@ -104,8 +104,6 @@ fun main(args: Array<String>) {
 
         BuildType.MACOS.name -> {
             MacAgentEnv.initEnv()
-            MacAgentEnv.selectXcode()
-
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
                     variables: Map<String, String>,

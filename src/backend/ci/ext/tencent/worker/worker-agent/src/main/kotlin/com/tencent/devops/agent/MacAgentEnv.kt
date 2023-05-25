@@ -3,7 +3,9 @@ package com.tencent.devops.agent
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -36,6 +38,8 @@ object MacAgentEnv {
     fun initEnv() {
         // 如果agentId环境变量存在，表示变量已注入，不用调用接口获取
         if (AgentEnv.getAgentId().isNotBlank()) {
+            // 设置buildType=MACOS_NEW, 适配网关兼容逻辑
+            System.setProperty(BUILD_TYPE, BuildType.MACOS_NEW.name)
             return
         }
 
@@ -82,9 +86,11 @@ object MacAgentEnv {
             }
         } while (!startBuild)
         println("Start to run.")
+
+        selectXcode()
     }
 
-    fun selectXcode() {
+    private fun selectXcode() {
         println("Start to select xcode.")
         // 选择XCODE版本
         val xcodeVersion = AgentEnv.getEnvProp(XCODE_VERSION) ?: throw RuntimeException("Not found xcodeVersion")
