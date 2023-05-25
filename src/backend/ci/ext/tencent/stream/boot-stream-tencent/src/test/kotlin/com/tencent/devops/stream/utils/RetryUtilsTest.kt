@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.service.utils.RetryUtils
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
