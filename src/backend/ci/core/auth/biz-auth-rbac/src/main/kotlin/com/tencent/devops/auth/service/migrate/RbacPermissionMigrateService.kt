@@ -276,9 +276,9 @@ class RbacPermissionMigrateService constructor(
                 totalTime = System.currentTimeMillis() - startEpoch
             )
             return true
-        } catch (exception: Exception) {
+        } catch (ignored: Exception) {
             handleException(
-                exception = exception,
+                exception = ignored,
                 projectCode = projectCode,
                 authType = authType.value
             )

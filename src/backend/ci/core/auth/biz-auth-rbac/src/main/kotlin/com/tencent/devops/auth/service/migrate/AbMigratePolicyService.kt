@@ -45,6 +45,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
@@ -75,7 +76,8 @@ abstract class AbMigratePolicyService(
     private val migrateIamApiService: MigrateIamApiService,
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val deptService: DeptService
 ) {
 
     companion object {
@@ -309,6 +311,12 @@ abstract class AbMigratePolicyService(
         results.forEach { result ->
             logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
             val userId = result.subject.id
+            // 离职人员,直接忽略
+            if (deptService.getUserInfo(userId = "admin", name = userId) == null) {
+                logger.warn("user has left, skip custom policy migration|${result.projectId}|$userId")
+                return@forEach
+            }
+
             result.permissions.forEach permission@{ permission ->
                 val groupId = matchResourceGroup(
                     userId = userId,
