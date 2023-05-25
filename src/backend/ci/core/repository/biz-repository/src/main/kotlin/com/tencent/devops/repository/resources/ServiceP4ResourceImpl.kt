@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.service.scm.Ip4Service
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -87,6 +88,20 @@ class ServiceP4ResourceImpl @Autowired constructor(
                 reversion = reversion,
                 username = username,
                 password = password
+            )
+        )
+    }
+
+    override fun getServerInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Result<P4ServerInfo> {
+        return Result(
+            p4Service.getServerInfo(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType
             )
         )
     }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_QUALITY_CHECK_FAIL
@@ -40,6 +41,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -47,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -69,6 +70,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
@@ -96,6 +98,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -163,6 +166,17 @@ class BuildEndControl @Autowired constructor(
 
         fixBuildInfo(buildInfo)
 
+        // 刷新详情页状态
+        val (model, allStageStatus, timeCost) = pipelineBuildRecordService.buildEnd(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildStatus = buildStatus,
+            errorInfoList = buildInfo.errorInfoList,
+            errorMsg = errorMsg,
+            executeCount = buildInfo.executeCount ?: 1
+        )
+
         // 记录本流水线最后一次构建的状态
         val endTime = LocalDateTime.now()
         pipelineRuntimeService.finishLatestRunningBuild(
@@ -172,7 +186,8 @@ class BuildEndControl @Autowired constructor(
                 endTime = endTime, buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
-            errorInfoList = buildInfo.errorInfoList
+            errorInfoList = buildInfo.errorInfoList,
+            timeCost = timeCost
         )
 
         // 更新buildNo
@@ -180,17 +195,6 @@ class BuildEndControl @Autowired constructor(
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
             setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         }
-
-        // 设置状态
-        val (model, allStageStatus) = pipelineBuildRecordService.buildEnd(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            buildStatus = buildStatus,
-            errorInfoList = buildInfo.errorInfoList,
-            errorMsg = errorMsg,
-            executeCount = buildInfo.executeCount ?: 1
-        )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
@@ -237,7 +241,7 @@ class BuildEndControl @Autowired constructor(
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)
         // 记录日志
-        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
+        buildLogPrinter.stopLog(buildId = buildId, executeCount = buildInfo.executeCount)
         return buildInfo
     }
 
@@ -290,19 +294,27 @@ class BuildEndControl @Autowired constructor(
             }
             // 将插件出错信息逐一加入构建错误信息
             if (task.errorType != null) {
+                val (taskId, taskName) = if (task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                    val container = containerBuildRecordService.getRecord(
+                        transactionContext = null, projectId = task.projectId, pipelineId = task.pipelineId,
+                        buildId = task.buildId, containerId = task.containerId, executeCount = task.executeCount ?: 1
+                    )
+                    Pair("", container?.containerVar?.get(Container::name.name)?.toString() ?: task.taskName)
+                } else {
+                    Pair(task.taskId, task.taskName)
+                }
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = task.stageId,
                         containerId = task.containerId,
                         matrixFlag = VMUtils.isMatrixContainerId(task.containerId),
-                        taskId = task.taskId,
-                        taskName = task.taskName,
+                        // 启动插件问题设为job级别问题，将taskId置空，用于前端定位图至job
+                        taskId = taskId,
+                        taskName = taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
                         errorType = task.errorType?.num ?: ErrorType.USER.num,
                         errorCode = task.errorCode ?: PLUGIN_DEFAULT_ERROR,
-                        errorMsg = CommonUtils.interceptStringInLength(
-                            string = task.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-                        ) ?: ""
+                        errorMsg = task.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                     )
                 )
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
@@ -401,7 +413,11 @@ class BuildEndControl @Autowired constructor(
             varName = PIPELINE_TIME_END,
             varValue = endTime
         )
-        val duration = ((endTime - startTime) / 1000).toString()
+        val duration = if (startTime <= 0L) { // 未启动，直接取消的情况下，耗时不准确
+            "0"
+        } else {
+            ((endTime - startTime) / 1000).toString()
+        }
         buildVariableService.setVariable(
             projectId = this.projectId,
             pipelineId = this.pipelineId,

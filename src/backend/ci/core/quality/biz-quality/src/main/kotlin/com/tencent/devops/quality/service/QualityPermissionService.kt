@@ -39,6 +39,19 @@ interface QualityPermissionService {
         message: String
     )
 
+    fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean
+
+    fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    )
+
     fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String)
 
     fun modifyGroupResource(projectId: String, groupId: Long, groupName: String)
@@ -50,6 +63,12 @@ interface QualityPermissionService {
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
+
+    fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long>
 
     fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean
 
@@ -74,4 +93,10 @@ interface QualityPermissionService {
         projectId: String,
         bkAuthPermissionSet: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
+
+    fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long>
 }

@@ -164,6 +164,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     pipelineId = subBuildInfo.pipelineId,
                     buildId = subBuildInfo.buildId,
                     userId = subBuildInfo.startUser,
+                    executeCount = subBuildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED
                 )
             } catch (ignored: Exception) {

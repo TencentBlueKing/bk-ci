@@ -220,6 +220,18 @@ class QualityRuleDao {
         }
     }
 
+    fun listIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): Result<Record1<Long>> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByPipelineRange(
         dslContext: DSLContext,
         projectId: String,
@@ -282,6 +294,24 @@ class QualityRuleDao {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(ruleIds))
                 .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        rulesId: List<Long>,
+        offset: Int,
+        limit: Int
+    ): Result<TQualityRuleRecord> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(rulesId))
+                .orderBy(CREATE_TIME.desc())
+                .offset(offset)
+                .limit(limit)
                 .fetch()
         }
     }

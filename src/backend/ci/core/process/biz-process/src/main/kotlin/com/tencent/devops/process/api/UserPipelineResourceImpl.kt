@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
@@ -39,9 +41,11 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
@@ -73,8 +77,8 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import io.micrometer.core.annotation.Timed
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
@@ -359,12 +363,22 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<PipelineRemoteToken> {
         checkParam(userId, projectId)
+        val language = I18nUtil.getLanguage(userId)
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+            message = MessageUtil.getMessageByLocale(
+                USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EDIT.getI18n(language),
+                    pipelineId
+                )
+            )
         )
         return Result(
             pipelineRemoteAuthService.generateAuth(
@@ -403,7 +417,9 @@ class UserPipelineResourceImpl @Autowired constructor(
             return Result(emptyMap())
         }
         if (pipelineIds.size > 100) {
-            throw InvalidParamException(message = "流水线列表长度不能超过100")
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(PIPELINE_LIST_LENGTH_LIMIT)
+            )
         }
         val result = pipelineIds.associateWith {
             try {

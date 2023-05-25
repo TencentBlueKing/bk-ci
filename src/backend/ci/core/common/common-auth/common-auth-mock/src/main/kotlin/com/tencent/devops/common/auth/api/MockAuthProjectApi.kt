@@ -34,9 +34,23 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 
+@Suppress("TooManyFunctions")
 class MockAuthProjectApi constructor(
     private val bkAuthPermissionApi: MockAuthPermissionApi
 ) : AuthProjectApi {
+
+    override fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        return if (permission == AuthPermission.MANAGE || permission == AuthPermission.ENABLE) {
+            checkProjectManager(userId = user, serviceCode = serviceCode, projectCode = projectCode)
+        } else {
+            checkProjectUser(user = user, serviceCode = serviceCode, projectCode = projectCode)
+        }
+    }
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
         return emptyList()
@@ -82,6 +96,15 @@ class MockAuthProjectApi constructor(
         val sets = mutableSetOf<String>()
         map.map { sets.addAll(it.value) }
         return sets.toList()
+    }
+
+    override fun getUserProjectsByPermission(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        permission: AuthPermission,
+        supplier: (() -> List<String>)?
+    ): List<String> {
+        return emptyList()
     }
 
     override fun getUserProjectsAvailable(

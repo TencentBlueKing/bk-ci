@@ -107,6 +107,12 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
     PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE("PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"),
 
     /**
+     * 流水线CallBack接口熔断通知模板代码
+     *
+     */
+    PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE("PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"),
+
+    /**
      * 未知模板代码
      */
     UNKNOWN("NULL");

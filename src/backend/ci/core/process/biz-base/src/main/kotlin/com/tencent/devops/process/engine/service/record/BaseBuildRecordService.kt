@@ -48,10 +48,11 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -71,6 +72,7 @@ import org.slf4j.LoggerFactory
 open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
@@ -93,6 +95,7 @@ open class BaseBuildRecordService(
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
         val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
+        var startUser: String? = null
         try {
             watcher.start("lock")
             lock.lock()
@@ -105,17 +108,15 @@ open class BaseBuildRecordService(
                 message = "Will not update"
                 return
             }
+            startUser = record.startUser
 
             watcher.start("refreshOperation")
             refreshOperation()
             watcher.stop()
 
-            watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
-
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
-            if (!change) {
+            if (!change && cancelUser.isNullOrBlank()) {
                 message = "Will not update"
                 return
             }
@@ -140,8 +141,10 @@ open class BaseBuildRecordService(
             logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
-            watcher.stop()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
+            watcher.start("dispatchEvent")
+            pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
         return
@@ -207,19 +210,22 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineDetailChangeEvent(
+    private fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        startUser: String,
+        startUser: String?,
         executeCount: Int
     ) {
+        val userId = startUser
+            ?: pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)?.startUser
+            ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = startUser,
+                userId = userId,
                 buildId = buildId,
                 executeCount = executeCount,
                 refreshTypes = RefreshType.RECORD.binary
@@ -264,7 +270,7 @@ open class BaseBuildRecordService(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.stageId == StageBuildRecordService.TRIGGER_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }
@@ -283,9 +289,9 @@ open class BaseBuildRecordService(
             newTimestamps.forEach { (type, new) ->
                 val old = oldTimestamps[type]
                 result[type] = if (old != null) {
-                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    // 如果时间戳已存在，开始时间不变，则结束时间将新值覆盖旧值
                     BuildRecordTimeStamp(
-                        startTime = new.startTime ?: old.startTime,
+                        startTime = old.startTime ?: new.startTime,
                         endTime = new.endTime ?: old.endTime
                     )
                 } else {

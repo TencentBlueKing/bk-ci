@@ -29,8 +29,10 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
+@Suppress("TooManyFunctions")
 interface ProjectPermissionService {
 
     /**
@@ -40,19 +42,24 @@ interface ProjectPermissionService {
     fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
 
     fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        authProjectCreateInfo: AuthProjectCreateInfo
     ): String
 
     fun deleteResource(projectCode: String)
 
-    fun modifyResource(projectCode: String, projectName: String)
+    fun modifyResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    )
 
     fun getUserProjects(userId: String): List<String>
 
     fun getUserProjectsAvailable(userId: String): Map<String, String>
+
+    fun filterProjects(
+        userId: String,
+        permission: AuthPermission
+    ): List<String>?
 
     fun verifyUserProjectPermission(
         accessToken: String? = null,
@@ -60,4 +67,18 @@ interface ProjectPermissionService {
         userId: String,
         permission: AuthPermission
     ): Boolean
+
+    fun cancelCreateAuthProject(
+        userId: String,
+        projectCode: String
+    )
+
+    fun cancelUpdateAuthProject(
+        userId: String,
+        projectCode: String
+    )
+
+    fun needApproval(needApproval: Boolean?): Boolean
+
+    fun isShowUserManageIcon(): Boolean
 }

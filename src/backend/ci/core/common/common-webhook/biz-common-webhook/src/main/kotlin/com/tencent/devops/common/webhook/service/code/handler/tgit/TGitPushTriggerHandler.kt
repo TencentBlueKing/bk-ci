@@ -277,4 +277,35 @@ class TGitPushTriggerHandler(
             )
         }
     }
+
+    private fun getPushChangeFiles(
+        event: GitPushEvent,
+        projectId: String,
+        repository: Repository
+    ): Set<String> {
+        val changeFileList = mutableSetOf<String>()
+        changeFileList.addAll(
+            eventCacheService.getChangeFileList(
+                projectId = projectId,
+                repo = repository,
+                from = event.before,
+                to = event.after
+            )
+        )
+        if (changeFileList.isEmpty()) {
+            // 兜底方案，若关联代码的权限失效，则集合为空，使用webhook信息进行触发
+            logger.warn(
+                "Failed to get the change file list," +
+                    "use webhook information to trigger," +
+                    "repo[${repository.projectName}]|" +
+                    "commitId[${event.checkout_sha}]"
+            )
+            event.commits?.forEach { commit ->
+                changeFileList.addAll(commit.added ?: listOf())
+                changeFileList.addAll(commit.removed ?: listOf())
+                changeFileList.addAll(commit.modified ?: listOf())
+            }
+        }
+        return changeFileList
+    }
 }

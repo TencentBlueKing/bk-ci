@@ -43,6 +43,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.service.PipelineElementService
@@ -68,6 +69,7 @@ class ContainerBuildRecordService(
     private val containerBuildDetailService: ContainerBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResDao: PipelineResDao,
+    pipelineBuildDao: PipelineBuildDao,
     pipelineResVersionDao: PipelineResVersionDao,
     pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
@@ -82,6 +84,7 @@ class ContainerBuildRecordService(
     redisOperation = redisOperation,
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
+    pipelineBuildDao = pipelineBuildDao,
     pipelineResVersionDao = pipelineResVersionDao,
     pipelineElementService = pipelineElementService
 ) {
@@ -412,6 +415,13 @@ class ContainerBuildRecordService(
                 logger.warn(
                     "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
                 )
+                return@transaction
+            }
+            val containerStatus = recordContainer.status
+            if (buildStatus == BuildStatus.PREPARE_ENV && containerStatus != null &&
+                BuildStatus.valueOf(containerStatus).isFinish()
+            ) {
+                logger.warn("ENGINE|$buildId|updateContainerRecord|container($containerId) is finish.")
                 return@transaction
             }
             var startTime: LocalDateTime? = null
