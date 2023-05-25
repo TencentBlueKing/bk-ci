@@ -122,6 +122,9 @@ function _M:switch_kubernetes(devops_project, tag)
     if config.kubernetes.switchAll == true then
         return true
     end
+    if config.kubernetes.useForceHeader and ngx.var.http_x_gateway_force_k8s == 'true' then
+        return true
+    end
     local isInList = false
     local tags = nil
     if devops_project == 'codecc' then
