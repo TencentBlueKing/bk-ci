@@ -33,6 +33,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceStartCloudClient::class.java)
         const val OK = 0
+        const val USER_ALREADY_EXISTED = 32001
         const val HAS_BEEN_DELETED = 32006
     }
 
@@ -126,14 +127,20 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
-                if (OK == environmentRsp.code) {
-                    return true
-                } else {
-                    throw BuildFailureException(
+                when (environmentRsp.code) {
+                    OK -> return true
+                    USER_ALREADY_EXISTED -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                         "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回失败:" +
+                            "${environmentRsp.code}-${environmentRsp.message}"
+                    )
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回异常:" +
                             "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }

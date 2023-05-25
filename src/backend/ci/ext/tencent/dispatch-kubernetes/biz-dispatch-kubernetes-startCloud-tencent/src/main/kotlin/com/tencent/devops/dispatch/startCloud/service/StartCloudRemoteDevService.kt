@@ -65,6 +65,11 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
             logger.warn("create user failed.|${it.message}")
+            if (it is BuildFailureException &&
+                it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
+            ) {
+                throw it
+            }
         }
 
         val ip = workspaceClient.createWorkspace(
