@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
-import org.yaml.snakeyaml.Yaml
 
 @Component
 class YamlSchemaCheck @Autowired constructor() {

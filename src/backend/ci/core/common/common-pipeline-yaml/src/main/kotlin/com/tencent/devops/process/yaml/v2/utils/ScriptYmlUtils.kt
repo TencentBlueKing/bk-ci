@@ -96,7 +96,6 @@ import java.util.Random
 import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
