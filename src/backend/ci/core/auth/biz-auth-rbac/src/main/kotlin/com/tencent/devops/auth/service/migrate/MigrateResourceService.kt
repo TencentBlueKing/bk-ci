@@ -292,7 +292,7 @@ class MigrateResourceService @Autowired constructor(
         private val noNeedToMigrateResourceType = listOf(
             AuthResourceType.PROJECT.value
         )
-        private val executorService = Executors.newFixedThreadPool(10)
+        private val executorService = Executors.newFixedThreadPool(50)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
         private const val MAX_RETRY_TIMES = 3
     }

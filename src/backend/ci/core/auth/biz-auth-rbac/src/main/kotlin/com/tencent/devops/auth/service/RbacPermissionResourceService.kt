@@ -168,7 +168,7 @@ class RbacPermissionResourceService(
             } else {
                 iamV2ManagerService.deleteSubsetManager(managerId.toString())
             }
-            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName|$exception")
+            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName",exception)
             throw ErrorCodeException(
                 errorCode = ERROR_RESOURCE_CREATE_FAIL,
                 defaultMessage = "create resource failed|$userId|$projectCode|$resourceType|$resourceName"
