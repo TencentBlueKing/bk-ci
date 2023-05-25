@@ -145,8 +145,8 @@ class RbacPermissionMigrateService constructor(
                 ).data ?: break
                 val v3MigrateProjectCodes =
                     migrateProjects.filter {
-                        it.routerTag == null || it.routerTag == AuthSystemType.V3_AUTH_TYPE.value }
-                        .map { it.englishName }
+                        it.routerTag == null || it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
+                    }.map { it.englishName }
                 logger.info("migrate all project to rbac|v3MigrateProjects:$v3MigrateProjectCodes")
                 val v0MigrateProjectCodes =
                     migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
@@ -244,6 +244,7 @@ class RbacPermissionMigrateService constructor(
                         projectName = projectInfo.projectName,
                         migrateTaskId = migrateTaskId,
                         gradeManagerId = gradeManagerId,
+                        version = authType.value,
                         watcher = watcher
                     )
                 }
@@ -252,6 +253,7 @@ class RbacPermissionMigrateService constructor(
                         projectCode = projectCode,
                         projectName = projectInfo.projectName,
                         gradeManagerId = gradeManagerId,
+                        version = authType.value,
                         watcher = watcher
                     )
                 }
@@ -299,6 +301,7 @@ class RbacPermissionMigrateService constructor(
     private fun migrateV3Auth(
         projectCode: String,
         projectName: String,
+        version: String,
         gradeManagerId: Int,
         watcher: Watcher
     ) {
@@ -309,12 +312,14 @@ class RbacPermissionMigrateService constructor(
         migrateV3PolicyService.migrateGroupPolicy(
             projectCode = projectCode,
             projectName = projectName,
+            version = version,
             gradeManagerId = gradeManagerId
         )
         // 迁移用户自定义权限
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
-            projectCode = projectCode
+            projectCode = projectCode,
+            version = version
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -326,6 +331,7 @@ class RbacPermissionMigrateService constructor(
         projectName: String,
         migrateTaskId: Int,
         gradeManagerId: Int,
+        version: String,
         watcher: Watcher
     ) {
         // 轮询任务状态
@@ -335,12 +341,14 @@ class RbacPermissionMigrateService constructor(
         migrateV0PolicyService.migrateGroupPolicy(
             projectCode = projectCode,
             projectName = projectName,
+            version = version,
             gradeManagerId = gradeManagerId
         )
         // 迁移用户自定义权限
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
-            projectCode = projectCode
+            projectCode = projectCode,
+            version = version
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
