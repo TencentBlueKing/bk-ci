@@ -25,16 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:common-pipeline-yaml"))
-    api(project(":core:common:common-webhook:biz-common-webhook"))
-    api(project(":core:store:api-store"))
-    api(project(":core:quality:api-quality"))
+package com.tencent.devops.store.pojo.common.enums
 
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-}
-
-plugins {
-    `task-deploy-to-maven`
+enum class PackageSourceTypeEnum {
+    REPO, // 代码库打包
+    UPLOAD; // 上传包
 }

@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -155,7 +155,7 @@ class RemoteDevService @Autowired constructor(
                     ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
                     ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
                     ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
-                    "工作空间状态非RUNNING"
+                    "The workspace state is not RUNNING"
                 )
             }
 
