@@ -71,8 +71,8 @@ class MigrateIamApiService {
     // iam迁移的token
     @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
-    @Value("\${auth.url:}")
-    private val iamBaseUrl = ""
+    @Value("\${auth.webHost:}")
+    private val iamWebHost = ""
 
     /**
      * 启动v3迁移任务
@@ -83,7 +83,7 @@ class MigrateIamApiService {
         logger.info("start v3 migrate task $v3GradeManagerIds")
         val data = JsonUtil.toJson(v3GradeManagerIds).toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .post(data)
             .build()
         getBody(operation = "failed to start v3 migrate task", request = request)
@@ -91,7 +91,7 @@ class MigrateIamApiService {
 
     fun getV3MigrateTaskStatus(): String {
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .get()
             .build()
         return JsonUtil.to(
@@ -109,7 +109,7 @@ class MigrateIamApiService {
         logger.info("start v3 migrate task $projectCodes")
         val data = JsonUtil.toJson(projectCodes).toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .post(data)
             .build()
         return JsonUtil.to(
@@ -120,7 +120,7 @@ class MigrateIamApiService {
 
     fun getV0MigrateTaskStatus(migrateTaskId: Int): String {
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V0_IAM_MIGRATE_TASK$migrateTaskId/?token=$migrateIamToken")
+            .url("$iamWebHost/$V0_IAM_MIGRATE_TASK$migrateTaskId/?token=$migrateIamToken")
             .get()
             .build()
         return JsonUtil.to(
@@ -143,7 +143,7 @@ class MigrateIamApiService {
     ): MigrateTaskDataResp {
         val request = Request.Builder()
             .url(
-                "$iamBaseUrl/$IAM_GET_MIGRATE_DATA?" +
+                "$iamWebHost/$IAM_GET_MIGRATE_DATA?" +
                     "token=$migrateIamToken&project_id=$projectCode&type=$migrateType&page=$page&page_size=$pageSize"
             )
             .get()

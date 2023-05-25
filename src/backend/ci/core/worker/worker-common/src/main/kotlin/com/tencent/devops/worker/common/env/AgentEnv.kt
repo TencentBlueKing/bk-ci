@@ -47,25 +47,29 @@ object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
 
-    const val PROJECT_ID = "devops.project.id"
-    const val DOCKER_PROJECT_ID = "devops_project_id"
-    const val AGENT_ID = "devops.agent.id"
-    const val DOCKER_AGENT_ID = "devops_agent_id"
-    const val AGENT_SECRET_KEY = "devops.agent.secret.key"
-    const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
-    const val AGENT_GATEWAY = "landun.gateway"
-    const val DOCKER_GATEWAY = "devops_gateway"
-    const val AGENT_ENV = "landun.env"
-    const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
-    const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    private const val PROJECT_ID = "devops.project.id"
+    private const val DOCKER_PROJECT_ID = "devops_project_id"
+    private const val AGENT_ID = "devops.agent.id"
+    private const val DOCKER_AGENT_ID = "devops_agent_id"
+    private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
+    private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
+    private const val AGENT_GATEWAY = "landun.gateway"
+    private const val DOCKER_GATEWAY = "devops_gateway"
+    private const val AGENT_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+    private const val AGENT_ENV = "landun.env"
+    private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
+    private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    private const val BK_TAG = "devops_bk_tag"
 
     private var projectId: String? = null
     private var agentId: String? = null
     private var secretKey: String? = null
     private var gateway: String? = null
+    private var fileGateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
     private var logStorageMode: LogStorageMode? = null
+    private var bkTag: String? = null
 
     private var property: Properties? = null
 
@@ -179,6 +183,18 @@ object AgentEnv {
         return gateway!!
     }
 
+    fun getFileGateway(): String? {
+        if (fileGateway.isNullOrBlank()) {
+            synchronized(this) {
+                if (fileGateway.isNullOrBlank()) {
+                    fileGateway = getEnvProp(AGENT_FILE_GATEWAY)
+                    logger.info("file gateway: $fileGateway")
+                }
+            }
+        }
+        return fileGateway
+    }
+
     fun getOS(): OSType {
         if (os == null) {
             synchronized(this) {
@@ -198,6 +214,20 @@ object AgentEnv {
             }
         }
         return os!!
+    }
+
+    fun getBkTag(): String? {
+
+        if (bkTag.isNullOrBlank()) {
+            synchronized(this) {
+                if (bkTag.isNullOrBlank()) {
+                    bkTag = getProperty(BK_TAG)
+                    logger.info("Get the bkTag($bkTag)")
+                    return bkTag
+                }
+            }
+        }
+        return bkTag!!
     }
 
     @Suppress("UNUSED")
