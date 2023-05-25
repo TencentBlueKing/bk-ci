@@ -89,16 +89,6 @@ class RbacPermissionMigrateService constructor(
                 logger.info("migrate project info is empty")
                 return false
             }
-        return v3ToRbacAuth(
-            projectCodes = projectCodes,
-            projectVos = projectVos
-        )
-    }
-
-    private fun v3ToRbacAuth(
-        projectCodes: List<String>,
-        projectVos: List<ProjectVO>
-    ): Boolean {
         val migrateProjectRelationIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
