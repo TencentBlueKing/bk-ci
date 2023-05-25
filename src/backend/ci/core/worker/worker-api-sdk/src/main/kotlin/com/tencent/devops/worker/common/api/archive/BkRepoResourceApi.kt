@@ -65,16 +65,16 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_FILE_
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
-import java.net.URLEncoder
-import java.util.Locale
-import java.util.Base64
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.net.URLEncoder
+import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 

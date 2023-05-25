@@ -552,7 +552,7 @@
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
                         this.constructImportForm.location = isTarget && isTarget.zoneName
                     }
-
+                    
                     if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {

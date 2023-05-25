@@ -45,12 +45,11 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
-import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
-import java.nio.file.Files
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.nio.file.Files
 
 @ApiPriority(priority = 9)
 class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {

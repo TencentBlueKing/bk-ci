@@ -438,6 +438,31 @@ class InitializeMatrixGroupStageCmd(
                             mutexGroup = mutexGroup
                         )
                     )
+                    recordContainer?.let {
+                        recordContainerList.add(
+                            BuildRecordContainer(
+                                projectId = event.projectId,
+                                pipelineId = event.pipelineId,
+                                resourceVersion = recordContainer.resourceVersion,
+                                buildId = event.buildId,
+                                stageId = event.stageId,
+                                containerId = newContainer.containerId!!,
+                                containerType = recordContainer.containerType,
+                                executeCount = context.executeCount,
+                                matrixGroupFlag = false,
+                                matrixGroupId = matrixGroupId,
+                                containerVar = mutableMapOf(
+                                    "@type" to newContainer.getClassType(),
+                                    Container::containerHashId.name to (newContainer.containerHashId ?: ""),
+                                    Container::name.name to (newContainer.name)
+                                ),
+                                status = newContainer.status,
+                                startTime = null,
+                                endTime = null,
+                                timestamps = mapOf()
+                            )
+                        )
+                    }
 
                     // 如为空就初始化，如有元素就直接追加
                     if (modelContainer.groupContainers.isNullOrEmpty()) {
