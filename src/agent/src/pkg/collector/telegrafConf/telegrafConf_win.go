@@ -51,11 +51,17 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-[[outputs.influxdb]]
-  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetric"
-  skip_database_creation = true
-  ###{tls_ca}###
+[[outputs.http]]
+  url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
+  # timeout = "5s"
+  method = "POST"
+  data_format = "json"
+  [outputs.http.headers]
+    Content-Type = "application/json; charset=utf-8"
+    X-DEVOPS-BUILD-TYPE = "###{buildType}###"
+    X-DEVOPS-PROJECT-ID = "###{projectId}###"
+    X-DEVOPS-AGENT-ID = "###{agentId}###"
+    X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
     ObjectName = "Processor"
