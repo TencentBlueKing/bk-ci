@@ -54,7 +54,8 @@ object ArtifactoryMessageCode {
     const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006" // 用户{0}没有项目{1}下载权限
     const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007" // 用户{0}在项目{1}下没有流水线{2}下载构件权限
     const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
-    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
+    // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
+    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009"
     const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
     const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011" // 获取下载链接请求出错
     const val UPLOAD_CUSTOM_FILE_FAILED = "2102012" // 上传自定义文件失败
@@ -90,12 +91,12 @@ object ArtifactoryMessageCode {
     const val JOB_EXECUTE_FAIL = "2102047" // JOB执行失败,msg{0}
 
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
-    const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"
     // 【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
-    const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime"
+    const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"
     // {0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
+    const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime"
     const val BK_DOWNLOAD = "bkDownload" // 下载
-    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkReceivedThisEmailBecauseYouFollowedProject"
     // 你收到此邮件，是因为你关注了 {0} 项目，或其它人@了你
+    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkReceivedThisEmailBecauseYouFollowedProject"
     const val BK_ILLEGAL_PATH = "bkIllegalPath" // 非法路径
 }
