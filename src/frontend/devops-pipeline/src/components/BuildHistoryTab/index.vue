@@ -18,17 +18,17 @@
 </template>
 
 <script>
-    import webSocketMessage from '@/utils/webSocketMessage'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
-    import emptyTips from '@/components/devops/emptyTips'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import { coverStrTimer } from '@/utils/util'
-    import { bus } from '@/utils/bus'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
+    import emptyTips from '@/components/devops/emptyTips'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { bus } from '@/utils/bus'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
+    import { coverStrTimer } from '@/utils/util'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
