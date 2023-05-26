@@ -35,6 +35,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val OK = 0
         const val USER_ALREADY_EXISTED = 32001
         const val HAS_BEEN_DELETED = 32006
+        const val APP_NOT_FOUND_CGS = 32005
     }
 
     @Value("\${startCloud.appId}")
@@ -76,10 +77,15 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
                 logger.info("createWorkspace rsp: $environmentRsp")
-                if (OK == environmentRsp.code && environmentRsp.data != null) {
-                    return environmentRsp.data.cgsIp
-                } else {
-                    throw BuildFailureException(
+                when {
+                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data.cgsIp
+                    APP_NOT_FOUND_CGS == environmentRsp.code -> throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-START-CLOUD 异常，容器资源不足($APP_NOT_FOUND_CGS)"
+                    )
+                    else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
