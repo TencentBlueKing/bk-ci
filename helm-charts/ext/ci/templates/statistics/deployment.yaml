@@ -109,6 +109,13 @@ spec:
             - mountPath: /data/workspace/statistics/jvm
               name: log-volume
               subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - sleep 10
       volumes:
       - name: mypvc
         nfs:
