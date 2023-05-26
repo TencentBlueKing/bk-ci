@@ -3,11 +3,13 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATION_FAILED_EXCEPTION_INFORMATION
 import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentDetailRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
@@ -20,9 +22,11 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
 import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_ENV_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
+import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -34,7 +38,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class WorkspaceDevCloudClient @Autowired constructor(
@@ -145,7 +148,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentOpRsp.message}"
+                        "For third-party service - DEVCLOUD exceptions, please contact O2000 for troubleshooting," +
+                                " exception information - operation environment interface returns failure" +
+                                "：${environmentOpRsp.message}"
                     )
                 }
 
@@ -286,7 +291,8 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境详情异常: ${response.code}"
+                        "For third-party service DEVCLOUD exceptions, contact O2000 for troubleshooting and obtain " +
+                                "the exception information - obtain the environment details: ${response.code}"
                     )
                 }
 
@@ -298,7 +304,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境详情返回失败：${environmentDetailRsp.message}"
+                        "If the third-party service - DEVCLOUD is abnormal, please contact O2000 for troubleshooting," +
+                                " and the exception information - operation environment details " +
+                                "fails：${environmentDetailRsp.message}"
                     )
                 }
             }
@@ -316,7 +324,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     errorType = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "获取环境详情接口超时, url: $url"
+                    errorMessage = "Get the environment details interface timeout, url: $url"
                 )
             }
         }
@@ -454,7 +462,11 @@ class WorkspaceDevCloudClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatusEnum.abort, "创建环境超时（10min）", ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR)
+                return Triple(
+                    first = TaskStatusEnum.abort,
+                    second = I18nUtil.getCodeLanMessage(BK_CREATE_ENV_TIMEOUT),
+                    third = ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR
+                )
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
@@ -499,7 +511,11 @@ class WorkspaceDevCloudClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("Get dev cloud task error, taskId: $taskId", e)
-            return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
+            return TaskResult(
+                isFinish = true,
+                success = false,
+                msg = "${I18nUtil.getCodeLanMessage(BK_CREATION_FAILED_EXCEPTION_INFORMATION)}:${e.message}"
+            )
         }
     }
 

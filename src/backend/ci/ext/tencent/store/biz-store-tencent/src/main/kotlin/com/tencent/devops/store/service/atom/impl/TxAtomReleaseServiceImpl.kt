@@ -92,7 +92,6 @@ import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
@@ -107,6 +106,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
@@ -235,9 +235,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
-    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
+    override fun getAtomPackageSourceType(): PackageSourceTypeEnum {
         // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
-        return AtomPackageSourceTypeEnum.REPO
+        return PackageSourceTypeEnum.REPO
     }
 
     override fun getFileStr(
@@ -250,7 +250,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): String? {
         logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
         val atomPackageSourceType = getAtomPackageSourceType()
-        return if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
+        return if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
@@ -492,11 +492,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 language = I18nUtil.getLanguage(userId)
             )
         }
+        val taskJsonMap = getAtomConfResult.taskDataMap
+        val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
+        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType())
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
-            jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
+            jsonMap = taskJsonMap.toMutableMap(),
             fileDir = "$atomCode/$atomVersion",
+            i18nDir = i18nDir,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
             repositoryHashId = repoId
         )
@@ -525,6 +530,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomVersion = atomVersion,
             repositoryHashId = atomRecord.repositoryHashId,
             userId = userId,
+            i18nDir = i18nDir,
             branch = branch
         )
         logger.info("rebuild, getAtomQualityResult: $getAtomQualityResult")

@@ -78,6 +78,10 @@ object ExperienceMessageCode {
     const val USER_NOT_IN_EXP_GROUP = "2106028" // 体验：用户{0}不在体验用户名单中
     const val USER_NEED_CREATE_EXP_PERMISSION = "2106029" // 体验: 用户没有创建版本体验{0}权限
     const val USER_NEED_CREATE_EXP_GROUP_PERMISSION = "2106030" // 体验: 用户没有创建体验用户组{0}权限
+    const val USER_NEED_PROJECT_TAKEDOWN_PERMISSION = "2106031" // 体验: 用户没有在项目({0})下架版本体验{1}权限
+    const val USER_NEED_VIEW_EXP_PERMISSION = "2106032" // 体验: 用户没有查看版本体验的权限
+    const val USER_NEED_VIEW_EXP_GROUP_PERMISSION = "2106033" // 体验: 用户在项目({0})没有查看体验用户组{1}的权限
+    const val USER_NEED_DELETE_EXP_GROUP_PERMISSION = "2106034" // 体验: 用户在项目({0})没有删除体验用户组{1}的权限
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" // 更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" // 更新成功

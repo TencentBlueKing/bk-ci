@@ -33,11 +33,11 @@ import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.utils.IpaFileUtil
+import java.io.File
+import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
-import java.io.InputStream
 
 @Service
 class FileServiceImpl : FileService {
@@ -65,15 +65,13 @@ class FileServiceImpl : FileService {
                 md5 == null -> {
                     logger.warn("copy file and calculate file md5 is failed.")
                     throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_COPY_FILE,
-                        defaultMessage = "复制并计算文件md5失败。"
+                        errorCode = SignMessageCode.ERROR_COPY_FILE
                     )
                 }
                 md5 != ipaSignInfo.md5 -> {
                     logger.warn("copy file success, but md5 is diff.")
                     throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_COPY_FILE,
-                        defaultMessage = "复制文件成功但md5不一致。"
+                        errorCode = SignMessageCode.ERROR_COPY_FILE
                     )
                 }
                 else -> {

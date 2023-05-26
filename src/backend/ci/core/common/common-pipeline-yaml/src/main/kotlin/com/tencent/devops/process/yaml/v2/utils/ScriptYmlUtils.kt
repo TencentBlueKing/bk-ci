@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -93,7 +94,6 @@ import java.util.Random
 import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -118,18 +118,16 @@ object ScriptYmlUtils {
         // replace custom tag
         val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        val yaml = Yaml()
-        val obj = yaml.load(yamlNormal) as Any
-        return YamlUtil.toYaml(obj)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
+
     fun parseVersion(yamlStr: String?): YmlVersion? {
         if (yamlStr == null) {
             return null
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
             null
@@ -142,8 +140,7 @@ object ScriptYmlUtils {
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
             null
@@ -155,8 +152,7 @@ object ScriptYmlUtils {
             return false
         }
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
@@ -941,6 +937,33 @@ object ScriptYmlUtils {
         }
         return null
     }
+
+    fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(yamlJson)
+        val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
+        val itr = report.iterator()
+        val sb = java.lang.StringBuilder()
+        while (itr.hasNext()) {
+            val message = itr.next() as ProcessingMessage
+            if (message.logLevel == LogLevel.ERROR || message.logLevel == LogLevel.FATAL) {
+                sb.append(message).append("\r\n")
+            }
+        }
+        return Pair(report.isSuccess, sb.toString())
+    }
+
+    fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)
+
+    fun validateJson(json: String): Boolean {
+        try {
+            jsonNodeFromString(json)
+        } catch (e: Exception) {
+            return false
+        }
+        return true
+    }
+
     fun convertYamlToJson(yaml: String): String {
         val yamlReader = ObjectMapper(YAMLFactory())
         val obj = yamlReader.readValue(yaml, Any::class.java)

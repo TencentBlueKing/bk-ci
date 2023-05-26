@@ -206,8 +206,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = GRANT_DOWNLOAD_PERMISSION,
-                defaultMessage = "请联系流水线负责人授予下载构件权限。"
+                errorCode = GRANT_DOWNLOAD_PERMISSION
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
@@ -223,8 +222,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(pipelineInfo?.creator ?: ""),
-                defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+                params = arrayOf(pipelineInfo?.creator ?: "")
             )
         }
 
