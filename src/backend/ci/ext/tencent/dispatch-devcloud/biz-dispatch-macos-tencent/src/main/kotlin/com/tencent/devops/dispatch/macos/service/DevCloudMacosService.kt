@@ -3,12 +3,14 @@ package com.tencent.devops.dispatch.macos.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
+import com.tencent.devops.dispatch.macos.pojo.TaskResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
@@ -17,6 +19,7 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +55,68 @@ class DevCloudMacosService @Autowired constructor(
         dispatchMessage: DispatchMessage
     ): DevCloudMacosVmCreateInfo? {
         val buildId = dispatchMessage.buildId
-        val (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let {macOSEnv ->
+        val url = "$devCloudUrl/api/mac/vm/create"
+
+        var taskId = ""
+        val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
+        logger.info("$buildId DevCloud creatVM request body: $body")
+        val request = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(
+                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId)
+                    .toHeaders()
+            )
+            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body!!.string()
+            logger.info("$buildId DevCloud creatVM http code is ${response.code}, $responseContent")
+            if (!response.isSuccessful) {
+                logger.error(
+                    "$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
+                return null
+            }
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            val code = responseData["actionCode"] as Int
+            val message = responseData["actionMessage"] as String
+            if (code != 200) {
+                logger.info("$buildId DevCloud fail to create MacOS,actionCode is $code ,actionMessage is $message")
+                return null
+            }
+            val temp = responseData["data"] as Map<String, Any>
+            taskId = temp["taskId"] as String
+            logger.info("$buildId success send creating VM request,enters the query process,taskId is $taskId")
+        }
+
+        repeat(200) { times ->
+            val taskResponse = getTaskStatus(taskId, dispatchMessage.userId)
+            if (taskResponse != null) {
+                when (taskResponse.status) {
+                    DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
+                        logger.info("$taskId status: failed or canceled, Try again")
+                        return null
+                    }
+                    DevCloudCreateMacVMStatus.succeeded.title -> {
+                        logger.info("$taskId status: succeeded")
+                        return taskResponse
+                    }
+                }
+            }
+
+            if (times % 50 == 0) logger.info("Query times is ${times + 1}")
+
+            Thread.sleep(3000)
+        }
+
+        logger.info("Loop task timout 10min")
+        return null
+    }
+
+    private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
+        val (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let { macOSEnv ->
             when (macOSEnv.size) {
                 0 -> Pair(null, null)
                 1 -> Pair(macOSEnv[0], null)
@@ -60,11 +124,9 @@ class DevCloudMacosService @Autowired constructor(
             }
         }
 
-        val projectId = dispatchMessage.projectId
-        val isGitProject = projectId.startsWith("git_")
+        val isGitProject = dispatchMessage.projectId.startsWith("git_")
 
-        val url = "$devCloudUrl/api/mac/vm/create"
-        val macosVmCreate = with(dispatchMessage) {
+        return with(dispatchMessage) {
             DevCloudMacosVmCreate(
                 project = projectId,
                 pipelineId = pipelineId,
@@ -85,148 +147,34 @@ class DevCloudMacosService @Autowired constructor(
                 )
             )
         }
-
-        var taskId = ""
-        val body = ObjectMapper().writeValueAsString(macosVmCreate)
-        logger.info("$buildId DevCloud creatVM request body: $body")
-        val request = Request.Builder()
-            .url(toIdcUrl(url))
-            .headers(
-                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId)
-                    .toHeaders()
-            )
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body!!.string()
-            logger.info("$buildId DevCloud creatVM http code is ${response.code}, $responseContent")
-            if (!response.isSuccessful) {
-                logger.error(
-                    "$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
-                        "msg: $responseContent"
-                )
-                return null
-            }
-            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            val code = responseData["actionCode"] as Int
-            val message = responseData["actionMessage"] as String
-            if (code != 200) {
-                logger.info("$buildId DevCloud fail to create MacOS,actionCode is $code ,actionMessage is $message")
-                return null
-            }
-            try {
-                val temp = responseData["data"] as Map<String, Any>
-                taskId = temp["taskId"] as String
-            } catch (e: Exception) {
-                try {
-                    val dataList = responseData["data"] as List<Any>
-                    var vm = dataList[0] as Map<String, Any>
-                    logger.info("success create VM")
-                    return DevCloudMacosVmCreateInfo(
-                        creator = vm["creator"] as String,
-                        name = vm["name"] as String,
-                        memory = vm["memory"] as String,
-                        assetId = vm["assetId"] as String,
-                        ip = vm["ip"] as String,
-                        disk = vm["disk"] as String,
-                        os = vm["os"] as String,
-                        id = vm["id"] as Int ?: 0,
-                        createdAt = vm["createdAt"] as String,
-                        cpu = vm["cpu"] as String,
-                        user = vm["user"] as String ?: "",
-                        password = vm["password"] as String ?: ""
-                    )
-                } catch (e: Exception) {
-                    logger.info("$buildId DevCloud return wrong info, Exception is ${e.message}")
-                    return null
-                }
-            }
-            logger.info("$buildId success send creating VM request,enters the query process,taskId is $taskId")
-        }
-
-        var times = 0
-        logger.info("start query")
-        while (times < 200) {
-            var temp = queryTaskStatus(taskId = taskId, creator = dispatchMessage.userId)
-
-            var staus = temp.first
-            if (staus == DevCloudCreateMacVMStatus.failed.title) {
-                logger.info("fail to query task status, actionMessage is ${temp.third}")
-                return null
-            } else if (staus == DevCloudCreateMacVMStatus.canceled.title) {
-                logger.info("user cancel task")
-                return null
-            } else if (staus == DevCloudCreateMacVMStatus.succeeded.title) {
-                logger.info("success create MacOS VM")
-                return temp.second
-            }
-
-            if (times % 50 == 0) {
-                logger.info("query times is ${times + 1}")
-            }
-            times++
-            Thread.sleep(3000)
-        }
-        logger.info("create failed. creation time Over limit")
-        return null
     }
 
-    // 返回值为三元组,分别代表devcloud构建状态,构建成功时返回的数据,构建失败时的错误信息
-    fun queryTaskStatus(taskId: String, creator: String): Triple<String, DevCloudMacosVmCreateInfo?, String> {
+    private fun getTaskStatus(taskId: String, creator: String): DevCloudMacosVmCreateInfo? {
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
             .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body!!.string()
-            // 如果网络波动导致的失败,就不需要返回failed状态,而是返回running状态,过几秒再来轮询
-            if (!response.isSuccessful) {
-                logger.info("$taskId request fail,retry later, $responseContent")
-                return Triple(DevCloudCreateMacVMStatus.running.title, null, "")
-            }
-            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            val code = responseData["actionCode"] as Int
-            val message = responseData["actionMessage"] as String
-            // 如果actionCode不是200,就是devcloud出问题了,返回错误状态
-            if (code != 200) {
-                logger.info("$taskId response code not 200, $responseContent")
-                return Triple(DevCloudCreateMacVMStatus.failed.title, null, message)
-            }
-            val vm = responseData["data"] as Map<String, Any>
-            val status = vm["status"] as String
-            // 如果返回状态为成功,就从response里取出数据并返回
-            if (status == DevCloudCreateMacVMStatus.succeeded.title) {
-                logger.info("$taskId request success. $responseContent")
-                return Triple(status,
-                    DevCloudMacosVmCreateInfo(
-                        creator = vm["creator"] as String,
-                        name = vm["name"] as String,
-                        memory = vm["memory"] as String,
-                        assetId = vm["assetId"] as String,
-                        ip = vm["ip"] as String,
-                        disk = vm["disk"] as String,
-                        os = vm["os"] as String,
-                        id = vm["id"] as Int ?: 0,
-                        createdAt = vm["createdAt"] as String,
-                        cpu = vm["cpu"] as String,
-                        user = vm["user"] as String ?: "",
-                        password = vm["password"] as String ?: ""
-                    ), "")
-            }
-            if (status == DevCloudCreateMacVMStatus.failed.title) {
-                logger.info("$taskId response status failed. $responseContent")
-                return Triple(DevCloudCreateMacVMStatus.failed.title, null, message)
-            }
 
-            if (status == DevCloudCreateMacVMStatus.canceled.title) {
-                logger.info("$taskId response status canceled. $responseContent")
-                return Triple(DevCloudCreateMacVMStatus.canceled.title, null, message)
-            }
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("Failed to get $url, response: $responseContent")
+                    return null
+                }
+                val taskResponse = JsonUtil.to(responseContent, TaskResponse::class.java)
+                if (taskResponse.actionCode != 200) {
+                    logger.error("Get $url response not 200, $responseContent")
+                    return null
+                }
 
-            // 否则返回运行中状态
-            return Triple(DevCloudCreateMacVMStatus.running.title, null, "")
+                return taskResponse.data
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get $url.", e)
+            return null
         }
     }
 
