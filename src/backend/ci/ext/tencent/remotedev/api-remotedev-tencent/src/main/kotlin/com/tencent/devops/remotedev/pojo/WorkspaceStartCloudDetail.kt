@@ -25,52 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.interfaces
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 用来获取不同类型的dispatchType的service来调用相关实现
- * 远程开发相关接口
- * 注：仅在接口层相关接口使用此类，构建层使用
- */
-interface RemoteDevInterface {
-
-    /**
-     * 创建远程工作空间
-     */
-    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String>
-
-    /**
-     * 启动远程工作空间
-     */
-    fun startWorkspace(userId: String, workspaceName: String): String
-
-    /**
-     * 停止远程工作空间
-     */
-    fun stopWorkspace(userId: String, workspaceName: String): String
-
-    /**
-     * 删除远程工作空间
-     */
-    fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String
-
-    /**
-     * 获取工作空间web端链接
-     */
-    fun getWorkspaceUrl(userId: String, workspaceName: String): String?
-
-    /**
-     * 工作空间task任务回调
-     */
-    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
-
-    /**
-     * 查询工作空间状态
-     */
-    fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
-}
+@ApiModel("start客户端工作空间详情")
+data class WorkspaceStartCloudDetail(
+    @ApiModelProperty("ip地址")
+    val ip: String,
+    @ApiModelProperty("start客户端所需唯一索引")
+    val curLaunchId: Int
+)

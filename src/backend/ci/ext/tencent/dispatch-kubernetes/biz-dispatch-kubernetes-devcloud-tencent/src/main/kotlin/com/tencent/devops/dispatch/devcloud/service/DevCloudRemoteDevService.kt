@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
@@ -221,18 +222,18 @@ class DevCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): String {
-        val environmentUid = getEnvironmentUid(workspaceName)
+    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+        val environmentUid = getEnvironmentUid(event.workspaceName)
         val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             environmentAction = EnvironmentAction.DELETE
         )
 
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             status = EnvStatusEnum.deleted,
             dslContext = dslContext
         )
