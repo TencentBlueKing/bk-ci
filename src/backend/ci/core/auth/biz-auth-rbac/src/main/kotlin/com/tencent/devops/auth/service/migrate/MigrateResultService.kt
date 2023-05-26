@@ -33,6 +33,7 @@ import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -75,6 +76,7 @@ class MigrateResultService constructor(
                             )
                         } ?: false
                         if (verifyResult != rbacVerifyResult) {
+                            if (action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
                             throw ErrorCodeException(
                                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
