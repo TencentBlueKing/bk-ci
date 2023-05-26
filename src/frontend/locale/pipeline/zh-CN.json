@@ -827,9 +827,8 @@
     "stepIdDesc": "由英文字母、数字、下划线组成（英文字母或下划线开头）",
     "atomOutput": "插件输出",
     "outputNamespace": "输出字段命名空间",
-    "outputItemList": "输出字段列表",
-    "noAppIdTips": "你正在使用的插件需要使用蓝鲸部署服务,请联系DevOps-helper开启",
-    "namespaceTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
+    "outputItemList": "输出字段列表：",
+    "noAppIdTips": "你正在使用的插件需要使用蓝鲸部署服务，请联系DevOps-helper开启",
     "enableMailNotice": "同时启用邮件通知",
     "archived": "自定义报告已归档",
     "baseRule": "基础规则",
@@ -1125,7 +1124,9 @@
   "pipelineLockTips": "流水线已禁用执行；可前往基础设置中恢复",
   "pipelineManualDisable": "该流水线未配置手动触发",
   "duration": "耗时",
-  "namespaceTips": "即将下线，请使用Step ID来设置插件字段的命名空间，通过上下文方式访问",
+  "namespaceTips": "即将下线，请使用Step ID来设置插件字段的命名空间，通过方式",
+  "context": "上下文",
+  "access": "访问",
   "outputNameSpaceDescTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
   "noReleatedPipeline": "暂无关联流水线"
 }
