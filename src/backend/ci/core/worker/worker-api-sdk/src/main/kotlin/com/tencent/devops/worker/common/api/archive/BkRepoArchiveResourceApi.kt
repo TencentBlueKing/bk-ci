@@ -45,11 +45,10 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 @ApiPriority(priority = 9)
 class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
@@ -108,8 +107,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_CUSTOM_FILE_FAILED,
@@ -172,8 +170,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_PIPELINE_FILE_FAILED,

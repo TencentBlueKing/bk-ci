@@ -122,6 +122,9 @@ function _M:switch_kubernetes(devops_project, tag)
     if config.kubernetes.switchAll == true then
         return true
     end
+    if config.kubernetes.useForceHeader and ngx.var.http_x_gateway_force_k8s == 'true' then
+        return true
+    end
     local isInList = false
     local tags = nil
     if devops_project == 'codecc' then
@@ -190,6 +193,9 @@ end
 
 -- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
+    if string.find(tag, '^kubernetes-') then
+        tag = string.sub(tag, 12) -- 去掉 "kubernetes-" 头部
+    end
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store
     local sub_path = sub_path_cache:get(tag)

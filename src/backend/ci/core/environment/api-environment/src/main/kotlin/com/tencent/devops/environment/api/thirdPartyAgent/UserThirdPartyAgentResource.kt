@@ -104,7 +104,10 @@ interface UserThirdPartyAgentResource {
         projectId: String,
         @ApiParam("操作系统", required = true)
         @PathParam("os")
-        os: OS
+        os: OS,
+        @ApiParam("可见性", required = false)
+        @QueryParam("visibility")
+        visibility: Boolean?
     ): Result<List<SlaveGateway>>
 
     @ApiOperation("查看Agent安装链接")

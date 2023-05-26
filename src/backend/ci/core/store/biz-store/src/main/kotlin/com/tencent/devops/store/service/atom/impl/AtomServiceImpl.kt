@@ -962,7 +962,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$atomClassifyCode",
                 defaultMessage = classifyName
             )
             result.add(
