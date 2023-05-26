@@ -77,7 +77,7 @@ class DevCloudMacosService @Autowired constructor(
                 xcode = xcodeVersion,
                 env = mapOf(
                     DockerConstants.ENV_KEY_PROJECT_ID to projectId,
-                    DockerConstants.ENV_KEY_AGENT_ID to dispatchMessage.id,
+                    // DockerConstants.ENV_KEY_AGENT_ID to dispatchMessage.id,
                     DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
                     DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
                     XCODE_VERSION to (xcodeVersion ?: "")
