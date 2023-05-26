@@ -143,7 +143,8 @@ class TxPermissionServiceImpl @Autowired constructor(
     }
 
     private fun getV3BsProjectAndPutInCache(projectCode: String): String? {
-        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data?.channelCode
+        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            ?.channelCode?.takeIf { it == ProjectChannelCode.BS.name }
             .also {
                 if (it != null && it == ProjectChannelCode.BS.name) {
                     v3BsProjectsCache.put(projectCode, it)

@@ -182,7 +182,8 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     private fun getV0BsProjectAndPutInCache(projectCode: String): String? {
-        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data?.channelCode
+        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            ?.channelCode?.takeIf { it == ProjectChannelCode.BS.name }
             .also {
                 if (it != null && it == ProjectChannelCode.BS.name) {
                     v0BsProjectsCache.put(projectCode, it)
