@@ -52,11 +52,12 @@ class DevCloudMacosService @Autowired constructor(
         dispatchMessage: DispatchMessage
     ): DevCloudMacosVmCreateInfo? {
         val buildId = dispatchMessage.buildId
-        val macOSEvn = dispatchMessage.dispatchMessage.split(":")
-        val (systemVersion, xcodeVersion) = when (macOSEvn.size) {
-            0 -> Pair(null, null)
-            1 -> Pair(macOSEvn[0], null)
-            else -> Pair(macOSEvn[0], macOSEvn[1])
+        val (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let {macOSEnv ->
+            when (macOSEnv.size) {
+                0 -> Pair(null, null)
+                1 -> Pair(macOSEnv[0], null)
+                else -> Pair(macOSEnv[0], macOSEnv[1])
+            }
         }
 
         val projectId = dispatchMessage.projectId
