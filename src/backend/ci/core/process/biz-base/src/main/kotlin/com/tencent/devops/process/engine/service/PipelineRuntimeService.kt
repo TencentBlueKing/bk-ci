@@ -1499,7 +1499,7 @@ class PipelineRuntimeService @Autowired constructor(
                     containerType = buildTask.containerType,
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
                     errorCode = completeTask.errorCode ?: 0,
-                    errorTypeName = completeTask.errorType?.typeName,
+                    errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     reason = completeTask.errorMsg
                 )
             )
