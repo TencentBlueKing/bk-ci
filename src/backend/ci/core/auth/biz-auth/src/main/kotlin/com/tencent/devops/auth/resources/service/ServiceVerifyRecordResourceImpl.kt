@@ -22,17 +22,15 @@ class ServiceVerifyRecordResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun bathCreateOrUpdate(
-        userId: String,
+    override fun delete(
         projectCode: String,
         resourceType: String,
-        permissionsResourcesMap: Map<AuthPermission, List<String>>
+        resourceCode: String
     ): Result<Boolean> {
-        authVerifyRecordService.bathCreateOrUpdateVerifyRecord(
-            permissionsResourcesMap = permissionsResourcesMap,
-            userId = userId,
+        authVerifyRecordService.deleteVerifyRecord(
             projectCode = projectCode,
-            resourceType = resourceType
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
         return Result(true)
     }
