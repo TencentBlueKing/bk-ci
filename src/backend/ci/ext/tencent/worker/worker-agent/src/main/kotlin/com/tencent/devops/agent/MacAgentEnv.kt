@@ -37,9 +37,10 @@ object MacAgentEnv {
     }
 
     fun initEnv() {
-        // 如果agentId环境变量存在，表示变量已注入，不用调用接口获取
-        if (AgentEnv.getAgentId().isNotBlank()) {
+        // 如果环境变量存在，表示变量已注入，不用调用接口获取
+        if (envExist()) {
             // 设置buildType=MACOS_NEW, 适配网关兼容逻辑
+            logger.info("Change buildType MACOS_NEW...")
             System.setProperty(BUILD_TYPE, BuildType.MACOS_NEW.name)
             BuildEnv.setBuildType(BuildType.MACOS_NEW)
             return
@@ -49,7 +50,7 @@ object MacAgentEnv {
         var startBuild = false
         val gateyway = AgentEnv.getGateway()
         val url = "http://$gateyway/dispatch-macos/gw/build/macos/startBuild"
-        println("url:$url")
+        logger.info("url:$url")
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
@@ -62,7 +63,7 @@ object MacAgentEnv {
                 OkhttpUtils.doHttp(request).use { resp ->
                     val resoCode = resp.code
                     val responseStr = resp.body!!.string()
-                    println("resoCode: $resoCode;responseStr:$responseStr")
+                    logger.info("resoCode: $resoCode;responseStr:$responseStr")
                     if (resoCode == 200) {
                         val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
 
@@ -77,23 +78,33 @@ object MacAgentEnv {
                         }
                         startBuild = true
                     } else {
-                        println("There is no build for this macos,sleep for 5s.")
+                        logger.info("There is no build for this macos,sleep for 5s.")
                     }
                 }
                 if (!startBuild) {
                     Thread.sleep(5000)
                 }
             } catch (e: Exception) {
-                println("Failed to connect to devops server.")
+                logger.info("Failed to connect to devops server.")
             }
         } while (!startBuild)
-        println("Start to run.")
+        logger.info("Start to run.")
 
         selectXcode()
     }
 
+    private fun envExist(): Boolean {
+        return try {
+            AgentEnv.getAgentId().isNotBlank() &&
+                AgentEnv.getAgentSecretKey().isNotBlank() &&
+                AgentEnv.getProjectId().isNotBlank()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun selectXcode() {
-        println("Start to select xcode.")
+        logger.info("Start to select xcode.")
         // 选择XCODE版本
         val xcodeVersion = AgentEnv.getEnvProp(XCODE_VERSION) ?: throw RuntimeException("Not found xcodeVersion")
         val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
@@ -110,12 +121,12 @@ object MacAgentEnv {
                 // 选择xcode
                 val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
                 ExecutorUtil.runCommand(selectCommand, selectCommand)
-                println("End to select xcode:select Xcode_$xcodeVersion.app.")
+                logger.info("End to select xcode:select Xcode_$xcodeVersion.app.")
             } catch (e: Exception) {
-                println("End to select xcode with error: $e")
+                logger.info("End to select xcode with error: $e")
             }
         } else {
-            println("End to select xcode:nothing to do.")
+            logger.info("End to select xcode:nothing to do.")
         }
     }
 }
