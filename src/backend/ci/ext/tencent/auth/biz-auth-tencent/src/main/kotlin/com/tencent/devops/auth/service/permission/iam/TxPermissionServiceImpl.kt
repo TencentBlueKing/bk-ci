@@ -121,8 +121,8 @@ class TxPermissionServiceImpl @Autowired constructor(
         )
         logger.info("The system starts recording the verify result:$verifyResult|$resourceCode|$useAction")
         executor.submit {
-            // 记录Bs渠道创建项目的鉴权记录
-            if (getV3BsProject(projectCode) != null) {
+            // 记录BS渠道创建项目的鉴权记录
+            if (checkBsChannelProject(projectCode)) {
                 authVerifyRecordService.createOrUpdateVerifyRecord(
                     VerifyRecordDTO(
                         userId = userId,
@@ -138,18 +138,14 @@ class TxPermissionServiceImpl @Autowired constructor(
         return verifyResult
     }
 
-    private fun getV3BsProject(projectCode: String): String? {
-        return v3BsProjectsCache.getIfPresent(projectCode) ?: getV3BsProjectAndPutInCache(projectCode)
+    private fun checkBsChannelProject(projectCode: String): Boolean {
+        val projectChannel = v3BsProjectsCache.getIfPresent(projectCode) ?: getV3BsProjectAndPutInCache(projectCode)
+        return if (projectChannel != null) projectChannel == ProjectChannelCode.BS.name else false
     }
 
     private fun getV3BsProjectAndPutInCache(projectCode: String): String? {
         return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
-            ?.channelCode?.takeIf { it == ProjectChannelCode.BS.name }
-            .also {
-                if (it != null && it == ProjectChannelCode.BS.name) {
-                    v3BsProjectsCache.put(projectCode, it)
-                }
-            }
+            ?.channelCode.also { v3BsProjectsCache.put(projectCode, it!!) }
     }
 
     override fun getUserResourceByAction(

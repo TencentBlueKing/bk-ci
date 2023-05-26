@@ -158,8 +158,8 @@ class BSAuthPermissionApi @Autowired constructor(
                 }
                 // 异步记录鉴权结果
                 executor.submit {
-                    // 记录Bs渠道创建项目的鉴权记录
-                    if (getV0BsProject(projectCode) != null) {
+                    // 记录BS渠道创建项目的鉴权记录
+                    if (checkBsChannelProject(projectCode)) {
                         createVerifyRecord(
                             user = user,
                             permission = permission,
@@ -177,18 +177,14 @@ class BSAuthPermissionApi @Autowired constructor(
         }
     }
 
-    private fun getV0BsProject(projectCode: String): String? {
-        return v0BsProjectsCache.getIfPresent(projectCode) ?: getV0BsProjectAndPutInCache(projectCode)
+    private fun checkBsChannelProject(projectCode: String): Boolean {
+        val projectChannel = v0BsProjectsCache.getIfPresent(projectCode) ?: getV0BsProjectAndPutInCache(projectCode)
+        return if (projectChannel != null) projectChannel == ProjectChannelCode.BS.name else false
     }
 
     private fun getV0BsProjectAndPutInCache(projectCode: String): String? {
         return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
-            ?.channelCode?.takeIf { it == ProjectChannelCode.BS.name }
-            .also {
-                if (it != null && it == ProjectChannelCode.BS.name) {
-                    v0BsProjectsCache.put(projectCode, it)
-                }
-            }
+            ?.channelCode.also { v0BsProjectsCache.put(projectCode, it!!) }
     }
 
     @Suppress("LongParameterList")
