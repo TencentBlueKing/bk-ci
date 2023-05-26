@@ -43,6 +43,7 @@ interface ServiceVerifyRecordResource {
         @QueryParam("resourceType")
         resourceType: String,
         @ApiParam("资源Code")
+        @QueryParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 }
