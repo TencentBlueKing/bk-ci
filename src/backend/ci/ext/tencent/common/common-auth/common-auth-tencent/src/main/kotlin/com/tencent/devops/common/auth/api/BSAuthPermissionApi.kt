@@ -69,7 +69,7 @@ class BSAuthPermissionApi @Autowired constructor(
     private val v0BsProjectsCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(10, TimeUnit.HOURS)
-        .build<String/*projectCode*/, String/*Channel*/>()
+        .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
     override fun validateUserResourcePermission(
         user: String,
@@ -178,13 +178,16 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     private fun checkBsChannelProject(projectCode: String): Boolean {
-        val projectChannel = v0BsProjectsCache.getIfPresent(projectCode) ?: getV0BsProjectAndPutInCache(projectCode)
-        return if (projectChannel != null) projectChannel == ProjectChannelCode.BS.name else false
-    }
-
-    private fun getV0BsProjectAndPutInCache(projectCode: String): String? {
-        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
-            ?.channelCode.also { v0BsProjectsCache.put(projectCode, it!!) }
+        return v0BsProjectsCache.getIfPresent(projectCode) ?: run {
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            if (projectInfo != null) {
+                val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
+                v0BsProjectsCache.put(projectCode, isBsChannelProject)
+                isBsChannelProject
+            } else {
+                false
+            }
+        }
     }
 
     @Suppress("LongParameterList")

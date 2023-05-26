@@ -62,7 +62,7 @@ class TxPermissionServiceImpl @Autowired constructor(
     private val v3BsProjectsCache = CacheBuilder.newBuilder()
         .maximumSize(500)
         .expireAfterWrite(10, TimeUnit.HOURS)
-        .build<String/*projectCode*/, String/*Channel*/>()
+        .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return super.validateUserActionPermission(userId, action)
@@ -139,13 +139,16 @@ class TxPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkBsChannelProject(projectCode: String): Boolean {
-        val projectChannel = v3BsProjectsCache.getIfPresent(projectCode) ?: getV3BsProjectAndPutInCache(projectCode)
-        return if (projectChannel != null) projectChannel == ProjectChannelCode.BS.name else false
-    }
-
-    private fun getV3BsProjectAndPutInCache(projectCode: String): String? {
-        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data
-            ?.channelCode.also { v3BsProjectsCache.put(projectCode, it!!) }
+        return v3BsProjectsCache.getIfPresent(projectCode) ?: run {
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            if (projectInfo != null) {
+                val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
+                v3BsProjectsCache.put(projectCode, isBsChannelProject)
+                isBsChannelProject
+            } else {
+                false
+            }
+        }
     }
 
     override fun getUserResourceByAction(
