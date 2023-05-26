@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import okhttp3.Request
@@ -40,6 +41,7 @@ object MacAgentEnv {
         if (AgentEnv.getAgentId().isNotBlank()) {
             // 设置buildType=MACOS_NEW, 适配网关兼容逻辑
             System.setProperty(BUILD_TYPE, BuildType.MACOS_NEW.name)
+            BuildEnv.setBuildType(BuildType.MACOS_NEW)
             return
         }
 
