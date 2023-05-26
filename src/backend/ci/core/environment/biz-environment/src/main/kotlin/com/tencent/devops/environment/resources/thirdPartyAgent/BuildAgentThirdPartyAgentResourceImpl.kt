@@ -194,6 +194,18 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.updatePipelineStatus(projectId, agentId, secretKey, response))
     }
 
+    override fun reportAgentMetrics(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        data: String
+    ): Result<Boolean> {
+        logger.info("reportAgentMetrics: ")
+        logger.info(data)
+        return Result(true)
+        TODO("上报给kafak，暂时先打日志")
+    }
+
     private fun checkParam(
         projectId: String,
         agentId: String,
