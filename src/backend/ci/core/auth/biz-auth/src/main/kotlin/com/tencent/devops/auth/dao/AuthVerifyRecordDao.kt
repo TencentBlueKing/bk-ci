@@ -58,6 +58,21 @@ class AuthVerifyRecordDao {
         }
     }
 
+    fun delete(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute()
+        }
+    }
+
     fun convert(record: TAuthTemporaryVerifyRecordRecord): VerifyRecordDTO {
         return with(record) {
             VerifyRecordDTO(
