@@ -14,7 +14,7 @@
                 :theme="isRunning ? 'warning' : 'default'"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("history.stopBuild") : $t("history.reBuild") }}
+                {{ isRunning ? $t("cancel") : $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <router-link :to="editRouteName">
