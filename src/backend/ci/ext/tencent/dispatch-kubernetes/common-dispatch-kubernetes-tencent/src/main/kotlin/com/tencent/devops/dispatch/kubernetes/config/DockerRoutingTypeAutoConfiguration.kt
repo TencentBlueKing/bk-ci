@@ -25,9 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.dispatch.kubernetes.config
 
-enum class AtomPackageSourceTypeEnum {
-    REPO, // 代码库打包
-    UPLOAD; // 上传包
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.annotation.PostConstruct
+
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class DockerRoutingTypeAutoConfiguration {
+
+    /**
+     * 动态扩展DockerRoutingType中的配置项
+     */
+    @PostConstruct
+    fun notifyTypeChange() {
+        DockerRoutingTypeEnumModifier().modified()
+    }
 }

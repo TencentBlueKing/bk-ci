@@ -101,17 +101,17 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
@@ -148,7 +148,7 @@ class ExperienceService @Autowired constructor(
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
         return bkTag.invokeByTag(projectConsulTag) {
             val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
-            if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
+            if (!client.getGateway(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
                 throw ErrorCodeException(
                     statusCode = 404,
                     errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
@@ -156,7 +156,7 @@ class ExperienceService @Autowired constructor(
             }
 
             val properties =
-                client.get(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
+                client.getGateway(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
             val propertyMap = mutableMapOf<String, String>()
             properties.forEach {
                 propertyMap[it.key] = it.value
@@ -167,7 +167,7 @@ class ExperienceService @Autowired constructor(
                 )
             }
             val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
-            client.get(ServicePipelineArtifactoryResource::class).hasPermission(
+            client.getGateway(ServicePipelineArtifactoryResource::class).hasPermission(
                 userId = userId,
                 projectId = propertyMap[ARCHIVE_PROPS_PROJECT_ID] ?: projectId,
                 pipelineId = pipelineId,

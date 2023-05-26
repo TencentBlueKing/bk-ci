@@ -55,7 +55,6 @@ object ProcessMessageCode {
     const val MY_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_MY" // "我的流水线"
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
-    const val BK_PIPELINE_SINGLE_BUILD = "bkPipelineSingleBuild" // 当前流水线已设置为同时只能运行一个构建任务，开始排队！
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
@@ -67,18 +66,14 @@ object ProcessMessageCode {
     const val BK_AUDIT_RESULT = "bkAuditResult" // 步骤审核结束，审核结果：[{0}]，审核人：{1}
     // 正在处理当前上报的任务, 请稍等。。。
     const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait"
-    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
     // <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
     const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether"
     // 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
     const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin"
     const val BK_BUILD_IN_REVIEW_STATUS = "bkBuildInReviewStatus" // 项目【{0}】下的流水线【{1}】#{2} 构建处于待审核状态
-    const val BK_PROJECT_NO_PIPELINE = "bkProjectNoPipeline" // 项目下无流水线
-    const val BK_NO_MATCHING_STARTED_PIPELINE = "bkNoMatchingStartedPipeline" // 未匹配到启用流水线
     // 用户（{0}) 没有流水线({1})的执行权限
     const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions"
     const val BK_REMOTE_CALL_SOURCE_IP = "bkRemoteCallSourceIp" // 本次远程调用的来源IP是[$sourceIp]
-    const val BK_OPERATE_PIPELINE_FAIL = "bkOperatePipelineFail" // {0}流水线失败
     const val BK_PIPELINE_NAME = "bkPipelineName" // 流水线名称
     const val BK_CREATOR = "bkCreator" // 创建人
     const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
@@ -95,7 +90,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_VIEW_NOT_FOUND = "2101004" // 视图({0})不存在
     const val ERROR_PIPELINE_VIEW_HAD_EXISTS = "2101005" // 视图({0})已存在
     const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = "2101006" // 用户({0})无权限删除视图({1})
-    const val ERROR_EDIT_PIPELINE_VIEW_NO_PERM = "2101007" // 用户({0})无权限编辑视图({1})
+    const val PIPELINE_LIST_LENGTH_LIMIT = "2101007" // 流水线列表长度不能超过100
     const val USER_NEED_PIPELINE_X_PERMISSION = "2101008" // 流水线: 用户无{0}权限
     const val ERROR_PIPELINE_CHANNEL_CODE = "2101009" // 流水线：流水线渠道来源不符合({0})
     const val ERROR_ATOM_NOT_FOUND = "2101010" // 插件不存在
@@ -138,7 +133,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LOCK = "2101047" // 流水线锁定
     const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数[{0}]不合法
     const val ERROR_PIPELINE_QUEUE_FULL = "2101049" // 流水线队列满
-    const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = "2101050" // 第三方构建机状态异常
+    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2101050" // 用户({0})在工程({1})下没有流水线{2}权限
     const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK = "2101051" // 模型中使用了商店镜像，但code为空
     const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK = "2101052" // 模型中使用了商店镜像，但version为空
     const val ERROR_PIPELINE_DISPATCH_VALUE_BLANK = "2101053" // 模型中非商店蓝盾源/第三方源的镜像value为空
@@ -148,8 +143,8 @@ object ProcessMessageCode {
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
     const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 入参buildId与pipelineId不匹配
     const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
-    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
-    const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
+    const val QUERY_USER_INFO_FAIL = "2101060" // 获取用户信息失败
+    const val PROJECT_NOT_EXIST = "2101061" // 项目不存在
     const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
     const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
     const val ERROR_FINALLY_STAGE = "2101064" // 流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置
@@ -165,7 +160,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
     const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败{0}
     const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
-    const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
+    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2101077" // 仓库ID和仓库名都为空
     const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
     const val FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG = "2101079" // 模板实例更新数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 项目[{0}]已禁用，不能启动
@@ -177,51 +172,54 @@ object ProcessMessageCode {
     const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085"
     // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086"
-    const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2101087" // {0} 中的step必须包含uses或run或checkout!
-    const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2101088" // "{0} job.id 超过长度限制64 {1}}"
-    const val ERROR_YAML_FORMAT_EXCEPTION = "2101089" // {0} 中 {1} 格式有误,应为 {2}, error message:${3}
-    const val ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS = "2101090" // 请确保step.id唯一性!({0})
-    const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2101091" // 请核对Stage标签是否正确
-    const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2101092" // STREAM Service镜像格式非法
-    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093" // {0}配置Env数量超过100限制!
-    // {0}Env单变量{1}长度超过{2}字符!({3})
-    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"
+    const val GIT_INVALID = "2101087" // 无效的GIT仓库
+    const val TGIT_INVALID = "2101088" // 无效的TGIT仓库
+    const val SVN_INVALID = "2101089" // 无效的SVN仓库
+    const val GITHUB_INVALID = "2101090" // 无效的GITHUB仓库
+    const val P4_INVALID = "2101091" // 无效的p4仓库
+    const val GIT_NOT_FOUND = "2101092" // 代码库{0}不存在
+    const val NOT_SVN_CODE_BASE = "2101093" // 代码库({0})不是svn代码库
+    const val FAIL_TO_GET_SVN_DIRECTORY = "2101094" // 获取Svn目录失败, msg:{0}
     const val ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
-    const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "2101096" // 变量名称必须是英文字母、数字或下划线(_)
+    const val BUILD_QUEUE_FOR_SINGLE = "2101096" // 排队中: 当前构建正在排队中
     const val ERROR_JOB_MATRIX_YAML_CONFIG_ERROR = "2101097" // Job[{0]的矩阵YAML配置错误:
     const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101098" // {0} 非 {1} 流水线
     const val ERROR_NO_MATCHING_PIPELINE = "2101099" // 没有找到对应的流水线
     // 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
     const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101100"
-    const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
-    const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
-    const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
-    const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
-    const val ERROR_PARAM_MANUALREVIEW = "2101105" // 人工审核插件编辑时输入参数错误
-    const val BUILD_RESOURCE_NOT_EXIST = "2101106" // {0}构建资源不存在，请检查yml配置.
-    const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101109" // bcsAppInstId 不是 init
-    const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101110" // category 不是  init
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101111" // bcsInstNum 不是  init
-    const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101112" // instVersionId 不是  init
-    const val ERROR_BUILD_TASK_BCS_OPERATE_FAIL = "2101113" // BCS 操作失败
-    const val ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR = "2101114" // instVersionId 不是 init
-    const val ERROR_BUILD_TASK_BCS_PARAM_VERSIONID = "2101115" // versionId 不是 init
-    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = "2101116" // showVersionId 不是 init
-    const val ERROR_BUILD_TASK_BCS_PARAM_INSTANCE_ENTITY = "2101117" // instanceEntity 不是 init
-    const val ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL = "2101118" // 创建实例失败
+    const val ERROR_MAX_PIPELINE_COUNT_PER_PROJECT = "2101101" // 该项目最多只能创建{0}条流水线
+    const val ERROR_RETRY_3_FAILED = "2101102" // 重试3次失败
+    const val ERROR_UPDATE_FAILED = "2101103" // 更新失败: {0}
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101104" // {0}非项目{1}管理员
+    const val BUILD_QUEUE_FOR_CONCURRENCY = "2101105" // 排队中: 当前构建正在并发组({0})排队中
+    const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101106" // 安装插件失败
+
+    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101107" // 暂停的流水线已开始运行
+    const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
+    const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
+    const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
+    const val ERROR_BUILD_TASK_QUALITY_OUT = "2101112" // 质量红线(准出)检测失败
+    const val ERROR_TIMEOUT_IN_RUNNING = "2101113" // {0}运行达到({1})分钟，超时结束运行!
+    const val ERROR_RETRY_STAGE_NOT_FAILED = "2101114" // stage非失败状态，不能进行重试
+    const val ERROR_NO_PARAM_IN_JOB_CONDITION = "2101115" // 请设置Job运行的自定义变量
+    const val ERROR_BACKGROUND_SERVICE_TASK_EXECUTION = "2101116" // 后台服务任务执行出错
+    const val ERROR_BACKGROUND_SERVICE_RUNNING_ERROR = "2101117" // 后台服务运行出错
+    const val ERROR_VIEW_NOT_FOUND_IN_PROJECT = "2101118" // 在项目 {0} 下未找到{1}视图{2}
+
     const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101119" // EnvName 不是 init
     const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101120" // EnvId 不是 init
     const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = "2101121" // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = "2101122" // 用户没有操作这些环境的权限！环境：$noExistsEnvNames
-    // "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+    // "以下这些环境id不存在,请重新修改流水线！id：
     const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = "2101123"
     const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = "2101124" // 支持 目标环境类型: {0}
-    const val ERROR_BUILD_TASK_CDN_FAIL = "2101125" // "分发CDN失败
-    const val ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS = "2101126" // 索引文件不存在
-    const val ERROR_BUILD_TASK_ZHIYUN_FAIL = "2101127" // 织云操作失败,织云返回错误信息：$msg
-    const val ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL = "2101128" // 织云异步升级失败,织云返回错误信息：$msg
-    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_PATH = "2101129" // 这路径 不是 init
+
+    const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101125" // 流水线组的视图范围不一致
+    const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101126" // 流水线组创建太多了
+    const val ERROR_VIEW_DUPLICATE_NAME = "2101127" // 流水线组名称重复
+    const val ERROR_VIEW_NAME_ILLEGAL = "2101128" // 流水线组名称不合法
+    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = "2101129" // 当前构建正在运行中，请勿重复提交重试请求
+
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101130" // 质量红线(准入)检测失败
     const val INCORRECT_EXCEL_FORMAT = "2101131" // Excel格式错误，或文件不存在
     const val ERROR_CALLBACK_URL_INVALID = "2101132" // 回调的url非法
@@ -235,12 +233,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101139" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
     const val ERROR_PIPELINE_IS_NOT_THE_LATEST = "2101140" // 异常：保存已拒绝，因为保存流水线时已不是最新版本
     const val ERROR_RESTART_EXSIT = "2101141" // 流水线: 待restart构建{0}已在restart中
-    const val ERROR_PIPELINE_DENY_RUN = "2101142" // 流水线不能执行
-    const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101143" // 流水线正在运行中，锁定
+    const val MAXIMUM_NUMBER_QUEUES_ILLEGAL = "2101142" // 最大排队数量非法
+    const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101143" // 没有修改流水线组权限
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101144" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101145" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101146" // ({0})的jobId({1})已存在
-    const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101147" // job:({0})依赖的({1})不存在
+    const val MAXIMUM_QUEUE_LENGTH_ILLEGAL = "2101147" // 最大排队时长非法
     const val BUILD_MSG_LABEL = "2101148" // 构建信息
     const val BUILD_MSG_MANUAL = "2101149" // 手动触发
     const val BUILD_MSG_TIME = "2101150" // 定时触发
@@ -277,60 +275,8 @@ object ProcessMessageCode {
     const val ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO = "2101174" // 用户（{0}) 无权限获取流水线({1})信息({2})
     const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101175" // 子流水线参数过滤失败
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101176" // 模版下存在无权限的插件
-    const val ERROR_RECORD_PARSE_FAILED = "2101177" // 解析构建记录出错
+    const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101177" // 流水线编排数量非法
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
-    const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101179" // 流水线编排数量非法
-    const val MAXIMUM_QUEUE_LENGTH_ILLEGAL = "2101180" // 最大排队时长非法
-    const val MAXIMUM_NUMBER_QUEUES_ILLEGAL = "2101181" // 最大排队数量非法
-    const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101182" // 没有修改流水线组权限
-    const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101183" // 流水线组的视图范围不一致
-    const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101184" // 流水线组创建太多了
-    const val ERROR_VIEW_DUPLICATE_NAME = "2101185" // 流水线组名称重复
-    const val ERROR_VIEW_NAME_ILLEGAL = "2101186" // 流水线组名称不合法
-    const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = "2101187" // Windows暂时没有公共构建机可用，请联系持续集成助手添加
-    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = "2101188" // 当前构建正在运行中，请勿重复提交重试请求
-    const val ERROR_NO_PARAM_IN_JOB_CONDITION = "2101189" // 请设置Job运行的自定义变量
-    const val ERROR_TIMEOUT_IN_RUNNING = "2101190" // {0}运行达到({1})分钟，超时结束运行!
-    const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101191" // 排队超时，取消运行! [{0}]
-    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101192" // 暂停的流水线已开始运行
-    const val ERROR_ELEMENT_TOO_LONG = "2101193" // {0} element大小越界
-    const val ERROR_JOB_RUNNING = "2101194" // job非完成态，不能进行重试
-    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101195" // 质量红线(准入)配置有误:
-    const val ERROR_BUILD_TASK_QUALITY_OUT = "2101196" // 质量红线(准出)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101197" // 质量红线(准出)配置有误：
-    const val ERROR_RETRY_STAGE_NOT_FAILED = "2101198" // stage非失败状态，不能进行重试
-    const val ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION = "2101199" // 拉取最新版本号出现异常,重试{0}次失败
-    const val ERROR_BACKGROUND_SERVICE_TASK_EXECUTION = "2101200" // 后台服务任务执行出错
-    const val ERROR_BACKGROUND_SERVICE_RUNNING_ERROR = "2101201" // 后台服务运行出错
-    const val ERROR_VIEW_NOT_FOUND_IN_PROJECT = "2101202" // 在项目 {0} 下未找到{1}视图{2}
-    const val ERROR_MAX_PIPELINE_COUNT_PER_PROJECT = "2101203" // 该项目最多只能创建{0}条流水线
-    const val ERROR_PERMISSION_VIEW_NEED = "2101204" // 无查看权限
-    const val ERROR_PERMISSION_CREATE_NEED = "2101205" // 无写权限
-    const val ERROR_PERMISSION_EXECUTE_NEED = "2101206" // 无执行权限
-    const val ERROR_PERMISSION_DELETE_NEED = "2101207" // 无删除权限
-    const val ERROR_PERMISSION_LIST_NEED = "2101208" // 无列表权限
-    const val ERROR_RETRY_3_FAILED = "2101209" // 重试3次失败
-    const val ERROR_UPDATE_FAILED = "2101210" // 更新失败: {0}
-    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101211" // {0}非项目{1}管理员
-    const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101212" // 非项目成员
-    const val BUILD_QUEUE_FOR_CONCURRENCY = "2101213" // 排队中: 当前构建正在并发组({0})排队中
-    const val BUILD_QUEUE_FOR_SINGLE = "2101214" // 排队中: 当前构建正在排队中
-
-    const val GIT_INVALID = "2101215" // 无效的GIT仓库
-    const val TGIT_INVALID = "2101216" // 无效的TGIT仓库
-    const val SVN_INVALID = "2101217" // 无效的SVN仓库
-    const val GITHUB_INVALID = "2101218" // 无效的GITHUB仓库
-    const val P4_INVALID = "2101219" // 无效的p4仓库
-    const val GIT_NOT_FOUND = "2101220" // 代码库{0}不存在
-    const val NOT_SVN_CODE_BASE = "2101221" // 代码库({0})不是svn代码库
-    const val FAIL_TO_GET_SVN_DIRECTORY = "2101222" // 获取Svn目录失败, msg:{0}
-    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2101223" // 仓库ID和仓库名都为空
-
-    const val PROJECT_NOT_EXIST = "2101224" // 项目不存在
-    const val QUERY_USER_INFO_FAIL = "2101225" // 获取用户信息失败
-    const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101226" // 安装插件失败
-    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2101227" // 用户({0})在工程({1})下没有流水线{2}权限
-    const val PIPELINE_LIST_LENGTH_LIMIT = "2101228" // 流水线列表长度不能超过100
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -472,7 +418,6 @@ object ProcessMessageCode {
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
-    const val BK_TRIGGERED_MANUALLY = "bkTriggeredManually" // 手动触发
     const val BK_MAX_PARALLEL = "bkMaxParallel" // 并行上限/Max parallel:
     const val BK_MANUALLY_SKIPPED = "bkManuallySkipped" // 被手动跳过 Manually skipped
     const val BK_EVENT = "bkEvent" // {0}事件

@@ -462,7 +462,11 @@ class WorkspaceDevCloudClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatusEnum.abort, I18nUtil.getCodeLanMessage(BK_CREATE_ENV_TIMEOUT), ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR)
+                return Triple(
+                    first = TaskStatusEnum.abort,
+                    second = I18nUtil.getCodeLanMessage(BK_CREATE_ENV_TIMEOUT),
+                    third = ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR
+                )
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(

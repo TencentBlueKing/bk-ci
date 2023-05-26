@@ -74,7 +74,8 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
@@ -123,18 +124,42 @@ class RbacPermissionResourceService(
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
-            traceEventDispatcher.dispatch(
-                AuthResourceGroupCreateEvent(
-                    managerId = managerId,
-                    userId = userId,
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    resourceName = resourceName,
-                    iamResourceCode = iamResourceCode
+            if (async) {
+                traceEventDispatcher.dispatch(
+                    AuthResourceGroupCreateEvent(
+                        managerId = managerId,
+                        userId = userId,
+                        projectCode = projectCode,
+                        projectName = projectName,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = resourceName,
+                        iamResourceCode = iamResourceCode
+                    )
                 )
-            )
+            } else {
+                // 同步创建组，主要用于迁移数据；正常创建资源，走异步
+                if (resourceType == AuthResourceType.PROJECT.value) {
+                    permissionGradeManagerService.createGradeDefaultGroup(
+                        gradeManagerId = managerId,
+                        userId = userId,
+                        projectCode = projectCode,
+                        projectName = projectName
+                    )
+                } else {
+                    permissionSubsetManagerService.createSubsetManagerDefaultGroup(
+                        subsetManagerId = managerId,
+                        userId = userId,
+                        projectCode = projectCode,
+                        projectName = projectName,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = resourceName,
+                        iamResourceCode = iamResourceCode,
+                        createMode = AuthGroupCreateMode.CREATE
+                    )
+                }
+            }
         }
         return true
     }

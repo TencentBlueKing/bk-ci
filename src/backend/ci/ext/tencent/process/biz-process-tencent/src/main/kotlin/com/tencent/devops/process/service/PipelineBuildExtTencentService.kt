@@ -27,15 +27,26 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.client.ServiceInstance
@@ -45,7 +56,12 @@ import java.util.Random
 
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
+    private val dslContext: DSLContext,
     private val consulClient: ConsulDiscoveryClient?,
+    private val templateDao: TemplateDao,
+    private val objectMapper: ObjectMapper,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
 
@@ -58,15 +74,17 @@ class PipelineBuildExtTencentService @Autowired constructor(
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextService.buildContext(
-            projectId = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            stageId = task.stageId,
-            containerId = task.containerId,
-            taskId = null,
-            variables = variable
-        ))
+        extMap.putAll(
+            pipelineContextService.buildContext(
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                buildId = task.buildId,
+                stageId = task.stageId,
+                containerId = task.containerId,
+                taskId = null,
+                variables = variable
+            )
+        )
         return extMap
     }
 
@@ -75,7 +93,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
     fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {
             val instances = consulClient!!.getInstances("turbo-new")
-                    ?: return ""
+                ?: return ""
             if (instances.isEmpty()) {
                 return ""
             }
@@ -115,7 +133,54 @@ class PipelineBuildExtTencentService @Autowired constructor(
         return instances[index]
     }
 
+    fun runPipelineWithTemplate(
+        userId: String,
+        projectId: String,
+        templateVersionId: Long,
+        parameters: Map<String, String>
+    ): BuildId {
+        val template = templateDao.getTemplate(dslContext = dslContext, version = templateVersionId)
+        val instanceModel =
+            PipelineUtils.instanceModel(
+                templateModel = objectMapper.readValue(template.template),
+                pipelineName = "am-$templateVersionId-${UUIDUtil.generate()}",
+                buildNo = null,
+                param = parameters.map {
+                    BuildFormProperty(
+                        id = it.key,
+                        required = false,
+                        type = BuildFormPropertyType.STRING,
+                        defaultValue = it.value,
+                        options = null,
+                        desc = null,
+                        repoHashId = null,
+                        relativePath = null,
+                        scmType = null,
+                        containerType = null,
+                        glob = null,
+                        properties = null
+                    )
+                },
+                instanceFromTemplate = true,
+                defaultStageTagId = null
+            )
+        // 保存流水线信息
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectId, instanceModel, ChannelCode.AM)
+        logger.info("createPipeline result is:$pipelineId")
+        return pipelineBuildFacadeService.buildManualStartup(
+            userId = userId,
+            startType = StartType.SERVICE,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = emptyMap(),
+            channelCode = ChannelCode.AM,
+            checkPermission = false,
+            isMobile = false,
+            startByMessage = null
+        )
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this :: class.java)
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

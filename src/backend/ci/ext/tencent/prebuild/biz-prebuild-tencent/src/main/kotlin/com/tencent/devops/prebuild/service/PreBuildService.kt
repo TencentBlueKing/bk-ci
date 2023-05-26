@@ -430,12 +430,12 @@ class PreBuildService @Autowired constructor(
             if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
         })
         return QueryLogs(
-            originLog.buildId,
-            originLog.finished,
-            originLog.hasMore,
-            cleanLogs,
-            originLog.timeUsed,
-            originLog.status
+            buildId = originLog.buildId,
+            finished = originLog.finished,
+            hasMore = originLog.hasMore,
+            logs = cleanLogs,
+            timeUsed = originLog.timeUsed,
+            status = originLog.status
         )
     }
 
@@ -465,12 +465,12 @@ class PreBuildService @Autowired constructor(
             if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
         })
         return QueryLogs(
-            originLog.buildId,
-            originLog.finished,
-            originLog.hasMore,
-            cleanLogs,
-            originLog.timeUsed,
-            originLog.status
+            buildId = originLog.buildId,
+            finished = originLog.finished,
+            hasMore = originLog.hasMore,
+            logs = cleanLogs,
+            timeUsed = originLog.timeUsed,
+            status = originLog.status
         )
     }
 

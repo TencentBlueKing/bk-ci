@@ -95,9 +95,7 @@ interface OpAtomResource {
     @GET
     @Path("/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listAllPipelineAtoms(
         @ApiParam("插件名称", required = false)
@@ -142,11 +140,7 @@ interface OpAtomResource {
     @ApiOperation("根据ID获取流水线插件信息")
     @GET
     @Path("/{id}")
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
+    @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getPipelineAtomById(
         @ApiParam("流水线插件ID", required = true)
         @QueryParam("id")

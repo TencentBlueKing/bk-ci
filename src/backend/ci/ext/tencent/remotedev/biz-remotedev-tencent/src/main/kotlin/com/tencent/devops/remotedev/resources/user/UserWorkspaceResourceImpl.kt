@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
@@ -205,5 +206,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
         bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
+    }
+
+    override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
     }
 }

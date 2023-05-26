@@ -53,7 +53,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.dao.ExtProjectDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -79,13 +78,13 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.support.api.service.ServiceFileResource
-import java.io.File
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Suppress("ALL")
 @Service
@@ -113,8 +112,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bkTag: BkTag,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
-    projectApprovalService: ProjectApprovalService,
-    private val extProjectDao: ExtProjectDao
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -261,7 +259,7 @@ class TxProjectServiceImpl @Autowired constructor(
             return emptyList()
         }
         return bkTag.invokeByTag(rbacTag) {
-            client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+            client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
                 action = permission.value
@@ -455,7 +453,7 @@ class TxProjectServiceImpl @Autowired constructor(
     ): List<String> {
         if (!tag.isBlank()) {
             val iamProjectList = bkTag.invokeByTag(tag) {
-                client.get(ServiceProjectAuthResource::class).getUserProjects(
+                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
                     token = tokenService.getSystemToken(null)!!
                 ).data
@@ -488,25 +486,14 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectRouterTag(englishName: String) {
-        val tag = bkTag.getLocalTag()
-        // rbac环境创建的项目,需要指定到rbac集群
-        if (tag.contains(rbacTag)) {
-            projectTagService.updateTagByProject(projectCode = englishName, tag = bkTag.getLocalTag())
-        }
-    }
-
-    override fun getV0orV3Projects(
-        authType: AuthSystemType,
-        limit: Int,
-        offset: Int
-    ): List<ProjectVO> {
-        return extProjectDao.getV0orV3Projects(
-            dslContext = dslContext,
-            authType = authType,
-            limit = limit,
-            offset = offset
-        ).map {
-            ProjectUtils.packagingBean(it)
+        try {
+            val tag = bkTag.getLocalTag()
+            // rbac环境创建的项目,需要指定到rbac集群
+            if (tag.contains(rbacTag)) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update project router tag", ignore)
         }
     }
 
