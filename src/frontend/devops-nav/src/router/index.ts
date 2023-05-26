@@ -2,9 +2,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
+import request from '@/utils/request'
 import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
-import request from '../utils/request'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -74,6 +74,7 @@ function isAmdModule (currentPage: subService): boolean {
 }
 
 const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
+    counterUser()
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -150,7 +151,37 @@ function updateHeaderConfig (routeMeta: any) {
     }
 }
 
-function getProjectId (params): string {
+/**
+ * 上报用户信息
+ */
+function counterUser (): void {
+    const userId = window.userInfo.username
+    const os = parseOS()
+    
+    request.post('/project/api/user/count/login', {
+        os,
+        userId
+    })
+}
+
+function parseOS (): string {
+    const { userAgent } = window.navigator
+    switch (true) {
+        case userAgent.indexOf('Linux') > -1:
+            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
+        case userAgent.indexOf('iPhone') > -1:
+            return 'IOS'
+        case userAgent.indexOf('iPad') > -1:
+            return 'iPad'
+        case userAgent.indexOf('Mac') > -1:
+            return 'MACOS'
+        case userAgent.indexOf('Win') > -1:
+            return 'WINDOWS'
+    }
+    return 'WINDOWS'
+}
+
+export function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
         const projectId = window.GLOBAL_PID || cookiePid
