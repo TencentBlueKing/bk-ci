@@ -68,5 +68,4 @@ enum class ErrorType(
             language = language
         )
     }
-
 }
