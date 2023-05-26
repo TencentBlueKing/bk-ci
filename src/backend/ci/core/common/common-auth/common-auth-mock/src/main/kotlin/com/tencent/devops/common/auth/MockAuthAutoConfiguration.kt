@@ -44,6 +44,7 @@ import com.tencent.devops.common.auth.code.MockBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.MockCodeAuthServiceCode
 import com.tencent.devops.common.auth.code.MockEnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.MockPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.MockPipelineGroupAuthServiceCode
 import com.tencent.devops.common.auth.code.MockProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.MockQualityAuthServiceCode
 import com.tencent.devops.common.auth.code.MockRepoAuthServiceCode
@@ -61,7 +62,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 /**
- * 兜底bean,可能存在有些auth.idProvider声明了这些bean,有些没有,没有的就需要创建
+ * 兜底bean,可能存在有些auth.idProvider声明了这些bean,有些没有声明,没有的就需要创建一个mock bean
  * 注意: 这个类要放在其他声明auth.idProvider配置类之后
  *
  */
@@ -98,6 +99,10 @@ class MockAuthAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PipelineAuthServiceCode::class)
     fun pipelineAuthServiceCode() = MockPipelineAuthServiceCode()
+
+    @Bean
+    @ConditionalOnMissingBean(PipelineAuthServiceCode::class)
+    fun pipelineGroupAuthServiceCode() = MockPipelineGroupAuthServiceCode()
 
     @Bean
     @ConditionalOnMissingBean(CodeAuthServiceCode::class)

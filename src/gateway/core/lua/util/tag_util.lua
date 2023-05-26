@@ -30,8 +30,12 @@ function _M:get_tag(ns_config)
 
     -- 根据header强制路由tag
     if ngx.var.http_x_gateway_tag ~= nil then
-        self:set_header(ngx.var.http_x_gateway_tag)
-        return ngx.var.http_x_gateway_tag
+        tag = ngx.var.http_x_gateway_tag
+        if not string.find(tag, '^kubernetes-') and self:switch_kubernetes(devops_project, tag) then
+            tag = "kubernetes-" .. tag
+        end
+        self:set_header(tag)
+        return tag
     end
 
     -- 获取本地缓存
@@ -86,7 +90,7 @@ function _M:get_tag(ns_config)
         end
         -- 是否使用kubernetes
         if not string.find(tag, '^kubernetes-') then
-            if config.kubernetes.switchAll == true then
+            if self:switch_kubernetes(devops_project, tag) then
                 tag = "kubernetes-" .. tag
             else
                 local k8s_redis_key = nil
@@ -112,6 +116,29 @@ function _M:get_tag(ns_config)
     self:set_header(tag)
 
     return tag
+end
+
+function _M:switch_kubernetes(devops_project, tag)
+    if config.kubernetes.switchAll == true then
+        return true
+    end
+    if config.kubernetes.useForceHeader and ngx.var.http_x_gateway_force_k8s == 'true' then
+        return true
+    end
+    local isInList = false
+    local tags = nil
+    if devops_project == 'codecc' then
+        tags = config.kubernetes.codeccTags
+    else
+        tags = config.kubernetes.tags
+    end
+    for _, v in ipairs(tags) do
+        if v == tag then
+            isInList = true
+            break
+        end
+    end
+    return isInList
 end
 
 -- 设置tag到http请求头
@@ -166,6 +193,9 @@ end
 
 -- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
+    if string.find(tag, '^kubernetes-') then
+        tag = string.sub(tag, 12) -- 去掉 "kubernetes-" 头部
+    end
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store
     local sub_path = sub_path_cache:get(tag)

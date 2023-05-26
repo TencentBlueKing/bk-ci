@@ -49,7 +49,7 @@ class AuthEnvService @Autowired constructor(
             envService.listEnvironmentByLimit(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (envInfos?.records == null) {
-            logger.info("$projectId 项目下无环境")
+            logger.info("There is no environment under the project $projectId ")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -68,7 +68,7 @@ class AuthEnvService @Autowired constructor(
         val envInfos = envService.listRawEnvByHashIdsAllType(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (envInfos == null || envInfos.isEmpty()) {
-            logger.info("$hashId 下无环境")
+            logger.info("$hashId no env")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -98,7 +98,7 @@ class AuthEnvService @Autowired constructor(
             envName = keyword)
         val result = SearchInstanceInfo()
         if (envInfos?.records == null) {
-            logger.info("$projectId 项目下无环境")
+            logger.info("There is no environment under the project $projectId ")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

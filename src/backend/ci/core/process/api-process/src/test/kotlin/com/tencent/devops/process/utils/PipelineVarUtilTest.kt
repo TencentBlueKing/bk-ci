@@ -28,10 +28,10 @@
 package com.tencent.devops.process.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
@@ -310,12 +310,10 @@ class PipelineVarUtilTest {
         plist.add(BuildParameters(key = MINORVERSION, value = illegalMinor, valueType = BuildFormPropertyType.STRING))
         plist.add(BuildParameters(key = FIXVERSION, value = illegalFixVer, valueType = BuildFormPropertyType.STRING))
         plist.add(BuildParameters(key = BUILD_NO, value = illegalBuildNo, valueType = BuildFormPropertyType.STRING))
-        val expectCut = CommonUtils.interceptStringInLength(
-            illegalMajor
+        val expectCut = illegalMajor
                 .plus(".").plus(illegalMinor)
                 .plus(".").plus(illegalFixVer)
-                .plus(".").plus(illegalBuildNo), MAX_VERSION_LEN
-        )
+                .plus(".").plus(illegalBuildNo).coerceAtMaxLength(MAX_VERSION_LEN)
         actual = PipelineVarUtil.getRecommendVersion(plist)
         assertEquals(expectCut, actual)
     }

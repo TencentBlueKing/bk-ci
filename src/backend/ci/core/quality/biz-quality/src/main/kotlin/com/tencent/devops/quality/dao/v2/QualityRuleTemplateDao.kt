@@ -32,10 +32,11 @@ import com.tencent.devops.model.quality.tables.TQualityRuleTemplate
 import com.tencent.devops.model.quality.tables.records.TQualityRuleTemplateRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.TemplateType
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdate
+import com.tencent.devops.quality.pojo.po.QualityRuleTemplatePO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityRuleTemplateDao {
@@ -126,6 +127,22 @@ class QualityRuleTemplateDao {
                 .set(UPDATE_USER, userId)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun batchCrateQualityRuleTemplate(dslContext: DSLContext, qualityRuleTemplatePOs: List<QualityRuleTemplatePO>) {
+        with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
+            dslContext.batch(
+                qualityRuleTemplatePOs.map { qualityRuleTemplatePO ->
+                    dslContext.insertInto(this)
+                        .set(dslContext.newRecord(this, qualityRuleTemplatePO))
+                        .onDuplicateKeyUpdate()
+                        .set(NAME, qualityRuleTemplatePO.name)
+                        .set(DESC, qualityRuleTemplatePO.desc)
+                        .set(STAGE, qualityRuleTemplatePO.stage)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                }
+            ).execute()
         }
     }
 }

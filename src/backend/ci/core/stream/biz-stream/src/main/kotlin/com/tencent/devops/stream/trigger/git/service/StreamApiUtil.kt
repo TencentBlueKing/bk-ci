@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
-import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.Logger
 
 object StreamApiUtil {
@@ -47,10 +47,7 @@ object StreamApiUtil {
             }
         } catch (e: ClientException) {
             logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
+            throw ErrorCodeException(errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString())
         } catch (e: RemoteServiceException) {
             logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
             throw ErrorCodeException(
@@ -70,7 +67,7 @@ object StreamApiUtil {
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
+                    "$log: ${apiErrorCode.getErrorMessage()}"
                 } else {
                     "$log: ${e.message}"
                 }

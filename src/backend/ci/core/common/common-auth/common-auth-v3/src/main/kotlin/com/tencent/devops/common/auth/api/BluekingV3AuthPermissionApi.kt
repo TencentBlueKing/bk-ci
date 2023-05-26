@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.api.util.OwnerUtils
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.ActionUtils
 import com.tencent.devops.common.auth.utils.AuthUtils
@@ -72,6 +73,23 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
     ): Boolean {
         val actionType = ActionUtils.buildAction(resourceType, permission)
         return authHelper.isAllowed(user, actionType)
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission
+        )
     }
 
     // 判断用户是否有某个动作某个实例的权限。
@@ -192,6 +210,27 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         }
         logger.info("v3 getPermissionMap user[$userId], project[$scopeId] map[$permissionMap]")
         return permissionMap
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     // 此处为不在common内依赖业务接口，固只从redis内取，前置有写入逻辑

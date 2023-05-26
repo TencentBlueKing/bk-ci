@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
@@ -42,23 +42,24 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.exception.NoAvailableHostException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
+import java.util.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.Random
 
 @Component
 class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val gray: Gray,
+    private val bkTag: BkTag,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
@@ -84,7 +85,7 @@ class DockerHostUtils @Autowired constructor(
         unAvailableIpList: Set<String> = setOf(),
         clusterName: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
-        val grayEnv = gray.isGray()
+        val grayEnv = bkTag.getFinalTag().contains("gray")
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
@@ -124,11 +125,11 @@ class DockerHostUtils @Autowired constructor(
 
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
-                throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
+                throw NoAvailableHostException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
                     errorMsg = "Start build Docker VM failed, no available Docker VM in $specialIpSet")
             }
-            throw DockerServiceException(errorType = ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorType,
+            throw NoAvailableHostException(errorType = ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode,
                 errorMsg = "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
         }
@@ -180,14 +181,18 @@ class DockerHostUtils @Autowired constructor(
                     return i
                 }
             }
-            throw DockerServiceException(errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                errorMsg = "构建机启动失败，没有空闲的构建机了！")
+                errorMsg = ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
+            )
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
-            throw DockerServiceException(errorType = ErrorCodeEnum.POOL_VM_ERROR.errorType,
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.POOL_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.POOL_VM_ERROR.errorCode,
-                errorMsg = "容器并发池分配异常")
+                errorMsg = ErrorCodeEnum.POOL_VM_ERROR.getErrorMessage()
+            )
         } finally {
             lock.unlock()
         }
@@ -243,7 +248,7 @@ class DockerHostUtils @Autowired constructor(
     ): Pair<String, Int> {
         // 检测IP是否活跃以及负载情况
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.grayEnv != gray.isGray() ||
+            dockerIpInfo.grayEnv != (bkTag.getFinalTag().contains("gray")) ||
             overload(dockerIpInfo)) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,

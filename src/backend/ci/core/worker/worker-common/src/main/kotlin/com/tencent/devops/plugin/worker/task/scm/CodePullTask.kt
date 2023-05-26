@@ -31,11 +31,14 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.task.ITask
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 abstract class CodePullTask constructor(private val scmType: ScmType) : ITask() {
 
@@ -59,7 +62,10 @@ abstract class CodePullTask constructor(private val scmType: ScmType) : ITask() 
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
-                errorMsg = "该插件已不推荐使用,${e.message}"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = WorkerMessageCode.BK_PLUGIN_IS_NO_LONGER_RECOMMENDED,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + ",${e.message}"
             )
         }
     }

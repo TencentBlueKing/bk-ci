@@ -43,6 +43,8 @@ object YamlUtil {
         YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
     ).registerKotlinModule()
 
+    private const val RETRY_TIME = 3
+
     fun getObjectMapper() = objectMapper
 
     fun toYaml(bean: Any): String {
@@ -52,9 +54,27 @@ object YamlUtil {
         return getObjectMapper().writeValueAsString(bean)!!
     }
 
-    fun <T> to(yamlStr: String): T {
-        val yaml = Yaml()
-        val obj = toYaml(yaml.load(yamlStr) as Any)
-        return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
+    fun <T> to(yamlStr: String, valueTypeRef: TypeReference<T>? = null): T {
+        val obj = loadYamlRetryOnAccident(yamlStr)
+        return getObjectMapper().readValue(obj, valueTypeRef ?: object : TypeReference<T>() {})
+    }
+
+    fun loadYamlRetryOnAccident(yamlStr: String, retryTime: Int = RETRY_TIME, retryPeriodMills: Long = 50): String {
+        try {
+            val yml = if (RETRY_TIME != retryTime) {
+                // 由于snakeYaml底层原因，部分正常yaml会解析失败，于是在此处尝试改变yaml内容进行重试
+                "# auto fix ${"+".repeat(retryTime)}\n$yamlStr"
+            } else yamlStr
+            val yaml = Yaml()
+            return toYaml(yaml.load(yml) as Any)
+        } catch (re: Throwable) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            return loadYamlRetryOnAccident(yamlStr, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        }
     }
 }

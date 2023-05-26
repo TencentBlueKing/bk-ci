@@ -28,7 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData

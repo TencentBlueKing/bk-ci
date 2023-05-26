@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
@@ -37,10 +38,11 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,6 +78,18 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun getAllProject(): Result<List<ProjectVO>> {
         return Result(projectService.getAllProject())
+    }
+
+    override fun listMigrateProjects(
+        limit: Int,
+        offset: Int
+    ): Result<List<ProjectWithPermission>> {
+        return Result(
+            projectService.listMigrateProjects(
+                limit = limit,
+                offset = offset
+            )
+        )
     }
 
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
@@ -183,11 +197,25 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
-        return Result(projectService.verifyUserProjectPermission(
-            accessToken = null,
-            userId = userId,
-            projectId = projectId,
-            permission = permission
-        ))
+        return Result(
+            projectService.verifyUserProjectPermission(
+                accessToken = null,
+                userId = userId,
+                projectId = projectId,
+                permission = permission
+            )
+        )
+    }
+
+    override fun updateProjectSubjectScopes(
+        projectId: String,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Result<Boolean> {
+        return Result(
+            projectService.updateProjectSubjectScopes(
+                projectId = projectId,
+                subjectScopes = subjectScopes
+            )
+        )
     }
 }
