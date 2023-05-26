@@ -1,5 +1,5 @@
-//go:build !windows
-// +build !windows
+//go:build windows && out
+// +build windows,out
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -51,31 +51,57 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-[[outputs.http]]
-  url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
-  # timeout = "5s"
-  method = "POST"
-  data_format = "json"
-  [outputs.http.headers]
-    Content-Type = "application/json; charset=utf-8"
-    X-DEVOPS-BUILD-TYPE = "###{buildType}###"
-    X-DEVOPS-PROJECT-ID = "###{projectId}###"
-    X-DEVOPS-AGENT-ID = "###{agentId}###"
-    X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
-[[inputs.cpu]]
-  percpu = true
-  totalcpu = true
-  collect_cpu_time = false
-  report_active = false
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetric"
+  skip_database_creation = true
+  ###{tls_ca}###
+[[inputs.win_perf_counters]]
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Processor"
+    Instances = ["*"]
+    Counters = [
+      "% Idle Time",
+      "% Interrupt Time",
+      "% Privileged Time",
+      "% User Time",
+      "% Processor Time",
+      "% DPC Time",
+    ]
+    Measurement = "cpu"
+    IncludeTotal=true
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "PhysicalDisk"
+    Instances = ["*"]
+    Counters = [
+      "Disk Read Bytes/sec",
+      "Disk Write Bytes/sec",
+      "Current Disk Queue Length",
+      "Disk Reads/sec",
+      "Disk Writes/sec",
+      "% Disk Time",
+      "% Disk Read Time",
+      "% Disk Write Time",
+    ]
+    Measurement = "diskio"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Network Interface"
+    Instances = ["*"]
+    Counters = [
+      "Bytes Received/sec",
+      "Bytes Sent/sec",
+      "Packets Received/sec",
+      "Packets Sent/sec",
+      "Packets Received Discarded",
+      "Packets Outbound Discarded",
+      "Packets Received Errors",
+      "Packets Outbound Errors",
+    ]
+    Measurement = "net"
+[[inputs.mem]]
 [[inputs.disk]]
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
-[[inputs.diskio]]
-[[inputs.mem]]
-[[inputs.net]]
 [[inputs.system]]
-[[inputs.netstat]]
-[[inputs.swap]]
-[[inputs.kernel]]
 
 [[processors.rename]]
   # cpu
@@ -83,29 +109,26 @@ const TelegrafConf = `
     measurement = "cpu"
     dest = "cpu_detail"
   [[processors.rename.replace]]
-    field = "usage_user"
+    field = "Percent_User_Time"
     dest = "user"
   [[processors.rename.replace]]
-    field = "usage_system"
+    field = "Percent_Privileged_Time"
     dest = "system"
   [[processors.rename.replace]]
-    field = "usage_idle"
+    field = "Percent_Idle_Time"
     dest = "idle"
-  [[processors.rename.replace]]
-    field = "usage_iowait"
-    dest = "iowait"
   # net
   [[processors.rename.replace]]
-    field = "bytes_recv"
+    field = "Bytes_Received_persec"
     dest = "speed_recv"
   [[processors.rename.replace]]
-    field = "bytes_sent"
+    field = "Bytes_Sent_persec"
     dest = "speed_sent"
   [[processors.rename.replace]]
-    field = "packets_recv"
+    field = "Packets_Received_persec"
     dest = "speed_packets_recv"
   [[processors.rename.replace]]
-    field = "packets_sent"
+    field = "Packets_Sent_persec"
     dest = "speed_packets_sent"
   # mem
   [[processors.rename.replace]]
@@ -116,11 +139,11 @@ const TelegrafConf = `
     measurement = "diskio"
     dest = "io"
   [[processors.rename.replace]]
-    field = "read_bytes"
+    field = "Disk_Read_Bytes_persec"
     dest = "rkb_s"
   [[processors.rename.replace]]
-    field = "write_bytes"
-    dest = "wkb_s"  
+    field = "Disk_Write_Bytes_persec"
+    dest = "wkb_s"
   # netstat
   [[processors.rename.replace]]
     field = "tcp_close_wait"
@@ -159,22 +182,12 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     measurement = "system"
     dest = "load"
-  # kernel  
-  [[processors.rename.replace]]
-    measurement = "kernel"
-    dest = "env"
-  [[processors.rename.replace]]
-    field = "boot_time"
-    dest = "uptime"
-  [[processors.rename.replace]]
-    field = "processes_forked"
-    dest = "procs"
 
 # disk的指标同名但改完名不同单独拿出来    
 [[processors.rename]]
   namepass = ["disk"]
   [[processors.rename.replace]]
     field = "used_percent"
-    dest = "in_use"
+    dest = "in_use"  
 
 `

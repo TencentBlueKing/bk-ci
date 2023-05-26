@@ -14,6 +14,7 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/swap"
 
 	_ "github.com/influxdata/telegraf/plugins/outputs/influxdb"
+	_ "github.com/influxdata/telegraf/plugins/outputs/http"
 	_ "github.com/influxdata/telegraf/plugins/processors/rename"
 )
 

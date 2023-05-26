@@ -1,5 +1,5 @@
-//go:build !windows
-// +build !windows
+//go:build !windows && out
+// +build !windows,out
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -51,17 +51,11 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-[[outputs.http]]
-  url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
-  # timeout = "5s"
-  method = "POST"
-  data_format = "json"
-  [outputs.http.headers]
-    Content-Type = "application/json; charset=utf-8"
-    X-DEVOPS-BUILD-TYPE = "###{buildType}###"
-    X-DEVOPS-PROJECT-ID = "###{projectId}###"
-    X-DEVOPS-AGENT-ID = "###{agentId}###"
-    X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetric"
+  skip_database_creation = true
+  ###{tls_ca}###
 [[inputs.cpu]]
   percpu = true
   totalcpu = true
