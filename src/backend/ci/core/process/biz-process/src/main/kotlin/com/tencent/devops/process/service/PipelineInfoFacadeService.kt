@@ -595,7 +595,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        saveDraft: Boolean? = false
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -669,7 +670,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 userId = userId,
                 channelCode = channelCode,
                 create = false,
-                updateLastModifyUser = updateLastModifyUser
+                updateLastModifyUser = updateLastModifyUser,
+                saveDraft = saveDraft
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
@@ -708,7 +710,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         setting: PipelineSetting,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        checkTemplate: Boolean = true
+        checkTemplate: Boolean = true,
+        saveDraft: Boolean? = false
     ): DeployPipelineResult {
         val pipelineResult = editPipeline(
             userId = userId,
@@ -717,7 +720,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = model,
             channelCode = channelCode,
             checkPermission = checkPermission,
-            checkTemplate = checkTemplate
+            checkTemplate = checkTemplate,
+            saveDraft = saveDraft
         )
         if (setting.projectId.isBlank()) {
             setting.projectId = projectId
@@ -728,7 +732,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting = setting,
             checkPermission = false,
             version = pipelineResult.version,
-            dispatchPipelineUpdateEvent = false
+            dispatchPipelineUpdateEvent = false,
+            saveDraft = saveDraft
         )
         return pipelineResult
     }
@@ -739,7 +744,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode,
         version: Int? = null,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        includeDraft: Boolean? = false
     ): Model {
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
@@ -767,7 +773,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId, version)
+        val model = pipelineRepositoryService.getModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = includeDraft
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,

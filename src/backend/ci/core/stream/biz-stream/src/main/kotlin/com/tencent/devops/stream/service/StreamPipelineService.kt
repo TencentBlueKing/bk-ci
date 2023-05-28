@@ -505,7 +505,7 @@ class StreamPipelineService @Autowired constructor(
         model: Model
     ): Boolean? {
         try {
-            val response = processClient.edit(
+            val response = processClient.editPipeline(
                 userId = userId,
                 projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,

@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
@@ -57,6 +58,7 @@ import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -188,7 +190,7 @@ interface UserPipelineResource {
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
-    fun edit(
+    fun editPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -199,7 +201,32 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model
+        pipeline: Model,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        saveDraft: Boolean?
+    ): Result<Boolean>
+
+    @ApiOperation("编辑流水线配置")
+    @PUT
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/setting")
+    fun editSetting(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线设置", required = true)
+        @Valid
+        setting: PipelineSetting,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        saveDraft: Boolean?
     ): Result<Boolean>
 
     @ApiOperation("编辑流水线编排以及设置")
@@ -218,7 +245,10 @@ interface UserPipelineResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting
+        modelAndSetting: PipelineModelAndSetting,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        saveDraft: Boolean?
     ): Result<Boolean>
 
     @ApiOperation("保存流水线设置")
@@ -252,7 +282,10 @@ interface UserPipelineResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        includeDraft: Boolean?
     ): Result<Model>
 
     @ApiOperation("获取流水线编排版本")
@@ -564,7 +597,7 @@ interface UserPipelineResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineInfo>>
+    ): Result<PipelineViewPipelinePage<PipelineResVersion>>
 
     @ApiOperation("校验matrix yaml格式")
     @POST

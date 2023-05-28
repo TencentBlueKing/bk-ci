@@ -154,7 +154,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 // md5不一致时更新蓝盾的model
                 if (oldMd5 != md5) {
                     // 编辑流水线model
-                    processClient.edit(
+                    processClient.editPipeline(
                         userId = userId,
                         projectId = projectCode,
                         pipelineId = pipeline.pipelineId,
@@ -180,7 +180,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
             } else {
                 // 编辑流水线model
-                processClient.edit(
+                processClient.editPipeline(
                     userId = userId,
                     projectId = projectCode,
                     pipelineId = pipeline.pipelineId,

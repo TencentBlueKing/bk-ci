@@ -131,8 +131,15 @@ class PipelineRepositoryService constructor(
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
-        private fun getVersionName(modelVersion: Int, triggerVersion: Int, settingVersion: Int) =
-            "P$modelVersion.T$triggerVersion.$settingVersion"
+        private fun getVersionName(
+            modelVersion: Int?,
+            triggerVersion: Int?,
+            settingVersion: Int?
+        ): String {
+            return if (modelVersion == null || triggerVersion == null || settingVersion == null) {
+                "init"
+            } else "P$modelVersion.T$triggerVersion.$settingVersion"
+        }
     }
 
     fun deployPipeline(
@@ -144,7 +151,8 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         useTemplateSettings: Boolean? = false,
         templateId: String? = null,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        saveDraft: Boolean? = false
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -186,7 +194,8 @@ class PipelineRepositoryService constructor(
                 modelTasks = modelTasks,
                 channelCode = channelCode,
                 maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
-                updateLastModifyUser = updateLastModifyUser
+                updateLastModifyUser = updateLastModifyUser,
+                saveDraft = saveDraft
             )
         } else {
             create(
@@ -201,7 +210,8 @@ class PipelineRepositoryService constructor(
                 modelTasks = modelTasks,
                 useTemplateSettings = useTemplateSettings,
                 templateId = templateId,
-                trigger = triggerContainer
+                trigger = triggerContainer,
+                saveDraft = saveDraft
             )
         }
     }
@@ -483,7 +493,8 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Collection<PipelineModelTask>,
         useTemplateSettings: Boolean? = false,
-        templateId: String? = null
+        templateId: String? = null,
+        saveDraft: Boolean? = false
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
@@ -508,8 +519,8 @@ class PipelineRepositoryService constructor(
                     id = id
                 )
                 model.latestVersion = 1
-                // 最新版本永远是新增逻辑
-                pipelineResDao.create(
+                // 如果不是草稿保存，最新版本永远是新增逻辑
+                if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -534,7 +545,8 @@ class PipelineRepositoryService constructor(
                     versionName = getVersionName(1, 1, 1),
                     modelVersion = 1,
                     triggerVersion = 1,
-                    settingVersion = 1
+                    settingVersion = 1,
+                    draftFlag = saveDraft == true
                 )
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
@@ -635,7 +647,8 @@ class PipelineRepositoryService constructor(
         modelTasks: Collection<PipelineModelTask>,
         channelCode: ChannelCode,
         maxPipelineResNum: Int? = null,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        saveDraft: Boolean? = false
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -679,17 +692,26 @@ class PipelineRepositoryService constructor(
                     throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
                 }
                 model.latestVersion = version
+                // 如果不是草稿保存，最新版本永远是新增逻辑
+                // TODO #8161 根据差异对比进行小版本号计算
                 val latestResRecord = pipelineResDao.getLatestVersionRecord(
                     transactionContext, projectId, pipelineId
                 )
-                pipelineResDao.create(
+                val modelVersion = 1
+                val triggerVersion = 1
+                val settingVersion = 1
+                if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = latestResRecord?.
+                    trigger = triggerContainer,
+                    versionName = getVersionName(modelVersion, triggerVersion, settingVersion),
+                    modelVersion = modelVersion,
+                    triggerVersion = triggerVersion,
+                    settingVersion = settingVersion
                 )
                 pipelineResVersionDao.create(
                     dslContext = transactionContext,
@@ -698,8 +720,14 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = triggerContainer
+                    trigger = triggerContainer,
+                    versionName = getVersionName(modelVersion, triggerVersion, settingVersion),
+                    modelVersion = modelVersion,
+                    triggerVersion = triggerVersion,
+                    settingVersion = settingVersion,
+                    draftFlag = saveDraft == true
                 )
+                // 针对新增version表做的数据迁移
                 if (version > 1 && pipelineResVersionDao.getVersionModelString(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -715,13 +743,25 @@ class PipelineRepositoryService constructor(
                         version = version - 1
                     )
                     if (!lastVersionModelStr.isNullOrEmpty()) {
+                        val triggerStr = try {
+                            val trigger = str2model(lastVersionModelStr, pipelineId)
+                                ?.stages?.get(0)?.containers?.get(0) as TriggerContainer
+                            JsonUtil.toJson(trigger, false)
+                        } catch (ignore: Throwable) {
+                            null
+                        }
                         pipelineResVersionDao.create(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             creator = userId,
                             version = version - 1,
-                            modelString = lastVersionModelStr
+                            modelString = lastVersionModelStr,
+                            triggerString = triggerStr,
+                            modelVersion = null,
+                            triggerVersion = null,
+                            settingVersion = null,
+                            draftFlag = false
                         )
                     }
                 }
@@ -803,17 +843,29 @@ class PipelineRepositoryService constructor(
         ).map { it.key to str2model(it.value, it.key) }.toMap()
     }
 
-    fun getModel(projectId: String, pipelineId: String, version: Int? = null): Model? {
+    fun getModel(
+        projectId: String,
+        pipelineId: String,
+        version: Int? = null,
+        includeDraft: Boolean? = false
+    ): Model? {
         var modelString: String?
         if (version == null) { // 取最新版，直接从旧版本表读
             modelString = pipelineResDao.getVersionModelString(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = null,
+                includeDraft = includeDraft
             ) ?: return null
         } else {
-            modelString = pipelineResVersionDao.getVersionModelString(dslContext, projectId, pipelineId, version)
+            modelString = pipelineResVersionDao.getVersionModelString(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                includeDraft = includeDraft
+            )
             if (modelString.isNullOrBlank()) {
                 // 兼容处理：取不到再从旧的版本表取
                 modelString = pipelineResDao.getVersionModelString(

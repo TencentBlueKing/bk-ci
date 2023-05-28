@@ -52,7 +52,7 @@ class PipelineResDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String = "init",
+        versionName: String,
         model: Model,
         trigger: TriggerContainer,
         modelVersion: Int,
@@ -87,7 +87,11 @@ class PipelineResDao {
         }
     }
 
-    fun getLatestVersionRecord(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineResourceRecord? {
+    fun getLatestVersionRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineResourceRecord? {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
@@ -95,14 +99,23 @@ class PipelineResDao {
         }
     }
 
-    fun getLatestVersionModelString(dslContext: DSLContext, projectId: String, pipelineId: String) =
-        getVersionModelString(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = null)
+    fun getLatestVersionModelString(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) = getVersionModelString(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        version = null
+    )
 
     fun getVersionModelString(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        version: Int?,
+        includeDraft: Boolean? = false
     ): String? {
 
         return with(T_PIPELINE_RESOURCE) {

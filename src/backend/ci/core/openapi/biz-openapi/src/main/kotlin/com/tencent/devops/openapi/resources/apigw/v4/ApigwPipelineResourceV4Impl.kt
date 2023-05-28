@@ -92,7 +92,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipeline: Model
     ): Result<Boolean> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|edit|$projectId|$pipelineId")
-        return client.get(ServicePipelineResource::class).edit(
+        return client.get(ServicePipelineResource::class).editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

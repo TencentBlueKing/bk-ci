@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,7 +74,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): PipelineViewPipelinePage<PipelineInfo> {
+    ): PipelineViewPipelinePage<PipelineResVersion> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         var slqLimit: SQLLimit? = null

@@ -51,9 +51,10 @@ class PipelineResVersionDao {
         versionName: String,
         model: Model,
         trigger: TriggerContainer,
-        modelVersion: Int,
-        triggerVersion: Int,
-        settingVersion: Int
+        modelVersion: Int?,
+        triggerVersion: Int?,
+        settingVersion: Int?,
+        draftFlag: Boolean
     ) {
         create(
             dslContext = dslContext,
@@ -66,7 +67,8 @@ class PipelineResVersionDao {
             triggerString = JsonUtil.toJson(trigger, formatted = false),
             modelVersion = modelVersion,
             triggerVersion = triggerVersion,
-            settingVersion = settingVersion
+            settingVersion = settingVersion,
+            draftFlag = draftFlag
         )
     }
 
@@ -78,10 +80,11 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String = "init",
         modelString: String,
-        triggerString: String,
-        modelVersion: Int,
-        triggerVersion: Int,
-        settingVersion: Int
+        triggerString: String?,
+        modelVersion: Int?,
+        triggerVersion: Int?,
+        settingVersion: Int?,
+        draftFlag: Boolean
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(this)
@@ -96,6 +99,7 @@ class PipelineResVersionDao {
                 .set(MODEL_VERSION, modelVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
+                .set(DRAFT_FLAG, draftFlag)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(TRIGGER, triggerString)
@@ -112,7 +116,8 @@ class PipelineResVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        version: Int?,
+        includeDraft: Boolean? = null
     ): String? {
 
         return with(T_PIPELINE_RESOURCE_VERSION) {
@@ -122,6 +127,8 @@ class PipelineResVersionDao {
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
+                // 非新的逻辑请求则保持旧逻辑
+                if (includeDraft != true) where.and(DRAFT_FLAG.ne(true))
                 where.orderBy(VERSION.desc()).limit(1)
             }
             where.fetchAny(0, String::class.java)
@@ -164,23 +171,30 @@ class PipelineResVersionDao {
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION, REFER_FLAG, REFER_COUNT)
-                .from(this)
+            val result = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc())
                 .limit(limit).offset(offset)
                 .fetch()
 
             result.forEach {
-                list.add(PipelineVersionSimple(
-                    pipelineId = pipelineId,
-                    creator = it[CREATOR] ?: "unknown",
-                    createTime = it.get(CREATE_TIME)?.timestampmilli() ?: 0,
-                    version = it[VERSION] ?: 1,
-                    versionName = it[VERSION_NAME] ?: "init",
-                    referFlag = it[REFER_FLAG],
-                    referCount = it[REFER_COUNT]
-                ))
+                list.add(
+                    PipelineVersionSimple(
+                        pipelineId = pipelineId,
+                        creator = it.creator ?: "unknown",
+                        createTime = it.createTime?.timestampmilli() ?: 0,
+                        version = it.version ?: 1,
+                        versionName = it.versionName ?: "init",
+                        referFlag = it.referFlag,
+                        referCount = it.referCount,
+                        modelVersion = it.modelVersion,
+                        triggerVersion = it.triggerVersion,
+                        settingVersion = it.settingVersion,
+                        draftFlag = it.draftFlag,
+                        debugBuildId = it.debugBuildId,
+                        pacRefs = it.pacRefs
+                    )
+                )
             }
         }
         return list

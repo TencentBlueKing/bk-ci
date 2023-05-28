@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
@@ -112,7 +113,7 @@ class PipelineRepositoryVersionService(
         pipelineId: String,
         offset: Int,
         limit: Int
-    ): Pair<Int, List<PipelineInfo>> {
+    ): Pair<Int, List<PipelineResVersion>> {
         if (pipelineInfo == null) {
             return Pair(0, emptyList())
         }
@@ -125,15 +126,32 @@ class PipelineRepositoryVersionService(
             offset = offset,
             limit = limit
         )
-        val list = mutableListOf<PipelineInfo>()
+        val list = mutableListOf<PipelineResVersion>()
 
         result.forEach {
             list.add(
-                pipelineInfo.copy(
-                    createTime = it.createTime,
-                    creator = it.creator,
+                PipelineResVersion(
+                    createTime = pipelineInfo.createTime,
+                    creator = pipelineInfo.creator,
+                    canElementSkip = pipelineInfo.canElementSkip,
+                    canManualStartup = pipelineInfo.canManualStartup,
+                    channelCode = pipelineInfo.channelCode,
+                    id = pipelineInfo.id,
+                    lastModifyUser = pipelineInfo.lastModifyUser,
+                    pipelineDesc = pipelineInfo.pipelineDesc,
+                    pipelineId = pipelineInfo.pipelineId,
+                    pipelineName = pipelineInfo.pipelineName,
+                    projectId = pipelineInfo.projectId,
+                    taskCount = pipelineInfo.taskCount,
+                    templateId = pipelineInfo.templateId,
                     version = it.version,
-                    versionName = it.versionName
+                    versionName = it.versionName,
+                    modelVersion = it.modelVersion,
+                    triggerVersion = it.triggerVersion,
+                    settingVersion = it.settingVersion,
+                    draftFlag = it.draftFlag,
+                    debugBuildId = it.debugBuildId,
+                    pacRefs = it.pacRefs
                 )
             )
         }
