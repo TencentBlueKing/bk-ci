@@ -45,6 +45,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
@@ -75,7 +76,8 @@ abstract class AbMigratePolicyService(
     private val migrateIamApiService: MigrateIamApiService,
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val deptService: DeptService
 ) {
 
     companion object {
@@ -91,7 +93,12 @@ abstract class AbMigratePolicyService(
         private const val CUSTOM_GROUP_CODE = "custom"
     }
 
-    fun migrateGroupPolicy(projectCode: String, projectName: String, gradeManagerId: Int) {
+    fun migrateGroupPolicy(
+        projectCode: String,
+        projectName: String,
+        version: String,
+        gradeManagerId: Int
+    ) {
         logger.info("start to migrate group policy")
         val watcher = Watcher("migrateGroupPolicy|$projectCode")
         try {
@@ -110,6 +117,7 @@ abstract class AbMigratePolicyService(
             watcher.start("group_api_policy")
             val groupApiPolicyCount = loopMigrateGroup(
                 projectCode = projectCode,
+                version = version,
                 migrateType = GROUP_API_POLICY,
                 projectName = projectName,
                 gradeManagerId = gradeManagerId,
@@ -119,6 +127,7 @@ abstract class AbMigratePolicyService(
             watcher.start("group_web_policy")
             val groupWebPolicyCount = loopMigrateGroup(
                 projectCode = projectCode,
+                version = version,
                 migrateType = GROUP_WEB_POLICY,
                 projectName = projectName,
                 gradeManagerId = gradeManagerId,
@@ -135,6 +144,7 @@ abstract class AbMigratePolicyService(
 
     private fun loopMigrateGroup(
         projectCode: String,
+        version: String,
         migrateType: String,
         projectName: String,
         gradeManagerId: Int,
@@ -147,6 +157,7 @@ abstract class AbMigratePolicyService(
             val taskDataResp = migrateIamApiService.getMigrateData(
                 projectCode = projectCode,
                 migrateType = migrateType,
+                version = version,
                 page = page,
                 pageSize = pageSize
             )
@@ -238,7 +249,7 @@ abstract class AbMigratePolicyService(
 
     abstract fun getGroupName(result: MigrateTaskDataResult): String
 
-    fun migrateUserCustomPolicy(projectCode: String) {
+    fun migrateUserCustomPolicy(projectCode: String, version: String) {
         logger.info("start to migrate user custom policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
@@ -255,7 +266,8 @@ abstract class AbMigratePolicyService(
             )
             loopMigrateUserCustom(
                 projectCode = projectCode,
-                managerGroupId = managerGroupId
+                managerGroupId = managerGroupId,
+                version = version
             )
         } finally {
             logger.info(
@@ -266,7 +278,8 @@ abstract class AbMigratePolicyService(
 
     private fun loopMigrateUserCustom(
         projectCode: String,
-        managerGroupId: Int
+        managerGroupId: Int,
+        version: String
     ): Int {
         var page = 1
         var totalCount = 0
@@ -275,6 +288,7 @@ abstract class AbMigratePolicyService(
             val taskDataResp = migrateIamApiService.getMigrateData(
                 projectCode = projectCode,
                 migrateType = USER_CUSTOM_POLICY,
+                version = version,
                 page = page,
                 pageSize = pageSize
             )
@@ -297,6 +311,12 @@ abstract class AbMigratePolicyService(
         results.forEach { result ->
             logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
             val userId = result.subject.id
+            // 离职人员,直接忽略
+            if (deptService.getUserInfo(userId = "admin", name = userId) == null) {
+                logger.warn("user has left, skip custom policy migration|${result.projectId}|$userId")
+                return@forEach
+            }
+
             result.permissions.forEach permission@{ permission ->
                 val groupId = matchResourceGroup(
                     userId = userId,

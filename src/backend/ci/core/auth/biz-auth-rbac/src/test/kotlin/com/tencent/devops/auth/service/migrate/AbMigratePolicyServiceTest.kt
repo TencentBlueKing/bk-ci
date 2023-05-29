@@ -37,6 +37,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.JsonUtil
@@ -59,6 +60,7 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
     val rbacCacheService: RbacCacheService = mockk()
     val migrateResourceCodeConverter: MigrateResourceCodeConverter = mockk()
     val authResourceCodeConverter: AuthResourceCodeConverter = mockk()
+    val deptService: DeptService = mockk()
 
     @BeforeEach
     fun before() {

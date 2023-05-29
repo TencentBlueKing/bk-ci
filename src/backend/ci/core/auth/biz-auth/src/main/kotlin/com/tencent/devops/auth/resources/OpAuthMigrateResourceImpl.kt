@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -40,12 +39,12 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     private val permissionMigrateService: PermissionMigrateService
 ) : OpAuthMigrateResource {
 
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v3ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v3ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v3ToRbacAuth(projectCodes = projectCodes))
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v0ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v0ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v0ToRbacAuth(projectCodes = projectCodes))
     }
 
     override fun allToRbacAuth(): Result<Boolean> {
