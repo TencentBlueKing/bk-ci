@@ -71,7 +71,7 @@ class TencentAgentMetricService @Autowired constructor(
             is TelegrafMulData -> {
                 val d = jsonData.metrics?.map { dd ->
                     AgentTelegrafData(
-                        dimensions = dd.tag?.map { it.key to it.value.toString() }?.toMap(),
+                        dimensions = dd.tags?.map { it.key to it.value.toString() }?.toMap(),
                         time = dd.timestamp,
                         metrics = dd.fields?.map { "${dd.name ?: ""}_${it.key}" to it.value }?.toMap()
                     )
@@ -82,7 +82,7 @@ class TencentAgentMetricService @Autowired constructor(
             is TelegrafStandData -> {
                 val d = listOf(
                     AgentTelegrafData(
-                        dimensions = jsonData.tag?.map { it.key to it.value.toString() }?.toMap(),
+                        dimensions = jsonData.tags?.map { it.key to it.value.toString() }?.toMap(),
                         time = jsonData.timestamp,
                         metrics = jsonData.fields?.map { "${jsonData.name ?: ""}_${it.key}" to it.value }?.toMap()
                     )
