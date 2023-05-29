@@ -25,15 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-}
+package com.tencent.devops.environment.pojo
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+/**
+ * 上报给数据平台数据类型
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AgentTelegrafData(
+    val metrics: Map<String, Any>?,
+    val dimensions: Map<String, String>?,
+    val time: Long?
+)
+
+/**
+ * telegraf json 单个数据类型
+ * https://github.com/influxdata/telegraf/tree/master/plugins/serializers/json
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TelegrafStandData(
+    val fields: Map<String, Any>?,
+    val name: String?,
+    val tag: Map<String, Any>?,
+    val timestamp: Long?
+)
+
+/**
+ * telegraf json 多个数据类型
+ * https://github.com/influxdata/telegraf/tree/master/plugins/serializers/json
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TelegrafMulData(
+    val metrics: List<TelegrafStandData>?
+)
