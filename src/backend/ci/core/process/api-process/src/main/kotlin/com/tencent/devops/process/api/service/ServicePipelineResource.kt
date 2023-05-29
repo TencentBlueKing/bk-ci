@@ -116,7 +116,7 @@ interface ServicePipelineResource {
         updateLastModifyUser: Boolean? = true,
         @QueryParam("draft")
         @DefaultValue("false")
-        saveDraft: Boolean?
+        saveDraft: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -178,7 +178,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @QueryParam("draft")
         @DefaultValue("false")
-        saveDraft: Boolean?
+        saveDraft: Boolean? = false
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")

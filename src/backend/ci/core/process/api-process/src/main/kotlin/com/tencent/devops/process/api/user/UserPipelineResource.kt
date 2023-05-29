@@ -204,7 +204,7 @@ interface UserPipelineResource {
         pipeline: Model,
         @QueryParam("draft")
         @DefaultValue("false")
-        saveDraft: Boolean?
+        saveDraft: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("编辑流水线编排以及设置")
@@ -226,7 +226,7 @@ interface UserPipelineResource {
         modelAndSetting: PipelineModelAndSetting,
         @QueryParam("draft")
         @DefaultValue("false")
-        saveDraft: Boolean?
+        saveDraft: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("保存流水线设置")
@@ -263,7 +263,7 @@ interface UserPipelineResource {
         pipelineId: String,
         @QueryParam("draft")
         @DefaultValue("false")
-        includeDraft: Boolean?
+        includeDraft: Boolean? = false
     ): Result<Model>
 
     @ApiOperation("获取流水线编排版本")
