@@ -35,13 +35,12 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.slf4j.MDC
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
-@SpringBootApplication
 @Suppress("ALL")
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
@@ -52,7 +51,6 @@ class MigrateResultService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResultService::class.java)
-        private val noNeedToMigrateResourceType = listOf(AuthResourceType.PROJECT.value)
         private val executorService = Executors.newFixedThreadPool(50)
     }
 
@@ -62,13 +60,17 @@ class MigrateResultService constructor(
         try {
             val resourceTypes = rbacCacheService.listResourceTypes()
                 .map { it.resourceType }
+            val traceId = MDC.get(TraceTag.BIZID)
             val compareFuture = resourceTypes.map { resourceType ->
                 CompletableFuture.supplyAsync(
                     {
-                        compare(
-                            projectCode = projectCode,
-                            resourceType = resourceType
-                        )
+                        MDC.put(TraceTag.BIZID, traceId)
+                        if (compare(
+                                projectCode = projectCode,
+                                resourceType = resourceType
+                            )) {
+                            logger.info("resourceType in project is successfully compared|$projectCode|$resourceType")
+                        }
                     },
                     executorService
                 )
@@ -85,7 +87,7 @@ class MigrateResultService constructor(
     private fun compare(
         projectCode: String,
         resourceType: String
-    ) {
+    ): Boolean {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         var hasMore = true
@@ -128,5 +130,6 @@ class MigrateResultService constructor(
             hasMore = limit == verifyRecordList.size
             offset += limit
         }
+        return true
     }
 }

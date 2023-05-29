@@ -42,6 +42,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -49,6 +50,7 @@ import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.Executors
 
@@ -94,7 +96,9 @@ class RbacPermissionMigrateService constructor(
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = migrateProjectRelationIds
         )
+        val traceId = MDC.get(TraceTag.BIZID)
         projectCodes.forEach { projectCode ->
+            MDC.put(TraceTag.BIZID, traceId)
             migrateProjectsExecutorService.submit {
                 migrateToRbacAuth(
                     projectCode = projectCode,
@@ -112,8 +116,10 @@ class RbacPermissionMigrateService constructor(
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
             projectCodes = projectCodes
         )
+        val traceId = MDC.get(TraceTag.BIZID)
         projectCodes.forEach { projectCode ->
             migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
                 migrateToRbacAuth(
                     projectCode = projectCode,
                     migrateTaskId = migrateTaskId,
@@ -125,7 +131,9 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun allToRbacAuth(): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
         allToRbacExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = 50
             do {
