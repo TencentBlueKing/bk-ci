@@ -54,7 +54,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
-import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
@@ -395,105 +394,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 )
             }
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = agentActionCount, records = agentActions)
-    }
-
-    fun queryCpuUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryMemoryUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryDiskioMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryNetMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
     }
 
     fun generateAgent(
