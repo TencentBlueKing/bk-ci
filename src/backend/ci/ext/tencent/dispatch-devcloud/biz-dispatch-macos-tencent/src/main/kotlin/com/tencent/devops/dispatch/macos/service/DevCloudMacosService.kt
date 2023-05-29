@@ -55,13 +55,12 @@ class DevCloudMacosService @Autowired constructor(
         dispatchMessage: DispatchMessage
     ): DevCloudMacosVmCreateInfo? {
         val buildId = dispatchMessage.buildId
-        val url = "$devCloudUrl/api/mac/vm/create"
 
         var taskId = ""
         val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
-            .url(toIdcUrl(url))
+            .url(toIdcUrl("$devCloudUrl/api/mac/vm/create"))
             .headers(
                 SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId)
                     .toHeaders()
@@ -96,7 +95,7 @@ class DevCloudMacosService @Autowired constructor(
             if (taskResponse != null) {
                 when (taskResponse.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
-                        logger.info("$taskId status: failed or canceled, Try again")
+                        logger.info("$taskId status: failed or canceled, Try again. $taskResponse")
                         return null
                     }
                     DevCloudCreateMacVMStatus.succeeded.title -> {
