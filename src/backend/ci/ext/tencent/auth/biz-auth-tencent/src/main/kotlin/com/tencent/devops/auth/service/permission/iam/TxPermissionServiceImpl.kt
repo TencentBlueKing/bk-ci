@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.permission.iam
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
@@ -40,9 +41,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
@@ -54,6 +58,11 @@ class TxPermissionServiceImpl @Autowired constructor(
     val authPipelineIdService: AuthPipelineIdService,
     val authVerifyRecordService: AuthVerifyRecordService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
+
+    private val v3BsProjectsCache = CacheBuilder.newBuilder()
+        .maximumSize(500)
+        .expireAfterWrite(10, TimeUnit.HOURS)
+        .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return super.validateUserActionPermission(userId, action)
@@ -112,18 +121,34 @@ class TxPermissionServiceImpl @Autowired constructor(
         )
         logger.info("The system starts recording the verify result:$verifyResult|$resourceCode|$useAction")
         executor.submit {
-            authVerifyRecordService.createOrUpdateVerifyRecord(
-                VerifyRecordDTO(
-                    userId = userId,
-                    projectId = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    action = useAction,
-                    verifyResult = verifyResult
+            // 记录BS渠道创建项目的鉴权记录
+            if (checkBsChannelProject(projectCode)) {
+                authVerifyRecordService.createOrUpdateVerifyRecord(
+                    VerifyRecordDTO(
+                        userId = userId,
+                        projectId = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        action = useAction,
+                        verifyResult = verifyResult
+                    )
                 )
-            )
+            }
         }
         return verifyResult
+    }
+
+    private fun checkBsChannelProject(projectCode: String): Boolean {
+        return v3BsProjectsCache.getIfPresent(projectCode) ?: run {
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            if (projectInfo != null) {
+                val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
+                v3BsProjectsCache.put(projectCode, isBsChannelProject)
+                isBsChannelProject
+            } else {
+                false
+            }
+        }
     }
 
     override fun getUserResourceByAction(
@@ -140,18 +165,7 @@ class TxPermissionServiceImpl @Autowired constructor(
             )) {
             return arrayListOf("*")
         }
-        val permissionResult = super.getUserResourceByAction(userId, action, projectCode, resourceType)
-        if (permissionResult.isNotEmpty()) {
-            executor.submit {
-                authVerifyRecordService.bathCreateOrUpdateVerifyRecord(
-                    permissionsResourcesMap = mapOf(AuthPermission.get(action.substringAfter("_")) to permissionResult),
-                    userId = userId,
-                    projectCode = projectCode,
-                    resourceType = resourceType
-                )
-            }
-        }
-        return permissionResult
+        return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
     override fun getUserResourcesByActions(
@@ -160,16 +174,7 @@ class TxPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
-        val permissionResourcesMap = super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
-        executor.submit {
-            authVerifyRecordService.bathCreateOrUpdateVerifyRecord(
-                permissionsResourcesMap = permissionResourcesMap,
-                userId = userId,
-                projectCode = projectCode,
-                resourceType = resourceType
-            )
-        }
-        return permissionResourcesMap
+        return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
     }
 
     private fun reviewManagerCheck(

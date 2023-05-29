@@ -38,6 +38,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -56,7 +57,7 @@ interface ProjectService {
     fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
 
     /**
-     * 创建 项目信息
+     * 创建项目信息
      */
     fun create(
         userId: String,
@@ -231,4 +232,6 @@ interface ProjectService {
         projectId: String,
         subjectScopes: List<SubjectScopeInfo>
     ): Boolean
+
+    fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 }

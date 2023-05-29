@@ -171,5 +171,7 @@ data class ProjectVO(
     @ApiModelProperty("是否拥有新版权限中心项目管理权限")
     val managePermission: Boolean? = null,
     @ApiModelProperty("是否展示用户管理图标")
-    val showUserManageIcon: Boolean? = null
+    val showUserManageIcon: Boolean? = null,
+    @ApiModelProperty("渠道")
+    val channelCode: String? = null
 )

@@ -13,7 +13,6 @@ import com.tencent.devops.experience.service.ExperiencePermissionService
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
 
 class RbacExperiencePermissionServiceImpl @Autowired constructor(
     val client: Client,
@@ -79,7 +78,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK),
             resourceCode = HashUtil.encodeLongId(experienceId),
-            resourceName = "$experienceName-${LocalDateTime.now()}"
+            resourceName = experienceName
         )
     }
 
