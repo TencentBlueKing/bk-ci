@@ -28,7 +28,6 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -164,11 +163,7 @@ class GroupService @Autowired constructor(
         val groupAndUsersList = bsAuthProjectApi.getProjectGroupAndUserList(experienceServiceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName,
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                groupName = it.displayName,
                 groupId = it.roleName,
                 groupRoleId = it.roleId,
                 users = it.userIdList.toSet()
