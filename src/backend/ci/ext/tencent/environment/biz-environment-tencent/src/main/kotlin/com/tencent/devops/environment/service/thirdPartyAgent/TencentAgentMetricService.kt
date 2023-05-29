@@ -58,6 +58,9 @@ class TencentAgentMetricService @Autowired constructor(
     override fun reportAgentMetrics(data: String): Boolean {
         logger.debug("reportAgentMetrics|origin")
         logger.debug(data)
+
+        val startTime = System.currentTimeMillis()
+
         // 装换json类型，不是列表格式就是单独格式
         val jsonData = try {
             objectMapper.readValue<TelegrafMulData>(data)
@@ -67,42 +70,47 @@ class TencentAgentMetricService @Autowired constructor(
         }
 
         // 拼接成数据平台类型
-        val reportData: String = when (jsonData) {
+        val reportData: List<AgentTelegrafData>? = when (jsonData) {
             is TelegrafMulData -> {
-                val d = jsonData.metrics?.map { dd ->
+                jsonData.metrics?.map { dd ->
                     AgentTelegrafData(
                         dimensions = dd.tags?.map { it.key to it.value.toString() }?.toMap(),
                         time = dd.timestamp,
                         metrics = dd.fields?.map { "${dd.name ?: ""}_${it.key}" to it.value }?.toMap()
                     )
                 }
-                objectMapper.writeValueAsString(d)
             }
 
             is TelegrafStandData -> {
-                val d = listOf(
+                listOf(
                     AgentTelegrafData(
                         dimensions = jsonData.tags?.map { it.key to it.value.toString() }?.toMap(),
                         time = jsonData.timestamp,
                         metrics = jsonData.fields?.map { "${jsonData.name ?: ""}_${it.key}" to it.value }?.toMap()
                     )
                 )
-                objectMapper.writeValueAsString(d)
             }
 
             else -> {
-                ""
+                emptyList()
             }
         }
+
+        logger.info("reportAgentMetrics json cost ${System.currentTimeMillis() - startTime}")
 
         // 上报
         if (!agentMetricTopic.isNullOrBlank()) {
             logger.debug("reportAgentMetrics|kafka")
-            logger.debug(reportData)
-            kafkaClient.send(agentMetricTopic!!, reportData)
+            reportData?.forEach {
+                val d = objectMapper.writeValueAsString(it)
+                logger.debug(d)
+                kafkaClient.send(agentMetricTopic!!, d)
+            }
         } else {
             logger.error("agentMetricTopic is null")
         }
+
+        logger.info("reportAgentMetrics report cost ${System.currentTimeMillis() - startTime}")
 
         return true
     }
