@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -130,7 +131,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
-    private val envShareProjectDao: EnvShareProjectDao
+    private val envShareProjectDao: EnvShareProjectDao,
+    private val commonConfig: CommonConfig
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -1034,7 +1036,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ParallelTaskCount = -1,
                     envs = mapOf(),
                     props = mapOf(),
-                    dockerParallelTaskCount = -1
+                    dockerParallelTaskCount = -1,
+                    language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
@@ -1145,7 +1148,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 ParallelTaskCount = -1,
                                 envs = mapOf(),
                                 props = mapOf(),
-                                dockerParallelTaskCount = -1
+                                dockerParallelTaskCount = -1,
+                                language = commonConfig.devopsDefaultLocaleLanguage
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1181,7 +1185,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
+                language = commonConfig.devopsDefaultLocaleLanguage
             )
         }
     }

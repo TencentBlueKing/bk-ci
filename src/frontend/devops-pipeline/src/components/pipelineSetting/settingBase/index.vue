@@ -1,8 +1,8 @@
 <template>
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
             </form-field>
 
             <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
@@ -23,103 +23,15 @@
                 </div>
             </form-field>
 
-            <form-field :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
+            <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
+                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
             </form-field>
 
             <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
-                <bk-form
-                    class="bkdevops-running-lock-setting-tab"
-                    :model="pipelineSetting"
-                    :rules="formRule"
-                    form-type="vertical">
-                    <bk-form-item :label="$t('settings.parallelSetting')">
-                        <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
-                            <bk-radio
-                                class="view-radio"
-                                :value="runTypeMap.MULTIPLE"
-                            >
-                                {{$t('settings.runningOption.multiple')}}
-                            </bk-radio>
-                            <bk-radio
-                                class="view-radio"
-                                :value="runTypeMap.GROUP"
-                            >
-                                {{$t('settings.runningOption.single')}}
-                            </bk-radio>
-                        </bk-radio-group>
-                    </bk-form-item>
-
-                    <div class="single-lock-sub-form" v-if="isSingleLock">
-                        <bk-form-item
-                            :required="isSingleLock"
-                            property="concurrencyGroup"
-                            desc-type="icon"
-                            desc-icon="bk-icon icon-info-circle"
-                            :label="$t('settings.groupName')"
-                            :desc="$t('settings.lockGroupDesc')"
-                            error-display-type="normal"
-                        >
-                            <bk-input
-                                :placeholder="$t('settings.itemPlaceholder')"
-                                v-model="pipelineSetting.concurrencyGroup"
-                            />
-                        </bk-form-item>
-
-                        <bk-form-item property="concurrencyCancelInProgress" error-display-type="normal">
-                            <bk-checkbox
-                                :checked="pipelineSetting.concurrencyCancelInProgress"
-                                @change="handleConCurrencyCancel"
-                            >
-                                {{$t('settings.stopWhenNewCome')}}
-                            </bk-checkbox>
-                        </bk-form-item>
-                        <template v-if="!pipelineSetting.concurrencyCancelInProgress">
-                            <bk-form-item
-                                :label="$t('settings.largestNum')"
-                                property="maxQueueSize"
-                                error-display-type="normal"
-                            >
-                                <bk-input
-                                    type="number"
-                                    :placeholder="$t('settings.itemPlaceholder')"
-                                    v-model="pipelineSetting.maxQueueSize"
-                                >
-                                    <template slot="append">
-                                        <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
-                                    </template>
-                                </bk-input>
-                            </bk-form-item>
-                            <bk-form-item
-                                :label="$t('settings.lagestTime')"
-                                property="waitQueueTimeMinute"
-                                error-display-type="normal"
-                            >
-                                <bk-input
-                                    type="number"
-                                    :placeholder="$t('settings.itemPlaceholder')"
-                                    v-model="pipelineSetting.waitQueueTimeMinute"
-                                >
-                                    <template slot="append">
-                                        <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
-                                    </template>
-                                </bk-input>
-                            </bk-form-item>
-                        </template>
-                    </div>
-
-                    <bk-form-item :label="$t('settings.disableSetting')">
-                        <span @click="handleLockTypeChange(runTypeMap.LOCK)">
-                            <bk-radio
-                                class="view-radio"
-                                :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
-                                :value="runTypeMap.LOCK"
-                            >
-                                {{$t('settings.runningOption.lock')}}
-                            </bk-radio>
-                        </span>
-                    </bk-form-item>
-                </bk-form>
+                <running-lock
+                    :pipeline-setting="pipelineSetting"
+                    :handle-running-lock-change="handleRunningLockChange"
+                />
             </form-field>
             <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
                 <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
@@ -140,10 +52,10 @@
                                 </div>
                             </div>
                             <form-field :label="$t('settings.additionUser')">
-                                <user-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></user-input>
+                                <user-input :handle-change="handleAdditionUserChange" name="users" :value="pipelineSettingUser"></user-input>
                             </form-field>
 
-                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
+                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has('content')" :error-msg="errors.first('content')">
                                 <textarea name="desc" v-model="pipelineSubscription.content" class="bk-form-textarea"></textarea>
                             </form-field>
 
@@ -194,17 +106,19 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import UserInput from '@/components/atomFormField/UserInput/index.vue'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             FormField,
             UserInput,
             GroupIdSelector,
-            AtomCheckbox
+            AtomCheckbox,
+            RunningLock
         },
         props: {
             isDisabled: {
@@ -478,8 +392,14 @@
                 this.isDisabled = false
                 return result
             },
-            handleLockTypeChange (type) {
-                this.pipelineSetting.runLockType = type
+            handleAdditionUserChange (_, value) {
+                this.pipelineSubscription.users = value.join(',')
+            },
+            handleRunningLockChange (param) {
+                this.updatePipelineSetting({
+                    container: this.pipelineSetting,
+                    param
+                })
             }
         }
     }
@@ -639,30 +559,5 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
-    }
-    .bkdevops-running-lock-setting-tab {
-        .bk-label {
-            font-weight: 900;
-        }
-        .bk-form-item:nth-child(1) {
-            display: table;
-            width: 100%;
-        }
-        .single-lock-sub-form {
-            margin: 0 0 10px 20px;
-        }
-        .run-lock-radio-item {
-            margin: 10px 0;
-        }
-        .pipeline-setting-unit {
-            display: flex;
-            background: #f1f4f8;
-            color: #63656e;
-            width: 50px;
-            font-size: 12px;
-            height: 100%;
-            align-items: center;
-            justify-content: center;
-        }
     }
 </style>

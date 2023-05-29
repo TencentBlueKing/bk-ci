@@ -73,12 +73,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
         fileDir: String,
+        i18nDir: String,
         propertiesKeyPrefix: String?,
         dbKeyPrefix: String?,
         repositoryHashId: String?
     ): Map<String, Any> {
         logger.info(
-            "parseJsonMap params:[$userId|$projectCode|$fileDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
+            "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
                 "$repositoryHashId]"
         )
         // 获取蓝盾默认语言信息
@@ -90,6 +91,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         val defaultProperties = getMessageProperties(
             projectCode = projectCode,
             fileDir = fileDir,
+            i18nDir = i18nDir,
             fileName = fileName,
             repositoryHashId = repositoryHashId
         )
@@ -119,6 +121,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             asyncHandleI18nMessage(
                 projectCode = projectCode,
                 fileDir = fileDir,
+                i18nDir = i18nDir,
                 repositoryHashId = repositoryHashId,
                 fieldLocaleInfos = fieldLocaleInfos,
                 dbKeyPrefix = dbKeyPrefix,
@@ -133,10 +136,11 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         projectCode: String,
         errorCodes: Set<Int>,
         fileDir: String,
+        i18nDir: String,
         keyPrefix: String?,
         repositoryHashId: String?
     ) {
-        logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$keyPrefix|$repositoryHashId]")
+        logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId]")
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         errorCodes.forEach { errorCode ->
             fieldLocaleInfos.add(FieldLocaleInfo(fieldName = errorCode.toString(), fieldValue = ""))
@@ -145,6 +149,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         asyncHandleI18nMessage(
             projectCode = projectCode,
             fileDir = fileDir,
+            i18nDir = i18nDir,
             repositoryHashId = repositoryHashId,
             fieldLocaleInfos = fieldLocaleInfos,
             dbKeyPrefix = keyPrefix,
@@ -191,6 +196,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     private fun asyncHandleI18nMessage(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         repositoryHashId: String?,
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         dbKeyPrefix: String?,
@@ -201,6 +207,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             val propertiesFileNames = getPropertiesFileNames(
                 projectCode = projectCode,
                 fileDir = fileDir,
+                i18nDir = i18nDir,
                 repositoryHashId = repositoryHashId
             )
             logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
@@ -212,6 +219,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 val fileProperties = getMessageProperties(
                     projectCode = projectCode,
                     fileDir = fileDir,
+                    i18nDir = i18nDir,
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
@@ -263,12 +271,14 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     private fun getMessageProperties(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         fileName: String,
         repositoryHashId: String?
     ): Properties? {
         val fileStr = getPropertiesFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
+            i18nDir = i18nDir,
             fileName = fileName,
             repositoryHashId = repositoryHashId
         )
@@ -282,6 +292,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     abstract fun getPropertiesFileStr(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         fileName: String,
         repositoryHashId: String? = null,
         branch: String? = null
@@ -290,6 +301,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     abstract fun getPropertiesFileNames(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         repositoryHashId: String? = null,
         branch: String? = null
     ): List<String>?

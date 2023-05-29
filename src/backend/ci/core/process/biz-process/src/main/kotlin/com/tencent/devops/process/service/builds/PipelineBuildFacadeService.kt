@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.builds
 
-import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -71,6 +70,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES_VALUE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.process.engine.common.Timeout
@@ -1894,7 +1894,7 @@ class PipelineBuildFacadeService(
         )
         val result = mutableListOf<IdValue>()
         BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
-            result.add(IdValue(it.name, I18nUtil.getCodeLanMessage(it.statusName)))
+            result.add(IdValue(it.name, it.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))))
         }
         return result
     }
@@ -2152,7 +2152,7 @@ class PipelineBuildFacadeService(
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
+                    messageCode = BUILD_AGENT_DETAIL_LINK_ERROR,
                     params = arrayOf(projectCode, nodeHashId)
                 )
             } $msg"
@@ -2186,9 +2186,9 @@ class PipelineBuildFacadeService(
 
         // 添加错误码日志
         val realErrorType = ErrorType.getErrorType(simpleResult.error?.errorType)
-        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${realErrorType?.typeName?.let { it ->
-            I18nUtil.getCodeLanMessage(it)
-        }}" }
+        simpleResult.error?.errorType.let {
+            msg = "$msg \nerrorType: ${realErrorType?.getI18n(I18nUtil.getDefaultLocaleLanguage())}"
+        }
         simpleResult.error?.errorCode.let { msg = "$msg \nerrorCode: ${simpleResult.error?.errorCode}" }
         simpleResult.error?.errorMessage.let { msg = "$msg \nerrorMsg: ${simpleResult.error?.errorMessage}" }
 
@@ -2226,7 +2226,7 @@ class PipelineBuildFacadeService(
                         actionType = ActionType.TERMINATE,
                         reason = msg,
                         errorCode = simpleResult.error?.errorCode ?: 0,
-                        errorTypeName = realErrorType?.typeName?.let { I18nUtil.getCodeLanMessage(it) }
+                        errorTypeName = realErrorType?.getI18n(I18nUtil.getDefaultLocaleLanguage())
                     )
                 )
             }

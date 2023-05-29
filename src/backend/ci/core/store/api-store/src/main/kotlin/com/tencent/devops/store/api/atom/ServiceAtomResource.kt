@@ -54,9 +54,7 @@ interface ServiceAtomResource {
     @GET
     @Path("/projectCodes/{projectCode}/list")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].atomCode", "data[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data[*].atomCode}", "{data[*].version}", "releaseInfo"]
     )
     fun getInstalledAtoms(
         @ApiParam("项目代码", required = true)
@@ -68,9 +66,7 @@ interface ServiceAtomResource {
     @GET
     @Path("/codes/{atomCode}/versions/{version}")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomVersionInfo(
         @ApiParam("插件代码", required = true)
@@ -107,11 +103,7 @@ interface ServiceAtomResource {
     @ApiOperation("获取插件分类信息")
     @GET
     @Path("/codes/{atomCode}/classify/info")
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
+    @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getAtomClassifyInfo(
         @ApiParam("插件代码", required = true)
         @PathParam("atomCode")
