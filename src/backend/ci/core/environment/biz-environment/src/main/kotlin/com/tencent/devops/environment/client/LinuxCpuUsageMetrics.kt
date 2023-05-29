@@ -29,6 +29,11 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_idle
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_iowait
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_system
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_user
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_cpu
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,14 +71,14 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT mean(\"$k_usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                " AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                " AND $timePart fill(null)"
+            "SELECT mean(\"$f_cpu_usage_idle\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                    " AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_iowait\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_user\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_system\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                    " AND $timePart fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics

@@ -29,6 +29,9 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_diskio_read_bytes
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_diskio_write_bytes
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_diskio
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,10 +51,10 @@ class WindowsDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
 
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
-        val queryStr = "select mean(\"Disk_Write_Bytes_persec\") as \"write\" from \"win_diskio\"" +
-            " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); " +
-            "select mean(\"Disk_Read_Bytes_persec\") as \"read\"  from \"win_diskio\"" +
-            " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
+        val queryStr = "select mean(\"$f_diskio_write_bytes\") as \"write\" from \"$t_diskio\"" +
+                " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); " +
+                "select mean(\"$f_diskio_read_bytes\") as \"read\"  from \"$t_diskio\"" +
+                " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics
