@@ -182,6 +182,9 @@ interface ProjectService {
     fun getAllProject(): List<ProjectVO>
 
     fun listMigrateProjects(
+        centerName: String?,
+        deptName: String?,
+        excludedProjectCodes: List<String>?,
         limit: Int,
         offset: Int
     ): List<ProjectWithPermission>

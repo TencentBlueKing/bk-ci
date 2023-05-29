@@ -81,11 +81,17 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun listMigrateProjects(
+        centerName: String?,
+        deptName: String?,
+        excludedProjectCodes: List<String>?,
         limit: Int,
         offset: Int
     ): Result<List<ProjectWithPermission>> {
         return Result(
             projectService.listMigrateProjects(
+                centerName = centerName,
+                deptName = deptName,
+                excludedProjectCodes = excludedProjectCodes,
                 limit = limit,
                 offset = offset
             )

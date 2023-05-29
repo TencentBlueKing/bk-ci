@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.MigrateProjectConditionDTO
+
 /**
  * 权限中心迁移服务
  */
@@ -47,4 +49,9 @@ interface PermissionMigrateService {
      * 全部迁移到rbac
      */
     fun allToRbacAuth(): Boolean
+
+    /**
+     * 按条件升级到rbac权限
+     */
+    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 }
