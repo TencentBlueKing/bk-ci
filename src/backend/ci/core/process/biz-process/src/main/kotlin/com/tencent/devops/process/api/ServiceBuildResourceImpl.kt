@@ -567,6 +567,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
+        startTime: Long?,
+        endTime: Long?,
         channelCode: ChannelCode
     ): Result<List<String>> {
         return Result(
@@ -575,6 +577,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildStatus = buildStatus,
+                startTime = startTime,
+                endTime = endTime,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )

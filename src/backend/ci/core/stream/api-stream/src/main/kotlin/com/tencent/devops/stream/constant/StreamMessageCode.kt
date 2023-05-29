@@ -79,6 +79,7 @@ object StreamMessageCode {
     const val ILLEGAL_TIMER_CRONTAB = "2129054" // 定时触发器的定时参数[{0}]不合法
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2129055" // 定时触发器的定时参数[{0}]不能秒级触发
     const val PROJECT_NOT_EXIST = "2129056" // 项目不存在
+    const val QUERY_DATE_BEYOND = "2129057" // 查询时间区间范围超出，请把查询时间区间范围缩小为{0}天内
 
     const val BK_FAILED_VERIFY_AUTHORITY = "bkFailedVerifyAuthority" // 授权人权限校验失败
     const val BK_STREAM_MESSAGE_NOTIFICATION = "bkStreamMessageNotification" // @Stream消息通知

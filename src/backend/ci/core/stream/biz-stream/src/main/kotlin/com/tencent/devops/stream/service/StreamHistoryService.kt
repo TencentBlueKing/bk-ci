@@ -27,12 +27,17 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.constant.StreamMessageCode.QUERY_DATE_BEYOND
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -46,6 +51,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class StreamHistoryService @Autowired constructor(
@@ -73,6 +80,16 @@ class StreamHistoryService @Autowired constructor(
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+        val startTime = search?.startTime?.let {
+            DateTimeUtil.stringToLocalDateTime(it, DateTimeUtil.YYYY_MM_DD)
+        } ?: LocalDateTime.now().plusDays(-1)
+        val endTime = search?.endTime?.let {
+            DateTimeUtil.stringToLocalDateTime(it, DateTimeUtil.YYYY_MM_DD)
+        } ?: LocalDateTime.now()
+
+        if (startTime.isAfter(endTime) || Duration.between(startTime, endTime).toDays() > 7) {
+            throw ErrorCodeException(errorCode = QUERY_DATE_BEYOND, params = arrayOf("7"))
+        }
 
         val buildIds = if (!search?.status.isNullOrEmpty()) {
             // 如果查询条件有状态信息，需要到引擎里面匹配，拿到buildIds之后再在event build 表里面进行其他条件匹配
@@ -81,6 +98,8 @@ class StreamHistoryService @Autowired constructor(
                 projectId = conf.projectCode!!,
                 pipelineId = search?.pipelineId,
                 buildStatus = search?.status,
+                startTime = startTime.timestamp(),
+                endTime = endTime.timestampmilli(),
                 channelCode = channelCode
             ).data
         } else null
@@ -129,7 +148,9 @@ class StreamHistoryService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset,
             pipelineIds = search?.pipelineIds,
-            buildIds = buildIds?.toSet()
+            buildIds = buildIds?.toSet(),
+            startTime = startTime,
+            endTime = endTime
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("StreamHistoryService|getHistoryBuildList|builds|$builds")

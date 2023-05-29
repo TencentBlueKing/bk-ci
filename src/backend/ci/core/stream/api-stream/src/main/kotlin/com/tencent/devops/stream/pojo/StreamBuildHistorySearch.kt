@@ -53,5 +53,9 @@ data class StreamBuildHistorySearch(
     @ApiModelProperty("构建状态", required = false)
     val status: Set<BuildStatus>?,
     @ApiModelProperty("流水线列表", required = false)
-    val pipelineIds: Set<String>?
+    val pipelineIds: Set<String>?,
+    @ApiModelProperty("开始时间 yyyy-MM-dd", required = false)
+    val startTime: String?,
+    @ApiModelProperty("结束时间 yyyy-MM-dd", required = false)
+    val endTime: String?
 )

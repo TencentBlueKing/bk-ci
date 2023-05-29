@@ -1682,13 +1682,17 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuilds(
         projectId: String,
         pipelineId: String?,
-        buildStatus: Set<BuildStatus>?
+        buildStatus: Set<BuildStatus>?,
+        startTime: Long?,
+        endTime: Long?
     ): List<String> {
         return pipelineBuildDao.getBuilds(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildStatus = buildStatus
+            buildStatus = buildStatus,
+            startTime = startTime,
+            endTime = endTime
         )
     }
 

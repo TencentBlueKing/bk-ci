@@ -626,6 +626,12 @@ interface ServiceBuildResource {
         @ApiParam("状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
+        @ApiParam("开始时间", required = false)
+        @QueryParam("startTime")
+        startTime: Long? = null,
+        @ApiParam("结束时间", required = false)
+        @QueryParam("endTime")
+        endTime: Long? = null,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<List<String>>

@@ -127,12 +127,12 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 /**
  *
@@ -1644,10 +1644,16 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
+        startTime: Long?,
+        endTime: Long?,
         checkPermission: Boolean
     ): List<String> {
         return pipelineRuntimeService.getBuilds(
-            projectId, pipelineId, buildStatus
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildStatus = buildStatus,
+            startTime = startTime,
+            endTime = endTime
         )
     }
 
@@ -2165,7 +2171,8 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
+                msg = "$msg| ${
+                    I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
                 }"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")

@@ -502,7 +502,9 @@ class GitRequestEventBuildDao {
         limit: Int,
         offset: Int,
         pipelineIds: Set<String>?,
-        buildIds: Set<String>?
+        buildIds: Set<String>?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -516,7 +518,9 @@ class GitRequestEventBuildDao {
                 commitMsg = commitMsg,
                 buildStatus = buildStatus,
                 pipelineIds = pipelineIds,
-                buildIds = buildIds
+                buildIds = buildIds,
+                startTime = startTime,
+                endTime = endTime
             ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
@@ -590,7 +594,9 @@ class GitRequestEventBuildDao {
         commitMsg: String?,
         buildStatus: Set<String>?,
         pipelineIds: Set<String>?,
-        buildIds: Set<String>?
+        buildIds: Set<String>?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -632,6 +638,12 @@ class GitRequestEventBuildDao {
             }
             if (!buildIds.isNullOrEmpty()) {
                 dsl.and(BUILD_ID.`in`(buildIds))
+            }
+            if (buildIds.isNullOrEmpty() && startTime != null) {
+                dsl.and(CREATE_TIME.ge(startTime))
+            }
+            if (buildIds.isNullOrEmpty() && endTime != null) {
+                dsl.and(CREATE_TIME.le(endTime))
             }
             return dsl
         }

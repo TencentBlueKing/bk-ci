@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -841,7 +841,9 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,
-        buildStatus: Set<BuildStatus>?
+        buildStatus: Set<BuildStatus>?,
+        startTime: Long?,
+        endTime: Long?
     ): List<String> {
         with(T_PIPELINE_BUILD_HISTORY) {
             val dsl = dslContext.select(BUILD_ID).from(this)
@@ -851,6 +853,12 @@ class PipelineBuildDao {
             }
             if (!buildStatus.isNullOrEmpty()) {
                 dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            if (startTime != null) {
+                dsl.and(QUEUE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            }
+            if (endTime != null) {
+                dsl.and(QUEUE_TIME.le(Timestamp(endTime).toLocalDateTime()))
             }
             return dsl.fetch(BUILD_ID)
         }
