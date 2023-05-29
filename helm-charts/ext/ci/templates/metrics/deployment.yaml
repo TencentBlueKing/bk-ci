@@ -107,6 +107,13 @@ spec:
           - mountPath: /data/workspace/metrics/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - sleep 10
       volumes:
       - hostPath:
           path: /data
