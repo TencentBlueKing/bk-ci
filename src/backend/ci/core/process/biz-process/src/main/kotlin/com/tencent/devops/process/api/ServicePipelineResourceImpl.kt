@@ -116,13 +116,14 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun edit(
+    override fun editPipeline(
         userId: String,
         projectId: String,
         pipelineId: String,
         pipeline: Model,
         channelCode: ChannelCode,
-        updateLastModifyUser: Boolean?
+        updateLastModifyUser: Boolean?,
+        saveDraft: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         val deployPipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -212,7 +213,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         modelAndSetting: PipelineModelAndSetting,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        saveDraft: Boolean?
     ): Result<DeployPipelineResult> {
         modelAndSetting.setting.checkParam()
         val buildNumRule = modelAndSetting.setting.buildNumRule
@@ -225,6 +227,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
+            saveDraft = saveDraft,
             channelCode = ChannelCode.BS
         )
 

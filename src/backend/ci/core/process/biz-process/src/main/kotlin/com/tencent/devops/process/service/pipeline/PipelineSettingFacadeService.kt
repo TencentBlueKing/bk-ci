@@ -88,8 +88,10 @@ class PipelineSettingFacadeService @Autowired constructor(
         version: Int = 0,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
-        updateLabels: Boolean = true
+        updateLabels: Boolean = true,
+        saveDraft: Boolean? = false
     ): String {
+        // TODO #8161 增加配置的版本管理
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EDIT

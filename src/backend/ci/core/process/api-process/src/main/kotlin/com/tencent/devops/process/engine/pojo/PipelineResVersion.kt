@@ -25,25 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线版本摘要")
-data class PipelineVersionSimple(
-    @ApiModelProperty("流水线ID", required = true)
+@ApiModel("流水线信息")
+data class PipelineResVersion(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("流水线DI")
     val pipelineId: String,
-    @ApiModelProperty("流水线创建人", required = true)
+    @ApiModelProperty("模板ID")
+    val templateId: String?,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("流水线描述")
+    val pipelineDesc: String,
+    @ApiModelProperty("版本")
+    var version: Int = 1,
+    @ApiModelProperty("创建时间")
+    val createTime: Long = 0,
+    @ApiModelProperty("更新时间")
+    val updateTime: Long = 0,
+    @ApiModelProperty("创建者")
     val creator: String,
-    @ApiModelProperty("创建时间戳", required = true)
-    val createTime: Long,
-    @ApiModelProperty("流水线版本号", required = true)
-    val version: Int,
-    @ApiModelProperty("流水线版本名称", required = true)
-    val versionName: String,
-    @ApiModelProperty("是否还有构建记录引用该版本标识", required = false)
-    val referFlag: Boolean? = null,
+    @ApiModelProperty("上一次的更新者")
+    val lastModifyUser: String,
+    @ApiModelProperty("渠道号")
+    val channelCode: ChannelCode,
+    @ApiModelProperty("是否能够手动启动")
+    val canManualStartup: Boolean,
+    @ApiModelProperty("是否可以跳过")
+    val canElementSkip: Boolean,
+    @ApiModelProperty("任务数")
+    val taskCount: Int,
+    @ApiModelProperty("版本名称")
+    var versionName: String = "init",
+    @ApiModelProperty("ID")
+    val id: Long?,
+    @ApiModelProperty("流水线组名称列表", required = false)
+    var viewNames: List<String>? = null,
     @ApiModelProperty("关联构建记录总数", required = false)
     val referCount: Int? = null,
     @ApiModelProperty("编排版本号", required = false)

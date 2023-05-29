@@ -95,7 +95,7 @@ interface ServicePipelineResource {
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
-    fun edit(
+    fun editPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -113,7 +113,10 @@ interface ServicePipelineResource {
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
         @DefaultValue("true")
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        saveDraft: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -172,7 +175,10 @@ interface ServicePipelineResource {
         modelAndSetting: PipelineModelAndSetting,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        saveDraft: Boolean? = false
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
