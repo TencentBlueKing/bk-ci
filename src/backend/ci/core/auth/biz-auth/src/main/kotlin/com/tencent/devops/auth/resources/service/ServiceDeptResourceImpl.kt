@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -44,5 +45,9 @@ class ServiceDeptResourceImpl @Autowired constructor(
 
     override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
         return Result(deptService.getDeptByName(deptName, userId))
+    }
+
+    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfo(userId, name))
     }
 }
