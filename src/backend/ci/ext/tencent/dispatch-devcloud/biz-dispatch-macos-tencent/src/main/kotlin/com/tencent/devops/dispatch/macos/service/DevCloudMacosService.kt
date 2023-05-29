@@ -92,15 +92,15 @@ class DevCloudMacosService @Autowired constructor(
 
         repeat(200) { times ->
             val taskResponse = getTaskStatus(taskId, dispatchMessage.userId)
-            if (taskResponse != null) {
-                when (taskResponse.status) {
+            if (taskResponse?.data != null) {
+                when (taskResponse.data.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
                         logger.info("$taskId status: failed or canceled, Try again. $taskResponse")
                         return null
                     }
                     DevCloudCreateMacVMStatus.succeeded.title -> {
                         logger.info("$taskId status: succeeded")
-                        return taskResponse
+                        return taskResponse.data
                     }
                 }
             }
@@ -148,7 +148,7 @@ class DevCloudMacosService @Autowired constructor(
         }
     }
 
-    private fun getTaskStatus(taskId: String, creator: String): DevCloudMacosVmCreateInfo? {
+    private fun getTaskStatus(taskId: String, creator: String): TaskResponse? {
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
             .url(toIdcUrl(url))
@@ -169,7 +169,7 @@ class DevCloudMacosService @Autowired constructor(
                     return null
                 }
 
-                return taskResponse.data
+                return taskResponse
             }
         } catch (e: Exception) {
             logger.error("Failed to get $url.", e)
