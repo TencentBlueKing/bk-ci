@@ -45,20 +45,18 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 /**
  * 将资源迁移到权限中心
@@ -185,11 +183,7 @@ class MigrateResourceService @Autowired constructor(
                     resourceCode = resourceCode
                 ) ?: run {
                     // 版本体验名称会重复,需添加上时间戳
-                    val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK_NEW.value) {
-                        "${it.displayName}-${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyyMMddHHmmss")}"
-                    } else {
-                        it.displayName
-                    }
+                    val resourceName = it.displayName
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(

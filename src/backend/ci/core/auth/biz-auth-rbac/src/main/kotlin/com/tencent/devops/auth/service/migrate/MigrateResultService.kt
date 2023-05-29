@@ -30,70 +30,103 @@ package com.tencent.devops.auth.service.migrate
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
+@SpringBootApplication
 @Suppress("ALL")
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
+    private val rbacCacheService: RbacCacheService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authVerifyRecordService: AuthVerifyRecordService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResultService::class.java)
+        private val noNeedToMigrateResourceType = listOf(AuthResourceType.PROJECT.value)
+        private val executorService = Executors.newFixedThreadPool(50)
     }
 
     fun compare(projectCode: String): Boolean {
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
-            var offset = 0
-            val limit = PageUtil.MAX_PAGE_SIZE
-            do {
-                val verifyRecordList = authVerifyRecordService.listByProjectCode(
-                    projectCode = projectCode,
-                    offset = offset,
-                    limit = limit
-                )
-                verifyRecordList.forEach {
-                    with(it) {
-                        val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
-                            resourceType = resourceType,
-                            migrateResourceCode = resourceCode
+            val resourceTypes = rbacCacheService.listResourceTypes()
+                .map { it.resourceType }
+                .filterNot { noNeedToMigrateResourceType.contains(it) }
+            val compareFuture = resourceTypes.map { resourceType ->
+                CompletableFuture.supplyAsync(
+                    {
+                        compare(
+                            projectCode = projectCode,
+                            resourceType = resourceType
                         )
-                        val rbacVerifyResult = rbacResourceCode?.let {
-                            permissionService.validateUserResourcePermissionByRelation(
-                                userId = userId,
-                                action = action,
-                                projectCode = projectId,
-                                resourceCode = rbacResourceCode,
-                                resourceType = resourceType,
-                                relationResourceType = null
-                            )
-                        } ?: false
-                        if (verifyResult != rbacVerifyResult) {
-                            if (action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
-                            logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
-                            throw ErrorCodeException(
-                                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
-                                params = arrayOf(projectCode),
-                                defaultMessage = "compare policy failed:" +
-                                    "$userId|$action|$projectId|$resourceType|$resourceCode"
-                            )
-                        }
-                    }
-                }
-                offset += limit
-            } while (verifyRecordList.size == limit)
+                    },
+                    executorService
+                )
+            }
+            CompletableFuture.allOf(*compareFuture.toTypedArray()).join()
             return true
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to compare policy|$projectCode"
             )
+        }
+    }
+
+    private fun compare(
+        projectCode: String,
+        resourceType: String
+    ) {
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        var hasMore = true
+        while (hasMore) {
+            val verifyRecordList = authVerifyRecordService.list(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                offset = offset,
+                limit = limit
+            )
+            verifyRecordList.forEach {
+                with(it) {
+                    val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                        resourceType = resourceType,
+                        migrateResourceCode = resourceCode
+                    )
+                    val rbacVerifyResult = rbacResourceCode?.let {
+                        permissionService.validateUserResourcePermissionByRelation(
+                            userId = userId,
+                            action = action,
+                            projectCode = projectId,
+                            resourceCode = rbacResourceCode,
+                            resourceType = resourceType,
+                            relationResourceType = null
+                        )
+                    } ?: false
+                    if (verifyResult != rbacVerifyResult) {
+                        if (action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
+                        logger.error("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                        throw ErrorCodeException(
+                            errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+                            params = arrayOf(projectCode),
+                            defaultMessage = "compare policy failed:" +
+                                "$userId|$action|$projectId|$resourceType|$resourceCode"
+                        )
+                    }
+                }
+            }
+            hasMore = limit == verifyRecordList.size
+            offset += limit
         }
     }
 }
