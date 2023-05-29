@@ -360,7 +360,7 @@ class BSAuthResourceApi @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BSAuthResourceApi::class.java)
-        private val executor = Executors.newFixedThreadPool(3)
+        private val executor = Executors.newFixedThreadPool(5)
         private const val HTTP_403 = 403
     }
 }
