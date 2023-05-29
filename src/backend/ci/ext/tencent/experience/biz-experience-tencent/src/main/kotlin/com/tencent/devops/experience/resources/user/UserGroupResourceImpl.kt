@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
-import com.tencent.devops.experience.pojo.Group
-import com.tencent.devops.experience.pojo.GroupCreate
-import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
-import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.GroupUsers
+import com.tencent.devops.experience.pojo.group.Group
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import com.tencent.devops.experience.service.GroupService
@@ -102,6 +102,10 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         checkParam(userId, projectId, groupHashId)
         groupService.edit(userId = userId, projectId = projectId, groupHashId = groupHashId, group = group)
         return Result(true)
+    }
+
+    override fun getV2(userId: String, projectId: String, groupHashId: String) {
+        TODO("Not yet implemented")
     }
 
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {

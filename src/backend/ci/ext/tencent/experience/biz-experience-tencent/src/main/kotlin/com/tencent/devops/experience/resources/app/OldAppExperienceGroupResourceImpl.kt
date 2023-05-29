@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.OldAppExperienceGroupResource
-import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
+import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
 import com.tencent.devops.experience.service.GroupService
 import org.springframework.beans.factory.annotation.Autowired
 

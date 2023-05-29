@@ -86,7 +86,7 @@ import com.tencent.devops.experience.pojo.ExperiencePermission
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
 import com.tencent.devops.experience.pojo.ExperienceUpdate
-import com.tencent.devops.experience.pojo.Group
+import com.tencent.devops.experience.pojo.group.Group
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.Source
