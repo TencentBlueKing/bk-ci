@@ -47,7 +47,7 @@ data class AgentTelegrafData(
 data class TelegrafStandData(
     val fields: Map<String, Any>?,
     val name: String?,
-    val tag: Map<String, Any>?,
+    val tags: Map<String, Any>?,
     val timestamp: Long?
 )
 
