@@ -56,6 +56,8 @@ class TencentAgentMetricService @Autowired constructor(
     val agentMetricTopic: String? = null
 
     override fun reportAgentMetrics(data: String): Boolean {
+        logger.debug("reportAgentMetrics|origin")
+        logger.debug(data)
         // 装换json类型，不是列表格式就是单独格式
         val jsonData = try {
             objectMapper.readValue<TelegrafMulData>(data)
@@ -65,30 +67,38 @@ class TencentAgentMetricService @Autowired constructor(
         }
 
         // 拼接成数据平台类型
-        val reportData: String = if (jsonData is TelegrafMulData) {
-            val d = jsonData.metrics?.map { dd ->
-                AgentTelegrafData(
-                    dimensions = dd.tag?.map { it.key to it.value.toString() }?.toMap(),
-                    time = dd.timestamp,
-                    metrics = dd.fields?.map { "${dd.name ?: ""}_${it.key}" to it.value }?.toMap()
-                )
+        val reportData: String = when (jsonData) {
+            is TelegrafMulData -> {
+                val d = jsonData.metrics?.map { dd ->
+                    AgentTelegrafData(
+                        dimensions = dd.tag?.map { it.key to it.value.toString() }?.toMap(),
+                        time = dd.timestamp,
+                        metrics = dd.fields?.map { "${dd.name ?: ""}_${it.key}" to it.value }?.toMap()
+                    )
+                }
+                objectMapper.writeValueAsString(d)
             }
-            objectMapper.writeValueAsString(d)
-        } else if (jsonData is TelegrafStandData) {
-            val d = listOf(
-                AgentTelegrafData(
-                    dimensions = jsonData.tag?.map { it.key to it.value.toString() }?.toMap(),
-                    time = jsonData.timestamp,
-                    metrics = jsonData.fields?.map { "${jsonData.name ?: ""}_${it.key}" to it.value }?.toMap()
+
+            is TelegrafStandData -> {
+                val d = listOf(
+                    AgentTelegrafData(
+                        dimensions = jsonData.tag?.map { it.key to it.value.toString() }?.toMap(),
+                        time = jsonData.timestamp,
+                        metrics = jsonData.fields?.map { "${jsonData.name ?: ""}_${it.key}" to it.value }?.toMap()
+                    )
                 )
-            )
-            objectMapper.writeValueAsString(d)
-        } else {
-            ""
+                objectMapper.writeValueAsString(d)
+            }
+
+            else -> {
+                ""
+            }
         }
 
         // 上报
         if (!agentMetricTopic.isNullOrBlank()) {
+            logger.debug("reportAgentMetrics|kafka")
+            logger.debug(reportData)
             kafkaClient.send(agentMetricTopic!!, reportData)
         } else {
             logger.error("agentMetricTopic is null")
