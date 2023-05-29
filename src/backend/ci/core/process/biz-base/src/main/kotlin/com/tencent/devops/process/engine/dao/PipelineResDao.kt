@@ -63,35 +63,23 @@ class PipelineResDao {
         with(T_PIPELINE_RESOURCE) {
             val modelString = JsonUtil.toJson(model, formatted = false)
             val triggerString = JsonUtil.toJson(trigger, formatted = false)
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                VERSION,
-                MODEL,
-                TRIGGER,
-                CREATOR,
-                CREATE_TIME,
-                VERSION_NAME,
-                MODEL_VERSION,
-                TRIGGER_VERSION,
-                SETTING_VERSION
-            ).values(
-                projectId,
-                pipelineId,
-                version,
-                modelString,
-                triggerString,
-                creator,
-                LocalDateTime.now(),
-                versionName,
-                modelVersion,
-                triggerVersion,
-                settingVersion
-            ).onDuplicateKeyUpdate()
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(VERSION, version)
+                .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
+                .set(MODEL_VERSION, modelVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
+                .onDuplicateKeyUpdate()
+                .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
+                .set(CREATOR, creator)
+                .set(VERSION_NAME, versionName)
                 .set(MODEL_VERSION, modelVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
