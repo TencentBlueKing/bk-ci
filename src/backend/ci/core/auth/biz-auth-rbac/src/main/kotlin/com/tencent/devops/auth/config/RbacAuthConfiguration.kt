@@ -315,10 +315,12 @@ class RbacAuthConfiguration {
     @Bean
     fun migrateResultService(
         permissionService: PermissionService,
+        rbacCacheService: RbacCacheService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         authVerifyRecordService: AuthVerifyRecordService
     ) = MigrateResultService(
         permissionService = permissionService,
+        rbacCacheService = rbacCacheService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         authVerifyRecordService = authVerifyRecordService
     )
