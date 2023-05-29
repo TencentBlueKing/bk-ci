@@ -122,6 +122,9 @@ class ProjectDao {
 
     fun listMigrateProjects(
         dslContext: DSLContext,
+        centerName: String? = null,
+        deptName: String? = null,
+        excludedProjectCodes: List<String>? = null,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
@@ -133,6 +136,12 @@ class ProjectDao {
                     ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
                         .or(ROUTER_TAG.isNull)
                 )
+                .let { if (centerName == null) it else it.and(CREATOR_CENTER_NAME.eq(centerName)) }
+                .let { if (deptName == null) it else it.and(CREATOR_DEPT_NAME.eq(deptName)) }
+                .let {
+                    if (excludedProjectCodes == null || excludedProjectCodes.isEmpty()) it
+                    else it.and(ENGLISH_NAME.notIn(excludedProjectCodes))
+                }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)

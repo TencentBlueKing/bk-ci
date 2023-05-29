@@ -740,11 +740,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun listMigrateProjects(
+        centerName: String?,
+        deptName: String?,
+        excludedProjectCodes: List<String>?,
         limit: Int,
         offset: Int
     ): List<ProjectWithPermission> {
         return projectDao.listMigrateProjects(
             dslContext = dslContext,
+            centerName = centerName,
+            deptName = deptName,
+            excludedProjectCodes = excludedProjectCodes,
             limit = limit,
             offset = offset
         ).map {

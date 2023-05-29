@@ -31,12 +31,14 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.pojo.dto.MigrateProjectConditionDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -131,13 +133,25 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun allToRbacAuth(): Boolean {
+        logger.info("start to migrate all project")
+        toRbacAuthByCondition(MigrateProjectConditionDTO())
+        return true
+    }
+
+    override fun toRbacAuthByCondition(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Boolean {
+        logger.info("start to migrate project by condition|$migrateProjectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         allToRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 50
+            val limit = PageUtil.MAX_PAGE_SIZE/2
             do {
                 val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    centerName = migrateProjectConditionDTO.centerName,
+                    deptName = migrateProjectConditionDTO.deptName,
+                    excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes,
                     limit = limit,
                     offset = offset
                 ).data ?: break
