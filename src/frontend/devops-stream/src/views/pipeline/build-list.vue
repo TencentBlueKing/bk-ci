@@ -109,6 +109,14 @@
                         :name="option.displayName">
                     </bk-option>
                 </bk-select>
+                <bk-date-picker
+                    v-model="dateTime"
+                    class="filter-item date-filter"
+                    type="daterange"
+                    :options="pickerOtions"
+                    @change="handleDateChange"
+                >
+                </bk-date-picker>
                 <bk-button @click="resetFilter">{{$t('reset')}}</bk-button>
             </section>
 
@@ -287,6 +295,7 @@
         modifyHtmlTitle,
         debounce
     } from '@/utils'
+    import { prettyDateTimeFormat } from '@/utils/util'
     import optMenu from '@/components/opt-menu'
     import codeSection from '@/components/code-section'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
@@ -321,7 +330,7 @@
         },
 
         data () {
-            const { commitMsg, triggerUser, branch, event, status, pipelineIds } = this.$route.query
+            const { commitMsg, triggerUser, branch, event, status, pipelineIds, startTime, endTime } = this.$route.query
             const getFilterData = () => {
                 return {
                     commitMsg: commitMsg || '',
@@ -329,7 +338,9 @@
                     branch: (branch && branch.split(',')) || [],
                     event: (event && event.split(',')) || [],
                     status: (status && status.split(',')) || [],
-                    pipelineIds: (pipelineIds && pipelineIds.split(',')) || []
+                    pipelineIds: (pipelineIds && pipelineIds.split(',')) || [],
+                    startTime: startTime ? startTime : prettyDateTimeFormat(Date.now()),
+                    endTime: endTime ? endTime : prettyDateTimeFormat(Date.now())
                 }
             }
             return {
@@ -420,6 +431,18 @@
 
             defaultBranch () {
                 return this.projectInfo.default_branch || ''
+            },
+
+            pickerOtions () {
+                return {
+                    disabledDate (time) {
+                        return time.getTime() > Date.now()
+                    }
+                }
+            },
+
+            dateTime () {
+                return [this.filterData.startTime, this.filterData.endTime]
             }
         },
 
@@ -459,6 +482,12 @@
                 const filter = this.filterList.find(filter => filter.id === id)
                 const options = filter.data.filter(data => val.includes(data.id))
                 this.filterData[id] = options.map(opstion => opstion.val).flat()
+                this.handleFilterChange()
+            },
+
+            handleDateChange (date) {
+                this.filterData.startTime = date[0] ? date[0] : null
+                this.filterData.endTime = date[1] ? date[1] : null
                 this.handleFilterChange()
             },
 
@@ -576,7 +605,9 @@
                     branch: [],
                     event: [],
                     status: [],
-                    pipelineIds: []
+                    pipelineIds: [],
+                    startTime: prettyDateTimeFormat(Date.now()),
+                    endTime: prettyDateTimeFormat(Date.now())
                 }
                 this.handleFilterChange()
             },
@@ -605,14 +636,19 @@
             },
 
             getBuildData () {
-                let { triggerUser } = this.filterData
+                let { triggerUser, startTime, endTime } = this.filterData
+                if (startTime === endTime) {
+                    endTime = null
+                }
                 triggerUser = triggerUser ? triggerUser.split(',') : []
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
                     pipelineId: this.curPipeline.pipelineId,
                     ...this.filterData,
-                    triggerUser
+                    triggerUser,
+                    startTime,
+                    endTime
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
                     this.buildList = (res.records || []).map((build) => {
@@ -849,7 +885,9 @@
                     branch: [],
                     event: [],
                     status: [],
-                    pipelineIds: []
+                    pipelineIds: [],
+                    startTime: prettyDateTimeFormat(Date.now()),
+                    endTime: prettyDateTimeFormat(Date.now())
                 }
                 this.handleFilterChange()
             },
@@ -878,6 +916,7 @@
 
 <style lang="postcss" scoped>
     .pipelines-main {
+        position: relative;
         padding-left: 16px;
         .main-head {
             height: 50px;
@@ -936,6 +975,9 @@
                 .filter-item {
                     width: 200px;
                     margin-right: 8px;
+                }
+                .date-filter {
+                    width: 250px;
                 }
                 .w300 {
                     width: 300px;
