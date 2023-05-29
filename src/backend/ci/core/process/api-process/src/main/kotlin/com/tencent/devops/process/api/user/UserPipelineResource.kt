@@ -207,28 +207,6 @@ interface UserPipelineResource {
         saveDraft: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("编辑流水线配置")
-    @PUT
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
-    @Path("/{projectId}/{pipelineId}/setting")
-    fun editSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "流水线设置", required = true)
-        @Valid
-        setting: PipelineSetting,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean?
-    ): Result<Boolean>
-
     @ApiOperation("编辑流水线编排以及设置")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/saveAll")

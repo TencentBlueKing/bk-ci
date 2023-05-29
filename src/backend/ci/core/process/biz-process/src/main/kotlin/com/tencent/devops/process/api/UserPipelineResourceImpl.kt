@@ -268,24 +268,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun editSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        setting: PipelineSetting,
-        saveDraft: Boolean?
-    ): Result<Boolean> {
-        // TODO #8161 单独保存设置的鉴权
-        pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            setting = setting,
-            checkPermission = false,
-            dispatchPipelineUpdateEvent = false,
-            saveDraft = saveDraft
-        )
-        return Result(true)
-    }
-
     override fun saveAll(
         userId: String,
         projectId: String,

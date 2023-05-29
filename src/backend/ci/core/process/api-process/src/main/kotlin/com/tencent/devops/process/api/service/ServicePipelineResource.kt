@@ -119,31 +119,6 @@ interface ServicePipelineResource {
         saveDraft: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("编辑流水线配置")
-    @PUT
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
-    @Path("/{projectId}/{pipelineId}/setting")
-    fun editSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "流水线设置", required = true)
-        @Valid
-        setting: PipelineSetting,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean?
-    ): Result<Boolean>
-
     @ApiOperation("复制流水线编排")
     @POST
     @Path("/{projectId}/{pipelineId}/copy")
