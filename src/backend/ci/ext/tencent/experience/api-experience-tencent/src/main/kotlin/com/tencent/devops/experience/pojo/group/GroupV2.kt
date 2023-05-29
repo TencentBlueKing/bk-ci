@@ -9,10 +9,18 @@ data class GroupV2(
     val groupHashId: String,
     @ApiModelProperty("体验组名称", required = true)
     val name: String,
-    @ApiModelProperty("内部人员")
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
-    val outerUsers: Set<String>,
+    @ApiModelProperty("成员列表")
+    val members: Set<String>,
     @ApiModelProperty("描述")
     val remark: String?
-)
+) {
+    @ApiModel("版本体验-体验组-成员信息")
+    data class Member(
+        @ApiModelProperty("名称", required = true)
+        val name: String,
+        @ApiModelProperty("类别,1--内部人员,2--外部人员,3--内部组织", required = true)
+        val type: Int,
+        @ApiModelProperty("组织架构", required = true)
+        val department: String
+    )
+}
