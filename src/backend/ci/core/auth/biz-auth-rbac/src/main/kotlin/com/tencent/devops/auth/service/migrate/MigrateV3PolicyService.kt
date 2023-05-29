@@ -43,6 +43,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -71,7 +72,8 @@ class MigrateV3PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -81,7 +83,8 @@ class MigrateV3PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService
+    rbacCacheService = rbacCacheService,
+    deptService = deptService
 ) {
 
     companion object {
@@ -249,7 +252,8 @@ class MigrateV3PolicyService constructor(
         return when {
             // 如果有all_action,直接加入管理员组
             userActions.contains(Constants.ALL_ACTION) -> managerGroupId
-            isProjectPolicy(resource) ->
+            // 项目类型
+            resource.type == AuthResourceType.PROJECT.value ->
                 v3MatchMinResourceGroup(
                     userId = userId,
                     projectCode = projectCode,
@@ -257,10 +261,10 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = projectCode,
                     userActions = permission.actions.map { it.id }
                 )
-            resource.paths[0].size >= 2 && resource.paths[0][1].id == "*" -> {
+            isSkipMatchResourceGroup(resource) -> {
                 logger.info(
                     "user cannot match all resources and matching will be skipped|" +
-                        "$projectCode|$resourceType|$userActions"
+                        "$userId|$projectCode|$resourceType|$userActions"
                 )
                 null
             }
@@ -277,12 +281,11 @@ class MigrateV3PolicyService constructor(
         }
     }
 
-    private fun isProjectPolicy(
+    private fun isSkipMatchResourceGroup(
         resource: ManagerResources
     ): Boolean {
-        // 资源类型是项目或者资源值是*,表示所有的资源，那么也应该迁移到项目组下
-        return resource.type == AuthResourceType.PROJECT.value ||
-            // 项目下所有资源
+        // 项目下所有的资源不能找到对应的用户组,直接跳过,如自定义权限是项目下所有流水线pipeline_execute权限,默认的用户组是不能匹配改策略
+        return resource.paths[0].size >= 2 && resource.paths[0][1].id == "*" ||
             (resource.paths[0].size == 1 && resource.paths[0][0].type == AuthResourceType.PROJECT.value)
     }
 

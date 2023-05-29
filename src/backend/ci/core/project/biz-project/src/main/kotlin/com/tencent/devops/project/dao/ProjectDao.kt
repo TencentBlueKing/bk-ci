@@ -728,6 +728,14 @@ class ProjectDao {
         }
     }
 
+    fun updateCreatorByCode(dslContext: DSLContext, projectCode: String, creator: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(CREATOR, creator).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun updatePropertiesByCode(dslContext: DSLContext, projectCode: String, properties: ProjectProperties): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
