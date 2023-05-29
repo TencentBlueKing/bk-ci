@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.KEY_END_TIME
 import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -251,8 +252,8 @@ class TaskAtomService @Autowired(required = false) constructor(
                 task.startTime?.let {
                     monitorDataMap[KEY_START_TIME] = it.timestampmilli()
                 }
-                task.startTime?.let {
-                    monitorDataMap[KEY_START_TIME] = it.timestampmilli()
+                task.endTime?.let {
+                    monitorDataMap[KEY_END_TIME] = it.timestampmilli()
                 }
                 logger.debug("TaskAtomService measureService:$measureService")
                 measureService?.postTaskData(
