@@ -28,8 +28,8 @@
 
 package com.tencent.devops.auth.api.migrate
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectConditionDTO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
