@@ -90,12 +90,13 @@ class DevCloudMacosService @Autowired constructor(
             logger.info("$buildId success send creating VM request,enters the query process,taskId is $taskId")
         }
 
+        // 轮训task执行结果，10min超时
         repeat(200) { times ->
             val taskResponse = getTaskStatus(taskId, dispatchMessage.userId)
             if (taskResponse?.data != null) {
                 when (taskResponse.data.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
-                        logger.info("$taskId status: failed or canceled, Try again. $taskResponse")
+                        logger.info("$taskId status: failed or canceled, Try again")
                         return null
                     }
                     DevCloudCreateMacVMStatus.succeeded.title -> {

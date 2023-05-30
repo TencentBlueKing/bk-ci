@@ -109,18 +109,12 @@ class MacBuildListener @Autowired constructor(
             logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
                             "buildTaskRecords: ${buildTaskRecords.size}")
 
-            val projectId = event.projectId
-            val creator = event.userId
-            val isGitProject = projectId.startsWith("git_")
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                            "Project is or not git project:$isGitProject")
-
             if (buildTaskRecords.isEmpty()) {
                 logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Recycling the macos failed.")
                 return
             }
 
-            doShutdown(buildTaskRecords, event, creator, projectId)
+            doShutdown(buildTaskRecords, event, event.userId, event.projectId)
         } catch (e: Exception) {
             logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] :$e")
         } finally {
