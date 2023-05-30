@@ -100,6 +100,8 @@ class MigrateResultService constructor(
             )
             verifyRecordList.forEach {
                 with(it) {
+                    if (resourceCode == "*" ||
+                        action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                         resourceType = resourceType,
                         migrateResourceCode = resourceCode
@@ -115,8 +117,6 @@ class MigrateResultService constructor(
                         )
                     } ?: false
                     if (verifyResult != rbacVerifyResult) {
-                        // 由于记录鉴权是异步动作，可能存在删除资源时，先把记录鉴权表的其他数据先删除，而删除资源这条校验记录才刚写入表，导致漏删情况
-                        if (action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
                         logger.error("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
                         throw ErrorCodeException(
                             errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
