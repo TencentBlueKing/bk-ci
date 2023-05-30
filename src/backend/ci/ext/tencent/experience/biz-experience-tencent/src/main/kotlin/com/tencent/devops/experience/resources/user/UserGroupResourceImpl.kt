@@ -68,6 +68,11 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         )
     }
 
+    override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
+        checkParam(userId, projectId)
+        return Result(groupService.commit(userId,projectId,groupCommit))
+    }
+
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {
         checkParam(userId, projectId)
         return Result(groupService.getProjectUsers(userId = userId, projectId = projectId, projectGroup = projectGroup))

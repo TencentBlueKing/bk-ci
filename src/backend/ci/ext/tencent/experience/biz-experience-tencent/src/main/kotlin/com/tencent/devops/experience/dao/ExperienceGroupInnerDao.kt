@@ -42,6 +42,15 @@ class ExperienceGroupInnerDao {
         groupId: Long,
         userId: String
     ) {
+        return create(dslContext, groupId, userId, "")
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        groupId: Long,
+        userId: String,
+        deptFullName: String
+    ) {
         val now = LocalDateTime.now()
         with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
             dslContext.insertInto(this)
@@ -49,6 +58,7 @@ class ExperienceGroupInnerDao {
                 .set(USER_ID, userId)
                 .set(CREATE_TIME, now)
                 .set(UPDATE_TIME, now)
+                .set(DEPT_FULL_NAME, deptFullName)
                 .onConflictDoNothing()
                 .execute()
         }
@@ -61,6 +71,22 @@ class ExperienceGroupInnerDao {
         with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
             dslContext.delete(this)
                 .where(GROUP_ID.eq(groupId))
+                .execute()
+        }
+    }
+
+    fun deleteByUserIds(
+        dslContext: DSLContext,
+        groupId: Long,
+        userIds: Collection<String>
+    ) {
+        if (userIds.isEmpty()) {
+            return
+        }
+        with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
+            dslContext.delete(this)
+                .where(GROUP_ID.eq(groupId))
+                .and(USER_ID.`in`(userIds))
                 .execute()
         }
     }

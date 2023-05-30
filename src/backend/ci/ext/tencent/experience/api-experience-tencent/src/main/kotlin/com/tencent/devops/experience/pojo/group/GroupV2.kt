@@ -9,8 +9,10 @@ data class GroupV2(
     val groupHashId: String,
     @ApiModelProperty("体验组名称", required = true)
     val name: String,
+    @ApiModelProperty("描述")
+    val remark: String,
     @ApiModelProperty("成员列表")
-    val members: List<Member>
+    val members: List<Member>,
 ) {
     @ApiModel("版本体验-体验组-成员信息")
     data class Member(
@@ -21,10 +23,4 @@ data class GroupV2(
         @ApiModelProperty("组织架构", required = true)
         val deptFullName: String
     )
-
-    enum class MemberType(val id: Int) {
-        INNER(1),
-        OUTER(2),
-        DEPT(3)
-    }
 }

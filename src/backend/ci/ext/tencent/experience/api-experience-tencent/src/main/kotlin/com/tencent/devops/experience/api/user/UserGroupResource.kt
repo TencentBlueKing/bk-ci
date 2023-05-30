@@ -142,7 +142,7 @@ interface UserGroupResource {
         groupHashId: String
     ): Result<GroupV2>
 
-    @ApiOperation("获取用户组织全称")
+    @ApiOperation("根据用户名获取用户组织全称")
     @Path("/users/{userId}/deptFullName")
     @GET
     fun deptFullNameByUser(
@@ -151,7 +151,7 @@ interface UserGroupResource {
         userId: String
     ): Result<String>
 
-    @ApiOperation("获取分组全称")
+    @ApiOperation("根据组织ID获取分组全称")
     @Path("/depts/{deptId}/deptFullName")
     @GET
     fun deptFullNameByDept(
@@ -159,6 +159,20 @@ interface UserGroupResource {
         @PathParam("deptId")
         deptId: String
     ): Result<String>
+
+    @ApiOperation("体验组数据提交")
+    @Path("/projects/{projectId}/commit")
+    @POST
+    fun commit(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("提交内容", required = true)
+        groupCommit: GroupCommit
+    ):Result<Boolean>
 
     @ApiOperation("获取体验组用户")
     @Path("/{projectId}/{groupHashId}/users")

@@ -8,10 +8,10 @@ import java.time.LocalDateTime
 
 @Repository
 class ExperienceGroupDepartmentDao {
-    fun add(
+    fun create(
         dslContext: DSLContext,
         groupId: Long,
-        deptId: Int,
+        deptId: String,
         deptLevel: Int,
         deptFullName: String
     ) {
@@ -36,15 +36,21 @@ class ExperienceGroupDepartmentDao {
         }
     }
 
-    fun listAll(dslContext: DSLContext, groupId: Long): List<TExperienceGroupDepartmentRecord> {
+    fun listByGroupIds(dslContext: DSLContext, groupIds: Collection<Long>): List<TExperienceGroupDepartmentRecord> {
         with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
-            return dslContext.selectFrom(this).where(GROUP_ID.eq(groupId)).limit(1000).fetch()
+            return dslContext.selectFrom(this).where(GROUP_ID.`in`(groupIds)).limit(1000).fetch()
         }
     }
 
-    fun delete(dslContext: DSLContext, id: Long) {
+    fun deleteByDeptIds(dslContext: DSLContext, groupId: Long, deptIds: Collection<String>) {
+        if (deptIds.isEmpty()) {
+            return
+        }
         with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
-            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
+            dslContext.deleteFrom(this)
+                .where(GROUP_ID.eq(groupId))
+                .and(DEPT_ID.`in`(deptIds))
+                .execute()
         }
     }
 }
