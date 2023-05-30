@@ -102,7 +102,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
     const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[{0}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
-    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线构建已结束，不能取消
+    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线已经被{0}取消构建，请过{1}秒后再试
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
     const val DENY_START_BY_MANUAL = "2101021" // 流水线: 该流水线不能手动启动
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发
@@ -277,6 +277,7 @@ object ProcessMessageCode {
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101176" // 模版下存在无权限的插件
     const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101177" // 流水线编排数量非法
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
+    const val PIPELINE_BUILD_HAS_ENDED = "2101179"// 流水线: 流水线构建已结束，不能取消
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
