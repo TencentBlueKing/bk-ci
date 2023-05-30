@@ -1,8 +1,8 @@
 <template>
     <bk-form
         ref="form"
-        v-bkloading="{ isLoading: saving || fetchingCodelibDetail }"
         :label-width="120"
+        v-bkloading="{ isLoading: fetchingCodelibDetail }"
         :model="codelib"
         :rules="formRules"
     >
@@ -30,7 +30,7 @@
                 <bk-radio
                     value="HTTP"
                 >
-                    HTTP
+                    {{ $t('codelib.用户名密码+个人token') }}
                 </bk-radio>
             </bk-radio-group>
 
@@ -73,7 +73,6 @@
                 <bk-select
                     v-model="codelib.url"
                     v-bind="selectComBindData"
-                    class="codelib-credential-selector"
                 >
                     <bk-option
                         v-for="option in oAuth.project"
@@ -97,6 +96,43 @@
                 >
                 </bk-input>
             </bk-form-item>
+            
+            <bk-form-item
+                :label="$t('codelib.PACmode')"
+            >
+                <div class="pac-item">
+                    <bk-switcher
+                        v-model="codelib.enablePac"
+                        :disabled="!!pacProjectName || !codelib.url"
+                        theme="primary"
+                        size="large"
+                    ></bk-switcher>
+                    <span
+                        v-if="pacProjectName"
+                        class="tips"
+                    >
+                        <span class="pac-warning-icon">
+                            <i class="devops-icon icon-exclamation" />
+                        </span>
+                        {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
+                    </span>
+                </div>
+                <div class="pac-tips">
+                    <p>1. {{ $t('codelib.同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC(Pipeline As Code) 模式') }}</p>
+                    <p>
+                        2. {{ $t('codelib.PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。') }}
+                        <bk-popover width="380" placement="right-end">
+                            <a>{{ $t('codelib.查看同步规则') }}</a>
+                            <div slot="content">
+                                <p>同步规则：</p>
+                                <p>- 新增 YAML 时，当前项目下将新增一条对应的流水线</p>
+                                <p>- 修改 YAML 后，新触发自动以最新的 YAML 配置为准</p>
+                                <p>- 删除 YAML 时，若触发过 CI 的所有分支上的 YAML 均已删除，则同步删除蓝盾上的流水线（包括基本信息和执行历史）</p>
+                            </div>
+                        </bk-popover>
+                    </p>
+                </div>
+            </bk-form-item>
         </template>
         <template v-else-if="!isOAUTH">
             <bk-form-item
@@ -113,6 +149,52 @@
                 <span class="error-tips" v-if="urlErrMsg">
                     {{ urlErrMsg }}
                 </span>
+            </bk-form-item>
+            <bk-form-item
+                :label="$t('codelib.aliasName')"
+                :required="true"
+                property="aliasName"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model.trim="codelib.aliasName"
+                    :maxlength="60"
+                    :placeholder="$t('codelib.aliasNameEnter')"
+                >
+                </bk-input>
+            </bk-form-item>
+            <bk-form-item
+                :label="$t('codelib.codelibCredential')"
+                :required="true"
+                property="credentialId"
+                error-display-type="normal"
+            >
+                <bk-select
+                    v-model="codelib.credentialId"
+                    :loading="isLoadingTickets"
+                    searchable
+                    :clearable="false"
+                    name="credentialId"
+                    class="codelib-credential-selector"
+                    :placeholder="$t('codelib.credentialPlaceholder')"
+                    @toggle="refreshTicket"
+                >
+                    <bk-option
+                        v-for="(option, index) in credentialList"
+                        :key="index"
+                        :id="option.credentialId"
+                        :name="option.credentialId">
+                        <span>
+                            {{option.credentialId}}
+                        </span>
+                        <i
+                            class="devops-icon icon-edit2 cre-icon"
+                            @click.stop="goToEditCre(index)"
+                        >
+                        </i>
+                    </bk-option>
+                </bk-select>
+                <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
             </bk-form-item>
         </template>
     </bk-form>
@@ -140,6 +222,31 @@
             font-size: 12px;
             color: #979BA5;
         }
+    }
+    .pac-item {
+        .tips {
+            position: relative;
+            top: 2px;
+            margin-left: 15px;
+            font-size: 12px;
+        }
+    }
+
+    .pac-warning-icon {
+        display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FF9C01;
+            color: #fff;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+    }
+    .pac-tips {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #979ba5ff;
     }
     
 </style>

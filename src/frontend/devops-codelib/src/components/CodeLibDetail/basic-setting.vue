@@ -9,28 +9,46 @@
             <div class="content">
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
-                    OAUTH@fayewang
+                    <span>
+                        {{ repoInfo.authType }}@
+                    </span>
+                    <a
+                        v-if="!['OAUTH'].includes(repoInfo.authType)"
+                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.userName}`"
+                        target="_blank"
+                    >
+                        {{ repoInfo.userName }}
+                    </a>
+                    <span v-else>
+                        {{ repoInfo.userName }}
+                    </span>
                     <a class="reset-bth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
             </div>
         </div>
         <!-- PAC 模式 -->
-        <div class="form-item">
+        <div
+            class="form-item"
+            v-if="isGit"
+        >
             <div class="label">
                 {{ $t('codelib.PACmode') }}
             </div>
             <p class="pac-tips">{{ $t('codelib.pacTips') }}</p>
             <div class="content">
                 <div class="pac-mode">
-                    <bk-switcher v-model="isEnabled" theme="primary"></bk-switcher>
+                    <bk-switcher v-model="repoInfo.enablePac" theme="primary"></bk-switcher>
                     <div class="pac-enable">
-                        {{ isEnabled ? $t('codelib.isOnPAC') : $t('codelib.isOffPAC') }}
+                        {{ repoInfo.enablePac ? $t('codelib.isOnPAC') : $t('codelib.isOffPAC') }}
                     </div>
                 </div>
             </div>
         </div>
         <!-- 通用设置 -->
-        <div class="form-item">
+        <div
+            class="form-item"
+            v-if="isGit"
+        >
             <div class="label">
                 {{ $t('codelib.common') }}
                 <span
@@ -101,22 +119,35 @@
     </section>
 </template>
 <script>
+    import {
+        isGit
+    } from '../../config/'
     export default {
         name: 'basicSetting',
         props: {
-            
+            type: {
+                type: String,
+                default: ''
+            },
+            repoInfo: {
+                type: Object
+            }
         },
         data () {
             return {
-                isEnabled: false,
-                isEditing: false
+                isEditing: false,
+                isGit: false
             }
         },
         computed: {
-           
+            projectId () {
+                return this.$route.params.projectId
+            }
         },
         watch: {
-           
+            type (val) {
+                this.isGit = isGit(val)
+            }
         },
         created () {
 

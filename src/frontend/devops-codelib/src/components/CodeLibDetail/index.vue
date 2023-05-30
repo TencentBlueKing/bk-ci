@@ -5,7 +5,7 @@
                 v-if="!isEditing"
                 class="codelib-name"
             >
-                <span class="mr5">{{ curRepoId }}</span>
+                <span class="mr5">{{ repoInfo.aliasName }}</span>
                 <span @click="handleEditName">
                     <Icon
                         name="edit2"
@@ -44,9 +44,13 @@
                     {{ $t('codelib.cancel') }}
                 </bk-button>
             </div>
-            <div>
-                <a class="codelib-address" v-bk-overflow-tips>
-                    https://git.woa.com/bk-ci-test/test111111111r12r21r21r21123123vjsae12e21e2oivjasoive12e21ejasf1111111/yamlv2.git
+            <div class="address-content">
+                <a
+                    class="codelib-address"
+                    v-bk-overflow-tips
+                    @click="handleToRepo(repoInfo.url)"
+                >
+                    {{ repoInfo.url }}
                 </a>
                 <span @click="handleCopy">
                     <Icon
@@ -63,13 +67,19 @@
                 v-bind="panel"
                 :key="index">
                 <component
-                    :is="componentName">
+                    :is="componentName"
+                    :repo-info="repoInfo"
+                    :type="repoInfo['@type']"
+                >
                 </component>
             </bk-tab-panel>
         </bk-tab>
     </section>
 </template>
 <script>
+    import {
+        REPOSITORY_API_URL_PREFIX
+    } from '../../store/constants'
     import basicSetting from './basic-setting.vue'
     export default {
         name: 'CodeLibDetail',
@@ -89,7 +99,8 @@
                 panels: [
                     { name: 'basic', label: this.$t('codelib.basicSetting') }
                 ],
-                active: 'basic'
+                active: 'basic',
+                repoInfo: {}
             }
         },
         computed: {
@@ -98,12 +109,15 @@
                     basic: 'basicSetting'
                 }
                 return comMap[this.active]
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         watch: {
             curRepoId: {
                 handler (val) {
-                    console.log(val, 4214)
+                    this.fetchRepoDetail(val)
                 },
                 immediate: true
             }
@@ -111,6 +125,16 @@
         created () {
         },
         methods: {
+            async fetchRepoDetail (id) {
+                this.isLoading = true
+                await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
+                    .then((res) => {
+                        this.repoInfo = res
+                        console.log(res, 123)
+                    }).finally(() => {
+                        this.isLoading = false
+                    })
+            },
             handleEditName () {
                 this.isEditing = true
                 setTimeout(() => {
@@ -128,7 +152,7 @@
             handleCopy () {
                 const textarea = document.createElement('textarea')
                 document.body.appendChild(textarea)
-                textarea.value = '1'
+                textarea.value = this.repoInfo.aliasName
                 textarea.select()
                 if (document.execCommand('copy')) {
                     document.execCommand('copy')
@@ -138,6 +162,10 @@
                     })
                 }
                 document.body.removeChild(textarea)
+            },
+
+            handleToRepo (url) {
+                window.open(url, '__blank')
             }
         }
     }
@@ -158,6 +186,10 @@
             font-size: 16px;
             color: #313238;
             margin-right: 30px;
+            max-width: 450px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             &:hover {
                 .edit-icon,
                 .delete-icon {
@@ -177,7 +209,9 @@
             margin-left: 5px;
             display: none;
         }
-
+        .address-content {
+            white-space: nowrap;
+        }
         .codelib-address {
             display: inline-block;
             max-width: 480px;

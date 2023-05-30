@@ -24,18 +24,29 @@
                 :label="$t('codelib.aliasName')"
                 sortable
                 prop="aliasName"
+                width="400"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
                     <a @click="handleShowDetail">{{ props.row.aliasName }}</a>
+                    <span class="pac-icon" v-if="props.row.enablePac">
+                        <Icon name="PACcode" size="16" />
+                        PAC
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.url"
                 :label="$t('codelib.address')"
-                sortable prop="url"
+                sortable
+                prop="url"
                 show-overflow-tooltip
             >
+                <template slot-scope="props">
+                    <!-- codelibIconMap[props.row.type] -->
+                    <Icon :name="codelibIconMap[props.row.type]" size="12" />
+                    <a @click="handleToCodelib(props.row.url)">{{ props.row.url }}</a>
+                </template>
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.authType"
@@ -46,7 +57,7 @@
                     <span>
                         {{ props.row.authType }}@
                     </span>
-                    <a class="text-link"
+                    <a
                         v-if="!['OAUTH'].includes(props.row.authType)"
                         :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
                         target="_blank"
@@ -56,6 +67,23 @@
                     <span v-else>
                         {{ props.row.authIdentity }}
                     </span>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                v-if="allColumnMap.recentlyEditedBy"
+                :label="$t('codelib.recentlyEditedBy')"
+                prop="updatedUser"
+                width="200"
+            >
+            </bk-table-column>
+            <bk-table-column
+                v-if="allColumnMap.lastModifiedTime"
+                :label="$t('codelib.lastModifiedTime')"
+                prop="updatedTime"
+                width="250"
+            >
+                <template slot-scope="props">
+                    {{ prettyDateTimeFormat(Number(props.row.updatedTime + '000')) }}
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -97,7 +125,10 @@
         CODE_REPOSITORY_CACHE,
         listColumnsCache
     } from '../../config/'
-    import { getOffset } from '@/utils/'
+    import {
+        getOffset,
+        prettyDateTimeFormat
+    } from '@/utils/'
     import EmptyTableStatus from '../empty-table-status.vue'
     
     export default {
@@ -160,6 +191,14 @@
                     ascending: 'ASC',
                     descending: 'DESC',
                     null: ''
+                },
+                codelibIconMap: {
+                    CODE_SVN: 'code-SVN',
+                    CODE_GIT: 'code-Git',
+                    CODE_GITLAB: 'code-Gitlab',
+                    GITHUB: 'code-Github',
+                    CODE_TGIT: 'code-TGit',
+                    CODE_P4: 'code-P4'
                 }
             }
         },
@@ -249,12 +288,12 @@
                     label: this.$t('codelib.authIdentity')
                 },
                 {
-                    id: 'lastModifyUser',
-                    label: this.$t('codelib.lastModifyUser')
+                    id: 'recentlyEditedBy',
+                    label: this.$t('codelib.recentlyEditedBy')
                 },
                 {
-                    id: 'lastModifyTime',
-                    label: this.$t('codelib.lastModifyTime')
+                    id: 'lastModifiedTime',
+                    label: this.$t('codelib.lastModifiedTime')
                 }
             ]
             const columnsCache = listColumnsCache.getItem(TABLE_COLUMN_CACHE)
@@ -266,8 +305,8 @@
                     { id: 'aliasName' },
                     { id: 'url' },
                     { id: 'authType' },
-                    { id: 'lastModifyUser' },
-                    { id: 'lastModifyTime' }
+                    { id: 'recentlyEditedBy' },
+                    { id: 'lastModifiedTime' }
                 ])
             }
         },
@@ -281,6 +320,7 @@
                 'checkGitOAuth',
                 'checkTGitOAuth'
             ]),
+            prettyDateTimeFormat,
 
             initPageSize () {
                 const { top } = getOffset(document.getElementById('codelib-list-content'))
@@ -320,6 +360,10 @@
                 this.isListFlod = true
             },
 
+            handleToCodelib (url) {
+                window.open(url, '__blank')
+            },
+
             handleRowSelect (row) {
                 if (this.isListFlod) {
                     this.selectId = row.repositoryHashId
@@ -335,7 +379,7 @@
                         page: this.page,
                         limit: this.pagination.limit
                     }))
-                    this.$emit('updataFlod', true)
+                    this.$emit('updateFlod', true)
                     this.$emit('update:curRepoId', row.repositoryHashId)
                 }
             },
@@ -354,7 +398,7 @@
                     query: {}
                 })
                 localStorage.removeItem(CODE_REPOSITORY_CACHE)
-                this.$emit('updataFlod', false)
+                this.$emit('updateFlod', false)
             },
 
             typeFormatter (row, column, cellValue, index) {
@@ -402,9 +446,6 @@
             // },
 
             deleteCodeLib ({ repositoryHashId, aliasName }) {
-                // if (this.hasPipelines) {
-
-                // }
                 this.$bkInfo({
                     subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
                     confirmFn: () => {
@@ -513,5 +554,25 @@
             margin-left: auto;
         }
     }
+    .pac-icon {
+        font-size: 12px;
+        margin-left: 10px;
+        color: #699DF4;
+        background-color: #E1ECFF;
+        width: 60px;
+        height: 24px;
+        display: inline-table;
+        line-height: 24px;
+        border-radius: 12px;
+        text-align: right;
+        padding-right: 5px;
+    }
+    // .codelib-aliasName {
+    //     position: relative;
+    //     span {
+    //         position: absolute;
+    //         left: 90%;
+    //     }
+    // }
 }
 </style>

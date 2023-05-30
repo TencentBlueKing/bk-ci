@@ -62,7 +62,6 @@
                 <bk-select
                     v-model="codelib.url"
                     v-bind="selectComBindData"
-                    class="codelib-credential-selector"
                 >
                     <bk-option
                         v-for="option in oAuth.project"

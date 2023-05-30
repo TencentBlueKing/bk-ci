@@ -39,7 +39,7 @@
                             :alias-name.sync="aliasName"
                             :is-list-flod.sync="isListFlod"
                             :switch-page="switchPage"
-                            @updataFlod="handleUpdataFlod"
+                            @updateFlod="handleUpdateFlod"
                             @handleSortChange="handleSortChange"
                         >
                         </code-lib-table>
@@ -85,6 +85,7 @@
         </empty-tips>
         <code-lib-dialog
             :refresh-codelib-list="refreshCodelibList"
+            @updateRepoId="handleUpdateRepo"
         ></code-lib-dialog>
     </div>
 </template>
@@ -105,7 +106,8 @@
         isGitLab,
         isTGit,
         isP4,
-        CODE_REPOSITORY_CACHE
+        CODE_REPOSITORY_CACHE,
+        isSvn
     } from '../config/'
     export default {
         name: 'codelib-list',
@@ -280,7 +282,7 @@
                     Object.assign(CodelibDialog, { authType: 'HTTPS' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
-                if (isGitLab(typeName)) {
+                if (isGitLab(typeName) || isSvn(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'SSH' })
                 }
                 if (isP4(typeName)) {
@@ -318,8 +320,13 @@
                 this.refreshCodelibList()
             },
 
-            handleUpdataFlod (payload) {
+            handleUpdateFlod (payload) {
                 this.isListFlod = payload
+            },
+
+            handleUpdateRepo (id) {
+                console.log(id, 12312312312)
+                this.curRepoId = id
             },
 
             handleLayoutFlod () {

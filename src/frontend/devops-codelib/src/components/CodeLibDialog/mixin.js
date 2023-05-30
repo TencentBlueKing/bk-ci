@@ -3,38 +3,34 @@ import {
     REPOSITORY_API_URL_PREFIX
 } from '../../store/constants'
 import { mapActions, mapState } from 'vuex'
-import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
-import { parsePathAlias, parsePathRegion } from '../../utils'
+import {
+    isP4,
+    isSvn,
+    isGit,
+    isTGit,
+    isGithub,
+    isGitLab,
+    getCodelibConfig
+} from '../../config/'
+import { parsePathAlias } from '../../utils'
 const vue = new Vue()
 export default {
-    props: {
-        padding: {
-            type: Number,
-            default: 24
-        },
-        width: {
-            type: Number,
-            default: 800
-        },
-        refreshCodelibList: {
-            type: Function,
-            required: true
-        }
-    },
     data () {
         return {
+            pacProjectName: '', // 已开启PAC的项目名
             isLoadingTickets: false,
             showRefreshBtn: false,
-            loading: false,
-            saving: true,
             urlErrMsg: '',
-            hasValidate: false,
+            disabledPACBtn: false,
             placeholders: {
                 url: {
-                    SVN: this.$t('codelib.svnUrlPlaceholder'),
-                    Git: this.$t('codelib.gitUrlPlaceholder'),
+                    SVNssh: this.$t('codelib.svnUrlPlaceholder'),
+                    SVNhttp: this.$t('codelib.svnUrlPlaceholder'),
+                    GitSSH: this.$t('codelib.gitUrlPlaceholder'),
+                    GitHTTP: this.$t('codelib.httpUrlPlaceholder'),
                     TGit: this.$t('codelib.tgitUrlPlaceholder'),
-                    Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
+                    GitlabSSH: this.$t('codelib.gitlabUrlPlaceholder'),
+                    GitlabHTTP: this.$t('codelib.gitlabUrlPlaceholder'),
                     HTTP: this.$t('codelib.httpUrlPlaceholder'),
                     HTTPS: this.$t('codelib.httpsUrlPlaceholder')
                 },
@@ -51,9 +47,6 @@ export default {
     },
 
     computed: {
-        ...mapState({
-            user: 'user'
-        }),
         ...mapState('codelib', [
             'tickets',
             'codelib',
@@ -63,16 +56,6 @@ export default {
             'githubOAuth',
             'tGitOAuth'
         ]),
-        isShow: {
-            get () {
-                return this.showCodelibDialog
-            },
-            set (showCodelibDialog) {
-                this.toggleCodelibDialog({
-                    showCodelibDialog
-                })
-            }
-        },
         hasPower () {
             return (
                 (this.isTGit
@@ -107,11 +90,6 @@ export default {
                     this.codelib.authType
                 ) || {}
             )
-        },
-        title () {
-            return this.$t('codelib.linkRepo', [
-                this.codelibConfig.label
-            ])
         },
         isGit () {
             return isGit(this.codelibTypeName)
@@ -167,8 +145,12 @@ export default {
             }
         },
         urlPlaceholder () {
+            let payload = `${this.codelibConfig.label}${this.codelib.authType}`
+            if (this.codelibConfig.label === 'SVN') {
+                payload = `${this.codelibConfig.label}${this.codelib.svnType}`
+            }
             return (
-                this.placeholders.url[this.codelibConfig.label]
+                this.placeholders.url[payload]
                 || this.placeholders.url[this.codelib.authType]
             )
         },
@@ -181,7 +163,8 @@ export default {
         selectComBindData () {
             const bindData = {
                 searchable: true,
-                clearable: false
+                clearable: false,
+                placeholder: this.$t('codelib.codelibUrlPlaceholder')
             }
             if (this.isGit) {
                 bindData.remoteMethod = this.handleSearchCodeLib
@@ -190,77 +173,44 @@ export default {
         },
         formRules () {
             const rulesMap = {
-                Git: {
-                    url: [
-                        {
-                            required: true,
-                            message: this.$t('codelib.codelibUrlPlaceholder'),
-                            trigger: 'blur'
-                        }
-                    ],
-                    aliasName: [
-                        {
-                            required: true,
-                            message: this.$t('codelib.aliasNameEnter'),
-                            trigger: 'change'
+                url: [
+                    {
+                        required: true,
+                        message: this.$t('codelib.codelibUrlPlaceholder'),
+                        trigger: 'blur'
+                    }
+                ],
+                aliasName: [
+                    {
+                        required: true,
+                        message: this.$t('codelib.aliasNameEnter'),
+                        trigger: 'change'
+                    },
+                    {
+                        validator: async function (value) {
+                            let result = true
+                            await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`)
+                                .then((res) => {
+                                    result = !res
+                                })
+                            return result
                         },
-                        {
-                            validator: async function (value) {
-                                let result = true
-                                await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`)
-                                    .then((res) => {
-                                        result = !res
-                                    })
-                                return result
-                            },
-                            message: this.$t('codelib.代码库别名不能重复'),
-                            trigger: 'change'
-                        }
-                    ]
-                },
-                Github: {
-                    url: [
-                        {
-                            required: true,
-                            message: this.$t('codelib.codelibUrlPlaceholder'),
-                            trigger: 'blur'
-                        }
-                    ],
-                    aliasName: [
-                        {
-                            required: true,
-                            message: this.$t('codelib.aliasNameEnter'),
-                            trigger: 'change'
-                        },
-                        {
-                            validator: async function (value) {
-                                let result = true
-                                await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`)
-                                    .then((res) => {
-                                        result = !res
-                                    })
-                                return result
-                            },
-                            message: this.$t('codelib.代码库别名不能重复'),
-                            trigger: 'change'
-                        }
-                    ]
-                },
-                TGit: {
-
-                },
-                SVN: {
-
-                },
-                P4: {
-
-                },
-                Gitlab: {
-
-                }
+                        message: this.$t('codelib.代码库别名不能重复'),
+                        trigger: 'change'
+                    }
+                ],
+                credentialId: [
+                    {
+                        required: true,
+                        message: this.$t('codelib.credentialRequired'),
+                        trigger: 'blur'
+                    }
+                ]
             }
 
-            return rulesMap[this.codelibConfig.label]
+            if (this.codelibConfig.label === 'Github') delete rulesMap.credentialId
+
+            return rulesMap
         },
         isOAUTH () {
             return this.codelib.authType === 'OAUTH'
@@ -270,46 +220,8 @@ export default {
         tickets () {
             this.isLoadingTickets = false
         },
-        codelib: {
-            deep: true,
-            handler: async function (newVal, oldVal) {
-                if (newVal.authType === oldVal.authType) return
-                const { projectId, codelibTypeConstants } = this
-
-                if (newVal.authType === 'OAUTH' && !this.hasValidate) {
-                    await this.checkOAuth({
-                        projectId,
-                        type: codelibTypeConstants
-                    })
-                }
-                if (newVal.authType === 'T_GIT_OAUTH' && !this.hasValidate) {
-                    await this.checkOAuth({
-                        projectId,
-                        type: codelibTypeConstants
-                    })
-                }
-                this.saving = false
-            }
-        },
-        'gitOAuth.status': function (newStatus) {
-            if (this.isGit) {
-                this.hasValidate = true
-                this.saving = false
-            }
-        },
-        'tGitOAuth.status': function (newStatus) {
-            if (this.isTGit) {
-                this.hasValidate = true
-                this.saving = false
-            }
-        },
-        'githubOAuth.status': function (newStatus) {
-            if (this.isGithub) {
-                this.hasValidate = true
-                this.saving = false
-            }
-        },
         'codelib.url': function (newVal) {
+            this.checkPacProject(newVal)
             const { codelib, codelibTypeName } = this
             const { alias, msg } = parsePathAlias(
                 codelibTypeName,
@@ -320,26 +232,24 @@ export default {
             if (msg) {
                 this.urlErrMsg = msg
             }
+            
+            if (!newVal) {
+                this.urlErrMsg = ''
+            }
+            
             const param = {
-                projectName: alias,
+                projectName: this.isP4 ? newVal : alias,
                 url: newVal
             }
 
             param.aliasName = alias || this.codelib.aliasName
-            this.urlErrMsg = msg
             this.updateCodelib(param)
-        },
-        isShow (val) {
-            if (!val) {
-                this.setTemplateCodelib()
-            }
         }
     },
 
     methods: {
         ...mapActions('codelib', [
             'requestTickets',
-            'createOrEditRepo',
             'toggleCodelibDialog',
             'updateCodelib',
             'gitOAuth',
@@ -347,69 +257,6 @@ export default {
             'checkTGitOAuth',
             'setTemplateCodelib'
         ]),
-        async submitCodelib () {
-            const {
-                projectId,
-                user: { username },
-                codelib,
-                createOrEditRepo,
-                repositoryHashId
-            } = this
-            const params = Object.assign({}, codelib, { userName: username })
-            this.loading = true
-            try {
-                this.$refs.form.$refs.form.validate().then(async () => {
-                    if (!this.urlErrMsg) {
-                        this.saving = true
-                        if (this.isSvn) {
-                            params.region = parsePathRegion(codelib.url)
-                        }
-                        await createOrEditRepo({
-                            projectId,
-                            params,
-                            hashId: repositoryHashId
-                        })
-                        this.toggleCodelibDialog(false)
-                        this.hasValidate = false
-                        this.saving = true
-                        this.$bkMessage({
-                            message: repositoryHashId
-                                ? this.$t('codelib.successfullyEdited')
-                                : this.$t('codelib.successfullyAdded'),
-                            theme: 'success'
-                        })
-                        this.refreshCodelibList()
-                    }
-                }, validator => {
-                    console.error(validator)
-                })
-            } catch (e) {
-                if (e.code === 403) {
-                    const actionId = this.$permissionActionMap[repositoryHashId ? 'edit' : 'create']
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId,
-                            resourceId: this.$permissionResourceMap.code,
-                            instanceId: repositoryHashId
-                                ? [{
-                                    id: repositoryHashId,
-                                    name: codelib.aliasName
-                                }]
-                                : null,
-                            projectId
-                        }]
-                    })
-                } else {
-                    this.$bkMessage({
-                        message: e.message,
-                        theme: 'error'
-                    })
-                }
-                this.saving = false
-            } finally {
-                this.$nextTick(() => (this.loading = false))
-            }
-        },
 
         handleSearchCodeLib (search) {
             const { projectId, codelibTypeConstants } = this
@@ -424,20 +271,7 @@ export default {
             this.showRefreshBtn = true
             window.open(this[`${this.codelibTypeConstants}OAuth`].url, '_blank')
         },
-        handleCancel () {
-            this.urlErrMsg = ''
-            this.hasValidate = false
-            this.saving = true
-            this.$refs.form.$refs.form.clearError()
-            this.updateCodelib({
-                url: '',
-                aliasName: '',
-                credentialId: '',
-                projectName: '',
-                authType: '',
-                svnType: ''
-            })
-        },
+        
         authTypeChange (codelib) {
             // 切换重置参数
             Object.assign(codelib, {
@@ -484,12 +318,23 @@ export default {
             this.urlErrMsg = ''
         },
         async handleRefreshOAUTH () {
-            this.saving = true
             await this.checkOAuth({
                 projectId: this.projectId,
                 type: this.codelibTypeConstants
             })
-            this.saving = false
+        },
+
+        /**
+         * @desc 校验项目是否已经开启PAC模式
+         * @params {String} repoUrl 仓库url
+         */
+        checkPacProject (repoUrl) {
+            if (this.isGit && this.isOAUTH) {
+                vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}`)
+                    .then((res) => {
+                        this.pacProjectName = res
+                    })
+            }
         }
     }
 }
