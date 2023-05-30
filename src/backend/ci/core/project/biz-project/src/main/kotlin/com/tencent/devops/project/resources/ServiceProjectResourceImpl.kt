@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -81,11 +82,13 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
         offset: Int
     ): Result<List<ProjectWithPermission>> {
         return Result(
             projectService.listMigrateProjects(
+                migrateProjectConditionDTO = migrateProjectConditionDTO,
                 limit = limit,
                 offset = offset
             )

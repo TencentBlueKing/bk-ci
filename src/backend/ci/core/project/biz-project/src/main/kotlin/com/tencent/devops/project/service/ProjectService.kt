@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -182,6 +183,7 @@ interface ProjectService {
     fun getAllProject(): List<ProjectVO>
 
     fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
         offset: Int
     ): List<ProjectWithPermission>

@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.migrate
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -64,4 +65,12 @@ interface OpAuthMigrateResource {
     @Path("/allToRbac")
     @ApiOperation("权限全部升级到rbac权限")
     fun allToRbacAuth(): Result<Boolean>
+
+    @POST
+    @Path("/toRbacAuthByCondition")
+    @ApiOperation("按条件升级到rbac权限")
+    fun toRbacAuthByCondition(
+        @ApiParam("按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
 }
