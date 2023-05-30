@@ -31,10 +31,16 @@ class TxMigrateCreatorFixServiceImpl @Autowired constructor(
         projectUpdator: String?
     ): String? {
         return when {
-            authSystemType == AuthSystemType.V3_AUTH_TYPE -> projectCreator.takeIf { isUserExist(it) }
             isUserExist(projectCreator) -> projectCreator
-            projectUpdator != null && isUserExist(projectUpdator) -> projectUpdator
-            else -> {
+            projectUpdator != null && isUserExist(projectUpdator) -> {
+                logger.warn(
+                    "project creator has left, use project updater to migrate|" +
+                        "$projectCode|${authSystemType.value}|$projectCreator|$projectUpdator"
+                )
+                projectUpdator
+            }
+
+            authSystemType == AuthSystemType.V0_AUTH_TYPE -> {
                 val managers = bkTag.invokeByTag(prodTag) {
                     client.getGateway(ServiceProjectAuthResource::class).getProjectUsers(
                         token = tokenService.getSystemToken(null)!!,
@@ -43,7 +49,20 @@ class TxMigrateCreatorFixServiceImpl @Autowired constructor(
                     ).data
                 }
                 logger.info("get project($projectCode) managers $managers")
-                managers?.find { isUserExist(it) }
+                managers?.find { isUserExist(it) }.also {
+                    logger.warn(
+                        "project creator and updater has left, use project manager to migrate|" +
+                            "$projectCode|${authSystemType.value}|$projectCreator|$projectUpdator|$it"
+                    )
+                }
+            }
+
+            else -> {
+                logger.warn(
+                    "project creator and updater has left, not found project manager to migrate|" +
+                        "$projectCode|${authSystemType.value}|$projectCreator|$projectUpdator"
+                )
+                null
             }
         }
     }
