@@ -28,7 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 /**
  * 权限中心迁移服务

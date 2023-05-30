@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
@@ -79,18 +80,10 @@ interface ServiceProjectResource {
 
     @GET
     @Path("/listMigrateProjects")
-    @ApiOperation("获取迁移项目")
+    @ApiOperation("条件迁移项目实体")
     fun listMigrateProjects(
-        @ApiParam("中心名称", required = false)
-        @QueryParam("centerName")
-        centerName: String? = null,
-        @ApiParam("部门名称", required = false)
-        @QueryParam("deptName")
-        deptName: String? = null,
-        @ApiParam("不迁移项目Code", required = false)
-        @QueryParam("excludedProjectCodes")
-        excludedProjectCodes: List<String>? = null,
-        @ApiParam("limit", required = true)
+        @ApiParam("条件迁移项目实体", required = false)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         @QueryParam("limit")
         limit: Int,
         @ApiParam("offset", required = true)
