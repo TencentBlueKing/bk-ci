@@ -363,7 +363,7 @@ class MigrateV0PolicyService constructor(
         }
     }
 
-    override fun getGroupName(result: MigrateTaskDataResult): String {
+    override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
         return result.subject.name!!
     }
 }
