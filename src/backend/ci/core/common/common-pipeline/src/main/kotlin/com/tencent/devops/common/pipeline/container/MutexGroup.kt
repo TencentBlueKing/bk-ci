@@ -52,13 +52,15 @@ data class MutexGroup(
     @ApiModelProperty("占用锁定的信息用于日志提示", required = false)
     var linkTip: String? = null // #5454 占用锁定的信息用于日志提示/不写入到Model，仅在构建开始时产生
 ) {
+    fun getRuntimeMutexGroup() = runtimeMutexGroup ?: mutexGroupName ?: ""
+
     fun genMutexLockKey(projectId: String): String {
-        val mutexGroupName = runtimeMutexGroup ?: mutexGroupName ?: ""
+        val mutexGroupName = getRuntimeMutexGroup()
         return "lock:container:mutex:$projectId:$mutexGroupName:lock"
     }
 
     fun genMutexQueueKey(projectId: String): String {
-        val mutexGroupName = runtimeMutexGroup ?: mutexGroupName ?: ""
+        val mutexGroupName = getRuntimeMutexGroup()
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
     }
 
