@@ -80,6 +80,7 @@ class ExperienceGroupOuterDao {
         return with(TExperienceGroupOuter.T_EXPERIENCE_GROUP_OUTER) {
             dslContext.selectFrom(this)
                 .where(GROUP_ID.`in`(groupIds))
+                .limit(5000)
                 .fetch()
         }
     }

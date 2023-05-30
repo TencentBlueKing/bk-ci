@@ -101,7 +101,8 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
     }
 
     override fun getV2(userId: String, projectId: String, groupHashId: String): Result<GroupV2> {
-        TODO("Not yet implemented")
+        checkParam(userId, projectId, groupHashId)
+        return Result(groupService.getUsersV2(userId = userId, projectId = projectId, groupHashId = groupHashId))
     }
 
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {

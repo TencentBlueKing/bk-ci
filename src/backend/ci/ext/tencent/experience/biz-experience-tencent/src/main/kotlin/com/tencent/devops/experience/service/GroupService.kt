@@ -43,27 +43,23 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION_GROUP
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_DELETE_EXP_GROUP_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_GROUP_PERMISSION
-import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
-import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
-import com.tencent.devops.experience.dao.GroupDao
-import com.tencent.devops.experience.pojo.group.Group
-import com.tencent.devops.experience.pojo.group.GroupCreate
-import com.tencent.devops.experience.pojo.group.GroupPermission
-import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
-import com.tencent.devops.experience.pojo.group.GroupUpdate
-import com.tencent.devops.experience.pojo.group.GroupUsers
+import com.tencent.devops.experience.dao.*
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
+import com.tencent.devops.experience.pojo.group.*
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.model.experience.tables.records.TExperienceGroupInnerRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import javax.ws.rs.core.Response
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
+@SuppressWarnings("LongParameterList")
 @Service
 class GroupService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -73,6 +69,7 @@ class GroupService @Autowired constructor(
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
+    private val experienceGroupDepartmentDao: ExperienceGroupDepartmentDao,
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceDao: ExperienceDao,
     private val objectMapper: ObjectMapper,
@@ -175,7 +172,8 @@ class GroupService @Autowired constructor(
         if (!experiencePermissionService.validateCreateGroupPermission(
                 user = userId,
                 projectId = projectId
-            )) {
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
                 params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
@@ -220,14 +218,6 @@ class GroupService @Autowired constructor(
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
-        return serviceGet(
-            userId = userId,
-            projectId = projectId,
-            groupHashId = groupHashId
-        )
-    }
-
-    fun serviceGet(userId: String, projectId: String, groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
             userId = userId,
@@ -272,10 +262,10 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             authPermission = AuthPermission.EDIT,
             message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(projectId, groupHashId)
-                )
+                messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(projectId, groupHashId)
+            )
         )
         if (groupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
@@ -405,6 +395,54 @@ class GroupService @Autowired constructor(
         experienceGroupDao.deleteByGroupId(dslContext, groupId)
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
+    }
+
+    fun getUsersV2(userId: String, projectId: String, groupHashId: String): GroupV2 {
+        val groupId = HashUtil.decodeIdToLong(groupHashId)
+        experiencePermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.VIEW,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NEED_VIEW_EXP_GROUP_PERMISSION,
+                params = arrayOf(projectId, groupHashId)
+            )
+        )
+        val groupRecord = groupDao.get(dslContext, groupId)
+        val inners = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId))
+        updateDeptFullName(inners)
+        val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId))
+        val depts = experienceGroupDepartmentDao.listAll(dslContext, groupId)
+
+        val members = mutableListOf<GroupV2.Member>()
+        for (inner in inners) {
+            members.add(GroupV2.Member(inner.userId, GroupV2.MemberType.INNER.id, inner.deptFullName))
+        }
+        for (outer in outers) {
+            members.add(GroupV2.Member(outer.outer, GroupV2.MemberType.OUTER.id, "--"))
+        }
+        for (dept in depts) {
+            members.add(GroupV2.Member(dept.deptName, GroupV2.MemberType.DEPT.id, dept.deptFullName))
+        }
+
+        // TODO sort
+
+        return GroupV2(groupHashId, groupRecord.name, members)
+    }
+
+    // 把组织架构更新到数据表中
+    private fun updateDeptFullName(inners: Result<TExperienceGroupInnerRecord>) {
+        for (inner in inners) {
+            if (inner.deptFullName.isNullOrBlank()) {
+                val userDept = client.get(ServiceTxUserResource::class).get(inner.userId)
+                userDept.data?.let {
+                    val deptFullName = StringUtils.join(it.bgName, it.deptName, it.centerName, '/')
+                    inner.deptFullName = deptFullName
+                    experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
+                }
+            }
+        }
     }
 
     companion object {

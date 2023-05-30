@@ -81,7 +81,17 @@ class ExperienceGroupInnerDao {
         return with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
             dslContext.selectFrom(this)
                 .where(GROUP_ID.`in`(groupIds))
+                .limit(5000)
                 .fetch()
+        }
+    }
+
+    fun updateDeptFullName(dslContext: DSLContext, id: Long, deptFullName: String) {
+        with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
+            dslContext.update(this)
+                .set(DEPT_FULL_NAME, deptFullName)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 }
