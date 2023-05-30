@@ -102,7 +102,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
     const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[{0}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
-    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建，请过{0}秒后再试
+    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线构建已结束，不能取消
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
     const val DENY_START_BY_MANUAL = "2101021" // 流水线: 该流水线不能手动启动
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发
@@ -206,7 +206,7 @@ object ProcessMessageCode {
     const val ERROR_BACKGROUND_SERVICE_RUNNING_ERROR = "2101117" // 后台服务运行出错
     const val ERROR_VIEW_NOT_FOUND_IN_PROJECT = "2101118" // 在项目 {0} 下未找到{1}视图{2}
 
-    const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101119" // EnvName 不是 init
+    const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101119" // 环境名未初始化
     const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101120" // EnvId 不是 init
     const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = "2101121" // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = "2101122" // 用户没有操作这些环境的权限！环境：$noExistsEnvNames

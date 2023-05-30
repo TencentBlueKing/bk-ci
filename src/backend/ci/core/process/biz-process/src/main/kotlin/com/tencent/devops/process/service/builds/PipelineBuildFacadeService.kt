@@ -2037,8 +2037,7 @@ class PipelineBuildFacadeService(
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    params = arrayOf(alreadyCancelUser ?: "")
+                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER
                 )
             }
 
@@ -2056,8 +2055,7 @@ class PipelineBuildFacadeService(
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    params = arrayOf(userId, timeTip.toString())
+                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER
                 )
             } else if (cancelActionTime > 0) {
                 terminateFlag = true
