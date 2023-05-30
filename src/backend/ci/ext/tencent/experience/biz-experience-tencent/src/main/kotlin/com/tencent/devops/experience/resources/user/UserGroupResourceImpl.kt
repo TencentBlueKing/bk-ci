@@ -105,6 +105,14 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(groupService.getUsersV2(userId = userId, projectId = projectId, groupHashId = groupHashId))
     }
 
+    override fun deptFullNameByUser(userId: String): Result<String> {
+        return Result(groupService.deptFullNameByUser(userId))
+    }
+
+    override fun deptFullNameByDept(deptId: String): Result<String> {
+        return Result(groupService.deptFullNameByDept(deptId))
+    }
+
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
         groupService.delete(userId = userId, projectId = projectId, groupHashId = groupHashId)

@@ -142,6 +142,24 @@ interface UserGroupResource {
         groupHashId: String
     ): Result<GroupV2>
 
+    @ApiOperation("获取用户组织全称")
+    @Path("/users/{userId}/deptFullName")
+    @GET
+    fun deptFullNameByUser(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<String>
+
+    @ApiOperation("获取分组全称")
+    @Path("/depts/{deptId}/deptFullName")
+    @GET
+    fun deptFullNameByDept(
+        @ApiParam("组织ID", required = true)
+        @PathParam("deptId")
+        deptId: String
+    ): Result<String>
+
     @ApiOperation("获取体验组用户")
     @Path("/{projectId}/{groupHashId}/users")
     @GET

@@ -50,6 +50,7 @@ import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import com.tencent.devops.experience.pojo.group.*
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceGroupInnerRecord
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.apache.commons.lang3.StringUtils
@@ -437,12 +438,29 @@ class GroupService @Autowired constructor(
             if (inner.deptFullName.isNullOrBlank()) {
                 val userDept = client.get(ServiceTxUserResource::class).get(inner.userId)
                 userDept.data?.let {
-                    val deptFullName = StringUtils.join(it.bgName, it.deptName, it.centerName, '/')
+                    val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
                     inner.deptFullName = deptFullName
                     experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
                 }
             }
         }
+    }
+
+    fun deptFullNameByUser(userId: String): String {
+        return client.get(ServiceTxUserResource::class).get(userId).data?.let {
+            StringUtils.joinWith(
+                "/",
+                it.bgName,
+                it.deptName,
+                it.centerName
+            )
+        } ?: ""
+    }
+
+    fun deptFullNameByDept(deptId: String): String {
+        return client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(deptId, 4).data?.let { depts ->
+            depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
+        } ?: ""
     }
 
     companion object {
