@@ -155,7 +155,7 @@ open class ScriptTask : ITask() {
                 ignore.errorMsg
             } else "") + I18nUtil.getCodeLanMessage(
                 messageCode = "$USER_SCRIPT_TASK_FAIL",
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             )
 
             throw TaskExecuteException(
