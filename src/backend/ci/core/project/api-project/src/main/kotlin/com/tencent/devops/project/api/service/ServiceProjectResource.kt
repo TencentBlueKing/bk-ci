@@ -78,7 +78,7 @@ interface ServiceProjectResource {
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
 
-    @GET
+    @POST
     @Path("/listMigrateProjects")
     @ApiOperation("条件迁移项目实体")
     fun listMigrateProjects(
