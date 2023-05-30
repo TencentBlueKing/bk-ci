@@ -35,8 +35,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
-import org.yaml.snakeyaml.Yaml
 
 /**
  * 部分yaml转换过程与公共的存在区别，template转换时需要保留meta信息字段
@@ -60,8 +60,7 @@ object TemplateYamlMapper {
     }
 
     fun <T> to(yamlStr: String): T {
-        val yaml = Yaml()
-        val obj = toYaml(yaml.load(yamlStr) as Any)
+        val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
         return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
     }
 }

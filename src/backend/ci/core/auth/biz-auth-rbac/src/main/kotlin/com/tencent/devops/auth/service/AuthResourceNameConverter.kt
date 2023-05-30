@@ -26,42 +26,38 @@
  *
  */
 
-package com.tencent.devops.auth.api.migrate
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 
-@Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
-@Path("/op/auth/migrate")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpAuthMigrateResource {
+/**
+ * 蓝盾资源名转换iam资源名
+ */
+class AuthResourceNameConverter {
 
-    @POST
-    @Path("/v3ToRbac")
-    @ApiOperation("v3权限批量升级到rbac权限")
-    fun v3ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
-        projectCodes: List<String>
-    ): Result<Boolean>
+    fun generateIamName(
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): String {
+        return when (resourceType) {
+            // 质量红线规则、质量红线通知组、版本体验组、版本体验资源名可以重复,创建二级管理员时就会报名称冲突,需要转换
+            AuthResourceType.EXPERIENCE_GROUP_NEW.value,
+            AuthResourceType.EXPERIENCE_TASK_NEW.value,
+            AuthResourceType.QUALITY_RULE.value,
+            AuthResourceType.QUALITY_GROUP_NEW.value ->
+                IamGroupUtils.buildSubsetManagerGroupName(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
 
-    @POST
-    @Path("/v0ToRbac")
-    @ApiOperation("v0权限批量升级到rbac权限")
-    fun v0ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
-        projectCodes: List<String>
-    ): Result<Boolean>
-
-    @POST
-    @Path("/allToRbac")
-    @ApiOperation("权限全部升级到rbac权限")
-    fun allToRbacAuth(): Result<Boolean>
+            else ->
+                IamGroupUtils.buildSubsetManagerGroupName(
+                    resourceType = resourceType,
+                    resourceName = resourceName
+                )
+        }
+    }
 }

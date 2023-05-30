@@ -32,16 +32,17 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.util.TaskUtils
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineBuildTaskService @Autowired constructor(
@@ -123,7 +124,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     containerType = buildTask.containerType,
                     actionType = actionType,
                     errorCode = errorCode,
-                    errorTypeName = buildTask.errorType?.typeName,
+                    errorTypeName = buildTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     reason = buildTask.errorMsg
                 )
             )

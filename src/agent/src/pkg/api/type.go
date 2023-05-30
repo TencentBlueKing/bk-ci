@@ -149,6 +149,7 @@ type AgentHeartbeatResponse struct {
 	FileGateway             string            `json:"fileGateway"`
 	Props                   AgentPropsResp    `json:"props"`
 	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
+	Language                string            `json:"language"`
 }
 
 type AgentPropsResp struct {
