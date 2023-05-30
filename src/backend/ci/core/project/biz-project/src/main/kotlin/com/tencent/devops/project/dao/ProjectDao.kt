@@ -128,7 +128,7 @@ class ProjectDao {
         offset: Int
     ): Result<TProjectRecord> {
         val centerId = migrateProjectConditionDTO.centerId
-        val deptId = migrateProjectConditionDTO.centerId
+        val deptId = migrateProjectConditionDTO.deptId
         val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
         val creator = migrateProjectConditionDTO.projectCreator
         return with(TProject.T_PROJECT) {
