@@ -7,30 +7,24 @@
                 isLoading: loading.isLoading,
                 title: loading.title
             }">
-            <div class="bk-form machine-params-form" v-if="hasPermission">
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-item-label">{{ $t('environment.nodeInfo.model') }}：</label>
-                    <div class="bk-form-content" style="margin-top:4px;">
+            <div class="machine-params-form" v-if="hasPermission">
+                <bk-form label-width="80">
+                    <bk-form-item
+                        required
+                        :label="$t('environment.nodeInfo.model')"
+                    >
                         <bk-radio-group v-model="constructImportForm.model">
                             <bk-radio :value="'LINUX'" :disabled="isAgent">Linux</bk-radio>
                             <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
                             <bk-radio :value="'WINDOWS'" :disabled="isAgent">Windows</bk-radio>
                         </bk-radio-group>
-                    </div>
-                </div>
-                <div class="bk-form-item is-required" v-if="gatewayList.length">
-                    <label class="bk-label env-item-label">
-                        <!-- 地点： -->
-                        <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.location') }}</span>：
-                            <template slot="content">
-                                <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                    {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
-                                </p>
-                            </template>
-                        </bk-popover>
-                    </label>
-                    <div class="bk-form-content gateway-item-content" style="margin-top:4px;">
+                    </bk-form-item>
+                    <bk-form-item
+                        v-if="gatewayList.length"
+                        required
+                        :label="$t('environment.nodeInfo.location')"
+                        :desc="$t('environment.nodeInfo.buildMachineLocationTips')"
+                    >
                         <bk-radio-group v-model="constructImportForm.location">
                             <bk-radio v-for="(model, index) in gatewayList"
                                 :key="index"
@@ -38,8 +32,8 @@
                                 :disabled="isAgent"
                             >{{ model.showName }}</bk-radio>
                         </bk-radio-group>
-                    </div>
-                </div>
+                    </bk-form-item>
+                </bk-form>
                 <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
                 <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
                     <div class="command-line">
@@ -153,20 +147,6 @@
     @import './../../../scss/conf';
 
     .machine-params-form {
-        .bk-label {
-            padding-right: 0;
-            width: 44px;
-            font-weight: normal;
-
-            &:after {
-                display: none;
-            }
-        }
-
-        .bk-form-content {
-            margin-left: 52px;
-        }
-
         .bk-form-radio {
             margin-right: 20px;
         }
@@ -187,12 +167,6 @@
             a {
                 cursor: pointer;
                 color: $primaryColor;
-            }
-        }
-
-        .gateway-item-content {
-            .bk-form-radio {
-                margin-bottom: 10px;
             }
         }
 
