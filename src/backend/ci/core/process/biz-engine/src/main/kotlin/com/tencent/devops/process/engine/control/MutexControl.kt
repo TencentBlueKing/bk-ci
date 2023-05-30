@@ -126,7 +126,7 @@ class MutexControl @Autowired constructor(
 
     internal fun acquireMutex(mutexGroup: MutexGroup?, container: PipelineBuildContainer): ContainerMutexStatus {
         // 当互斥组为空为空或互斥组名称为空或互斥组没有启动的时候，不做互斥行为
-        if (mutexGroup == null || mutexGroup.getRuntimeMutexGroup().isBlank() || !mutexGroup.enable) {
+        if (mutexGroup == null || mutexGroup.fetchRuntimeMutexGroup().isBlank() || !mutexGroup.enable) {
             return ContainerMutexStatus.READY
         }
         // 每次都对Job互斥组的redis key和queue都进行清理
@@ -179,7 +179,7 @@ class MutexControl @Autowired constructor(
         executeCount: Int?
     ) {
         if (mutexGroup != null && mutexGroup.enable) {
-            val runtimeMutexGroup = mutexGroup.getRuntimeMutexGroup()
+            val runtimeMutexGroup = mutexGroup.fetchRuntimeMutexGroup()
             LOG.info(
                 "[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|project=$projectId|[$runtimeMutexGroup]"
             )
