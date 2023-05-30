@@ -78,16 +78,17 @@ interface ServiceProjectResource {
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
 
-    @GET
-    @Path("/listMigrateProjects")
+    @POST
+    @Path("/listMigrateProjects/{offset}/{limit}")
     @ApiOperation("条件迁移项目实体")
     fun listMigrateProjects(
         @ApiParam("条件迁移项目实体", required = false)
         migrateProjectConditionDTO: MigrateProjectConditionDTO,
-        @QueryParam("limit")
+        @ApiParam("limit", required = true)
+        @PathParam("limit")
         limit: Int,
         @ApiParam("offset", required = true)
-        @QueryParam("offset")
+        @PathParam("offset")
         offset: Int
     ): Result<List<ProjectWithPermission>>
 
