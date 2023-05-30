@@ -71,7 +71,14 @@ class TxMigrateCreatorFixServiceImpl @Autowired constructor(
         projectCreator: String,
         resourceCreator: String
     ): String {
-        return if (isUserExist(resourceCreator)) resourceCreator else projectCreator
+        return if (isUserExist(resourceCreator)) {
+            resourceCreator
+        } else {
+            logger.warn(
+                "resource creator has left, use project creator to migrate|$projectCreator|$resourceCreator"
+            )
+            projectCreator
+        }
     }
 
     private fun isUserExist(name: String): Boolean =
