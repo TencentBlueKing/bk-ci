@@ -101,8 +101,8 @@ class RbacPermissionMigrateService constructor(
         )
         val traceId = MDC.get(TraceTag.BIZID)
         projectCodes.forEach { projectCode ->
-            MDC.put(TraceTag.BIZID, traceId)
             migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
                 migrateToRbacAuth(
                     projectCode = projectCode,
                     migrateTaskId = 0,
