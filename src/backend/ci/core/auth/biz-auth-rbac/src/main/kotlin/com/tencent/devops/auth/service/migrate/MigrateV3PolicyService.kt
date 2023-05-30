@@ -354,6 +354,6 @@ class MigrateV3PolicyService constructor(
     }
 
     override fun getGroupName(result: MigrateTaskDataResult): String {
-        return result.subject.name!!.substringAfter("${result.projectId}-")
+        return result.subject.name!!.substringAfter("${result.subject.name}-")
     }
 }
