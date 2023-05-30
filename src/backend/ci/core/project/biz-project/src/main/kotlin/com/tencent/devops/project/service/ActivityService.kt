@@ -53,7 +53,7 @@ class ActivityService @Autowired constructor(
             ActivityInfo(
                 name = I18nUtil.getCodeLanMessage(T_ACTIVITY_PREFIX + it.englishName).ifBlank { it.name },
                 link = it.link,
-                createTime = it.createTime.toLocalTime().toString()
+                createTime = DateTimeUtil.toDateTime(it.createTime)
             )
         }
     }
