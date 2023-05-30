@@ -331,11 +331,11 @@ export default {
         cacheQuery = this.$route.query
       }
       const query = cacheQuery || this.$route.query
-      const { resourceType, action, iamResourceCode, groupId, groupName } = query;
+      const { resourceType, action, iamResourceCode, groupId, groupName, resourceName } = query;
       if (resourceType && iamResourceCode && action) {
         this.resourceType = resourceType;
         if (groupId) {
-          await this.getResourceList();
+          await this.getResourceList(1, 10, resourceName);
           await this.getActionsList();
           const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
           const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
@@ -378,7 +378,7 @@ export default {
         }
       } else if (resourceType && iamResourceCode) {
         this.resourceType = resourceType;
-        await this.getResourceList();
+        await this.getResourceList(1, 10, resourceName);
         await this.getActionsList();
         const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
         const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);

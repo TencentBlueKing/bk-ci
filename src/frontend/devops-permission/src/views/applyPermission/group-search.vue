@@ -117,11 +117,6 @@ watch(() => props.groupList, () => {
   deep: true,
 });
 
-watch(() => props.curProject, (val) => {
-  const resourceType = route.query?.resourceType || '';
-  if (val && !resourceType) fetchGroupList();
-})
-
 watch(() => userGroupList.value, () => {
   const query = JSON.parse(sessionStorage.getItem('group-apply-query'));
   const { groupId } = query;
