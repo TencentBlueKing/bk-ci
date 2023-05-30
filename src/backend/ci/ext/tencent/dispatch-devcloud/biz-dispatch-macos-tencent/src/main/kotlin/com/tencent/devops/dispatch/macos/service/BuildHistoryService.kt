@@ -75,16 +75,9 @@ class BuildHistoryService @Autowired constructor(
     fun endBuild(status: MacJobStatus, buildHistoryId: Long, buildTaskId: Long) {
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val taskResult = buildTaskDao.deleteById(context, buildTaskId)
-            if (!taskResult) {
-                throw RuntimeException("Fail to delete build task,buildTaskId=$buildTaskId.")
-            }
-            logger.info("success delete build task,buildTaskId=$buildTaskId")
-            val historyResult = buildHistoryDao.endStatus(context, status.name, buildHistoryId)
-            if (!historyResult) {
-                throw RuntimeException("Fail to end build history,buildHistoryId=$buildHistoryId.")
-            }
-            logger.info("success end build history,buildHistoryId=$buildHistoryId.")
+            buildTaskDao.deleteById(context, buildTaskId)
+            buildHistoryDao.endStatus(context, status.name, buildHistoryId)
+            logger.info("Success end build, buildHistoryId=$buildHistoryId, buildTaskId: $buildTaskId")
         }
     }
 }

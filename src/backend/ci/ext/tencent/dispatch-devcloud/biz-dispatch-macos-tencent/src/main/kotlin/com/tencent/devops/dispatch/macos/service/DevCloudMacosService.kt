@@ -184,34 +184,22 @@ class DevCloudMacosService @Autowired constructor(
 
     fun deleteVM(
         creator: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        vmId: Int
+        devCloudMacosVmDelete: DevCloudMacosVmDelete
     ): Boolean {
         val url = "$devCloudUrl/api/mac/vm/delete"
-        val macosVmDelete = DevCloudMacosVmDelete(
-            project = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            id = vmId.toString()
-        )
-        val body = ObjectMapper().writeValueAsString(macosVmDelete)
-        logger.info("DevCloud deleteVM body:$body")
+        val body = ObjectMapper().writeValueAsString(devCloudMacosVmDelete)
+        logger.info("Delete MacOS VM body:$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
+            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        var result: Boolean = true
+        var result: Boolean
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("DevCloud deleteVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
                 logger.error(
-                    "Fail to request to DevCloud deleteVM, http response code: ${response.code}, msg: $responseContent"
+                    "Failed to delete MacOS VM response: ${response.code}, msg: $responseContent"
                 )
                 result = false
             }
@@ -219,6 +207,7 @@ class DevCloudMacosService @Autowired constructor(
             val code = responseData["actionCode"] as Int
             result = 200 == code
         }
+
         return result
     }
 

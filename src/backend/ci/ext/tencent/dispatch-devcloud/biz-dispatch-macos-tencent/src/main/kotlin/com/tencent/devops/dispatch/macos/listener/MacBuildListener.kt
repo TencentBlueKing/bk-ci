@@ -6,6 +6,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.service.BuildHistoryService
 import com.tencent.devops.dispatch.macos.service.BuildTaskService
 import com.tencent.devops.dispatch.macos.service.DevCloudMacosService
@@ -86,7 +87,7 @@ class MacBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        logger.info("[${event.pipelineId}|${event.pipelineId}|${event.buildId}] Build shutdown with event($event)")
+        logger.info("MacOS shutdown with event($event)")
         // 如果是某个job关闭，则锁到job，如果是整条流水线shutdown，则锁到buildid级别
         val lockKey =
             if (event.vmSeqId == null)
@@ -106,11 +107,11 @@ class MacBuildListener @Autowired constructor(
                 vmSeqId = event.vmSeqId,
                 executeCount = event.executeCount
             )
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                            "buildTaskRecords: ${buildTaskRecords.size}")
 
+            // task记录为空，可能createVM还在进行中，等待createVM结束后回收机器
             if (buildTaskRecords.isEmpty()) {
                 logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Recycling the macos failed.")
+                retry(sleepTimeInMS = 60000, retryTimes = 10, pipelineEvent = event)
                 return
             }
 
@@ -129,43 +130,33 @@ class MacBuildListener @Autowired constructor(
         projectId: String
     ) {
         buildTaskRecords.forEach { buildTask ->
-            // 关闭的时候对container进行锁操作，防止重复操作
             try {
                 val vmIp = buildTask.vmIp
                 val vmId = buildTask.vmId
                 logger.info(
-                    "[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                        "Get the vm ip($vmIp),vm id($vmId)"
+                    "${event.buildId}|${event.vmSeqId} Shutdown MacOS ip($vmIp), id($vmId)"
                 )
                 macosVMRedisService.deleteRedisBuild(vmIp)
                 devCloudMacosService.deleteVM(
                     creator = creator,
-                    projectId = projectId,
-                    pipelineId = buildTask.pipelineId,
-                    buildId = buildTask.buildId,
-                    vmSeqId = buildTask.vmSeqId,
-                    vmId = vmId
-                )
-                logger.info("[${event.buildId}]|[${event.vmSeqId}] end build. buildId: ${buildTask.id}")
-                buildHistoryService.endBuild(MacJobStatus.Done, buildTask.buildHistoryId, buildTask.id)
-            } catch (e: Exception) {
-                val vmIp = buildTask.vmIp
-                logger.error(
-                    "[${event.projectId}|${event.pipelineId}|${event.buildId}] shutdown error,vm is $vmIp",
-                    e
+                    devCloudMacosVmDelete = DevCloudMacosVmDelete(
+                        project = projectId,
+                        pipelineId = buildTask.pipelineId,
+                        buildId = buildTask.buildId,
+                        vmSeqId = buildTask.vmSeqId,
+                        id = vmId.toString()
+                    )
                 )
 
-                if (e is SocketTimeoutException) {
-                    logger.error(
-                        "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                            "vm is $vmIp, end build."
-                    )
-                    buildHistoryService.endBuild(
-                        MacJobStatus.ShutDownError,
-                        buildTask.buildHistoryId,
-                        buildTask.id
-                    )
-                }
+                logger.info("${event.buildId}|${event.vmSeqId} end build. buildId: ${buildTask.id}")
+                buildHistoryService.endBuild(
+                    MacJobStatus.Done,
+                    buildTask.buildHistoryId,
+                    buildTask.id
+                )
+            } catch (e: Exception) {
+                val vmIp = buildTask.vmIp
+                logger.error("${event.buildId}|${event.vmSeqId} Shutdown error,vm is $vmIp", e)
             }
         }
     }
