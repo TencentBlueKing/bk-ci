@@ -204,6 +204,7 @@ class MigrateV3PolicyService constructor(
                     }
                     // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                        projectCode = projectCode,
                         resourceType = managerPath.type,
                         migrateResourceCode = v3ResourceCode
                     ) ?: v3ResourceCode
@@ -299,6 +300,7 @@ class MigrateV3PolicyService constructor(
         logger.info("match min resource group|$userId|$projectCode|$resourceType|$v3ResourceCode|$userActions")
         // 先将v3资源code转换成rbac资源code
         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+            projectCode = projectCode,
             resourceType = resourceType,
             migrateResourceCode = v3ResourceCode
         ) ?: return null
