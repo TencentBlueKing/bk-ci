@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
@@ -122,9 +123,14 @@ class ProjectDao {
 
     fun listMigrateProjects(
         dslContext: DSLContext,
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
+        val centerId = migrateProjectConditionDTO.centerId
+        val deptId = migrateProjectConditionDTO.centerId
+        val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
+        val creator = migrateProjectConditionDTO.projectCreator
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -133,6 +139,10 @@ class ProjectDao {
                     ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
                         .or(ROUTER_TAG.isNull)
                 )
+                .let { if (centerId == null) it else it.and(CENTER_ID.eq(centerId)) }
+                .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
+                .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
+                .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
