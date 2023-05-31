@@ -66,7 +66,9 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >{{ item.label }}</span>
+                    >
+                        {{ item.label }}
+                    </span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"

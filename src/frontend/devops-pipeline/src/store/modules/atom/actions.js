@@ -415,6 +415,17 @@ export default {
                         recommendFlag: defaultBuildResource.recommendFlag,
                         imageType: 'BKSTORE'
                     },
+                    jobControlOption: { // 作业控制选项默认值
+                        enable: true,
+                        dependOnType: 'ID',
+                        dependOnId: [],
+                        dependOnName: '',
+                        timeoutVar: '900',
+                        prepareTimeout: '10',
+                        runCondition: 'STAGE_RUNNING',
+                        customVariables: [{ key: 'param1', value: '' }],
+                        customCondition: ''
+                    },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
                     jobId: `job_${randomString(3)}`,

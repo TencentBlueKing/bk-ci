@@ -18,7 +18,6 @@
 </template>
 
 <script>
-    import webSocketMessage from '@/utils/webSocketMessage'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import emptyTips from '@/components/devops/emptyTips'
@@ -28,6 +27,7 @@
     import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
+    import webSocketMessage from '@/utils/webSocketMessage'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {

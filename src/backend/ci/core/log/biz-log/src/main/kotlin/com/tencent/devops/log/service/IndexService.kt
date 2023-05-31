@@ -131,6 +131,10 @@ class IndexService @Autowired constructor(
         }
     }
 
+    fun getBuildIndexName(buildId: String): String? {
+        return indexDao.getBuild(dslContext, buildId)?.indexName
+    }
+
     fun getLastLineNum(buildId: String): Long {
         return redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
             ?: indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: 0

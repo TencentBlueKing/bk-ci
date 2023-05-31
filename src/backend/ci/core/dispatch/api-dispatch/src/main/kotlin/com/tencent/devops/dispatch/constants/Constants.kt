@@ -63,3 +63,4 @@ const val BK_NO_AGENT_AVAILABLE = "bkNoAgentAvailable" // 没有可用Agent，�
 const val BK_ENV_BUSY = "bkEnvBusy" // 构建环境并发保护，稍后重试...
 const val BK_QUEUE_TIMEOUT_MINUTES = "bkQueueTimeoutMinutes" //  构建环境无可分配构建机，等待超时（queue-timeout-minutes={0}）
 const val BK_AGENT_IS_BUSY = "bkAgentIsBusy" // 构建机繁忙，继续重试(Agent is busy)
+const val BK_BUILD_AGENT_DETAIL_LINK_ERROR = "bkBuildAgentDetailLinkError" // 构建机Agent详情链接

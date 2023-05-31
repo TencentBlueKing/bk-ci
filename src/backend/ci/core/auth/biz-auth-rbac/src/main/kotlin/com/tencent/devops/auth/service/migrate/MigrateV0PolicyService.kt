@@ -42,6 +42,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -62,7 +63,8 @@ class MigrateV0PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -72,7 +74,8 @@ class MigrateV0PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService
+    rbacCacheService = rbacCacheService,
+    deptService = deptService
 ) {
 
     companion object {
@@ -360,7 +363,7 @@ class MigrateV0PolicyService constructor(
         }
     }
 
-    override fun getGroupName(result: MigrateTaskDataResult): String {
+    override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
         return result.subject.name!!
     }
 }
