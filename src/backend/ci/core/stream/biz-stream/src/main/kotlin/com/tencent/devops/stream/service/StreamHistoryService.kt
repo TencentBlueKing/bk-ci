@@ -98,7 +98,7 @@ class StreamHistoryService @Autowired constructor(
                 projectId = conf.projectCode!!,
                 pipelineId = search?.pipelineId,
                 buildStatus = search?.status,
-                startTime = startTime.timestamp(),
+                startTime = startTime.timestampmilli(),
                 endTime = endTime.timestampmilli(),
                 channelCode = channelCode
             ).data
