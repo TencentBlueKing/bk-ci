@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -84,4 +86,16 @@ interface ServiceProjectOrganizationResource {
         @PathParam("level")
         level: Int
     ): Result<List<DeptInfo>>
+
+    @ApiOperation("获取部门员工信息")
+    @GET
+    @Path("staffs/deptIds/{deptId}/levels/{level}")
+    fun getDeptStaffsWithLevel(
+        @ApiParam("机构ID")
+        @PathParam("deptId")
+        deptId: String,
+        @ApiParam("向上查询的层级数")
+        @PathParam("level")
+        level: Int
+    ):Result<List<StaffInfo>>
 }

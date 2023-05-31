@@ -56,7 +56,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
         val staff = tofService.getStaffInfo(userId, bkToken!!)
         return Result(
             ProjectUser(
-                chineseName = staff.ChineseName,
+                chineseName = staff.chineseName,
                 avatarUrl = avatarUrl?.replace("##UserId##", userId) ?: "",
                 username = userId
             )

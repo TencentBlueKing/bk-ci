@@ -39,21 +39,13 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
-import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
-import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
-import com.tencent.devops.experience.dao.ExperienceInnerDao
-import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
-import com.tencent.devops.experience.dao.ExperienceOuterDao
-import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.*
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -64,11 +56,13 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 // 服务共用部分在这里
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 @Service
 class ExperienceBaseService @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
+    private val experienceGroupDepartmentDao: ExperienceGroupDepartmentDao,
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
@@ -364,6 +358,19 @@ class ExperienceBaseService @Autowired constructor(
             }
             userIds.add(it.userId)
         }
+        experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds).forEach { dept ->
+            client.get(ServiceProjectOrganizationResource::class)
+                .getDeptStaffsWithLevel(dept.deptId, 10)
+                .data?.forEach {
+                    var userIds = groupIdToUserIds[dept.groupId]
+                    if (null == userIds) {
+                        userIds = mutableSetOf()
+                        groupIdToUserIds[dept.groupId] = userIds!!
+                    }
+                    userIds!!.add(it.loginName)
+                }
+        }
+
         return groupIdToUserIds
     }
 

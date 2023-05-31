@@ -25,14 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.tof
+package com.tencent.devops.project.pojo
 
-data class StaffInfoResponse(
-    val LoginName: String,
-    val DepartmentName: String,
-    val FullName: String,
-    val ChineseName: String,
-    val GroupId: String,
-    val GroupName: String,
-    val StatusId: String
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("用户信息")
+data class StaffInfo(
+    @ApiModelProperty("登录名")
+    @JsonProperty("LoginName")
+    val loginName: String,
+    @ApiModelProperty("部门名称")
+    @JsonProperty("DepartmentName")
+    val departmentName: String,
+    @ApiModelProperty("英文全名")
+    @JsonProperty("FullName")
+    val fullName: String,
+    @ApiModelProperty("中文名")
+    @JsonProperty("ChineseName")
+    val chineseName: String,
+    @ApiModelProperty("组ID")
+    @JsonProperty("GroupId")
+    val groupId: String,
+    @ApiModelProperty("组名称")
+    @JsonProperty("GroupName")
+    val groupName: String,
+    @ApiModelProperty("当前状态")
+    @JsonProperty("StatusId")
+    val statusId: String
 )
