@@ -9,9 +9,7 @@
             </span>
             <span>{{ error.errorCode }}</span>
         </p>
-        <article v-if="!isCollapse" class="error-log-summary-content">
-            {{ error.errorMsg }}
-        </article>
+        <pre v-if="!isCollapse" class="error-log-summary-content">{{ error.errorMsg.trim() }}</pre>
     </div>
 </template>
 
@@ -79,6 +77,7 @@
         &-content {
             flex: 1;
             padding: 8px 20px;
+            margin: 0;
             color: white;
         }
     }
