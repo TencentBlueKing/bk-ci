@@ -129,7 +129,7 @@ object TemplateYamlUtil {
                                 Constants.VALUE_NOT_IN_ENUM.format(
                                     fromPath,
                                     valueName,
-                                    newValue,
+                                    newValue.toString(),
                                     param.values.joinToString(",")
                                 )
                             )
