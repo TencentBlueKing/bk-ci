@@ -411,15 +411,15 @@ class ImageArtifactoryService @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 if (!response.isSuccessful) {
-                    logger.error(response.message)
-                    throw RuntimeException("Failed to get images")
+                    logger.error("images repository search failed, statusCode: ${response.code}")
+                    throw RuntimeException("images repository search failed")
                 }
                 val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
                 return processingImages(responseBody)
             } catch (e: Exception) {
-                logger.error(e.message)
-                throw RuntimeException("Failed to get images")
+                logger.error("images repository search failed", e)
+                throw RuntimeException("images repository search failed")
             }
         }
     }
