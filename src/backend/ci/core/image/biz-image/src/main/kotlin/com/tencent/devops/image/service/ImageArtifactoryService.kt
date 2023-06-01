@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
@@ -49,6 +50,7 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -144,16 +146,20 @@ class ImageArtifactoryService @Autowired constructor(
         handleImageList(devCloudProjectImages, imageList)
         return ImageListResp(imageList)
     }
-    fun getUrl(projectCode: String, repoName: String, searchKey: String?): String {
+    fun getUrl(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): String {
+        val stringBuilder = StringBuilder()
+        val start = "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
+        val middle = "packageName=$searchKey&"
+        val end = "pageNumber=$number&pageSize=$size"
+        stringBuilder.append(start)
         if (searchKey.isNullOrBlank()) {
-            return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName"
+            return stringBuilder.append(end).toString()
         }
-        return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName" +
-                "?packageName=$searchKey"
+        return stringBuilder.append(middle).append(end).toString()
     }
-    fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
+    fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): ImageListResp {
         // 查询项目镜像列表
-        val projectImages = getImagesByUrl(projectCode, repoName, searchKey)
+        val projectImages = getImagesByUrl(projectCode, repoName, searchKey, number, size)
         val imageList = mutableListOf<ImageItem>()
         val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
         repoNames.forEach {
@@ -395,8 +401,8 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
-        val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
+    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): List<DockerTag> {
+        val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey, number, size))
             .get()
             .header("Authorization", credential)
             .build()
@@ -407,6 +413,7 @@ class ImageArtifactoryService @Autowired constructor(
                     throw RuntimeException("Failed to get images")
                 }
                 val responseBody = response.body?.string()
+                logger.info("responseBody: $responseBody")
                 return processingImages(responseBody)
             } catch (e: Exception) {
                 logger.error(e.message)
@@ -450,14 +457,19 @@ class ImageArtifactoryService @Autowired constructor(
 
     fun processingImages(dataStr: String?): List<DockerTag> {
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
+        logger.info("responseData: $responseData")
         val results: Map<String, Any> = responseData["data"] as Map<String, Any>
+        logger.info("results: $results")
         val records = results["records"] as List<Map<String, Any>>
+        logger.info("records: $records")
         val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
-            dockerTag.created = DateTime(it["createdDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.created = DateTimeUtil.toDateTime(it["createdDate"] as LocalDateTime?)
+                    //DateTime(it["createdDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.createdBy = it["createdBy"] as String?
-            dockerTag.modified = DateTime(it["lastModifiedDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.modified = DateTimeUtil.toDateTime(it["lastModifiedDate"] as LocalDateTime?)
+                //DateTime(it["lastModifiedDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.modifiedBy = it["lastModifiedBy"] as String?
             dockerTag.desc = it["description"] as String?
             dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"

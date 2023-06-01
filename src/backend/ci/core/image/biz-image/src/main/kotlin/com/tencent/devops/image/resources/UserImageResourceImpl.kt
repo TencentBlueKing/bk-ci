@@ -137,9 +137,18 @@ class UserImageResourceImpl @Autowired constructor(
         return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
     }
 
-    override fun getProjectImages(userId: String, projectId: String, repoName: String, searchKey: String?): Result<ImageListResp> {
+    override fun getProjectImages(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        searchKey: String?,
+        pageNumber: Int?,
+        pageSize: Int?
+    ): Result<ImageListResp> {
         checkUserAndProject(userId, projectId)
-        return Result(artifactoryService.getProjectImages(projectId, repoName, searchKey))
+        val number = if (pageNumber == null || pageNumber == 0) 0 else pageNumber
+        val size = if (pageSize == null || pageSize == 0) 10 else pageSize
+        return Result(artifactoryService.getProjectImages(projectId, repoName, searchKey, number, size))
     }
 
     override fun listProjectBuildImages(

@@ -147,7 +147,7 @@ interface UserImageResource {
     ): Result<ImageListResp>
 
     @ApiOperation("获取新仓库项目镜像列表")
-    @Path("/{projectId}/{repoName}/getAllProjectImages")
+    @Path("/projects/{projectId}/repos/{repoName}/getAllProjectImages")
     @GET
     fun getProjectImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -161,7 +161,13 @@ interface UserImageResource {
         repoName: String,
         @ApiParam(value = "查询关键字", required = false)
         @QueryParam("searchKey")
-        searchKey: String?
+        searchKey: String?,
+        @ApiParam(value = "页码", required = false)
+        @QueryParam("pageNumber")
+        pageNumber: Int?,
+        @ApiParam(value = "每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<ImageListResp>
 
     @ApiOperation("获取项目构建镜像列表")
