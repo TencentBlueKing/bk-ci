@@ -378,7 +378,6 @@ class ExperienceBaseService @Autowired constructor(
      * 获取内部用户列表
      */
     fun getInnerReceivers(
-        dslContext: DSLContext,
         experienceId: Long,
         userId: String
     ): MutableSet<String> {
@@ -414,7 +413,6 @@ class ExperienceBaseService @Autowired constructor(
      * 获取外部用户列表
      */
     fun getOuterReceivers(
-        dslContext: DSLContext,
         experienceId: Long,
         groupIds: Set<Long>
     ): MutableSet<String> {
@@ -427,6 +425,19 @@ class ExperienceBaseService @Autowired constructor(
         outerReceivers.addAll(outerGroup)
         outerReceivers.addAll(outerUser)
         return outerReceivers
+    }
+
+    fun getDeptUserReceivers(
+        groupIds: Set<Long>
+    ): MutableSet<String> {
+        val deptUsers = mutableSetOf<String>()
+        val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds)
+        for (dept in depts) {
+            client.get(ServiceProjectOrganizationResource::class)
+                .getDeptStaffsWithLevel(dept.deptId, 10)
+                .data?.forEach { deptUsers.add(it.loginName) }
+        }
+        return deptUsers
     }
 
     /**

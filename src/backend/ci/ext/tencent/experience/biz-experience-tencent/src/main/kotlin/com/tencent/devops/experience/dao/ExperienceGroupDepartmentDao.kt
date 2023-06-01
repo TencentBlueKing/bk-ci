@@ -8,12 +8,14 @@ import java.time.LocalDateTime
 
 @Repository
 class ExperienceGroupDepartmentDao {
+    @SuppressWarnings("LongParameterList")
     fun create(
         dslContext: DSLContext,
         groupId: Long,
         deptId: String,
         deptLevel: Int,
-        deptFullName: String
+        deptName: String,
+        deptFullName: String,
     ) {
         with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
             val now = LocalDateTime.now()
@@ -22,6 +24,7 @@ class ExperienceGroupDepartmentDao {
                 GROUP_ID,
                 DEPT_ID,
                 DEPT_LEVEL,
+                DEPT_NAME,
                 DEPT_FULL_NAME,
                 CREATE_TIME,
                 UPDATE_TIME
@@ -29,6 +32,7 @@ class ExperienceGroupDepartmentDao {
                 groupId,
                 deptId,
                 deptLevel,
+                deptName,
                 deptFullName,
                 now,
                 now

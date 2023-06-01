@@ -509,12 +509,12 @@ class GroupService @Autowired constructor(
             userIds = (originalInnerUsers - commitInnerUsers)
         )
         (commitInnerUsers - originalInnerUsers).forEach {
-            val deptFullName = deptFullNameByUser(it)
+            val gdfn = getGDFNByUser(it)
             experienceGroupInnerDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
                 userId = it,
-                deptFullName = deptFullName
+                deptFullName = gdfn.deptFullName
             )
         }
         // 外部体验人员
@@ -549,13 +549,14 @@ class GroupService @Autowired constructor(
         (commitDepts - originalDepts).forEach {
             val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.toInt())
             if (null != deptInfo.data) {
-                val deptFullName = deptFullNameByDept(it)
+                val gdfn = getGDFNByDept(it)
                 experienceGroupDepartmentDao.create(
                     dslContext = dslContext,
                     groupId = groupId,
                     deptId = it,
                     deptLevel = deptInfo.data!!.level.toInt(),
-                    deptFullName = deptFullName
+                    deptName = gdfn.name,
+                    deptFullName = gdfn.deptFullName
                 )
             }
         }
@@ -594,12 +595,12 @@ class GroupService @Autowired constructor(
         )
         // 内部体验人员
         groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
-            val deptFullName = deptFullNameByUser(it.name)
+            val gdfn = getGDFNByUser(it.name)
             experienceGroupInnerDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
                 userId = it.name,
-                deptFullName = deptFullName
+                deptFullName = gdfn.deptFullName
             )
         }
         // 外部体验人员
@@ -615,13 +616,14 @@ class GroupService @Autowired constructor(
             val deptInfo =
                 client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.name.toInt())
             if (null != deptInfo.data) {
-                val deptFullName = deptFullNameByDept(it.name)
+                val gdfn = getGDFNByDept(it.name)
                 experienceGroupDepartmentDao.create(
                     dslContext = dslContext,
                     groupId = groupId,
                     deptId = it.name,
                     deptLevel = deptInfo.data!!.level.toInt(),
-                    deptFullName = deptFullName
+                    deptName = gdfn.name,
+                    deptFullName = gdfn.deptFullName
                 )
             }
         }
@@ -636,16 +638,16 @@ class GroupService @Autowired constructor(
 
     fun batchDeptFullName(groupBatchName: GroupBatchName): List<GroupDeptFullName> {
         return if (GroupMemberType.INNER.eq(groupBatchName.type)) {
-            groupBatchName.names.map { GroupDeptFullName(it, deptFullNameByUser(it)) }
+            groupBatchName.names.map { getGDFNByUser(it) }
         } else if (GroupMemberType.DEPT.eq(groupBatchName.type)) {
-            groupBatchName.names.map { GroupDeptFullName(it, deptFullNameByDept(it)) }
+            groupBatchName.names.map { getGDFNByDept(it) }
         } else {
             emptyList()
         }
     }
 
-    private fun deptFullNameByUser(userId: String): String {
-        return try {
+    private fun getGDFNByUser(userId: String): GroupDeptFullName {
+        val deptFullName = try {
             client.get(ServiceTxUserResource::class).get(userId).data?.let {
                 if (it.bgId == "0") {
                     it.groupName
@@ -662,16 +664,25 @@ class GroupService @Autowired constructor(
             logger.warn("Can`t get dept full name , userId : $userId", e)
             ""
         }
+        return GroupDeptFullName(userId, deptFullName)
     }
 
-    private fun deptFullNameByDept(deptId: String): String {
-        return try {
-            client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(deptId, 4).data?.let { depts ->
-                depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
-            } ?: ""
+    private fun getGDFNByDept(deptId: String): GroupDeptFullName {
+        try {
+            val data = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(null, deptId.toInt()).data
+            return if (null == data) {
+                logger.warn("Can`t get dept info , depId: $deptId")
+                GroupDeptFullName("", "")
+            } else {
+                val deptFullName = client.get(ServiceProjectOrganizationResource::class)
+                    .getParentDeptInfos(deptId, 4).data?.let { depts ->
+                        depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
+                    } ?: ""
+                GroupDeptFullName(data.name, deptFullName)
+            }
         } catch (e: Throwable) {
             logger.warn("Can`t get dept full name , deptId : $deptId", e)
-            ""
+            return GroupDeptFullName("", "")
         }
     }
 

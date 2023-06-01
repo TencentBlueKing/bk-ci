@@ -41,16 +41,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
+import com.tencent.devops.common.archive.constant.*
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -60,42 +51,19 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.experience.constant.ExperienceConstant
-import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.*
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_PROJECT_TAKEDOWN_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_PERMISSION
-import com.tencent.devops.experience.constant.GroupIdTypeEnum
-import com.tencent.devops.experience.constant.GroupScopeEnum
-import com.tencent.devops.experience.constant.ProductCategoryEnum
-import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceInnerDao
-import com.tencent.devops.experience.dao.ExperienceOuterDao
-import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
-import com.tencent.devops.experience.dao.GroupDao
-import com.tencent.devops.experience.pojo.Experience
-import com.tencent.devops.experience.pojo.ExperienceCreate
-import com.tencent.devops.experience.pojo.ExperienceCreateResp
-import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
-import com.tencent.devops.experience.pojo.ExperiencePermission
-import com.tencent.devops.experience.pojo.ExperienceServiceCreate
-import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
-import com.tencent.devops.experience.pojo.ExperienceUpdate
-import com.tencent.devops.experience.pojo.group.Group
-import com.tencent.devops.experience.pojo.NotifyType
+import com.tencent.devops.experience.dao.*
+import com.tencent.devops.experience.pojo.*
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.Source
-import com.tencent.devops.experience.util.AppNotifyUtil
-import com.tencent.devops.experience.util.DateUtil
-import com.tencent.devops.experience.util.EmailUtil
-import com.tencent.devops.experience.util.RtxUtil
-import com.tencent.devops.experience.util.WechatGroupUtil
-import com.tencent.devops.experience.util.WechatUtil
+import com.tencent.devops.experience.pojo.group.Group
+import com.tencent.devops.experience.util.*
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
@@ -347,19 +315,21 @@ class ExperienceService @Autowired constructor(
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf("bundleIdentifier")
-                    ))
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("bundleIdentifier")
+                )
+            )
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf("appVersion")
-                    ))
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("appVersion")
+                )
+            )
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
@@ -390,7 +360,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                    "artifactoryType:$artifactoryType , path:${experience.path}"
+                        "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -680,10 +650,10 @@ class ExperienceService @Autowired constructor(
             experienceId = experienceId,
             authPermission = AuthPermission.EDIT,
             message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_EDIT_PERMISSION,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(projectId, experienceHashId)
-                )
+                messageCode = BK_USER_NOT_EDIT_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(projectId, experienceHashId)
+            )
         )
         return experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
@@ -731,11 +701,11 @@ class ExperienceService @Autowired constructor(
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = FILE_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(path)
-                    )
+                MessageUtil.getMessageByLocale(
+                    messageCode = FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(path)
+                )
             )
         }
 
@@ -743,19 +713,20 @@ class ExperienceService @Autowired constructor(
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf("buildNo")
-                    ))
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("buildNo")
+                )
+            )
         }
 
         val remark = if (experience.description.isNullOrBlank()) {
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_CONSTRUCTION_NUMBER,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(propertyMap[ARCHIVE_PROPS_BUILD_NO]!!)
-                )
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_CONSTRUCTION_NUMBER,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(propertyMap[ARCHIVE_PROPS_BUILD_NO]!!)
+            )
         } else experience.description
 
         val experienceCreate = ExperienceCreate(
@@ -827,13 +798,11 @@ class ExperienceService @Autowired constructor(
 
             // 内部用户
             val innerReceivers = experienceBaseService.getInnerReceivers(
-                dslContext = dslContext,
                 experienceId = experienceId,
                 userId = experienceRecord.creator
             )
             // 外部用户
             val outerReceivers = experienceBaseService.getOuterReceivers(
-                dslContext = dslContext,
                 experienceId = experienceId,
                 groupIds = groupIds
             )
@@ -846,9 +815,14 @@ class ExperienceService @Autowired constructor(
             ).map { it.value2() }.toSet().subtract(innerReceivers)
                 .subtract(outerReceivers)
 
+            // 内部架构
+            val deptUsers =
+                experienceBaseService.getDeptUserReceivers(groupIds).subtract(innerReceivers).subtract(outerReceivers)
+                    .subtract(subscribeUsers)
+
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers:" +
-                    " $outerReceivers , subscribeUsers: $subscribeUsers "
+                        " $outerReceivers , subscribeUsers: $subscribeUsers "
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
                 logger.info("empty Receivers , experienceId:$experienceId")
@@ -870,6 +844,7 @@ class ExperienceService @Autowired constructor(
                 appUrl = appUrl
             )
             sendMessageToSubscriber(subscribeUsers, experienceRecord)
+            sendMessageToDeptUsers(deptUsers, experienceRecord)
         }
     }
 
@@ -900,6 +875,22 @@ class ExperienceService @Autowired constructor(
         experienceRecord: TExperienceRecord
     ) {
         subscribeUsers.forEach {
+            val appMessage = AppNotifyUtil.makeMessage(
+                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                experienceName = experienceRecord.experienceName,
+                appVersion = experienceRecord.version,
+                receiver = it,
+                platform = experienceRecord.platform
+            )
+            experiencePushService.pushMessage(appMessage)
+        }
+    }
+
+    private fun sendMessageToDeptUsers(
+        deptUsers: Set<String>,
+        experienceRecord: TExperienceRecord
+    ) {
+        deptUsers.forEach {
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
                 experienceName = experienceRecord.experienceName,
@@ -995,14 +986,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
