@@ -159,6 +159,8 @@ class ImageArtifactoryService @Autowired constructor(
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): ImageListResp {
         // 查询项目镜像列表
+        logger.info("SecurityUtil ${SecurityUtil.decrypt(dockerConfig.registryPassword!!)}")
+        logger.info("username: ${dockerConfig.registryUsername!!} passWord: ${dockerConfig.registryPassword!!}")
         val projectImages = getImagesByUrl(projectCode, repoName, searchKey, number, size)
         val imageList = mutableListOf<ImageItem>()
         val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
