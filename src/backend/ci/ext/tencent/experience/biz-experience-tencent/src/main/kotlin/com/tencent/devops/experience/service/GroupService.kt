@@ -596,7 +596,7 @@ class GroupService @Autowired constructor(
     private fun deptFullNameByUser(userId: String): String {
         return try {
             client.get(ServiceTxUserResource::class).get(userId).data?.let {
-                if (it.bgName.isBlank()) {
+                if (it.bgId == "0") {
                     it.groupName
                 } else {
                     StringUtils.joinWith(
