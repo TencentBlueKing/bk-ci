@@ -448,15 +448,15 @@ class GroupService @Autowired constructor(
     private fun updateDeptFullName(inners: Result<TExperienceGroupInnerRecord>) {
         for (inner in inners) {
             if (inner.deptFullName.isNullOrBlank()) {
-                val userDept = try {
-                    client.get(ServiceTxUserResource::class).get(inner.userId)
+                try {
+                    client.get(ServiceTxUserResource::class).get(inner.userId).data?.let {
+                        val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
+                        inner.deptFullName = deptFullName
+                        experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
+                    }
                 } catch (e: Throwable) {
                     logger.warn("get user info failed , userId: ${inner.userId}")
-                }
-                userDept.data?.let {
-                    val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
-                    inner.deptFullName = deptFullName
-                    experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
+                    inner.deptFullName = ""
                 }
             }
         }
