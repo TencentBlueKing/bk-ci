@@ -467,10 +467,10 @@ class ImageArtifactoryService @Autowired constructor(
         val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
-            dockerTag.created = DateTimeUtil.toDateTime(it["createdDate"] as LocalDateTime?)
+            dockerTag.created = DateTimeUtil.toDateTime(LocalDateTime.parse(it["createdDate"] as String))
                     //DateTime(it["createdDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.createdBy = it["createdBy"] as String?
-            dockerTag.modified = DateTimeUtil.toDateTime(it["lastModifiedDate"] as LocalDateTime?)
+            dockerTag.modified = DateTimeUtil.toDateTime(LocalDateTime.parse(it["lastModifiedDate"] as String))
                 //DateTime(it["lastModifiedDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.modifiedBy = it["lastModifiedBy"] as String?
             dockerTag.desc = it["description"] as String?
