@@ -128,6 +128,7 @@ object TemplateYamlUtil {
                             throw error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
                                     fromPath,
+                                    path,
                                     valueName,
                                     newValue.toString(),
                                     param.values.joinToString(",")
