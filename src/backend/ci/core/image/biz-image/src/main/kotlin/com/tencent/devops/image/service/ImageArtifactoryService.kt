@@ -159,8 +159,6 @@ class ImageArtifactoryService @Autowired constructor(
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): ImageListResp {
         // 查询项目镜像列表
-        logger.info("SecurityUtil ${SecurityUtil.decrypt(dockerConfig.registryPassword!!)}")
-        logger.info("username: ${dockerConfig.registryUsername!!} passWord: ${dockerConfig.registryPassword!!}")
         val projectImages = getImagesByUrl(projectCode, repoName, searchKey, number, size)
         val imageList = mutableListOf<ImageItem>()
         val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
@@ -415,7 +413,6 @@ class ImageArtifactoryService @Autowired constructor(
                     throw RuntimeException("images repository search failed")
                 }
                 val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
                 return processingImages(responseBody)
             } catch (e: Exception) {
                 logger.error("images repository search failed", e)
@@ -459,11 +456,8 @@ class ImageArtifactoryService @Autowired constructor(
 
     fun processingImages(dataStr: String?): List<DockerTag> {
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
-        logger.info("responseData: $responseData")
         val results: Map<String, Any> = responseData["data"] as Map<String, Any>
-        logger.info("results: $results")
         val records = results["records"] as List<Map<String, Any>>
-        logger.info("records: $records")
         val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
