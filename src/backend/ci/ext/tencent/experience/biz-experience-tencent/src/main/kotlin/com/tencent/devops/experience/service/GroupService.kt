@@ -596,12 +596,16 @@ class GroupService @Autowired constructor(
     private fun deptFullNameByUser(userId: String): String {
         return try {
             client.get(ServiceTxUserResource::class).get(userId).data?.let {
-                StringUtils.joinWith(
-                    "/",
-                    it.bgName,
-                    it.deptName,
-                    it.centerName
-                )
+                if (it.bgName == "") {
+                    it.groupName
+                } else {
+                    StringUtils.joinWith(
+                        "/",
+                        it.bgName,
+                        it.deptName,
+                        it.centerName
+                    )
+                }
             } ?: ""
         } catch (e: Throwable) {
             ""
