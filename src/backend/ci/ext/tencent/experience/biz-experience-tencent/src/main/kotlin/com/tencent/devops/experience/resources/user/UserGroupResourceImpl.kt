@@ -70,7 +70,7 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
 
     override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(groupService.commit(userId,projectId,groupCommit))
+        return Result(groupService.commit(userId, projectId, groupCommit))
     }
 
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {
@@ -110,12 +110,8 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(groupService.getUsersV2(userId = userId, projectId = projectId, groupHashId = groupHashId))
     }
 
-    override fun deptFullNameByUser(userId: String): Result<String> {
-        return Result(groupService.deptFullNameByUser(userId))
-    }
-
-    override fun deptFullNameByDept(deptId: String): Result<String> {
-        return Result(groupService.deptFullNameByDept(deptId))
+    override fun batchDeptFullName(groupBatchName: GroupBatchName): Result<List<GroupDeptFullName>> {
+        return Result(groupService.batchDeptFullName(groupBatchName))
     }
 
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {

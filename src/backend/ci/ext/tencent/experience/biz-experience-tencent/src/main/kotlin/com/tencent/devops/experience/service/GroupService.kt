@@ -458,23 +458,6 @@ class GroupService @Autowired constructor(
         }
     }
 
-    fun deptFullNameByUser(userId: String): String {
-        return client.get(ServiceTxUserResource::class).get(userId).data?.let {
-            StringUtils.joinWith(
-                "/",
-                it.bgName,
-                it.deptName,
-                it.centerName
-            )
-        } ?: ""
-    }
-
-    fun deptFullNameByDept(deptId: String): String {
-        return client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(deptId, 4).data?.let { depts ->
-            depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
-        } ?: ""
-    }
-
     fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Boolean {
         // TODO 鉴权
 
@@ -492,11 +475,11 @@ class GroupService @Autowired constructor(
             )
             // 内部体验人员
             groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
-                val deptFullName = deptFullNameByUser(it.id)
+                val deptFullName = deptFullNameByUser(it.name)
                 experienceGroupInnerDao.create(
                     dslContext = dslContext,
                     groupId = groupId,
-                    userId = it.id,
+                    userId = it.name,
                     deptFullName = deptFullName
                 )
             }
@@ -505,18 +488,19 @@ class GroupService @Autowired constructor(
                 experienceGroupOuterDao.create(
                     dslContext = dslContext,
                     groupId = groupId,
-                    outer = it.id
+                    outer = it.name
                 )
             }
             // 内部组织
             groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }.forEach {
-                val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.id.toInt())
+                val deptInfo =
+                    client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.name.toInt())
                 if (null != deptInfo.data) {
-                    val deptFullName = deptFullNameByDept(it.id)
+                    val deptFullName = deptFullNameByDept(it.name)
                     experienceGroupDepartmentDao.create(
                         dslContext = dslContext,
                         groupId = groupId,
-                        deptId = it.id,
+                        deptId = it.name,
                         deptLevel = deptInfo.data!!.level.toInt(),
                         deptFullName = deptFullName
                     )
@@ -538,7 +522,7 @@ class GroupService @Autowired constructor(
                 .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
                 .map { it.userId }.toSet()
             val commitInnerUsers = groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }
-                .map { it.id }.toSet()
+                .map { it.name }.toSet()
             experienceGroupInnerDao.deleteByUserIds(
                 dslContext = dslContext,
                 groupId = groupId,
@@ -558,7 +542,7 @@ class GroupService @Autowired constructor(
                 .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
                 .map { it.outer }.toSet()
             val commitOuterUsers = groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }
-                .map { it.id }.toSet()
+                .map { it.name }.toSet()
             experienceGroupOuterDao.deleteByUserIds(
                 dslContext = dslContext,
                 groupId = groupId,
@@ -576,7 +560,7 @@ class GroupService @Autowired constructor(
                 .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
                 .map { it.deptId }.toSet()
             val commitDepts = groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }
-                .map { it.id }.toSet()
+                .map { it.name }.toSet()
             experienceGroupDepartmentDao.deleteByDeptIds(
                 dslContext = dslContext,
                 groupId = groupId,
@@ -597,6 +581,41 @@ class GroupService @Autowired constructor(
             }
         }
         return true
+    }
+
+    fun batchDeptFullName(groupBatchName: GroupBatchName): List<GroupDeptFullName> {
+        return if (GroupMemberType.INNER.eq(groupBatchName.type)) {
+            groupBatchName.names.map { GroupDeptFullName(it, deptFullNameByUser(it)) }
+        } else if (GroupMemberType.DEPT.eq(groupBatchName.type)) {
+            groupBatchName.names.map { GroupDeptFullName(it, deptFullNameByDept(it)) }
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun deptFullNameByUser(userId: String): String {
+        return try {
+            client.get(ServiceTxUserResource::class).get(userId).data?.let {
+                StringUtils.joinWith(
+                    "/",
+                    it.bgName,
+                    it.deptName,
+                    it.centerName
+                )
+            } ?: ""
+        } catch (e: Throwable) {
+            ""
+        }
+    }
+
+    private fun deptFullNameByDept(deptId: String): String {
+        return try {
+            client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(deptId, 4).data?.let { depts ->
+                depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
+            } ?: ""
+        } catch (e: Throwable) {
+            ""
+        }
     }
 
     companion object {
