@@ -550,8 +550,7 @@ class TOFService @Autowired constructor(
                     dept_id = deptId,
                     level = level,
                     app_code = tofAppCode!!,
-                    app_secret = tofAppSecret!!,
-                    bk_username = "stubenhuang"
+                    app_secret = tofAppSecret!!
                 ), I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
                 )

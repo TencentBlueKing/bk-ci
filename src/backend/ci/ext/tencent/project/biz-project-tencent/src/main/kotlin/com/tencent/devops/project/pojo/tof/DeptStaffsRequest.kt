@@ -4,6 +4,5 @@ data class DeptStaffsRequest(
     val dept_id: String,
     val level: Int,
     val app_code: String,
-    val app_secret: String,
-    val bk_username:String
+    val app_secret: String
 )
