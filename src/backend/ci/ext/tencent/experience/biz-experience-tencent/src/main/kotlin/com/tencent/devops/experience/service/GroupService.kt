@@ -464,145 +464,174 @@ class GroupService @Autowired constructor(
     @SuppressWarnings("LongMethod")
     fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Boolean {
         if (groupCommit.groupHashId == null) { // 新建用户组
-            if (!experiencePermissionService.validateCreateGroupPermission(
-                    user = userId,
-                    projectId = projectId
-                )
-            ) {
-                throw ErrorCodeException(
-                    errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
-                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
-                )
-            }
-            val groupId = groupDao.create(
-                dslContext = dslContext,
-                projectId = projectId,
-                name = groupCommit.name,
-                innerUsers = "",
-                innerUsersCount = 0,
-                remark = groupCommit.remark,
-                creator = userId,
-                updator = userId
-            )
-            // 内部体验人员
-            groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
-                val deptFullName = deptFullNameByUser(it.name)
-                experienceGroupInnerDao.create(
-                    dslContext = dslContext,
-                    groupId = groupId,
-                    userId = it.name,
-                    deptFullName = deptFullName
-                )
-            }
-            // 外部体验人员
-            groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }.forEach {
-                experienceGroupOuterDao.create(
-                    dslContext = dslContext,
-                    groupId = groupId,
-                    outer = it.name
-                )
-            }
-            // 内部组织
-            groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }.forEach {
-                val deptInfo =
-                    client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.name.toInt())
-                if (null != deptInfo.data) {
-                    val deptFullName = deptFullNameByDept(it.name)
-                    experienceGroupDepartmentDao.create(
-                        dslContext = dslContext,
-                        groupId = groupId,
-                        deptId = it.name,
-                        deptLevel = deptInfo.data!!.level.toInt(),
-                        deptFullName = deptFullName
-                    )
-                }
-            }
+            createForCommit(groupCommit, userId, projectId)
         } else { // 更新用户组
-            val groupId = HashUtil.decodeIdToLong(groupCommit.groupHashId!!)
-            experiencePermissionService.validateGroupPermission(
-                userId = userId,
-                projectId = projectId,
-                groupId = groupId,
-                authPermission = AuthPermission.EDIT,
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(projectId, groupCommit.groupHashId!!)
-                )
-            )
-            groupDao.update(
-                dslContext = dslContext,
-                id = groupId,
-                name = groupCommit.name,
-                innerUsers = "",
-                innerUsersCount = 0,
-                remark = groupCommit.remark,
-                updator = userId
-            )
-            // 内部体验人员
-            val originalInnerUsers = experienceGroupInnerDao
-                .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
-                .map { it.userId }.toSet()
-            val commitInnerUsers = groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }
-                .map { it.name }.toSet()
-            experienceGroupInnerDao.deleteByUserIds(
-                dslContext = dslContext,
-                groupId = groupId,
-                userIds = (originalInnerUsers - commitInnerUsers)
-            )
-            (commitInnerUsers - originalInnerUsers).forEach {
-                val deptFullName = deptFullNameByUser(it)
-                experienceGroupInnerDao.create(
-                    dslContext = dslContext,
-                    groupId = groupId,
-                    userId = it,
-                    deptFullName = deptFullName
-                )
-            }
-            // 外部体验人员
-            val originalOuterUsers = experienceGroupOuterDao
-                .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
-                .map { it.outer }.toSet()
-            val commitOuterUsers = groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }
-                .map { it.name }.toSet()
-            experienceGroupOuterDao.deleteByUserIds(
-                dslContext = dslContext,
-                groupId = groupId,
-                userIds = (originalOuterUsers - commitOuterUsers)
-            )
-            (commitOuterUsers - originalOuterUsers).forEach {
-                experienceGroupOuterDao.create(
-                    dslContext = dslContext,
-                    groupId = groupId,
-                    outer = it
-                )
-            }
-            // 内部组织
-            val originalDepts = experienceGroupDepartmentDao
-                .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
-                .map { it.deptId }.toSet()
-            val commitDepts = groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }
-                .map { it.name }.toSet()
-            experienceGroupDepartmentDao.deleteByDeptIds(
-                dslContext = dslContext,
-                groupId = groupId,
-                deptIds = (originalDepts - commitDepts)
-            )
-            (commitDepts - originalDepts).forEach {
-                val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.toInt())
-                if (null != deptInfo.data) {
-                    val deptFullName = deptFullNameByDept(it)
-                    experienceGroupDepartmentDao.create(
-                        dslContext = dslContext,
-                        groupId = groupId,
-                        deptId = it,
-                        deptLevel = deptInfo.data!!.level.toInt(),
-                        deptFullName = deptFullName
-                    )
-                }
-            }
+            updateForCommit(groupCommit, userId, projectId)
         }
         return true
+    }
+
+    private fun updateForCommit(
+        groupCommit: GroupCommit,
+        userId: String,
+        projectId: String
+    ) {
+        val groupId = HashUtil.decodeIdToLong(groupCommit.groupHashId!!)
+        experiencePermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(projectId, groupCommit.groupHashId!!)
+            )
+        )
+        groupDao.update(
+            dslContext = dslContext,
+            id = groupId,
+            name = groupCommit.name,
+            innerUsers = "",
+            innerUsersCount = 0,
+            remark = groupCommit.remark,
+            updator = userId
+        )
+        // 内部体验人员
+        val originalInnerUsers = experienceGroupInnerDao
+            .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
+            .map { it.userId }.toSet()
+        val commitInnerUsers = groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }
+            .map { it.name }.toSet()
+        experienceGroupInnerDao.deleteByUserIds(
+            dslContext = dslContext,
+            groupId = groupId,
+            userIds = (originalInnerUsers - commitInnerUsers)
+        )
+        (commitInnerUsers - originalInnerUsers).forEach {
+            val deptFullName = deptFullNameByUser(it)
+            experienceGroupInnerDao.create(
+                dslContext = dslContext,
+                groupId = groupId,
+                userId = it,
+                deptFullName = deptFullName
+            )
+        }
+        // 外部体验人员
+        val originalOuterUsers = experienceGroupOuterDao
+            .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
+            .map { it.outer }.toSet()
+        val commitOuterUsers = groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }
+            .map { it.name }.toSet()
+        experienceGroupOuterDao.deleteByUserIds(
+            dslContext = dslContext,
+            groupId = groupId,
+            userIds = (originalOuterUsers - commitOuterUsers)
+        )
+        (commitOuterUsers - originalOuterUsers).forEach {
+            experienceGroupOuterDao.create(
+                dslContext = dslContext,
+                groupId = groupId,
+                outer = it
+            )
+        }
+        // 内部组织
+        val originalDepts = experienceGroupDepartmentDao
+            .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
+            .map { it.deptId }.toSet()
+        val commitDepts = groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }
+            .map { it.name }.toSet()
+        experienceGroupDepartmentDao.deleteByDeptIds(
+            dslContext = dslContext,
+            groupId = groupId,
+            deptIds = (originalDepts - commitDepts)
+        )
+        (commitDepts - originalDepts).forEach {
+            val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.toInt())
+            if (null != deptInfo.data) {
+                val deptFullName = deptFullNameByDept(it)
+                experienceGroupDepartmentDao.create(
+                    dslContext = dslContext,
+                    groupId = groupId,
+                    deptId = it,
+                    deptLevel = deptInfo.data!!.level.toInt(),
+                    deptFullName = deptFullName
+                )
+            }
+        }
+        // 更新权限
+        experiencePermissionService.modifyGroupResource(
+            projectId = projectId,
+            groupId = groupId,
+            groupName = groupCommit.name
+        )
+    }
+
+    private fun createForCommit(
+        groupCommit: GroupCommit,
+        userId: String,
+        projectId: String
+    ) {
+        if (!experiencePermissionService.validateCreateGroupPermission(
+                user = userId,
+                projectId = projectId
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
+                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        }
+        val groupId = groupDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            name = groupCommit.name,
+            innerUsers = "",
+            innerUsersCount = 0,
+            remark = groupCommit.remark,
+            creator = userId,
+            updator = userId
+        )
+        // 内部体验人员
+        groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
+            val deptFullName = deptFullNameByUser(it.name)
+            experienceGroupInnerDao.create(
+                dslContext = dslContext,
+                groupId = groupId,
+                userId = it.name,
+                deptFullName = deptFullName
+            )
+        }
+        // 外部体验人员
+        groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }.forEach {
+            experienceGroupOuterDao.create(
+                dslContext = dslContext,
+                groupId = groupId,
+                outer = it.name
+            )
+        }
+        // 内部组织
+        groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }.forEach {
+            val deptInfo =
+                client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.name.toInt())
+            if (null != deptInfo.data) {
+                val deptFullName = deptFullNameByDept(it.name)
+                experienceGroupDepartmentDao.create(
+                    dslContext = dslContext,
+                    groupId = groupId,
+                    deptId = it.name,
+                    deptLevel = deptInfo.data!!.level.toInt(),
+                    deptFullName = deptFullName
+                )
+            }
+        }
+        // 创建权限
+        experiencePermissionService.createGroupResource(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            groupName = groupCommit.name
+        )
     }
 
     fun batchDeptFullName(groupBatchName: GroupBatchName): List<GroupDeptFullName> {
