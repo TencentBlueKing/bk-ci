@@ -427,7 +427,7 @@ class GroupService @Autowired constructor(
         members = if (sortBy == GroupMemberSort.DEPT_FULL_NAME) {
             members.sortedBy { Collator.getInstance(Locale.CHINA).getCollationKey(it.deptFullName) }
         } else {
-            members.sortedBy { Collator.getInstance(Locale.CHINA).getCollationKey(it.name) }
+            members.sortedBy { Collator.getInstance(Locale.ENGLISH).getCollationKey(it.name) }
         }
 
         return GroupV2(groupHashId, groupRecord.name, groupRecord.remark, members)
