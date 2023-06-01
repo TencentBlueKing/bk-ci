@@ -58,9 +58,9 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList")
@@ -458,11 +458,19 @@ class GroupService @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("LongMethod")
     fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Boolean {
-        // TODO 鉴权
-
-        val now = LocalDateTime.now()
         if (groupCommit.groupHashId == null) { // 新建用户组
+            if (!experiencePermissionService.validateCreateGroupPermission(
+                    user = userId,
+                    projectId = projectId
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
+                )
+            }
             val groupId = groupDao.create(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -508,6 +516,17 @@ class GroupService @Autowired constructor(
             }
         } else { // 更新用户组
             val groupId = HashUtil.decodeIdToLong(groupCommit.groupHashId!!)
+            experiencePermissionService.validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                groupId = groupId,
+                authPermission = AuthPermission.EDIT,
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(projectId, groupCommit.groupHashId!!)
+                )
+            )
             groupDao.update(
                 dslContext = dslContext,
                 id = groupId,
@@ -608,6 +627,7 @@ class GroupService @Autowired constructor(
                 }
             } ?: ""
         } catch (e: Throwable) {
+            logger.warn("Can`t get dept full name , userId : $userId", e)
             ""
         }
     }
@@ -618,6 +638,7 @@ class GroupService @Autowired constructor(
                 depts.filterNot { it.level == "0" }.sortedBy { it.level }.joinToString("/") { it.name }
             } ?: ""
         } catch (e: Throwable) {
+            logger.warn("Can`t get dept full name , deptId : $deptId", e)
             ""
         }
     }
@@ -625,5 +646,6 @@ class GroupService @Autowired constructor(
     companion object {
         const val NEW_ADD_OUTER_USERS = "new_add_outer_users"
         const val NEW_ADD_INNER_USERS = "new_add_inner_users"
+        private val logger = LoggerFactory.getLogger(GroupService::class.java)
     }
 }
