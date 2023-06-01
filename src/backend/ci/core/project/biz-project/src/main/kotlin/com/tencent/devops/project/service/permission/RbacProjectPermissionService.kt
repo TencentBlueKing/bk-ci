@@ -41,11 +41,11 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
 @Suppress("LongParameterList")
@@ -63,10 +63,6 @@ class RbacProjectPermissionService(
     // 项目是否需要开启审批
     @Value("\${auth.project.approval:#{false}}")
     private val authProjectApproval: Boolean = false
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(RbacProjectPermissionService::class.java)
-    }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return authProjectApi.checkProjectUser(
@@ -98,11 +94,17 @@ class RbacProjectPermissionService(
     ): String {
         var authProjectId = ""
         with(authProjectCreateInfo) {
+            val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+                ProjectTipsStatus.SHOW_CREATE_PENDING.status
+            } else {
+                ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
+            }
             projectApprovalService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 approvalStatus = approvalStatus,
-                subjectScopes = subjectScopes
+                subjectScopes = subjectScopes,
+                tipsStatus = tipsStatus
             )
             if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
                 // 创建兼容的权限中心项目

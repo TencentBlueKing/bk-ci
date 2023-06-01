@@ -530,8 +530,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
     }
 
-    override fun getPipelineInfobyAutoId(id: Long): Result<SimplePipeline> {
-        return Result(pipelineListFacadeService.getByAutoIds(listOf(id))[0])
+    override fun getPipelineInfobyAutoId(projectId: String, id: Long): Result<SimplePipeline?> {
+        return Result(
+            pipelineListFacadeService.getByAutoIds(
+                ids = listOf(id),
+                projectId = projectId
+            ).firstOrNull()
+        )
     }
 
     private fun checkParams(userId: String, projectId: String) {
