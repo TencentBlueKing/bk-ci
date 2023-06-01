@@ -105,9 +105,21 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(true)
     }
 
-    override fun getV2(userId: String, projectId: String, groupHashId: String): Result<GroupV2> {
+    override fun getV2(
+        userId: String,
+        projectId: String,
+        groupHashId: String,
+        sortBy: GroupMemberSort?
+    ): Result<GroupV2> {
         checkParam(userId, projectId, groupHashId)
-        return Result(groupService.getUsersV2(userId = userId, projectId = projectId, groupHashId = groupHashId))
+        return Result(
+            groupService.getUsersV2(
+                userId = userId,
+                projectId = projectId,
+                groupHashId = groupHashId,
+                sortBy = sortBy
+            )
+        )
     }
 
     override fun batchDeptFullName(groupBatchName: GroupBatchName): Result<List<GroupDeptFullName>> {
