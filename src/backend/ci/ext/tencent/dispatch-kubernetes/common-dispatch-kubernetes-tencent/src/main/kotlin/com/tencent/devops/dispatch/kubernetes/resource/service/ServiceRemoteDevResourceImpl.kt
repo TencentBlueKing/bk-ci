@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -39,11 +40,19 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ServiceRemoteDevResource {
 
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): Result<String?> {
-        return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName))
+    override fun getWorkspaceUrl(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType
+    ): Result<String?> {
+        return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName, mountType))
     }
 
-    override fun getWorkspaceInfo(userId: String, workspaceName: String): Result<WorkspaceInfo> {
-        return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName))
+    override fun getWorkspaceInfo(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType
+    ): Result<WorkspaceInfo> {
+        return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName, mountType))
     }
 }

@@ -60,6 +60,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -1499,7 +1500,7 @@ class PipelineRuntimeService @Autowired constructor(
                     containerType = buildTask.containerType,
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
                     errorCode = completeTask.errorCode ?: 0,
-                    errorTypeName = completeTask.errorType?.typeName,
+                    errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     reason = completeTask.errorMsg
                 )
             )
@@ -1570,7 +1571,8 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorInfoList: List<ErrorInfo>?
+        errorInfoList: List<ErrorInfo>?,
+        timeCost: BuildRecordTimeCost?
     ) {
         if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
             // 减1,当作没执行过
@@ -1589,7 +1591,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         with(latestRunningBuild) {
             val executeTime = try {
-                getExecuteTime(latestRunningBuild.projectId, buildId)
+                timeCost?.executeCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L

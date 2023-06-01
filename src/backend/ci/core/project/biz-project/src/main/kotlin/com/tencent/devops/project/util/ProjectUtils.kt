@@ -108,7 +108,8 @@ object ProjectUtils {
             },
             authSecrecy = tProjectRecord.authSecrecy,
             managePermission = managePermission,
-            showUserManageIcon = showUserManageIcon
+            showUserManageIcon = showUserManageIcon,
+            channelCode = tProjectRecord.channel
         )
     }
 

@@ -28,7 +28,6 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -42,6 +41,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION_GROUP
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_DELETE_EXP_GROUP_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_GROUP_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
@@ -58,10 +59,10 @@ import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GroupService @Autowired constructor(
@@ -162,11 +163,7 @@ class GroupService @Autowired constructor(
         val groupAndUsersList = bsAuthProjectApi.getProjectGroupAndUserList(experienceServiceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName,
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                groupName = it.displayName,
                 groupId = it.roleName,
                 groupRoleId = it.roleId,
                 users = it.userIdList.toSet()
@@ -237,7 +234,10 @@ class GroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.VIEW,
-            message = "用户在项目($projectId)没有体验组($groupHashId)的查看权限"
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NEED_VIEW_EXP_GROUP_PERMISSION,
+                params = arrayOf(projectId, groupHashId)
+            )
         )
         val groupRecord = groupDao.get(dslContext, groupId)
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
@@ -394,7 +394,10 @@ class GroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.DELETE,
-            message = "用户在项目($projectId)没有体验组($groupHashId)的删除权限"
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NEED_DELETE_EXP_GROUP_PERMISSION,
+                params = arrayOf(projectId, groupHashId)
+            )
         )
 
         experiencePermissionService.deleteGroupResource(projectId, groupId)

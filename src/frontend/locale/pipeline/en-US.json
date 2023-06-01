@@ -825,9 +825,8 @@
     "stepIdDesc": "Only begin with letters or underscores, and only contain letters, numbers, and underscores",
     "atomOutput": " Output of plugins ",
     "outputNamespace": " Output name space",
-    "outputItemList": " Output item list",
+    "outputItemList": " Output item list: ",
     "noAppIdTips": " The plugin you are using requires the service provided by Blue Whale. Please contact DevOps (customer service from Blue Shield) to enable it.",
-    "namespaceTips": "Used to solve the problem that when the same plugin exists in several instances under a pipeline, there is a clash of using the output fields. \n when there is no clash, then no need to add name space. \n after editing the name space, such edition should also be synchronized to other fields that use this name space",
     "enableMailNotice": "Enable email notification",
     "archived": " Custom reports are archived",
     "baseRule": " Basic rules",
@@ -1123,7 +1122,9 @@
   "pipelineLockTips": "Execute is disabled; You can go to Basic Settings to restore it",
   "pipelineManualDisable": "This pipeline is not configured for manual trigger",
   "duration": "Duration",
-  "namespaceTips": "Deprecated. Please use Step ID to set the namespace of plugin fields and access them through context.",
+  "namespaceTips": "Deprecated. Please use Step ID to set the namespace of plugin fields and access them through",
+  "context": "context",
+  "access": "access",
   "outputNameSpaceDescTips": "It is used to solve the problem of output field conflicts when there are multiple instances of the same plugin under the pipeline. \nNo need to add namespace when there is no conflict. \nWhen the namespace is modified, the subsequent use of the corresponding field also needs to be modified synchronously",
   "noReleatedPipeline": "No Related Pipeline"
 }
