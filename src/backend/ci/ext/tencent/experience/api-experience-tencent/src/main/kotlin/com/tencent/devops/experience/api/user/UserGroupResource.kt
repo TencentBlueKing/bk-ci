@@ -140,9 +140,6 @@ interface UserGroupResource {
         @ApiParam("体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String,
-        @ApiParam("排序规则", required = true)
-        @QueryParam("sortBy")
-        sortBy: GroupMemberSort? = null
     ): Result<GroupV2>
 
     @ApiOperation("根据名字查询组织全称")

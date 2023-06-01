@@ -108,16 +108,14 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
     override fun getV2(
         userId: String,
         projectId: String,
-        groupHashId: String,
-        sortBy: GroupMemberSort?
+        groupHashId: String
     ): Result<GroupV2> {
         checkParam(userId, projectId, groupHashId)
         return Result(
             groupService.getUsersV2(
                 userId = userId,
                 projectId = projectId,
-                groupHashId = groupHashId,
-                sortBy = sortBy
+                groupHashId = groupHashId
             )
         )
     }

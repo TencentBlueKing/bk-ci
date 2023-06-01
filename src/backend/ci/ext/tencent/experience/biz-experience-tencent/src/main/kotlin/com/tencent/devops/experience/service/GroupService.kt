@@ -61,7 +61,6 @@ import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.Collator
 import java.util.*
 import javax.ws.rs.core.Response
 
@@ -403,7 +402,7 @@ class GroupService @Autowired constructor(
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
     }
 
-    fun getUsersV2(userId: String, projectId: String, groupHashId: String, sortBy: GroupMemberSort? = null): GroupV2 {
+    fun getUsersV2(userId: String, projectId: String, groupHashId: String): GroupV2 {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
             userId = userId,
@@ -421,14 +420,7 @@ class GroupService @Autowired constructor(
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId))
         val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, setOf(groupId))
 
-        var members = toGroupV2Members(inners, outers, depts)
-
-        // 排序
-        members = if (sortBy == GroupMemberSort.DEPT_FULL_NAME) {
-            members.sortedBy { Collator.getInstance(Locale.CHINA).getCollationKey(it.deptFullName) }
-        } else {
-            members.sortedBy { Collator.getInstance(Locale.ENGLISH).getCollationKey(it.name) }
-        }
+        val members = toGroupV2Members(inners, outers, depts)
 
         return GroupV2(groupHashId, groupRecord.name, groupRecord.remark, members)
     }
