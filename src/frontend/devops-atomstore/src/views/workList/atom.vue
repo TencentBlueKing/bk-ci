@@ -235,6 +235,7 @@
                                 > {{ $t('store.项目不能为空') }} </div>
                             </div>
                             <bk-popover
+                                class="info-circle-icon"
                                 placement="right"
                                 width="400"
                             >
