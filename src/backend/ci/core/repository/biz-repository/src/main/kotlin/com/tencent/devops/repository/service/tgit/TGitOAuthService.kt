@@ -87,7 +87,7 @@ class TGitOAuthService @Autowired constructor(
                         name = it.name.toString(),
                         nameWithNameSpace = it.nameWithNamespace.toString(),
                         sshUrl = it.sshUrlToRepo.toString(),
-                        httpUrl = it.httpUrlToRepo.toString(),
+                        httpUrl = it.httpsUrlToRepo.toString(),
                         lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
                             LocalDateTime.parse(it.lastActivityAt.toString().removeSuffix("+0000"))
                         ) * 1000L
@@ -117,7 +117,7 @@ class TGitOAuthService @Autowired constructor(
                 name = it.name.toString(),
                 nameWithNameSpace = it.nameWithNamespace.toString(),
                 sshUrl = it.sshUrlToRepo.toString(),
-                httpUrl = it.httpUrlToRepo.toString(),
+                httpUrl = it.httpsUrlToRepo.toString(),
                 lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
                     LocalDateTime.parse(it.lastActivityAt.toString().removeSuffix("+0000"))
                 ) * 1000L
