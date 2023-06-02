@@ -1,9 +1,9 @@
 import Vue from 'vue'
 import {
-    UPDATE_SELECTED_FILE,
+    SET_CURRELEASE_DETAIL,
     UPDATE_IS_EXPIRED,
-    UPDATE_USER_GROUP,
-    SET_CURRELEASE_DETAIL
+    UPDATE_SELECTED_FILE,
+    UPDATE_USER_GROUP
 } from './constants'
 
 const prefix = 'experience/api'
@@ -55,12 +55,6 @@ const actions = {
         return vue.$ajax.get(`${artifactoryPre}/user/artifactories/${projectId}/${artifactoryType}/properties`, { params: { path } })
     },
     /**
-     * 新增用户组
-     */
-    createUserGroups ({ commit }, { projectId, params }) {
-        return vue.$ajax.post(`${prefix}/user/groups/${projectId}`, params)
-    },
-    /**
      * 删除用户组
      */
     toDeleteGroups ({ commit }, { projectId, groupHashId }) {
@@ -70,13 +64,19 @@ const actions = {
      * 获取用户组详情
      */
     toGetGroupDetail ({ commit }, { projectId, groupHashId }) {
-        return vue.$ajax.get(`${prefix}/user/groups/${projectId}/${groupHashId}`)
+        return vue.$ajax.get(`${prefix}/user/groups/project/${projectId}/group/${groupHashId}`)
+    },
+    /**
+     * 获取用户所属组织
+     */
+    requestUserOrg ({ commit }, body) {
+        return vue.$ajax.post(`${prefix}/user/groups/batchDeptFullName`, body)
     },
     /**
      * 修改用户组
      */
-    editUserGroups ({ commit }, { projectId, groupHashId, params }) {
-        return vue.$ajax.put(`${prefix}/user/groups/${projectId}/${groupHashId}`, params)
+    editUserGroups ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/groups//projects/${projectId}/commit`, params)
     },
     /**
      * 获取组用户
@@ -167,7 +167,11 @@ const actions = {
     },
     setCurReleaseDetail ({ commit }, curReleaseDetail) {
         commit(SET_CURRELEASE_DETAIL, curReleaseDetail)
+    },
+    requestOrgs ({ commit }, id) {
+        return vue.$ajax.get(`project/api/user/organizations/types/dept/ids/${id ?? 0}`)
     }
+    
 }
 
 export default actions

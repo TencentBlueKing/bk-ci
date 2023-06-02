@@ -60,11 +60,9 @@
             </bk-tab>
 
             <experience-group
-                :node-select-conf="nodeSelectConf"
+                v-bind="groupSideslider"
                 :create-group-form="createGroupForm"
-                :outers-list="outersList"
-                :loading="dialogLoading"
-                :on-change="onChange"
+                :handle-group-field-change="handleGroupFieldChange"
                 :error-handler="errorHandler"
                 @after-submit="afterCreateGroup"
                 :cancel-fn="cancelFn"
@@ -75,9 +73,9 @@
 </template>
 
 <script>
-    import emptyData from './empty-data'
-    import experienceGroup from './create_group'
     import { getQueryString } from '@/utils/util'
+    import experienceGroup from './create_group'
+    import emptyData from './empty-data'
 
     export default {
         components: {
@@ -89,28 +87,20 @@
                 curTab: 'experienceGroup',
                 experienceList: [],
                 showContent: false,
-                outersList: [],
                 loading: {
                     isLoading: false,
                     title: ''
                 },
-                dialogLoading: {
-                    isLoading: false,
-                    title: ''
-                },
-                nodeSelectConf: {
+                groupSideslider: {
                     title: '',
-                    isShow: false,
-                    closeIcon: false,
-                    hasHeader: false,
-                    quickClose: false
+                    visible: false,
+                    isLoading: false
                 },
                 createGroupForm: {
-                    idEdit: false,
+                    groupHashId: undefined,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 },
                 errorHandler: {
                     nameError: false
@@ -147,7 +137,6 @@
         },
         async mounted () {
             await this.init()
-            this.fetchOutersList()
         },
         methods: {
             async init () {
@@ -171,33 +160,7 @@
                     }, 1000)
                 }
             },
-            /**
-             * 获取外部体验人员列表
-             */
-            async fetchOutersList () {
-                this.loading.isLoading = true
-                try {
-                    const res = await this.$store.dispatch('experience/fetchOutersList', {
-                        projectId: this.projectId
-                    })
-                    res.forEach(item => {
-                        this.outersList.push({
-                            id: item.username,
-                            name: item.username
-                        })
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.loading.isLoading = false
-                }
-            },
+            
             /**
              * 获取列表
              */
@@ -230,18 +193,16 @@
             },
             toCreateGroup () {
                 this.createGroupForm = {
-                    isEdit: false,
-                    groupHashId: '',
+                    groupHashId: undefined,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 }
-                this.nodeSelectConf.title = '新增体验组'
-                this.nodeSelectConf.isShow = true
+                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.visible = true
             },
-            onChange (tags) {
-                this.createGroupForm.internal_list = tags
+            handleGroupFieldChange (name, value) {
+                this.createGroupForm[name] = value
             },
             validate () {
                 let errorCount = 0
@@ -258,18 +219,19 @@
             },
             afterCreateGroup () {
                 this.requestList()
-                this.nodeSelectConf.isShow = false
+                this.groupSideslider.visible = false
             },
             cancelFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.nodeSelectConf.isShow = false
+                console.log(1111, this.groupSideslider)
+                if (!this.groupSideslider.isLoading) {
+                    this.groupSideslider.visible = false
                 }
             },
             async toEditGroup (row) {
                 if (row.permissions.canEdit) {
-                    this.nodeSelectConf.title = '编辑体验组'
-                    this.nodeSelectConf.isShow = true
-                    this.dialogLoading.isLoading = true
+                    this.groupSideslider.title = row.name
+                    this.groupSideslider.visible = true
+                    this.groupSideslider.isLoading = true
 
                     try {
                         const res = await this.$store.dispatch('experience/toGetGroupDetail', {
@@ -277,12 +239,7 @@
                             groupHashId: row.groupHashId
                         })
 
-                        this.createGroupForm.isEdit = true
-                        this.createGroupForm.groupHashId = row.groupHashId
-                        this.createGroupForm.name = res.name
-                        this.createGroupForm.external_list = res.outerUsers
-                        this.createGroupForm.desc = res.remark
-                        this.createGroupForm.internal_list = res.innerUsers
+                        this.createGroupForm = res
                     } catch (err) {
                         const message = err.data ? err.data.message : err
                         const theme = 'error'
@@ -292,7 +249,7 @@
                             theme
                         })
                     } finally {
-                        this.dialogLoading.isLoading = false
+                        this.groupSideslider.isLoading = false
                     }
                 } else {
                     this.$showAskPermissionDialog({
@@ -385,8 +342,8 @@
                 margin: 0;
             }
         }
-        .bk-tab-label-item{
-            background-color: transparent !important;
+        .sub-view-port .bk-tab-label-item{
+            background-color: transparent;
         }
     }
 </style>
