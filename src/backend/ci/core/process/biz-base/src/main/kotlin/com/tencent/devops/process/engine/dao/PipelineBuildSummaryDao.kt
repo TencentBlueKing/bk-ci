@@ -27,10 +27,10 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -515,7 +515,10 @@ class PipelineBuildSummaryDao {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =
                     dslContext.update(this)
-                        .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
+                        .set(
+                            LATEST_STATUS,
+                            DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                        ) // 不一定是FINISH，也有可能其它失败的status
                         .set(LATEST_END_TIME, endTime) // 结束时间
                         .set(LATEST_TASK_ID, "") // 结束时清空
                         .set(LATEST_TASK_NAME, "") // 结束时清空
@@ -543,10 +546,15 @@ class PipelineBuildSummaryDao {
             val update = dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
 
             if (runningIncrement > 0) {
-                update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
+                update.set(
+                    LATEST_STATUS,
+                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.RUNNING.ordinal).otherwise(LATEST_STATUS)
+                )
             } else {
-                update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
-                    .set(LATEST_END_TIME, LocalDateTime.now())
+                update.set(
+                    LATEST_STATUS,
+                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.STAGE_SUCCESS.ordinal).otherwise(LATEST_STATUS)
+                ).set(LATEST_END_TIME, LocalDateTime.now())
             }
             update.where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
