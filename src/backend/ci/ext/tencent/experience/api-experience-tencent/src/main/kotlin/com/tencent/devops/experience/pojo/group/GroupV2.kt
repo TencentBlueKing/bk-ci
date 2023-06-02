@@ -16,6 +16,8 @@ data class GroupV2(
 ) {
     @ApiModel("版本体验-体验组-成员信息")
     data class Member(
+        @ApiModelProperty("ID", required = true)
+        val id: String,
         @ApiModelProperty("名称", required = true)
         val name: String,
         @ApiModelProperty("类别,1--内部人员,2--外部人员,3--内部组织", required = true)

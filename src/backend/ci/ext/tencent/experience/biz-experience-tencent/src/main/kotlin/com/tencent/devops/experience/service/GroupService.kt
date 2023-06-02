@@ -432,13 +432,13 @@ class GroupService @Autowired constructor(
     ): List<GroupV2.Member> {
         val members = mutableListOf<GroupV2.Member>()
         for (inner in inners) {
-            members.add(GroupV2.Member(inner.userId, GroupMemberType.INNER.id, inner.deptFullName))
+            members.add(GroupV2.Member(inner.userId, inner.userId, GroupMemberType.INNER.id, inner.deptFullName))
         }
         for (outer in outers) {
-            members.add(GroupV2.Member(outer.outer, GroupMemberType.OUTER.id, "--"))
+            members.add(GroupV2.Member(outer.outer, outer.outer, GroupMemberType.OUTER.id, "--"))
         }
         for (dept in depts) {
-            members.add(GroupV2.Member(dept.deptName, GroupMemberType.DEPT.id, dept.deptFullName))
+            members.add(GroupV2.Member(dept.deptId, dept.deptName, GroupMemberType.DEPT.id, dept.deptFullName))
         }
         return members
     }
@@ -502,7 +502,7 @@ class GroupService @Autowired constructor(
             .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
             .map { it.userId }.toSet()
         val commitInnerUsers = groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }
-            .map { it.name }.toSet()
+            .map { it.id }.toSet()
         experienceGroupInnerDao.deleteByUserIds(
             dslContext = dslContext,
             groupId = groupId,
@@ -522,7 +522,7 @@ class GroupService @Autowired constructor(
             .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
             .map { it.outer }.toSet()
         val commitOuterUsers = groupCommit.members.filter { GroupMemberType.OUTER.eq(it.type) }
-            .map { it.name }.toSet()
+            .map { it.id }.toSet()
         experienceGroupOuterDao.deleteByUserIds(
             dslContext = dslContext,
             groupId = groupId,
@@ -540,7 +540,7 @@ class GroupService @Autowired constructor(
             .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
             .map { it.deptId }.toSet()
         val commitDepts = groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }
-            .map { it.name }.toSet()
+            .map { it.id }.toSet()
         experienceGroupDepartmentDao.deleteByDeptIds(
             dslContext = dslContext,
             groupId = groupId,
@@ -595,11 +595,11 @@ class GroupService @Autowired constructor(
         )
         // 内部体验人员
         groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
-            val gdfn = getGDFNByUser(it.name)
+            val gdfn = getGDFNByUser(it.id)
             experienceGroupInnerDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
-                userId = it.name,
+                userId = it.id,
                 deptFullName = gdfn.deptFullName
             )
         }
@@ -608,19 +608,19 @@ class GroupService @Autowired constructor(
             experienceGroupOuterDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
-                outer = it.name
+                outer = it.id
             )
         }
         // 内部组织
         groupCommit.members.filter { GroupMemberType.DEPT.eq(it.type) }.forEach {
             val deptInfo =
-                client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.name.toInt())
+                client.get(ServiceProjectOrganizationResource::class).getDeptInfo(userId, it.id.toInt())
             if (null != deptInfo.data) {
-                val gdfn = getGDFNByDept(it.name)
+                val gdfn = getGDFNByDept(it.id)
                 experienceGroupDepartmentDao.create(
                     dslContext = dslContext,
                     groupId = groupId,
-                    deptId = it.name,
+                    deptId = it.id,
                     deptLevel = deptInfo.data!!.level.toInt(),
                     deptName = gdfn.name,
                     deptFullName = gdfn.deptFullName
