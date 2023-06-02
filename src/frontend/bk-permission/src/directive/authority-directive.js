@@ -207,11 +207,13 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
     static install(app) {
       app.directive('perm', {
         created(el, binding, vNode) {
+          console.log('===========created');
           if (!vNode.key) {
             vNode.key = new Date().getTime();
           }
         },
         mounted(el, binding, vNode) {
+          console.log('===========mounted');
           const { disablePermissionApi } = binding.value;
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
