@@ -200,7 +200,11 @@
                 'codelib',
                 'showCodelibDialog'
             ]),
-
+            title () {
+                return this.$t('codelib.linkRepo', [
+                    this.codelibConfig.label
+                ])
+            },
             isGit () {
                 return isGit(this.codelibTypeName)
             },
@@ -313,7 +317,7 @@
             ...mapActions('codelib', [
                 'checkOAuth',
                 'updateCodelib',
-                'createOrEditRepo',
+                'createRepo',
                 'toggleCodelibDialog',
                 'setTemplateCodelib'
             ]),
@@ -323,7 +327,7 @@
                     projectId,
                     user: { username },
                     codelib,
-                    createOrEditRepo,
+                    createRepo,
                     repositoryHashId
                 } = this
                 const params = Object.assign({}, codelib, { userName: username })
@@ -333,7 +337,7 @@
                             if (this.isSvn) {
                                 params.region = parsePathRegion(codelib.url)
                             }
-                            const res = await createOrEditRepo({
+                            const res = await createRepo({
                                 projectId,
                                 params,
                                 hashId: repositoryHashId

@@ -17,20 +17,19 @@
             @row-click="handleRowSelect"
             @sort-change="handleSortChange"
             @page-change="handlePageChange"
-            @page-limit-change="handlePageCountChange"
+            @page-limit-change="handlePageLimitChange"
         >
             <bk-table-column
                 v-if="allColumnMap.aliasName"
                 :label="$t('codelib.aliasName')"
                 sortable
                 prop="aliasName"
-                width="400"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <a @click="handleShowDetail">{{ props.row.aliasName }}</a>
+                    <a @click="handleShowDetail(props.row)">{{ props.row.aliasName }}</a>
                     <span class="pac-icon" v-if="props.row.enablePac">
-                        <Icon name="PACcode" size="16" />
+                        <Icon name="PACcode" size="22" class="pac-code-icon" />
                         PAC
                     </span>
                 </template>
@@ -43,8 +42,7 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <!-- codelibIconMap[props.row.type] -->
-                    <Icon :name="codelibIconMap[props.row.type]" size="12" />
+                    <Icon class="codelib-type-icon" :name="codelibIconMap[props.row.type]" size="16" />
                     <a @click="handleToCodelib(props.row.url)">{{ props.row.url }}</a>
                 </template>
             </bk-table-column>
@@ -73,6 +71,7 @@
                 v-if="allColumnMap.recentlyEditedBy"
                 :label="$t('codelib.recentlyEditedBy')"
                 prop="updatedUser"
+                show-overflow-tooltip
                 width="200"
             >
             </bk-table-column>
@@ -89,6 +88,7 @@
             <bk-table-column
                 v-if="!isListFlod"
                 :label="$t('codelib.operation')"
+                show-overflow-tooltip
                 width="100"
             >
                 <template slot-scope="props">
@@ -115,6 +115,13 @@
                 <EmptyTableStatus :type="aliasName ? 'search-empty' : 'empty'" @clear="resetFilter" />
             </template>
         </bk-table>
+        <UsingPipelinesDialog
+            :pipelines-list="pipelinesList"
+            :is-show.sync="pipelinesDialogPayload.isShow"
+            :is-loadig-more="pipelinesDialogPayload.isLoadingMore"
+            :has-load-end="pipelinesDialogPayload.hasLoadEnd"
+            :fetch-pipelines-list="fetchPipelinesList"
+        />
     </div>
 </template>
 
@@ -130,10 +137,12 @@
         prettyDateTimeFormat
     } from '@/utils/'
     import EmptyTableStatus from '../empty-table-status.vue'
+    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     
     export default {
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            UsingPipelinesDialog
         },
         props: {
             switchPage: {
@@ -144,6 +153,7 @@
             totalPages: Number,
             page: Number,
             pageSize: Number,
+            defaultPagesize: Number,
             records: {
                 type: Array,
                 required: true,
@@ -157,12 +167,19 @@
                 type: String,
                 default: ''
             },
+            curRepo: {
+                type: Object,
+                default: () => {}
+            },
             limit: {
                 type: Number
             },
             aliasName: {
                 type: String,
                 default: ''
+            },
+            refreshCodelibList: {
+                type: Function
             }
         },
 
@@ -177,7 +194,7 @@
                     current: this.page,
                     count: this.count,
                     limit: this.pageSize,
-                    limitList: [10, 15, 20, 50, 100],
+                    limitList: [10, 20, 50, 100],
                     small: false
                 },
                 isLoading: false,
@@ -199,21 +216,21 @@
                     GITHUB: 'code-Github',
                     CODE_TGIT: 'code-TGit',
                     CODE_P4: 'code-P4'
-                }
+                },
+                pipelinesDialogPayload: {
+                    isShow: false,
+                    isLoadingMore: false,
+                    hasLoadEnd: false,
+                    page: 1,
+                    pageSize: 20,
+                    repositoryHashId: ''
+                },
+                pipelinesList: []
             }
         },
 
         computed: {
             ...mapState('codelib', ['gitOAuth']),
-
-            currentPage: {
-                get () {
-                    return this.page
-                },
-                set (page) {
-                    this.switchPage(page, this.pageSize)
-                }
-            },
 
             projectId () {
                 return this.$route.params.projectId
@@ -259,11 +276,14 @@
                     this.pagination.small = val
                 },
                 immediate: true
+            },
+            defaultPagesize (val) {
+                const limitList = new Set([10, 20, 50, 100, val])
+                this.pagination.limitList = [...limitList].sort((a, b) => a - b)
             }
         },
 
         mounted () {
-            this.initPageSize()
             this.calcTableHeight()
             window.addEventListener('resize', this.calcTableHeight)
             this.$once('hook:beforeDestroy', () => {
@@ -314,34 +334,11 @@
         methods: {
             ...mapActions('codelib', [
                 'toggleCodelibDialog',
-                'requestDetail',
                 'updateCodelib',
                 'deleteRepo',
-                'checkGitOAuth',
-                'checkTGitOAuth'
+                'fetchUsingPipelinesList'
             ]),
             prettyDateTimeFormat,
-
-            initPageSize () {
-                const { top } = getOffset(document.getElementById('codelib-list-content'))
-                const windowHeight = window.innerHeight
-                const tableHeadHeight = 42
-                const paginationHeight = 63
-                const windownOffsetBottom = 20
-                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
-                const tableRowHeight = 42
-                const limit = Math.floor(listTotalHeight / tableRowHeight)
-                this.pagination.limit = limit
-                const pageLimit = new Set([
-                    10, 20, 50, 100, limit
-                ])
-                if (!pageLimit.has(this.pagination.limit)) {
-                    pageLimit.add(this.pagination.limit)
-                }
-                this.pagination.limitList = [
-                    ...pageLimit
-                ].sort((a, b) => a - b)
-            },
 
             /**
              * @desc 计算表格高度
@@ -356,8 +353,10 @@
                 return row.repositoryHashId === this.selectId ? 'active' : ''
             },
 
-            handleShowDetail (row) {
-                this.isListFlod = true
+            handleShowDetail (codelib) {
+                if (this.isListFlod) return
+                this.$emit('update:curRepo', codelib)
+                this.$emit('update:isListFlod', true)
             },
 
             handleToCodelib (url) {
@@ -365,6 +364,7 @@
             },
 
             handleRowSelect (row) {
+                this.$emit('update:curRepo', row)
                 if (this.isListFlod) {
                     this.selectId = row.repositoryHashId
                     this.$router.push({
@@ -393,6 +393,9 @@
                 })
             },
 
+            /**
+             * 展开列表
+             */
             handleExpandList () {
                 this.$router.push({
                     query: {}
@@ -401,17 +404,13 @@
                 this.$emit('updateFlod', false)
             },
 
-            typeFormatter (row, column, cellValue, index) {
-                return cellValue.replace('CODE_', '')
-            },
-
             handlePageChange (current) {
                 this.pagination.current = current
                 this.switchPage(current, this.pagination.limit)
             },
 
-            handlePageCountChange (limit) {
-                if (this.pagination.limit === limit) return
+            handlePageLimitChange (limit) {
+                if (this.pagination.limit === Number(limit)) return
 
                 this.pagination.current = 1
                 this.pagination.limit = limit
@@ -422,6 +421,54 @@
                     page: this.page,
                     limit: this.pagination.limit
                 }))
+            },
+
+            async fetchPipelinesList () {
+                if (this.pipelinesDialogPayload.isLoadingMore) return
+                this.pipelinesDialogPayload.isLoadingMore = true
+                await this.fetchUsingPipelinesList({
+                    projectId: this.projectId,
+                    repositoryHashId: this.pipelinesDialogPayload.repositoryHashId,
+                    page: this.pipelinesDialogPayload.page,
+                    pageSize: this.pipelinesDialogPayload.pageSize
+                }).then(res => {
+                    this.pipelinesList = [...this.pipelinesList, ...res.records]
+                    if (this.pipelinesDialogPayload.page === 1 && this.pipelinesList.length) {
+                        this.pipelinesDialogPayload.isShow = true
+                    }
+                    this.pipelinesDialogPayload.hasLoadEnd = res.totalPages === this.pipelinesDialogPayload.page
+                    this.pipelinesDialogPayload.page += 1
+                }).finally(() => {
+                    this.pipelinesDialogPayload.isLoadingMore = false
+                })
+            },
+
+            async deleteCodeLib (row) {
+                if (row.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
+                    this.pipelinesDialogPayload.repositoryHashId = row.repositoryHashId
+                    this.pipelinesList = []
+                }
+                this.pipelinesDialogPayload.page = 1
+                
+                await this.fetchPipelinesList()
+
+                if (!this.pipelinesList.length) {
+                    this.$bkInfo({
+                        title: this.$t('codelib.是否删除该代码库？'),
+                        confirmFn: () => {
+                            this.deleteRepo({
+                                projectId: this.projectId,
+                                repositoryHashId: row.repositoryHashId
+                            }).then(() => {
+                                this.refreshCodelibList()
+                                this.$bkMessage({
+                                    message: this.$t('codelib.successfullyDeleted'),
+                                    theme: 'success'
+                                })
+                            })
+                        }
+                    })
+                }
             },
 
             // async editCodeLib (codelib) {
@@ -445,59 +492,6 @@
             //     this.toggleCodelibDialog(CodelibDialog)
             // },
 
-            deleteCodeLib ({ repositoryHashId, aliasName }) {
-                this.$bkInfo({
-                    subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
-                    confirmFn: () => {
-                        const { projectId, currentPage, pageSize, count, totalPages } = this
-                        this.isLoading = true
-
-                        this.deleteRepo({ projectId, repositoryHashId }).then(() => {
-                            this.$bkMessage({
-                                message: `${this.$t('codelib.codelib')}${aliasName}${this.$t('codelib.successfullyDeleted')}`,
-                                theme: 'success'
-                            })
-
-                            this.$router.push({
-                                name: 'codelibHome',
-                                params: {
-                                    projectId: this.projectId,
-                                    repoType: '',
-                                    repoId: ''
-                                }
-                            })
-                            if (count - 1 <= pageSize * (totalPages - 1)) {
-                                // 删除列表项之后，如果不足页数的话直接切换到上一页
-                                this.switchPage(currentPage - 1, pageSize)
-                            } else {
-                                this.switchPage(currentPage, pageSize)
-                            }
-                        }).catch((e) => {
-                            if (e.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.edit,
-                                        resourceId: this.$permissionResourceMap.code,
-                                        instanceId: [{
-                                            id: repositoryHashId,
-                                            name: aliasName
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
-                            } else {
-                                this.$bkMessage({
-                                    message: e.message,
-                                    theme: 'error'
-                                })
-                            }
-                        }).finally(() => {
-                            this.isLoading = false
-                        })
-                    }
-                })
-            },
-            
             handleSortChange ({ prop, order }) {
                 const sortBy = this.sortByMap[prop]
                 const sortType = this.sortTypeMap[order]
@@ -554,7 +548,12 @@
             margin-left: auto;
         }
     }
+    .codelib-type-icon {
+        position: relative;
+        top: 3px;
+    }
     .pac-icon {
+        position: relative;
         font-size: 12px;
         margin-left: 10px;
         color: #699DF4;
@@ -566,6 +565,11 @@
         border-radius: 12px;
         text-align: right;
         padding-right: 5px;
+    }
+    .pac-code-icon {
+        position: absolute;
+        left: 1px;
+        top: 1px;
     }
     // .codelib-aliasName {
     //     position: relative;

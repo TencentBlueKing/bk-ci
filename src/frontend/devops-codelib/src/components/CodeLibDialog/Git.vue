@@ -41,25 +41,13 @@
                 >
                     {{ $t('codelib.oauthCert') }}
                 </bk-button>
-                <span
-                    v-if="showRefreshBtn"
-                    class="refresh-oauth"
-                    @click="handleRefreshOAUTH"
-                >
-                    <Icon
-                        name="refresh"
-                        size="12"
-                        class="refresh-icon"
-                    />
-                    {{ $t('codelib.refreshOAUTH') }}
-                </span>
                 <div class="oauth-tips">
-                    <p>{{ $t('codelib.尚未授权，请先点击按钮授权。推荐使用公共账号授权。') }}</p>
-                    <p>{{ $t('codelib.此授权用于平台和代码库进行交互：') }}</p>
-                    <p>1.{{ $t('codelib.添加代码库触发器时往工蜂注册回调事件（需拥有代码库开发者及以上权限）') }}</p>
-                    <p>2.{{ $t('codelib.代码库事件触发时，获取 YAML 配置文件（PAC 模式下）') }}</p>
-                    <p>3.{{ $t('codelib.拉代码插件不指定凭据时，默认使用此授权同步代码到构建机') }}</p>
-                    <p>4.{{ $t('codelib.流水线执行时，回写流水线执行状态到代码库') }}</p>
+                    <p>{{ $t('codelib.尚未授权，请先点击按钮授权。') }}</p>
+                    <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+                    <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
+                    <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                    <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                    <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
                 </div>
             </div>
         </bk-form-item>
@@ -124,10 +112,10 @@
                         <bk-popover width="380" placement="right-end">
                             <a>{{ $t('codelib.查看同步规则') }}</a>
                             <div slot="content">
-                                <p>同步规则：</p>
-                                <p>- 新增 YAML 时，当前项目下将新增一条对应的流水线</p>
-                                <p>- 修改 YAML 后，新触发自动以最新的 YAML 配置为准</p>
-                                <p>- 删除 YAML 时，若触发过 CI 的所有分支上的 YAML 均已删除，则同步删除蓝盾上的流水线（包括基本信息和执行历史）</p>
+                                <p>{{ $t('codelib.同步规则：') }}</p>
+                                <p>- {{ $t('codelib.新增 YAML 时，当前项目下将新增一条对应的流水线') }}</p>
+                                <p>- {{ $t('codelib.修改 YAML 后，新触发自动以最新的 YAML 配置为准') }}</p>
+                                <p>- {{ $t('codelib.删除 YAML 时，若触发过 CI 的所有分支上的 YAML 均已删除，则同步删除蓝盾上的流水线（包括基本信息和执行历史）') }}</p>
                             </div>
                         </bk-popover>
                     </p>
@@ -181,11 +169,11 @@
                 >
                     <bk-option
                         v-for="(option, index) in credentialList"
-                        :key="index"
+                        :key="option.credentialId"
                         :id="option.credentialId"
                         :name="option.credentialId">
                         <span>
-                            {{option.credentialId}}
+                            {{ option.credentialId }}
                         </span>
                         <i
                             class="devops-icon icon-edit2 cre-icon"

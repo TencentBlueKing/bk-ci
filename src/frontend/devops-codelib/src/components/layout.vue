@@ -14,9 +14,6 @@
             <div class="right-wraper" :class="{ active: isShowRight }">
                 <slot v-if="isShowRight" name="flod" />
             </div>
-            <div class="close-btn" @click="handleClose">
-                
-            </div>
         </div>
     </div>
 </template>
@@ -33,7 +30,6 @@
         data () {
             return {
                 isShowRight: false,
-                isOpen: false,
                 layoutWidth: 'auto',
                 layoutOffsetTop: 0
             }
@@ -86,14 +82,6 @@
                 this.layoutWidth = `${layoutWidth}px`
                 const offsetTop = getOffset(this.$refs.layout).top
                 this.layoutOffsetTop = offsetTop
-            },
-            handleToggle () {
-                this.isOpen = !this.isOpen
-            },
-            handleClose () {
-                this.isOpen = false
-                this.$emit('on-flod')
-                this.$emit('update:flod', false)
             }
         }
     }

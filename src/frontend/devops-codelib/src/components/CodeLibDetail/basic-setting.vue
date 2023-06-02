@@ -4,25 +4,53 @@
         <div class="form-item">
             <div class="label">
                 {{ $t('codelib.auth') }}
-                <Icon name="helper" size="14" class="help-icon" />
+                <bk-popover placement="top">
+                    <Icon name="help" size="14" class="auth-help-icon" />
+                    <div slot="content">
+                        <template v-if="isGit || isTGit">
+                            <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
+                            <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                            <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+                        </template>
+                        <template v-if="isGithub">
+                            <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
+                            <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
+                        </template>
+                        <template v-if="isSvn">
+                            <p>{{ $t('codelib.此授权用于平台和 SVN 代码库进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.注册 Webhook 到代码库') }}</p>
+                            <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Write 权限') }}</p>
+                        </template>
+                        <template v-if="isP4">
+                            <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Read 权限') }}</p>
+                        </template>
+                    </div>
+                </bk-popover>
             </div>
             <div class="content">
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
                     <span>
-                        {{ repoInfo.authType }}@
+                        {{ curRepo.authType }}@
                     </span>
                     <a
-                        v-if="!['OAUTH'].includes(repoInfo.authType)"
-                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.userName}`"
+                        v-if="!['OAUTH'].includes(curRepo.authType)"
+                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${curRepo.authIdentity}`"
                         target="_blank"
                     >
-                        {{ repoInfo.userName }}
+                        {{ curRepo.authIdentity }}
                     </a>
                     <span v-else>
-                        {{ repoInfo.userName }}
+                        {{ curRepo.authIdentity }}
                     </span>
-                    <a class="reset-bth">{{ $t('codelib.resetAuth') }}</a>
+                    <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
             </div>
         </div>
@@ -37,10 +65,24 @@
             <p class="pac-tips">{{ $t('codelib.pacTips') }}</p>
             <div class="content">
                 <div class="pac-mode">
-                    <bk-switcher v-model="repoInfo.enablePac" theme="primary"></bk-switcher>
-                    <div class="pac-enable">
-                        {{ repoInfo.enablePac ? $t('codelib.isOnPAC') : $t('codelib.isOffPAC') }}
+                    <div
+                        class="switcher-item"
+                        :class="{ 'disabled-pac': !repoInfo.enablePac && pacProjectName }"
+                        @click="handleTogglePacStatus">
                     </div>
+                   
+                    <bk-switcher
+                        v-model="repoInfo.enablePac"
+                        theme="primary"
+                        :disabled="!repoInfo.enablePac && pacProjectName"
+                    >
+                    </bk-switcher>
+                    <div class="pac-enable">
+                        {{ repoInfo.enablePac ? $t('codelib.已开启 PAC 模式') : $t('codelib.未开启 PAC 模式') }}
+                    </div>
+                    <span v-if="!repoInfo.enablePac && pacProjectName">
+                        {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -54,17 +96,18 @@
                 <span
                     v-if="!isEditing"
                     @click="handleEditCommon">
-                    <Icon name="edit2" size="14" class="edit-icon" />
+                    <Icon name="edit-line" size="14" class="edit-icon" />
                 </span>
                 <span v-else>
                     <bk-button
-                        class="ml20 mr5"
+                        class="common-btn ml20 mr5"
                         text
                         @click="handleSaveCommon"
                     >
                         {{ $t('codelib.save') }}
                     </bk-button>
                     <bk-button
+                        class="common-btn"
                         text
                         @click="isEditing = false"
                     >
@@ -75,13 +118,12 @@
             <div class="content">
                 <div class="merge-request">
                     {{ $t('codelib.blockingMergeRequest') }}
-                    <Icon name="helper" size="14" class="help-icon" />
-                    <p v-if="!isEditing" class="request-result">{{ true ? $t('codelib.yes') : $t('codelib.no') }}</p>
+                    <Icon name="help" size="14" class="help-icon" />
+                    <p v-if="!isEditing" class="request-result">{{ repoInfo.settings.enableMrBlock ? $t('codelib.yes') : $t('codelib.no') }}</p>
                     <bk-radio-group
                         class="common-radio-group"
                         v-else
-                        v-model="demo4"
-                        @change="handlerChange">
+                        v-model="repoInfo.settings.enableMrBlock">
                         <bk-radio class="mr15" :value="true">
                             {{ $t('codelib.yes') }}
                         </bk-radio>
@@ -100,30 +142,95 @@
             <div class="history-content">
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.creator') }}</span>
-                    <span class="value">hwweng</span>
+                    <span class="value">{{ curRepo.createUser }}</span>
                 </div>
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.recentlyEditedBy') }}</span>
-                    <span class="value">hwweng</span>
+                    <span class="value">{{ curRepo.updatedUser }}</span>
                 </div>
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.createdTime') }}</span>
-                    <span class="value">hwweng</span>
+                    <span class="value">{{ prettyDateTimeFormat(Number(curRepo.createTime + '000')) }}</span>
                 </div>
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.lastModifiedTime') }}</span>
-                    <span class="value">hwweng</span>
+                    <span class="value">{{ prettyDateTimeFormat(Number(curRepo.updatedTime + '000')) }}</span>
                 </div>
             </div>
         </div>
+        <bk-dialog
+            ext-cls="close-repo-confirm-dialog"
+            :value="showClosePac"
+            :show-footer="false"
+        >
+            <span class="toggle-pac-warning-icon">
+                <i class="devops-icon icon-exclamation" />
+            </span>
+            <span class="close-confirm-title">
+                {{ $t('codelib.关闭 PAC 模式失败') }}
+            </span>
+            <span class="close-confirm-tips">
+                <p>
+                    {{ $t('codelib.检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将') }}
+                    <span>{{ $t('codelib.不再同步到蓝盾流水线') }}</span>
+                    {{ $t('codelib.。') }}
+                </p>
+                <p>
+                    {{ $t('codelib.请先将目录') }}
+                    <span>{{ $t('codelib.改名或删除') }}</span>
+                    {{ $t('codelib.后重试，避免项目其他成员进行无效的YAML 文件修改') }}
+                    {{ $t('codelib.。') }}
+                </p>
+            </span>
+            <span class="close-confirm-footer">
+                <bk-checkbox
+                    v-model="isDeleted"
+                >
+                    {{ $t('codelib.ci目录已改名或删除') }}
+                </bk-checkbox>
+                <bk-button
+                    class="ml10"
+                    theme="primary"
+                    :disabled="!isDeleted"
+                    @click="handleClosePac"
+                >
+                    {{ $t('codelib.继续关闭') }}
+                </bk-button>
+            </span>
+        </bk-dialog>
+        <ResetAuthDialog
+            ref="resetAuth"
+            :cur-repo="curRepo"
+            :repo-info="repoInfo"
+            :type="type"
+            :is-git="isGit"
+            :is-github="isGithub"
+            :fetch-repo-detail="fetchRepoDetail"
+        />
     </section>
 </template>
 <script>
     import {
-        isGit
+        isP4,
+        isGit,
+        isGithub,
+        isGitLab,
+        isSvn,
+        isTGit
     } from '../../config/'
+    import {
+        mapActions
+    } from 'vuex'
+    import {
+        prettyDateTimeFormat
+    } from '@/utils/'
+    import ResetAuthDialog from '../ResetAuthDialog.vue'
+
     export default {
         name: 'basicSetting',
+        components: {
+            ResetAuthDialog
+        },
         props: {
             type: {
                 type: String,
@@ -131,39 +238,200 @@
             },
             repoInfo: {
                 type: Object
+            },
+            curRepo: {
+                type: Object,
+                default: () => {}
+            },
+            fetchRepoDetail: {
+                type: Function
             }
         },
         data () {
             return {
                 isEditing: false,
-                isGit: false
+                isDeleted: false,
+                hasCiFolder: true,
+                showClosePac: false,
+                showEnablePac: false,
+                isP4: false,
+                isGit: false,
+                isSvn: false,
+                isTGit: false,
+                isGithub: false,
+                isGitLab: false,
+                pacProjectName: ''
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isOAUTH () {
+                return this.curRepo.authType === 'OAUTH'
+            },
+            repoId () {
+                return this.$route.query.id
             }
         },
         watch: {
-            type (val) {
-                this.isGit = isGit(val)
+            type: {
+                handler (val) {
+                    this.isP4 = isP4(val)
+                    this.isGit = isGit(val)
+                    this.isSvn = isSvn(val)
+                    this.isTGit = isTGit(val)
+                    this.isGithub = isGithub(val)
+                    this.isGitLab = isGitLab(val)
+                },
+                immediate: true
+            },
+            'repoInfo.url': {
+                handler (val) {
+                    setTimeout(() => {
+                        this.handleCheckPacProject(val)
+                    }, 200)
+                },
+                deep: true
+            },
+            repoId () {
+                this.pacProjectName = ''
             }
         },
-        created () {
-
-        },
         methods: {
+            ...mapActions('codelib', [
+                'closePac',
+                'enablePac',
+                'changeMrBlock',
+                'checkHasCiFolder',
+                'checkPacProject'
+            ]),
+            prettyDateTimeFormat,
+
+            /**
+             * 开启通用设置编辑状态
+             */
             handleEditCommon () {
                 this.isEditing = true
             },
 
+            /**
+             * 校验仓库是否已经在其他项目开启了PAC
+             */
+            handleCheckPacProject (repoUrl) {
+                if (this.isGit && this.isOAUTH && repoUrl) {
+                    this.checkPacProject(repoUrl).then((res) => {
+                        this.pacProjectName = res
+                    })
+                }
+            },
+
+            /**
+             * 通用设置 —> 保存
+             */
             handleSaveCommon () {
-                this.isEditing = false
+                this.changeMrBlock({
+                    projectId: this.projectId,
+                    repositoryHashId: this.curRepo.repositoryHashId,
+                    enableMrBlock: this.repoInfo.settings.enableMrBlock
+                }).then(() => {
+                    this.$bkMessage({
+                        message: this.$t('codelib.保存成功'),
+                        theme: 'success'
+                    })
+                }).finally(() => {
+                    this.isEditing = false
+                })
+            },
+
+            /**
+             * 重置授权
+             */
+            handleResetAuth () {
+                this.$refs.resetAuth.isShow = true
+            },
+        
+            /**
+             * 开启/关闭PAC模式
+             * 关闭PAC需校验仓库状态 是否存在.ci文件夹
+             *  true -> 存在.ci文件夹
+             *  false -> 不存在.ci文件夹
+             */
+            async handleTogglePacStatus () {
+                if (!this.repoInfo.enablePac && this.pacProjectName) return
+                if (this.repoInfo.enablePac) {
+                    this.pacProjectName = ''
+                    await this.checkHasCiFolder({
+                        projectId: this.projectId,
+                        repositoryHashId: this.curRepo.repositoryHashId
+                    }).then(res => {
+                        this.hasCiFolder = !res
+                    })
+                    if (this.hasCiFolder) {
+                        this.showClosePac = true
+                    } else {
+                        this.$bkInfo({
+                            title: this.$t('codelib.确定关闭 PAC 模式？'),
+                            confirmFn: this.handleClosePac
+                        })
+                    }
+                } else {
+                    if (this.isOAUTH) {
+                        this.$bkInfo({
+                            title: this.$t('codelib.确定开启 PAC 模式？'),
+                            confirmFn: this.handleEnablePac
+                        })
+                    } else {
+                        this.$bkInfo({
+                            type: 'warning',
+                            title: this.$t('codelib.PAC 模式需使用 OAUTH 授权'),
+                            subTitle: this.$t('codelib.确定重置授权为 OAUTH，同时开启 PAC 模式吗？'),
+                            confirmFn: this.handleEnablePac
+                        })
+                    }
+                }
+            },
+
+            /**
+             * 关闭PAC
+             */
+            handleClosePac () {
+                this.closePac({
+                    projectId: this.projectId,
+                    repositoryHashId: this.curRepo.repositoryHashId
+                }).then(() => {
+                    this.$bkMessage({
+                        message: this.$t('codelib.关闭成功'),
+                        theme: 'success'
+                    })
+                    this.showClosePac = false
+                    this.fetchRepoDetail(this.curRepo.repositoryHashId)
+                })
+            },
+            /**
+             * 开启PAC
+             */
+            handleEnablePac () {
+                this.enablePac({
+                    projectId: this.projectId,
+                    repositoryHashId: this.curRepo.repositoryHashId
+                }).then(() => {
+                    this.$bkMessage({
+                        message: this.$t('codelib.开启成功'),
+                        theme: 'success'
+                    })
+                    this.fetchRepoDetail(this.curRepo.repositoryHashId)
+                }).catch((e) => {
+                    this.$bkMessage({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                })
             }
         }
     }
 </script>
-<style lang='scss' scoped>
+<style lang='scss'>
     .basic-setting {
         .form-item {
             margin-bottom: 40px;
@@ -196,14 +464,36 @@
                 display: flex;
                 align-items: center;
             }
+            .switcher-item {
+                width: 36px;
+                height: 20px;
+                border-radius: 12px;
+                opacity: 0;
+                position: absolute;
+                z-index: 100;
+                cursor: pointer;
+            }
+            .disabled-pac {
+                cursor: not-allowed;
+            }
             .edit-icon {
+                position: relative;
+                top: 2px;
                 margin-left: 18px;
+                color: #979BA5;
                 cursor: pointer;
             }
             .pac-enable {
                 margin: 0 24px 0 8px;
             }
             .help-icon {
+                cursor: pointer;
+                margin-left: 8px;
+                color: #979BA5;
+            }
+            .auth-help-icon {
+                position: relative;
+                top: 2px;
                 cursor: pointer;
                 margin-left: 8px;
                 color: #979BA5;
@@ -233,6 +523,11 @@
                     background: #DCDEE5;
                 }
             }
+            .common-btn {
+                font-size: 12px;
+                font-weight: 400;
+                height: 0;
+            }
             .merge-request {
                 display: flex;
                 align-items: center;
@@ -254,7 +549,7 @@
         }
         .history-item {
             display: inline-flex;
-            min-width: 200px;
+            min-width: 230px;
             max-width: 300px;
             margin-right: 200px;
             margin-bottom: 16px;
@@ -267,6 +562,45 @@
                 font-size: 12px;
                 color: #63656E;
             }
+        }
+    }
+    .close-repo-confirm-dialog {
+        text-align: center;
+        .bk-dialog-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-height: calc(50vh - 50px);
+        }
+        .toggle-pac-warning-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFE8C3;
+            color: #FF9C01;
+            width: 42px;
+            height: 42px;
+            font-size: 24px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .close-confirm-title {
+            font-size: 20px;
+            color: #313238;
+            margin: 20px 0 8px;
+        }
+        .close-confirm-tips {
+            text-align: left;
+            color: #63656E;
+            font-size: 14px;
+            margin-bottom: 30px;
+            span {
+                color: #FF9C01;
+            }
+        }
+        .close-confirm-footer {
+            position: relative;
+            left: 50px;
         }
     }
 </style>

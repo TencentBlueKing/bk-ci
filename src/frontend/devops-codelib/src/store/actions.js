@@ -106,18 +106,28 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    createOrEditRepo ({
+    createRepo ({
         commit,
         state,
         dispatch
     }, {
         projectId,
-        hashId,
         params
     }) {
-        return vue.$ajax[`${hashId ? 'put' : 'post'}`](`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${hashId ? `${hashId}` : ''}`, {
+        return vue.$ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}`, {
             ...params
         })
+    },
+
+    editRepo ({ commit },
+        {
+            projectId,
+            repositoryHashId,
+            params
+        }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}`,
+            params
+        )
     },
     /**
      * 删除指定代码库
@@ -311,6 +321,88 @@ const actions = {
         commit
     }, codeLib) {
         commit(SET_TEMPLATE_CODELIB, codeLib)
+    },
+
+    async changeMrBlock ({ commit }, {
+        projectId,
+        repositoryHashId,
+        enableMrBlock
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/updateRepoSetting`, {
+            enableMrBlock
+        })
+    },
+
+    async checkPacProject ({ commit }, repoUrl) {
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}`)
+    },
+
+    /**
+     * 刷新git工蜂授权token
+     */
+    async refreshGitOauth ({ commit }) {
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/git/isOauth?refreshToken=true`)
+    },
+
+    /**
+     * 刷新github授权token
+     */
+    async refreshGithubOauth ({ commit }, {
+        projectId
+    }) {
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?refreshToken=true&projectId=${projectId}`)
+    },
+
+    /**
+     * 重命名-代码库别名
+     */
+    async renameAliasName ({ commit }, {
+        projectId,
+        repositoryHashId,
+        params
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/rename`, params)
+    },
+    /**
+     * 关闭PAC校验- 仓库是否存在.ci文件夹
+     */
+    async checkHasCiFolder ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+    },
+
+    /**
+     * 关闭PAC
+     */
+    closePac ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac`)
+    },
+
+    /**
+     * 开启PAC
+     */
+    enablePac ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/enablePac`)
+    },
+
+    /**
+     * 获取代码库关联的流水线列表
+     */
+    fetchUsingPipelinesList ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listUsingPipeline?page=${page}&pageSize=${pageSize}`)
     }
 }
 

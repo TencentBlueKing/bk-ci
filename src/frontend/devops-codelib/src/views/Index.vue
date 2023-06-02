@@ -2,7 +2,7 @@
     <div class="codelib-content">
         <template v-if="hasCodelibs || aliasName.length || isLoading">
             <div id="codelib-list-content">
-                <layout :flod="isListFlod" @on-flod="handleLayoutFlod">
+                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
                     <template>
                         <section class="header-content">
                             <link-code-lib
@@ -33,12 +33,15 @@
                         </section>
                         <code-lib-table
                             v-bkloading="{ isLoading }"
-                            v-bind="codelibs"
-                            :cur-repo-id.sync="curRepoId"
                             :limit="limit"
-                            :alias-name.sync="aliasName"
-                            :is-list-flod.sync="isListFlod"
+                            v-bind="codelibs"
+                            :default-pagesize="defaultPagesize"
+                            :cur-repo.sync="curRepo"
                             :switch-page="switchPage"
+                            :alias-name.sync="aliasName"
+                            :cur-repo-id.sync="curRepoId"
+                            :is-list-flod.sync="isListFlod"
+                            :refresh-codelib-list="refreshCodelibList"
                             @updateFlod="handleUpdateFlod"
                             @handleSortChange="handleSortChange"
                         >
@@ -46,7 +49,11 @@
                     </template>
                     <template slot="flod">
                         <code-lib-detail
-                            :cur-repo-id="curRepoId"
+                            :cur-repo="curRepo"
+                            :cur-repo-id.sync="curRepoId"
+                            :codelib-list="codelibList"
+                            :refresh-codelib-list="refreshCodelibList"
+                            @updateList="handleUpdateRepoList"
                         />
                     </template>
                 </layout>
@@ -131,7 +138,8 @@
                 sortBy: '',
                 sortType: '',
                 isListFlod: false,
-                curRepoId: ''
+                curRepoId: '',
+                curRepo: {}
             }
         },
 
@@ -162,20 +170,25 @@
                     result[item.id] = true
                     return result
                 }, {})
+            },
+
+            codelibList () {
+                return this.codelibs && this.codelibs.records
             }
         },
 
         watch: {
             codelibs: function () {
                 this.isLoading = false
+                this.curRepo = (this.codelibs && this.codelibs.records.find(codelib => codelib.repositoryHashId === this.curRepoId)) || this.curRepo
             },
             projectId (projectId) {
+                this.isListFlod = false
                 this.refreshCodelibList(projectId)
+            },
+            curRepoId (id) {
+                this.curRepo = (this.codelibs && this.codelibs.records.find(codelib => codelib.repositoryHashId === id)) || this.curRepo
             }
-        },
-
-        created () {
-            // this.initCache()
         },
 
         async mounted () {
@@ -220,13 +233,11 @@
                 const id = (query && query.id) || (cachae && cachae.id) || ''
                 const page = (query && query.page) || (cachae && cachae.page) || 1
                 const limit = (query && query.limit) || (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
-
-                this.defaultPagesize = limit
-
+                this.startPage = page
+                this.defaultPagesize = Number(limit)
                 if (id) {
                     this.isListFlod = true
                     this.curRepoId = id
-                    this.startPage = page
                     this.$router.push({
                         query: {
                             id,
@@ -246,7 +257,7 @@
                 this.refreshCodelibList(projectId, page, pageSize)
             },
 
-            refreshCodelibList (
+            async refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
                 pageSize = this.defaultPagesize,
@@ -255,7 +266,7 @@
                 sortType = this.sortType
             ) {
                 this.isLoading = true
-                this.requestList({
+                await this.requestList({
                     projectId,
                     aliasName,
                     page,
@@ -325,12 +336,13 @@
             },
 
             handleUpdateRepo (id) {
-                console.log(id, 12312312312)
                 this.curRepoId = id
             },
 
-            handleLayoutFlod () {
-                console.log(123)
+            handleUpdateRepoList () {
+                const page = this.$route.query.page
+                const limit = this.$route.query.limit
+                this.refreshCodelibList(this.projectId, page, limit)
             }
         }
     }

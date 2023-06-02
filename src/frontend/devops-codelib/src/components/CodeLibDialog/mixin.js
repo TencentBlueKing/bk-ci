@@ -19,7 +19,6 @@ export default {
         return {
             pacProjectName: '', // 已开启PAC的项目名
             isLoadingTickets: false,
-            showRefreshBtn: false,
             urlErrMsg: '',
             disabledPACBtn: false,
             placeholders: {
@@ -189,7 +188,9 @@ export default {
                     {
                         validator: async function (value) {
                             let result = true
-                            await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`)
+                            await vue.$ajax.get(
+                                `${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`
+                            )
                                 .then((res) => {
                                     result = !res
                                 })
@@ -221,7 +222,7 @@ export default {
             this.isLoadingTickets = false
         },
         'codelib.url': function (newVal) {
-            this.checkPacProject(newVal)
+            this.handleCheckPacProject(newVal)
             const { codelib, codelibTypeName } = this
             const { alias, msg } = parsePathAlias(
                 codelibTypeName,
@@ -255,7 +256,8 @@ export default {
             'gitOAuth',
             'checkOAuth',
             'checkTGitOAuth',
-            'setTemplateCodelib'
+            'setTemplateCodelib',
+            'checkPacProject'
         ]),
 
         handleSearchCodeLib (search) {
@@ -267,9 +269,8 @@ export default {
             })
         },
 
-        async openValidate () {
-            this.showRefreshBtn = true
-            window.open(this[`${this.codelibTypeConstants}OAuth`].url, '_blank')
+        openValidate () {
+            window.open(this[`${this.codelibTypeConstants}OAuth`].url)
         },
         
         authTypeChange (codelib) {
@@ -317,23 +318,16 @@ export default {
             this.$refs.form.clearError()
             this.urlErrMsg = ''
         },
-        async handleRefreshOAUTH () {
-            await this.checkOAuth({
-                projectId: this.projectId,
-                type: this.codelibTypeConstants
-            })
-        },
 
         /**
          * @desc 校验项目是否已经开启PAC模式
          * @params {String} repoUrl 仓库url
          */
-        checkPacProject (repoUrl) {
-            if (this.isGit && this.isOAUTH) {
-                vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}`)
-                    .then((res) => {
-                        this.pacProjectName = res
-                    })
+        handleCheckPacProject (repoUrl) {
+            if (this.isGit && this.isOAUTH && repoUrl) {
+                this.checkPacProject(repoUrl).then((res) => {
+                    this.pacProjectName = res
+                })
             }
         }
     }
