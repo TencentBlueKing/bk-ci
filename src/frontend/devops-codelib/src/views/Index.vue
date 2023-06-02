@@ -43,18 +43,18 @@
 </template>
 
 <script>
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
     import {
         codelibTypes,
         getCodelibConfig,
         isGit,
-        isGithub,
         isGitLab,
-        isTGit,
-        isP4
+        isGithub,
+        isP4,
+        isTGit
     } from '../config/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
@@ -110,11 +110,12 @@
             this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
-                || this.$route.hash.includes('popupGithub')
+                // || this.$route.hash.includes('popupGithub')
             ) {
-                const type = this.$route.hash.includes('popupGithub')
-                    ? 'github'
-                    : 'git'
+                // const type = this.$route.hash.includes('popupGithub')
+                //     ? 'github'
+                //     : 'git'
+                const type = 'git'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
             }
