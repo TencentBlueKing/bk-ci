@@ -146,21 +146,24 @@ class ImageArtifactoryService @Autowired constructor(
         handleImageList(devCloudProjectImages, imageList)
         return ImageListResp(imageList)
     }
-    fun getUrl(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): String {
+    fun getUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): String {
         val stringBuilder = StringBuilder()
         val start = "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
         val middle = "packageName=$searchKey&"
-        val end = "pageNumber=$number&pageSize=$size"
+        val end = "pageNumber=$page&pageSize=$pageSize"
         stringBuilder.append(start)
         if (!searchKey.isNullOrBlank()) {
             stringBuilder.append(middle)
         }
         return stringBuilder.append(end).toString()
     }
-    fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): ImageListResp {
+    fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): ImageListResp {
         // 查询项目镜像列表
-        val projectImages = getImagesByUrl(projectCode, repoName, searchKey, number, size)
         val imageList = mutableListOf<ImageItem>()
+        val projectImages = getImagesByUrl(projectCode, repoName, searchKey, page, pageSize)
+        if (projectImages.isEmpty()) {
+            return ImageListResp(imageList)
+        }
         val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
         repoNames.forEach {
             imageList.add(
@@ -401,24 +404,20 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): List<DockerTag> {
-        val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey, number, size))
-            .get()
-            .header("Authorization", credential)
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            try {
-                if (!response.isSuccessful) {
-                    logger.error("images repository search failed, statusCode: ${response.code}")
-                    throw RuntimeException("images repository search failed")
-                }
-                val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
-                return processingImages(responseBody)
-            } catch (e: Exception) {
-                logger.error("images repository search failed", e)
+    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): List<DockerTag> {
+        val headerMap = mutableMapOf("Authorization" to credential)
+        val response = OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), headerMap)
+        try {
+            if (!response.isSuccessful) {
+                logger.error("images repository search failed, statusCode: ${response.code}")
                 throw RuntimeException("images repository search failed")
             }
+            val responseBody = response.body?.string()
+            logger.info("responseBody: $responseBody")
+            return processingImages(responseBody)
+        } catch (e: Exception) {
+            logger.error("images repository search failed", e)
+            throw RuntimeException("images repository search failed")
         }
     }
     private fun aqlSearchImage(aql: String): List<DockerTag> {
@@ -455,13 +454,13 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     fun processingImages(dataStr: String?): List<DockerTag> {
+        val images = mutableListOf<DockerTag>()
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
-        if (!responseData.containsKey("data")) {
-            throw RuntimeException("data not exist")
+        if (responseData["data"] == null) {
+            return images
         }
         val results: Map<String, Any> = responseData["data"] as Map<String, Any>
         val records = results["records"] as List<Map<String, Any>>
-        val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
             dockerTag.created = DateTimeUtil.toDateTime(LocalDateTime.parse(it["createdDate"] as String))

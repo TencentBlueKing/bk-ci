@@ -37,11 +37,11 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
     api(project(":core:log:api-log"))
+    api(project(":core:common:common-archive"))
     api("org.apache.commons:commons-compress")
     api("com.github.docker-java:docker-java")
     api("org.glassfish.jersey.core:jersey-client")
     api("org.glassfish.jersey.core:jersey-server")
     api("org.glassfish.jersey.core:jersey-common")
     api("org.glassfish.jersey.containers:jersey-container-servlet")
-    implementation(project(mapOf("path" to ":core:common:common-archive")))
 }

@@ -142,13 +142,12 @@ class UserImageResourceImpl @Autowired constructor(
         projectId: String,
         repoName: String,
         searchKey: String?,
-        pageNumber: Int?,
-        pageSize: Int?
+        page: Int,
+        size: Int
     ): Result<ImageListResp> {
         checkUserAndProject(userId, projectId)
-        val number = if (pageNumber == null || pageNumber == 0) 0 else pageNumber
-        val size = if (pageSize == null || pageSize == 0) 10 else pageSize
-        return Result(artifactoryService.getProjectImages(projectId, repoName, searchKey, number, size))
+        val pageSize = if (size > 100) 100 else size
+        return Result(artifactoryService.getProjectImages(projectId, repoName, searchKey, page, pageSize))
     }
 
     override fun listProjectBuildImages(

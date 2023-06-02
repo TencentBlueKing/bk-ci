@@ -162,12 +162,12 @@ interface UserImageResource {
         @ApiParam(value = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @ApiParam(value = "页码", required = false)
-        @QueryParam("pageNumber")
-        pageNumber: Int?,
-        @ApiParam(value = "每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam(value = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页数量", required = true)
+        @QueryParam("size")
+        size: Int
     ): Result<ImageListResp>
 
     @ApiOperation("获取项目构建镜像列表")
