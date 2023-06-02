@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
@@ -40,12 +41,16 @@ import com.tencent.devops.repository.pojo.OauthParams
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.pojo.Project
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -63,12 +68,98 @@ class TGitOAuthService @Autowired constructor(
             "&redirect_uri=${gitConfig.tGitWebhookUrl}&response_type=code&state=${URLEncoder.encode(id, "UTF-8")}"
     }
 
+    fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
+        logger.info("start to get project: userId:$userId")
+        val accessToken =
+            getAccessToken(userId) ?: return isOAuth(userId, redirectUrl = gitConfig.redirectUrl + "/$projectId")
+        val authResult = AuthorizeResult(200, "")
+        return try {
+            authResult.project.addAll(
+                tGitService.getProjectList(
+                    accessToken = accessToken.accessToken,
+                    page = 1,
+                    pageSize = 100,
+                    search = search,
+                    orderBy = null, sort = null, owned = null, minAccessLevel = null
+                ).map {
+                    Project(
+                        id = it.id.toString(),
+                        name = it.name.toString(),
+                        nameWithNameSpace = it.nameWithNamespace.toString(),
+                        sshUrl = it.sshUrlToRepo.toString(),
+                        httpUrl = it.httpUrlToRepo.toString(),
+                        lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
+                            LocalDateTime.parse(it.lastActivityAt.toString().removeSuffix("+0000"))
+                        ) * 1000L
+                    )
+                }
+            )
+            authResult
+        } catch (e: Exception) {
+            logger.info("get oauth project fail: ${e.message}")
+            isOAuth(userId, redirectUrl = gitConfig.redirectUrl + "/$projectId")
+        }
+    }
+
+    fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        logger.info("start to get project: userId:$userId")
+        val accessToken = getAccessToken(userId) ?: return mutableListOf()
+        return tGitService.getProjectList(
+            accessToken = accessToken.accessToken,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            null, null, null, null, null
+        ).map {
+            Project(
+                id = it.id.toString(),
+                name = it.name.toString(),
+                nameWithNameSpace = it.nameWithNamespace.toString(),
+                sshUrl = it.sshUrlToRepo.toString(),
+                httpUrl = it.httpUrlToRepo.toString(),
+                lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
+                    LocalDateTime.parse(it.lastActivityAt.toString().removeSuffix("+0000"))
+                ) * 1000L
+            )
+        }
+    }
+
+    fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        logger.info("start to get branch: userId:$userId repository: $repository")
+        val accessToken = getAccessToken(userId) ?: return mutableListOf()
+        return tGitService.getBranch(
+            accessToken = accessToken.accessToken,
+            userId = userId,
+            repository = repository,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = null
+        )
+    }
+
+    fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        logger.info("start to get tag: userId:$userId repository: $repository")
+        val accessToken = getAccessToken(userId) ?: return mutableListOf()
+        return tGitService.getTag(
+            accessToken = accessToken.accessToken,
+            userId = userId,
+            repository = repository,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
+    }
+
     fun isOAuth(
         userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?,
-        gitProjectId: Long?,
-        refreshToken: Boolean?
+        redirectUrlType: RedirectUrlTypeEnum? = RedirectUrlTypeEnum.DEFAULT,
+        redirectUrl: String? = null,
+        gitProjectId: Long? = null,
+        refreshToken: Boolean? = null
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {

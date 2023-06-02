@@ -46,6 +46,8 @@ import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
+import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -198,6 +200,68 @@ class TGitService @Autowired constructor(
         return res
     }
 
+    @BkTimed(extraTags = ["operation", "拉标签"], value = "bk_tgit_api_time")
+    override fun getTag(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<GitTag> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
+        val repoId = URLEncoder.encode(repository, "utf-8")
+        val url = "${gitConfig.tGitApiUrl}/projects/$repoId/repository/tags" +
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+        val res = mutableListOf<GitTag>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body?.string() ?: return@use
+            val tagList = JsonParser().parse(data).asJsonArray
+            if (!tagList.isJsonNull) {
+                tagList.forEach {
+                    val tag = it.asJsonObject
+                    val commit = tag["commit"].asJsonObject
+                    if (!tag.isJsonNull && !commit.isJsonNull) {
+                        res.add(
+                            GitTag(
+                                name = if (tag["name"].isJsonNull) {
+                                    ""
+                                } else tag["name"].asString,
+                                message = if (tag["message"].isJsonNull) {
+                                    ""
+                                } else tag["message"].asString,
+                                commit = GitTagCommit(
+                                    id = if (commit["id"].isJsonNull) {
+                                        ""
+                                    } else commit["id"].asString,
+                                    message = if (commit["message"].isJsonNull) {
+                                        ""
+                                    } else commit["message"].asString,
+                                    authoredDate = if (commit["authored_date"].isJsonNull) {
+                                        ""
+                                    } else commit["authored_date"].asString,
+                                    authorName = if (commit["author_name"].isJsonNull) {
+                                        ""
+                                    } else commit["author_name"].asString,
+                                    authorEmail = if (commit["author_email"].isJsonNull) {
+                                        ""
+                                    } else commit["author_email"].asString
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        return res
+    }
+
     @BkTimed(extraTags = ["operation", "GIT_FILE_CONTENT"], value = "bk_tgit_api_time")
     override fun getGitFileContent(
         repoName: String,
@@ -304,8 +368,10 @@ class TGitService @Autowired constructor(
     ): List<GitCodeProjectInfo> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = ("${gitConfig.tGitApiUrl}/projects?access_token=$accessToken" +
-            "&page=$pageNotNull&per_page=$pageSizeNotNull")
+        val url = (
+            "${gitConfig.tGitApiUrl}/projects?access_token=$accessToken" +
+            "&page=$pageNotNull&per_page=$pageSizeNotNull"
+        )
             .addParams(
                 mapOf(
                     "search" to search,

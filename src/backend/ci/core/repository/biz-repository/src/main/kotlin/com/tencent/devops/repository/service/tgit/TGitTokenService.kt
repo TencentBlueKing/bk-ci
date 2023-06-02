@@ -56,7 +56,7 @@ class TGitTokenService @Autowired constructor(
         val accessToken = doGetAccessToken(userId) ?: return null
 
         return if (isTokenExpire(accessToken)) {
-            GitOauthService.logger.info("try to refresh the git token of user($userId)")
+            logger.info("try to refresh the git token of user($userId)")
             val lock = RedisLock(redisOperation, "OAUTH_REFRESH_TOKEN_$userId", 60L)
             lock.use {
                 lock.lock()
@@ -104,6 +104,10 @@ class TGitTokenService @Autowired constructor(
         tGitToken.accessToken = AESUtil.encrypt(aesKey, tGitToken.accessToken)
         tGitToken.refreshToken = AESUtil.encrypt(aesKey, tGitToken.refreshToken)
         return tGitTokenDao.saveAccessToken(dslContext, userId, oauthUserId, tGitToken)
+    }
+
+    fun deleteToken(userId: String): Int {
+        return tGitTokenDao.deleteToken(dslContext, userId)
     }
 
     companion object {
