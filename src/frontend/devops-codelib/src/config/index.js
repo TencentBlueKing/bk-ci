@@ -82,7 +82,7 @@ export const codelibConfig = {
 
 export const codelibTypes = [
     'SVN',
-    'Github',
+    // 'Github',
     'Gitlab',
     'TGit',
     'P4'
