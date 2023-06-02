@@ -152,10 +152,10 @@ class ImageArtifactoryService @Autowired constructor(
         val middle = "packageName=$searchKey&"
         val end = "pageNumber=$number&pageSize=$size"
         stringBuilder.append(start)
-        if (searchKey.isNullOrBlank()) {
-            return stringBuilder.append(end).toString()
+        if (!searchKey.isNullOrBlank()) {
+            stringBuilder.append(middle)
         }
-        return stringBuilder.append(middle).append(end).toString()
+        return stringBuilder.append(end).toString()
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, number: Int, size: Int): ImageListResp {
         // 查询项目镜像列表
