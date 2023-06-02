@@ -441,8 +441,11 @@
                 }
             },
 
-            dateTime () {
-                return [this.filterData.startTime, this.filterData.endTime]
+            dateTime: {
+                get () {
+                    return [this.filterData.startTime, this.filterData.endTime]
+                },
+                set () {}
             }
         },
 
@@ -637,7 +640,7 @@
 
             getBuildData () {
                 let { triggerUser, startTime, endTime } = this.filterData
-                if (startTime === endTime) {
+                if (prettyDateTimeFormat(Date.now()) === endTime) {
                     endTime = null
                 }
                 triggerUser = triggerUser ? triggerUser.split(',') : []
