@@ -123,11 +123,12 @@ function validatePermission(data, ajaxPrefix) {
       .postData
       ?.find(data => (data.projectId + data.resourceType + data.resourceCode) === key);
     if (!postData) {
-      ajax;
       postData = { projectId, resourceType, resourceCode, actionList: [] };
       validatePermission.postData = [...validatePermission.postData || [], postData];
     }
-    postData.actionList.push(action);
+    if (!postData.actionList.includes(action)) {
+      postData.actionList.push(action);
+    }
 
     // 接口执行完以后的回调
     let callBackMap = validatePermission.callBackMaps?.[key];
@@ -220,8 +221,10 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
         },
         updated(el, binding, vNode) {
           const { value, oldValue } = binding;
-          if (JSON.stringify(value) === JSON.stringify(oldValue)) return;
-          init(el, binding.value, vNode);
+          console.log(value, oldValue, '===========updated');
+          if (value.hasPermission !== oldValue.hasPermission) {
+            init(el, binding.value, vNode);
+          }
         },
         beforeUnmount(el, binding, vNode) {
           destroy(el, vNode);
@@ -231,4 +234,4 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
   };
 }
 
-export default version === 2 ? AuthorityDirectiveV2 : AuthorityDirectiveV3
+export default version === 2 ? AuthorityDirectiveV2 : AuthorityDirectiveV3;
