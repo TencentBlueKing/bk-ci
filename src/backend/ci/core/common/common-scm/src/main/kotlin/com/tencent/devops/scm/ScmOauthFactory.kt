@@ -36,7 +36,6 @@ import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
 import com.tencent.devops.scm.code.CodeSvnScmImpl
 import com.tencent.devops.scm.code.CodeTGitScmImpl
-import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig

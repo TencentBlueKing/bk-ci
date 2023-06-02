@@ -34,7 +34,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.GitOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
