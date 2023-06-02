@@ -207,7 +207,7 @@ class QualityRuleService @Autowired constructor(
             projectId = projectId,
             ruleId = ruleId,
             authPermission = AuthPermission.DELETE,
-            message = "用户没拦截规则的删除权限"
+            message = "用户没有拦截规则的删除权限"
         )
         qualityRuleDao.delete(dslContext, ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)
@@ -504,6 +504,15 @@ class QualityRuleService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<QualityRuleSummaryWithPermission>> {
+        // RBAC得先校验是否有质量红线列表权限，如果没有，直接返回空
+        val isListPermission = qualityPermissionService.validateRulePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.LIST
+        )
+        if (!isListPermission)
+            return Pair(0, listOf())
+
         val count = qualityRuleDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)
@@ -578,12 +587,14 @@ class QualityRuleService @Autowired constructor(
             }.toMap()
 
             // 获取结果各字段数据
-            val pipelineSummary = getPipelineLackSummary(projectId = projectId,
+            val pipelineSummary = getPipelineLackSummary(
+                projectId = projectId,
                 rule = rule,
                 pipelineIdInfoMap = pipelineIdInfoMap,
                 indicators = indicators,
                 controlPoint = controlPoint,
-                pipelineElementsMap = pipelineElementsMap)
+                pipelineElementsMap = pipelineElementsMap
+            )
             val templateSummary = getTemplateLackSummary(projectId, rule, indicators, controlPoint, templateIdMap)
             val summaryIndicatorList = getSummaryIndicatorList(indicators, ruleIndicatorMap)
             val ruleSummaryControlPoint =
@@ -673,7 +684,8 @@ class QualityRuleService @Autowired constructor(
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
                 name = info.pipelineName,
                 type = "PIPELINE",
-                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            )
         }
     }
 
@@ -703,7 +715,8 @@ class QualityRuleService @Autowired constructor(
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
                 name = template.name,
                 type = "TEMPLATE",
-                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            )
         }
     }
 
@@ -785,15 +798,21 @@ class QualityRuleService @Autowired constructor(
                     })
 
                     // 获取审核用户列表
-                    taskAuditUserList.addAll(if (rule.operation == RuleOperation.AUDIT) {
-                        rule.auditUserList?.toSet() ?: setOf()
-                    } else {
-                        setOf()
-                    })
+                    taskAuditUserList.addAll(
+                        if (rule.operation == RuleOperation.AUDIT) {
+                            rule.auditUserList?.toSet() ?: setOf()
+                        } else {
+                            setOf()
+                        }
+                    )
                 }
                 // 生成结果
-                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
-                    taskRuleList, taskThresholdList, taskAuditUserList))
+                matchTaskList.add(
+                    QualityRuleMatchTask(
+                        controlPoint.name, controlPoint.cnName, position,
+                        taskRuleList, taskThresholdList, taskAuditUserList
+                    )
+                )
             }
         }
         return matchTaskList

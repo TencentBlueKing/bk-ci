@@ -47,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
+@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限--项目相关接口")
 @Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

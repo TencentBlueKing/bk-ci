@@ -135,6 +135,10 @@
     import qrcode from '@/components/devops/qrcode'
     import Logo from '@/components/Logo'
     import { convertFileSize, convertTime } from '@/utils/util'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -275,29 +279,22 @@
                         window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.download,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineId
-                        }],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.DOWNLOAD
+                        }
+                    )
                 }
             },
 
             requestDownloadPermission () {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.download,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineId
-                        }],
-                        projectId: this.projectId
-                    }]
+                handlePipelineNoPermission({
+                    projectId: this.projectId,
+                    resourceCode: this.pipelineId,
+                    action: RESOURCE_ACTION.DOWNLOAD
                 })
             },
             clickHandler (event) {
@@ -361,12 +358,14 @@
                     sideSliderConfig.data = res
                     sideSliderConfig.isLoading = false
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.artifactory,
-                        instanceId: [],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.DOWNLOAD
+                        }
+                    )
                 }
             },
             /**

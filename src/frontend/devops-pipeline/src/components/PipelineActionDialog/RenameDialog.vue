@@ -72,15 +72,14 @@
                     this.$emit('done', this.renamePipelineModel.name)
                     this.handleClose()
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.edit,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineName
-                        }],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EDIT
+                        }
+                    )
                 } finally {
                     message && this.$showTips({
                         message,

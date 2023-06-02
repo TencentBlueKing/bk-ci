@@ -23,7 +23,6 @@ interface IShowTime {
   m?: number,
   s: number
 }
-
 const { t } = useI18n();
 
 const emit = defineEmits(['change']);
@@ -196,6 +195,7 @@ watch(
       :data="tableData"
       remote-pagination
       settings
+      :empty-text="t('noData')"
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">

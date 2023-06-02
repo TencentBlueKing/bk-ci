@@ -8,6 +8,9 @@
             <slot name="btns">
                 <template v-if="btns.length">
                     <button class="bk-button"
+                        v-perm="{
+                            permissionData: btn.permissionData ? btn.permissionData : {}
+                        }"
                         v-for="(btn, index) in btns"
                         :key="index"
                         :class="[`bk-${btn.type}`, `bk-button-${btn.size}`]"

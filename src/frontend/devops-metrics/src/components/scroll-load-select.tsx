@@ -5,6 +5,7 @@ import {
   watch,
   onMounted,
 } from 'vue';
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   props: {
@@ -53,6 +54,7 @@ export default defineComponent({
       pageSize: 100,
       keyword: '',
     });
+    const { t } = useI18n();
     const isLoadEnd = ref(false);
     const isLoading = ref(false);
     const isLoadingMore = ref(false);
@@ -128,6 +130,7 @@ export default defineComponent({
         onScrollEnd={getList}
         onChange={handleChange}
         onToggle={handleToggle}
+        noDataText={t('noData')}
       >
         {
           list.value.map(item => (

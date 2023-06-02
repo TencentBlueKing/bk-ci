@@ -43,12 +43,27 @@ import com.tencent.devops.common.auth.utils.ActionUtils
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 
+@Suppress("TooManyFunctions")
 class BluekingV3AuthProjectApi constructor(
     private val policyService: PolicyService,
     private val authHelper: AuthHelper,
     private val iamConfiguration: IamConfiguration,
     private val iamEsbService: IamEsbService
 ) : AuthProjectApi {
+
+    override fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        // v3没有project_enable权限,启用/禁用只有管理员才有权限
+        return if (permission == AuthPermission.MANAGE || permission == AuthPermission.ENABLE) {
+            checkProjectManager(userId = user, serviceCode = serviceCode, projectCode = projectCode)
+        } else {
+            checkProjectUser(user = user, serviceCode = serviceCode, projectCode = projectCode)
+        }
+    }
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
         logger.info("v3 getProjectUsers serviceCode[$serviceCode] projectCode[$projectCode] group[$group]")

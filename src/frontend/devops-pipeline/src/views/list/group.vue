@@ -664,7 +664,6 @@
             color: #979BA5;
         }
         &-content {
-            width: 1700px;
             // display: flex;
             // flex-wrap: wrap;
             margin: 0 auto;

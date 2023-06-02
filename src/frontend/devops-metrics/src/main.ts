@@ -3,11 +3,14 @@ import { createPinia } from 'pinia';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
+import zhCn from 'bkui-vue/dist/locale/zh-cn.esm'
+import en from 'bkui-vue/dist/locale/en.esm'
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
+import eventBus from '@/utils/bus.js'
 
 // i18n
 import { getCookie } from '@/common/util'
@@ -26,9 +29,13 @@ const i18n = createI18n({
   }
 })
 
+window.Bus = eventBus;
+
 createApp(App)
   .use(router)
   .use(createPinia())
-  .use(bkui)
+  .use(bkui, {
+    locale: ['en', 'en-us', 'en_us'].includes(i18nLocale.toLowerCase()) ? en : zhCn
+  })
   .use(i18n)
   .mount('.app');

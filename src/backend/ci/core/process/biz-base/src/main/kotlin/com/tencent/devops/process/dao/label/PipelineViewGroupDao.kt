@@ -61,6 +61,20 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        viewId: Long,
+        offset: Int,
+        limit: Int
+    ): List<TPipelineViewGroupRecord> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.selectFrom(this)
+                .where(VIEW_ID.eq(viewId))
+                .offset(offset).limit(limit)
+                .fetch()
+        }
+    }
+
     fun listByViewIds(
         dslContext: DSLContext,
         projectId: String,
@@ -76,13 +90,16 @@ class PipelineViewGroupDao {
 
     fun listByViewId(
         dslContext: DSLContext,
-        projectId: String,
-        viewId: Long
+        projectId: String? = null,
+        viewId: Long,
+        offset: Int? = null,
+        limit: Int? = null
     ): List<TPipelineViewGroupRecord> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(VIEW_ID.eq(viewId))
+                .where(VIEW_ID.eq(viewId))
+                .let { if (projectId == null) it else it.and(PROJECT_ID.eq(projectId)) }
+                .let { if (offset != null && limit != null) it.offset(offset).limit(limit) else it }
                 .fetch()
         }
     }

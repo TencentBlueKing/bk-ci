@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
@@ -494,7 +495,7 @@ class PipelineViewGroupService @Autowired constructor(
         projectViewList.add(
             PipelineViewDict.ViewInfo(
                 viewId = PIPELINE_VIEW_UNCLASSIFIED,
-                viewName = "未分组",
+                viewName = ungroupedName(),
                 pipelineList = pipelineInfoMap.values
                     .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
                     .map {
@@ -658,7 +659,7 @@ class PipelineViewGroupService @Autowired constructor(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
                     projectId = projectId,
-                    name = "未分组",
+                    name = ungroupedName(),
                     projected = true,
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),
@@ -756,6 +757,19 @@ class PipelineViewGroupService @Autowired constructor(
                 logger.info("init finish , ${view.projectId} , ${view.id}")
             }
         }
+    }
+
+    private fun ungroupedName() = MessageCodeUtil.getMessageByLocale("未分组", "Ungrouped")
+
+    fun listViewIdsByPipelineId(projectId: String, pipelineId: String): Set<Long> {
+        return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
+    }
+
+    fun listViewIdsByProjectId(projectId: String): Set<Long> {
+        return pipelineViewGroupDao.listByProjectId(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.viewId }.toSet()
     }
 
     companion object {

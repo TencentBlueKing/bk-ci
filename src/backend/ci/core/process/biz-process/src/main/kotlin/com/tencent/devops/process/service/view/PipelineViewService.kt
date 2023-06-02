@@ -48,7 +48,7 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.PipelineGroupPermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
@@ -88,9 +88,9 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineGroupService: PipelineGroupService,
-    private val client: Client
+    private val client: Client,
+    private val pipelineGroupPermissionService: PipelineGroupPermissionService
 ) {
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
@@ -327,7 +327,7 @@ class PipelineViewService @Autowired constructor(
                 ""
             }
             val logic = if (pipelineView.viewType == PipelineViewType.DYNAMIC) pipelineView.logic.name else ""
-            return pipelineViewDao.create(
+            val viewId = pipelineViewDao.create(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
@@ -338,6 +338,16 @@ class PipelineViewService @Autowired constructor(
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data,
                 viewType = pipelineView.viewType
             )
+            if (pipelineView.projected) {
+                // 个人流水线组不需要权限管理
+                pipelineGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    viewId = viewId,
+                    viewName = pipelineView.name
+                )
+            }
+            return viewId
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
@@ -348,7 +358,14 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun deleteView(userId: String, projectId: String, viewId: Long, context: DSLContext? = null): Boolean {
-        return pipelineViewDao.delete(context ?: dslContext, projectId, viewId)
+        val success = pipelineViewDao.delete(context ?: dslContext, projectId, viewId)
+        if (success) {
+            pipelineGroupPermissionService.deleteResource(
+                projectId = projectId,
+                viewId = viewId
+            )
+        }
+        return success
     }
 
     fun updateView(
@@ -360,7 +377,7 @@ class PipelineViewService @Autowired constructor(
     ): Boolean {
         try {
             checkForUpset(context, projectId, userId, pipelineView, false, viewId)
-            return pipelineViewDao.update(
+            val success = pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 viewId = viewId,
@@ -373,6 +390,15 @@ class PipelineViewService @Autowired constructor(
                 ),
                 viewType = pipelineView.viewType
             )
+            if (success && pipelineView.projected) {
+                pipelineGroupPermissionService.modifyResource(
+                    userId = userId,
+                    projectId = projectId,
+                    viewId = viewId,
+                    viewName = pipelineView.name
+                )
+            }
+            return success
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
@@ -526,13 +552,6 @@ class PipelineViewService @Autowired constructor(
         }
 
         return allFilters
-    }
-
-    private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.checkProjectManager(
-            userId = userId,
-            projectId = projectId
-        )
     }
 
     private fun getSystemViewName(viewId: String): String {

@@ -52,6 +52,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
 import com.tencent.devops.environment.dao.EnvDao
@@ -197,15 +198,20 @@ class EnvService @Autowired constructor(
         } else {
             emptyList()
         }
-
-        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
-        if (validRecordList.isEmpty()) {
+        val canListEnv = envRecordList.filter { canListEnvIds.contains(it.envId) }
+        // 用于兼容rbac和其他版本权限，rbac只会展示出用户有列表权限的环境。而其
+        // 他权限版本，则只要用户具有某个环境的列表权限，就会把该项目下所有的环境都返回
+        val envListResult = if (canListEnv.isEmpty()) {
             return listOf()
+        } else {
+            environmentPermissionService.getEnvListResult(
+                canListEnv = canListEnv,
+                envRecordList = envRecordList
+            )
         }
-
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })
-        return envRecordList.map {
+        return envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
@@ -509,8 +515,8 @@ class EnvService @Autowired constructor(
 
     override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
-        val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
-        val invalidEnvIds = envIds.filterNot { canUseEnvIdList.contains(it) }
+        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
+        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
@@ -566,7 +572,7 @@ class EnvService @Autowired constructor(
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }

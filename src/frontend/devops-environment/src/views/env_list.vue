@@ -3,7 +3,16 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.environment') }}</div>
             <div slot="right" v-if="showContent && envList.length">
-                <bk-button theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: ENV_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
             </div>
         </content-header>
 
@@ -15,7 +24,7 @@
             <bk-table v-if="showContent && envList.length"
                 size="small"
                 :data="envList"
-                :row-class-name="getRowClsName"
+                row-class-name="env-item-row"
                 @row-click="toEnvDetail">
                 <bk-table-column :label="$t('environment.envInfo.name')" prop="name"></bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.type')" prop="envType">
@@ -27,7 +36,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.nodeCount')" prop="nodeCount">
                     <template slot-scope="props">
-                        <span class="node-count-item">{{ props.row.nodeCount }}</span>
+                        {{ props.row.nodeCount }}
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime">
@@ -37,7 +46,25 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span :class="{ 'handler-text': props.row.canDelete, 'no-env-delete-permission': !props.row.canDelete }" @click.stop="confirmDelete(props.row)">{{ $t('environment.delete') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: props.row.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: props.row.envHashId,
+                                    action: ENV_RESOURCE_ACTION.DELETE
+                                }
+                            }"
+                        >
+                            <span
+                                :class="{ 'handler-text': props.row.canDelete }"
+                                @click.stop="confirmDelete(props.row)"
+                            >
+                                {{ $t('environment.delete') }}
+                            </span>
+                        </span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -53,6 +80,7 @@
 <script>
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -60,6 +88,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
                 showContent: false, // 显示内容
                 envList: [], // 换环境列表
                 loading: {
@@ -86,9 +116,6 @@
             await this.init()
         },
         methods: {
-            getRowClsName ({ row }) {
-                return `env-item-row ${row.canUse ? '' : 'env-row-useless'}`
-            },
             async init () {
                 const {
                     loading
@@ -143,20 +170,6 @@
              */
             async confirmDelete (row) {
                 const id = row.envHashId
-                if (!row.canDelete) {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.environment,
-                            instanceId: [{
-                                id,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }]
-                    })
-                    return
-                }
                 
                 this.$bkInfo({
                     type: 'warning',
@@ -173,28 +186,21 @@
 
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
-                        } catch (err) {
-                            if (err.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.delete,
-                                        resourceId: this.$permissionResourceMap.environment,
-                                        instanceId: [{
-                                            id,
-                                            name: row.name
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
-                            } else {
-                                message = err.data ? err.data.message : err
-                                theme = 'error'
-                            }
-                        } finally {
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: row.envHashId,
+                                    action: ENV_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        } finally {
                             this.requestList()
                         }
                     }
@@ -204,26 +210,12 @@
              * 跳转环境详情
              */
             toEnvDetail (row) {
-                if (row.canUse) {
-                    this.$router.push({
-                        name: 'envDetail',
-                        params: {
-                            envId: row.envHashId
-                        }
-                    })
-                } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.use,
-                            resourceId: this.$permissionResourceMap.environment,
-                            instanceId: [{
-                                id: row.envHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }]
-                    })
-                }
+                this.$router.push({
+                    name: 'envDetail',
+                    params: {
+                        envId: row.envHashId
+                    }
+                })
             },
             /**
              * 处理时间格式
@@ -253,19 +245,8 @@
         }
         .env-item-row {
             cursor: pointer;
-            &.env-row-useless {
-              cursor: url('../images/cursor-lock.png'), auto;
-              color: $fontLigtherColor;
-              .node-count-item {
-                color: $fontLigtherColor;
-              }
-            }
-            .no-env-delete-permission {
-              cursor: url('../images/cursor-lock.png'), auto;
-            }
         }
 
-        .node-count-item,
         .handler-text {
             color: $primaryColor;
             cursor: pointer;

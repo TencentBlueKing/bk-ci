@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -255,6 +256,10 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             val buildType = BuildEnv.getBuildType()
             val map = mutableMapOf<String, String>()
 
+            AgentEnv.getBkTag()?.let {
+                map[AUTH_HEADER_GATEWAY_TAG] = it
+            }
+
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
                 BuildType.AGENT -> {
@@ -376,7 +381,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else if (useFileDevnetGateway != null) {
-            if (useFileDevnetGateway) {
+            if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+                fixUrl(AgentEnv.getFileGateway()!!, path)
+            } else if (useFileDevnetGateway) {
                 val fileDevnetGateway = CommonEnv.fileDevnetGateway
                 fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
             } else {

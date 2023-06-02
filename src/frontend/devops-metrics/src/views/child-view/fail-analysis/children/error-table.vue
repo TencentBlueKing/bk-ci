@@ -9,9 +9,6 @@ import http from '@/http/api';
 import {
   sharedProps,
 } from '../common/props-type';
-import {
-  useRouter
-} from 'vue-router';
 import { useI18n } from "vue-i18n";
 
 import useFilter from '@/composables/use-filter';
@@ -23,7 +20,6 @@ const {
 } = useFilter(emit);
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
-const router = useRouter()
 const columns = [
   {
     label: t('Pipeline'),
@@ -106,7 +102,6 @@ const pagination = ref({
 const goToPipelineDetail = (row) => {
   console.log(row, arguments);
 }
-
 const handlePageChange = (current) => {
   pagination.value.current = current;
   getData();

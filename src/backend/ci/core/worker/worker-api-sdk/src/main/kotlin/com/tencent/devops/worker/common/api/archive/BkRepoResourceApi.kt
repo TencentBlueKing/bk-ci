@@ -59,6 +59,7 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -88,6 +89,9 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     }
 
     fun tokenAccess(): Boolean {
+        if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+            return true
+        }
         var fileDevnetGateway = CommonEnv.fileDevnetGateway
         var fileIdcGateway = CommonEnv.fileIdcGateway
         if (fileDevnetGateway == null || fileIdcGateway == null) {
@@ -190,7 +194,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(fullPath)}"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = user
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header)
         download(request, destPath)
     }
 
@@ -260,8 +264,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPut(
             path = url,
             requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            headers = getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileDevnetGateway = true
+            headers = getUploadHeader(file, buildVariables, parseAppMetadata)
         )
         val response = request(request, "上传文件失败")
         try {

@@ -133,15 +133,14 @@ export default {
                     status: 'known_error'
                 })
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: target.pipelineId,
-                        name: target.pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
@@ -180,15 +179,14 @@ export default {
             } catch (err) {
                 this.setExecuteStatus(false)
                 this.$store.commit('pipelines/updateCurAtomPrams', null)
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -281,15 +279,14 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -317,15 +314,14 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: this.curPipeline.pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId: this.$route.params.projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.curPipeline.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -398,15 +394,14 @@ export default {
                     data: responses
                 }
             } catch (e) {
-                this.handleError(e, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.pipeline.name
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    e,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
                 return {
                     code: e.code,
                     message: e.message
@@ -431,15 +426,14 @@ export default {
                     theme: 'success'
                 })
             } catch (e) {
-                this.handleError(e, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.pipeline ? this.pipeline.name : ''
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    e,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    }
+                )
             }
         },
         updateCurPipelineByKeyValue (key, value) {

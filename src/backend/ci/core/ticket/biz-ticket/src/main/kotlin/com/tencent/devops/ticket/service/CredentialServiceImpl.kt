@@ -173,7 +173,6 @@ class CredentialServiceImpl @Autowired constructor(
         }
 
         logger.info("$userId create credential ${credential.credentialId}")
-        credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
         credentialDao.create(
             dslContext = dslContext,
             projectId = projectId,
@@ -191,6 +190,7 @@ class CredentialServiceImpl @Autowired constructor(
             credentialV4 = credentialHelper.encryptCredential(credential.v4),
             credentialRemark = credential.credentialRemark
         )
+        credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
     }
 
     override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {

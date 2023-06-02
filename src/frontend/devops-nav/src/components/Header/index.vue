@@ -27,6 +27,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
+                    :popover-width="345"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -36,19 +37,30 @@
                     >
                     </bk-option>
                     <template slot="extension">
-                        <div
-                            class="bk-selector-create-item"
-                            @click.stop.prevent="popProjectDialog()"
-                        >
-                            <i class="devops-icon icon-plus-circle" />
-                            <span class="text">{{ $t('newProject') }}</span>
-                        </div>
-                        <div
-                            class="bk-selector-create-item"
-                            @click.stop.prevent="goToPm"
-                        >
-                            <i class="devops-icon icon-apps" />
-                            <span class="text">{{ $t('projectManage') }}</span>
+                        <div class="extension-wrapper">
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="popProjectDialog"
+                            >
+                                <i class="devops-icon icon-plus-circle mr5" />
+                                <span class="text">{{ $t('newProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="handleApplyProject"
+                            >
+                                <icon name="icon-apply" size="14" class="mr5" />
+                                <span class="text">{{ $t('joinProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="goToPm"
+                            >
+                                <i class="devops-icon icon-apps mr5" />
+                                <span class="text">{{ $t('manageProject') }}</span>
+                            </span>
                         </div>
                     </template>
                 </bk-select>
@@ -84,6 +96,7 @@
             :init-show-dialog="showProjectDialog"
             :title="projectDialogTitle"
         />
+        <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
     </div>
 </template>
 
@@ -93,6 +106,7 @@
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
+    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
@@ -105,6 +119,7 @@
             User,
             NavMenu,
             ProjectDialog,
+            ApplyProjectDialog,
             Logo,
             DevopsSelect,
             LocaleSwitcher
@@ -227,16 +242,15 @@
             }
 
             reload
-? location.href = path
-: this.$router.replace({
-                path
-            })
+                ? location.href = path
+                : this.$router.replace({ path })
         }
 
         handleProjectChange (id: string) {
             const { projectId } = this.$route.params
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
+            sessionStorage.removeItem('group-apply-query')
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
@@ -267,13 +281,15 @@
         }
 
         popProjectDialog (project: object): void {
-            this.toggleProjectDialog({
-                showProjectDialog: true,
-                project
-            })
+            this.to('/console/manage/apply')
             if (this.$refs.projectDropdown && typeof this.$refs.projectDropdown.close === 'function') {
                 this.$refs.projectDropdown.close()
             }
+        }
+
+        handleApplyProject () {
+            // this.$refs.applyProjectDialog.isShow = true
+            this.to('/console/permission/apply')
         }
 
         closeTooltip (): void {
@@ -286,7 +302,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
@@ -409,7 +425,13 @@
         }
     }
     .bk-selector-create-item{
+        display: flex;
+        align-items: center;
         cursor: pointer;
+        font-size: 12px !important;
+        i {
+            font-size: 12px !important;
+        }
         &:hover {
             color: $primaryColor;
             .text {
@@ -419,5 +441,18 @@
         &:first-child {
             border-top: 0
         }
+    }
+
+    .extension-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .extension-line {
+        display: inline-block;
+        width: 1px;
+        height: 16px;
+        margin: 0 10px;
+        background: #DCDEE5;
     }
 </style>

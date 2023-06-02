@@ -53,5 +53,10 @@
     "Success rate trend": "Success rate trend",
     "Success rate (%)": "Success rate (%)",
     "Plugin stat": "Plugin stat",
-    "Average time of failure runs (min)": "Average time of failure runs (min)"
+    "Average time of failure runs (min)": "Average time of failure runs (min)",
+    "noData": "No Data",
+    "编译": "Build",
+    "测试": "Test",
+    "部署": "Deploy",
+    "其它": "Common"
 }

@@ -31,28 +31,29 @@ package com.tencent.devops.auth.resources
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.auth.api.callback.ServiceAuthResourceCallBackResource
-import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
-    val resourceService: ResourceService
+    private val permissionResourceCallbackService: PermissionResourceCallbackService
 ) : ServiceAuthResourceCallBackResource {
     override fun projectInfo(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO {
-        return resourceService.getProject(callBackInfo, token)
+        logger.info("callBackInfo: $callBackInfo, token: $token")
+        return permissionResourceCallbackService.getProject(callBackInfo, token)
     }
 
     override fun resourceList(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO? {
-        logger.info("resourceList: $callBackInfo, token: $token")
-        return resourceService.getInstanceByResource(
+        logger.info("callBackInfo: $callBackInfo, token: $token")
+        return permissionResourceCallbackService.getInstanceByResource(
                 callBackInfo = callBackInfo,
                 token = token
             )
