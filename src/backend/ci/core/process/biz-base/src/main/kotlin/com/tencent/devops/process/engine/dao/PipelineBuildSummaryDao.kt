@@ -463,13 +463,18 @@ class PipelineBuildSummaryDao {
      */
     fun startLatestRunningBuild(
         dslContext: DSLContext,
-        latestRunningBuild: LatestRunningBuild
+        latestRunningBuild: LatestRunningBuild,
+        executeCount: Int
     ): Int {
         return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 dslContext.update(this)
-                    .set(LATEST_BUILD_ID, buildId)
-                    .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
+                    .let {
+                        if (executeCount == 1) {
+                            // 只有首次才写入LATEST_BUILD_ID和LATEST_STATUS，重试不写入
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
+                        } else it
+                    }
                     .set(LATEST_TASK_COUNT, taskCount)
                     .set(LATEST_START_USER, userId)
                     .set(QUEUE_COUNT, QUEUE_COUNT - 1)
