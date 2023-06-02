@@ -9,7 +9,11 @@
             </span>
             <span>{{ error.errorCode }}</span>
         </p>
-        <pre v-if="!isCollapse" class="error-log-summary-content">{{ error.errorMsg.trim() }}</pre>
+        <div
+            v-if="!isCollapse"
+            class="error-log-summary-content"
+            v-html="errorMsg"
+        ></div>
     </div>
 </template>
 
@@ -31,6 +35,9 @@
         computed: {
             errorTypeAlias () {
                 return this.$t(errorTypeMap[this.error?.errorType]?.title ?? '--')
+            },
+            errorMsg () {
+                return this.error?.errorMsg?.trim().replace(/\n/g, '<br/>') ?? ''
             }
         },
         methods: {
@@ -79,6 +86,12 @@
             padding: 8px 20px;
             margin: 0;
             color: white;
+            a {
+                color: #3c96ff;
+                &:visited {
+                    color: #3c96ff;
+                }
+            }
         }
     }
 </style>
