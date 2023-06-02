@@ -42,9 +42,11 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
+import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -210,17 +212,25 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean> {
         val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
+        val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
         val propsMap = mutableMapOf<String, Any?>()
-        propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
-        propsMap[KEY_INPUT] = taskDataMap[KEY_INPUT]
-        propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
-        propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
+        val packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (packagePath.isNullOrBlank()) {
+            inputDataMap?.let { propsMap.putAll(inputDataMap) }
+        } else {
+            propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
+            propsMap[KEY_INPUT] = inputDataMap
+            propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
+            propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)

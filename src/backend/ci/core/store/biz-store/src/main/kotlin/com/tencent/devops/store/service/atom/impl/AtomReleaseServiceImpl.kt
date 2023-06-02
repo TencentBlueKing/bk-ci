@@ -93,6 +93,7 @@ import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.KEY_VERSION_INFO
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
@@ -240,21 +241,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.ATOM, atomCode),
                 marketAtomCreateRequest = marketAtomCreateRequest
             )
-            // 添加插件与项目关联关系，type为0代表新增插件时关联的初始化项目
-            storeProjectRelDao.addStoreProjectRel(
+            // 初始化插件统计表数据
+            storeStatisticTotalDao.initStatisticData(
                 dslContext = context,
-                userId = userId,
                 storeCode = atomCode,
-                projectCode = marketAtomCreateRequest.projectCode,
-                type = StoreProjectTypeEnum.INIT.type.toByte(),
-                storeType = StoreTypeEnum.ATOM.type.toByte()
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
-                storeCode = atomCode,
-                projectCode = marketAtomCreateRequest.projectCode,
-                type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
             // 默认给新建插件的人赋予管理员权限
@@ -276,10 +266,24 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     yamlFlag = false
                 )
             )
-            // 初始化插件统计表数据
-            storeStatisticTotalDao.initStatisticData(
+            if (marketAtomCreateRequest.projectCode.isBlank()) {
+                return@transaction
+            }
+            // 添加插件与项目关联关系，type为0代表新增插件时关联的初始化项目
+            storeProjectRelDao.addStoreProjectRel(
                 dslContext = context,
+                userId = userId,
                 storeCode = atomCode,
+                projectCode = marketAtomCreateRequest.projectCode,
+                type = StoreProjectTypeEnum.INIT.type.toByte(),
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeCode = atomCode,
+                projectCode = marketAtomCreateRequest.projectCode,
+                type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         }
@@ -434,16 +438,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
-        val propsMap = mutableMapOf<String, Any?>()
-        propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
-        propsMap[KEY_INPUT] = taskDataMap[KEY_INPUT]
-        propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
-        propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
 
-        val classType = if (convertUpdateRequest.os.isEmpty()) {
+        val packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String
+        val classType = if (packagePath.isNullOrBlank()) {
+            // 没有可执行文件的插件是老的内置插件，插件的classType为插件标识
+            atomCode
+        } else if (convertUpdateRequest.os.isEmpty()) {
             MarketBuildLessAtomElement.classType
         } else {
             MarketBuildAtomElement.classType
+        }
+        val propsMap = mutableMapOf<String, Any?>()
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (packagePath.isNullOrBlank()) {
+            inputDataMap?.let { propsMap.putAll(inputDataMap) }
+        } else {
+            propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
+            propsMap[KEY_INPUT] = inputDataMap
+            propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
+            propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
         }
         convertUpdateRequest.os.sort() // 给操作系统排序
         val atomStatus =

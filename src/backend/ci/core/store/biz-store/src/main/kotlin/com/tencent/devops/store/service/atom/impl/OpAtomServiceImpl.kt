@@ -391,12 +391,12 @@ class OpAtomServiceImpl @Autowired constructor(
         try {
             val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
             taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
-            val releaseInfoMap = taskJsonMap["releaseInfo"]
+            val releaseInfoMap = taskJsonMap[KEY_RELEASE_INFO]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                params = arrayOf("releaseInfo"),
+                params = arrayOf(KEY_RELEASE_INFO),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -532,6 +532,9 @@ class OpAtomServiceImpl @Autowired constructor(
                 status = updateMarketAtomResult.status,
                 message = updateMarketAtomResult.message
             )
+        }
+        if (releaseInfo.configInfo.defaultFlag) {
+            setDefault(userId, atomCode)
         }
         // 确认测试通过
         return atomReleaseService.passTest(userId, atomId)

@@ -135,6 +135,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
             atomEnvRequests.forEach { atomEnvRequest ->
+                if (atomEnvRequest.pkgLocalPath.isNullOrBlank()) {
+                    return@forEach
+                }
                 val packageFilePathPrefix = buildAtomArchivePath(projectCode, atomCode, version)
                 val packageFile = File("$packageFilePathPrefix/${atomEnvRequest.pkgLocalPath}")
                 val packageFileInfo = PackageFileInfo(
