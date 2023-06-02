@@ -33,41 +33,45 @@
             </bk-form-item>
             <bk-form-item label="人员">
                 <section class="group-importer">
-                    <bk-tab :label-height="32" :active.sync="activeTab" @tab-change="handleTabChange">
+                    <bk-tab
+                        :label-height="32"
+                        :active.sync="activeTab"
+                        @tab-change="handleTabChange"
+                    >
                         <bk-tab-panel
                             :key="panel.name"
                             v-for="(panel) in panels"
                             v-bind="panel"
                         >
-                            <header class="group-importer-header">
-                                <bk-select
-                                    :value="importType"
-                                    @selected="handleImportTypeSelected"
-                                    :loading="loadingGroup"
-                                    :clearable="false"
-                                >
-                                    <bk-option v-for="option in importTypeList"
-                                        :key="option.id"
-                                        :id="option.id"
-                                        :name="option.name"
-                                    />
-                                </bk-select>
-                                <component
-                                    :is="typeComponent"
-                                    v-bind="typeProps.props"
-                                    v-on="typeProps.listeners"
-                                />
-                                <bk-button
-                                    theme="primary"
-                                    outline
-                                    :disabled="adding"
-                                    :icon="adding ? 'loading' : ''"
-                                    @click="handlerAddUser"
-                                >
-                                    添加
-                                </bk-button>
-                            </header>
                         </bk-tab-panel>
+                        <header class="group-importer-header">
+                            <bk-select
+                                :value="importType"
+                                @selected="handleImportTypeSelected"
+                                :loading="loadingGroup"
+                                :clearable="false"
+                            >
+                                <bk-option v-for="option in importTypeList"
+                                    :key="option.id"
+                                    :id="option.id"
+                                    :name="option.name"
+                                />
+                            </bk-select>
+                            <component
+                                :is="typeComponent"
+                                v-bind="typeProps.props"
+                                v-on="typeProps.listeners"
+                            />
+                            <bk-button
+                                theme="primary"
+                                outline
+                                :disabled="adding"
+                                :icon="adding ? 'loading' : ''"
+                                @click="handlerAddUser"
+                            >
+                                添加
+                            </bk-button>
+                        </header>
                     </bk-tab>
                     <bk-table
                         ref="filterTable"
@@ -299,6 +303,21 @@
         watch: {
             'userList.length': function (len) {
                 this.pagination.count = len
+            },
+            visible (val) {
+                if (!val) { // 重置
+                    this.activeTab = 'manual'
+                    this.importType = 1
+                    this.submitting = false
+                    this.innerUsers = []
+                    this.outerUsers = []
+                    this.innerOrg = null
+                    this.pagination = {
+                        current: 1,
+                        count: 0,
+                        limit: 10
+                    }
+                }
             }
         },
         created () {
@@ -391,6 +410,14 @@
             async handlerAddUser () {
                 switch (this.importType) {
                     case 3:
+                        if (this.userSet.has(this.innerOrg?.name)) {
+                            this.$bkMessage({
+                                message: `内部组织${this.innerOrg.name}已存在`,
+                                theme: 'error'
+                            })
+                            this.innerOrg = null
+                            return
+                        }
                         this.handleGroupFieldChange(
                             'members',
                             [

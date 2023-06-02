@@ -4,11 +4,12 @@
         :value="value"
     >
         <bk-big-tree
-            :data="treeData"
             class="tree-select"
             enable-title-tip
             selectable
             ref="tree"
+            :data="treeData"
+            :expand-on-click="false"
             :options="{ folderKey: 'hasNext' }"
             :lazy-method="expandNode"
             :default-selected-node="value"
