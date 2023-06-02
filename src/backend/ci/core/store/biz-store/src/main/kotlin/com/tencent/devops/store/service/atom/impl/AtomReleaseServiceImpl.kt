@@ -440,7 +440,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
 
         val packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String
-        val classType = if (packagePath.isNullOrBlank()) {
+        val classType = if (packagePath.isNullOrBlank() && atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
             // 没有可执行文件的插件是老的内置插件，插件的classType为插件标识
             atomCode
         } else if (convertUpdateRequest.os.isEmpty()) {
