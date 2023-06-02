@@ -28,9 +28,11 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
@@ -42,7 +44,13 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.CommitSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
+import java.nio.file.Files
+import java.util.LinkedList
+import java.util.Queue
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNDepth
 import org.tmatesoft.svn.core.SVNErrorCode
@@ -58,10 +66,6 @@ import org.tmatesoft.svn.core.wc.SVNRevision
 import org.tmatesoft.svn.core.wc.SVNStatusType
 import org.tmatesoft.svn.core.wc.SVNUpdateClient
 import org.tmatesoft.svn.core.wc2.SvnTarget
-import java.io.File
-import java.nio.file.Files
-import java.util.LinkedList
-import java.util.Queue
 
 @Suppress("ALL")
 open class SvnUpdateTask constructor(
@@ -225,7 +229,8 @@ open class SvnUpdateTask constructor(
                 branchName = "",
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
-                commitTimes = commitMaterial.commitTimes
+                commitTimes = commitMaterial.commitTimes,
+                scmType = ScmType.CODE_SVN.name
             )
         ))
         return env
@@ -583,7 +588,13 @@ open class SvnUpdateTask constructor(
             return
         }
         if (info.url != svnUrl) {
-            LoggerService.addWarnLine("SVN repo url 从（${info.url}）变为（$svnUrl），全量拉取代码")
+            LoggerService.addWarnLine(
+                "SVN repo url " + MessageUtil.getMessageByLocale(
+                            messageCode = WorkerMessageCode.PULL_THE_REPOSITORY_IN_FULL,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf("${info.url}", "$svnUrl")
+                        )
+            )
             cleanupWorkspace(workspace)
         }
     }
@@ -604,7 +615,13 @@ open class SvnUpdateTask constructor(
             val newProjectName = SvnUtils.getSvnProjectName(svnUrl.toString())
 
             if (localProjectName == newProjectName) {
-                LoggerService.addWarnLine("SVN repo url 从（${info.url}）变为（$svnUrl），switch拉取代码")
+                LoggerService.addWarnLine(
+                    "SVN repo url " + MessageUtil.getMessageByLocale(
+                        messageCode = WorkerMessageCode.PULL_THE_REPOSITORY_IN_SWITCH,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = arrayOf("${info.url}", "$svnUrl")
+                    )
+                )
                 return true
             }
         }

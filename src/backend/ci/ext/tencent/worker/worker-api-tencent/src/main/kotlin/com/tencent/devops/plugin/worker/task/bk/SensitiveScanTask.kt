@@ -27,28 +27,34 @@
 
 package com.tencent.devops.plugin.worker.task.bk
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.element.SensitiveScanElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_CANNING_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
 import com.tencent.devops.worker.common.utils.BkRepoUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.TextProgressMonitor
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.Writer
 import java.nio.file.Paths
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.TextProgressMonitor
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -103,18 +109,29 @@ class SensitiveScanTask : ITask() {
                 cd public_script && /bin/bash check.sh "$excludePath"
             """
         logger.info("Start to scan the sensitive information.excludePath: $excludePath")
-        LoggerService.addNormalLine("开始敏感信息扫描，待排除目录：$excludePath")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_CANNING_SENSITIVE_INFORMATION,
+                language = AgentEnv.getLocaleLanguage()
+        ) + "：$excludePath")
 
         command.execute(buildId, script, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
 
         val fileDirParam = "public_script/report"
         val indexFileParam = "detect_ssd.html"
-        val reportNameParam = "敏感信息扫描报告"
+        val reportNameParam = MessageUtil.getMessageByLocale(
+            messageCode = BK_SENSITIVE_INFORMATION,
+            language = AgentEnv.getLocaleLanguage()
+        )
 
         val fileDir = getFile(workspace, fileDirParam)
         if (!fileDir.isDirectory) {
             throw TaskExecuteException(
-                errorMsg = "文件夹($fileDirParam)不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = FOLDER_NOT_EXIST,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(fileDirParam)
+                ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
@@ -122,7 +139,12 @@ class SensitiveScanTask : ITask() {
 
         val indexFile = getFile(fileDir, indexFileParam)
         if (!indexFile.exists()) {
-            LoggerService.addNormalLine("无敏感信息，无需生成报告")
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NO_SENSITIVE_INFORMATION,
+                    language = AgentEnv.getLocaleLanguage()
+                )
+            )
             return
         }
 
@@ -147,9 +169,11 @@ class SensitiveScanTask : ITask() {
             )
         }
         reportArchiveResourceApi.createReportRecord(
+            buildVariables = buildVariables,
             taskId = elementId,
             indexFile = indexFileParam,
-            name = reportNameParam
+            name = reportNameParam,
+            token = token
         )
     }
 

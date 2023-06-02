@@ -32,7 +32,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.DesUtil
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -44,6 +45,7 @@ import sun.misc.BASE64Decoder
 import java.util.Random
 
 @Service
+@Suppress("ALL")
 class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -71,7 +73,7 @@ class TOFService @Autowired constructor(
             return TOFResult("TOF error, post tof data cannot serialize")
         }
 
-        val requestBody = RequestBody.create(MediaType.parse(CONTENT_TYPE), body)
+        val requestBody = RequestBody.create(CONTENT_TYPE.toMediaTypeOrNull(), body)
         val headers = generateHeaders(tofConf["sys-id"] ?: "", tofConf["app-key"] ?: "")
         if (headers == null) {
             logger.error(String.format("TOF error, generate signature failure, url: %s", url))
@@ -88,18 +90,22 @@ class TOFService @Autowired constructor(
         try {
             okHttpClient.newCall(request).execute().use { response ->
 
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                    logger.error("TOF error, post data response failure, url: $finalUrl, status code: ${response.code()}," +
-                        " errorMsg: $responseBody, request body: $body")
+                    logger.error(
+                        "TOF error, post data response failure, url: $finalUrl, status code: ${response.code}," +
+                                " errorMsg: $responseBody, request body: $body")
                     return TOFResult("TOF error, post data response failure")
                 }
             }
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
             return result
         } catch (e: Throwable) {
@@ -142,7 +148,7 @@ class TOFService @Autowired constructor(
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
 
-        postData.codeccAttachFileContent!!.forEach { key, value ->
+        postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)
         }
@@ -152,17 +158,26 @@ class TOFService @Autowired constructor(
             val taskRequest = Request.Builder().url(String.format("%s%s", tofConf["host"], "/api/v1/Message/SendMail"))
                 .headers(headers).post(taskBody.build()).build()
             OkhttpUtils.doHttp(taskRequest).use { response ->
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 logger.info("post codecc email to tof with url, request, response: $url \n $params \n $responseBody")
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                    logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
+                    logger.error(String.format(
+                        "TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s",
+                        url,
+                        response.code,
+                        responseBody
+                    ))
                     return TOFResult("TOF error, post data response failure")
                 }
             }
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("post email formData fail: $result")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
             return result
         } catch (e: Throwable) {
@@ -190,13 +205,13 @@ class TOFService @Autowired constructor(
         }
 
         val signature = DesUtil.toHexString(signatureBytes).toUpperCase()
-        val headerMap = HashMap<String, String?>()
+        val headerMap = mutableMapOf<String, String>()
         headerMap.apply {
             put("appkey", tofAppKey)
             put("timestamp", timestamp)
             put("random", randomNumber.toString())
             put("signature", signature)
         }
-        return Headers.of(headerMap)
+        return headerMap.toHeaders()
     }
 }

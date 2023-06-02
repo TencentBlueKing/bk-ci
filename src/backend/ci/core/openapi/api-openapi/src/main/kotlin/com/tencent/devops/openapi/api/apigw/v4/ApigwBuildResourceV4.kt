@@ -151,9 +151,12 @@ interface ApigwBuildResourceV4 {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildId")
-        buildId: String,
+        buildId: String?,
+        @ApiParam("构建号(构建ID和构建号，二选其一填入)", required = false)
+        @QueryParam("buildNumber")
+        buildNumber: Int?,
         @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
@@ -384,7 +387,19 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("变量名列表", required = true)
+        @ApiParam(
+            "变量名列表", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
+                        value = """
+                            ["variable1"]
+                                """
+                    )
+                ]
+            )
+        )
         variableNames: List<String>
     ): Result<Map<String, String>>
 
@@ -463,13 +478,13 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = false)
+        @ApiParam("流水线ID（p-开头）", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id", required = true)
+        @ApiParam("步骤Id（e-开头）", required = true)
         @QueryParam("elementId")
         elementId: String,
         @ApiParam("审核信息", required = true)
@@ -501,4 +516,24 @@ interface ApigwBuildResourceV4 {
         @ApiParam("请求参数", required = true)
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>
+
+    @ApiOperation(
+        "尝试将异常导致流水线中断的继续运转下去（结果可能是：失败结束 or 继续运行）",
+        tags = ["v4_app_try_fix_stuck_builds", "v4_user_try_fix_stuck_builds"]
+    )
+    @POST
+    @Path("/try_fix_stuck_builds")
+    fun tryFinishStuckBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
+        buildIds: Set<String>
+    ): Result<Boolean>
 }

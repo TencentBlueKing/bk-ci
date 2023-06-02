@@ -71,5 +71,7 @@ data class WebHookParams(
     var includePushAction: String? = null,
     var enableThirdFilter: Boolean? = false,
     var thirdUrl: String? = null,
-    var thirdSecretToken: String? = null
+    var thirdSecretToken: String? = null,
+    // 插件版本
+    var version: String? = null
 )

@@ -31,7 +31,11 @@ function _M:new()
         return nil
     end
     red:set_timeout(2000) -- 2 second
-    local res, err = red:connect(redisConfig['host'], redisConfig['port'], {backlog = redisConfig['backlog']})
+    local res, err = red:connect(redisConfig['host'], redisConfig['port'], {
+        backlog = redisConfig['backlog'],
+        ssl = redisConfig['ssl'],
+        pool_size = redisConfig['pool_size']
+    })
     if not res then
         ngx.log(ngx.ERR, "red connect error:", redisConfig['host'], ",", redisConfig['port'], " ", err)
         return nil

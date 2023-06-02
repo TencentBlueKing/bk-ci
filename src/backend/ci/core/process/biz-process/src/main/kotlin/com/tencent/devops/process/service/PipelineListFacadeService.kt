@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -48,13 +49,14 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
@@ -75,6 +77,7 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
@@ -103,6 +106,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_RECENT_USE
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -111,7 +115,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -183,14 +186,10 @@ class PipelineListFacadeService @Autowired constructor(
                 permission = permission
             )
             if (!hasViewPermission) {
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                    defaultMessage = permission.alias
-                )
+                val permissionMsg = permission.getI18n(I18nUtil.getLanguage(userId))
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                    defaultMessage = "用户($userId)无权限在工程($projectId)下获取流水线",
                     params = arrayOf(permissionMsg)
                 )
             }
@@ -696,11 +695,49 @@ class PipelineListFacadeService @Autowired constructor(
                 page = page ?: 1,
                 pageSize = pageSize ?: totalSize.toInt(),
                 count = totalSize,
-                records = pipelineList
+                records = fillPipelinePermissions(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineList = pipelineList
+                )
             )
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
+        }
+    }
+
+    private fun fillPipelinePermissions(
+        userId: String,
+        projectId: String,
+        pipelineList: List<Pipeline>
+    ): List<Pipeline> {
+        val permissionToListMap = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.MANAGE,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.SHARE,
+                AuthPermission.EDIT,
+                AuthPermission.DOWNLOAD,
+                AuthPermission.EXECUTE
+            ),
+            pipelineIds = pipelineList.map { it.pipelineId }
+        )
+        return pipelineList.map { pipeline ->
+            pipeline.copy(
+                permissions = PipelinePermissions(
+                    canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipeline.pipelineId) ?: false,
+                    canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipeline.pipelineId) ?: false,
+                    canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipeline.pipelineId) ?: false,
+                    canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipeline.pipelineId) ?: false,
+                    canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipeline.pipelineId) ?: false,
+                    canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipeline.pipelineId) ?: false,
+                    canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipeline.pipelineId) ?: false
+                )
+            )
         }
     }
 
@@ -995,8 +1032,8 @@ class PipelineListFacadeService @Autowired constructor(
 
         return if (logic == Logic.AND) {
             nameFilterPipelines
-                .intersect(creatorFilterPipelines.asIterable())
-                .intersect(labelFilterPipelines.asIterable())
+                .intersect(creatorFilterPipelines.toSet())
+                .intersect(labelFilterPipelines.toSet())
                 .toList()
         } else {
             nameFilterPipelines
@@ -1054,14 +1091,6 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
         return pipelines
-    }
-
-    fun getPipelineInfoNum(
-        dslContext: DSLContext,
-        projectIds: Set<String>?,
-        channelCodes: Set<ChannelCode>?
-    ): Int? {
-        return pipelineInfoDao.getPipelineInfoNum(dslContext, projectIds, channelCodes)!!.value1()
     }
 
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
@@ -1495,18 +1524,6 @@ class PipelineListFacadeService @Autowired constructor(
         }
     }
 
-    // 旧接口
-    fun getPipelineIdAndProjectIdByBuildId(projectId: String, buildId: String): Pair<String, String> {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId)
-            )
-        return Pair(buildInfo.pipelineId, buildInfo.projectId)
-    }
-
     fun listDeletePipelineIdByProject(
         userId: String,
         projectId: String,
@@ -1540,27 +1557,6 @@ class PipelineListFacadeService @Autowired constructor(
             count = count.toLong(),
             records = list
         )
-    }
-
-    fun listPermissionPipelineCount(
-        userId: String,
-        projectId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
-        checkPermission: Boolean = true
-    ): Int {
-        val watcher = Watcher(id = "listPermissionPipelineCount|$projectId|$userId")
-        try {
-            watcher.start("perm_r_perm")
-            val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-                userId = userId, projectId = projectId, permission = AuthPermission.LIST
-            )
-            watcher.start("s_r_c_b_id")
-            return pipelineRepositoryService.countByPipelineIds(
-                projectId = projectId, channelCode = channelCode, pipelineIds = hasPermissionList
-            )
-        } finally {
-            LogUtils.printCostTimeWE(watcher = watcher)
-        }
     }
 
     fun getPipelinePage(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
@@ -1687,14 +1683,14 @@ class PipelineListFacadeService @Autowired constructor(
         logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
-        val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
             pipelineInfoDao.searchByProject(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
                 projectCode = projectId,
-                limit = page.limit,
-                offset = page.offset
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {
@@ -1709,14 +1705,26 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelineDetailInfo? {
+        val permission = AuthPermission.VIEW
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW
+                permission = permission
             )
         ) {
-            throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
         }
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
@@ -1724,7 +1732,13 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineId = pipelineId
         ) ?: return null
         if (pipelineInfo.projectId != projectId) {
-            throw ParamBlankException("$pipelineId 非 $projectId 流水线")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(pipelineId, projectId)
+                )
+            )
         }
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -1829,7 +1843,7 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getByAutoIds(
-        ids: List<Int>,
+        ids: List<Long>,
         projectId: String? = null
     ): List<SimplePipeline> {
         val pipelines = pipelineInfoDao.getPipelineByAutoId(
@@ -1859,12 +1873,10 @@ class PipelineListFacadeService @Autowired constructor(
 
         val watch = StopWatch()
         watch.start("perm_r_perm")
-        val authPipelines = if (authPipelineIds.isEmpty()) {
+        val authPipelines = authPipelineIds.ifEmpty {
             pipelinePermissionService.getResourceByPermission(
-                userId, projectId, AuthPermission.LIST
+                userId = userId, projectId = projectId, permission = AuthPermission.LIST
             )
-        } else {
-            authPipelineIds
         }
         watch.stop()
 

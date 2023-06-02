@@ -60,7 +60,7 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -283,7 +283,7 @@ class CallBackControl @Autowired constructor(
                     "Removing callbacks because of 100% failure rate|" +
                         "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
                 )
-                projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
+                projectPipelineCallBackService.disable(callBack)
             }
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
@@ -440,7 +440,7 @@ class CallBackControl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
         const val MAX_RETRY_COUNT = 3
 
         private fun anySslSocketFactory(): SSLSocketFactory {

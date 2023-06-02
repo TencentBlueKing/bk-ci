@@ -31,11 +31,11 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
 import com.tencent.devops.support.model.wechatwork.enums.UploadMediaType
 import com.tencent.devops.support.model.wechatwork.result.UploadMediaResult
-import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType as SendMediaType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.InputStream
+import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType as SendMediaType
 
 @Service
 class WechatWorkMessageService @Autowired constructor(
@@ -47,14 +47,22 @@ class WechatWorkMessageService @Autowired constructor(
 
     fun sendRichtextMessage(richitextMessage: RichtextMessage) = wechatWorkService.sendRichText(richitextMessage)
 
-    fun uploadMedia(uploadMediaType: UploadMediaType, mediaName: String, mediaInputStream: InputStream): UploadMediaResult? {
+    fun uploadMedia(
+        uploadMediaType: UploadMediaType,
+        mediaName: String,
+        mediaInputStream: InputStream
+    ): UploadMediaResult? {
         val uploadMediaResponse = wechatWorkService.uploadMedia(
-                SendMediaType.valueOf(uploadMediaType.toString()),
-                mediaName, mediaInputStream)
+            SendMediaType.valueOf(uploadMediaType.toString()),
+            mediaName, mediaInputStream
+        )
         return if (uploadMediaResponse == null) {
             null
         } else {
-            return UploadMediaResult(UploadMediaType.valueOf(uploadMediaResponse.type.toString()), uploadMediaResponse.media_id)
+            return UploadMediaResult(
+                UploadMediaType.valueOf(uploadMediaResponse.type.toString()),
+                uploadMediaResponse.mediaId
+            )
         }
     }
 }

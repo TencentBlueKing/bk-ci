@@ -1,27 +1,30 @@
 dependencies:
 - name: common
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 1.10.0
 - name: mysql
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.8.3
 - name: redis
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 14.8.8
 - name: elasticsearch
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 17.5.2
 - name: rabbitmq
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.20.1
 - name: influxdb
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 2.3.7
 - name: nginx-ingress-controller
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 7.6.21
 - name: mongodb
-  repository: https://charts.bitnami.com/bitnami
-  version: 10.10.2
-digest: sha256:fa218488738d77fec69f3b95a20323964c10b8bc82ae0daeb4ae02c65514e4ee
-generated: "2022-02-23T11:17:26.380277102+08:00"
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 10.30.6
+- name: kubernetes-manager
+  repository: file://./local_chart/kubernetes-management
+  version: 0.0.36
+digest: sha256:521a93d5e92e46288b16ef26391656c9a7041dd880a01cf5c04389f1bb4f4186
+generated: "2023-03-14T17:35:25.523011238+08:00"

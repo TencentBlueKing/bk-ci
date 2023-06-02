@@ -35,6 +35,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@Suppress("ThrowsCount", "TooGenericExceptionThrown")
 object CommonCredentialUtils {
 
     private val logger = LoggerFactory.getLogger(CommonCredentialUtils::class.java)
@@ -52,7 +53,7 @@ object CommonCredentialUtils {
         val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
             encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) " +
+            logger.warn("Fail to get the credential($credentialId) of project($projectId) " +
                 "because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }

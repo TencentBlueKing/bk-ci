@@ -29,8 +29,6 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
@@ -46,11 +44,6 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     private val dispatchDockerService: DispatchDockerService,
     private val dockerResourceOptionsService: DockerResourceOptionsService
 ) : BuildDockerHostResource {
-
-    override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
-        AlertUtils.doAlert(level, title, message)
-        return Result(0, "success")
-    }
 
     override fun getResourceConfig(pipelineId: String, vmSeqId: String): Result<DockerResourceOptionsVO> {
         return Result(dockerResourceOptionsService.getDockerResourceConfig(pipelineId, vmSeqId))

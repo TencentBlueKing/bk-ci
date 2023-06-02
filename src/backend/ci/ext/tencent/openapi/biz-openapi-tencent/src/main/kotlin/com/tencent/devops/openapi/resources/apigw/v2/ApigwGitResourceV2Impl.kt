@@ -44,13 +44,16 @@ class ApigwGitResourceV2Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        repoHashId: String?
+        repoHashId: String?,
+        search: String?
     ): Result<AuthorizeResult> {
-        logger.info("Get git projects  of project($projectId) by user($userId) with repoHashId($repoHashId)")
+        logger.info("Get git projects  of project($projectId) by " +
+                        "user($userId) with repoHashId($repoHashId) and search($search)")
         return client.get(UserGitResource::class).getProject(
             userId = userId,
             projectId = projectId,
-            repoHashId = repoHashId
+            repoHashId = repoHashId,
+            search = search
         )
     }
 

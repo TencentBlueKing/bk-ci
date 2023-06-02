@@ -49,7 +49,14 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
             // 现有用户覆盖定义旧系统变量的，前端无法帮助转换，用户传的仍然是旧变量为key，则用新的Key无法找到，要用旧的id兜底
             val value = paramValues[key] ?: paramValues[param.id] ?: param.defaultValue
 
-            paramsMap[key] = BuildParameters(key, value = value, valueType = param.type, readOnly = param.readOnly)
+            paramsMap[key] = BuildParameters(
+                key = key,
+                value = value,
+                valueType = param.type,
+                readOnly = param.readOnly,
+                desc = param.desc,
+                defaultValue = param.defaultValue
+            )
         }
 
         return paramsMap

@@ -16,6 +16,7 @@ import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
@@ -31,9 +32,9 @@ import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
 
 // 全量引入 bk-magic-vue
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -60,8 +61,8 @@ Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
-const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/))
-const isMooc = location.search.indexOf('isMooc') > -1
+const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+
 // @ts-ignore
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -86,7 +87,6 @@ router.beforeEach((to, from, next) => {
 })
 window.eventBus = eventBus
 window.vuexStore = store
-window.isMooc = isMooc
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
@@ -95,6 +95,7 @@ Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -139,9 +140,6 @@ window.devops = new Vue({
     i18n,
     router,
     store,
-    provide: {
-        isMooc
-    },
     render (h) {
         return h(App)
     }

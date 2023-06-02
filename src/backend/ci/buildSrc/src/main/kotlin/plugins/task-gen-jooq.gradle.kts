@@ -42,20 +42,22 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
+
     "statistics" -> {
         listOf("process", "project", "openapi")
     }
+
     "lambda" -> {
         listOf("process", "project", "lambda", "store")
     }
-    "gitci" -> {
-        listOf("stream")
-    }
+
     else -> listOf(moduleName)
 }
 
 if (name == "model-dispatch-kubernetes") {
     moduleNames = listOf("dispatch_kubernetes")
+} else if (name == "model-dispatch-devcloud-tencent") {
+    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
@@ -94,7 +96,7 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
-                            println("use default mysql database.")
+                            println("use default properties.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
@@ -129,22 +131,17 @@ jooq {
                         }
 
                         target.apply {
-                            if (packageName == "gitci") {
-                                packageName = "com.tencent.devops.model.gitci"
-                            } else {
-                                packageName = "com.tencent.devops.model.$moduleName"
-                            }
+                            packageName = "com.tencent.devops.model.${moduleName.replace("_", ".")}"
                         }
                     }
                 }
             }
         }
     }
+}
 
-    tasks.getByName<AbstractCompile>("compileKotlin") {
-        destinationDir = File("build/generated-src")
-        tasks.matching { it is JooqGenerate }.forEach {
-            dependsOn(it.name)
-        }
+tasks.getByName<AbstractCompile>("compileKotlin") {
+    tasks.matching { it is JooqGenerate }.forEach {
+        dependsOn(it.name)
     }
 }

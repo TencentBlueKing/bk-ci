@@ -69,10 +69,15 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
     }
 
-    override fun getGateway(userId: String, projectId: String, os: OS): Result<List<SlaveGateway>> {
+    override fun getGateway(
+        userId: String,
+        projectId: String,
+        os: OS,
+        visibility: Boolean?
+    ): Result<List<SlaveGateway>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(slaveGatewayService.getGateway())
+        return Result(slaveGatewayService.getGateway().filter { it.visibility == (visibility ?: true) })
     }
 
     override fun getLink(userId: String, projectId: String, nodeId: String): Result<ThirdPartyAgentLink> {
@@ -144,7 +149,32 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        thirdPartyAgentService.setParallelTaskCount(userId, projectId, nodeHashId, parallelTaskCount)
+        thirdPartyAgentService.setParallelTaskCount(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = null
+        )
+        return Result(true)
+    }
+
+    override fun setAgentDockerParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        count: Int
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        thirdPartyAgentService.setParallelTaskCount(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            parallelTaskCount = null,
+            dockerParallelTaskCount = count
+        )
         return Result(true)
     }
 

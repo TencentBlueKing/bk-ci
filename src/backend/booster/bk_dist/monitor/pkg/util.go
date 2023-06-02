@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/flock"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
@@ -22,13 +23,32 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
+func KillProcess(p *process.Process) error {
+	var err error
+	if runtime.GOOS != "windows" {
+		err = p.Kill()
+	} else {
+		targetp, err := os.FindProcess(int(p.Pid))
+		if err == nil {
+			err = targetp.Kill()
+			return err
+		}
+	}
+
+	return err
+}
+
 // KillChildren kill all process children of given process
 func KillChildren(p *process.Process) {
 	children, err := p.Children()
 	if err == nil && len(children) > 0 {
 		for _, v := range children {
 			KillChildren(v)
-			_ = v.Kill()
+			err = KillProcess(v)
+			if err != nil {
+				name, _ := v.Name()
+				blog.Infof("monitor: kill child process %s %d failed with err:%v", name, int32(v.Pid), err)
+			}
 		}
 	}
 }

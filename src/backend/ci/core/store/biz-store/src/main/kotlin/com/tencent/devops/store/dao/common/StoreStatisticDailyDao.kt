@@ -29,13 +29,18 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.model.store.tables.TStoreStatisticsDaily
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_FAIL_NUM
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
 import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
@@ -171,6 +176,28 @@ class StoreStatisticDailyDao {
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
             return dslContext.selectFrom(this).where(conditions).orderBy(STATISTICS_TIME.asc()).fetch()
+        }
+    }
+
+    fun getStoreExecuteCountByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Record2<BigDecimal, BigDecimal>? {
+        with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(STATISTICS_TIME.ge(startTime))
+            conditions.add(STATISTICS_TIME.le(endTime))
+            return dslContext.select(
+                sum(DAILY_SUCCESS_NUM).`as`(BK_SUM_DAILY_SUCCESS_NUM),
+                sum(DAILY_FAIL_NUM).`as`(BK_SUM_DAILY_FAIL_NUM)
+            )
+                .from(this)
+                .where(conditions).fetchOne()
         }
     }
 }

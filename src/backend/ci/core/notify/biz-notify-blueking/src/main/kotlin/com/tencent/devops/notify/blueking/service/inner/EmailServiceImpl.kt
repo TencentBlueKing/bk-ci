@@ -35,8 +35,8 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
-import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL
@@ -51,10 +51,8 @@ import com.tencent.devops.notify.service.EmailService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
-@Service
 @Suppress("ALL")
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,

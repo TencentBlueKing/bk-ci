@@ -20,8 +20,8 @@ kubernetes-manager可以使用二进制方式启动，也可以使用容器方�
     - **登录调试相关** 因为登录调试需要将https链接转为wss与kuberntes通信，所以需要 **指定需要登录调试集群的kubeconfig**，指定方式参考 **如何链接不同的kubernetes集群**。
     - **realResource优化** 优化使用了kubernetes-scheduler-pluign和prometheus的特性，所以需要配置 prometheus同时需要安装 [ci-dispatch-k8s-manager-plugin](https://github.com/TencentBlueKing/ci-dispatch-k8s-manager-plugin) 插件。
 
-#### kubernetes-manager和bk-ci同k8s集群同namespace部署
-配置bk-ci helm values
+#### kubernetes-manager和bk-ci同k8s集群同namespace部署(bk-ci默认部署方式)
+配置bk-ci helm values，已默认配置
 'bkCiKubernetesHost': "http://kubernetes-manager"  // 默认kubernetes-manager的service类型为 NodePort
 'bkCiKubernetesToken': "landun" // 同kubernetesManager.apiserver.auth.apiToken.value配置
 #### kubernetes-manager和bk-ci同集群不同namespace部署

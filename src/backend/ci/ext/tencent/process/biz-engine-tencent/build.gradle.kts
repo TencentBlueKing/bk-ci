@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-archive"))
-    api(project(":ext:tencent:common:common-wechatwork"))
+    api(project(":core:common:common-wechatwork"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))

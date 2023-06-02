@@ -27,7 +27,11 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -42,6 +46,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -50,6 +55,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -57,6 +63,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -64,19 +71,21 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -89,6 +98,10 @@ class BkRepoService @Autowired constructor(
     val client: Client,
     val shortUrlService: ShortUrlService
 ) : RepoService {
+
+    @Value("\${bkrepo.dockerRegistry:#{null}}")
+    private val dockerRegistry: String? = null
+
     override fun list(
         userId: String,
         projectId: String,
@@ -104,8 +117,8 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
-            // 镜像不支持按路径查询列表
-            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+            // 镜像/报告不支持按路径查询列表
+            else -> throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(ArtifactoryType.IMAGE.name)
             )
@@ -129,8 +142,22 @@ class BkRepoService @Autowired constructor(
         } else {
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                    ?: throw NotFoundException("文件不存在")
-            RepoUtils.toFileDetail(fileDetail)
+                    ?: throw NotFoundException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    )
+            val shortUrl = if (fileDetail.name.endsWith(".ipa") || fileDetail.name.endsWith(".apk")) {
+                val ttl = TimeUnit.DAYS.toSeconds(1).toInt()
+                shortUrlService.createShortUrl(
+                    url = externalDownloadUrl(userId, userId, projectId, artifactoryType, fileDetail.fullPath, ttl),
+                    ttl = ttl
+                )
+            } else {
+                null
+            }
+            RepoUtils.toFileDetail(fileDetail, shortUrl)
         }
     }
 
@@ -192,8 +219,11 @@ class BkRepoService @Autowired constructor(
         matadataMap.forEach {
             propertyList.add(Property(it.key, it.value))
         }
-        if (matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            val pipelineName = pipelineService.getPipelineName(projectId, matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
+        if (matadataMap.containsKey(ARCHIVE_PROPS_PROJECT_ID) && matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+            val pipelineName = pipelineService.getPipelineName(
+                matadataMap[ARCHIVE_PROPS_PROJECT_ID]!!,
+                matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!
+            )
             propertyList.add(Property(ARCHIVE_PROPS_PIPELINE_NAME, pipelineName))
         }
         return propertyList
@@ -230,7 +260,12 @@ class BkRepoService @Autowired constructor(
                     buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
                     channelCode = ChannelCode.BS
                 ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+                targetBuildId = (targetBuild ?: throw BadRequestException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_NOT_EXIST,
+                            params = arrayOf(crossBuildNo)
+                        )
+                )).id
             }
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
@@ -241,9 +276,9 @@ class BkRepoService @Autowired constructor(
             )
         ) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeMessage(
-                    ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    arrayOf(lastModifyUser, projectId)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    params = arrayOf(lastModifyUser, projectId)
                 )
             )
         }
@@ -253,9 +288,9 @@ class BkRepoService @Autowired constructor(
                 projectId = targetProjectId,
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
-                message = MessageCodeUtil.getCodeMessage(
-                    ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    arrayOf(lastModifyUser, projectId, targetPipelineId)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    params = arrayOf(lastModifyUser, projectId, targetPipelineId)
                 )
             )
         }
@@ -317,9 +352,9 @@ class BkRepoService @Autowired constructor(
             projectId,
             pipelineId,
             AuthPermission.DOWNLOAD,
-            MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(userId, projectId, pipelineId)
+            I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(userId, projectId, pipelineId)
             )
         )
 
@@ -435,7 +470,12 @@ class BkRepoService @Autowired constructor(
         val metadataMap =
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-            throw BadRequestException("元数据(pipelineId)不存在")
+            throw BadRequestException(
+                I18nUtil.getCodeLanMessage(
+                        messageCode = METADATA_NOT_EXIST,
+                        params = arrayOf("pipelineId")
+                    )
+            )
         }
         val pipelineId = metadataMap[ARCHIVE_PROPS_PIPELINE_ID]
         val pipelineName = pipelineService.getPipelineName(projectId, metadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
@@ -448,7 +488,7 @@ class BkRepoService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
             bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException("文件不存在")
+                ?: throw NotFoundException(I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_EXIST))
 
         return RepoUtils.toFileDetail(fileDetail)
     }
@@ -488,9 +528,9 @@ class BkRepoService @Autowired constructor(
                 } else {
                     it.metadata!!.map { itp ->
                         if (itp.key == "appVersion") {
-                            appVersion = itp.value ?: ""
+                            appVersion = itp.value.toString()
                         }
-                        Property(itp.key, itp.value ?: "")
+                        Property(itp.key, itp.value.toString())
                     }
                 }
                 if (RepoUtils.isPipelineFile(it)) {
@@ -582,7 +622,8 @@ class BkRepoService @Autowired constructor(
                     DateTimeFormatter.ISO_DATE_TIME
                 ).timestamp(),
                 artifactoryType = ArtifactoryType.IMAGE,
-                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) }
+                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) },
+                registry = dockerRegistry
             )
         }
     }
@@ -618,10 +659,12 @@ class BkRepoService @Autowired constructor(
             pathNamePairs = pathNamePairs,
             metadata = condition.properties,
             page = 0,
-            pageSize = 10000
+            pageSize = 10000,
+            sortBy = "lastModifiedDate",
+            direction = Sort.Direction.DESC
         ).records
 
-        return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
+        return fileList.map { it.fullPath }
     }
 
     override fun copyToCustom(
@@ -702,6 +745,28 @@ class BkRepoService @Autowired constructor(
         return Count(srcFiles.size)
     }
 
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        val srcRepo = BkRepoUtils.getRepoName(srcArtifactoryType)
+        val dstRepo = BkRepoUtils.getRepoName(dstArtifactoryType)
+        bkRepoClient.copy(
+            userId = userId,
+            fromProject = srcProjectId,
+            fromRepo = srcRepo,
+            fromPath = srcFullPath,
+            toProject = dstProjectId,
+            toRepo = dstRepo,
+            toPath = dstFullPath
+        )
+    }
+
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
         return bkRepoClient.getFileDownloadUrl(param)
     }
@@ -751,8 +816,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-                "/bkrepo/api/external/repository$shareUri&download=true"
+
+        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

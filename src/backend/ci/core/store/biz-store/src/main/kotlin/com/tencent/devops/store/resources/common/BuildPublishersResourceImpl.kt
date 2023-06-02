@@ -27,13 +27,13 @@
 
 package com.tencent.devops.store.resources.common
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.common.BuildPublishersResource
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 import com.tencent.devops.store.service.common.PublishersDataService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -61,7 +61,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.createPlatformsData(userId, storeDockingPlatformRequests))
+        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
@@ -77,7 +77,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.updatePlatformsData(userId, storeDockingPlatformRequests))
+        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")

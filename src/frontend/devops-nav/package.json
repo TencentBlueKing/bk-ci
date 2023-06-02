@@ -60,7 +60,7 @@
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^4.1.0",
     "typescript": "3.4.5",
-    "vue-loader": "^15.9.8",
+    "vue-loader": "15.9.8",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },
@@ -68,7 +68,7 @@
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "@types/webpack-env": "^1.15.2",
     "axios": "^0.27.2",
-    "bk-magic-vue": "2.4.17-beta.5",
+    "@tencent/bk-magic-vue": "2.4.17-beta.5",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
     "vue": "2.6.12",

@@ -133,6 +133,7 @@ Elasticsearch username
 */}}
 {{- define "bkci.elasticsearchUsername" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
+""
 {{- else -}}
 {{- .Values.externalElasticsearch.username -}}
 {{- end -}}
@@ -143,6 +144,7 @@ Elasticsearch password
 */}}
 {{- define "bkci.elasticsearchPassword" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
+""
 {{- else -}}
 {{- .Values.externalElasticsearch.password -}}
 {{- end -}}

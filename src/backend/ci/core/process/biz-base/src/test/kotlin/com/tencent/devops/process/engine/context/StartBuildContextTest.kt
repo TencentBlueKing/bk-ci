@@ -30,9 +30,11 @@ package com.tencent.devops.process.engine.context
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
@@ -48,10 +50,11 @@ import org.junit.jupiter.api.Test
 
 class StartBuildContextTest : TestBase() {
 
-    private val params = mutableMapOf<String, Any>()
+    private val params = mutableMapOf<String, String>()
     private val projectId = "projectId"
     private val pipelineId = PipelineIdGenerator().getNextId()
     private val buildId = BuildIdGenerator().getNextId()
+    private val version = 1
 
     @BeforeEach
     fun setUp2() {
@@ -70,7 +73,8 @@ class StartBuildContextTest : TestBase() {
     fun needSkipWhenStageFailRetry() {
         params.remove(PIPELINE_RETRY_START_TASK_ID)
         params.remove(PIPELINE_RETRY_COUNT)
-        val context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        val context = initDefaultStartBuildContext()
+        Assertions.assertEquals(params, context.variables)
         val stage = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)[1]
         val needSkipWhenStageFailRetry = context.needSkipWhenStageFailRetry(stage)
         println("needSkipWhenStageFailRetry=$needSkipWhenStageFailRetry")
@@ -80,23 +84,20 @@ class StartBuildContextTest : TestBase() {
     @Test
     fun needSkipContainerWhenFailRetry() {
         params[PIPELINE_RETRY_COUNT] = "abc"
-        var context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        var context = initDefaultStartBuildContext()
+        Assertions.assertEquals(params, context.variables)
         Assertions.assertEquals(context.executeCount, 1)
 
         params[PIPELINE_RETRY_COUNT] = "2"
-        context = StartBuildContext.init(projectId, pipelineId, buildId, params)
-        Assertions.assertEquals(context.executeCount, params[PIPELINE_RETRY_COUNT].toString().toInt() + 1)
-
-        params[PIPELINE_RETRY_COUNT] = 3
-        context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        context = initDefaultStartBuildContext()
         Assertions.assertEquals(context.executeCount, params[PIPELINE_RETRY_COUNT].toString().toInt() + 1)
 
         params[PIPELINE_START_CHANNEL] = ChannelCode.AM.name
-        context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        context = initDefaultStartBuildContext()
         Assertions.assertEquals(ChannelCode.AM, context.channelCode)
         params.remove(PIPELINE_START_CHANNEL)
 
-        context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        context = initDefaultStartBuildContext()
         Assertions.assertEquals(ChannelCode.BS, context.channelCode)
 
         val stage = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)[1]
@@ -106,9 +107,26 @@ class StartBuildContextTest : TestBase() {
         Assertions.assertEquals(false, needSkipContainerWhenFailRetry)
     }
 
+    private fun initDefaultStartBuildContext(): StartBuildContext {
+        val pipelineParamMap: MutableMap<String, BuildParameters> = params.toList().associate {
+            it.first to BuildParameters(key = it.first, value = it.second)
+        }.toMutableMap()
+        return StartBuildContext.init(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            resourceVersion = version,
+            realStartParamKeys = emptyList(),
+            pipelineParamMap = pipelineParamMap,
+            currentBuildNo = null,
+            triggerReviewers = null
+        )
+    }
+
     @Test
     fun needSkipTaskWhenRetry() {
-        val context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        val context = initDefaultStartBuildContext()
+        Assertions.assertEquals(params, context.variables)
         val stage = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)[1]
         val container = stage.containers[0]
         val needSkipTaskWhenRetry = context.needSkipTaskWhenRetry(stage, container, taskId = "1")
@@ -123,9 +141,10 @@ class StartBuildContextTest : TestBase() {
     fun needSkipTaskWhenRetrySkip() {
         // 跳过Stage-2下所有失败插件
         params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
-        params[PIPELINE_SKIP_FAILED_TASK] = true
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
 
-        val stage2Context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        val stage2Context = initDefaultStartBuildContext()
+        Assertions.assertEquals(params, stage2Context.variables)
         val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
         val stage1 = stages[1]
         val stage2 = stages[2]
@@ -146,10 +165,11 @@ class StartBuildContextTest : TestBase() {
 
         // 指定跳过插件是 Stage-1 里的 插件
         params[PIPELINE_RETRY_START_TASK_ID] = stage1.containers[0].elements[0].id!!
-        params[PIPELINE_SKIP_FAILED_TASK] = true
-        val skipElement = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val skipElement = initDefaultStartBuildContext()
         needSkipTaskWhenRetrySkip = skipElement.needSkipTaskWhenRetry(
-            stage = stages[2], container = container2, taskId = container2.elements[0].id)
+            stage = stages[2], container = container2, taskId = container2.elements[0].id
+        )
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
         Assertions.assertEquals(true, needSkipTaskWhenRetrySkip)
     }
@@ -158,9 +178,10 @@ class StartBuildContextTest : TestBase() {
     fun inSkipStage() {
         // 跳过Stage-2下所有失败插件
         params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
-        params[PIPELINE_SKIP_FAILED_TASK] = true
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
 
-        val stage2Context = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        val stage2Context = initDefaultStartBuildContext()
+        Assertions.assertEquals(params, stage2Context.variables)
         val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
         val stage1 = stages[1]
         val stage2 = stages[2]
@@ -182,8 +203,8 @@ class StartBuildContextTest : TestBase() {
 
         // 指定跳过插件是 Stage-1 里 插件
         params[PIPELINE_RETRY_START_TASK_ID] = stage1.containers[0].elements[0].id!!
-        params[PIPELINE_SKIP_FAILED_TASK] = true
-        val skipElement = StartBuildContext.init(projectId, pipelineId, buildId, params)
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val skipElement = initDefaultStartBuildContext()
         // Stage-2 的插件不在重试时跳过的Stage内范围
         stage2.containers.forEach { c ->
             c.elements.forEach { e ->

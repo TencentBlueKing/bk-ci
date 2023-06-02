@@ -81,4 +81,15 @@ class ExperienceConfiguration {
     ) = StreamExperiencePermissionServiceImpl(
         client, tokenService, experienceDao, groupDao, dslContext
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacExperiencePermissionServiceImpl(
+        client: Client,
+        dslContext: DSLContext,
+        experienceDao: ExperienceDao,
+        tokenService: ClientTokenService
+    ) = RbacExperiencePermissionServiceImpl(
+        client, dslContext, experienceDao, tokenService
+    )
 }

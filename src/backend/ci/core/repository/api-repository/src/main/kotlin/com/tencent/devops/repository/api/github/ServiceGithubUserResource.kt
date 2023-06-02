@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.response.GetUserEmailResponse
 import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -54,4 +55,13 @@ interface ServiceGithubUserResource {
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String
     ): Result<GetUserResponse?>
+
+    @ApiOperation("获取用户 email 信息")
+    @GET
+    @Path("/get_user_email")
+    fun getUserEmail(
+        @ApiParam("授权token", required = true)
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
+        token: String
+    ): Result<List<GetUserEmailResponse>>
 }

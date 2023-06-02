@@ -34,6 +34,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -41,8 +42,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Repository
@@ -298,8 +297,7 @@ class TemplateDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                defaultMessage = "模板不存在"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
             )
         }
     }
@@ -312,7 +310,7 @@ class TemplateDao {
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-                conditions.add(ID.eq(templateId))
+            conditions.add(ID.eq(templateId))
             if (version != null) {
                 conditions.add(VERSION.eq(version))
             }
@@ -324,8 +322,7 @@ class TemplateDao {
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                defaultMessage = "模板不存在"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
             )
         }
     }
@@ -385,12 +382,14 @@ class TemplateDao {
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
-            normalConditions.add(PROJECT_ID.eq(projectId))
+            if (!projectId.isNullOrBlank()) {
+                normalConditions.add(PROJECT_ID.eq(projectId))
+            }
             var count = dslContext.select(DSL.countDistinct(ID))
                 .from(this)
                 .where(normalConditions)
                 .fetchOne(0, Int::class.java)!!
-            if (includePublicFlag != null && includePublicFlag) {
+            if (true == includePublicFlag) {
                 val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
                 publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
                 count += dslContext.select(DSL.countDistinct(ID))
@@ -535,7 +534,9 @@ class TemplateDao {
                 .and(ID.eq(templateId))
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw NotFoundException("流水线模板不存在")
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
     }
 
@@ -548,7 +549,9 @@ class TemplateDao {
                 .where(ID.eq(templateId))
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw NotFoundException("流水线模板不存在")
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
     }
 

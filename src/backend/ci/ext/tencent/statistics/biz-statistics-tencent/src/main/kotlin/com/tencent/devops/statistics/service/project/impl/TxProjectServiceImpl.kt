@@ -54,7 +54,7 @@ class TxProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = projectPermissionService.getUserProjects(userId)
-            logger.info("项目列表：$projects")
+            logger.info("Project list：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects).map {
                 list.add(ProjectUtils.packagingBean(it))

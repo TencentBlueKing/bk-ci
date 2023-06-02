@@ -79,7 +79,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                     customCommitMsg = triggerBuildReq.customCommitMsg,
                     yaml = triggerBuildReq.yaml,
                     description = null,
-                    commitId = triggerBuildReq.commitId,
+                    commitId = if (triggerBuildReq.useCommitId) triggerBuildReq.commitId else null,
                     payload = null,
                     eventType = null,
                     inputs = ManualTriggerService.parseInputs(triggerBuildReq.inputs)

@@ -28,7 +28,7 @@
 package config
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const ActionUpgrade = "upgrade"
@@ -71,6 +71,8 @@ const (
 
 	DockerInitFile = "agent_docker_init.sh"
 )
+
+const DEFAULT_LANGUAGE_TYPE = "zh_CN"
 
 // Auth Header
 

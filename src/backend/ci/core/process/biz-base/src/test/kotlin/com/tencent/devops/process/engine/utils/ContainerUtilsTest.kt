@@ -86,5 +86,5 @@ class ContainerUtilsTest {
     }
 
     private fun option(enable: Boolean) =
-        JobControlOption(enable = enable, timeout = 600, runCondition = JobRunCondition.STAGE_RUNNING)
+        JobControlOption(enable = enable, runCondition = JobRunCondition.STAGE_RUNNING)
 }

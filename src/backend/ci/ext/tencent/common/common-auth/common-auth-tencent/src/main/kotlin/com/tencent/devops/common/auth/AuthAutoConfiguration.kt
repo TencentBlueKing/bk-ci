@@ -47,6 +47,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
+import com.tencent.devops.common.client.Client
 
 @Configuration
 @ConditionalOnWebApplication
@@ -70,18 +71,20 @@ class AuthAutoConfiguration {
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi
+        jmxAuthApi: JmxAuthApi,
+        client: Client
     ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi)
+        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi, client)
 
     @Bean
     @Primary
     fun bsAuthResourceApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi
+        bsAuthTokenApi: BSAuthTokenApi,
+        client: Client
     ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi)
+        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
 
     @Bean
     @Primary

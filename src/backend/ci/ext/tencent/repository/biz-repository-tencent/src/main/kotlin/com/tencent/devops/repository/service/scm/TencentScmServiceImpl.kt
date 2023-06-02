@@ -37,6 +37,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -333,5 +334,19 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             page = page,
             size = size
         ).data ?: emptyList()
+    }
+
+    override fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): GitProjectInfo? {
+        return client.getScm(ServiceScmResource::class).getProjectInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token
+        ).data
     }
 }

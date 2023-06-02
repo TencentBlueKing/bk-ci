@@ -29,26 +29,30 @@ package com.tencent.devops.worker.common.api.log
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOG_STORAGE_STATUS_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import java.lang.StringBuilder
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         val path = "/log/api/build/logs/multi?buildId=$buildId"
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(logMessages)
         )
         val request = buildPost(path, requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = "上报日志失败",
+            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, AgentEnv.getLocaleLanguage()),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L
@@ -69,9 +73,12 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (executeCount != null) path.append("&executeCount=$executeCount")
         if (logMode != null) path.append("&logMode=${logMode.name}")
-        val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         val request = buildPut(path.toString(), requestBody)
-        val responseContent = request(request, "上报结束状态失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -82,13 +89,16 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val path = StringBuilder("/log/api/build/logs/mode")
         path.append("?executeCount=$executeCount")
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(propertyList)
         )
         val request = buildPost(path.toString(), requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = "上报日志存储状态失败",
+            errorMessage = MessageUtil.getMessageByLocale(
+                LOG_STORAGE_STATUS_FAILED,
+                AgentEnv.getLocaleLanguage()
+            ),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L

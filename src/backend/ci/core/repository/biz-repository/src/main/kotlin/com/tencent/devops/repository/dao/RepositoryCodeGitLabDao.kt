@@ -46,7 +46,8 @@ class RepositoryCodeGitLabDao {
         projectName: String,
         userName: String,
         privateToken: String,
-        authType: RepoAuthType?
+        authType: RepoAuthType?,
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
@@ -58,7 +59,8 @@ class RepositoryCodeGitLabDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                AUTH_TYPE
+                AUTH_TYPE,
+                GIT_PROJECT_ID
             )
                 .values(
                     repositoryId,
@@ -67,7 +69,8 @@ class RepositoryCodeGitLabDao {
                     privateToken,
                     now,
                     now,
-                    authType?.name
+                    authType?.name,
+                    gitProjectId
                 ).execute()
         }
     }
@@ -89,17 +92,24 @@ class RepositoryCodeGitLabDao {
         repositoryId: Long,
         projectName: String,
         userName: String,
-        credentialId: String
+        credentialId: String,
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
-            dslContext.update(this)
-                .set(PROJECT_NAME, projectName)
-                .set(USER_NAME, userName)
-                .set(CREDENTIAL_ID, credentialId)
-                .set(UPDATED_TIME, now)
-                .where(REPOSITORY_ID.eq(repositoryId))
-                .execute()
+            with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+                dslContext.update(this)
+                val updateSetStep = dslContext.update(this)
+                    .set(PROJECT_NAME, projectName)
+                    .set(USER_NAME, userName)
+                    .set(CREDENTIAL_ID, credentialId)
+                    .set(UPDATED_TIME, now)
+                if (gitProjectId >= 0) {
+                    updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+                }
+                updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
+            }
         }
     }
 
@@ -133,6 +143,39 @@ class RepositoryCodeGitLabDao {
             return dslContext.selectFrom(this)
                 .where(REPOSITORY_ID.`in`(repositoryIds))
                 .fetch()
+        }
+    }
+
+    /**
+     * 分页查询
+     */
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TRepositoryCodeGitlabRecord>? {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            return dslContext.selectFrom(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateGitProjectId(
+        dslContext: DSLContext,
+        id: Long,
+        gitProjectId: Long
+    ) {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            val conditions = mutableListOf(
+                REPOSITORY_ID.eq(id),
+                GIT_PROJECT_ID.le(0)
+            )
+            dslContext.update(this)
+                .set(GIT_PROJECT_ID, gitProjectId)
+                .where(conditions)
+                .execute()
         }
     }
 }

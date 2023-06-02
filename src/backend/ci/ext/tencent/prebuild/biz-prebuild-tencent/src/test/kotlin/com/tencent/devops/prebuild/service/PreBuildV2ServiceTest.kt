@@ -1,21 +1,23 @@
 package com.tencent.devops.prebuild.service
 
-import com.nhaarman.mockito_kotlin.times
-import com.nhaarman.mockito_kotlin.verify
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
-import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
 import com.tencent.devops.prebuild.v2.service.PreBuildV2Service
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.modelCreate.ModelCreate
+import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
+import io.mockk.verify
+import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -38,10 +40,19 @@ import org.mockito.junit.jupiter.MockitoExtension
 @Disabled
 class PreBuildV2ServiceTest : ServiceBaseTest() {
     @Mock
-    lateinit var preCIYAMLValidator: PreCIYAMLValidator
+    lateinit var preCIYAMLValidator: PreCIYAMLValidatorV2
 
     @Mock
     lateinit var client: Client
+
+    @Mock
+    lateinit var dslContext: DSLContext
+
+    @Mock
+    lateinit var modelCreate: ModelCreate
+
+    @Mock
+    lateinit var redisOperation: RedisOperation
 
     @Mock
     lateinit var prebuildProjectDao: PrebuildProjectDao
@@ -92,7 +103,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         Mockito.`when`(pipelineLayoutBuilder.build()).thenReturn(any())
 
         // yaml校验器
-        Mockito.`when`(preCIYAMLValidator.validate(anyString())).thenReturn(Triple(true, any(), ""))
+        Mockito.`when`(preCIYAMLValidator.check(anyString(), any(), any())).thenReturn(Unit)
     }
 
     @Test
@@ -108,8 +119,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     @DisplayName("测试yaml校验失败")
     fun testCheckYamlSchema_fail() {
         val errorMsg = "error at line 22"
-        val mockFailReturn: Triple<Boolean, PreScriptBuildYaml?, String> = Triple(false, null, errorMsg)
-        Mockito.`when`(preCIYAMLValidator.validate(anyString())).thenReturn(mockFailReturn)
+        Mockito.`when`(preCIYAMLValidator.check(anyString(), any(), any())).thenThrow(YamlFormatException::class.java)
         val failResp = preBuildV2Service.checkYamlSchema(YAML_CONTENT)
 
         assertFalse(failResp.isOk())
@@ -122,23 +132,25 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     fun testStartBuild_success() {
         val resp = preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo)
         assertEquals(BUILD_ID, resp.id)
-        verify(prebuildProjectDao, times(1)).createOrUpdate(
-            any()!!,
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString()
-        )
+        verify(exactly = 1) {
+            prebuildProjectDao.createOrUpdate(
+                any()!!,
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+            )
+        }
     }
 
     @Test
     @DisplayName("测试yaml非法导致流水线生成失败")
     fun testStartBuild_fail() {
-        Mockito.`when`(preCIYAMLValidator.validate(anyString())).thenReturn(Triple(false, null, "error"))
+        Mockito.`when`(preCIYAMLValidator.check(anyString(), any(), any())).thenThrow(YamlFormatException::class.java)
         assertThrows<CustomException> { preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo) }
     }
 }

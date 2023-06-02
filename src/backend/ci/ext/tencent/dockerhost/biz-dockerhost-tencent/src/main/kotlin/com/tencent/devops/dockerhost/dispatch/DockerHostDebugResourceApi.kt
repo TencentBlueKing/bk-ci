@@ -48,7 +48,7 @@ class DockerHostDebugResourceApi constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val contentLength = response.header("Content-Length")?.toLong()
             if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. ${response.code()}")
+                logger.error("DockerHostBuildResourceApi $path fail. ${response.code}")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                     errorType = ErrorType.SYSTEM,

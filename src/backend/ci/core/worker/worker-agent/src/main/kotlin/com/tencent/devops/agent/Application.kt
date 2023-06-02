@@ -29,11 +29,11 @@ package com.tencent.devops.agent
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -142,7 +142,7 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    val responseBody = resp.body()?.string() ?: ""
+    val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
@@ -156,7 +156,7 @@ private fun doResponse(
         }
         true
     } else {
-        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
         false
     }
 }

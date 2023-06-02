@@ -51,6 +51,7 @@ import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
+import AtomMarkdown from '@/components/atomFormField/AtomMarkdown'
 import { urlJoin, rely, bkVarWrapper } from '../../utils/util'
 
 const atomMixin = {
@@ -99,7 +100,8 @@ const atomMixin = {
         GroupIdSelector,
         QualitygateTips,
         AutoComplete,
-        DevopsSelect
+        DevopsSelect,
+        AtomMarkdown
     },
     computed: {
         ...mapGetters('atom', [

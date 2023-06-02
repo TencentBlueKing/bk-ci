@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -44,6 +45,8 @@ data class BuildStageStatus(
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var elapsed: Long? = null,
+    @ApiModelProperty("各项耗时", required = true)
+    var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var showMsg: String? = null
 )

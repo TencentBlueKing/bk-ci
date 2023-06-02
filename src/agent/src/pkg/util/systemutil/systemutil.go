@@ -30,16 +30,18 @@ package systemutil
 import (
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/gofrs/flock"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+
+	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string
@@ -75,9 +77,12 @@ func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
 
-// GetCurrentUser get current process user
+// GetCurrentUser get current process user, log & exit when error was found
 func GetCurrentUser() *user.User {
-	currentUser, _ := user.Current()
+	currentUser, err := user.Current()
+	if currentUser == nil {
+		logs.Fatalf("GetCurrentUser cache return nil: error[%v]", err) //
+	}
 	return currentUser
 }
 

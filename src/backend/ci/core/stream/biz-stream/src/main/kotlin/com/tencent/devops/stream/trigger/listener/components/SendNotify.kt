@@ -261,11 +261,9 @@ class SendNotify @Autowired constructor(
 
         val vars = mutableSetOf<String>()
         value.forEach { re ->
-            if (!re.contains(',')) {
-                vars.add(re)
-                return@forEach
-            }
-            vars.addAll(re.split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet())
+            vars.addAll(re.parseEnv(variables)
+                .split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet()
+            )
         }
 
         if (variables.isNullOrEmpty()) {
@@ -275,6 +273,9 @@ class SendNotify @Autowired constructor(
             EnvUtils.parseEnv(it, variables)
         }.toSet()
     }
+
+    private fun String.parseEnv(data: Map<String, String>?) =
+        if (!data.isNullOrEmpty()) EnvUtils.parseEnv(this, data) else this
 
     private fun getNoticeType(buildId: String, type: String?): StreamNotifyType? {
         return when (type) {

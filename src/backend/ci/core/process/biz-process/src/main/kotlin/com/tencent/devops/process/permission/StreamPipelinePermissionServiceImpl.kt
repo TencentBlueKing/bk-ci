@@ -101,6 +101,17 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         return getProjectAllInstance(projectId)
     }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
+    ): Map<AuthPermission, List<String>> {
+        return authPermissions.associateWith {
+            pipelineIds
+        }
+    }
+
     override fun createResource(
         userId: String,
         projectId: String,

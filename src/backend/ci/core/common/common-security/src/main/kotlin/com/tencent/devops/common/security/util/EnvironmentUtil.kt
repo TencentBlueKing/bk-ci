@@ -104,5 +104,12 @@ class EnvironmentUtil : ApplicationContextAware {
             }
             return false
         }
+
+        /**
+         * 获取gateway定义的devopsToken
+         */
+        fun gatewayDevopsToken(): String? {
+            return applicationContext?.environment?.getProperty("auth.gateway.devopsToken")
+        }
     }
 }

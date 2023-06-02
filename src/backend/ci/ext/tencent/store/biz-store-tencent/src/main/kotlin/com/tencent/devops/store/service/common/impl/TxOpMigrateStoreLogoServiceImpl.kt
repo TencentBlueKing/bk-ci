@@ -355,7 +355,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
             val serviceUrl =
                 "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
             OkhttpUtils.uploadFile(serviceUrl, tmpFile).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
                 }

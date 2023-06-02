@@ -484,6 +484,26 @@ func saveFile(
 
 			inputfile = targetname
 		}
+
+		// !! set file attribute after rename
+		// TODO : change filemode and modifytime if new file created here
+		if newfilesaved {
+			filemode := rf.GetFilemode()
+			if filemode > 0 {
+				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+				if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
+					blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
+				}
+			}
+
+			modifytime := rf.GetModifytime()
+			if modifytime > 0 {
+				blog.Infof("get file[%s] modify time [%d]", inputfile, modifytime)
+				if err = os.Chtimes(inputfile, time.Now(), time.Unix(0, modifytime)); err != nil {
+					blog.Warnf("Chtimes file %s to time %s failed: %v", inputfile, time.Unix(0, modifytime), err)
+				}
+			}
+		}
 	}()
 
 	if rf.GetCompressedsize() > 0 {
@@ -495,11 +515,11 @@ func saveFile(
 				return "", err
 			}
 
-			filemode := rf.GetFilemode()
-			if filemode > 0 {
-				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
-				_ = os.Chmod(inputfile, os.FileMode(filemode))
-			}
+			// filemode := rf.GetFilemode()
+			// if filemode > 0 {
+			// 	blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+			// 	_ = os.Chmod(inputfile, os.FileMode(filemode))
+			// }
 			break
 		// case protocol.PBCompressType_LZO:
 		// 	// decompress with lzox1 firstly
@@ -559,13 +579,13 @@ func saveFile(
 				return "", err
 			}
 
-			filemode := rf.GetFilemode()
-			if filemode > 0 {
-				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
-				if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
-					blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
-				}
-			}
+			// filemode := rf.GetFilemode()
+			// if filemode > 0 {
+			// 	blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+			// 	if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
+			// 		blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
+			// 	}
+			// }
 			break
 		default:
 			return "", fmt.Errorf("unknown compress type [%s]", rf.GetCompresstype())

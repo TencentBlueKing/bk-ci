@@ -28,9 +28,12 @@
 package com.tencent.devops.worker.common.api.quality
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SAVE_SCRIPT_METADATA_FAILURE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
@@ -48,13 +51,20 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
         try {
             val path = "/ms/quality/api/build/metadata/saveHisMetadata?" +
                     "elementType=$elementType&taskId=$taskId&taskName=$taskName"
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
-                objectMapper.writeValueAsString(data))
+            val requestBody = RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                objectMapper.writeValueAsString(data)
+            )
             val request = buildPost(path, requestBody)
-            val responseContent = request(request, "保存脚本元数据失败")
+            val responseContent = request(
+                request,
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, AgentEnv.getLocaleLanguage())
+            )
             return Result(responseContent)
         } catch (ignore: Exception) {
-            LoggerService.addErrorLine("保存脚本元数据失败: ${ignore.message}")
+            LoggerService.addErrorLine("${
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, AgentEnv.getLocaleLanguage())
+            }: ${ignore.message}")
             logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
         return Result("")

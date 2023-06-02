@@ -28,9 +28,10 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -47,10 +48,13 @@ data class VMBuildContainer(
     @ApiModelProperty("容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
     @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
     @ApiModelProperty("VM基础操作系统", required = true)
     val baseOS: VMBaseOS,
@@ -100,13 +104,15 @@ data class VMBuildContainer(
     @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
+    override var executeCount: Int? = null,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
+    @ApiModelProperty("各项耗时", required = true)
+    override var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
     @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
@@ -148,5 +154,15 @@ data class VMBuildContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? {
         return matrixContext
+    }
+
+    override fun transformCompatibility() {
+        if (jobControlOption?.timeoutVar.isNullOrBlank()) {
+            jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
+        }
+        if (mutexGroup?.timeoutVar.isNullOrBlank()) {
+            mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
+        }
+        super.transformCompatibility()
     }
 }

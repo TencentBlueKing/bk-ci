@@ -27,12 +27,12 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -51,13 +51,14 @@ import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitTagPushTr
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
 
-class GitWebHookMatcherTest {
+class GitWebHookMatcherTest : BkCiAbstractTest() {
 
     private val repository = CodeGitRepository(
         aliasName = "mingshewhe/webhook_test3",
@@ -67,7 +68,8 @@ class GitWebHookMatcherTest {
         userName = "mingshewhe",
         authType = RepoAuthType.HTTP,
         projectId = "mht",
-        repoHashId = "eraf"
+        repoHashId = "eraf",
+        gitProjectId = 0L
     )
 
     private val repositoryDyy = CodeGitRepository(
@@ -78,13 +80,14 @@ class GitWebHookMatcherTest {
         userName = "yongyiduan",
         authType = RepoAuthType.HTTP,
         projectId = "mht",
-        repoHashId = "eraf"
+        repoHashId = "eraf",
+        gitProjectId = 0L
     )
 
     @BeforeEach
     fun setUp() {
-        val gitScmService: GitScmService = mock()
-        val eventCacheService: EventCacheService = mock()
+        val gitScmService: GitScmService = mockk()
+        val eventCacheService: EventCacheService = mockk()
         CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(eventCacheService, gitScmService))
         CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
         CodeWebhookHandlerRegistrar.register(

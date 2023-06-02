@@ -10,7 +10,7 @@ mkdir $WORK_DIR\bin
 $Env:GO111MODULE = "on"
 $BuildTime = Get-Date -Format "yyyy/MM/dd.HH:mm.K"
 $GitCommit = git rev-parse HEAD
-$BUILD_FLAGS = "-ldflags=`"-w -s -X github.com/Tencent/bk-ci/src/agent/src/pkg/config.BuildTime=$BuildTime -X github.com/Tencent/bk-ci/src/agent/src/pkg/config.GitCommit=$GitCommit`""
+$BUILD_FLAGS = "-ldflags=`"-w -s -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.BuildTime=$BuildTime -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.GitCommit=$GitCommit`""
 
 go env
 

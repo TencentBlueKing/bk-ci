@@ -27,6 +27,8 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,13 +37,13 @@ import io.swagger.annotations.ApiModelProperty
 data class ProjectVO(
     @ApiModelProperty("主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @ApiModelProperty("项目ID（很少使用）")
     // @JsonProperty("project_id")
     val projectId: String,
     @ApiModelProperty("项目名称")
     // @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("项目代码")
+    @ApiModelProperty("项目代码（蓝盾项目Id）")
     // @JsonProperty("project_code")
     val projectCode: String,
     @ApiModelProperty("项目类型")
@@ -116,6 +118,9 @@ data class ProjectVO(
     @ApiModelProperty("修改时间")
     // @JsonProperty("updated_at")
     val updatedAt: String?,
+    @ApiModelProperty("修改人")
+    // @JsonProperty("updated_at")
+    val updator: String?,
     @ApiModelProperty("useBK")
     // @JsonProperty("use_bk")
     val useBk: Boolean?,
@@ -154,5 +159,19 @@ data class ProjectVO(
     @ApiModelProperty("关联系统Id")
     val relationId: String?,
     @ApiModelProperty("项目其他配置")
-    val properties: ProjectProperties?
+    val properties: ProjectProperties?,
+    @ApiModelProperty("项目最大可授权人员范围")
+    val subjectScopes: List<SubjectScopeInfo>?,
+    @ApiModelProperty("是否权限私密")
+    val authSecrecy: Int?,
+    @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
+    val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
+    @ApiModelProperty("项目审批message")
+    val approvalMsg: String? = "",
+    @ApiModelProperty("是否拥有新版权限中心项目管理权限")
+    val managePermission: Boolean? = null,
+    @ApiModelProperty("是否展示用户管理图标")
+    val showUserManageIcon: Boolean? = null,
+    @ApiModelProperty("渠道")
+    val channelCode: String? = null
 )

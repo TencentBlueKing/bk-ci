@@ -7,11 +7,11 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /** issue_7748 搬用 dispatch sdk 的方法，因为sdk集成当前存在问题
  *  @see com.tencent.devops.common.dispatch.sdk.service.DispatchService
@@ -81,11 +81,7 @@ class DispatchService @Autowired constructor(
         // job结束
         finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
         redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
-
-        val keysSet = redisOperation.hkeys(secretInfoKey)
-        if (keysSet.isNullOrEmpty()) {
-            redisOperation.delete(secretInfoKey)
-        }
+        // 当hash表为空时，redis会自动删除
     }
 
     private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {

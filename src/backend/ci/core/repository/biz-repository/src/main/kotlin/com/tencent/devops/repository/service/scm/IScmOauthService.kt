@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
@@ -132,4 +133,14 @@ interface IScmOauthService {
         page: Int,
         size: Int
     ): List<GitCommit>
+
+    /**
+     * 获取代码库详情
+     */
+    fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): GitProjectInfo?
 }

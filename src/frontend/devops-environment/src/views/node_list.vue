@@ -194,13 +194,13 @@
 </template>
 
 <script>
-    import emptyNode from './empty_node'
-    import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import configManageNode from '@/components/devops/environment/config-manage-node'
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
+    import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
+    import emptyNode from './empty_node'
 
     export default {
         components: {
@@ -310,6 +310,8 @@
             // 构建机型变化
             'constructImportForm.model' (val) {
                 if (val && !this.isAgent) {
+                    this.constructImportForm.link = ''
+                    this.constructImportForm.location = ''
                     this.requestGateway()
                 }
             },
@@ -575,6 +577,8 @@
                             theme
                         })
                     }
+
+                    this.dialogLoading.isLoading = false
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -596,7 +600,6 @@
                     })
 
                     this.gatewayList.splice(0, this.gatewayList.length)
-                    this.constructImportForm.location = ''
                     res.forEach(item => {
                         this.gatewayList.push(item)
                     })
@@ -606,8 +609,6 @@
                     } else if (this.gatewayList.length && gateway && gateway !== 'shenzhen') {
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
                         this.constructImportForm.location = isTarget && isTarget.zoneName
-                    } else if (this.gatewayList.length && !gateway) {
-                        this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
                     if (node && ['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
@@ -633,6 +634,8 @@
              * 生成链接
              */
             async requestDevCommand () {
+                if (!this.constructImportForm.location && this.gatewayList.length) return
+
                 this.dialogLoading.isLoading = true
 
                 try {
@@ -746,6 +749,8 @@
                     this.isAgent = false
                     this.constructToolConf.isShow = false
                     this.dialogLoading.isShow = false
+                    this.constructImportForm.link = ''
+                    this.constructImportForm.location = ''
                     this.constructToolConf.importText = this.$t('environment.import')
                 }
             },

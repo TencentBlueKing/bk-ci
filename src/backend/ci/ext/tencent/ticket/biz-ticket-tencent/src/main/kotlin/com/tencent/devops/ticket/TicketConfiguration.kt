@@ -40,10 +40,10 @@ import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
-import com.tencent.devops.ticket.service.StreamCertPermissionServiceImpl
-import com.tencent.devops.ticket.service.StreamCredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.permission.StreamCertPermissionServiceImpl
+import com.tencent.devops.ticket.service.permission.StreamCredentialPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

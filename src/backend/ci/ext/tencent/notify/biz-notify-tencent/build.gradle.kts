@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:support:api-support-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:common:common-db"))

@@ -1,7 +1,10 @@
 package com.tencent.devops.stream.trigger.listener.notify
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.trigger.pojo.rtxCustom.MessageType
 import com.tencent.devops.stream.trigger.pojo.rtxCustom.ReceiverType
@@ -88,7 +91,11 @@ object TXSendRtx {
             pipelineId = pipelineId,
             buildId = build.id
         )
-        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
+        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [" +
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_VIEW_DETAILS,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
@@ -116,7 +123,7 @@ object TXSendRtx {
                 "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
-                "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
+                "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +
                     "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
@@ -127,7 +134,11 @@ object TXSendRtx {
             "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
             request +
             costTime +
-            "[查看详情]" +
+            "[" +
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_VIEW_DETAILS,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "]" +
             "(${
             GitCIPipelineUtils.genGitCIV2BuildUrl(
                 homePage = v2GitUrl,

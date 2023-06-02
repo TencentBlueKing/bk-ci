@@ -27,12 +27,20 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -41,6 +49,8 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
@@ -52,7 +62,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
-    private val agentPipelineService: AgentPipelineService
+    private val agentPipelineService: AgentPipelineService,
+    private val slaveGatewayService: SlaveGatewayService,
+    private val permissionService: EnvironmentPermissionService,
+    private val nodeService: NodeService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -160,5 +173,39 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?> {
         return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
+    }
+
+    override fun getGateways(): Result<List<SlaveGateway>> {
+        return Result(slaveGatewayService.getGateway())
+    }
+
+    override fun getNodeDetail(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<ThirdPartyAgentDetail?> {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeService.getByDisplayName(
+                userId,
+                projectId,
+                nodeName,
+                listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()?.nodeHashId
+            else -> null
+        } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
+        if (!permissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = HashUtil.decodeIdToLong(hashId),
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
+            )
+        }
+        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 }

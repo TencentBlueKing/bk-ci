@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -66,6 +67,9 @@ interface UserAtomResource {
     @ApiOperation("获取所有流水线插件信息")
     @GET
     @Path("/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun listAllPipelineAtoms(
         @ApiParam("token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
@@ -118,6 +122,9 @@ interface UserAtomResource {
     @ApiOperation("根据插件代码和版本号获取流水线插件详细信息")
     @GET
     @Path("/{projectCode}/{atomCode}/{version}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
     fun getPipelineAtom(
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
@@ -148,6 +155,9 @@ interface UserAtomResource {
     @ApiOperation("获取项目下已安装的插件列表")
     @GET
     @Path("/projectCodes/{projectCode}/installedAtoms/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun getInstalledAtoms(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

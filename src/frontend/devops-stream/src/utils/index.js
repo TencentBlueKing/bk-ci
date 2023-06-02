@@ -184,9 +184,9 @@ export function modifyHtmlTitle (title) {
     document.title = title
 }
 
-export function debounce (callBack) {
+export function debounce (callBack, time = 200) {
     window.clearTimeout(debounce.timeId)
-    debounce.timeId = window.setTimeout(callBack, 200)
+    debounce.timeId = window.setTimeout(callBack, time)
 }
 
 export function getWSpath (path = '') {

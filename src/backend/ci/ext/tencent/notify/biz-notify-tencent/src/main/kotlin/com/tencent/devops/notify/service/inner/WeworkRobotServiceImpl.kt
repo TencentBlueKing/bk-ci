@@ -34,17 +34,19 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WEWORK
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
 import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
-import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -81,7 +83,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
             weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
-                "...(消息长度超$WEWORK_MAX_SIZE 已截断,请控制消息长度)"
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CONTROL_MESSAGE_LENGTH,
+                        params = arrayOf(WEWORK_MAX_SIZE.toString())
+                    )
         }
         weworkNotifyTextMessage.message = content
         when (weworkNotifyTextMessage.receiverType) {
@@ -148,20 +153,20 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         return OkhttpUtils.doPost(url, requestBody).use {
-            val responseBody = it.body()?.string() ?: ""
+            val responseBody = it.body?.string() ?: ""
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
                 if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
-                            "|chatid = ${weworkMessage.chatid} ;",
+                                "|chatid = ${weworkMessage.chatid} ;",
                         errorCode = sendMessageResp.errCode
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
-                logger.warn("${it.request()}|send wework robot message failed, $responseBody")
+                logger.warn("${it.request}|send wework robot message failed, $responseBody")
                 Optional.of(e)
             })
         }

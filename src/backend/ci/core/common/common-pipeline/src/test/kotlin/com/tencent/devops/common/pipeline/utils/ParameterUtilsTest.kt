@@ -28,11 +28,28 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class ParameterUtilsTest {
+
+    @Test
+    fun testGetListValueByKey() {
+        val plist = mutableListOf<BuildParameters>()
+        plist.add(BuildParameters(key = "A", value = true, valueType = BuildFormPropertyType.BOOLEAN))
+        val expect = "any"
+        plist.add(BuildParameters(key = "B", value = expect, valueType = BuildFormPropertyType.STRING))
+
+        var actual = ParameterUtils.getListValueByKey(plist, "B")
+        Assertions.assertEquals(expect, actual)
+
+        actual = ParameterUtils.getListValueByKey(plist, "C")
+        Assertions.assertEquals(null, actual)
+    }
+
     @Test
     fun parameterSizeCheck() {
         val data1 = mutableMapOf<String, Any>()

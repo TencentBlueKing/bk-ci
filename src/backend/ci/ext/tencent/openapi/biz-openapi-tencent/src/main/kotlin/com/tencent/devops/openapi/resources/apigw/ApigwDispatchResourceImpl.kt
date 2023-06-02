@@ -49,13 +49,13 @@ class ApigwDispatchResourceImpl @Autowired constructor(
     }
 
     override fun macOSList(appCode: String?, apigwType: String?, userId: String): Result<List<VirtualMachineInfo>> {
-        val url = "${commonConfig.devopsIdcGateway}/ms/dispatch-macos/api/service/vms"
+        val url = "${commonConfig.devopsIdcGateway}/ms/dispatch-devcloud/api/service/macos/vms"
         val request = Request.Builder()
             .url(url)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("dispatch-macos VM resource: $url fail. $responseContent")
                 throw RemoteServiceException("dispatch-macos VM resource: $url fail")

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.scm.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.exception.ScmException
@@ -74,7 +74,9 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to login p4", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.P4_USERNAME_PASSWORD_FAIL
+                ),
                 ScmType.CODE_P4.name
             )
         }
@@ -94,7 +96,9 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add p4 triggers", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.P4_USERNAME_PASSWORD_FAIL
+                ),
                 ScmType.CODE_P4.name
             )
         }
@@ -106,7 +110,8 @@ class CodeP4ScmImpl(
         targetUrl: String,
         context: String,
         description: String,
-        block: Boolean
+        block: Boolean,
+        targetBranch: List<String>?
     ) = Unit
 
     override fun addMRComment(mrId: Long, comment: String) = Unit

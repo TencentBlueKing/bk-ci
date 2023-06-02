@@ -70,7 +70,7 @@ class OldWeworkServiceImpl @Autowired constructor(
                     it,
                     weworkNotifyMediaMessage.mediaType,
                     weworkNotifyMediaMessage.mediaType,
-                    uploadMediaResponse.media_id
+                    uploadMediaResponse.mediaId
                 )
                 val sendResult = wechatWorkService.sendMessage(sendString)
                 if (sendResult) {

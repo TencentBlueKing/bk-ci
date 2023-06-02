@@ -74,6 +74,8 @@ const (
 	FlagPumpCacheDir         = "pump_cache_dir"
 	FlagPumpCacheSizeMaxMB   = "pump_cache_size_max_MB"
 	FlagPumpCacheRemoveAll   = "pump_cache_remove_all"
+	FlagPumpBlackList        = "pump_black_list"
+	FlagPumpMinActionNum     = "pump_min_action_num"
 	FlagForceLocalList       = "force_local_list"
 	FlagNoWork               = "no_work"
 	FlagControllerNoWait     = "controller_no_wait"
@@ -305,6 +307,14 @@ var (
 		commandCli.BoolFlag{
 			Name:  "pump_cache_remove_all",
 			Usage: "remove all of pump cache files",
+		},
+		commandCli.StringSliceFlag{
+			Name:  "pump_black_list, pbl",
+			Usage: "action in this list will not use pump",
+		},
+		commandCli.IntFlag{
+			Name:  "pump_min_action_num",
+			Usage: "do not use pump if total actions less this",
 		},
 		commandCli.StringSliceFlag{
 			Name:  "force_local_list, fll",

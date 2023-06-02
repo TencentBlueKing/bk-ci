@@ -1,4 +1,4 @@
-import { bkMessage } from 'bk-magic-vue'
+import { bkMessage } from '@tencent/bk-magic-vue'
 
 export function copyText (value, $t) {
     const input = document.createElement('input')

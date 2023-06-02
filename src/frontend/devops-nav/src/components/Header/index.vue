@@ -5,13 +5,15 @@
                 class="header-logo"
                 to="/console/"
             >
-                <Logo
-                    name="devops-logo"
-                    width="100"
-                    height="28"
-                />
+                <span>
+                    <Logo
+                        :name="headerLogoName"
+                        width="auto"
+                        height="28"
+                    />
+                </span>
             </router-link>
-            <template v-if="showProjectList && !isMooc">
+            <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
@@ -50,9 +52,9 @@
                     </template>
                 </bk-select>
             </template>
-            <nav-menu v-if="showNav && !isMooc" />
+            <nav-menu v-if="showNav" />
             <h3
-                v-if="title && !isMooc"
+                v-if="title"
                 class="service-title"
                 @click="goHome"
             >
@@ -67,24 +69,21 @@
             </h3>
         </div>
         <div class="header-right-bar">
-            <locale-switcher v-if="!isMooc || !isInIframe"></locale-switcher>
-            <qrcode v-if="!isMooc" class="feed-back-icon" />
-            <span v-if="!isMooc" class="seperate-line">|</span>
+            <locale-switcher v-if="!isInIframe"></locale-switcher>
+            <qrcode class="feed-back-icon" />
+            <span class="seperate-line">|</span>
             
             <i
-                v-if="!isMooc"
                 class="devops-icon icon-helper"
                 @click.stop="goToDocs"
             />
             <User
                 class="user-info"
-                :disabled="isMooc"
                 v-bind="user"
             />
         </div>
 
         <project-dialog
-            v-if="!isMooc"
             :init-show-dialog="showProjectDialog"
             :title="projectDialogTitle"
         />
@@ -93,17 +92,17 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component, Inject } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Component } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
+    import eventBus from '../../utils/eventBus'
+    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin, isAbsoluteUrl } from '../../utils/util'
 
     @Component({
         components: {
@@ -132,8 +131,14 @@
         isShowTooltip: boolean = true
         isAbsoluteUrl = isAbsoluteUrl
 
-        @Inject()
-        isMooc: boolean
+        get headerLogoName (): string {
+            const logoArr = ['devops-logo']
+            const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
+            if (localeConst) {
+                logoArr.push(localeConst)
+            }
+            return logoArr.join('-')
+        }
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList
@@ -261,7 +266,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${IWIKI_DOCS_URL}/display/DevOps`)
+            this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
         goToPm (): void {
@@ -310,6 +315,11 @@
                 margin-left: 15px;
                 margin-right: 15px;
                 width: 230px;
+                display: flex;
+                > span {
+                    display: inline-flex;
+
+                }
             }
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {

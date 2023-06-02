@@ -127,6 +127,15 @@ export default {
                 throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.stageLimit') + state.pipelineLimit.stageLimit))
             }
 
+            stages.forEach((stage, index) => {
+                if (index !== 0 && stage.checkIn) {
+                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
+                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                        throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
+                    }
+                }
+            })
+
             if (stages.some(stage => stage.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }

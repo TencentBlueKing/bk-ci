@@ -34,14 +34,18 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TCLS_ENVIRONMENT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TCLS_ENVIRONMENT_MESSAGE
 import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.tools.StringUtils
@@ -123,14 +127,18 @@ class UserTclsResourceImpl @Autowired constructor(
         val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["message"]
                     logger.warn("get env list failed: $msg")
-                    throw OperationException("获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：$msg")
+                    throw OperationException(
+                        MessageUtil.getMessageByLocale(
+                        messageCode = BK_TCLS_ENVIRONMENT_MESSAGE,
+                        language = I18nUtil.getLanguage(userId)
+                    ) + "$msg")
                 }
 
                 @Suppress("UNCHECKED_CAST")
@@ -146,7 +154,12 @@ class UserTclsResourceImpl @Autowired constructor(
                 } // 1,2,6是TCLS的正式环境，不能用，参考： https://TAPD站点/TCLS/markdown_wikis/#1010027201006683087
             } catch (e: Exception) {
                 logger.error("get env list failed", e)
-                throw OperationException("获取 TCLS 环境失败，请检查用户名密码是否正确")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_TCLS_ENVIRONMENT,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
         }
     }
@@ -225,7 +238,7 @@ class UserTclsResourceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserTclsResourceImpl::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
         private const val appCode = "bkci"
         private const val appSecret = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
     }

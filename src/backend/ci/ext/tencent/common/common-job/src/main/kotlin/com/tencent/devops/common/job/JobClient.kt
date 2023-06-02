@@ -30,6 +30,7 @@ package com.tencent.devops.common.job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -38,6 +39,7 @@ import com.tencent.devops.common.job.api.pojo.BkJobProperties
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -104,7 +106,7 @@ class JobClient @Autowired constructor(
             val url = "${jobProperties.url}/service/task/$projectId/$taskId/detail"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -131,7 +133,7 @@ class JobClient @Autowired constructor(
             val url = "${jobProperties.url}/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -177,7 +179,7 @@ class JobClient @Autowired constructor(
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             logger.info("response body: $responseStr")
 
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -200,7 +202,7 @@ class JobClient @Autowired constructor(
 
     fun getDetailUrl(projectId: String, taskInstanceId: Long): String {
         return "<a target='_blank' href='${jobProperties.linkUrl}/$projectId/?taskInstanceList" +
-            "&projectId=$projectId#taskInstanceId=$taskInstanceId'>查看详情</a>"
+            "&projectId=$projectId#taskInstanceId=$taskInstanceId'>${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}</a>"
     }
 
     companion object {

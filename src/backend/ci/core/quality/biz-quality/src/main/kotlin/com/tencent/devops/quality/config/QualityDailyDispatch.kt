@@ -27,6 +27,8 @@
 
 package com.tencent.devops.quality.config
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
@@ -45,21 +47,34 @@ class QualityDailyDispatch constructor(
         private val logger = LoggerFactory.getLogger(QualityDailyDispatch::class.java)
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: QualityReportEvent) {
-        try {
-            events.forEach { event ->
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
-                logger.info("[${eventType.exchange}|$routeKey|${event.projectId} dispatch the refresh event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    if (eventType.delayMills > 0) { // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+        events.forEach { event ->
+            try {
+                send(event)
+            } catch (ignored: Exception) {
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
                     }
-                    message
+                } else {
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
                 }
             }
-        } catch (e: Exception) {
-            logger.error("QUALITY|dispatch|Fail to dispatch the event|$events|error=${e.message}")
+        }
+    }
+
+    private fun send(event: QualityReportEvent) {
+        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+        val routeKey = eventType.routeKey
+        logger.info("[${eventType.exchange}|$routeKey|${event.projectId} dispatch the refresh event")
+        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+            if (eventType.delayMills > 0) { // 事件类型固化默认值
+                message.messageProperties.setHeader("x-delay", eventType.delayMills)
+            }
+            message
         }
     }
 }

@@ -80,7 +80,7 @@ object MTAH5Util {
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
 //        httpClient.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             try {
 
                 coreDataReponse = mapper.readValue(responseContent)

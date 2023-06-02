@@ -28,11 +28,18 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
+import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
+import feign.Target.HardCodedTarget
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,14 +60,17 @@ class FeignConfiguration @Autowired constructor(
      */
     @Bean
     @Primary
+    @Suppress("ComplexMethod")
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             requestTemplate.decodeSlash(false)
 
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_PROJECT_ID)) {
             // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            val tag = bkTag.getFinalTag()
-            requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
-            logger.debug("gateway tag is : $tag")
+                val tag = bkTag.getFinalTag()
+                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
+                logger.debug("gateway tag is : $tag")
+            }
 
             // 设置traceId
             requestTemplate.header(
@@ -76,6 +86,12 @@ class FeignConfiguration @Autowired constructor(
                 }
             }
 
+            // 新增devopsToken给网关校验
+            val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+            if (devopsToken != null) {
+                requestTemplate.header("X-DEVOPS-TOKEN", devopsToken)
+            }
+
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -84,7 +100,36 @@ class FeignConfiguration @Autowired constructor(
             if (!languageHeaderValue.isNullOrBlank()) {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
+            // 设置用户ID
+            val userId = request.getHeader(AUTH_HEADER_USER_ID)
+            if (!userId.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_USER_ID, userId)
+            }
+            // 设置请求渠道信息
+            val requestChannel =
+                (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
+            if (!requestChannel.isNullOrBlank()) {
+                requestTemplate.header(REQUEST_CHANNEL, requestChannel)
+            }
+            // 设置服务名称
+            val serviceName = when (val target = requestTemplate.feignTarget()) {
+                is MicroServiceTarget -> {
+                    target.name()
+                }
 
+                is HardCodedTarget -> {
+                    val nameRegex = Regex("/([a-z]+)/api")
+                    val nameMatchResult = nameRegex.find(target.name())
+                    nameMatchResult?.groupValues?.get(1) ?: target.name()
+                }
+
+                else -> {
+                    target.name()
+                }
+            }
+            if (!serviceName.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
+            }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()

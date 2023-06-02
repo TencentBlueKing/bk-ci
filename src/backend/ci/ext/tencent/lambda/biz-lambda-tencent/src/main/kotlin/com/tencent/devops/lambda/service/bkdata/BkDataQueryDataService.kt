@@ -77,9 +77,9 @@ class BkDataQueryDataService @Autowired constructor() {
         if (!resp.isSuccessful) {
             logger.warn("bkDataQueryParam:$bkDataQueryParam queryData fail: $resp")
             throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
-        } else if (resp.body() == null) {
+        } else if (resp.body == null) {
             logger.warn("bkDataQueryParam:$bkDataQueryParam resp is empty")
         }
-        return JsonUtil.to(resp.body()!!.string(), object : TypeReference<BkDataResult<BkDataQueryData>>() {})
+        return JsonUtil.to(resp.body!!.string(), object : TypeReference<BkDataResult<BkDataQueryData>>() {})
     }
 }

@@ -1,8 +1,8 @@
 <template>
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
             </form-field>
 
             <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
@@ -23,40 +23,17 @@
                 </div>
             </form-field>
 
-            <form-field :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
+            <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
+                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
             </form-field>
 
             <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
-                <bk-radio-group v-model="pipelineSetting.runLockType">
-                    <bk-radio v-for="(entry, key) in runTypeList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
-                </bk-radio-group>
+                <running-lock
+                    :pipeline-setting="pipelineSetting"
+                    :handle-running-lock-change="handleRunningLockChange"
+                />
             </form-field>
-            <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
-                <div class="bk-form-content">
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.item') }}</div>
-                            </div>
-                            <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
-                        </div>
-                    </div>
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.minutes') }}</div>
-                            </div>
-                            <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <form-field :label="$t('settings.notify')" style="margin-bottom: 0px">
+            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
                 <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
                     <bk-tab-panel
                         v-for="(entry, index) in subscriptionList"
@@ -89,10 +66,10 @@
                                 </div>
                             </div>
                             <form-field :label="$t('settings.additionUser')">
-                                <staff-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></staff-input>
+                                <staff-input :handle-change="handleAdditionUserChange" name="users" :value="pipelineSettingUser"></staff-input>
                             </form-field>
 
-                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
+                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has('content')" :error-msg="errors.first('content')">
                                 <textarea name="desc" v-model="pipelineSubscription.content" class="bk-form-textarea"></textarea>
                             </form-field>
 
@@ -143,17 +120,20 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             FormField,
             StaffInput,
             GroupIdSelector,
-            AtomCheckbox
+            AtomCheckbox,
+            RunningLock
         },
         props: {
             isDisabled: {
@@ -167,20 +147,6 @@
                 isEditing: false,
                 isLoading: true,
                 resetFlag: false,
-                runTypeList: [
-                    {
-                        label: this.$t('settings.runningOption.multiple'),
-                        value: 'MULTIPLE'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.lock'),
-                        value: 'LOCK'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.single'),
-                        value: 'SINGLE'
-                    }
-                ],
                 subscriptionList: [
                     { label: this.$t('settings.whenSuc'), name: 'success' },
                     { label: this.$t('settings.whenFail'), name: 'fail' }
@@ -237,6 +203,51 @@
                     })
                     return value
                 })
+            },
+            runTypeMap () {
+                return {
+                    MULTIPLE: 'MULTIPLE',
+                    SINGLE: 'SINGLE',
+                    GROUP: 'GROUP_LOCK',
+                    LOCK: 'LOCK'
+                }
+            },
+            isSingleLock () {
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting.runLockType)
+            },
+            formRule () {
+                const requiredRule = {
+                    required: this.isSingleLock,
+                    message: this.$t('editPage.checkParamTip'),
+                    trigger: 'blur'
+                }
+                return {
+                    concurrencyGroup: [
+                        requiredRule
+                    ],
+                    maxQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
+                            },
+                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
+                            trigger: 'change'
+                        }
+                    ],
+                    waitQueueTimeMinute: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                            },
+                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'change'
+                        }
+                    ]
+                }
             }
         },
         watch: {
@@ -398,6 +409,15 @@
                 }
                 this.isDisabled = false
                 return result
+            },
+            handleAdditionUserChange (_, value) {
+                this.pipelineSubscription.users = value.join(',')
+            },
+            handleRunningLockChange (param) {
+                this.updatePipelineSetting({
+                    container: this.pipelineSetting,
+                    param
+                })
             }
         }
     }

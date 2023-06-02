@@ -27,13 +27,14 @@
 
 package com.tencent.devops.process.engine.extend
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -51,17 +52,20 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.text.MessageFormat
 
 class DefaultModelCheckPluginTest : TestBase() {
 
-    private val client: Client = mock()
-    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig = mock()
-    private val stageCommonSettingConfig: StageCommonSettingConfig = mock()
-    private val jobCommonSettingConfig: JobCommonSettingConfig = mock()
-    private val taskCommonSettingConfig: TaskCommonSettingConfig = mock()
+    private val client: Client = mockk()
+    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig = mockk()
+    private val stageCommonSettingConfig: StageCommonSettingConfig = mockk()
+    private val jobCommonSettingConfig: JobCommonSettingConfig = mockk()
+    private val taskCommonSettingConfig: TaskCommonSettingConfig = mockk()
     private val checkPlugin = DefaultModelCheckPlugin(
         client = client,
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
@@ -69,9 +73,9 @@ class DefaultModelCheckPluginTest : TestBase() {
         jobCommonSettingConfig = jobCommonSettingConfig,
         taskCommonSettingConfig = taskCommonSettingConfig
     )
-    private val serviceMarketAtomResource: ServiceMarketAtomResource = mock()
-    private val serviceAtomResource: ServiceAtomResource = mock()
-    private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mock()
+    private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
+    private val serviceAtomResource: ServiceAtomResource = mockk()
+    private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mockk()
 
     private fun genAtomVersion() = AtomVersion(
         atomId = "1",
@@ -118,26 +122,26 @@ class DefaultModelCheckPluginTest : TestBase() {
 
     @BeforeEach
     fun setUp2() {
-        whenever(client.get(ServiceMarketAtomResource::class)).thenReturn(serviceMarketAtomResource)
-        whenever(
+        every { client.get(ServiceMarketAtomResource::class) } returns serviceMarketAtomResource
+        every {
             client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
-        ).thenReturn(
+        } returns (
             Result(genAtomVersion())
-        )
+            )
 
-        whenever(client.get(ServiceAtomResource::class)).thenReturn(serviceAtomResource)
-        whenever(
+        every { client.get(ServiceAtomResource::class) } returns (serviceAtomResource)
+        every {
             client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
-        ).thenReturn(
+        } returns (
             Result(genInstallAtomInfo())
-        )
-        whenever(client.get(ServiceMarketAtomEnvResource::class)).thenReturn(serviceMarketAtomEnvResource)
-        whenever(
+            )
+        every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
+        every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
                 projectCode = any(),
                 atomVersions = any()
             )
-        ).thenReturn(
+        } returns (
             Result(
                 mapOf(
                     "manualTrigger:1.*" to AtomRunInfo(
@@ -151,22 +155,22 @@ class DefaultModelCheckPluginTest : TestBase() {
                     )
                 )
             )
-        )
-        whenever(pipelineCommonSettingConfig.maxModelSize).thenReturn(16777215)
-        whenever(pipelineCommonSettingConfig.maxStageNum).thenReturn(20)
-        whenever(pipelineCommonSettingConfig.maxPipelineNameSize).thenReturn(255)
-        whenever(pipelineCommonSettingConfig.maxPipelineDescSize).thenReturn(255)
-        whenever(stageCommonSettingConfig.maxJobNum).thenReturn(20)
-        whenever(jobCommonSettingConfig.maxTaskNum).thenReturn(20)
-        whenever(taskCommonSettingConfig.maxInputNum).thenReturn(50)
-        whenever(taskCommonSettingConfig.maxOutputNum).thenReturn(50)
-        whenever(taskCommonSettingConfig.maxInputComponentSize).thenReturn(1024)
-        whenever(taskCommonSettingConfig.maxTextareaComponentSize).thenReturn(4096)
-        whenever(taskCommonSettingConfig.maxCodeEditorComponentSize).thenReturn(16384)
-        whenever(taskCommonSettingConfig.maxDefaultInputComponentSize).thenReturn(1024)
-        whenever(taskCommonSettingConfig.multipleInputComponents).thenReturn("dynamic-parameter")
-        whenever(taskCommonSettingConfig.maxMultipleInputComponentSize).thenReturn(4000)
-        whenever(taskCommonSettingConfig.maxDefaultOutputComponentSize).thenReturn(4000)
+            )
+        every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
+        every { pipelineCommonSettingConfig.maxStageNum } returns (20)
+        every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)
+        every { pipelineCommonSettingConfig.maxPipelineDescSize } returns (255)
+        every { stageCommonSettingConfig.maxJobNum } returns (20)
+        every { jobCommonSettingConfig.maxTaskNum } returns (20)
+        every { taskCommonSettingConfig.maxInputNum } returns (50)
+        every { taskCommonSettingConfig.maxOutputNum } returns (50)
+        every { taskCommonSettingConfig.maxInputComponentSize } returns (1024)
+        every { taskCommonSettingConfig.maxTextareaComponentSize } returns (4096)
+        every { taskCommonSettingConfig.maxCodeEditorComponentSize } returns (16384)
+        every { taskCommonSettingConfig.maxDefaultInputComponentSize } returns (1024)
+        every { taskCommonSettingConfig.multipleInputComponents } returns ("dynamic-parameter")
+        every { taskCommonSettingConfig.maxMultipleInputComponentSize } returns (4000)
+        every { taskCommonSettingConfig.maxDefaultOutputComponentSize } returns (4000)
     }
 
     private fun genInstallAtomInfo(): List<InstalledAtom> {
@@ -174,6 +178,7 @@ class DefaultModelCheckPluginTest : TestBase() {
             InstalledAtom(
                 atomId = "atomId",
                 atomCode = atomCode,
+                version = "1.*",
                 name = "atomName",
                 logoUrl = "logoUrl",
                 classifyCode = "classifyCode",
@@ -214,32 +219,137 @@ class DefaultModelCheckPluginTest : TestBase() {
         checkPlugin.clearUpModel(model)
     }
 
-    @Test
-    fun checkJob() {
-        // trigger
-        val triggerContainers = genContainers(1, 1, 2)
-        checkPlugin.checkJob(triggerContainers[0], projectId, pipelineId, userId, false)
-        val allContainers = genContainers(2, 3, 2)
-        val mac = allContainers[0]
-        checkPlugin.checkJob(mac, projectId, pipelineId, userId, false)
-        val win = allContainers[1]
-        checkPlugin.checkJob(win, projectId, pipelineId, userId, false)
-        val linux = allContainers[2]
-        checkPlugin.checkJob(linux, projectId, pipelineId, userId, false)
-    }
-
-    private fun checkModelIntegrityEmptyElement() {
+    private fun checkModelIntegrityEmptyElement(): ErrorCodeException? {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
-        Assertions.assertThrows(ErrorCodeException::class.java) { checkPlugin.checkModelIntegrity(model, projectId) }
+        return Assertions.assertThrows(ErrorCodeException::class.java) {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
     }
 
     @Test
     fun checkModelIntegrity() {
-        try {
-            checkModelIntegrityEmptyElement()
-        } catch (actual: ErrorCodeException) {
-            Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
+        var actual: ErrorCodeException? = checkModelIntegrityEmptyElement()
+        Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutElement("\${{$illegalTimeoutVar}}", illegal = true) // 插件非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutElement("\${{$biggerTimeoutVar}}", illegal = true) // 插件超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutJob("\${{$illegalTimeoutVar}}", illegal = true) // Job非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutJob("\${{$biggerTimeoutVar}}", illegal = true) // Job超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        // 互斥组场景
+        actual = checkModelIntegrityIllegalTimeoutJobMutex("\${{$illegalTimeoutVar}}") // 互斥组非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityIllegalTimeoutJobMutex("\${{$biggerTimeoutVar}}") // 互斥组超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual.params) }}")
+
+        checkModelIntegrityTimeoutJob("\${{$timeoutVar}}") // 正常的Job变量场景
+        checkModelIntegrityTimeoutJob("60") // timeout 60 minutes
+
+        checkModelIntegrityTimeoutElement("\${{$timeoutVar}}") // 正常的插件变量场景
+        checkModelIntegrityTimeoutElement("60") // timeout 60 minutes
+
+        checkModelIntegrityVarTimeoutJobMutex("\${{$timeoutVar}}") // 正常的互斥组变量场景
+        checkModelIntegrityVarTimeoutJobMutex("60") // timeout 60 minutes
+    }
+
+    private fun checkModelIntegrityTimeoutElement(varName: String, illegal: Boolean = false): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setElementTimeoutVar(model, varName)
+        return if (illegal) {
+            Assertions.assertThrows(ErrorCodeException::class.java) {
+                checkPlugin.checkModelIntegrity(model, projectId)
+            }
+        } else {
+            checkPlugin.checkModelIntegrity(model, projectId)
+            null
         }
+    }
+
+    private fun checkModelIntegrityTimeoutJob(varName: String, illegal: Boolean = false): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setJobTimeoutVar(model, varName)
+        return if (illegal) {
+            Assertions.assertThrows(ErrorCodeException::class.java) {
+                checkPlugin.checkModelIntegrity(model, projectId)
+            }
+        } else {
+            checkPlugin.checkModelIntegrity(model, projectId)
+            null
+        }
+    }
+
+    private fun checkModelIntegrityIllegalTimeoutJobMutex(varName: String): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setJobMutexTimeoutVar(model, varName)
+        return Assertions.assertThrows(ErrorCodeException::class.java) {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
+    }
+
+    private fun setElementTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers[0].elements.forEach {
+            val jop = it.additionalOptions
+            jop?.timeoutVar = varName
+        }
+    }
+
+    private fun setJobTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers.forEach {
+            val jop = when (it) {
+                is VMBuildContainer -> it.jobControlOption
+                is NormalContainer -> it.jobControlOption
+                else -> return@forEach
+            }
+            jop?.timeoutVar = varName
+        }
+    }
+
+    private fun checkModelIntegrityVarTimeoutJobMutex(value: String) {
+        val model = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
+        setJobMutexTimeoutVar(model, value)
+        checkPlugin.checkModelIntegrity(model, projectId)
+    }
+
+    private fun setJobMutexTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers.forEach {
+            val mut = when (it) {
+                is VMBuildContainer -> {
+                    it.mutexGroup ?: run { it.mutexGroup = getMutex(); it.mutexGroup }
+                }
+
+                is NormalContainer -> {
+                    it.mutexGroup ?: run { it.mutexGroup = getMutex(); it.mutexGroup }
+                }
+
+                else -> return@forEach
+            }
+            mut?.timeoutVar = varName
+        }
+    }
+
+    private fun getMutex(): MutexGroup {
+        return MutexGroup(
+            enable = true,
+            mutexGroupName = "mutexGroupName\${var1}",
+            queueEnable = true,
+            timeout = 100800,
+            queue = 15
+        )
     }
 
     @Test

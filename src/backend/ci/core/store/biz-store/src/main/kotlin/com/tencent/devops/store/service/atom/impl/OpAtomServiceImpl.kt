@@ -40,10 +40,9 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -52,10 +51,10 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
-import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -65,6 +64,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -76,27 +77,29 @@ import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.util.FileSystemUtils
 
 @Service
-@Suppress("LongParameterList", "LongMethod", "ReturnCount")
+@Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
 class OpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val classifyDao: ClassifyDao,
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomFeatureDao: MarketAtomFeatureDao,
@@ -107,6 +110,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomReleaseService: AtomReleaseService,
     private val storeLogoService: StoreLogoService,
     private val storeWebsocketService: StoreWebsocketService,
+    private val classifyService: ClassifyService,
+    private val storeI18nMessageService: StoreI18nMessageService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) : OpAtomService {
@@ -119,6 +124,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -127,14 +133,15 @@ class OpAtomServiceImpl @Autowired constructor(
         atomStatus: AtomStatusEnum?,
         sortType: OpSortTypeEnum?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<Atom>?> {
         logger.info("getOpPipelineAtoms|atomName=$atomName,serviceScope=$serviceScope,os=$os,atomType=$atomType")
         logger.info("getOpPipelineAtoms|category=$category,classifyId=$classifyId,page=$page,pageSize=$pageSize")
         val pipelineAtomList = atomDao.getOpPipelineAtoms(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -152,6 +159,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val totalSize = atomDao.getOpPipelineAtomCount(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -204,12 +212,12 @@ class OpAtomServiceImpl @Autowired constructor(
      * 生成插件对象
      */
     private fun generatePipelineAtom(it: TAtomRecord): Atom {
-        val atomClassifyRecord = classifyDao.getClassify(dslContext, it.classifyId)
-        return convert(it, atomClassifyRecord)
+        val classify = classifyService.getClassify(it.classifyId).data
+        return convert(it, classify)
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun convert(atomRecord: TAtomRecord, atomClassifyRecord: TClassifyRecord?): Atom {
+    private fun convert(atomRecord: TAtomRecord, classify: Classify?): Atom {
         val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
         return Atom(
             id = atomRecord.id,
@@ -222,9 +230,9 @@ class OpAtomServiceImpl @Autowired constructor(
             serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
             jobType = atomRecord.jobType,
             os = JsonUtil.toOrNull(atomRecord.os, List::class.java) as List<String>?,
-            classifyId = atomClassifyRecord?.id,
-            classifyCode = atomClassifyRecord?.classifyCode,
-            classifyName = atomClassifyRecord?.classifyName,
+            classifyId = classify?.id,
+            classifyCode = classify?.classifyCode,
+            classifyName = classify?.classifyName,
             docsLink = atomRecord.docsLink,
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
@@ -241,8 +249,16 @@ class OpAtomServiceImpl @Autowired constructor(
             buildLessRunFlag = atomRecord.buildLessRunFlag,
             weight = atomRecord.weight,
             props = atomRecord.props?.let {
+                val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                    jsonStr = it,
+                    keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                        storeType = StoreTypeEnum.ATOM,
+                        storeCode = atomRecord.atomCode,
+                        version = atomRecord.version
+                    )
+                )
                 AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
-                    ?.decorate(atomRecord.props) as Map<String, Any>?
+                    ?.decorate(propJsonStr) as Map<String, Any>?
             },
             data = atomRecord.data?.let {
                 AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
@@ -263,20 +279,26 @@ class OpAtomServiceImpl @Autowired constructor(
     override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
         // 判断插件是否存在
         val atom = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(atomId)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
             )
 
         val oldStatus = atom.atomStatus
         if (oldStatus != AtomStatusEnum.AUDITING.status.toByte()) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         if (approveReq.result != PASS && approveReq.result != REJECT) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(approveReq.result)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(approveReq.result),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomCode = atom.atomCode
@@ -336,6 +358,7 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun releaseAtom(
         userId: String,
         atomCode: String,
@@ -356,9 +379,10 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_CONF_INVALID,
-                arrayOf(TASK_JSON_NAME)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                params = arrayOf(TASK_JSON_NAME),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val taskJsonMap: Map<String, Any>
@@ -370,9 +394,10 @@ class OpAtomServiceImpl @Autowired constructor(
             val releaseInfoMap = taskJsonMap["releaseInfo"]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo")
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf("releaseInfo"),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 新增插件
@@ -402,8 +427,10 @@ class OpAtomServiceImpl @Autowired constructor(
                 )
             }
             val relativePath = logoUrlAnalysisResult.data
-            val logoFile = File("$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
+            val logoFile = File(
+                "$atomPath${File.separator}file" +
+                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
+            )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
                     userId = userId,
@@ -436,7 +463,7 @@ class OpAtomServiceImpl @Autowired constructor(
             client = client,
             userId = userId
         )
-        taskJsonMap["releaseInfo"] = releaseInfo
+        taskJsonMap[KEY_RELEASE_INFO] = releaseInfo
         // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()
@@ -508,5 +535,19 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         // 确认测试通过
         return atomReleaseService.passTest(userId, atomId)
+    }
+
+    override fun setDefault(userId: String, atomCode: String): Boolean {
+        return try {
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                atomDao.updateAtomByCode(context, userId, atomCode, AtomFeatureUpdateRequest(defaultFlag = true))
+                redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)) // 直接删除重建
+            }
+            true
+        } catch (e: Exception) {
+            logger.error("set default atom failed , userId:$userId , atomCode:$atomCode")
+            false
+        }
     }
 }

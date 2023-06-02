@@ -38,7 +38,7 @@ import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -67,6 +67,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.KEY_ICON
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -344,6 +345,7 @@ class AtomDao : AtomBaseDao() {
     fun getOpPipelineAtoms(
         dslContext: DSLContext,
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -352,12 +354,20 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?,
         sortType: String?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
-            val conditions =
-                queryOpPipelineAtomsConditions(atomName, atomType, serviceScope, os, category, classifyId, atomStatus)
+            val conditions = queryOpPipelineAtomsConditions(
+                atomName = atomName,
+                atomCode = atomCode,
+                atomType = atomType,
+                serviceScope = serviceScope,
+                os = os,
+                category = category,
+                classifyId = classifyId,
+                atomStatus = atomStatus
+            )
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
                 if (desc != null && desc) {
@@ -369,17 +379,14 @@ class AtomDao : AtomBaseDao() {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
-            return if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
-            }
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
     }
 
     fun getOpPipelineAtomCount(
         dslContext: DSLContext,
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -390,6 +397,7 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val conditions = queryOpPipelineAtomsConditions(
                 atomName = atomName,
+                atomCode = atomCode,
                 atomType = atomType,
                 serviceScope = serviceScope,
                 os = os,
@@ -403,6 +411,7 @@ class AtomDao : AtomBaseDao() {
 
     private fun TAtom.queryOpPipelineAtomsConditions(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -412,6 +421,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
+        atomCode?.let { conditions.add(ATOM_CODE.contains(atomCode)) }
         atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
         serviceScope?.let {
             if (!"all".equals(serviceScope, true)) {
@@ -667,7 +677,8 @@ class AtomDao : AtomBaseDao() {
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
-            tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM)
+            tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
+            tsst.HOT_FLAG.`as`(KEY_HOT_FLAG)
         )
             .from(ta)
             .join(tc)
@@ -748,16 +759,24 @@ class AtomDao : AtomBaseDao() {
                 queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
             ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-            defaultAtomCondition.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
-                .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
-                .where(initTestAtomCondition)))
-            normalAtomConditions.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
-                .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
-                .where(initTestAtomCondition)))
+            defaultAtomCondition.add(
+                ta.ATOM_CODE.notIn(
+                    dslContext.select(ta.ATOM_CODE)
+                        .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                        .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
+                        .where(initTestAtomCondition)
+                )
+            )
+            normalAtomConditions.add(
+                ta.ATOM_CODE.notIn(
+                    dslContext.select(ta.ATOM_CODE)
+                        .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                        .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
+                        .where(initTestAtomCondition)
+                )
+            )
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
@@ -850,9 +869,11 @@ class AtomDao : AtomBaseDao() {
         }
         if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
             if (fitOsFlag == false) {
-                conditions.add((ta.OS.notLike("%$os%")
-                    .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
-                    .and(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte())))
+                conditions.add(
+                    (ta.OS.notLike("%$os%")
+                        .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
+                        .and(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
+                )
             } else {
                 conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             }
@@ -948,10 +969,14 @@ class AtomDao : AtomBaseDao() {
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
-        conditions.add(ta.ATOM_STATUS.`in`(listOf(
-            AtomStatusEnum.TESTING.status.toByte(),
-            AtomStatusEnum.AUDITING.status.toByte()
-        ))) // 只查测试中和审核中的插件
+        conditions.add(
+            ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.TESTING.status.toByte(),
+                    AtomStatusEnum.AUDITING.status.toByte()
+                )
+            )
+        ) // 只查测试中和审核中的插件
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
         conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
@@ -1043,6 +1068,9 @@ class AtomDao : AtomBaseDao() {
             if (!atomFeatureUpdateRequest.repositoryUrl.isNullOrBlank()) {
                 baseStep.set(CODE_SRC, atomFeatureUpdateRequest.repositoryUrl)
             }
+            if (atomFeatureUpdateRequest.defaultFlag != null) {
+                baseStep.set(DEFAULT_FLAG, atomFeatureUpdateRequest.defaultFlag)
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ATOM_CODE.eq(atomCode))
@@ -1082,7 +1110,7 @@ class AtomDao : AtomBaseDao() {
     ): Result<out Record>? {
 
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
-        val tc = TClassify.T_CLASSIFY.`as`("tc")
+        val tc = TClassify.T_CLASSIFY
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
             .from(ta).groupBy(ta.ATOM_CODE)
@@ -1090,6 +1118,7 @@ class AtomDao : AtomBaseDao() {
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
             ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            ta.VERSION.`as`(KEY_VERSION),
             ta.NAME.`as`(NAME),
             ta.LOGO_URL.`as`(KEY_LOGO_URL),
             ta.CATEGROY.`as`(KEY_CATEGORY),
@@ -1104,8 +1133,10 @@ class AtomDao : AtomBaseDao() {
         )
             .from(ta)
             .join(t)
-            .on(ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java))))
+            .on(
+                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
+                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)
@@ -1123,16 +1154,16 @@ class AtomDao : AtomBaseDao() {
         name: String?,
         dslContext: DSLContext
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
+        val ta = TAtom.T_ATOM
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.STORE_TYPE.eq(0))
         if (!classifyCode.isNullOrEmpty()) {
-            val a = TClassify.T_CLASSIFY.`as`("a")
-            val classifyId = dslContext.select(a.ID)
-                .from(a)
-                .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
+            val tClassify = TClassify.T_CLASSIFY
+            val classifyId = dslContext.select(tClassify.ID)
+                .from(tClassify)
+                .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
                 .fetchOne(0, String::class.java)
             conditions.add(ta.CLASSIFY_ID.eq(classifyId))
         }
@@ -1156,10 +1187,10 @@ class AtomDao : AtomBaseDao() {
             }
             val classifyCode = atomBaseInfoUpdateRequest.classifyCode
             if (null != classifyCode) {
-                val a = TClassify.T_CLASSIFY.`as`("a")
-                val classifyId = dslContext.select(a.ID)
-                    .from(a)
-                    .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
+                val tClassify = TClassify.T_CLASSIFY
+                val classifyId = dslContext.select(tClassify.ID)
+                    .from(tClassify)
+                    .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
                     .fetchOne(0, String::class.java)
                 baseStep.set(CLASSIFY_ID, classifyId)
             }
@@ -1205,14 +1236,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
-                .fetch()
-        }
-    }
-
     fun batchGetDefaultAtomCode(dslContext: DSLContext): Result<Record1<String>> {
         return with(TAtom.T_ATOM) {
             dslContext.select(ATOM_CODE).from(this)
@@ -1232,6 +1255,47 @@ class AtomDao : AtomBaseDao() {
                         .and(ATOM_CODE.`in`(atomCodes))
                 )
                 .fetch()
+        }
+    }
+
+    fun getPublishedAtoms(
+        dslContext: DSLContext,
+        timeDescFlag: Boolean = true,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.select(ATOM_CODE)
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            if (timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc(), ID)
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc(), ID)
+            }
+            return baseStep.groupBy(ATOM_CODE)
+                .limit((page - 1) * pageSize, pageSize).fetchInto(String::class.java)
+        }
+    }
+
+    fun getPublishedAtomCount(
+        dslContext: DSLContext
+    ): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.select()
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .groupBy(ATOM_CODE)
+                .execute()
+        }
+    }
+
+    fun getAtomCodeSrc(dslContext: DSLContext, atomCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(CODE_SRC)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode).and(LATEST_FLAG.eq(true)))
+                .fetchOne(0, String::class.java)
         }
     }
 

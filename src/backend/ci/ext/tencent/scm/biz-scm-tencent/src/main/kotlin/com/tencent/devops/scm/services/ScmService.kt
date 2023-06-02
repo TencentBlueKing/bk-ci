@@ -27,11 +27,11 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
@@ -45,6 +45,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.QualityUtils
@@ -328,7 +329,15 @@ class ScmService @Autowired constructor(
                     event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
                 requestTime = System.currentTimeMillis()
-                scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                scm.addCommitCheck(
+                    commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block,
+                    targetBranch = targetBranch
+                )
                 responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
@@ -341,7 +350,8 @@ class ScmService @Autowired constructor(
             statusCode = e.code
             statusMessage = e.message
             throw ScmException(
-                e.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                e.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         } finally {
@@ -498,6 +508,25 @@ class ScmService @Autowired constructor(
             region = null,
             userName = null
         ).getMrCommitList(mrId = mrId, page = page, size = size)
+    }
+
+    fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): GitProjectInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getProjectInfo(projectName = projectName)
     }
 
     companion object {

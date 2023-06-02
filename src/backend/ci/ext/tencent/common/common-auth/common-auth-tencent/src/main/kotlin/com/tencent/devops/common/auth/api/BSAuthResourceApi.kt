@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.service.ServiceVerifyRecordResource
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -38,17 +39,20 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthResourceModifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import okhttp3.MediaType
+import com.tencent.devops.common.client.Client
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
 
 class BSAuthResourceApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
-    private val bsAuthTokenApi: BSAuthTokenApi
+    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val client: Client
 ) : AuthResourceApi {
 
     override fun batchCreateResource(
@@ -165,7 +169,7 @@ class BSAuthResourceApi @Autowired constructor(
             authorizedGroups
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -175,7 +179,7 @@ class BSAuthResourceApi @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
 //        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth create resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error("Fail to create auth resource. $responseContent")
@@ -210,7 +214,7 @@ class BSAuthResourceApi @Autowired constructor(
             resourceType.value
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -220,7 +224,7 @@ class BSAuthResourceApi @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
 //        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth modify resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Fail to modify auth resource. $responseContent")
@@ -253,7 +257,7 @@ class BSAuthResourceApi @Autowired constructor(
             resourceType.value
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceDeleteRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -261,7 +265,7 @@ class BSAuthResourceApi @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth delete resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error("Fail to delete auth resource. $responseContent")
@@ -276,8 +280,31 @@ class BSAuthResourceApi @Autowired constructor(
                 logger.error("Fail to delete auth resource. $responseContent")
                 throw RemoteServiceException("Fail to delete auth resource")
             }
+            executor.submit {
+                client.get(ServiceVerifyRecordResource::class).delete(
+                    projectCode = projectCode,
+                    resourceType = resourceType.value,
+                    resourceCode = resourceCode
+                )
+            }
         }
     }
+
+    override fun cancelCreateResource(
+        userId: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
+
+    override fun cancelUpdateResource(
+        userId: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
 
     override fun batchCreateResource(
         serviceCode: AuthServiceCode,
@@ -303,7 +330,7 @@ class BSAuthResourceApi @Autowired constructor(
         )
 
         val content = objectMapper.writeValueAsString(requestData)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -311,7 +338,7 @@ class BSAuthResourceApi @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth batch create resource response: $responseContent")
 
             if (!response.isSuccessful) {
@@ -333,6 +360,7 @@ class BSAuthResourceApi @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BSAuthResourceApi::class.java)
+        private val executor = Executors.newFixedThreadPool(5)
         private const val HTTP_403 = 403
     }
 }

@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.tof.TOFService
@@ -66,12 +66,10 @@ class ProjectIamV0Service @Autowired constructor(
         logger.info("[createUser2Project] createUser[$createUser] userId[$userIds] projectCode[$projectCode]")
 
         if (!bkAuthProjectApi.checkProjectManager(createUser, bsPipelineAuthServiceCode, projectCode)) {
-            logger.error("$createUser is not manager for project[$projectCode]")
-            throw OperationException(
-                (MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.NOT_MANAGER,
-                    params = arrayOf(createUser, projectCode)
-                ))
+            logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.NOT_MANAGER,
+                params = arrayOf(createUser, projectCode)
             )
         }
         return createUser2ProjectImpl(
@@ -79,44 +77,6 @@ class ProjectIamV0Service @Autowired constructor(
             projectId = projectCode,
             roleId = roleId,
             roleName = roleName
-        )
-    }
-
-    @Suppress("ALL")
-    fun createPipelinePermission(
-        createUser: String,
-        projectId: String,
-        userId: String,
-        permission: String,
-        resourceType: String,
-        resourceTypeCode: String
-    ): Boolean {
-        logger.info("createPipelinePermission [$createUser] [$projectId] [$userId] [$permission]")
-        if (!bkAuthProjectApi.checkProjectManager(createUser, bsPipelineAuthServiceCode, projectId)) {
-            logger.info("createPipelinePermission createUser not project manager[$createUser] [$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.NOT_MANAGER,
-                params = arrayOf(createUser, projectId))))
-        }
-        val createUserList = userId.split(",")
-
-        createUserList?.forEach {
-            if (!bkAuthProjectApi.checkProjectUser(it, bsPipelineAuthServiceCode, projectId)) {
-                logger.info("createPipelinePermission userId not project manager [$userId] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(it, projectId))))
-            }
-        }
-
-        return createPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = permission,
-            resourceType = resourceType,
-            authServiceCode = bsPipelineAuthServiceCode,
-            resourceTypeCode = resourceTypeCode,
-            userList = createUserList
         )
     }
 
@@ -131,7 +91,12 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            ?: throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
 
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)
@@ -156,9 +121,8 @@ class ProjectIamV0Service @Autowired constructor(
     ): Boolean {
         logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(ProjectMessageCode.PROJECT_NOT_EXIST, null)
-            )
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
         roleList.forEach {
@@ -190,15 +154,17 @@ class ProjectIamV0Service @Autowired constructor(
                     projectCode = projectInfo.projectId,
                     role = authRoleId!!
                 )
-            } catch (ope: OperationException) {
-                logger.warn("OperationException $it $projectId ${ope.message}")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = ope.message,
-                    params = arrayOf(it)
-                ))
-            } catch (e: Exception) {
-                logger.warn("createUser2Project fail, userId[$it]", e)
+            } catch (ignore: OperationException) {
+                logger.warn("OperationException $it $projectId ${ignore.message}")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                        defaultMessage = ignore.message,
+                        params = arrayOf(it)
+                    )
+                )
+            } catch (ignore: Exception) {
+                logger.warn("createUser2Project fail, userId[$it]", ignore)
                 return false
             }
         }
@@ -206,6 +172,6 @@ class ProjectIamV0Service @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectIamV0Service::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectIamV0Service::class.java)
     }
 }

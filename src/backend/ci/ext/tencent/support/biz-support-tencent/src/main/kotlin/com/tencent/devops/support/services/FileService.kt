@@ -35,15 +35,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.constant.SupportMessageCode
+import java.io.InputStream
+import java.nio.file.Files
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.InputStream
-import java.nio.file.Files
 
 @Service
 class FileService @Autowired constructor(private val client: Client) {
@@ -66,9 +66,10 @@ class FileService @Autowired constructor(private val client: Client) {
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadFileTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType.toLowerCase())) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = SupportMessageCode.UPLOAD_FILE_TYPE_IS_NOT_SUPPORT,
-                params = arrayOf(fileType, allowUploadFileTypes)
+                params = arrayOf(fileType, allowUploadFileTypes),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
@@ -79,9 +80,10 @@ class FileService @Autowired constructor(private val client: Client) {
         val fileSize = file.length()
         val maxFileSize = maxUploadFileSize.toLong()
         if (fileSize > maxFileSize) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = SupportMessageCode.UPLOAD_FILE_IS_TOO_LARGE,
-                params = arrayOf((maxFileSize / 1048576).toString() + "M")
+                params = arrayOf((maxFileSize / 1048576).toString() + "M"),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
@@ -91,10 +93,13 @@ class FileService @Autowired constructor(private val client: Client) {
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
             OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
-                    return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                    return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.SYSTEM_ERROR,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 }
                 return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
             }

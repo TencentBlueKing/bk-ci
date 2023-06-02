@@ -28,21 +28,23 @@
 package upgrade
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade/download"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+
+	"github.com/pkg/errors"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 var JdkVersion = &JdkVersionType{}
@@ -105,6 +107,11 @@ func DoPollAndUpgradeAgent() {
 	for {
 		time.Sleep(20 * time.Second)
 		logs.Info("try upgrade")
+		// debug模式下关闭升级，方便调试问题
+		if config.IsDebug {
+			logs.Debug("debug no upgrade")
+			continue
+		}
 		agentUpgrade()
 		logs.Info("upgrade done")
 	}
@@ -122,13 +129,13 @@ func agentUpgrade() {
 		}
 	}()
 
-	jdkVersion, err := syncJdkVersion()
+	jdkVersion, err := SyncJdkVersion()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync jdk version err: ", err.Error())
 		return
 	}
 
-	err = syncDockerInitFileMd5()
+	err = SyncDockerInitFileMd5()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync docker file md5 err: ", err.Error())
 		return
@@ -176,8 +183,8 @@ func agentUpgrade() {
 	}
 }
 
-// syncJdkVersion 同步jdk版本信息
-func syncJdkVersion() ([]string, error) {
+// SyncJdkVersion 同步jdk版本信息
+func SyncJdkVersion() ([]string, error) {
 	// 获取jdk文件状态以及时间
 	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
@@ -221,7 +228,7 @@ func syncJdkVersion() ([]string, error) {
 	return version, nil
 }
 
-func syncDockerInitFileMd5() error {
+func SyncDockerInitFileMd5() error {
 	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
 		DockerFileMd5.NeedUpgrade = false
 		return nil

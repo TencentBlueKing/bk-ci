@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -38,8 +38,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.Credential
@@ -47,28 +45,27 @@ import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
-import com.tencent.devops.repository.api.scm.ServiceScmResource
-import com.tencent.devops.repository.pojo.CodeP4Repository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.util.Base64
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -97,10 +94,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
-                AlertUtils.doAlert(
-                    module = "SCM", level = AlertLevel.MEDIUM, title = "拉取最新版本号出现异常,重试${retry}次失败",
-                    message = "拉取最新版本号出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-                )
                 return Result(ERROR_RETRY_3_FAILED.toInt())
             }
         }, retry, 2000)
@@ -325,10 +318,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                throw ErrorCodeException(
-                    defaultMessage = "SVN 不支持获取Tag",
-                    errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG)
             }
             is CodeGitRepository -> {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
@@ -392,7 +382,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
-            ?: throw ErrorCodeException(defaultMessage = "不是Git代码仓库", errorCode = RepositoryMessageCode.GIT_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
         val isOauth = repo.credentialId.isEmpty()
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
@@ -434,10 +424,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
-            ?: throw ErrorCodeException(
-                defaultMessage = "不是Gitlab代码仓库",
-                errorCode = RepositoryMessageCode.GITLAB_INVALID
-            )
+            ?: throw ErrorCodeException(errorCode = GITLAB_INVALID)
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -456,7 +443,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addSvnWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
-            ?: throw ErrorCodeException(defaultMessage = "不是SVN代码仓库", errorCode = RepositoryMessageCode.SVN_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -475,7 +462,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addTGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
-            ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = RepositoryMessageCode.TGIT_INVALID)
+            ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = ProcessMessageCode.TGIT_INVALID)
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -512,10 +499,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     ): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
-            ?: throw ErrorCodeException(
-                defaultMessage = "不是p4代码仓库",
-                errorCode = RepositoryMessageCode.P4_INVALID
-            )
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.P4_INVALID)
         val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -547,10 +531,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(
-                defaultMessage = "不是Github代码仓库",
-                errorCode = RepositoryMessageCode.GITHUB_INVALID
-            )
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -587,10 +568,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(
-                defaultMessage = "不是Github代码仓库",
-                errorCode = RepositoryMessageCode.GITHUB_INVALID
-            )
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -614,16 +592,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {
         when (repositoryConfig.repositoryType) {
             RepositoryType.ID -> if (repositoryConfig.repositoryHashId.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    defaultMessage = "仓库ID为空",
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_ID_NULL
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_ID_NULL)
             }
             RepositoryType.NAME -> if (repositoryConfig.repositoryName.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    defaultMessage = "仓库名为空",
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_NAME_NULL
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_NAME_NULL)
             }
         }
     }

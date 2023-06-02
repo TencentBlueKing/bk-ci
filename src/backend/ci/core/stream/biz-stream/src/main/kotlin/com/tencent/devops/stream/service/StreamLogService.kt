@@ -32,17 +32,20 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.util.GitCommonUtils
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class StreamLogService @Autowired constructor(
@@ -126,9 +129,16 @@ class StreamLogService @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
-        val response = OkhttpUtils.doLongGet(path.toString(), mapOf(AUTH_HEADER_USER_ID to userId))
+        val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
+
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
+
+        val response = OkhttpUtils.doLongGet(path.toString(), headers)
         return Response
-            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
             .header("X-DEVOPS-PROJECT-ID", "gitciproject")
@@ -137,5 +147,8 @@ class StreamLogService @Autowired constructor(
 
     private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
-            ?: throw CustomException(Response.Status.FORBIDDEN, "该流水线不存在或已删除，如有疑问请联系蓝盾助手")
+            ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                I18nUtil.getCodeLanMessage(PIPELINE_NOT_FOUND_OR_DELETED)
+            )
 }

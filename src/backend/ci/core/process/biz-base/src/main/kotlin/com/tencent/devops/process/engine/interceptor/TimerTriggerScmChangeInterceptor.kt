@@ -46,8 +46,8 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NON_TIMED_TRIGGER_SKIP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
 import com.tencent.devops.process.constant.ProcessMessageCode.OK
@@ -72,12 +72,15 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         // 非定时触发的直接跳过
         if (task.startType != StartType.TIME_TRIGGER) {
-            return Response(OK, "非定时触发，直接跳过")
+            return Response(OK, I18nUtil.getCodeLanMessage(BK_NON_TIMED_TRIGGER_SKIP))
         }
 
         val pipelineId = task.pipelineInfo.pipelineId
         val projectId = task.pipelineInfo.projectId
-        val model = task.model ?: return Response(ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(), "流水线的模型不存在")
+        val model = task.model ?: return Response(
+            ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(),
+            I18nUtil.getCodeLanMessage(ERROR_PIPELINE_MODEL_NOT_EXISTS)
+        )
 
         var noScm = false
         var hasCodeChange = false
@@ -134,7 +137,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             !noScm -> Response(OK) // 没有开启【源代码未更新时不触发构建】, 则允许执行
             hasCodeChange -> Response(OK) //  有代码变更，【源代码未更新时不触发构建】不成立，允许执行
             !hasScmElement -> Response(OK) // 没有任何拉代码的插件，【源代码未更新时不触发构建】无效，允许执行
-            else -> Response(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE.toInt(), "代码没有变更，跳过执行")
+            else -> Response(
+                ERROR_PIPELINE_TIMER_SCM_NO_CHANGE.toInt(),
+                I18nUtil.getCodeLanMessage(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE)
+            )
         }
     }
 
@@ -263,10 +269,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             )
         } catch (e: Exception) {
             LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
-            AlertUtils.doAlert(
-                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
-                "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-            )
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != ele.revision)) {
@@ -307,10 +309,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             )
         } catch (e: Exception) {
             LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
-            AlertUtils.doAlert(
-                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
-                "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-            )
             return false
         }
 
@@ -396,10 +394,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             )
         } catch (e: Exception) {
             LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
-            AlertUtils.doAlert(
-                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
-                "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-            )
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != latestRevision)) {
@@ -471,10 +465,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             )
         } catch (e: Exception) {
             LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
-            AlertUtils.doAlert(
-                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
-                "拉取上一次构建${ele.getAtomCode()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-            )
             return false
         }
 

@@ -41,11 +41,7 @@ import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 
-@Service
-@Primary
 class TxGithubService @Autowired constructor(
     private val client: Client,
     private val githubTokenService: GithubTokenService

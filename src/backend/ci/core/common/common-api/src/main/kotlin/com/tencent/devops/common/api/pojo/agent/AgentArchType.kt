@@ -30,5 +30,15 @@ package com.tencent.devops.common.api.pojo.agent
 enum class AgentArchType(val arch: String) {
     ARM64("arm64"),
     MIPS64("mips64"),
-    AMD64("amd64")
+    AMD64("amd64");
+
+    companion object {
+        fun parse(arch: String?): AgentArchType? =
+            when (arch) {
+                AMD64.arch -> AMD64 // 优化：最多的第在第一位，快速遍历
+                ARM64.arch -> ARM64
+                MIPS64.arch -> MIPS64
+                else -> null
+            }
+    }
 }

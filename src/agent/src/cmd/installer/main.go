@@ -34,10 +34,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/installer"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/installer"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (
@@ -49,7 +49,7 @@ const (
 func main() {
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsInstaller.log")
-	err := logs.Init(logFilePath)
+	err := logs.Init(logFilePath, false)
 	if err != nil {
 		fmt.Printf("init installer log error %v\n", err)
 		systemutil.ExitProcess(1)

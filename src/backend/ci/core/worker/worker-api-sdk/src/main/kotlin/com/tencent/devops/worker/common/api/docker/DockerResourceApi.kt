@@ -30,9 +30,12 @@ package com.tencent.devops.worker.common.api.docker
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_IMAGE_MARKET_INFO_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
@@ -49,12 +52,15 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
     ): Result<Boolean> {
         val path = "/ms/store/api/build/market/image/projectCodes/$projectCode/imageCodes/$imageCode/versions/$version"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(imageBaseInfoUpdateRequest)
         )
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildPut(path, body, headMap)
-        val responseContent = request(request, "更新镜像市场信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(UPDATE_IMAGE_MARKET_INFO_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

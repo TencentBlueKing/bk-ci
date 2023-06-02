@@ -150,7 +150,7 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )[0].username
         OkhttpUtils.uploadFile(uploadFileUrl, file, mapOf(AUTH_HEADER_USER_ID to userId)).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.error("BKSystemErrorMonitor|uploadFile|$destPath|error=$responseContent")
         }
     }
@@ -164,7 +164,7 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                 "&deep=1&depth=5&listFolders=0&mdTimestamps=1&includeRootPath=0"
             val headers = mapOf("Authorization" to Credentials.basic(jfrogUsername, jfrogPassword))
             val resp = OkhttpUtils.doGet(jfrogFileUrl, headers)
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             val dataMap: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
             val files = dataMap["files"] as? List<Map<String, Any>>
             files?.forEach { fileMap ->

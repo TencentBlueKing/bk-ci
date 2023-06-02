@@ -27,24 +27,25 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -264,7 +265,8 @@ class ScmOauthService @Autowired constructor(
                     targetUrl = targetUrl,
                     context = context,
                     description = description,
-                    block = block
+                    block = block,
+                    targetBranch = targetBranch
                 )
                 responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {
@@ -278,7 +280,7 @@ class ScmOauthService @Autowired constructor(
             statusCode = e.code
             statusMessage = e.message
             throw ScmException(
-                e.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                e.message ?: I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         } finally {
@@ -383,6 +385,26 @@ class ScmOauthService @Autowired constructor(
             userName = null,
             event = null
         ).getMrCommitList(mrId = mrId, page = page, size = size)
+    }
+
+    fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): GitProjectInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getProjectInfo(projectName = projectName)
     }
 
     companion object {

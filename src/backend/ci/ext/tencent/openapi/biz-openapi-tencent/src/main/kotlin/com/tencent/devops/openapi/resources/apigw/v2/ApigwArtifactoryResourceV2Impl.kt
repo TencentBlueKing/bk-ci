@@ -78,6 +78,9 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
         logger.info("getThirdPartyDownloadUrl buildId:$buildId")
         logger.info("getThirdPartyDownloadUrl subPath:$subPath")
+
+        val finalRegion = if (region != "EXTERNAL") "OPENAPI" else region
+
         return client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -88,7 +91,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
             crossPipineId = null,
             crossProjectId = null,
             crossBuildNo = null,
-            region = region,
+            region = finalRegion,
             userId = userId
         )
     }

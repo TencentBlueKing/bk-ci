@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.common.notify.utils
 
+@Suppress("ConstructorParameterNaming", "MagicNumber")
 data class TOFResult constructor(
     var Ret: Int,
     var ErrCode: Int,
@@ -33,9 +34,10 @@ data class TOFResult constructor(
     var StackTrace: String?,
     var data: Any?
 ) {
-    constructor(errorMessage: String) : this(-1, 500, errorMessage, null, null)
+    constructor(errorMessage: String) :
+        this(Ret = -1, ErrCode = 500, ErrMsg = errorMessage, StackTrace = null, data = null)
 
     override fun toString(): String {
-        return "Ret:$Ret, ErrCode:$ErrCode, ErrMsg:$ErrMsg, StackTrace:$String, data:$data"
+        return "Ret:$Ret, ErrCode:$ErrCode, ErrMsg:$ErrMsg, StackTrace:$StackTrace, data:$data"
     }
 }

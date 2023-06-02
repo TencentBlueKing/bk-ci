@@ -32,10 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("错误码信息")
 data class ErrorCodeInfo(
-    @ApiModelProperty("组件错误码")
+    @ApiModelProperty("错误码")
     val errorCode: Int,
     @ApiModelProperty("中文简体描述信息")
-    val errorMsgZhCn: String,
+    val errorMsgZhCn: String = "",
     @ApiModelProperty("中文繁体描述信息")
     val errorMsgZhTw: String? = null,
     @ApiModelProperty("英文描述信息")

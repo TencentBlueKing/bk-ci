@@ -56,7 +56,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -165,7 +165,7 @@ class ExtServiceBuildDeployTask : ITask() {
         val dockerBuildAndPushImagePath =
             "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}&syncFlag=true"
         val dockerBuildAndPushImageBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             JsonUtil.toJson(dockerBuildParam)
         )
         val dockerBuildAndPushImageUrl = "http://$dockerHostIp$dockerBuildAndPushImagePath"
@@ -174,12 +174,12 @@ class ExtServiceBuildDeployTask : ITask() {
             .post(dockerBuildAndPushImageBody)
             .build()
         val response = OkhttpUtils.doLongHttp(request)
-        val responseContent = response.body()?.string()
+        val responseContent = response.body?.string()
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
-            LoggerService.addErrorLine(response.message())
+            logger.warn("Fail to request($request) with code ${response.code} , message ${response.message} and response ($responseContent)")
+            LoggerService.addErrorLine(response.message)
             throw TaskExecuteException(
-                errorMsg = "dockerBuildAndPushImage fail: message ${response.message()} and response ($responseContent)",
+                errorMsg = "dockerBuildAndPushImage fail: message ${response.message} and response ($responseContent)",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )

@@ -27,16 +27,20 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.PackageFileInfo
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.service.ArchiveAtomService
-import com.tencent.devops.artifactory.util.BkRepoUtils
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -44,6 +48,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
@@ -147,7 +152,12 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             clearServerTmpFile(projectCode, atomCode, version)
         }
         val finalAtomId = if (releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-            atomId
+            val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version).data
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf("$atomCode:$version")
+                )
+            atom.id
         } else {
             // 普通发布类型会重新生成一条插件版本记录
             UUIDUtil.generate()
@@ -316,9 +326,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             val path = file.path.removePrefix("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR")
             logger.info("updateArchiveFile path:$path")
             bkRepoClient.uploadLocalFile(
-                userId = BkRepoUtils.BKREPO_DEFAULT_USER,
-                projectId = BkRepoUtils.BKREPO_STORE_PROJECT_ID,
-                repoName = BkRepoUtils.REPO_NAME_PLUGIN,
+                userId = BKREPO_DEFAULT_USER,
+                projectId = BKREPO_STORE_PROJECT_ID,
+                repoName = REPO_NAME_PLUGIN,
                 path = path,
                 file = file
             )

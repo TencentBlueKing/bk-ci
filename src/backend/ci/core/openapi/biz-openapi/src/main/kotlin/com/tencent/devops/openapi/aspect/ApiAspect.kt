@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -54,7 +57,8 @@ class ApiAspect(
     private val appCodeService: AppCodeService,
     private val apiGatewayUtil: ApiGatewayUtil,
     private val redisOperation: RedisOperation,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val permissionService: OpenapiPermissionService
 ) {
 
     companion object {
@@ -82,6 +86,7 @@ class ApiAspect(
         var projectId: String? = null
         var appCode: String? = null
         var apigwType: String? = null
+        var userId: String? = null
 
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
@@ -90,6 +95,7 @@ class ApiAspect(
                 "projectCode" -> projectId = parameterValue[index]?.toString()
                 "appCode" -> appCode = parameterValue[index]?.toString()
                 "apigwType" -> apigwType = parameterValue[index]?.toString()
+                "userId" -> userId = parameterValue[index]?.toString()
                 else -> Unit
             }
         }
@@ -97,14 +103,14 @@ class ApiAspect(
         if (logger.isDebugEnabled) {
 
             val methodName: String = jp.signature.name
-            logger.debug("【前置增强】the method 【{}】", methodName)
+            logger.debug("【before advice】the method 【{}】", methodName)
 
             parameterNames.forEach {
-                logger.debug("参数名[{}]", it)
+                logger.debug("param name[{}]", it)
             }
 
             parameterValue.forEach {
-                logger.debug("参数值[{}]", it)
+                logger.debug("param value[{}]", it)
             }
             logger.debug("ApiAspect|apigwType[$apigwType],appCode[$appCode],projectId[$projectId]")
         }
@@ -124,6 +130,15 @@ class ApiAspect(
         }
 
         if (projectId != null) {
+
+            permissionService.validProjectPermission(
+                appCode = appCode,
+                apigwType = apigwType,
+                userId = userId,
+                projectId = projectId,
+                method = jp.signature as MethodSignature
+            )
+
             if (appCodeService.validProjectInfo(projectId) == null) {
                 appCodeService.invalidProjectInfo(projectId)
                 throw CustomException(Response.Status.NOT_FOUND, "ProjectId [$projectId] not find, please check it.")
@@ -143,7 +158,7 @@ class ApiAspect(
     }
 
     @Suppress("ComplexCondition")
-    @Around("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
+    @Around("within(com.tencent.devops.openapi.resources.apigw..*)")
     fun aroundMethod(pdj: ProceedingJoinPoint): Any? {
         val begin = System.currentTimeMillis()
         val methodName = pdj.signature.name
@@ -165,7 +180,10 @@ class ApiAspect(
             throw error
         } catch (ignored: ParamBlankException) {
             logger.info("openapi check parameters error| error info:${ignored.message}")
-            throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: ${ignored.message}")
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL) + " ${ignored.message}"
+            )
         } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传
             val parameterValue = pdj.args
@@ -179,13 +197,19 @@ class ApiAspect(
                     parameterMap.containsKey(kParameter.name) && // 检查参数集合中是否存在对应key，避免直接拿取到null
                     parameterMap[kParameter.name] == null // 判断用户传参是否为为null
                 ) {
-                    throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: 请求参数${kParameter.name} 不能为空")
+                    throw CustomException(
+                        Response.Status.BAD_REQUEST,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = PARAM_VERIFY_FAIL,
+                            params = arrayOf("request param ${kParameter.name} cannot be empty")
+                        )
+                    )
                 }
             }
             throw error
         } finally {
             afterMethod()
-            logger.info("$methodName 方法耗时${System.currentTimeMillis() - begin}毫秒")
+            logger.info("$methodName function execution time${System.currentTimeMillis() - begin}millisecond")
         }
 
         return res

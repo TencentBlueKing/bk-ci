@@ -28,10 +28,14 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_DOCKER_BUILDER_RUNS_TOO_MANY
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_FAILED_TO_START_ERROR_MESSAGE
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_FAILED_TO_START_IMAGE_NOT_EXIST
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
@@ -42,8 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceIdcDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService,
-    private val alertApi: AlertApi
+    private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceIdcDockerHostResource {
 
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
@@ -51,34 +54,55 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(
             val containerNum = dockerHostBuildService.getContainerNum()
             if (containerNum >= MAX_CONTAINER_NUM) {
                 logger.warn("Too many containers in this host, break to start build.")
-                alertApi.alert(AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
-                return Result(1, "Docker构建机运行的容器太多，母机IP:${CommonUtils.getInnerIP()}，容器数量: $containerNum")
+                return Result(1,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_DOCKER_BUILDER_RUNS_TOO_MANY,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf(CommonUtils.getInnerIP(), containerNum.toString())
+                        )
+                )
             }
             logger.warn("Create container, dockerStartBuildInfo: $dockerHostBuildInfo")
 
             val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
-                message = "构建环境启动成功，等待Agent启动...",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             return Result(containerId)
         } catch (e: NoSuchImageException) {
-            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
+            logger.warn(
+                "BKSystemMonitor|Create container container failed, no such image. " +
+                    "pipelineId: ${dockerHostBuildInfo.pipelineId}, " +
+                    "vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}"
+            )
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
-                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_TO_START_IMAGE_NOT_EXIST,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(dockerHostBuildInfo.imageName)
+                    ),
                 tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             return Result(2, e.message, "")
         } catch (e: ContainerException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            logger.error(
+                "BKSystemMonitor|Create container failed, rollback build. " +
+                    "buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}"
+            )
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
-                message = "构建环境启动失败，错误信息:${e.message}",
+                message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_TO_START_ERROR_MESSAGE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "：${e.message}",
                 tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )

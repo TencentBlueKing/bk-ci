@@ -37,12 +37,14 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -57,28 +59,31 @@ class DispatchClient @Autowired constructor(
 ) {
     fun updateContainerId(buildLessTask: BuildLessTask, containerId: String) {
         val path = "/ms/dispatch-docker/api/service/dockerhost/builds/${buildLessTask.buildId}/vmseqs" +
-            "/${buildLessTask.vmSeqId}?containerId=$containerId"
+                "/${buildLessTask.vmSeqId}?containerId=$containerId"
 
         try {
             val url = buildUrl(path)
             val request = Request
                 .Builder()
                 .url(url)
-                .headers(Headers.of(makeHeaders()))
-                .put(RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    "")
+                .headers(makeHeaders())
+                .put(
+                    RequestBody.create(
+                        "application/json; charset=utf-8".toMediaTypeOrNull(),
+                        ""
+                    )
                 )
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("Update containerId $path fail. $responseContent")
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
-                        errorMsg = "Update containerId $path fail")
+                        errorMsg = "Update containerId $path fail"
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -120,22 +125,25 @@ class DispatchClient @Autowired constructor(
             val request = Request
                 .Builder()
                 .url(url)
-                .headers(Headers.of(makeHeaders()))
-                .post(RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(dockerIpInfoVO))
+                .headers(makeHeaders())
+                .post(
+                    RequestBody.create(
+                        "application/json; charset=utf-8".toMediaTypeOrNull(),
+                        JsonUtil.toJson(dockerIpInfoVO)
+                    )
                 )
                 .build()
 
             logger.info("Start refresh buildLess status $url")
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("Refresh buildLess status $url fail. $responseContent")
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
-                        errorMsg = "Refresh buildLess status $url fail")
+                        errorMsg = "Refresh buildLess status $url fail"
+                    )
                 }
                 logger.info("End refreshDockerIpStatus.")
             }
@@ -164,13 +172,19 @@ class DispatchClient @Autowired constructor(
         }
     }
 
-    private fun makeHeaders(): Map<String, String?> {
+    private fun makeHeaders(): Headers {
         val gatewayHeaderTag = if (buildLessConfig.gatewayHeaderTag == null) {
             bkTag.getLocalTag()
         } else {
             buildLessConfig.gatewayHeaderTag
+        } ?: ""
+        val headers = mutableMapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
+        // 新增devopsToken给网关校验
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
         }
-        return mapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
+        return headers.toHeaders()
     }
 
     companion object {

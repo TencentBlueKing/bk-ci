@@ -30,6 +30,7 @@ package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -37,7 +38,9 @@ import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,7 +117,12 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
 
         val iamId = findInstanceId(projectId, pipelineId)
         if (iamId.isNullOrEmpty()) {
-            throw PermissionForbiddenException("流水线不存在")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         val permissionCheck = authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -144,10 +152,21 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         if (iamInstanceList.contains("*")) {
             pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
-            val ids = iamInstanceList.map { it.toInt() }
+            val ids = iamInstanceList.map { it.toLong() }
             pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
+    }
+
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
+    ): Map<AuthPermission, List<String>> {
+        return authPermissions.associateWith {
+            pipelineIds
+        }
     }
 
     override fun createResource(
@@ -192,8 +211,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         return pipelineInfo.id.toString()
     }

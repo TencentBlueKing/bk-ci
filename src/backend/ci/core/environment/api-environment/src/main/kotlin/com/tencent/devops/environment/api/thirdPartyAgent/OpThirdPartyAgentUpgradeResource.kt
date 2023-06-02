@@ -28,23 +28,36 @@
 package com.tencent.devops.environment.api.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.thirdPartyAgent.JDKInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Api(tags = ["OP_ENVIRONMENT_UPGRADE_THIRD_PARTY_AGENT"], description = "第三方构建机升级设置")
 @Path("/op/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpThirdPartyAgentUpgradeResource {
 
+    @ApiOperation("设置JDK版本列表")
+    @PUT
+    @Path("/agents/set_jdk_version_list")
+    fun setJDKVersionList(
+        @ApiParam("osArchJDKVersionList", required = true)
+        osArchJDKVersionSet: Set<JDKInfo>
+    ): Result<Boolean>
+
     @ApiOperation("设置agent最大并发升级数量")
-    @POST
+    @PUT
     @Path("/agents/setMaxParallelUpgradeCount")
     fun setMaxParallelUpgradeCount(
         @ApiParam("maxParallelUpgradeCount", required = true)
@@ -52,7 +65,159 @@ interface OpThirdPartyAgentUpgradeResource {
     ): Result<Boolean>
 
     @ApiOperation("获取agent最大并发升级数量")
-    @POST
+    @GET
     @Path("/agents/getMaxParallelUpgradeCount")
     fun getMaxParallelUpgradeCount(): Result<Int?>
+
+    @ApiOperation("设置Agent Worker升级版本")
+    @PUT
+    @Path("/agents/upgrade/{version}")
+    fun setAgentWorkerVersion(
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<Boolean>
+
+    @ApiOperation("设置Agent Master版本")
+    @PUT
+    @Path("/agents/masterVersion/{version}")
+    fun setMasterVersion(
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取当前Agent Worker版本")
+    @GET
+    @Path("/agent/upgrade")
+    fun getAgentWorkerVersion(): Result<String?>
+
+    @ApiOperation("获取当前Master版本")
+    @GET
+    @Path("/agent/masterVersion")
+    fun getAgentMasterVersion(): Result<String?>
+
+    @ApiOperation("设置agent强制升级")
+    @PUT
+    @Path("/agents/setForceUpdateAgents")
+    fun setForceUpdateAgents(
+        @ApiParam("agent long id", required = true)
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("取消agent强制升级")
+    @DELETE
+    @Path("/agents/unsetForceUpdateAgents")
+    fun unsetForceUpdateAgents(
+        @ApiParam("agent long id", required = true)
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有强制升级agent(agent long id)")
+    @GET
+    @Path("/agents/getAllForceUpgradeAgents")
+    fun getAllForceUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Set<Long>> /* agent long id */
+
+    @ApiOperation("取消所有强制升级agent")
+    @DELETE
+    @Path("/agents/cleanAllForceUpgradeAgents")
+    fun cleanAllForceUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("设置agent锁定升级")
+    @PUT
+    @Path("/agents/setLockUpdateAgents")
+    fun setLockUpdateAgents(
+        @ApiParam("agent long id", required = true)
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("取消agent锁定升级")
+    @DELETE
+    @Path("/agents/unsetLockUpdateAgents")
+    fun unsetLockUpdateAgents(
+        @ApiParam("agent long id", required = true)
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有强制锁定agent")
+    @GET
+    @Path("/agents/getAllLockUpgradeAgents")
+    fun getAllLockUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Set<Long>> /* agent long id */
+
+    @ApiOperation("取消所有强制锁定agent")
+    @DELETE
+    @Path("/agents/cleanAllLockUpgradeAgents")
+    fun cleanAllLockUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
+
+    @ApiOperation("设置优先升级项目（指定项目）")
+    @PUT
+    @Path("/agents/set_priority_upgrade_projects")
+    fun setPriorityUpgradeAgentProjects(
+        @ApiParam("projectIds", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("取消优先升级项目（指定项目）")
+    @DELETE
+    @Path("/agents/unset_priority_upgrade_projects")
+    fun unsetPriorityUpgradeAgentProjects(
+        @ApiParam("projectIds", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("获取优先升级项目列表(所有）")
+    @GET
+    @Path("/agents/get_all_priority_upgrade_projects")
+    fun getAllPriorityUpgradeAgentProjects(): Result<Set<String>>
+
+    @ApiOperation("取消优先升级项目（所有）")
+    @DELETE
+    @Path("/agents/clean_all_priority_upgrade_projects")
+    fun cleanAllPriorityUpgradeAgentProjects(): Result<Boolean>
+
+    @ApiOperation("设置禁止升级项目（指定项目）")
+    @PUT
+    @Path("/agents/set_deny_upgrade_projects")
+    fun setDenyUpgradeAgentProjects(
+        @ApiParam("projectIds", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("移除禁止升级项目（指定项目）")
+    @DELETE
+    @Path("/agents/unset_deny_upgrade_projects")
+    fun unsetDenyUpgradeAgentProjects(
+        @ApiParam("agentIds", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("获取禁止升级项目列表(所有）")
+    @GET
+    @Path("/agents/get_all_deny_upgrade_projects")
+    fun getAllDenyUpgradeAgentProjects(): Result<Set<String>>
+
+    @ApiOperation("移除禁止升级项目（所有）")
+    @DELETE
+    @Path("/agents/clean_all_deny_upgrade_projects")
+    fun cleanAllDenyUpgradeAgentProjects(): Result<Boolean>
 }

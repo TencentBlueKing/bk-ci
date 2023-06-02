@@ -33,7 +33,20 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
+import com.tencent.devops.external.constant.ExternalMessageCode.ACCOUNT_NOT_PERMISSIO
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_ADD_DETECTION_TASK
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_LIST_OF_BRANCHES
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_BRANCH
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_TAG
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_TAG_LIST
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_WAREHOUSE_LIST
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_UPDATE_DETECTION_TASK
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_AUTHENTICATION_FAILED
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_PLATFORM_FAILED
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_WAREHOUSE_NOT_EXIST
+import com.tencent.devops.external.constant.ExternalMessageCode.PARAMETER_ERROR
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.pojo.GithubCheckRuns
@@ -44,16 +57,16 @@ import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.exception.GithubApiException
-import okhttp3.MediaType
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -98,7 +111,11 @@ class GithubService @Autowired constructor(
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPost(token, "repos/$projectName/check-runs", body)
 
-        return callMethod(OPERATION_ADD_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        return callMethod(
+            I18nUtil.getCodeLanMessage(messageCode = BK_ADD_DETECTION_TASK),
+            request,
+            GithubCheckRunsResponse::class.java
+        )
     }
 
     fun updateCheckRuns(
@@ -117,7 +134,13 @@ class GithubService @Autowired constructor(
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
 
-        callMethod(OPERATION_UPDATE_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        callMethod(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_UPDATE_DETECTION_TASK
+            ),
+            request,
+            GithubCheckRunsResponse::class.java
+        )
     }
 
     fun getRepositories(token: String): List<GithubRepository> {
@@ -128,7 +151,12 @@ class GithubService @Autowired constructor(
             while (page < 100) {
                 page++
                 val request = buildGet(token, "user/repos?page=$page&per_page=$perPage")
-                val body = getBody(OPERATION_GET_REPOS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_WAREHOUSE_LIST
+                    ),
+                    request
+                )
                 val repos = objectMapper.readValue<List<GithubRepo>>(body)
                 githubRepos.addAll(repos)
 
@@ -157,7 +185,7 @@ class GithubService @Autowired constructor(
         OkhttpUtils.doGet(url).use {
             logger.info("github content url: $url")
             if (!it.isSuccessful) throw RuntimeException("get github file fail")
-            return it.body()!!.string()
+            return it.body!!.string()
         }
     }
 
@@ -173,7 +201,12 @@ class GithubService @Autowired constructor(
                 val sBranch = branch ?: "master"
                 val path = "repos/$projectName/branches/$sBranch"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_BRANCH, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_SPECIFIED_BRANCH
+                    ),
+                    request
+                )
                 return objectMapper.readValue(body)
             }
         }, 1, 500)
@@ -190,7 +223,7 @@ class GithubService @Autowired constructor(
             override fun execute(): GithubTag? {
                 val path = "repos/$projectName/git/refs/tags/$tag"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_TAG, request)
+                val body = getBody(BK_GET_SPECIFIED_TAG, request)
                 return objectMapper.readValue(body)
             }
         }, 1, 500)
@@ -207,7 +240,12 @@ class GithubService @Autowired constructor(
             override fun execute(): List<String> {
                 val path = "repos/$projectName/branches?page=1&per_page=100"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_BRANCHS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_LIST_OF_BRANCHES
+                    ),
+                    request
+                )
                 return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
             }
         }, 3, 500)
@@ -224,7 +262,12 @@ class GithubService @Autowired constructor(
             override fun execute(): List<String> {
                 val path = "repos/$projectName/tags?page=1&per_page=100"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_TAGS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                    messageCode = BK_GET_TAG_LIST
+                ),
+                    request
+                )
                 return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
             }
         }, 3, 500)
@@ -238,13 +281,13 @@ class GithubService @Autowired constructor(
 
     private fun buildPost(token: String, path: String, body: String): Request {
         return request(token, path)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
     private fun buildPatch(token: String, path: String, body: String): Request {
         return request(token, path)
-            .patch(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .patch(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
@@ -258,11 +301,12 @@ class GithubService @Autowired constructor(
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
 //        okHttpClient.newCall(request).execute().use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
-
-            logger.info("getBody operation($operation). response code($code) message($message) body($body)")
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
+            if (logger.isDebugEnabled) {
+                logger.debug("getBody operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }
@@ -273,11 +317,12 @@ class GithubService @Autowired constructor(
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
 //        okHttpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
-
-            logger.info("callMethod operation($operation). response code($code) message($message) body($body)")
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
+            if (logger.isDebugEnabled) {
+                logger.debug("callMethod operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }
@@ -287,21 +332,36 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         when (code) {
-            400 -> throw GithubApiException(code, "参数错误")
-            401 -> throw GithubApiException(code, "GitHub认证失败")
-            403 -> throw GithubApiException(code, "账户没有${operation}的权限")
-            404 -> throw GithubApiException(code, "GitHub仓库不存在或者是账户没有该项目${operation}的权限")
-            else -> throw GithubApiException(code, "GitHub平台${operation}失败")
+            400 -> throw GithubApiException(code,
+            I18nUtil.getCodeLanMessage(
+                messageCode = PARAMETER_ERROR
+            )
+                )
+            401 -> throw GithubApiException(code,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITHUB_AUTHENTICATION_FAILED
+                )
+                )
+            403 -> throw GithubApiException(code,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ACCOUNT_NOT_PERMISSIO,
+                    params = arrayOf(operation)
+                )
+                )
+            404 -> throw GithubApiException(code,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITHUB_WAREHOUSE_NOT_EXIST,
+                    params = arrayOf(operation)
+                )
+                )
+            else -> throw GithubApiException(code,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITHUB_PLATFORM_FAILED,
+                    params = arrayOf(operation)
+                )
+                )
         }
     }
-
-    private val OPERATION_ADD_CHECK_RUNS = "添加检测任务"
-    private val OPERATION_UPDATE_CHECK_RUNS = "更新检测任务"
-    private val OPERATION_GET_REPOS = "获取仓库列表"
-    private val OPERATION_GET_BRANCH = "获取指定分支"
-    private val OPERATION_GET_TAG = "获取指定Tag"
-    private val OPERATION_LIST_BRANCHS = "获取分支列表"
-    private val OPERATION_LIST_TAGS = "获取Tag列表"
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)

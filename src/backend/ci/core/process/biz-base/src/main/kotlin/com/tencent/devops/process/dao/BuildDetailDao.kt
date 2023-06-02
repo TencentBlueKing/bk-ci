@@ -44,23 +44,6 @@ class BuildDetailDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        model: String
-    ) {
-        create(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            startUser = "",
-            startType = null,
-            buildNum = null,
-            model = model
-        )
-    }
-
-    fun create(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
         startUser: String,
         startType: StartType?,
         buildNum: Int?,
@@ -151,18 +134,6 @@ class BuildDetailDao {
                 execute.set(END_TIME, LocalDateTime.now())
             }
             execute.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
-        }
-    }
-
-    fun updateModel(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        model: String
-    ) {
-        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.update(this).set(MODEL, model)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
     }
 

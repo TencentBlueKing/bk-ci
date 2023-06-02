@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.FormatLog
 import com.tencent.devops.dispatch.docker.pojo.LogType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -55,12 +55,14 @@ class DockerHostBuildLogResourceApi constructor(
                 logMessageMap = logMap
             )
             val request = buildPost(path = path,
-                requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(formatLog))
+                requestBody = RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(formatLog)
+                )
             )
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("DockerHostBuildLogResourceApi $path fail. $responseContent")
                 }

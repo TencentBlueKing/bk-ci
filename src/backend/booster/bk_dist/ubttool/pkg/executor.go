@@ -65,7 +65,7 @@ func (d *Executor) Update() {
 func (d *Executor) Run(fullargs []string, workdir string) (int, string, error) {
 	blog.Infof("ubtexecutor: command [%s] begins", strings.Join(fullargs, " "))
 	for i, v := range fullargs {
-		blog.Infof("ubtexecutor: arg[%d] : [%s]", i, v)
+		blog.Debugf("ubtexecutor: arg[%d] : [%s]", i, v)
 	}
 	defer blog.Infof("ubtexecutor: command [%s] finished", strings.Join(fullargs, " "))
 

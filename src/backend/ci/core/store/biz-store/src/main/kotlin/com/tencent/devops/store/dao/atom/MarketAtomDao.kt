@@ -158,6 +158,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.CLASSIFY_ID,
             ta.CATEGROY,
             ta.ATOM_CODE,
+            ta.VERSION,
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,

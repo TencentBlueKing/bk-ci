@@ -30,12 +30,17 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_AGENT_STATUS
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_LIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_NODE
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_QUERY_GSE_AGENT_STATUS
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
-import okhttp3.MediaType
+import com.tencent.devops.common.web.utils.I18nUtil
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -54,7 +59,7 @@ class EsbAgentClient {
 
     companion object {
         private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
         private const val DEFAULT_SYTEM_USER = "devops"
     }
 
@@ -80,14 +85,16 @@ class EsbAgentClient {
         val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get user cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "查询 Gse Agent 状态失败")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
+                        messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS
+                    ))
                 }
 
                 val ipInfoMap = (responseData["data"] as Map<String, *>)["data"] as Map<String, *>
@@ -111,7 +118,11 @@ class EsbAgentClient {
                 return resultMap
             } catch (e: Exception) {
                 logger.error("get agent status failed", e)
-                throw OperationException("获取agent状态失败")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = FAILED_TO_GET_AGENT_STATUS
+                    )
+                )
             }
         }
     }
@@ -139,14 +150,17 @@ class EsbAgentClient {
         val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取 CMDB 节点失败")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = FAILED_TO_GET_CMDB_NODE
+                        ))
                 }
 
                 val data = responseData["data"] as Map<String, *>
@@ -186,7 +200,11 @@ class EsbAgentClient {
                 )
             } catch (e: Exception) {
                 logger.error("get cmdb nodes error", e)
-                throw OperationException("获取CMDB列表失败")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = FAILED_TO_GET_CMDB_LIST
+                    )
+                )
             }
         }
     }

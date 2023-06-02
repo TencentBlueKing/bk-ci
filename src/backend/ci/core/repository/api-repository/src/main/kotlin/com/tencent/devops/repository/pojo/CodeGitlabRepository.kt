@@ -45,11 +45,13 @@ data class CodeGitlabRepository(
     @ApiModelProperty("用户名", required = true)
     override var userName: String,
     @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
+    override var projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
     @ApiModelProperty("仓库认证类型", required = false)
-    val authType: RepoAuthType? = RepoAuthType.HTTP
+    val authType: RepoAuthType? = RepoAuthType.HTTP,
+    @ApiModelProperty("Gitlab仓库ID", required = false)
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeGitLab"

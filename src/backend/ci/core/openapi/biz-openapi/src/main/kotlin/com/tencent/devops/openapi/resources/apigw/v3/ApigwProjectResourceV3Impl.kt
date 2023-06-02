@@ -32,6 +32,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -47,7 +48,8 @@ import org.springframework.beans.factory.annotation.Value
 class ApigwProjectResourceV3Impl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val openapiPermissionService: OpenapiPermissionService
 ) : ApigwProjectResourceV3 {
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceV3Impl::class.java)
@@ -138,14 +140,16 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
     override fun createProjectUser(
         appCode: String?,
         apigwType: String?,
+        userId: String?,
         projectId: String,
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?> {
+        logger.info("OPENAPI_PROJECT_V3|$appCode|create project user|$userId|$projectId|$createInfo")
+        openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {
             bkTag.setGatewayTag(projectConsulTag)
         }
-        logger.info("OPENAPI_PROJECT_V3|$appCode|create project user|$projectId|$createInfo|$projectConsulTag")
         return client.get(ServiceProjectResource::class).createProjectUser(
             projectId = projectId,
             createInfo = createInfo

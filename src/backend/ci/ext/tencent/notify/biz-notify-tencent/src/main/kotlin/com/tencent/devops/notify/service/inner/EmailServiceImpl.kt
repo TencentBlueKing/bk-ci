@@ -55,10 +55,8 @@ import com.tencent.devops.notify.utils.TofUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
-@Service
 class EmailServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val emailNotifyDao: EmailNotifyDao,

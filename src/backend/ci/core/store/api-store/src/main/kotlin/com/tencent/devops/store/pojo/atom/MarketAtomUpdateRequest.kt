@@ -28,6 +28,7 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -49,6 +50,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("支持的操作系统", required = true)
     val os: ArrayList<String>,
     @ApiModelProperty("插件简介", required = false)
+    @field:BkField(maxLength = 256)
     val summary: String?,
     @ApiModelProperty("插件描述", required = false)
     val description: String?,

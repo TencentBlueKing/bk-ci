@@ -45,7 +45,8 @@ class DefaultDeptServiceImpl : DeptService {
         name: String,
         accessToken: String?,
         userId: String,
-        type: ManagerScopesEnum
+        type: ManagerScopesEnum,
+        exactLookups: Boolean?
     ): List<UserAndDeptInfoVo?> {
         return emptyList()
     }
@@ -65,4 +66,11 @@ class DefaultDeptServiceImpl : DeptService {
     override fun getUserDeptInfo(userId: String): Set<String> {
         return emptySet()
     }
+
+    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? =
+        UserAndDeptInfoVo(
+            id = 0,
+            name = name,
+            type = ManagerScopesEnum.USER
+        )
 }

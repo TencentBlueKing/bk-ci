@@ -27,8 +27,8 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -72,6 +72,9 @@ interface UserMarketAtomResource {
     @ApiOperation("获取插件市场首页的数据")
     @Path("/atom/list/main")
     @GET
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data[*].records[*].code}", "{data[*].records[*].version}", "releaseInfo"]
+    )
     fun mainPageList(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -87,6 +90,9 @@ interface UserMarketAtomResource {
     @ApiOperation("插件市场搜索插件")
     @GET
     @Path("/atom/list/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].code}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -129,6 +135,9 @@ interface UserMarketAtomResource {
     @ApiOperation("根据用户获取插件工作台插件列表")
     @GET
     @Path("/desk/atom/list/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun listMyAtoms(
         @ApiParam("token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
@@ -151,6 +160,9 @@ interface UserMarketAtomResource {
     @ApiOperation("根据插件版本ID获取插件详情")
     @GET
     @Path("/desk/atom/{atomId}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
     fun getAtomById(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -163,13 +175,13 @@ interface UserMarketAtomResource {
     @ApiOperation("根据插件标识获取插件正式版本详情")
     @GET
     @Path("/atom/{atomCode}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
     fun getAtomByCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("bk ticket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bk_ticket: String,
         @ApiParam("atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
@@ -178,6 +190,9 @@ interface UserMarketAtomResource {
     @ApiOperation("根据插件标识获取插件版本列表")
     @GET
     @Path("/atom/version/list/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
     fun getAtomVersionsByCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

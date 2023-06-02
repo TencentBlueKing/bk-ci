@@ -43,7 +43,7 @@ data class CodeP4Repository(
     @ApiModelProperty("用户名", required = true)
     override var userName: String,
     @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
+    override var projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?
 ) : Repository {

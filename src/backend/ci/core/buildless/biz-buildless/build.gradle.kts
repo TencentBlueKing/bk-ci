@@ -32,7 +32,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-redis"))
     api(project(":core:log:api-log"))
-
+    api(project(":core:common:common-security"))
     api("com.github.docker-java:docker-java")
     api("com.github.docker-java:docker-java-transport-okhttp")
     implementation("com.github.oshi:oshi-core")

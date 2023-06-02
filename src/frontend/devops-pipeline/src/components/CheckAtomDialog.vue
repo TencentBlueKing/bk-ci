@@ -11,7 +11,18 @@
         <div v-bkloading="{ isLoading }">
             <bk-form form-type="vertical" :model="data" ref="checkForm">
                 <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
-                    <div style="white-space: pre-wrap;word-break:break-all;">{{data.desc}}</div>
+                    <mavon-editor
+                        class="markdown-desc"
+                        :editable="false"
+                        default-open="preview"
+                        :subfield="false"
+                        :toolbars-flag="false"
+                        :external-link="false"
+                        :box-shadow="false"
+                        preview-background="#fff"
+                        v-model="data.desc"
+                    >
+                    </mavon-editor>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')"
                     required
@@ -200,7 +211,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .check-atom-form {
         .choose-item {
             margin-right: 30px;
@@ -208,5 +219,12 @@
         .check-suggest {
             margin-top: 0px;
         }
+    }
+    .markdown-desc {
+        min-height: 50px !important;
+        max-height: 120px !important;
+    }
+    ::v-deep .bk-label-text {
+        font-weight: bold;
     }
 </style>

@@ -2,6 +2,7 @@ package com.tencent.devops.prebuild.component
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientErrorDecoder
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -9,49 +10,69 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
-import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
     @InjectMocks
-    lateinit var preCIYAMLValidator: PreCIYAMLValidator
+    lateinit var preCIYAMLValidator: PreCIYAMLValidatorV2
 
     @Mock
     lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
 
-    fun setup(
-        @Mock consulClient: CompositeDiscoveryClient,
-        @Mock clientErrorDecoder: ClientErrorDecoder,
-        @Mock commonConfig: CommonConfig,
-        @Mock objectMapper: ObjectMapper,
-        @Mock bkTag: BkTag
-    ) {
-        val theMock = Mockito.mockStatic(SpringContextUtil::class.java)
-        theMock.`when`<Client> { SpringContextUtil.getBean(any(Client::class.java.javaClass)) }
-            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, bkTag, objectMapper))
+    @BeforeEach
+    fun setup() {
+        val consulClient: CompositeDiscoveryClient = mockk()
+        val clientErrorDecoder: ClientErrorDecoder = mockk()
+        val commonConfig: CommonConfig = mockk()
+        val objectMapper: ObjectMapper = mockk()
+        val bkTag: BkTag = mockk()
+        val redisOperation: RedisOperation = mockk()
+        every {
+            commonConfig.devopsDefaultLocaleLanguage
+        } returns "zh_CN"
+        every {
+            redisOperation.get(any())
+        } returns "zh_CN"
+        mockkObject(SpringContextUtil)
+        every {
+            SpringContextUtil.getBean(Client::class.java)
+        } returns Client(consulClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
+        every {
+            SpringContextUtil.getBean(CommonConfig::class.java)
+        } returns commonConfig
+        every {
+            SpringContextUtil.getBean(RedisOperation::class.java)
+        } returns redisOperation
     }
 
     @Test
@@ -188,12 +209,11 @@ class PipelineLayoutTest : ServiceBaseTest() {
             .creator(userId)
             .stages(createStagesRequest)
             .build()
-
         // 无编译环境均为NormalContainer，非VM没有dispatchType
         assertTrue(
             model.stages.stream().anyMatch { x ->
                 x.containers.stream().anyMatch { y ->
-                    y.getClassType() == NormalContainer.classType && y.name.contains("无编译环境")
+                    y.getClassType() == NormalContainer.classType
                 }
             }
         )
@@ -223,9 +243,17 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     private fun getYamlObject(yamlStr: String): ScriptBuildYaml {
-        val (isPassed, preYamlObject, errorMsg) = preCIYAMLValidator.validate(yamlStr)
-        val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject!!)
-
-        return scriptBuildYaml
+        return ScriptYmlUtils.normalizePreCiYaml(
+            YamlTemplate(
+                filePath = "",
+                yamlObject = YamlUtil.getObjectMapper()
+                    .readValue(yamlStr, PreTemplateScriptBuildYaml::class.java),
+                extraParameters = null,
+                getTemplateMethod = { p: GetTemplateParam<Any?> -> "" },
+                nowRepo = null,
+                repo = null,
+                resourcePoolMapExt = null
+            ).replace()
+        )
     }
 }

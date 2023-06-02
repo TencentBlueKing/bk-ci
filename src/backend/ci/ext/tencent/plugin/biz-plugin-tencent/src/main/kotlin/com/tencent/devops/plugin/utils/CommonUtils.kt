@@ -31,16 +31,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.plugin.constant.PluginMessageCode.GET_SIGNATURE_ERROR
+import com.tencent.devops.plugin.constant.PluginMessageCode.URL_CODING_ERROR
+import com.tencent.devops.plugin.constant.PluginMessageCode.WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.Request
-import org.apache.commons.lang3.StringUtils
-import org.json.JSONException
-import org.json.JSONObject
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.Inet4Address
@@ -53,27 +51,33 @@ import java.util.Base64
 import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import okhttp3.Request
+import org.apache.commons.lang3.StringUtils
+import org.json.JSONException
+import org.json.JSONObject
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
-    private val getKeyHost = "http://wetest.apigw.o.oa.com/prod/api"
-    private val GET_API_KEY = "/v3/get_api_key"
-    private val HMAC_SHA1 = "HmacSHA1"
-    private val METHOD_GET = "GET"
+    private const val getKeyHost = "http://wetest.apigw.o.oa.com/prod/api"
+    private const val GET_API_KEY = "/v3/get_api_key"
+    private const val HMAC_SHA1 = "HmacSHA1"
+    private const val METHOD_GET = "GET"
 //    private val okclient = OkhttpUtils.okHttpClient
     // esb校验
-    private val APP_CODE = "bkci"
-    private val APP_SECRET = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
+    private const val APP_CODE = "bkci"
+    private const val APP_SECRET = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
     // wetest校验,通过用户名获取凭证所用
-    private val APP_ID = 30005
-    private val APP_KEY = "vnPcswYIlxk5SZZkYG0R"
+    private const val APP_ID = 30005
+    private const val APP_KEY = "vnPcswYIlxk5SZZkYG0R"
 
     fun getInnerIP(): String {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -102,7 +106,7 @@ object CommonUtils {
                     val netInterface = allNetInterfaces.nextElement()
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) { // 过滤掉127.0.0.1的IP
-                        logger.info("loopback地址或网卡名称为空")
+                        logger.info("The loopback address or NIC name is empty")
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -117,7 +121,7 @@ object CommonUtils {
                 }
             }
         } catch (e: Exception) {
-            logger.error("获取网卡失败", e)
+            logger.error("Failed to obtain NIC", e)
         }
 
         return allIp
@@ -211,7 +215,13 @@ object CommonUtils {
         if (ret != 0) {
             val msg = response.optString("msg")
             logger.error("fail to get getApiKey from weTest, retCode: $ret, msg: $msg")
-            throw OperationException("WeTest获取secretId,secretKey失败，返回码: $ret, 错误消息: $msg")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = WETEST_FAILED_GET,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(ret.toString(), msg)
+                )
+            )
         }
 
         val secretId = response.getString("secretid")
@@ -229,7 +239,9 @@ object CommonUtils {
             val hash = mac.doFinal(mk.toByteArray(charset("UTF-8")))
             encodeUrl(String(Base64Coder.encode(hash)))
         } catch (e: NoSuchAlgorithmException) {
-            throw OperationException("获取Signature错误，err:$e")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(messageCode = GET_SIGNATURE_ERROR) + "$e"
+            )
         }
     }
 
@@ -253,7 +265,9 @@ object CommonUtils {
         try {
             return URLEncoder.encode(input, "UTF-8").replace("+", "%20").replace("*", "%2A")
         } catch (e: UnsupportedEncodingException) {
-            throw OperationException("url编码错误, err:$e")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(messageCode = URL_CODING_ERROR) + "$e"
+            )
         }
     }
 
@@ -264,11 +278,11 @@ object CommonUtils {
             OkhttpUtils.doHttp(request).use { response ->
                 //            val response = okclient.newCall(request).execute()
                 if (response.isSuccessful) {
-                    val responseStr = response.body()!!.string()
+                    val responseStr = response.body!!.string()
                     logger.info("WeTest response: $responseStr")
                     return JSONObject(responseStr)
                 } else {
-                    errRet.put("msg", "http code:" + response.code())
+                    errRet.put("msg", "http code:" + response.code)
                 }
             }
         } catch (e: IOException) {

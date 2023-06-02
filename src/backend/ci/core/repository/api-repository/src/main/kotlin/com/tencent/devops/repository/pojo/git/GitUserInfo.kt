@@ -36,6 +36,9 @@ data class GitUserInfo(
     @ApiModelProperty("ID", name = "id")
     @JsonProperty("id")
     val id: Int,
+    @ApiModelProperty("email", name = "email")
+    @JsonProperty("email")
+    val email: String?,
     @ApiModelProperty("用户名称", name = "username")
     @JsonProperty("username")
     val username: String?,

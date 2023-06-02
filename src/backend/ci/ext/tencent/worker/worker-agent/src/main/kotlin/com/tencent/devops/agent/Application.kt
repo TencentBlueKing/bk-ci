@@ -118,8 +118,8 @@ fun main(args: Array<String>) {
             do {
                 try {
                     OkhttpUtils.doHttp(request).use { resp ->
-                        val resoCode = resp.code()
-                        val responseStr = resp.body()!!.string()
+                        val resoCode = resp.code
+                        val responseStr = resp.body!!.string()
                         println("resoCode: $resoCode;responseStr:$responseStr")
                         if (resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
@@ -232,7 +232,7 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    val responseBody = resp.body()?.string() ?: ""
+    val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
@@ -246,7 +246,7 @@ private fun doResponse(
         }
         true
     } else {
-        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
         false
     }
 }

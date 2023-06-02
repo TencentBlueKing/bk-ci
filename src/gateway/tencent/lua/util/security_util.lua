@@ -21,16 +21,30 @@ function _M:isSafe()
         return true
     end
 
-    local host = ngx.var.host
+    -- 根请求直接忽略
     local path = ngx.var.uri
+    if path == '/index.html' or path == '/' then
+        return true
+    end
+
+    -- external location 可以忽略
+    local external_location = ngx.var.external_location
+    if external_location == "1" then
+        return true
+    end
+
     -- 外部链接安全检查
-    if string.find(host, "bkdevops.qq.com") ~= nil then -- bkdevops.qq.com 相关域名
+    local host = ngx.var.host
+    local header_clb = ngx.var.http_x_clb_lbid
+    if string.find(host, "bkdevops.qq.com") ~= nil or header_clb ~= nil then -- bkdevops.qq.com 相关域名或者传了lb的ID
         if string.find(path, "/api/app/") == nil -- app 路径
         and string.find(path, "/api/open/") == nil -- open路径
         and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
         and string.find(path, "/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
         and string.find(path, "/process/api/external/scm/codetgit/commit") == nil -- TGit回调
+        and string.find(path, "/repository/api/external/github") == nil -- Github回调
         and string.find(path, "/external/api/external/github") == nil -- Github回调
+        and string.find(path, "/process/api/external/scm/p4/commit") == nil -- p4回调
         and string.find(path, "/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
         and string.find(path, "/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
         then
@@ -38,7 +52,7 @@ function _M:isSafe()
             return false
         end
         -- 防止spring actuator被调用
-        if string.find(path, "/actuator/") ~= nil then
+        if string.find(path, "^/actuator/") ~= nil or string.find(path, "^/management/") ~= nil then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end

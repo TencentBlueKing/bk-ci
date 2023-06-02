@@ -32,7 +32,7 @@ import com.tencent.devops.notify.blueking.sdk.pojo.ApiReq
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiResp
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_FAIL
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -62,7 +62,7 @@ class NotifyUtils constructor(
         body.bk_app_secret = appSecret
 
         val jsonbody = ObjectMapper().writeValueAsString(body)
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
         val url = host + uri
         logger.info("notify post url: $url")
         logger.info("notify post body: $jsonbody")
@@ -83,18 +83,18 @@ class NotifyUtils constructor(
         try {
             val response = okHttpClient.newCall(request).execute()
             if (response.isSuccessful) {
-                val responseStr = response.body()!!.string()
+                val responseStr = response.body!!.string()
                 logger.info("notify response: $responseStr")
                 resultBean = ObjectMapper().readValue(responseStr, ApiResp::class.java)
             } else {
-                logger.error("NOTIFY_REQUEST_FAILED|url=${request.url().url()}|response=($response)")
+                logger.error("NOTIFY_REQUEST_FAILED|url=${request.url.toUrl()}|response=($response)")
             }
             if (!resultBean.result!!) {
-                logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url().url()}|message=${resultBean.message}")
+                logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url.toUrl()}|message=${resultBean.message}")
             }
             return resultBean
         } catch (ignore: Exception) {
-            logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url().url()}|message=${ignore.message}", ignore)
+            logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url.toUrl()}|message=${ignore.message}", ignore)
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_SEND_FAIL,
                 defaultMessage = "notify send msg failed: ${ignore.message}"

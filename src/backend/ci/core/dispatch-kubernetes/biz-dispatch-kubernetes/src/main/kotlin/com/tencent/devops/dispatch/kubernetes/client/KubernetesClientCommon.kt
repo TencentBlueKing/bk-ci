@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.client
 
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -63,6 +64,6 @@ class KubernetesClientCommon @Autowired constructor(
             result.putAll(otherHeaders)
         }
 
-        return Headers.of(result)
+        return result.toHeaders()
     }
 }

@@ -29,8 +29,11 @@ package com.tencent.devops.prebuild.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -46,25 +49,27 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_BUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
-import com.tencent.devops.prebuild.pojo.IDEInfo
 import com.tencent.devops.prebuild.pojo.DevcloudUserRes
+import com.tencent.devops.prebuild.pojo.IDEInfo
 import com.tencent.devops.prebuild.pojo.UserResItem
+import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
-import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -72,7 +77,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.concurrent.Executors
 
@@ -203,7 +207,7 @@ class WebIDEService @Autowired constructor(
 
     fun getAgentInstallLink(userId: String, projectId: String, operationSystem: String, zoneName: String?, initIp: String?): ThirdPartyAgentStaticInfo {
         val agent = client.get(ServicePreBuildAgentResource::class)
-                .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp)
+                .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp, null)
 
         // client.get(UserThirdPartyAgentResource::class).generateLink(userId, projectId, OS.valueOf(operationSystem), zoneName)
 
@@ -221,13 +225,13 @@ class WebIDEService @Autowired constructor(
         logger.info(url)
         val request = Request.Builder()
                 .url(url)
-                .headers(Headers.of(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0")))
+                .headers(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0").toHeaders())
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.info("response code: ${response.code()}")
+                logger.info("response code: ${response.code}")
                 logger.info("response: $responseContent")
                 throw RuntimeException("Fail to start docker")
             }
@@ -318,11 +322,18 @@ class WebIDEService @Autowired constructor(
     private fun createAgentPipeline(userId: String, projectId: String, agentId: String, agentIp: String): String {
         val stageList = mutableListOf<Stage>()
 
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ), "T-1-1-1")
         val params: List<BuildFormProperty> = emptyList()
         val triggerContainer = TriggerContainer(
                 "0",
-                "构建触发",
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ),
                 listOf(manualTriggerElement),
                 null,
                 null,
@@ -343,14 +354,25 @@ class WebIDEService @Autowired constructor(
         val elementList = mutableListOf<Element>()
         elementList.add(makeScriptElement(userId, agentIp))
 
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement))
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+        ), "T-1-1-1")
+        val triggerContainer = TriggerContainer("0",
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ), listOf(manualTriggerElement))
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
         val vmContainer = VMBuildContainer(
                 id = "1",
-                name = "构建环境-LINUX",
+                name = MessageUtil.getMessageByLocale(
+                    messageCode = BK_BUILD_ENVIRONMENT_LINUX,
+                    language = I18nUtil.getLanguage(userId)
+                ),
                 elements = elementList,
                 status = null,
                 startEpoch = null,

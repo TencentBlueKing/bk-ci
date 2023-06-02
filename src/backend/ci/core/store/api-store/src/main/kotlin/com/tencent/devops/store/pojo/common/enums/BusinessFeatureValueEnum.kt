@@ -28,6 +28,6 @@
 package com.tencent.devops.store.pojo.common.enums
 
 enum class BusinessFeatureValueEnum {
-    NEED_AGENT_TYPE_TRUE,      // 需要指定AgentType
-    NEED_AGENT_TYPE_FALSE      // 不需要指定AgentType
+    NEED_AGENT_TYPE_TRUE, // 需要指定AgentType
+    NEED_AGENT_TYPE_FALSE // 不需要指定AgentType
 }

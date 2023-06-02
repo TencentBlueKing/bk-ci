@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.EDIT
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
-import com.tencent.devops.common.api.constant.ONLINE
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
@@ -46,6 +45,7 @@ import com.tencent.devops.common.api.constant.NUM_SEVEN
 import com.tencent.devops.common.api.constant.NUM_SIX
 import com.tencent.devops.common.api.constant.NUM_THREE
 import com.tencent.devops.common.api.constant.NUM_TWO
+import com.tencent.devops.common.api.constant.ONLINE
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.TEST_ENV_PREPARE
@@ -58,13 +58,14 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceItemResource
@@ -75,16 +76,15 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceEnvDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
-import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
@@ -129,15 +129,15 @@ import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
+import java.util.regex.Pattern
+import okhttp3.Request
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
-import java.time.LocalDateTime
-import java.util.regex.Pattern
-import okhttp3.Request
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -323,9 +323,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 判断扩展服务是不是首次创建版本
         val serviceCount = extServiceDao.countByCode(dslContext, serviceCode)
         if (serviceCount < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceCode)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val serviceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)!!
@@ -334,9 +335,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 submitDTO.serviceName,
                 submitDTO.serviceCode
             )
-        ) return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_EXIST,
-            arrayOf(submitDTO.serviceName)
+        ) return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+            params = arrayOf(submitDTO.serviceName),
+            language = I18nUtil.getLanguage(userId)
         )
         // 校验前端传的版本号是否正确
         val releaseType = submitDTO.releaseType
@@ -365,9 +367,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
 
         if (!requireVersionList.contains(version)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersionList.toString())
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
+                params = arrayOf(version, requireVersionList.toString()),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -385,9 +388,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
 
         if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_SERVICE_VERSION_IS_NOT_FINISH,
-                arrayOf(serviceRecord.serviceName, serviceRecord.version)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SERVICE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(serviceRecord.serviceName, serviceRecord.version),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -519,14 +523,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("getProcessInfo userId is $userId,serviceId is $serviceId")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
         return if (null == record) {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceId),
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             val serviceCode = record.serviceCode
             // 判断用户是否有查询权限
             val queryFlag =
                 storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
             if (!queryFlag) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    language = I18nUtil.getLanguage(userId))
             }
             val status = record.serviceStatus.toInt()
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
@@ -657,30 +667,35 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             it["id"] as String
         }
         if (extServiceId.isNullOrBlank()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_SERVICE_NOT_EXIST,
-                arrayOf(serviceCode)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SERVICE_NOT_EXIST,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val type = StoreTypeEnum.SERVICE.type.toByte()
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, type)) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
         }
         val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
-                arrayOf(serviceCode)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 如果已经被安装到其他项目下使用，不能删除
         val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
         logger.info("installedCount: $releasedCount")
         if (installedCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
-                arrayOf(serviceCode)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val initProjectCode =
@@ -761,8 +776,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                val responseContent = response.body()!!.string()
-                throw RemoteServiceException("delete node file failed: $responseContent", response.code())
+                val responseContent = response.body!!.string()
+                throw RemoteServiceException("delete node file failed: $responseContent", response.code)
             }
         }
     }
@@ -770,7 +785,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean> {
         // 判断用户是否有权限下线
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         // 停止bcs灰度命名空间和正式命名空间的应用
         val bcsStopAppResult = extServiceBcsService.stopExtService(
@@ -865,15 +883,18 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun cancelRelease(userId: String, serviceId: String): Result<Boolean> {
         logger.info("extService cancelRelease, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val status = ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code,
+                language = I18nUtil.getLanguage(userId))
         }
         // 如果该版本的状态已处于测试中及其后面的状态，取消发布则需要停掉灰度命名空间的应用
         val serviceCode = serviceRecord.serviceCode
@@ -905,7 +926,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 serviceId = serviceId,
                 serviceStatus = status,
                 userId = userId,
-                msg = MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+                msg = I18nUtil.getCodeLanMessage(
+                    messageCode = UN_RELEASE,
+                    language = I18nUtil.getLanguage(userId))
             )
         }
         return Result(true)
@@ -917,10 +940,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun passTest(userId: String, serviceId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val serviceStatus = ExtServiceStatusEnum.EDIT.status.toByte()
@@ -938,13 +962,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val status = ExtServiceStatusEnum.BUILDING.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         // 拉取extension.json，检查格式，更新入库
         val serviceRecord =
-            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceId)
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceId),
+                language = I18nUtil.getLanguage(userId)
             )
         val serviceCode = serviceRecord.serviceCode
         val extServiceFeature = extFeatureDao.getServiceByCode(dslContext, serviceCode)!!
@@ -1016,7 +1044,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code,
+                language = I18nUtil.getLanguage(userId))
         }
         // 先集中删除，再添加媒体信息
         mediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
@@ -1068,7 +1098,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus.status.toByte())
 
         if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = code,
+                language = I18nUtil.getLanguage(userId))
         }
 
         extServiceDao.setServiceStatusById(
@@ -1335,17 +1367,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST_ENV_PREPARE), TEST_ENV_PREPARE, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(EDIT), COMMIT, NUM_FOUR, UNDO))
+        processInfo.add(
+            ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS)
+        )
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(TEST_ENV_PREPARE), TEST_ENV_PREPARE, NUM_TWO, UNDO)
+        )
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(EDIT), COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_SIX, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SEVEN, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(END), END, NUM_SEVEN, UNDO))
         }
         return processInfo
     }
@@ -1584,7 +1621,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
         }
         // 查询扩展的最新记录
         val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)

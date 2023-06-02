@@ -32,6 +32,10 @@ type Action struct {
 	FollowIndex []string `json:"followindex"` // follower index which depend on this
 	Running     bool     `json:"running"`
 	Finished    bool     `json:"finished"`
+	//其它详细信息
+	IsCompile  bool
+	ModulePath string
+	Desc       string
 }
 
 // UE4Action to desc ubt actions

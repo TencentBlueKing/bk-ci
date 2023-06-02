@@ -29,7 +29,7 @@ package com.tencent.devops.common.archive.client
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
@@ -67,11 +67,11 @@ class DirectBkRepoClient {
             .header(BK_REPO_OVERRIDE, override.toString())
             .header(BK_REPO_UID, userId)
             .header(BK_REPO_METADATA, Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray()))
-            .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
+            .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                throw RemoteServiceException("upload file failed: ${response.body()!!.string()}", response.code())
+                throw RemoteServiceException("upload file failed: ${response.body!!.string()}", response.code)
             }
         }
     }
@@ -98,11 +98,11 @@ class DirectBkRepoClient {
             .header(BK_REPO_OVERRIDE, override.toString())
             .header(BK_REPO_UID, userId)
             .header(BK_REPO_METADATA, Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray()))
-            .put(RequestBody.create(MediaType.parse("application/octet-stream"), byteArray))
+            .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), byteArray))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                throw RemoteServiceException("upload file failed: ${response.body()!!.string()}", response.code())
+                throw RemoteServiceException("upload file failed: ${response.body!!.string()}", response.code)
             }
             return url
         }

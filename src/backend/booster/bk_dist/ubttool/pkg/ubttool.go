@@ -40,10 +40,11 @@ import (
 )
 
 const (
-	OSWindows   = "windows"
-	MaxWaitSecs = 10800
-	TickSecs    = 30
-	DefaultJobs = 240 // ok for most machines
+	OSWindows         = "windows"
+	MaxWaitSecs       = 10800
+	TickSecs          = 30
+	DefaultJobs       = 240 // ok for most machines
+	ActionDescMaxSize = 50
 
 	DevOPSProcessTreeKillKey = "DEVOPS_DONT_KILL_PROCESS_TREE"
 )
@@ -63,6 +64,7 @@ func NewUBTTool(flagsparam *common.Flags, config dcSDK.ControllerConfig) *UBTToo
 		finished:       false,
 		actionchan:     nil,
 		executor:       NewExecutor(),
+		moduleselected: make(map[string]int, 0),
 	}
 }
 
@@ -85,6 +87,8 @@ type UBTTool struct {
 	runningnumber      int32
 	maxjobs            int32
 	finished           bool
+
+	moduleselected map[string]int
 
 	actionchan chan common.Actionresult
 
@@ -148,6 +152,12 @@ func (h *UBTTool) runActions() error {
 
 	// execute actions here
 	h.allactions = all.Actions
+
+	// parse actions firstly
+	h.analyzeActions(h.allactions)
+	// for debug
+	blog.Debugf("UBTTool: all actions:%+v", h.allactions)
+
 	// readyactions includes actions which no depend
 	err = h.getReadyActions()
 	if err != nil {
@@ -229,38 +239,117 @@ func (h *UBTTool) executeActions() error {
 	}
 }
 
-// to simply print log
-func getActionDesc(cmd, arg string) string {
-	// _, _ = fmt.Fprintf(os.Stdout, "cmd %s arg %s\n", cmd, arg)
+// // to simply print log
+// func getActionDesc(cmd, arg string) string {
+// 	// _, _ = fmt.Fprintf(os.Stdout, "cmd %s arg %s\n", cmd, arg)
 
-	exe := filepath.Base(cmd)
-	targetsuffix := []string{}
-	switch exe {
-	case "cl.exe", "cl-filter.exe", "clang.exe", "clang++.exe", "clang", "clang++":
-		targetsuffix = []string{".cpp", ".c", ".response\"", ".response"}
-		break
-	case "lib.exe", "link.exe", "link-filter.exe":
-		targetsuffix = []string{".dll", ".lib", ".response\"", ".response"}
-	default:
-		return exe
+// 	exe := filepath.Base(cmd)
+// 	targetsuffix := []string{}
+// 	switch exe {
+// 	case "cl.exe", "cl-filter.exe", "clang.exe", "clang++.exe", "clang", "clang++":
+// 		targetsuffix = []string{".cpp", ".c", ".response\"", ".response"}
+// 		break
+// 	case "lib.exe", "link.exe", "link-filter.exe":
+// 		targetsuffix = []string{".dll", ".lib", ".response\"", ".response"}
+// 	default:
+// 		return exe
+// 	}
+
+// 	args, _ := shlex.Split(replaceWithNextExclude(arg, '\\', "\\\\", []byte{'"'}))
+// 	if len(args) == 1 {
+// 		argbase := strings.TrimRight(filepath.Base(arg), "\"")
+// 		return fmt.Sprintf("%s %s", exe, argbase)
+// 	} else {
+// 		for _, v := range args {
+// 			for _, s := range targetsuffix {
+// 				if strings.HasSuffix(v, s) {
+// 					vtrime := strings.TrimRight(v, "\"")
+// 					return fmt.Sprintf("%s %s", exe, vtrime)
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	return exe
+// }
+
+// to simply print log
+func (h *UBTTool) analyzeActions(actions []common.Action) error {
+	for i, v := range actions {
+		cmd := v.Cmd
+		arg := v.Arg
+		exe := filepath.Base(cmd)
+		targetsuffix := []string{}
+		needAnalyzeArg := true
+		switch exe {
+		case "cl.exe", "cl-filter.exe", "clang.exe", "clang++.exe", "clang", "clang++":
+			targetsuffix = []string{".cpp", ".c", ".response\"", ".response"}
+			actions[i].IsCompile = true
+			break
+		case "lib.exe", "link.exe", "link-filter.exe":
+			targetsuffix = []string{".dll", ".lib", ".response\"", ".response"}
+		default:
+			needAnalyzeArg = false
+			arglen := ActionDescMaxSize
+			if arglen > len(arg) {
+				arglen = len(arg)
+			}
+			actions[i].Desc = fmt.Sprintf("%s %s...", exe, arg[0:arglen])
+		}
+
+		if !needAnalyzeArg {
+			continue
+		}
+
+		args, _ := shlex.Split(replaceWithNextExclude(arg, '\\', "\\\\", []byte{'"'}))
+		if len(args) == 1 {
+			argbase := strings.TrimRight(filepath.Base(arg), "\"")
+			actions[i].Desc = fmt.Sprintf("%s %s", exe, argbase)
+			actions[i].ModulePath = filepath.Dir(arg)
+		} else {
+			foundSuffix := false
+			for _, v := range args {
+				foundSuffix = false
+				for _, s := range targetsuffix {
+					if strings.HasSuffix(v, s) {
+						vtrime := strings.TrimRight(v, "\"")
+						actions[i].Desc = fmt.Sprintf("%s %s", exe, vtrime)
+						actions[i].ModulePath = filepath.Dir(v)
+						foundSuffix = true
+						break
+					}
+				}
+				if foundSuffix {
+					break
+				}
+			}
+
+			if !foundSuffix {
+				arglen := ActionDescMaxSize
+				if arglen > len(arg) {
+					arglen = len(arg)
+				}
+				actions[i].Desc = fmt.Sprintf("%s %s...", exe, arg[0:arglen])
+			}
+		}
 	}
 
-	args, _ := shlex.Split(replaceWithNextExclude(arg, '\\', "\\\\", []byte{'"'}))
-	if len(args) == 1 {
-		argbase := strings.TrimRight(filepath.Base(arg), "\"")
-		return fmt.Sprintf("%s %s", exe, argbase)
-	} else {
-		for _, v := range args {
-			for _, s := range targetsuffix {
-				if strings.HasSuffix(v, s) {
-					vtrime := strings.TrimRight(v, "\"")
-					return fmt.Sprintf("%s %s", exe, vtrime)
+	totalcompilenum := 0
+	for _, v := range actions {
+		if v.IsCompile {
+			totalcompilenum++
+			if v.ModulePath != "" {
+				if _, ok := h.moduleselected[v.ModulePath]; !ok {
+					h.moduleselected[v.ModulePath] = 0
 				}
 			}
 		}
 	}
 
-	return exe
+	env.SetEnv(env.KeyExecutorTotalActionNum, strconv.Itoa(totalcompilenum))
+	blog.Infof("UBTTool: set total action num with: %s=%d", env.KeyExecutorTotalActionNum, totalcompilenum)
+
+	return nil
 }
 
 func (h *UBTTool) selectActionsToExecute() error {
@@ -276,8 +365,8 @@ func (h *UBTTool) selectActionsToExecute() error {
 		h.readyactions[index].Running = true
 		h.runningnumber++
 		_, _ = fmt.Fprintf(os.Stdout, "[bk_ubt_tool] [%d/%d] %s\n",
-			h.finishednumber+h.runningnumber, len(h.allactions),
-			getActionDesc(h.readyactions[index].Cmd, h.readyactions[index].Arg))
+			h.finishednumber+h.runningnumber, len(h.allactions), h.readyactions[index].Desc)
+		// getActionDesc(h.readyactions[index].Cmd, h.readyactions[index].Arg))
 		go h.executeOneAction(h.readyactions[index], h.actionchan)
 	}
 
@@ -287,6 +376,7 @@ func (h *UBTTool) selectActionsToExecute() error {
 func (h *UBTTool) selectReadyAction() int {
 	index := -1
 	followers := -1
+
 	// select ready action which is not running and has most followers
 	if h.flags.MostDepentFirst {
 		for i := range h.readyactions {
@@ -309,6 +399,9 @@ func (h *UBTTool) selectReadyAction() int {
 
 	if index >= 0 {
 		blog.Infof("UBTTool: selected global index %s with %d followers", h.readyactions[index].Index, followers)
+		if h.readyactions[index].IsCompile && h.readyactions[index].ModulePath != "" {
+			h.moduleselected[h.readyactions[index].ModulePath]++
+		}
 	}
 	return index
 }
@@ -394,7 +487,7 @@ func (h *UBTTool) onActionFinished(index string, exitcode int) error {
 	blog.Infof("UBTTool: running : %d, finished : %d, total : %d", h.runningnumber, h.finishednumber, len(h.allactions))
 	if h.finishednumber >= int32(len(h.allactions)) {
 		h.finishednumberlock.Unlock()
-		blog.Infof("UBTTool: finishend")
+		blog.Infof("UBTTool: finishend,module selected:%+v", h.moduleselected)
 		h.finished = true
 		return nil
 	}

@@ -40,7 +40,6 @@ class LambdaBuildTaskFinishListener @Autowired constructor(
 ) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
         lambdaDataService.onBuildTaskFinish(event)
     }
 }

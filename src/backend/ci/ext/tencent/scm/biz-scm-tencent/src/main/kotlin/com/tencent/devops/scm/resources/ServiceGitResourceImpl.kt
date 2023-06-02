@@ -39,7 +39,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -59,11 +58,13 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -257,6 +258,16 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo> {
+        return Result(
+            gitService.getGitUserInfo(
+                userId = userId,
+                tokenType = tokenType,
+                token = token
+            ).data!!
+        )
+    }
+
     override fun getGitCIFileContent(
         gitProjectId: Long,
         filePath: String,
@@ -334,7 +345,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getGitCIFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
@@ -751,6 +762,24 @@ class ServiceGitResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             type = type,
             iid = iid
+        )
+    }
+
+    override fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        return gitService.getCommitDiff(
+            accessToken = accessToken,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            sha = sha,
+            path = path,
+            ignoreWhiteSpace = ignoreWhiteSpace
         )
     }
 }

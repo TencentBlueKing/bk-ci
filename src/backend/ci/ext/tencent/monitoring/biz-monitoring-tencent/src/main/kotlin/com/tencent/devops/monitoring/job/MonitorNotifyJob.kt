@@ -295,11 +295,11 @@ class MonitorNotifyJob @Autowired constructor(
         )
         if (!resp.isSuccessful) {
             throw RuntimeException("gitResponse is failed , $resp")
-        } else if (resp.body() == null) {
+        } else if (resp.body == null) {
             throw RuntimeException("gitResponse is empty ")
         }
 
-        return JsonUtil.to(resp.body()!!.string(), BkDataBean::class.java)
+        return JsonUtil.to(resp.body!!.string(), BkDataBean::class.java)
     }
 
     private fun coverage(startTime: Long): EmailModuleData {
@@ -332,7 +332,7 @@ class MonitorNotifyJob @Autowired constructor(
             var siteId: String? = null
             var token: String? = null
             if (potAuthResp.isSuccessful) {
-                potAuthResp.body()?.let {
+                potAuthResp.body?.let {
                     val builderFactory = DocumentBuilderFactory.newInstance()
                     builderFactory.isValidating = false
                     builderFactory.isIgnoringElementContentWhitespace = true
@@ -349,7 +349,7 @@ class MonitorNotifyJob @Autowired constructor(
             val potDataUrl = potViewUrl.replace("##siteId##", siteId!!).replace("##viewId##", potViewId)
             val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
             val potProjects = if (potDataResp.isSuccessful) {
-                potDataResp.body()?.run {
+                potDataResp.body?.run {
                     IOUtils.readLines(byteStream(), Charsets.UTF_8).filter { it.contains("提交次数") }
                         .map { it.split(",")[0] }.toSet()
                 } ?: throw RuntimeException("potDataResp is empty")
@@ -541,7 +541,7 @@ class MonitorNotifyJob @Autowired constructor(
                     "content-type" to "application/json;charset=UTF-8"
                 )
             )
-            logger.info("oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
+            logger.info("oteam status , id:{} , resp:{}", timestamp, response.body!!.string())
         } catch (ignored: Throwable) {
             logger.warn("oteam data report fail!", ignored)
         }

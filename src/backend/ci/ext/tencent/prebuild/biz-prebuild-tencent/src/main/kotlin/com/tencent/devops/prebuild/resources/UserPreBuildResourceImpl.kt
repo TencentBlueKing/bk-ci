@@ -30,13 +30,17 @@ package com.tencent.devops.prebuild.resources
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_AGENT_NOT_INSTALLED
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_ILLEGAL_YAML
 import com.tencent.devops.prebuild.api.UserPreBuildResource
 import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.prebuild.pojo.HistoryResponse
@@ -66,9 +70,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
         userId: String,
         os: OS,
         ip: String,
-        hostName: String
+        hostName: String,
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo> {
-        return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
+        return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName, nodeStingId))
     }
 
     override fun getAgentStatus(
@@ -98,7 +103,11 @@ class UserPreBuildResourceImpl @Autowired constructor(
                 preBuildService.getAgent(userId, startUpReq.os, startUpReq.ip, startUpReq.hostname)
             if (null == agentInfo) {
                 logger.error("Agent not install")
-                return Result(2, "Agent未安装，请安装Agent.")
+                return Result(2,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_AGENT_NOT_INSTALLED,
+                        language = I18nUtil.getLanguage(userId)
+                    ))
             }
 
             val ymlVersion = ScriptYmlUtils.parseVersion(startUpReq.yaml)
@@ -115,7 +124,12 @@ class UserPreBuildResourceImpl @Autowired constructor(
                         CiYamlUtils.normalizePrebuildYaml(yamlObject)
                     } catch (e: Throwable) {
                         logger.error("Invalid yml, error message: ", e)
-                        return Result(1, "YAML非法: ${e.message}")
+                        return Result(1,
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_ILLEGAL_YAML,
+                                language = I18nUtil.getLanguage(userId)
+                            ) + "${e.message}"
+                        )
                     }
                     preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo)
                 }

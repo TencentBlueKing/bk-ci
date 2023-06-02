@@ -33,8 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
-import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -46,13 +45,16 @@ import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_INTERFACE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
-import okhttp3.MediaType
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
+import java.net.SocketTimeoutException
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class BcsBuilderClient @Autowired constructor(
@@ -76,7 +78,7 @@ class BcsBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] builderName: $name response: $responseContent")
                 if (response.isSuccessful) {
                     return objectMapper.readValue(responseContent)
@@ -86,13 +88,11 @@ class BcsBuilderClient @Autowired constructor(
                     val retryTimeLocal = retryTime - 1
                     return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
                 }
-
-                throw BuildFailureException(
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                        "（Fail to get builder detail, http response code: ${response.code()}"
+                    throw BuildFailureException(
+                        ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                        "Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -104,12 +104,13 @@ class BcsBuilderClient @Autowired constructor(
                 )
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
-                logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
+                val errorMsg = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.getErrorMessage()
+                    logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取构建机详情接口超时, url: $url"
+                    errorType = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = errorMsg,
+                    errorMessage = "$errorMsg, url: $url"
                 )
             }
         }
@@ -127,7 +128,7 @@ class BcsBuilderClient @Autowired constructor(
         val (request, action) = when (param) {
             is BcsDeleteBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, url)
-                    .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .delete(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "delete"
             )
@@ -139,7 +140,7 @@ class BcsBuilderClient @Autowired constructor(
             )
             is BcsStartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
-                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "start"
             )
@@ -149,14 +150,14 @@ class BcsBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
-                            "（Fail to $action docker, http response code: ${response.code()}"
+                    val errorMsg = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.getErrorMessage()
+                        throw BuildFailureException(
+                            ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.errorType,
+                            ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.errorCode,
+                            errorMsg,
+                            "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -165,21 +166,24 @@ class BcsBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
+                    val errorMsg = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口返回失败：$msg"
+                        ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorCode,
+                        errorMsg,
+                        "$errorMsg：$msg"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
             logger.error("[$buildId]|[$vmSeqId] operateBuilder get SocketTimeoutException.", e)
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口超时, url: $url"
+            val errorMsg = I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                    I18nUtil.getCodeLanMessage(BK_MACHINE_INTERFACE_TIMEOUT)
+                throw BuildFailureException(
+                errorType = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = errorMsg,
+                errorMessage = "$errorMsg, url: $url"
             )
         }
     }
@@ -195,20 +199,20 @@ class BcsBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = clientCommon.baseRequest(userId, url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code()}, $responseContent")
+                val responseContent = response.body!!.string()
+                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
+                    val errorMsg = ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
-                            "${response.code()}"
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_ERROR.errorCode,
+                        errorMsg,
+                        errorMsg + ": Fail to createBuilder, http response code: ${response.code}"
                     )
                 }
 
@@ -217,11 +221,12 @@ class BcsBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
+                    val errorMsg = ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口返回失败: $msg"
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorCode,
+                        errorMsg,
+                        "$errorMsg: $msg"
                     )
                 }
             }
@@ -230,11 +235,12 @@ class BcsBuilderClient @Autowired constructor(
                 "[$buildId]|[$vmSeqId] create builder get SocketTimeoutException",
                 e
             )
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
+            val errorMsg = ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.getErrorMessage()
+                throw BuildFailureException(
+                errorType = ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = errorMsg,
+                errorMessage = "$errorMsg, url: $url"
             )
         }
     }
@@ -294,15 +300,16 @@ class BcsBuilderClient @Autowired constructor(
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
-                    throw BuildFailureException(
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
+                    val errorMsg = "${ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
+                        throw BuildFailureException(
+                        ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                            errorMsg,
+                        "$errorMsg（Fail to getWebsocket, http response code: ${response.code}"
                     )
                 }
                 val bcsResult: BcsResult<String> = objectMapper.readValue(responseContent)
@@ -314,11 +321,12 @@ class BcsBuilderClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
+            val errorMsg = "${ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
+                throw BuildFailureException(
+                errorType = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = errorMsg,
+                errorMessage = "$errorMsg, url: $url, ${e.message}"
             )
         }
     }
@@ -334,21 +342,22 @@ class BcsBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url)
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageReq)
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(buildImageReq)
                 )
             )
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("$userId build and push image response: $responseContent")
-                if (!response.isSuccessful) {
+                val errorMsg = "${ErrorCodeEnum.BCS_CREATE_IMAGE_INTERFACE_ERROR.errorCode}"
+                    if (!response.isSuccessful) {
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        "构建并推送接口异常（Fail to build image, http response code: ${response.code()}"
+                        ErrorCodeEnum.BCS_CREATE_IMAGE_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.BCS_CREATE_IMAGE_INTERFACE_ERROR.errorCode,
+                        errorMsg,
+                        "$errorMsg（Fail to build image, http response code: ${response.code}"
                     )
                 }
                 val responseData: BcsResult<BcsTaskResp> = objectMapper.readValue(responseContent)
@@ -358,20 +367,21 @@ class BcsBuilderClient @Autowired constructor(
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: $msg"
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.BCS_CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        "$errorMsg: $msg"
                     )
                 }
             }
         } catch (e: Exception) {
             logger.error("$userId builderName: $builderName build and push image failed.", e)
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "构建并推送接口超时, url: $url"
+            val errorMsg = "${ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode}"
+                throw BuildFailureException(
+                errorType = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = errorMsg,
+                errorMessage = "errorMsg, url: $url"
             )
         }
     }

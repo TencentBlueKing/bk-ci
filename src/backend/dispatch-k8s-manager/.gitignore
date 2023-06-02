@@ -6,3 +6,4 @@ out
 .codecc
 build.yml
 .vscode
+resources/kube*

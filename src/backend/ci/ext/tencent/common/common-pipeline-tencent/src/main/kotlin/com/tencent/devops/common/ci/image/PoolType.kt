@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.ci.image
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_CANNOT_EMPTY_ALL
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_EMPTY
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -39,6 +42,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -56,7 +60,12 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    ))
             }
         }
     },
@@ -74,7 +83,13 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    )
+                )
             }
         }
     },
@@ -92,7 +107,11 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(I18nUtil.getCodeLanMessage(
+                    messageCode = DANG
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                    messageCode = PARAMETER_IS_EMPTY
+                ))
             }
         }
     },
@@ -107,7 +126,11 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(I18nUtil.getCodeLanMessage(
+                    messageCode = DANG
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                    messageCode = PARAMETER_IS_EMPTY
+                ))
             }
         }
     },
@@ -124,15 +147,30 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.macOS) {
                 logger.error("validatePool, pool.type:{}, macOS is null", this)
-                throw OperationException("当pool.type=$this, macOS参数不能为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, macOS" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    ))
             }
             if (null == pool.macOS.systemVersion) {
                 logger.error("validatePool, pool.type:{}, macOS.systemVersion is null", this)
-                throw OperationException("当pool.type=$this, macOS.systemVersion参数不能为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, macOS.systemVersion" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    ))
             }
             if (null == pool.macOS.xcodeVersion) {
                 logger.error("validatePool, pool.type:{} , macOS.xcodeVersion is null", this)
-                throw OperationException("当pool.type=$this, macOS.xcodeVersion参数不能为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, macOS.xcodeVersion" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    ))
             }
         }
     },
@@ -148,7 +186,8 @@ enum class PoolType {
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
-                        envs = pool.env
+                        options = null,
+                        imagePullPolicy = null
                     )
                 )
             } else if (!pool.envId.isNullOrBlank()) {
@@ -160,7 +199,8 @@ enum class PoolType {
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
-                        envs = pool.env
+                        options = null,
+                        imagePullPolicy = null
                     )
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
@@ -171,7 +211,8 @@ enum class PoolType {
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
-                        envs = pool.env
+                        options = null,
+                        imagePullPolicy = null
                     )
                 )
             } else {
@@ -182,7 +223,8 @@ enum class PoolType {
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
-                        envs = pool.env
+                        options = null,
+                        imagePullPolicy = null
                     )
                 )
             }
@@ -191,7 +233,12 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.agentName && null == pool.agentId && null == pool.envId && null == pool.envName) {
                 logger.error("validatePool, pool.type:{}, agentName/agentId/envId/envName is null", this)
-                throw OperationException("当pool.type=$this, agentName/agentId/envId/envName参数不能全部为空")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, agentName/agentId/envId/envName" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_CANNOT_EMPTY_ALL
+                    ))
             }
         }
     }

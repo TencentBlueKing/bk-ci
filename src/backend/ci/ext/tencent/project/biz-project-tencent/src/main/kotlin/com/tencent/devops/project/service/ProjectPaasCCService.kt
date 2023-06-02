@@ -30,7 +30,14 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_FAILED_BSC_CREATE_PROJECT
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_FAILED_GET_PAASCC_INFORMATION
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_SYNCHRONIZE_PROJECT
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_LOGO_INFORMATION
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_PROJECT_INFORMATION
 import com.tencent.devops.project.pojo.BcsProjectForCreate
 import com.tencent.devops.project.pojo.BcsProjectForUpdate
 import com.tencent.devops.project.pojo.BcsProjectInfo
@@ -39,7 +46,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.tof.Response
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -81,7 +88,7 @@ class ProjectPaasCCService @Autowired constructor(
         )
 
         val url = ccUrl
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(bscProject)
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("createBcsProject url:$url, body:$requestBody")
@@ -89,11 +96,21 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .post(requestBody).build()
-        val responseContent = request(request, "调用BSC接口创建项目失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_BSC_CREATE_PROJECT,
+                language = I18nUtil.getLanguage(userId)
+            ))
         val result = objectMapper.readValue<Result<Map<String, Any>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the projects in bcs with response $responseContent")
-            throw OperationException("同步项目到BCS失败")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = FAILED_SYNCHRONIZE_PROJECT,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 
@@ -118,7 +135,7 @@ class ProjectPaasCCService @Autowired constructor(
             description = projectUpdateInfo.description
         )
         val url = "$ccUrl/$projectId"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(bscProjectUpdate)
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("updateBcsProject url:$url, body:$requestBody")
@@ -126,13 +143,21 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
-        val responseContent = request(request, "更新bcs的项目信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
+                language = I18nUtil.getLanguage(userId)
+            ))
         logger.info("Success to update the project with response $responseContent")
         val result: Response<Any> = objectMapper.readValue(responseContent)
 
         if (result.code.toInt() != 0) {
             logger.warn("Fail to update the project in bcs with response $responseContent")
-            throw OperationException("更新bcs的项目信息失败")
+            throw OperationException(MessageUtil.getMessageByLocale(
+                messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
+                language = I18nUtil.getLanguage(userId)
+            ) + ": $responseContent")
         }
     }
 
@@ -145,31 +170,45 @@ class ProjectPaasCCService @Autowired constructor(
         logger.info("Update the bcs projectLogo $projectUpdateLogoInfo by user $userId with token $accessToken")
 
         val url = "$ccUrl/$projectId"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(projectUpdateLogoInfo)
         val requestBody = RequestBody.create(mediaType, param)
         val request = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
-        val responseContent = request(request, "更新bcs的项目LOGO信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = FAILED_UPDATE_LOGO_INFORMATION,
+                language = I18nUtil.getLanguage(userId)
+            ))
         logger.info("Success to update the projectLogo with response $responseContent")
         val result: Response<Any> = objectMapper.readValue(responseContent)
 
         if (result.code.toInt() != 0) {
             logger.warn("Fail to update the projectLogo in bcs with response $responseContent")
-            throw OperationException("更新bcs的项目LOGO信息失败")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = FAILED_UPDATE_LOGO_INFORMATION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 
+    @Suppress("MagicNumber")
     fun getPaasCCProjectInfo(projectCode: String, accessToken: String): BcsProjectInfo? {
         logger.info("get the bsc projectInfo $projectCode with token $accessToken")
         val url = "$ccUrl/$projectCode"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
         val request = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $bcsToken")
             .get().build()
-        val responseContent = request(request, "获取PAASCC项目信息失败")
+        val responseContent = request(
+            request,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_FAILED_GET_PAASCC_INFORMATION
+            ))
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
         if (result.code != 0) {
             if (result.code == 2001600) {
@@ -185,11 +224,12 @@ class ProjectPaasCCService @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
         OkhttpUtils.doHttp(request).use { response ->
             //        httpClient.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("bcs: $responseContent")
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} " +
-                                ", message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code} " +
+                            ", message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -197,6 +237,6 @@ class ProjectPaasCCService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectPaasCCService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectPaasCCService::class.java)
     }
 }

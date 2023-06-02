@@ -28,7 +28,12 @@
 package com.tencent.devops.stream.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_THIS_GROUP_ID
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.common.wechatwork.model.CallbackElement
 import com.tencent.devops.common.wechatwork.model.enums.FromType
@@ -40,8 +45,9 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextM
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.stream.config.RtxCustomConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.BK_STREAM_MESSAGE_NOTIFICATION
 import com.tencent.devops.stream.trigger.listener.notify.RtxCustomApi
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.dom4j.Document
@@ -131,14 +137,26 @@ class OpenRtxCustomService constructor(
                 // 针对文本内容的@情况进行处理
 
                 // 当被@到,但没有@到机器人的名字的时候也不做处理。 @Stream消息通知
-                if (receiverType == ReceiverType.group && !content.contains("@Stream消息通知")) {
+                if (receiverType == ReceiverType.group && !content.contains(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_STREAM_MESSAGE_NOTIFICATION,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        )
+                )) {
                     return true
                 }
                 logger.info("content = $content")
                 // 返回群会话ID关键词
                 if (receiverType == ReceiverType.group && (
-                    content.contains("会话ID", true) || content.contains(
-                            "群ID",
+                    content.contains(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_SESSION_ID,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ), true) || content.contains(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GROUP_ID,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                             true
                         )
                     )
@@ -146,7 +164,13 @@ class OpenRtxCustomService constructor(
                     logger.info("chatId = $chatId")
                     val receiver = Receiver(receiverType, chatId)
                     val richtextContentList = mutableListOf<RichtextContent>()
-                    richtextContentList.add(RichtextText(RichtextTextText("本群ID='$chatId'。PS:群ID可用于蓝盾平台上任意企业微信群通知。")))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_THIS_GROUP_ID,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            params = arrayOf(chatId)
+                        )
+                    )))
                     val richtextMessage = RichtextMessage(receiver, richtextContentList)
                     sendRichText(richtextMessage)
                 }
@@ -231,18 +255,18 @@ class OpenRtxCustomService constructor(
         val jsonString = jacksonObjectMapper().writeValueAsString(richtextMessage)
 
         val sendURL = "${rtxCustomConfig.rtxUrl}/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException(
-                    "RtxCustomApi sendRichText error code: ${response.code()} " +
-                        "messge: ${response.message()}"
+                    "RtxCustomApi sendRichText error code: ${response.code} " +
+                            "messge: ${response.message}"
                 )
             }
         }

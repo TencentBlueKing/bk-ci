@@ -29,18 +29,20 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -290,7 +292,9 @@ class RepositoryDao {
             if (!projectId.isNullOrBlank()) {
                 query.and(PROJECT_ID.eq(projectId))
             }
-            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException("代码库不存在")
+            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
+            )
         }
     }
 
@@ -300,7 +304,9 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchOne() ?: throw NotFoundException("代码库${repositoryName}不存在")
+                .fetchAny() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
+                )
         }
     }
 

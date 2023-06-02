@@ -36,22 +36,26 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
@@ -84,7 +88,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val txProjectServiceImpl: TxProjectServiceImpl,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val authTokenApi: AuthTokenApi
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -252,7 +257,11 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
+    fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
+        return getOrCreatePreProject(userId, null)
+    }
+
+    fun getOrCreatePreProject(userId: String, accessToken: String?): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -279,7 +288,9 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
-        val projectId = getProjectIdInAuth(projectCode, accessToken)
+        val projectId = getProjectIdInAuth(
+            projectCode, accessToken ?: authTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        )
 
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -489,7 +500,9 @@ class ProjectLocalService @Autowired constructor(
         val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
         if (!validateFlag) {
-            val messageResult = MessageCodeUtil.generateResponseDataObject<String>(CommonMessageCode.PERMISSION_DENIED)
+            val messageResult = I18nUtil.generateResponseDataObject<String>(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
             return Result(messageResult.status, messageResult.message, null)
         }
         val projectUserList = authProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
@@ -507,7 +520,7 @@ class ProjectLocalService @Autowired constructor(
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
             .map {
                 // 因历史原因,前端是通过roleName==manager 来判断是否为管理员,故此处需兼容
-                if (it.displayName == DefaultGroupType.MANAGER.displayName) {
+                if (it.displayName == DefaultGroupType.MANAGER.getDisplayName(I18nUtil.getLanguage(userId))) {
                     UserRole(it.displayName, it.roleId, DefaultGroupType.MANAGER.value, it.type)
                 } else {
                     UserRole(it.displayName, it.roleId, it.roleName, it.type)
@@ -520,7 +533,7 @@ class ProjectLocalService @Autowired constructor(
             val url = "$authUrl/$projectCode?access_token=$accessToken"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["code"] as Int == 0) {
@@ -555,7 +568,8 @@ class ProjectLocalService @Autowired constructor(
             centerId = 0L,
             centerName = "",
             secrecy = false,
-            kind = 0
+            kind = 0,
+            properties = ProjectProperties(PipelineAsCodeSettings(true))
         )
 
         try {
@@ -585,8 +599,7 @@ class ProjectLocalService @Autowired constructor(
     fun getProjectRole(projectId: String): List<BKAuthProjectRolesResources> {
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         return authProjectApi.getProjectRoles(
             bsPipelineAuthServiceCode,
@@ -614,9 +627,10 @@ class ProjectLocalService @Autowired constructor(
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.NOT_MANAGER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }
@@ -628,12 +642,14 @@ class ProjectLocalService @Autowired constructor(
                     accessToken = null,
                     projectCode = projectId,
                     userId = userId
-                )) {
+                )
+            ) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }

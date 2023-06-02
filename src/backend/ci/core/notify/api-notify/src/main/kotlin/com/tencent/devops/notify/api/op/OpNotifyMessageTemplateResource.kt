@@ -111,6 +111,21 @@ interface OpNotifyMessageTemplateResource {
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean>
 
+    @ApiOperation("匹配腾讯云ses模板id要邮件模板库")
+    @PUT
+    @Path("/tencent_cloud_ses_template_id")
+    fun updateTXSESTemplateId(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("公共模板ID", required = true)
+        @QueryParam("commonTemplateId")
+        templateId: String,
+        @ApiParam("腾讯云ses 模板id", required = true)
+        @QueryParam("sesTemplateId")
+        sesTemplateId: Int?
+    ): Result<Boolean>
+
     @ApiOperation("删除消息通知模板")
     @DELETE
     @Path("/ids/sub/{templateId}/{notifyType}")

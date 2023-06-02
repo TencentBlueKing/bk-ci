@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-auth:common-auth-v3"))
+    api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:project:api-project-sample"))
     api(project(":core:process:api-process"))
     api(project(":core:repository:api-repository"))

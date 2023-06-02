@@ -37,7 +37,7 @@ import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.PageUtils
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import org.slf4j.LoggerFactory
 
@@ -62,17 +62,17 @@ data class StoreWebsocketPush(
         private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
-    override fun findSession(page: String): List<String>? {
+    override fun findSession(page: String): Set<String> {
         val pageList = mutableListOf<String>()
         pageList.add(page)
         val associationPage = PageUtils.replaceAssociationPage(page)
         if (associationPage != null) {
             pageList.add(associationPage)
         }
-        val sessionList = mutableListOf<String>()
-        if (pageList.size > 0) {
+        val sessionList = mutableSetOf<String>()
+        if (pageList.isNotEmpty()) {
             pageList.forEach {
-                val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
+                val pageSession = WsRedisUtils.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
                     sessionList.addAll(pageSession)
                     notifyPost.page = it
@@ -82,13 +82,13 @@ data class StoreWebsocketPush(
         return sessionList
     }
 
-    override fun buildMqMessage(): SendMessage? {
+    override fun buildMqMessage(): SendMessage {
         return AmdMessage(
                 atomId = atomId,
                 notifyPost = notifyPost,
                 userId = userId,
                 page = page,
-                sessionList = findSession(page!!)!!
+                sessionList = findSession(page!!)
         )
     }
 

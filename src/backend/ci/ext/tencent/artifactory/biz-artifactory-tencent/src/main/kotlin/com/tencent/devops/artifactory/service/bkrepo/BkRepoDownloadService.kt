@@ -28,6 +28,9 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -51,7 +54,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -171,10 +174,23 @@ open class BkRepoDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException("文件($argPath)不存在")
+                ?: throw NotFoundException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = FILE_NOT_EXIST,
+                            params = arrayOf(argPath)
+                        )
+                )
         val properties = fileInfo.metadata
-        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException("元数据(pipelineId)不存在")
-        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException("元数据(buildId)不存在")
+        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = METADATA_NOT_EXIST,
+                params = arrayOf("pipelineId")
+            ))
+        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = METADATA_NOT_EXIST,
+                    params = arrayOf("buildId")
+                ))
         val shortUrl = shortUrlService.createShortUrl(
             url = PathUtils.buildDetailLink(
                 projectId = projectId,
@@ -205,12 +221,13 @@ open class BkRepoDownloadService @Autowired constructor(
                 pipelineService.validatePermission(
                     userId,
                     projectId,
-                    message = MessageCodeUtil.getCodeMessage(
-                        ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        arrayOf(userId, projectId)
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId)
                     )
                 )
             }
+
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
                 pipelineService.validatePermission(
@@ -218,9 +235,9 @@ open class BkRepoDownloadService @Autowired constructor(
                     projectId,
                     pipelineId,
                     AuthPermission.SHARE,
-                    MessageCodeUtil.getCodeMessage(
-                        ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
-                        arrayOf(userId, projectId, pipelineId)
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId, pipelineId)
                     )
                 )
             }
@@ -236,7 +253,12 @@ open class BkRepoDownloadService @Autowired constructor(
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
             path
-        ) ?: throw BadRequestException("文件（$path) 不存在")
+        ) ?: throw BadRequestException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = FILE_NOT_EXIST,
+                params = arrayOf(path)
+            )
+        )
         val fileName = fileDetail.name
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
@@ -290,7 +312,12 @@ open class BkRepoDownloadService @Autowired constructor(
                     crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
                     ChannelCode.BS
                 ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+                targetBuildId = (targetBuild ?: throw BadRequestException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_NOT_EXIST,
+                            params = arrayOf(crossBuildNo)
+                        )
+                )).id
             }
         }
 
@@ -299,24 +326,24 @@ open class BkRepoDownloadService @Autowired constructor(
         val pipelineDownloadErrorMsg: String?
         if (!userId.isNullOrBlank()) {
             accessUserId = userId
-            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId)
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId)
             )
-            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
             )
         } else {
             accessUserId = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId)
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId)
             )
-            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
             )
         }
         logger.info(
@@ -382,7 +409,13 @@ open class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
+            if (region == "OPENAPI") {
+                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
+            } else {
+                resultList.add(
+                    "${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true"
+                )
+            }
         }
         return resultList
     }

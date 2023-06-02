@@ -33,11 +33,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateResourceV3
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.api.template.UserPTemplateResource
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -78,7 +78,8 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            version = version
+            version = version,
+            versionName = null
         )
     }
 

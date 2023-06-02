@@ -28,10 +28,10 @@
 dependencies {
     api(project(":core:stream:biz-stream"))
 
-    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
+    api(project(":ext:tencent:common:common-pipeline-yaml-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
+    api(project(":core:common:common-wechatwork"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))

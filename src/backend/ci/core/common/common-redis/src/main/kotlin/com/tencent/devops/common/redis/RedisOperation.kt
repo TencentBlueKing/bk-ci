@@ -34,7 +34,7 @@ import org.springframework.data.redis.core.ScanOptions
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "UNUSED")
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, private val redisName: String? = null) {
 
     // max expire time is 30 days
@@ -100,8 +100,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         }
     }
 
-    fun delete(key: String, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.delete(getFinalKey(key, isDistinguishCluster))
+    fun delete(key: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.delete(getFinalKey(key, isDistinguishCluster))
     }
 
     fun delete(keys: Collection<String>, isDistinguishCluster: Boolean? = false) {
@@ -116,12 +116,12 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.hasKey(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun addSetValue(key: String, item: String, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), item)
+    fun addSetValue(key: String, item: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), item) == 1L
     }
 
-    fun removeSetMember(key: String, item: String, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), item)
+    fun removeSetMember(key: String, item: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), item) == 1L
     }
 
     fun isMember(key: String, item: String, isDistinguishCluster: Boolean? = false): Boolean {
@@ -141,9 +141,12 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         redisTemplate.opsForHash<String, String>().put(getFinalKey(key, isDistinguishCluster), hashKey, values)
     }
 
-    fun hIncrBy(key: String, hashKey: String, delta: Long, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.opsForHash<String, String>().increment(getFinalKey(key, isDistinguishCluster), hashKey, delta)
+    fun hmset(key: String, map: Map<String, String>, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().putAll(getFinalKey(key, isDistinguishCluster), map)
     }
+
+    fun hIncrBy(key: String, hashKey: String, delta: Long, isDistinguishCluster: Boolean? = false): Long =
+        redisTemplate.opsForHash<String, String>().increment(getFinalKey(key, isDistinguishCluster), hashKey, delta)
 
     fun hget(key: String, hashKey: String, isDistinguishCluster: Boolean? = false): String? {
         return redisTemplate.opsForHash<String, String>().get(getFinalKey(key, isDistinguishCluster), hashKey)
@@ -235,8 +238,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.expireAt(getFinalKey(key, isDistinguishCluster), date)
     }
 
-    fun expire(key: String, expiredInSecond: Long) {
-        redisTemplate.expire(key, expiredInSecond, TimeUnit.SECONDS)
+    fun expire(key: String, expiredInSecond: Long, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.expire(getFinalKey(key, isDistinguishCluster), expiredInSecond, TimeUnit.SECONDS)
     }
 
     fun <T> execute(action: RedisCallback<T>): T? {

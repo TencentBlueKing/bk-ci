@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -42,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -49,17 +49,16 @@ import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -164,7 +163,11 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineName = model.name,
             userId = record.startUser ?: "",
             triggerUser = buildInfo.triggerUser,
-            trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            trigger = StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
             status = record.status ?: "",
@@ -227,7 +230,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
                         container.containPostTaskFlag != true
                     if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
-                        ContainerUtils.clearQueueContainerName(container)
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
                         container.status = buildStatus.name
                     }
                     return Traverse.CONTINUE
@@ -300,7 +303,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         } else {
                             container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
                         }
-                        ContainerUtils.clearQueueContainerName(container)
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
                     }
                     return Traverse.CONTINUE
                 }
@@ -363,34 +366,6 @@ class PipelineBuildDetailService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             cancelUser = cancelUserId
-        )
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
-        update(
-            projectId = projectId,
-            buildId = buildId,
-            modelInterface = object : ModelInterface {
-                var update = false
-
-                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                    val targetContainer = container.getContainerById(containerId)
-                    if (targetContainer != null) {
-                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
-                            targetContainer.name = vmInfo.name
-                        }
-                        update = true
-                        return Traverse.BREAK
-                    }
-                    return Traverse.CONTINUE
-                }
-
-                override fun needUpdate(): Boolean {
-                    return update
-                }
-            },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
     }
 

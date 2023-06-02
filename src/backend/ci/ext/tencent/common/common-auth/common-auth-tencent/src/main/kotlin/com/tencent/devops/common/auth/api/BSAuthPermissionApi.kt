@@ -29,8 +29,12 @@ package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.api.service.ServiceVerifyRecordResource
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionGrantRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionVerifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionsPolicyCodeAndResourceType
@@ -42,18 +46,30 @@ import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCE
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCES
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.VALIDATE_USER_RESOURCE
-import okhttp3.MediaType
+import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class BSAuthPermissionApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val jmxAuthApi: JmxAuthApi
+    private val jmxAuthApi: JmxAuthApi,
+    private val client: Client
 ) : AuthPermissionApi {
+
+    private val v0BsProjectsCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(10, TimeUnit.HOURS)
+        .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
     override fun validateUserResourcePermission(
         user: String,
@@ -68,6 +84,25 @@ class BSAuthPermissionApi @Autowired constructor(
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null
+        )
+    }
+
+    @Suppress("NestedBlockDepth")
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
@@ -78,7 +113,8 @@ class BSAuthPermissionApi @Autowired constructor(
         var success = false
         try {
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-            val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
+            val url =
+                "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
             logger.info("[$user|$serviceCode|$resourceType|$projectCode|$resourceCode|$permission] BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
                 projectCode = projectCode,
@@ -89,13 +125,13 @@ class BSAuthPermissionApi @Autowired constructor(
                 userId = user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder().url(url).post(requestBody).build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to validate user permission. $responseContent")
                     throw RemoteServiceException("Fail to validate user permission")
@@ -120,10 +156,70 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
+                // 异步记录鉴权结果
+                executor.submit {
+                    // 记录BS渠道创建项目的鉴权记录
+                    if (checkBsChannelProject(projectCode)) {
+                        createVerifyRecord(
+                            user = user,
+                            permission = permission,
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            verifyResult = result
+                        )
+                    }
+                }
                 return result
             }
         } finally {
             jmxAuthApi.execute(VALIDATE_USER_RESOURCE, System.currentTimeMillis() - epoch, success)
+        }
+    }
+
+    private fun checkBsChannelProject(projectCode: String): Boolean {
+        return v0BsProjectsCache.getIfPresent(projectCode) ?: run {
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            if (projectInfo != null) {
+                val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
+                v0BsProjectsCache.put(projectCode, isBsChannelProject)
+                isBsChannelProject
+            } else {
+                false
+            }
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun createVerifyRecord(
+        user: String,
+        permission: AuthPermission,
+        projectCode: String,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        verifyResult: Boolean
+    ) {
+        // 若是创建动作，需要挂载在项目资源类型下
+        val (verifyRecordResourceType, verifyRecordResourceCode) =
+            if (permission == AuthPermission.CREATE) {
+                Pair(AuthResourceType.PROJECT, projectCode)
+            } else {
+                Pair(resourceType, resourceCode)
+            }
+        try {
+            client.get(ServiceVerifyRecordResource::class).createOrUpdate(
+                userId = user,
+                verifyRecordDTO = VerifyRecordDTO(
+                    userId = user,
+                    projectId = projectCode,
+                    resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
+                    resourceCode = verifyRecordResourceCode,
+                    action = TActionUtils.buildAction(permission, resourceType),
+                    verifyResult = verifyResult
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("create v0 verify record failed!|$projectCode|$user|$permission|$resourceType|$resourceCode")
         }
     }
 
@@ -145,7 +241,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val request = Request.Builder().url(url).get().build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resource by permission. $responseContent")
                     throw RemoteServiceException("Fail to get user resource by permission")
@@ -198,7 +294,7 @@ class BSAuthPermissionApi @Autowired constructor(
                 user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionsResourcesRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder()
@@ -207,7 +303,7 @@ class BSAuthPermissionApi @Autowired constructor(
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
@@ -268,13 +364,13 @@ class BSAuthPermissionApi @Autowired constructor(
                 userId = userId
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionsResourcesRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder().url(url).post(requestBody).build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
@@ -334,13 +430,13 @@ class BSAuthPermissionApi @Autowired constructor(
             resourceType = resourceType.value,
             userIdList = userIdList
         )
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val content = objectMapper.writeValueAsString(grantRequest)
         logger.info("addResourcePermissionForUsers url[$url], body[$content]")
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
                 throw RemoteServiceException("add Resource Permission remote fail")
@@ -366,10 +462,32 @@ class BSAuthPermissionApi @Autowired constructor(
         return result
     }
 
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
+
     companion object {
         private const val HTTP_403 = 403
         private const val HTTP_400 = 400
         private const val HTTP_500 = 500
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)
+        private val executor = Executors.newFixedThreadPool(8)
     }
 }

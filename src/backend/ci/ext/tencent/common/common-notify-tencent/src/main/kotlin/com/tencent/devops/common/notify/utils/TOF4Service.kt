@@ -31,7 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -43,6 +44,7 @@ import sun.misc.BASE64Decoder
 import java.util.Random
 
 @Service
+@Suppress("ALL")
 class TOF4Service @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -72,12 +74,9 @@ class TOF4Service @Autowired constructor(
             return TOFResult("TOF error, post tof data cannot serialize")
         }
 
-        val requestBody = RequestBody.create(MediaType.parse(CONTENT_TYPE), body)
+        val requestBody = RequestBody.create(CONTENT_TYPE.toMediaTypeOrNull(), body)
         val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
-        if (headers == null) {
-            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
-            return TOFResult("TOF error, generate signature failure")
-        }
+            ?: return TOFResult("TOF error, generate signature failure")
         logger.info("[$url] Start to request tof with body size: ${body.length}")
 
         val finalUrl = tofConfig["host"]!! + url
@@ -91,10 +90,10 @@ class TOF4Service @Autowired constructor(
                 .build()
 
             okHttpClient.newCall(request).execute().use { response ->
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error(
-                        "TOF error, post data response failure, url: $finalUrl, status code: ${response.code()}," +
+                        "TOF error, post data response failure, url: $finalUrl, status code: ${response.code}," +
                                 " errorMsg: $responseBody, request body: $body"
                     )
 
@@ -104,8 +103,11 @@ class TOF4Service @Autowired constructor(
 
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
 
             return result
@@ -129,10 +131,7 @@ class TOF4Service @Autowired constructor(
         }
 
         val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
-        if (headers == null) {
-            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
-            return TOFResult("TOF error, generate signature failure")
-        }
+            ?: return TOFResult("TOF error, generate signature failure")
 
         val params = mapOf(
             "EmailType" to postData.emailType.toString(),
@@ -173,7 +172,7 @@ class TOF4Service @Autowired constructor(
                 .build()
 
             OkhttpUtils.doHttp(taskRequest).use { response ->
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 logger.info(
                     "post codecc email to tof with url, request, response: $finalUrl \n " +
                             "$params \n $responseBody"
@@ -183,7 +182,7 @@ class TOF4Service @Autowired constructor(
                         String.format(
                             "TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s",
                             url,
-                            response.code(),
+                            response.code,
                             responseBody
                         )
                     )
@@ -194,7 +193,11 @@ class TOF4Service @Autowired constructor(
 
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("post email formData fail: $result")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
 
             return result
@@ -228,6 +231,6 @@ class TOF4Service @Autowired constructor(
             put("x-rio-nonce", nonce)
         }
 
-        return Headers.of(headerMap)
+        return headerMap.toHeaders()
     }
 }

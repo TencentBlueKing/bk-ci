@@ -33,17 +33,17 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
-import com.tencent.devops.auth.common.Constants.LEVEL
-import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
+import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.NAME
+import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABLE
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -53,14 +53,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import okhttp3.MediaType
+import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.Optional
+import java.util.concurrent.TimeUnit
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
@@ -85,6 +86,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .maximumSize(500)
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Set<String>>()
+
+    private val userInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, Optional<UserAndDeptInfoVo>>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
@@ -115,11 +121,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
+    @Suppress("ComplexMethod")
     override fun getUserAndDeptByName(
         name: String,
         accessToken: String?,
         userId: String,
-        type: ManagerScopesEnum
+        type: ManagerScopesEnum,
+        exactLookups: Boolean?
     ): List<UserAndDeptInfoVo?> {
         val deptSearch = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
@@ -127,8 +135,6 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = null,
             lookupField = NAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
@@ -137,10 +143,17 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = USERNAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
+        // 模糊搜索或者精准搜索方式
+        if (exactLookups == null || exactLookups == false) {
+            deptSearch.fuzzyLookups = name
+            userSearch.fuzzyLookups = name
+        } else {
+            deptSearch.exactLookups = name
+            userSearch.exactLookups = name
+        }
+
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
         when (type) {
             ManagerScopesEnum.USER -> {
@@ -243,6 +256,20 @@ class AuthDeptServiceImpl @Autowired constructor(
         return userDeptIds
     }
 
+    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(name)?.get() ?: getUserAndPutInCache(userId, name)
+    }
+
+    private fun getUserAndPutInCache(userId: String, name: String): UserAndDeptInfoVo? {
+        return getUserAndDeptByName(
+            name = name,
+            accessToken = null,
+            userId = userId,
+            type = ManagerScopesEnum.USER,
+            exactLookups = true
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, Optional.ofNullable(it)) }
+    }
+
     private fun getUserDeptFamily(userId: String): String {
         val deptSearch = SearchProfileDeptEntity(
             id = userId,
@@ -280,7 +307,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     private fun callUserCenter(url: String, searchEntity: EsbBaseReq): String {
         val url = getAuthRequestUrl(url)
         val content = objectMapper.writeValueAsString(searchEntity)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
             .post(requestBody)
@@ -293,11 +320,12 @@ class AuthDeptServiceImpl @Autowired constructor(
                         " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.USER_NOT_EXIST
-                ))
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.USER_NOT_EXIST
+                    )
+                )
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             logger.info("callUserCenter : response = $responseStr")
             val responseDTO = JsonUtil.to(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
@@ -307,7 +335,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                         " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
                     ))
             }
@@ -320,13 +348,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         val dataMap = JsonUtil.to(str, Map::class.java)
         val userInfoList = JsonUtil.to(JsonUtil.toJson(dataMap[HTTP_RESULT]!!), List::class.java)
         val users = mutableListOf<String>()
-        userInfoList.forEach {
-            val userInfo = JsonUtil.toJson(it!!)
+        userInfoList.forEachIndexed foreach@{ userIndex, user ->
+            if (userIndex == MAX_USER_OF_DEPARTMENT_RETURNED) return@foreach
+            val userInfo = JsonUtil.toJson(user!!)
             val userInfoMap = JsonUtil.to(userInfo, Map::class.java)
             val userName = userInfoMap["username"].toString()
             users.add(userName)
         }
-
         return users
     }
 
@@ -374,5 +402,6 @@ class AuthDeptServiceImpl @Autowired constructor(
         const val USER_INFO = "api/c/compapi/v2/usermanage/list_users/"
         const val RETRIEVE_DEPARTMENT = "api/c/compapi/v2/usermanage/retrieve_department/"
         const val LIST_PROFILE_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_profile_departments/"
+        const val MAX_USER_OF_DEPARTMENT_RETURNED = 500
     }
 }

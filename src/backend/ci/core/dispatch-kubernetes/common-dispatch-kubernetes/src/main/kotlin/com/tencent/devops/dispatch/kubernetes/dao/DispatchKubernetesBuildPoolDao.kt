@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesBuildPool
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesBuildPool
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

@@ -40,11 +40,19 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
+import com.tencent.devops.image.constants.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_SOURCE_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
-import okhttp3.MediaType
+import java.time.LocalDateTime
+import java.util.UUID
+import java.util.concurrent.Executors
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.math.NumberUtils
@@ -52,9 +60,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.UUID
-import java.util.concurrent.Executors
 
 /**
  * 腾讯内部TKE接口(乱)
@@ -92,7 +97,7 @@ class TkeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TkeService::class.java)
         private val executorService = Executors.newFixedThreadPool(8)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     private val dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -148,7 +153,11 @@ class TkeService @Autowired constructor(
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
         buildLogPrinter.addLine(
             buildId = pushImageParam.buildId,
-            message = "源镜像：$fromImage",
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = BK_SOURCE_IMAGE,
+                params = arrayOf(fromImage),
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ),
             tag = pushImageParam.taskId,
             jobId = pushImageParam.containerId,
             executeCount = pushImageParam.executeCount ?: 1
@@ -165,7 +174,11 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
-                message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_TARGET_IMAGE,
+                    params = arrayOf(toImageRepo, pushImageParam.targetImageTag),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
@@ -249,7 +262,7 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|requestUrl: $url")
             logger.info("[${pushImageParam.buildId}]|requestBody: $requestBody")
             OkhttpUtils.doHttp(request).use { res ->
-                val responseBody = res.body()!!.string()
+                val responseBody = res.body!!.string()
                 logger.info("[${pushImageParam.buildId}]|responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
@@ -258,7 +271,10 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image success")
                     buildLogPrinter.addLine(
                         buildId = pushImageParam.buildId,
-                        message = "注册镜像成功",
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
                         executeCount = pushImageParam.executeCount ?: 1
@@ -268,7 +284,10 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image failed, msg:$msg")
                     buildLogPrinter.addRedLine(
                         buildId = pushImageParam.buildId,
-                        message = "注册镜像失败，错误信息：$msg",
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_FAILED_REGISTER_IMAGE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + "$msg",
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
                         executeCount = pushImageParam.executeCount ?: 1
@@ -279,7 +298,10 @@ class TkeService @Autowired constructor(
             logger.error("[${pushImageParam.buildId}]|Import docker image failed exception:", e)
             buildLogPrinter.addRedLine(
                 buildId = pushImageParam.buildId,
-                message = "注册镜像失败，错误信息：${e.message}",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILED_REGISTER_IMAGE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "${e.message}",
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1

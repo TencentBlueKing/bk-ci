@@ -59,8 +59,6 @@ class AppPipelineService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AppPipelineService::class.java)
     }
 
-//    private val executor = Executors.newFixedThreadPool(16)
-
     fun listProjects(
         userId: String,
         page: Int,
@@ -73,10 +71,8 @@ class AppPipelineService @Autowired constructor(
         beginTime = System.currentTimeMillis()
 
         // 遍历获取所有项目信息
-        val bkProjectInfos =
-            bkCCProjectApi.getProjectListAsOuter(projectIds.toSet()).map { it.projectCode to it }.toMap()
+        val bkProjectInfos = bkCCProjectApi.getProjectListAsOuter(projectIds.toSet()).associateBy { it.projectCode }
         logger.info("get project info: ${System.currentTimeMillis() - beginTime}")
-        beginTime = System.currentTimeMillis()
 
         val projects = mutableListOf<AppProject>()
         bkProjectInfos.values.forEach { project ->
@@ -85,22 +81,11 @@ class AppPipelineService @Autowired constructor(
                     projectId = project.projectCode,
                     activePipelineCount = 0,
                     projectName = project.projectName,
-                    projectLogo = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-                        "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
-                    } else {
-                        project.logoAddr
-                    },
+                    projectLogo = project.logoAddr,
                     approvalStatus = project.approvalStatus
                 )
             )
         }
-
-        // 获取名字和logo
-//        val tasks = executor.invokeAll(bkProjectInfos.values.filter { it.approvalStatus == "2" }.map { project ->
-//            AppProjectTask(pipelineService, project, userId)
-//        })
-//        val projects = tasks.map { it.get() }
-        logger.info("get project name & logo: ${System.currentTimeMillis() - beginTime}")
 
         return Page(count = projects.count().toLong(), page = -1, pageSize = -1, totalPages = 1, records = projects)
     }
@@ -128,10 +113,9 @@ class AppPipelineService @Autowired constructor(
         val appPipelines = mutableListOf<AppPipeline>()
 
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data
-        val projectInfo = if (projectInfoList == null || projectInfoList.isEmpty()) null else projectInfoList[0]
+        val projectInfo = if (projectInfoList.isNullOrEmpty()) null else projectInfoList[0]
         val projectName = projectInfo?.projectName ?: ""
-        var logoAddr = projectInfo?.logoAddr ?: ""
-        logoAddr = "https://download.bkdevops.qq.com/images" + logoAddr.removePrefix("http://radosgw.open.oa.com")
+        val logoAddr = projectInfo?.logoAddr ?: ""
 
         result.records.filter { it.hasPermission }.map {
             with(it) {

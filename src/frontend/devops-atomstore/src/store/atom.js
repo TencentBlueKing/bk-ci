@@ -19,7 +19,7 @@
 
 const prefix = 'store/api'
 const projectPrefix = 'project/api'
-const supportPrefix = 'support/api'
+const artifactoryPrefix = 'artifactory/api'
 const Vue = window.Vue
 const vue = new Vue()
 
@@ -355,7 +355,7 @@ export const actions = {
      * 上传文件
      */
     uploadFile ({ commit }, { formData, config }) {
-        return vue.$ajax.post(`${supportPrefix}/user/file/upload`, formData, config)
+        return vue.$ajax.post(`${artifactoryPrefix}/user/bkrepo/statics/file/upload`, formData, config)
     },
 
     /**
@@ -386,5 +386,9 @@ export const actions = {
     // 获取发布者列表
     getPublishersList ({ commit }, { atomCode }) {
         return vue.$ajax.get(`${prefix}/user/market/publishers/get?storeType=ATOM&storeCode=${atomCode}`)
+    },
+    // 获取所有环境列表
+    getContainerList ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/pipeline/container/all`)
     }
 }

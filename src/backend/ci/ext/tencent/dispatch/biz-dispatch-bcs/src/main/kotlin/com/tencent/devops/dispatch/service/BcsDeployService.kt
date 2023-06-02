@@ -52,8 +52,8 @@ import io.fabric8.kubernetes.client.KubernetesClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Collections
 import java.text.MessageFormat
+import java.util.Collections
 
 @Service
 class BcsDeployService @Autowired constructor(private val redisOperation: RedisOperation) {
@@ -138,7 +138,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(getServiceName(serviceCode))
             .endMetadata()
             .withNewSpec()
-            .withSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
+            .addToSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
             .addNewPort()
             .withName("$serviceCode-port")
             .withProtocol("TCP")

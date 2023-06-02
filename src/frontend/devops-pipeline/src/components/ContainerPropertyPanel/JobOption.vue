@@ -15,11 +15,11 @@
 </template>
 
 <script>
-    import Vue from 'vue'
-    import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import Vue from 'vue'
+    import { mapActions } from 'vuex'
     export default {
         name: 'job-config',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
@@ -52,6 +52,7 @@
             }
         },
         created () {
+            console.log(this.optionModel, 'optionModel')
             if (!this.disabled) {
                 this.initOptionConfig()
             }
