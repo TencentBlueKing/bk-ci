@@ -47,6 +47,7 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -173,7 +174,6 @@ class ExperienceBaseService @Autowired constructor(
         groupIdType: GroupIdTypeEnum,
         isOuter: Boolean = false
     ): MutableSet<Long> {
-        val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
             if (isOuter) {
@@ -182,11 +182,25 @@ class ExperienceBaseService @Autowired constructor(
             } else {
                 groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
                     .toMutableSet())
+
+                val deptIds = mutableSetOf<String>()
+                client.get(ServiceTxUserResource::class).get(userId).data?.let {
+                    deptIds.add(it.bgId)
+                    deptIds.add(it.deptId)
+                    deptIds.add(it.centerId)
+                    deptIds.add(it.groupId)
+                }
+                groupIds.addAll(
+                    experienceGroupDepartmentDao.listGroupIdsByDeptIds(dslContext, deptIds).map { it.value1() }
+                        .toMutableSet()
+                )
             }
         }
         if (groupIdType == GroupIdTypeEnum.JUST_PUBLIC || groupIdType == GroupIdTypeEnum.ALL) {
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)
         }
+
+        val recordIds = mutableSetOf<Long>()
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
         if (isOuter) {
             recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())

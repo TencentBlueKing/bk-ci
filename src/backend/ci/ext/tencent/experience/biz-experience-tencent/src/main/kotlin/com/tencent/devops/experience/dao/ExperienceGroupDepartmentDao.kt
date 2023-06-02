@@ -3,6 +3,8 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.model.experience.tables.TExperienceGroupDepartment
 import com.tencent.devops.model.experience.tables.records.TExperienceGroupDepartmentRecord
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -43,6 +45,12 @@ class ExperienceGroupDepartmentDao {
     fun listByGroupIds(dslContext: DSLContext, groupIds: Collection<Long>): List<TExperienceGroupDepartmentRecord> {
         with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
             return dslContext.selectFrom(this).where(GROUP_ID.`in`(groupIds)).limit(1000).fetch()
+        }
+    }
+
+    fun listGroupIdsByDeptIds(dslContext: DSLContext, deptIds: Collection<String>): Result<Record1<Long>> {
+        with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
+            return dslContext.select(GROUP_ID).from(this).where(DEPT_ID.`in`(deptIds)).limit(1000).fetch()
         }
     }
 
