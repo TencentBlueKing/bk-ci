@@ -175,11 +175,13 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
     static install(Vue) {
       Vue.directive('perm', {
         bind(el, binding, vNode) {
+          console.log('===============bind');
           if (!vNode.key) {
             vNode.key = new Date().getTime();
           }
         },
         inserted(el, binding, vNode) {
+          console.log('===============inserted');
           const { disablePermissionApi } = binding.value;
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
@@ -189,8 +191,10 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         update(el, binding, vNode) {
           const { value, oldValue } = binding;
-          if (JSON.stringify(value) === JSON.stringify(oldValue)) return;
-          init(el, binding.value, vNode);
+          console.log(value, oldValue, '===============update');
+          if (value.hasPermission !== oldValue.hasPermission) {
+            init(el, binding.value, vNode);
+          }
         },
         unbind(el, binding, vNode) {
           destroy(el, vNode);
@@ -207,13 +211,11 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
     static install(app) {
       app.directive('perm', {
         created(el, binding, vNode) {
-          console.log('===========created');
           if (!vNode.key) {
             vNode.key = new Date().getTime();
           }
         },
         mounted(el, binding, vNode) {
-          console.log('===========mounted');
           const { disablePermissionApi } = binding.value;
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
@@ -223,7 +225,6 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
         },
         updated(el, binding, vNode) {
           const { value, oldValue } = binding;
-          console.log(value, oldValue, '===========updated');
           if (value.hasPermission !== oldValue.hasPermission) {
             init(el, binding.value, vNode);
           }
