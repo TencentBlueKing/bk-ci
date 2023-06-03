@@ -175,13 +175,11 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
     static install(Vue) {
       Vue.directive('perm', {
         bind(el, binding, vNode) {
-          console.log('===============bind');
           if (!vNode.key) {
             vNode.key = new Date().getTime();
           }
         },
         inserted(el, binding, vNode) {
-          console.log('===============inserted');
           const { disablePermissionApi } = binding.value;
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
@@ -191,7 +189,6 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         update(el, binding, vNode) {
           const { value, oldValue } = binding;
-          console.log(value, oldValue, '===============update');
           if (value.hasPermission !== oldValue.hasPermission) {
             init(el, binding.value, vNode);
           }
