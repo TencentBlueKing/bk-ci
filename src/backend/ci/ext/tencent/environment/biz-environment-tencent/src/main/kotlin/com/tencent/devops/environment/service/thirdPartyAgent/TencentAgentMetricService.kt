@@ -100,11 +100,11 @@ class TencentAgentMetricService @Autowired constructor(
 
         // 上报
         if (!agentMetricTopic.isNullOrBlank()) {
-            logger.debug("reportAgentMetrics|kafka")
-            reportData?.forEach {
-                val d = objectMapper.writeValueAsString(it)
-                logger.debug(d)
-                kafkaClient.send(agentMetricTopic!!, d)
+            logger.debug("reportAgentMetrics|kafka ${reportData?.size ?: 0}")
+            if (reportData.isNullOrEmpty()) {
+                kafkaClient.send(agentMetricTopic!!, "{}")
+            } else {
+                kafkaClient.send(agentMetricTopic!!, objectMapper.writeValueAsString(reportData))
             }
         } else {
             logger.error("agentMetricTopic is null")
