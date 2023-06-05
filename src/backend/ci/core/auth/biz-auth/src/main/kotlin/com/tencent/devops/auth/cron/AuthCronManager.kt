@@ -248,7 +248,6 @@ class AuthCronManager @Autowired constructor(
             }
         }
     }
-    
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
         private const val AUTH_EXPIRING_MANAGAER_APPROVAL = "auth:expiring:manager:approval"
