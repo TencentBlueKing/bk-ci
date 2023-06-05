@@ -410,7 +410,7 @@ class ImageArtifactoryService @Autowired constructor(
         val response = bkRepoClient.getBkrepoImage(
             projectCode = projectCode,
             repoName = repoName,
-            searchKey= searchKey,
+            searchKey = searchKey,
             page = page,
             pageSize = pageSize,
             headers = getHeaders()
