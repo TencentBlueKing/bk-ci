@@ -18,7 +18,6 @@ import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
