@@ -24,10 +24,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import org.springframework.util.FileSystemUtils
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.nio.file.Files
 import java.util.Properties
 
 val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
