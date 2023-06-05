@@ -473,6 +473,7 @@
   border-top: 1px solid #dde4eb;
   overflow-y: scroll;
   overflow-y: overlay;
+  background: #F5F7FA;
 
   .exec-detail-summary-header {
     padding: 8px 24px;
