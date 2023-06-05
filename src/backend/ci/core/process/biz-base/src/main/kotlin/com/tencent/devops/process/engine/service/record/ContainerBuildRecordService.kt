@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -225,11 +226,16 @@ class ContainerBuildRecordService(
                     if (recordContainer.startTime == null) {
                         startTime = LocalDateTime.now()
                     }
-                    when (recordContainer.containerType) {
-                        VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
-                        NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
+                    val mutexGroup = when (recordContainer.containerType) {
+                        VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]?.let {
+                            it as MutexGroup
+                        }
+                        NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]?.let {
+                            it as MutexGroup
+                        }
                         else -> null
-                    }?.let {
+                    }
+                    if (mutexGroup?.enable == true) {
                         containerVar[Container::name.name] = ContainerUtils.getMutexWaitName(containerName)
                     }
                 } else {
