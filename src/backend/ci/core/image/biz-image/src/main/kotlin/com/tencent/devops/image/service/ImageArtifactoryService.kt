@@ -415,8 +415,6 @@ class ImageArtifactoryService @Autowired constructor(
             pageSize = pageSize,
             headers = getHeaders()
         )
-            //OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), getHeaders())
-        logger.info("response: $response")
         try {
             if (!response.isSuccessful) {
                 logger.error("images repository search failed, statusCode: ${response.code}")
