@@ -219,21 +219,6 @@
                         <bk-input v-model="atomForm.branch"></bk-input>
                     </div>
                 </div>
-                <div class="bk-form-item release-package-form-item is-required">
-                    <label class="bk-label"> {{ $t('store.发布包') }} </label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-file-upload
-                            :post-url="releasePackageUrl"
-                            :os="atomForm.os"
-                            :job-type="atomForm.jobType"
-                            :tip="$t('store.只允许上传 zip 格式的文件')"
-                            accept="application/zip"
-                            @uploadSuccess="uploadPackageSuccess"
-                            @uploadFail="uploadPackageErr"
-                        ></bk-file-upload>
-                        <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('store.发布包不能为空') }} </div>
-                    </div>
-                </div>
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('store.版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
@@ -268,14 +253,12 @@
 <script>
     import api from '@/api'
     import breadCrumbs from '@/components/bread-crumbs.vue'
-    import bkFileUpload from '@/components/common/file-upload'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
     
     export default {
         components: {
             selectLogo,
-            bkFileUpload,
             breadCrumbs
         },
         data () {
@@ -380,9 +363,6 @@
             },
             toolbarOptions () {
                 return toolbars
-            },
-            releasePackageUrl () {
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
@@ -587,21 +567,6 @@
                         theme
                     })
                     this.$refs[ref].$refs.toolbar_left.$imgDel(pos)
-                }
-            },
-
-            uploadPackageSuccess (data) {
-                if (data.atomEnvRequests && data.atomEnvRequests.length) {
-                    this.formErrors.releasePackageError = false
-                }
-            },
-
-            uploadPackageErr (message) {
-                if (message) {
-                    this.$bkMessage({
-                        message: message,
-                        theme: 'error'
-                    })
                 }
             },
 
