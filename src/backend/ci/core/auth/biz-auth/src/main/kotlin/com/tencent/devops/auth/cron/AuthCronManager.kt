@@ -215,7 +215,7 @@ class AuthCronManager @Autowired constructor(
             Executors.newFixedThreadPool(1).submit {
                 try {
                     logger.info("start init auth resource group config type I18n")
-                    val authAuthResourceGroupConfigs= mutableListOf<TAuthResourceGroupConfigRecord>()
+                    val authAuthResourceGroupConfigs = mutableListOf<TAuthResourceGroupConfigRecord>()
                     var page = PageUtil.DEFAULT_PAGE
                     do {
                         val resourceGroupConfigResult = authResourceGroupConfigDao.list(
@@ -248,8 +248,7 @@ class AuthCronManager @Autowired constructor(
             }
         }
     }
-
-
+    
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
         private const val AUTH_EXPIRING_MANAGAER_APPROVAL = "auth:expiring:manager:approval"

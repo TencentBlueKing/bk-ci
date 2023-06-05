@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicatorMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType

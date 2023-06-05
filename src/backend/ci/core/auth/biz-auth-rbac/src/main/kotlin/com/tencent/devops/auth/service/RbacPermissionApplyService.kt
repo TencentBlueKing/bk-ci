@@ -380,7 +380,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage(),
                     defaultMessage = it.actionName
                 )
-                                         },
+            },
             groupInfoList = groupInfoList
         )
     }
