@@ -217,7 +217,7 @@ class ContainerBuildRecordService(
                     return@transaction
                 }
                 val containerVar = mutableMapOf<String, Any>()
-                val containerName = containerVar[Container::name.name]?.toString() ?: ""
+                val containerName = recordContainer.containerVar[Container::name.name]?.toString() ?: ""
                 var startTime: LocalDateTime? = null
                 var endTime: LocalDateTime? = null
                 // 存在互斥组的先将名字修改
