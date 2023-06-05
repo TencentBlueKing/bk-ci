@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
@@ -57,7 +58,8 @@ import java.time.LocalDateTime
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dockerConfig: DockerConfig,
-    private val bkRepoClientConfig: BkRepoClientConfig
+    private val bkRepoClientConfig: BkRepoClientConfig,
+    private val bkRepoClient: BkRepoClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
@@ -68,6 +70,10 @@ class ImageArtifactoryService @Autowired constructor(
 
     init {
         credential = makeCredential()
+    }
+
+    fun getHeaders(): Map<String, String> {
+        return mutableMapOf("Authorization" to credential)
     }
 
     fun listPublicImages(searchKey: String, start: Int, limit: Int): ImagePageData {
@@ -146,17 +152,7 @@ class ImageArtifactoryService @Autowired constructor(
         handleImageList(devCloudProjectImages, imageList)
         return ImageListResp(imageList)
     }
-    fun getUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): String {
-        val stringBuilder = StringBuilder()
-        val start = "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
-        val middle = "packageName=$searchKey&"
-        val end = "pageNumber=$page&pageSize=$pageSize"
-        stringBuilder.append(start)
-        if (!searchKey.isNullOrBlank()) {
-            stringBuilder.append(middle)
-        }
-        return stringBuilder.append(end).toString()
-    }
+
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): ImageListResp {
         // 查询项目镜像列表
         val imageList = mutableListOf<ImageItem>()
@@ -404,9 +400,23 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): List<DockerTag> {
-        val headerMap = mutableMapOf("Authorization" to credential)
-        val response = OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), headerMap)
+    fun getImagesByUrl(
+        projectCode: String,
+        repoName: String,
+        searchKey: String?,
+        page: Int,
+        pageSize: Int
+    ): List<DockerTag> {
+        val response = bkRepoClient.getBkrepoImage(
+            projectCode = projectCode,
+            repoName = repoName,
+            searchKey= searchKey,
+            page = page,
+            pageSize = pageSize,
+            headers = getHeaders()
+        )
+            //OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), getHeaders())
+        logger.info("response: $response")
         try {
             if (!response.isSuccessful) {
                 logger.error("images repository search failed, statusCode: ${response.code}")

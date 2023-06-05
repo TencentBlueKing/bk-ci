@@ -248,6 +248,27 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<List<FileInfo>>>()!!.data!!
     }
 
+    fun getUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): String {
+        val stringBuilder = StringBuilder()
+        val start = "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
+        val middle = "packageName=$searchKey&"
+        val end = "pageNumber=$page&pageSize=$pageSize"
+        stringBuilder.append(start)
+        if (!searchKey.isNullOrBlank()) {
+            stringBuilder.append(middle)
+        }
+        return stringBuilder.append(end).toString()
+    }
+    fun getBkrepoImage(
+        projectCode: String,
+        repoName: String,
+        searchKey: String?,
+        page: Int,
+        pageSize: Int,
+        headers: Map<String, String>
+    ): okhttp3.Response {
+        return OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), headers)
+    }
     fun listFilePage(
         userId: String,
         projectId: String,
@@ -752,7 +773,7 @@ class BkRepoClient constructor(
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
             fullPath.removePrefix("/").replace(
                 "#",
-                "%23"
+                "%23" 
             )
         }"
         val requestData = ShareRecordCreateRequest(
