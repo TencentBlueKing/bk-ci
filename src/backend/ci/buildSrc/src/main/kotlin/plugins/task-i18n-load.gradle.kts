@@ -27,6 +27,7 @@
 import org.springframework.util.FileSystemUtils
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.file.Files
 import java.util.Properties
 
 val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
@@ -75,8 +76,12 @@ if (File(i18nPath).isDirectory) {
                     )
                 )
                 println("copy srcFile: ${srcFile.absolutePath} now...")
-                FileSystemUtils.copyRecursively(srcFile, destFile)
-                // 处理模块的properties文件，要合并公共的properties文件
+                copy {
+                    from(srcFile.toPath())
+                    into(destFile.toPath())
+                }
+                println("copy srcFile: ${srcFile.absolutePath} finish...")
+                // 处理模块的properties文件(要合并公共的properties文件)
                 destFile.listFiles()?.filter { it.name.endsWith("properties") }?.forEach { propertyFile ->
                     val commonPropertyFile = File(joinPath(i18nPath, propertyFile.name))
                     val targetProperties = Properties()
