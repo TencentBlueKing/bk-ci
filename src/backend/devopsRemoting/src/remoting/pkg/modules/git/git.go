@@ -18,18 +18,18 @@ import (
 
 // ConfigGit 配置Git
 func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
-	gitcache := "cache"
+	gitcache := []string{"credential.helper", "'cache --timeout=1296000'"}
 	if cfg.WorkSpace.DebugEnable {
-		gitcache = "store"
+		gitcache = []string{"credential.helper", "store"}
 	}
 	settings := [][]string{
 		{"push.default", "simple"},
 		{"alias.lg", "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"},
-		{"credential.helper", gitcache},
+		gitcache,
 		{"safe.directory", "*"},
 		// 工蜂域名更改
-		{"--unset", "url.git@git.code.oa.com:.insteadOf"},
-		{"--unset", "url.git@git.woa.com:.insteadOf"},
+		{"--unset", "url.git@git.code.oa.com:.insteadOf", "||", "true"},
+		{"--unset", "url.git@git.woa.com:.insteadOf", "||", "true"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "http://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "https://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "git@git.woa.com:"},
