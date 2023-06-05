@@ -217,8 +217,6 @@ class ContainerBuildRecordService(
                     return@transaction
                 }
                 val containerVar = mutableMapOf<String, Any>()
-                containerVar.putAll(recordContainer.containerVar)
-
                 val containerName = containerVar[Container::name.name]?.toString() ?: ""
                 var startTime: LocalDateTime? = null
                 var endTime: LocalDateTime? = null
