@@ -340,7 +340,11 @@ class QualityIndicatorService @Autowired constructor(
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
             return Msg(0, I18nUtil.getCodeLanMessage(BK_CREATE_SUCCESS), true)
         }
-        return Msg(-1, I18nUtil.getCodeLanMessage(BK_CREATE_FAIL), false)
+        return Msg(
+            -1,
+            I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = I18nUtil.getLanguage(userId)),
+            false
+        )
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
