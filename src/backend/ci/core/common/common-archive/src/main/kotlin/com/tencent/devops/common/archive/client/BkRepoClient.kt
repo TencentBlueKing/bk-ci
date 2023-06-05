@@ -773,7 +773,7 @@ class BkRepoClient constructor(
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
             fullPath.removePrefix("/").replace(
                 "#",
-                "%23" 
+                "%23"
             )
         }"
         val requestData = ShareRecordCreateRequest(
