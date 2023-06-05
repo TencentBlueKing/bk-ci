@@ -18,18 +18,18 @@ import (
 
 // ConfigGit 配置Git
 func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
-	gitcache := []string{"credential.helper", "cache", "--timeout", "1296000"}
+	gitcache := "cache --timeout=1296000"
 	if cfg.WorkSpace.DebugEnable {
-		gitcache = []string{"credential.helper", "store"}
+		gitcache = "store"
 	}
 	settings := [][]string{
 		{"push.default", "simple"},
 		{"alias.lg", "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"},
-		gitcache,
+		{"credential.helper", gitcache},
 		{"safe.directory", "*"},
 		// 工蜂域名更改
-		{"--unset", "url.git@git.code.oa.com:.insteadOf", "||", "true"},
-		{"--unset", "url.git@git.woa.com:.insteadOf", "||", "true"},
+		{"--unset", "url.git@git.code.oa.com:.insteadOf"},
+		{"--unset", "url.git@git.woa.com:.insteadOf"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "http://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "https://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "git@git.woa.com:"},
@@ -50,6 +50,12 @@ func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
+			// 针对 git unset 命令 exit status 5 优化
+			if len(s) > 1 && s[0] == "--unset" {
+				if exiterr, ok := err.(*exec.ExitError); ok && exiterr.ExitCode() == 5 {
+					continue
+				}
+			}
 			logs.WithError(err).Warn("git config error")
 		}
 	}
