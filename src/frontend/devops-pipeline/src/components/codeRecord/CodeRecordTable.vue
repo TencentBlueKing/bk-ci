@@ -40,7 +40,7 @@
     </div>
     <div v-else class="code-records-empty">
         <div class="no-data-right">
-            <img src="../../images/box.png">
+            <logo name="empty" size="180" />
             <p>
                 <span>{{ label }}</span>{{ $t('details.noCodeRecords') }}
             </p>
@@ -50,8 +50,12 @@
 
 <script>
     import { convertTime } from '@/utils/util'
+    import Logo from '@/components/Logo'
     export default {
         name: 'code-record-table',
+        components: {
+            Logo
+        },
         props: {
             commitList: {
                 type: Array,

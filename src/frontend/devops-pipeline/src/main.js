@@ -39,10 +39,14 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import bkMagic from '@tencent/bk-magic-vue'
+import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 import { pipelineDocs } from '../../common-lib/docs'
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import {
+    actionMap,
+    resourceMap,
+    resourceTypeMap
+} from '../../common-lib/permission-conf'
 
 // 全量引入 bk-magic-vue 样式
 require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -67,6 +71,7 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
+console.log(i18n.locale)
 Vue.use(BkPipeline, {
     i18n
 })

@@ -51,7 +51,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-
             .create-env-btn {
                 margin-left: 4px;
             }
