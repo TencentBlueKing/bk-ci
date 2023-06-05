@@ -274,8 +274,8 @@ class ContainerBuildRecordService(
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
-                    containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    startTime = startTime, endTime = endTime,
+                    containerVar = recordContainer.containerVar.plus(containerVar),
+                    buildStatus = buildStatus, startTime = startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
             }

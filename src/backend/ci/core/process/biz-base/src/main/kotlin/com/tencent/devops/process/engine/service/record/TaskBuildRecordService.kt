@@ -204,7 +204,6 @@ class TaskBuildRecordService(
                     return@transaction
                 }
                 val taskVar = mutableMapOf<String, Any>()
-                taskVar.putAll(recordTask.taskVar)
                 val taskStatus: BuildStatus
                 if (
                     recordTask.classType == ManualReviewUserTaskElement.classType ||
@@ -253,7 +252,7 @@ class TaskBuildRecordService(
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = executeCount,
-                    taskVar = taskVar,
+                    taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = taskStatus,
                     startTime = LocalDateTime.now(),
                     endTime = null,
@@ -380,7 +379,6 @@ class TaskBuildRecordService(
                     return@transaction
                 }
                 val taskVar = mutableMapOf<String, Any>()
-                taskVar.putAll(recordTask.taskVar)
                 if (atomVersion != null) {
                     when (recordTask.classType) {
                         MarketBuildAtomElement.classType -> {
@@ -419,7 +417,7 @@ class TaskBuildRecordService(
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = executeCount,
-                    taskVar = taskVar,
+                    taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = buildStatus,
                     startTime = null,
                     endTime = LocalDateTime.now(),
