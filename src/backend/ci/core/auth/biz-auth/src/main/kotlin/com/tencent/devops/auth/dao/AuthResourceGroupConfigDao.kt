@@ -98,4 +98,26 @@ class AuthResourceGroupConfigDao {
                 .fetchOne(0, Int::class.java)!!
         }
     }
+    fun list(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Result<TAuthResourceGroupConfigRecord> {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.selectFrom(this)
+                .orderBy(CREATE_TIME.desc(), RESOURCE_TYPE, GROUP_CODE)
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
+        }
+    }
+
+    fun batchUpdateAuthResourceGroupConfig(
+        dslContext: DSLContext,
+        authAuthResourceGroupConfigs: List<TAuthResourceGroupConfigRecord>
+    ) {
+        if (authAuthResourceGroupConfigs.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(authAuthResourceGroupConfigs).execute()
+    }
 }

@@ -43,6 +43,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -66,6 +67,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
+import java.io.File
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
@@ -91,7 +93,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val redisOperation: RedisOperation,
-    private val messageTemplateDao: MessageTemplateDao
+    private val messageTemplateDao: MessageTemplateDao,
+    private val commonConfig: CommonConfig
 ) : NotifyMessageTemplateService {
 
     companion object {
@@ -125,7 +128,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     fun updateMessageTemplate() {
         val classPathResource = ClassPathResource(
-            "template_${I18nUtil.getDefaultLocaleLanguage()}.yaml"
+            "i18n${File.separator}template_${commonConfig.devopsDefaultLocaleLanguage}.yaml"
         )
         val inputStream = classPathResource.inputStream
         val yamlStr = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
