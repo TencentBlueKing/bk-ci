@@ -1153,7 +1153,7 @@ class PipelineRuntimeService @Autowired constructor(
                 detail.mutexGroup?.let {
                     containerVar[VMBuildContainer::mutexGroup.name] = it
                 }
-            } else if (detail is NormalContainer){
+            } else if (detail is NormalContainer) {
                 detail.mutexGroup?.let {
                     containerVar[VMBuildContainer::mutexGroup.name] = it
                 }
