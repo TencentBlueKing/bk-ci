@@ -32,10 +32,8 @@ import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
@@ -67,7 +65,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod")
+@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -183,8 +181,8 @@ object LoggerService {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() = loggerService.stop()
             })
-        } catch (t: Throwable) {
-            logger.warn("Fail to add shutdown hook", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to add shutdown hook", ignore)
         }
     }
 
@@ -265,9 +263,15 @@ object LoggerService {
 
         try {
             if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+                var offset = 0
                 // 上报前做长度等内容限制
-                fixUploadMessage(logMessage)
-                this.uploadQueue.put(logMessage)
+                while (offset < logMessage.message.length) {
+                    val chunk = logMessage.message.substring(
+                        offset, minOf(offset + LOG_MESSAGE_LENGTH_LIMIT, logMessage.message.length)
+                    )
+                    this.uploadQueue.put(logMessage.copy(message = chunk))
+                    offset += LOG_MESSAGE_LENGTH_LIMIT
+                }
             } else if (elementId2LogProperty[elementId]?.logStorageMode != LogStorageMode.LOCAL) {
                 logger.warn(
                     "The number of Task[$elementId] log lines exceeds the limit, " +
@@ -282,7 +286,7 @@ object LoggerService {
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (ignored: InterruptedException) {
-            logger.error("写入 $logType 日志行失败：", ignored)
+            logger.error("Writing to a $logType log line failed：", ignored)
         }
     }
 
@@ -469,19 +473,6 @@ object LoggerService {
         } catch (ignored: Exception) {
             logger.warn("Fail to finish the logs", ignored)
         }
-    }
-
-    private fun fixUploadMessage(logMessage: LogMessage) {
-        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
-        if (logMessage.message.length > LOG_MESSAGE_LENGTH_LIMIT) {
-            logMessage.message = Ansi().bold().fgYellow()
-                .a("[Length exceeds limit]")
-                .reset().toString()
-        }
-        logMessage.message = CommonUtils.interceptStringInLength(
-            string = logMessage.message,
-            length = LOG_MESSAGE_LENGTH_LIMIT
-        ) ?: ""
     }
 
     private fun disableLogUpload() {

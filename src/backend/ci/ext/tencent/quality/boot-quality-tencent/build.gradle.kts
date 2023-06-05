@@ -27,6 +27,5 @@
 
 dependencies {
     api(project(":ext:tencent:quality:biz-quality-tencent"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }
-
-

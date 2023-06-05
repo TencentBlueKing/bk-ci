@@ -123,7 +123,7 @@ class P4Api(
     }
 
     fun getChangelistFiles(change: Int): List<P4FileSpec> {
-        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+        val changeFiles = P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
             p4Server.getChangelistFiles(change = change)
         }.map { iFileSpec ->
@@ -132,6 +132,8 @@ class P4Api(
                 depotPathString = iFileSpec.depotPathString
             )
         }
+        logger.info("get change list files size|$p4port|$username|${changeFiles.size}")
+        return changeFiles
     }
 
     fun getShelvedFiles(change: Int): List<P4FileSpec> {
@@ -221,6 +223,7 @@ class P4Api(
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
+
             TriggerType.SHELVE_COMMIT,
             TriggerType.SHELVE_DELETE,
             TriggerType.SHELVE_SUBMIT
@@ -231,6 +234,7 @@ class P4Api(
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
+
             else -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(
@@ -272,5 +276,16 @@ class P4Api(
 
         val result = p4Server.addTriggers(newTriggers)
         logger.info("add p4 triggers|$p4port|$eventType|$result")
+    }
+
+    fun getServerInfo(): P4ServerInfo {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            p4Server.getServer().serverInfo.run {
+                P4ServerInfo(
+                    caseSensitive = this.isCaseSensitive
+                )
+            }
+        }
     }
 }

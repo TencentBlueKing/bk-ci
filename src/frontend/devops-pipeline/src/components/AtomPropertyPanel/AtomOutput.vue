@@ -11,21 +11,30 @@
                     <bk-popover placement="top">
                         <i class="bk-icon icon-info-circle"></i>
                         <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                            <div>{{ $t("editPage.namespaceTips") }}</div>
+                            <div>{{ outputNamespaceDesc }}</div>
                         </div>
                     </bk-popover>
                     <i class="bk-icon icon-edit edit-namespace" @click="editNamespace"></i>
                 </label>
-                <div class="bk-form-content">
+                <div class="bk-form-content output-namespace-tips">
                     <bk-alert type="warning" :closable="true" style="margin-bottom: 8px;">
-                        <div slot="title"><span v-html="namespaceTips"></span></div>
+                        <template slot="title">
+                            {{ namespaceTips }}
+                            <a
+                                class="primary-link"
+                                target="_blank"
+                                :href="variableNamespaceDocs"
+                            >
+                                {{ $t('context') }}
+                            </a>
+                        </template>
                     </bk-alert>
                     <vuex-input v-if="showEditNamespace" name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" />
                     <p v-if="errors.has('namespace')" class="bk-form-help is-danger">{{errors.first('namespace')}}</p>
                 </div>
             </div>
             <div class="atom-output-var-list">
-                <h4>{{ $t('editPage.outputItemList') }}：</h4>
+                <h4>{{ $t('editPage.outputItemList') }}</h4>
                 <p v-for="(output, key) in outputProps" :key="key">
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
@@ -42,9 +51,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'atom-output',
         components: {
@@ -53,13 +62,13 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                showEditNamespace: false
+                showEditNamespace: false,
+                namespaceTips: this.$t('namespaceTips'),
+                outputNamespaceDesc: this.$t('outputNameSpaceDescTips'),
+                variableNamespaceDocs: this.$pipelineDocs.NAMESPACE_DOC
             }
         },
         computed: {
-            namespaceTips () {
-                return `即将下线，请使用Step ID来设置插件字段的命名空间，通过<a style="color: #3c96ff" target="_blank" href="${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=691153587#Stream%E8%A1%A8%E8%BE%BE%E5%BC%8F%E3%80%81%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%87%BD%E6%95%B0-jobs">上下文</a>方式访问`
-            },
             outputProps () {
                 try {
                     return this.atomPropsModel.output
@@ -94,10 +103,14 @@
         margin-bottom: 12px;
     }
     .edit-namespace {
-            cursor: pointer;
-            margin-left: 2px;
-            font-size: 12px;
-        }
+        cursor: pointer;
+        margin-left: 2px;
+        font-size: 12px;
+    }
+    .output-namespace-tips,
+    .atom-output-var-list {
+        pointer-events: auto;
+    }
     .atom-output-var-list {
         > h4,
         > p {

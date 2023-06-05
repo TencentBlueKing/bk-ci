@@ -1,5 +1,5 @@
 # lambda hpa
-{{ if .Values.external.enabled -}}
+{{ if .Values.lambda.enabled -}}
 {{ if .Values.lambda.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler

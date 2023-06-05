@@ -40,6 +40,8 @@ data class P4ShelveEvent(
     val user: String? = null,
     @ApiModelProperty("文件变更列表")
     val files: List<String>? = null,
+    @ApiModelProperty("路径是否区分大小写，默认区分大小写")
+    val caseSensitive: Boolean? = true,
     // 指定项目触发
     override val projectId: String? = null
 ) : P4Event(projectId = projectId) {

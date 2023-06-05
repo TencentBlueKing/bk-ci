@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -68,14 +69,15 @@ class PipelineContextService @Autowired constructor(
         stageId: String?,
         containerId: String?,
         taskId: String?,
-        variables: Map<String, String>
-    ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
+        variables: Map<String, String>,
+        model: Model? = null
+    ): MutableMap<String, String> {
+        val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return mutableMapOf()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
         try {
-            modelDetail.model.stages.forEach { stage ->
+            modelDetail.stages.forEach { stage ->
                 if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
                     previousStageStatus = BuildStatus.FAILED
                 }
@@ -225,12 +227,13 @@ class PipelineContextService @Autowired constructor(
         matrixGroupIndex: Int?,
         failTaskNameList: MutableList<String>
     ) {
+        val statusStr = getJobStatus(c)
         // current job
         if (c.id?.let { it == containerId } == true) {
             c.jobId?.let { contextMap["job.id"] = it }
             contextMap["job.name"] = c.name
-            getJobStatus(c)?.let { contextMap["job.status"] = it }
-            c.status?.let { contextMap["job.outcome"] = it }
+            contextMap["job.status"] = statusStr
+            contextMap["job.outcome"] = statusStr
             getNetWork(c)?.let { contextMap["job.container.network"] = it }
             stage.id?.let { contextMap["job.stage_id"] = it }
             stage.name?.let { contextMap["job.stage_name"] = it }
@@ -241,8 +244,8 @@ class PipelineContextService @Autowired constructor(
         val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
         contextMap["jobs.$jobId.id"] = jobId
         contextMap["jobs.$jobId.name"] = c.name
-        getJobStatus(c)?.let { contextMap["jobs.$jobId.status"] = it }
-        c.status?.let { contextMap["jobs.$jobId.outcome"] = it }
+        contextMap["jobs.$jobId.status"] = statusStr
+        contextMap["jobs.$jobId.outcome"] = statusStr
         getNetWork(c)?.let { contextMap["jobs.$jobId.container.network"] = it }
         stage.id?.let { contextMap["jobs.$jobId.stage_id"] = it }
         stage.name?.let { contextMap["jobs.$jobId.stage_name"] = it }
@@ -279,13 +282,14 @@ class PipelineContextService @Autowired constructor(
         failTaskNameList: MutableList<String>
     ) {
         c.elements.forEach { e ->
+            val statusStr = getStepStatus(e)
             checkStatus(e, failTaskNameList)
             // current step
             if (e.id?.let { it == taskId } == true) {
                 contextMap["step.name"] = e.name
                 e.id?.let { contextMap["step.id"] = it }
-                getStepStatus(e)?.let { contextMap["step.status"] = it }
-                e.status?.let { contextMap["step.outcome"] = it }
+                contextMap["step.status"] = statusStr
+                contextMap["step.outcome"] = statusStr
                 contextMap["step.atom_version"] = e.version
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
@@ -294,14 +298,14 @@ class PipelineContextService @Autowired constructor(
             if (c.id?.let { it == containerId } == true) {
                 contextMap["steps.$stepId.name"] = e.name
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
-                getStepStatus(e)?.let { contextMap["steps.$stepId.status"] = it }
-                e.status?.let { contextMap["steps.$stepId.outcome"] = it }
+                contextMap["steps.$stepId.status"] = statusStr
+                contextMap["steps.$stepId.outcome"] = statusStr
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
             e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
-            getStepStatus(e)?.let { contextMap["jobs.$jobId.steps.$stepId.status"] = it }
-            e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
+            contextMap["jobs.$jobId.steps.$stepId.status"] = statusStr
+            contextMap["jobs.$jobId.steps.$stepId.outcome"] = statusStr
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
                     jobPrefix = "jobs.$jobId.",
@@ -359,7 +363,7 @@ class PipelineContextService @Autowired constructor(
         else -> null
     }
 
-    private fun getJobStatus(c: Container): String? {
+    private fun getJobStatus(c: Container): String {
         return if (c is VMBuildContainer && c.status == BuildStatus.FAILED.name) {
             if (c.jobControlOption?.continueWhenFailed == true) {
                 BuildStatus.SUCCEED.name
@@ -373,11 +377,11 @@ class PipelineContextService @Autowired constructor(
                 BuildStatus.FAILED.name
             }
         } else {
-            c.status
+            c.status ?: BuildStatus.UNEXEC.name
         }
     }
 
-    private fun getStepStatus(e: Element): String? {
+    private fun getStepStatus(e: Element): String {
         return if (e.status == BuildStatus.FAILED.name) {
             if (ControlUtils.continueWhenFailure(e.additionalOptions)) {
                 BuildStatus.SUCCEED.name
@@ -385,7 +389,7 @@ class PipelineContextService @Autowired constructor(
                 BuildStatus.FAILED.name
             }
         } else {
-            e.status
+            e.status ?: BuildStatus.UNEXEC.name
         }
     }
 }

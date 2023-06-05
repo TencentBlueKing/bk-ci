@@ -27,6 +27,7 @@
 
 package com.tencent.devops.support.dao
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.model.support.tables.TWechatWorkMessage
 import com.tencent.devops.model.support.tables.records.TWechatWorkMessageRecord
 import org.jooq.DSLContext
@@ -49,14 +50,15 @@ class WechatWorkMessageDAO {
     fun insertMassageId(dslContext: DSLContext, messageId: String) {
         with(TWechatWorkMessage.T_WECHAT_WORK_MESSAGE) {
             val result = if (exist(dslContext, messageId)) {
-                "message id 已存在。"
+                com.tencent.devops.common.api.util.MessageUtil
+                "Message id already exists."
             } else {
                 // 插入新的
                 dslContext
                         .insertInto(this, MESSAGE_ID)
                         .values(messageId)
                         .execute()
-                "message id 插入成功。"
+                "Message id inserted successfully."
             }
             System.out.println(result)
         }

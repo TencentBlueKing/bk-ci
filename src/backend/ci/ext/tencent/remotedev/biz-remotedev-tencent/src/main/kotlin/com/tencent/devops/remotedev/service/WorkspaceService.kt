@@ -61,22 +61,27 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT
@@ -86,7 +91,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -205,6 +209,7 @@ class WorkspaceService @Autowired constructor(
             Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
+                displayName = null,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -216,7 +221,9 @@ class WorkspaceService @Autowired constructor(
                 createUserId = userId,
                 workPath = Constansts.prefixWorkPath.plus(projectName),
                 workspaceFolder = devfile.workspaceFolder ?: "",
-                hostName = ""
+                hostName = "",
+                workspaceMountType = devfile.checkWorkspaceMountType(),
+                workspaceSystemType = devfile.checkWorkspaceSystemType()
             )
         }
 
@@ -229,9 +236,8 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 替换部分devfile内容，兼容使用老remoting的情况
-        if (devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-base-remoting") != true &&
-            devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-full-remoting") != true
-        ) {
+        if (!isImageInDefaultList(devfile.runsOn?.container?.image,
+                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet())) {
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
@@ -265,7 +271,8 @@ class WorkspaceService @Autowired constructor(
 
         return WorkspaceResponse(
             workspaceName = workspaceName,
-            status = WorkspaceAction.PREPARING
+            status = WorkspaceAction.PREPARING,
+            systemType = devfile.checkWorkspaceSystemType()
         )
     }
 
@@ -315,7 +322,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            getOrSaveWorkspaceDetail(event.workspaceName)
+            getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
@@ -359,7 +366,7 @@ class WorkspaceService @Autowired constructor(
                 logger.info("${workspace.name} is running.")
                 remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, workspaceName)
+                    .getWorkspaceInfo(userId, workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
                 bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                 return WorkspaceResponse(
@@ -380,7 +387,12 @@ class WorkspaceService @Autowired constructor(
             }
             checkUserCreate(userId, true)
             /*处理异常的情况*/
-            checkAndFixExceptionWS(status, userId, workspaceName)
+            checkAndFixExceptionWS(
+                status,
+                userId,
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -422,7 +434,8 @@ class WorkspaceService @Autowired constructor(
                     ),
                     workspaceName = workspace.name,
                     settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                    bkTicket = bkTicket
+                    bkTicket = bkTicket,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -447,10 +460,11 @@ class WorkspaceService @Autowired constructor(
     private fun checkAndFixExceptionWS(
         status: WorkspaceStatus,
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        mountType: WorkspaceMountType
     ) {
         if (status.checkException()) {
-            when (val fix = fixUnexpectedStatus(userId, workspaceName, status)) {
+            when (val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)) {
                 WorkspaceStatus.EXCEPTION -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
@@ -463,8 +477,6 @@ class WorkspaceService @Autowired constructor(
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_ERROR_FIX.errorCode,
-                        defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR_FIX.formatErrorMessage
-                            .format(fix.name),
                         params = arrayOf(fix.name)
                     )
                 }
@@ -476,7 +488,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when {
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
@@ -550,7 +562,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            getOrSaveWorkspaceDetail(workspaceName)
+            getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
             redisHeartBeat.refreshHeartbeat(workspaceName)
         } else {
             // 启动失败,记录为EXCEPTION
@@ -624,7 +636,12 @@ class WorkspaceService @Autowired constructor(
             }
 
             /*处理异常的情况*/
-            checkAndFixExceptionWS(status, userId, workspaceName)
+            checkAndFixExceptionWS(
+                status,
+                userId,
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -658,7 +675,8 @@ class WorkspaceService @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -680,7 +698,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
@@ -729,7 +747,14 @@ class WorkspaceService @Autowired constructor(
             }
             /*处理异常的情况，如果还异常，直接强制删除*/
             var deleteImmediately = false
-            kotlin.runCatching { checkAndFixExceptionWS(status, userId, workspaceName) }.onFailure {
+            kotlin.runCatching {
+                checkAndFixExceptionWS(
+                    status = status,
+                    userId = userId,
+                    workspaceName = workspaceName,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                )
+            }.onFailure {
                 if (it is ErrorCodeException && it.errorCode == ErrorCodeEnum.WORKSPACE_ERROR.errorCode) {
                     deleteImmediately = true
                 } else throw it
@@ -774,7 +799,8 @@ class WorkspaceService @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -833,7 +859,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
@@ -843,6 +869,33 @@ class WorkspaceService @Autowired constructor(
             }
         }
         doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
+    }
+
+    // 修改workspace备注名称
+    fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
+        logger.info("$userId edit workspace $workspaceName|$displayName")
+        permissionService.checkPermission(userId, workspaceName)
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:$workspaceName",
+            expiredTimeInSeconds
+        ).lock().use {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.updateWorkspaceDisplayName(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                displayName = displayName
+            )
+        }
+        return true
     }
 
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
@@ -917,12 +970,18 @@ class WorkspaceService @Autowired constructor(
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
                     ) {
-                        status = fixUnexpectedStatus(userId, it.name, status)
+                        status = fixUnexpectedStatus(
+                            userId = userId,
+                            workspaceName = it.name,
+                            status = status,
+                            mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
+                        )
                     }
                 }
                 Workspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
+                    displayName = it.displayName,
                     repositoryUrl = it.url,
                     branch = it.branch,
                     devFilePath = it.yamlPath,
@@ -934,7 +993,9 @@ class WorkspaceService @Autowired constructor(
                     createUserId = it.creator,
                     workPath = it.workPath,
                     workspaceFolder = it.workspaceFolder,
-                    hostName = it.hostName
+                    hostName = it.hostName,
+                    workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
+                    workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType)
                 )
             }
         )
@@ -943,11 +1004,12 @@ class WorkspaceService @Autowired constructor(
     private fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        mountType: WorkspaceMountType
     ): WorkspaceStatus {
         val workspaceInfo = kotlin.runCatching {
             client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(userId, workspaceName).data!!
+                .getWorkspaceInfo(userId, workspaceName, mountType).data!!
         }.getOrElse { ignore ->
             logger.warn(
                 "get workspace info error $workspaceName|${ignore.message}"
@@ -1085,6 +1147,7 @@ class WorkspaceService @Autowired constructor(
             WorkspaceDetail(
                 workspaceId = id,
                 workspaceName = name,
+                displayName = displayName,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
@@ -1097,6 +1160,27 @@ class WorkspaceService @Autowired constructor(
                 yaml = yaml
             )
         }
+    }
+
+    fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
+        logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
+        permissionService.checkPermission(userId, workspaceName)
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
+        val detail = redisCache.getWorkspaceDetail(workspaceName)
+        if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
+        }
+        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!)
     }
 
     fun getWorkspaceTimeline(
@@ -1143,7 +1227,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun getOrSaveWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo {
+    private fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
         return redisCache.getWorkspaceDetail(workspaceName) ?: run {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
@@ -1151,14 +1235,16 @@ class WorkspaceService @Autowired constructor(
             ).toSet()
             val sshKey = sshService.getSshPublicKeys4Ws(userSet)
             val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
             val cache = WorkSpaceCacheInfo(
                 sshKey,
                 workspaceInfo.environmentHost,
                 workspaceInfo.hostIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
-                workspaceInfo.namespace
+                workspaceInfo.namespace,
+                workspaceInfo.curLaunchId
             )
             redisCache.saveWorkspaceDetail(
                 workspaceName,
@@ -1230,10 +1316,11 @@ class WorkspaceService @Autowired constructor(
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = ADMIN_NAME,
+                    userId = getSystemOperator(workspace.creator, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -1281,7 +1368,12 @@ class WorkspaceService @Autowired constructor(
             logger.info(
                 "workspace ${it.name} is EXCEPTION, try to fix."
             )
-            fixUnexpectedStatus(ADMIN_NAME, it.name, WorkspaceStatus.values()[it.status])
+            fixUnexpectedStatus(
+                userId = ADMIN_NAME,
+                workspaceName = it.name,
+                status = WorkspaceStatus.values()[it.status],
+                mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
+            )
         }
     }
 
@@ -1300,6 +1392,12 @@ class WorkspaceService @Autowired constructor(
             heartBeatDeleteWS(it)
         }
     }
+
+    private fun getSystemOperator(workspaceOwner: String, mountType: String): String =
+        when (mountType) {
+            WorkspaceMountType.START.name -> workspaceOwner
+            else -> ADMIN_NAME
+        }
 
     fun heartBeatDeleteWS(workspace: TWorkspaceRecord): Boolean {
         logger.info("heart beat delete workspace ${workspace.name}")
@@ -1331,10 +1429,11 @@ class WorkspaceService @Autowired constructor(
             val bizId = MDC.get(TraceTag.BIZID)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = ADMIN_NAME,
+                    userId = getSystemOperator(workspace.creator, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -1618,5 +1717,14 @@ class WorkspaceService @Autowired constructor(
             }
         }
         return true
+    }
+
+    // 判断用户定义的镜像是否在默认镜像白名单列表中
+    fun isImageInDefaultList(image: String?, whitelist: Set<String>): Boolean {
+        if (image.isNullOrBlank()) return false
+        whitelist.forEach { cidr ->
+            if (image.contains(cidr)) return true
+        }
+        return false
     }
 }

@@ -3,10 +3,10 @@ package com.tencent.devops.process.service.pipelineExport
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
-import com.tencent.devops.process.service.pipelineExport.ExportStepCheckout.updateIfNotAbsent
 import com.tencent.devops.process.service.pipelineExport.pojo.CheckoutAtomParam
 import com.tencent.devops.process.service.pipelineExport.pojo.GitCodeRepoAtomParam
 import com.tencent.devops.process.service.pipelineExport.pojo.GitCodeRepoCommonAtomParam
@@ -19,7 +19,7 @@ object ExportStepCheckout {
 
     private val logger = LoggerFactory.getLogger(ExportStepCheckout::class.java)
 
-    private const val LIMIT_MESSAGE = "[该字段限制导出，请手动填写]"
+    private const val LIMIT_MESSAGE = "LimitMessage" // "[该字段限制导出，请手动填写]"
     private val checkoutAtomCodeSet = listOf(
         "gitCodeRepo",
         "gitCodeRepoCommon",
@@ -36,7 +36,9 @@ object ExportStepCheckout {
                 return mutableMapOf()
             }
         val repo = allInfo.getRepoInfo(allInfo.pipelineInfo.projectId, input.getRepositoryConfig())
-        val url = repo?.url ?: input.repositoryName?.ifBlank { null } ?: LIMIT_MESSAGE
+        val url = repo?.url ?: input.repositoryName?.ifBlank { null } ?: I18nUtil.getCodeLanMessage(
+            messageCode = LIMIT_MESSAGE
+        )
 
         val toCheckoutAtom = CheckoutAtomParam(input)
 
@@ -98,7 +100,9 @@ object ExportStepCheckout {
             input.repositoryUrl ?: ""
         } else {
             val repo = allInfo.getRepoInfo(allInfo.pipelineInfo.projectId, input.getRepositoryConfig())
-            repo?.url ?: input.repositoryName?.ifBlank { null } ?: LIMIT_MESSAGE
+            repo?.url ?: input.repositoryName?.ifBlank { null } ?: I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            )
         }
 
         val fixInputMap =
@@ -140,13 +144,27 @@ object ExportStepCheckout {
             val url = fixInputMap["repositoryUrl"] as String?
 
             // 去掉所有插件上的凭证配置
-            fixInputMap.updateIfNotAbsent("credentialId", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("ticketId", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("username", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("password", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("username", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("accessToken", LIMIT_MESSAGE)
-            fixInputMap.updateIfNotAbsent("personalAccessToken", LIMIT_MESSAGE)
+            fixInputMap.updateIfNotAbsent("credentialId", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("ticketId", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("username", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("password", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("username", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("accessToken", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
+            fixInputMap.updateIfNotAbsent("personalAccessToken", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
+            ))
 
             // 去掉原来的仓库指定参数
             fixInputMap.remove("repositoryType")

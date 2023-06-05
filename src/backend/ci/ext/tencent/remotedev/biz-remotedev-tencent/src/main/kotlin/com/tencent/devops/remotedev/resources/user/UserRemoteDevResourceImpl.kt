@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.StartCloudService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
@@ -46,7 +47,8 @@ import javax.ws.rs.core.HttpHeaders
 class UserRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val bkgptService: BKGPTService,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val startCloudService: StartCloudService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -93,5 +95,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         agentId: String
     ): Result<Boolean> {
         return Result(workspaceService.preCiAgent(agentId, workspaceName))
+    }
+
+    override fun afterStartCloudInit(userId: String, workspaceName: String?, agentId: String): Result<Boolean> {
+        return Result(startCloudService.afterStartCloudInit(userId, workspaceName, agentId))
     }
 }

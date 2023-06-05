@@ -30,14 +30,18 @@ package com.tencent.devops.common.auth.api.v3
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
+import com.tencent.devops.common.api.constant.CommonMessageCode.USERS_EXCEEDS_THE_LIMIT
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -95,6 +99,24 @@ class TxV3AuthPermissionApi @Autowired constructor(
             resourceCode = resourceCode,
             relationResourceType = relationResourceType?.value ?: null
         ).data!!
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null
+        )
     }
 
     override fun getUserResourceByPermission(
@@ -166,6 +188,16 @@ class TxV3AuthPermissionApi @Autowired constructor(
         ).data ?: emptyMap()
     }
 
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,
@@ -179,7 +211,12 @@ class TxV3AuthPermissionApi @Autowired constructor(
         // 此处做保护,防止用户一次加太多用户
         if (userIdList.size > GRANT_USER_MAX_SIZE) {
             logger.warn("grant instance user too long $projectCode|$resourceCode|$resourceType|$userIdList")
-            throw ParamBlankException("授权用户数越界:$GRANT_USER_MAX_SIZE")
+            throw ParamBlankException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = USERS_EXCEEDS_THE_LIMIT,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(GRANT_USER_MAX_SIZE.toString())
+                    ))
         }
         userIdList.forEach {
             val grantInstanceDTO = GrantInstanceDTO(
@@ -221,6 +258,17 @@ class TxV3AuthPermissionApi @Autowired constructor(
             allActionMap.put(cacheKey, "1")
         }
         return hasAllAction
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     private fun buildAction(resourceType: String, permission: AuthPermission): String {

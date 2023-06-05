@@ -37,6 +37,7 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
@@ -59,7 +60,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val bkRepoCustomDirService: BkRepoCustomDirService
+    private val bkRepoCustomDirService: BkRepoCustomDirService,
+    private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
     override fun check(
         userId: String,
@@ -288,6 +290,36 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             modifiedTimeDesc = modifiedTimeDesc ?: false
         )
         return Result(data)
+    }
+
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<String> {
+        val content = archiveFileService.getFileContent(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(content)
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<List<String>> {
+        val fileNames = archiveFileService.listFileNamesByPath(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(fileNames)
     }
 
     companion object {

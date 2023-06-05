@@ -29,8 +29,8 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
-import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_NOT_INSTALLED
 import com.tencent.devops.store.pojo.image.exception.ImageNotInstalledException
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.slf4j.LoggerFactory
@@ -69,7 +69,10 @@ class StoreImageService @Autowired constructor(
         }
         val permissionResult = client.get(ServiceStoreImageResource::class).isInstalled(userId, projectId, imageCode)
         if (permissionResult.isNotOk() || (!permissionResult.data!!)) {
-            throw ImageNotInstalledException("Input:($userId,$projectId,$imageCode)", USER_IMAGE_NOT_INSTALLED)
+            throw ImageNotInstalledException(
+                "Input:($userId,$projectId,$imageCode)",
+                "${ErrorCodeEnum.USER_IMAGE_NOT_INSTALLED.errorCode}"
+            )
         }
         // 调商店接口获取镜像信息
         val result = client.get(ServiceStoreImageResource::class)

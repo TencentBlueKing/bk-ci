@@ -27,8 +27,11 @@
 
 package com.tencent.devops.artifactory.resources
 
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.pojo.CopyFileRequest
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -98,5 +101,27 @@ class UserFileResourceImpl @Autowired constructor(
 
     override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
         downloadFile(userId, filePath, logo, response)
+    }
+
+    override fun copy(userId: String, copyFileRequest: CopyFileRequest): Result<Boolean> {
+        with(copyFileRequest) {
+            if (dstArtifactoryType != ArtifactoryType.CUSTOM_DIR) {
+                throw IllegalArgumentException("invalid dstArtifactoryType")
+            }
+            srcFileFullPaths.forEach {
+                val filename = PathUtils.resolveName(it)
+                val dstFullPath = PathUtils.combineFullPath(dstDirFullPath, filename)
+                archiveFileService.copyFile(
+                    userId = userId,
+                    srcProjectId = projectId,
+                    srcArtifactoryType = srcArtifactoryType,
+                    srcFullPath = it,
+                    dstProjectId = projectId,
+                    dstArtifactoryType = dstArtifactoryType,
+                    dstFullPath = dstFullPath
+                )
+            }
+        }
+        return Result(true)
     }
 }

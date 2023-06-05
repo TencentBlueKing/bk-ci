@@ -30,10 +30,13 @@ package com.tencent.devops.process.plugin.trigger.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.process.engine.pojo.PipelineTimer
@@ -89,7 +92,12 @@ open class PipelineTimerService @Autowired constructor(
                     actionType = ActionType.TERMINATE
                 )
             )
-            Result(ERROR_SAVE_PIPELINE_TIMER.toInt(), "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
+            Result(
+                ERROR_SAVE_PIPELINE_TIMER.toInt(),
+                MessageUtil.getMessageByLocale(
+                    ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL,
+                    I18nUtil.getLanguage(userId))
+            )
         }
     }
 
@@ -110,7 +118,15 @@ open class PipelineTimerService @Autowired constructor(
                 )
             )
         }
-        return if (count > 0) Result(true) else Result(ERROR_DEL_PIPELINE_TIMER.toInt(), "删除流水线${pipelineId}定时触发调度失败！")
+        return if (count > 0) Result(true)
+        else Result(
+            ERROR_DEL_PIPELINE_TIMER.toInt(),
+            MessageUtil.getMessageByLocale(
+                ERROR_DEL_PIPELINE_TIMER,
+                I18nUtil.getLanguage(userId),
+                arrayOf(pipelineId)
+            )
+        )
     }
 
     open fun get(projectId: String, pipelineId: String): PipelineTimer? {

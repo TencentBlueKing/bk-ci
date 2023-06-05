@@ -74,7 +74,7 @@ func NewRegistry(cfg config.Config, newResolver ResolverProvider, reg prometheus
 	if err != nil {
 		return nil, err
 	}
-	logs.WithField("storePath", storePath).Info("using local filesystem to cache manifests and config")
+	logs.Info("using local filesystem to cache manifests and config", logs.String("storePath", storePath))
 	// TODO: GC the store
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -222,7 +222,7 @@ func (reg *Registry) UpdateStaticLayer(ctx context.Context, cfg []config.StaticL
 func (reg *Registry) MustServe() {
 	err := reg.Serve()
 	if err != nil {
-		logs.WithError(err).Fatal("cannot serve registry")
+		logs.Fatal("cannot serve registry", logs.Err(err))
 	}
 }
 
@@ -250,14 +250,14 @@ func (reg *Registry) Serve() error {
 	}
 
 	if reg.Config.TLS != nil {
-		logs.WithField("addr", addr).Info("HTTPS registry server listening")
+		logs.Info("HTTPS registry server listening", logs.String("addr", addr))
 
 		cert, key := reg.Config.TLS.Certificate, reg.Config.TLS.PrivateKey
 
 		return reg.srv.ServeTLS(l, cert, key)
 	}
 
-	logs.WithField("addr", addr).Info("HTTP registry server listening")
+	logs.Info("HTTP registry server listening", logs.String("addr", addr))
 	return reg.srv.Serve(l)
 }
 
@@ -318,7 +318,7 @@ func dispatcher(d dispatchFunc) http.Handler {
 		if nameRequired(r) {
 			nameRef, err := reference.WithName(getName(ctx))
 			if err != nil {
-				logs.WithError(err).WithField("nameRef", nameRef).Errorf("error parsing reference from context")
+				logs.Errorf("error parsing reference from context", logs.Err(err), logs.Any("nameRef", nameRef))
 				respondWithError(w, distribution.ErrRepositoryNameInvalid{
 					Name:   nameRef.Name(),
 					Reason: err,
@@ -344,7 +344,7 @@ func nameRequired(r *http.Request) bool {
 func respondWithError(w http.ResponseWriter, terr error) {
 	err := errcode.ServeJSON(w, terr)
 	if err != nil {
-		logs.WithError(err).WithField("orignalErr", terr).Errorf("error serving error json")
+		logs.Errorf("error serving error json", logs.Err(err), logs.Any("orignalErr", terr))
 	}
 }
 

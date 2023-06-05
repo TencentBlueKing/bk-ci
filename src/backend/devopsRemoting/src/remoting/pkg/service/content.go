@@ -78,17 +78,17 @@ func StartContentInit(
 		}
 		if f, err := os.Stat("/dev"); os.IsNotExist(err) || !f.IsDir() {
 			if err = os.MkdirAll("/dev", os.ModePerm); err != nil {
-				logs.WithError(err).Error("cannot write termination log")
+				logs.Error("cannot write termination log", logs.Err(err))
 				return
 			}
 		}
 		ferr := os.WriteFile("/dev/termination-log", []byte(err.Error()), 0o644)
 		if ferr != nil {
-			logs.WithError(err).Error("cannot write termination log")
+			logs.Error("cannot write termination log", logs.Err(err))
 			return
 		}
 
-		logs.WithError(err).Fatal("content initialization failed")
+		logs.Fatal("content initialization failed", logs.Err(err))
 	}()
 
 	err = func() error {
@@ -100,11 +100,11 @@ func StartContentInit(
 		cred, host, err := thirdApi.Server.GetUserGitCred(ctx, cfg.WorkSpace.WorkspaceId, cfg.WorkSpace.GitUsername)
 		logs.Debugf("get user git cred took %v", time.Since(start))
 		if err != nil {
-			logs.WithError(err).Errorf("request user %s git cred error", cfg.WorkSpace.GitUsername)
+			logs.Errorfw("request user %s git cred error", []any{cfg.WorkSpace.GitUsername}, logs.Err(err))
 			return err
 		}
 		if err = git.ConfigGitCred(cfg, host, cred, childProcEnvvars); err != nil {
-			logs.WithError(err).Errorf("config git cred error")
+			logs.Error("config git cred error", logs.Err(err))
 			return err
 		}
 
@@ -113,7 +113,7 @@ func StartContentInit(
 		if err == nil || os.IsExist(err) {
 			files, err := ioutil.ReadDir(cfg.WorkSpace.GitRepoRootPath)
 			if err != nil {
-				logs.WithError(err).Errorf("search git repo dir files error")
+				logs.Error("search git repo dir files error", logs.Err(err))
 				return err
 			}
 			if len(files) != 0 {
@@ -122,7 +122,7 @@ func StartContentInit(
 			}
 		} else {
 			if !os.IsNotExist(err) {
-				logs.WithError(err).Error("stat user repo dir error")
+				logs.Error("stat user repo dir error", logs.Err(err))
 				return err
 			}
 		}
@@ -158,7 +158,7 @@ func StartContentInit(
 				filepath.Join(cfg.WorkSpace.GitRepoRootPath, constant.DevfileDir, constant.DefaultDevFileName),
 				cfg.WorkSpace.WorkspaceId,
 			); err != nil {
-				logs.WithError(err).Error("download default devfile error")
+				logs.Error("download default devfile error", logs.Err(err))
 				// 没有devfile不影响主流程
 				err = nil
 			} else {
@@ -169,8 +169,6 @@ func StartContentInit(
 
 		return nil
 	}()
-	// 不论成功还是失败拉完代码后都进行上报
-	thirdApi.Server.ReportGitCloneDone(ctx, cfg.WorkSpace.WorkspaceId)
 	if err != nil {
 		return
 	}
@@ -184,7 +182,7 @@ func StartContentInit(
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			logs.WithError(err).Error("git fetch error")
+			logs.Error("git fetch error", logs.Err(err))
 		}
 	}()
 

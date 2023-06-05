@@ -1,5 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.pojo
 
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -14,5 +15,6 @@ data class EventRepositoryCache(
     var gitCompareChangeFiles: Set<String>? = null,
     var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
     var repoAuthUser: String? = null,
-    var p4ChangeFiles: List<String>? = null
+    var p4ChangeFiles: List<String>? = null,
+    val serverInfo: P4ServerInfo? = null
 )

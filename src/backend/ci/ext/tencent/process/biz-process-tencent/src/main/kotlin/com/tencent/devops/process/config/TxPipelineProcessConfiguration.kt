@@ -40,11 +40,11 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
+import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
+import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
-import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
-import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

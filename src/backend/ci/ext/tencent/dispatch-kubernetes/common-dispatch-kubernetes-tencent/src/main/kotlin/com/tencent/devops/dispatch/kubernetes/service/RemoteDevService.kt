@@ -28,17 +28,21 @@
 package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -58,7 +62,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
-        val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(userId)
+        val mountType = event.devFile.checkWorkspaceMountType()
+        val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
 
         // 记录创建历史
@@ -70,21 +75,21 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(mountType)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. $enviromentUid")
 
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(userId)
+            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "工作空间状态非RUNNING"
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                 )
             }
 
@@ -130,36 +135,36 @@ class RemoteDevService @Autowired constructor(
             }
 
             throw BuildFailureException(
-                ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
 
-    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .startWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun startWorkspace(event: WorkspaceOperateEvent): WorkspaceResponse {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .startWorkspace(event.userId, event.workspaceName)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(userId)
-                .getWorkspaceInfo(userId, workspaceName)
+            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+                .getWorkspaceInfo(event.userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.START_VM_ERROR.errorType,
-                    ErrorCodeEnum.START_VM_ERROR.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                    "工作空间状态非RUNNING"
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
+                    "The workspace state is not RUNNING"
                 )
             }
 
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.running,
                 dslContext = dslContext
             )
@@ -171,24 +176,24 @@ class RemoteDevService @Autowired constructor(
             )
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
 
-    fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .stopWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun stopWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .stopWorkspace(event.userId, event.workspaceName)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.stopped,
                 dslContext = dslContext
             )
@@ -196,24 +201,24 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.STOP_VM_ERROR.errorType,
-                ErrorCodeEnum.STOP_VM_ERROR.errorCode,
-                ErrorCodeEnum.STOP_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .deleteWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .deleteWorkspace(event.userId, event)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.deleted,
                 dslContext = dslContext
             )
@@ -221,23 +226,34 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.DELETE_VM_ERROR.errorType,
-                ErrorCodeEnum.DELETE_VM_ERROR.errorCode,
-                ErrorCodeEnum.DELETE_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
 
-    fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
-        return remoteDevServiceFactory.loadRemoteDevService(userId).getWorkspaceUrl(userId, workspaceName)
+    fun getWorkspaceUrl(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): String? {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceUrl(userId, workspaceName)
     }
 
-    fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        return remoteDevServiceFactory.loadRemoteDevService(userId).getWorkspaceInfo(userId, workspaceName)
+    fun getWorkspaceInfo(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): WorkspaceInfo {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
     }
 
-    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        return remoteDevServiceFactory.loadRemoteDevService("").workspaceTaskCallback(taskStatus)
+    fun workspaceTaskCallback(
+        taskStatus: TaskStatus,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Boolean {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 }

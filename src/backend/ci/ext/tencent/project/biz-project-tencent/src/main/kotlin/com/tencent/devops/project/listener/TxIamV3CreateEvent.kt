@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package com.tencent.devops.project.listener
-
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
-
 @Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
 data class TxIamV3CreateEvent(
     override val userId: String,

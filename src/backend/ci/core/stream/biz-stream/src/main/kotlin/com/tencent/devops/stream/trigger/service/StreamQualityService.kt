@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.util.ElementUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
@@ -77,7 +79,12 @@ class StreamQualityService @Autowired constructor(
                 CodeEventType.MERGE_REQUEST.name,
                 pipelineName,
                 StreamPipelineUtils.genStreamV2BuildUrl(
-                    homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+                    homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = STARTUP_CONFIG_MISSING,
+                            params = arrayOf(" streamUrl")
+                        )
+                    ),
                     gitProjectId = gitProjectId,
                     pipelineId = pipelineId,
                     buildId = buildId

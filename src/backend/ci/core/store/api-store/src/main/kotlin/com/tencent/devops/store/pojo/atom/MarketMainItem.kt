@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -38,5 +39,6 @@ data class MarketMainItem(
     @ApiModelProperty("标签")
     val label: String,
     @ApiModelProperty("插件列表")
+    @BkFieldI18n
     val records: List<MarketItem?>
 )

@@ -45,7 +45,7 @@ dependencies {
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":core:common:common-wechatwork"))
-    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
+    api(project(":ext:tencent:common:common-pipeline-yaml-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:prebuild:api-prebuild-tencent"))
