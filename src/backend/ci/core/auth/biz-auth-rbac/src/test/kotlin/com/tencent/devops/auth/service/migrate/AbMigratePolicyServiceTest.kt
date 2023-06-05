@@ -74,10 +74,11 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
 
         every {
             migrateResourceCodeConverter.getRbacResourceCode(
+                projectCode = any(),
                 resourceType = any(),
                 migrateResourceCode = any()
             )
-        } returnsArgument 1
+        } returnsArgument 2
 
         every {
             iamConfiguration.systemId

@@ -176,7 +176,7 @@ class QualityHistoryService @Autowired constructor(
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
-                        )
+                        ) + "\n"
                 )
             }
             val remark = sb.toString()
@@ -439,7 +439,7 @@ class QualityHistoryService @Autowired constructor(
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
-                        )
+                        ) + "\n"
                     )
             }
             val remark = sb.toString()
@@ -711,7 +711,7 @@ class QualityHistoryService @Autowired constructor(
                             "${intercept.actualValue}",
                             "$thresholdOperationName${intercept.value}"
                         )
-                    )
+                    ) + "\n"
                 )
             }
             val remark = sb.toString()

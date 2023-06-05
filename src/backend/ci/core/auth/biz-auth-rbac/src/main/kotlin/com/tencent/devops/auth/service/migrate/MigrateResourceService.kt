@@ -158,7 +158,7 @@ class MigrateResourceService @Autowired constructor(
                 resourceType = resourceType,
                 projectCode = projectCode
             )
-            logger.info("MigrateResourceService|resourceData:$resourceData")
+            logger.info("MigrateResourceService|projectCode:$projectCode|resourceData:$resourceData")
             if (resourceData == null || resourceData.data.result.isNullOrEmpty()) {
                 return
             }
@@ -173,16 +173,16 @@ class MigrateResourceService @Autowired constructor(
             }.forEach {
                 val resourceCode =
                     migrateResourceCodeConverter.getRbacResourceCode(
+                        projectCode = projectCode,
                         resourceType = resourceType,
                         migrateResourceCode = it.id
                     ) ?: return@forEach
-                logger.info("MigrateResourceService|resourceCode:$resourceCode")
+                logger.info("MigrateResourceService|projectCode:$projectCode|resourceCode:$resourceCode")
                 authResourceService.getOrNull(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    // 版本体验名称会重复,需添加上时间戳
                     val resourceName = it.displayName
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
