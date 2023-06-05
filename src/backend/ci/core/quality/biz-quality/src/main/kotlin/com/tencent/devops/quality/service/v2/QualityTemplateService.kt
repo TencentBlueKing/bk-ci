@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.RuleIndicatorSet
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplate
@@ -45,6 +45,7 @@ import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.po.QualityRuleTemplatePO
+import java.io.File
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -63,7 +64,8 @@ class QualityTemplateService @Autowired constructor(
     private val qualityControlPointDao: QualityControlPointDao,
     private val ruleTemplateIndicatorDao: QualityTemplateIndicatorMapDao,
     private val indicatorDao: QualityIndicatorDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
 
     @PostConstruct
@@ -79,7 +81,7 @@ class QualityTemplateService @Autowired constructor(
                 try {
                     logger.info("start init quality rule template")
                     val classPathResource = ClassPathResource(
-                        "ruleTemplate_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}ruleTemplate_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }

@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
@@ -45,6 +45,7 @@ import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.pojo.po.ControlPointPO
 import com.tencent.devops.quality.util.ElementUtils
+import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -63,7 +64,8 @@ class QualityControlPointService @Autowired constructor(
     private val controlPointDao: QualityControlPointDao,
     private val qualityRuleDao: QualityRuleDao,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) {
 
     @PostConstruct
@@ -79,7 +81,7 @@ class QualityControlPointService @Autowired constructor(
                 try {
                     logger.info("start init quality control point")
                     val classPathResource = ClassPathResource(
-                        "controlPoint_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}controlPoint_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }

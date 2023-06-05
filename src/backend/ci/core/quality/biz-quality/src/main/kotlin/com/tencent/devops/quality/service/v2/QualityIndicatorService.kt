@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
@@ -89,6 +90,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import java.io.File
 import java.util.Base64
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
@@ -108,7 +110,8 @@ class QualityIndicatorService @Autowired constructor(
     private val indicatorDao: QualityIndicatorDao,
     private val metadataService: QualityMetadataService,
     private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
 
     private val encoder = Base64.getEncoder()
@@ -126,7 +129,7 @@ class QualityIndicatorService @Autowired constructor(
                 try {
                     logger.info("start init quality indicator")
                     val classPathResource = ClassPathResource(
-                        "indicator_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}indicator_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }

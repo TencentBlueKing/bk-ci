@@ -63,6 +63,7 @@ import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -141,7 +142,13 @@ class PermissionGradeManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
-        val description = manageGroupConfig.description
+
+        val description = MessageUtil.getMessageByLocale(
+            messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
+                    ".AuthResourceGroupConfig.description",
+            language = I18nUtil.getDefaultLocaleLanguage(),
+            defaultMessage = manageGroupConfig.description
+        )
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
@@ -165,7 +172,14 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorization_scopes(authorizationScopes)
                 .subject_scopes(subjectScopes)
                 .sync_perm(true)
-                .groupName(manageGroupConfig.groupName)
+                .groupName(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
+                                ".AuthResourceGroupConfig.groupName",
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = manageGroupConfig.description
+                    )
+                )
                 .build()
             logger.info("create grade manager|$name|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
@@ -195,7 +209,14 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(manageGroupConfig.groupName)
+                .groupName(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
+                                ".AuthResourceGroupConfig.groupName",
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = manageGroupConfig.groupName
+                    )
+                )
                 .applicant(userId)
                 .reason(
                     IamGroupUtils.buildItsmDefaultReason(
@@ -280,7 +301,14 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(groupConfig.groupName)
+                .groupName(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                                ".AuthResourceGroupConfig.groupName",
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = groupConfig.groupName
+                    )
+                )
                 .build()
             logger.info("update grade manager|$name|${gradeManagerDetail.members}")
             iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
@@ -309,7 +337,14 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(groupConfig.groupName)
+                .groupName(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                                ".AuthResourceGroupConfig.groupName",
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = groupConfig.groupName
+                    )
+                )
                 .applicant(projectApprovalInfo.updator)
                 .members(gradeManagerDetail.members)
                 .reason(
@@ -371,8 +406,18 @@ class PermissionGradeManagerService @Autowired constructor(
             if (resourceGroupInfo != null) {
                 return@forEach
             }
-            val name = groupConfig.groupName
-            val description = groupConfig.description
+            val name = MessageUtil.getMessageByLocale(
+                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                        ".AuthResourceGroupConfig.groupName",
+                language = I18nUtil.getDefaultLocaleLanguage(),
+                defaultMessage = groupConfig.groupName
+            )
+            val description = MessageUtil.getMessageByLocale(
+                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                        ".AuthResourceGroupConfig.description",
+                language = I18nUtil.getDefaultLocaleLanguage(),
+                defaultMessage = groupConfig.description
+            )
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
