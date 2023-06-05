@@ -473,6 +473,7 @@
             ...mapActions('common', ['requestInterceptAtom']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
             renderLabel (h, name) {
+                const panel = this.panels.find(panel => panel.name === name)
                 return h(
                     'p',
                     {},
@@ -485,7 +486,7 @@
                                     click: this.setShowErrorPopup
                                 }
                             },
-                            name
+                            panel?.label ?? name
                         ),
                         h(
                             'bk-tag',
