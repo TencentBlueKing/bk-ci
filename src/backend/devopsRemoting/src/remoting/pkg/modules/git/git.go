@@ -18,7 +18,7 @@ import (
 
 // ConfigGit 配置Git
 func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
-	gitcache := []string{"credential.helper", "'cache --timeout=1296000'"}
+	gitcache := []string{"credential.helper", "cache", "--timeout", "1296000"}
 	if cfg.WorkSpace.DebugEnable {
 		gitcache = []string{"credential.helper", "store"}
 	}
