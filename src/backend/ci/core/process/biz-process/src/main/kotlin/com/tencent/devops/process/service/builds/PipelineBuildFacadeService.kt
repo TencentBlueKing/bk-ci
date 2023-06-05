@@ -2037,8 +2037,7 @@ class PipelineBuildFacadeService(
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    params = arrayOf(alreadyCancelUser ?: "")
+                    errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED
                 )
             }
 
@@ -2186,9 +2185,9 @@ class PipelineBuildFacadeService(
 
         // 添加错误码日志
         val realErrorType = ErrorType.getErrorType(simpleResult.error?.errorType)
-        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${realErrorType?.typeName?.let { it ->
-            I18nUtil.getCodeLanMessage(it)
-        }}" }
+        simpleResult.error?.errorType.let {
+            msg = "$msg \nerrorType: ${realErrorType?.getI18n(I18nUtil.getDefaultLocaleLanguage())}"
+        }
         simpleResult.error?.errorCode.let { msg = "$msg \nerrorCode: ${simpleResult.error?.errorCode}" }
         simpleResult.error?.errorMessage.let { msg = "$msg \nerrorMsg: ${simpleResult.error?.errorMessage}" }
 
@@ -2226,7 +2225,7 @@ class PipelineBuildFacadeService(
                         actionType = ActionType.TERMINATE,
                         reason = msg,
                         errorCode = simpleResult.error?.errorCode ?: 0,
-                        errorTypeName = realErrorType?.typeName?.let { I18nUtil.getCodeLanMessage(it) }
+                        errorTypeName = realErrorType?.getI18n(I18nUtil.getDefaultLocaleLanguage())
                     )
                 )
             }

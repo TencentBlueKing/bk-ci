@@ -59,6 +59,7 @@ class WorkspaceImageService @Autowired constructor(
         val specR = imageSpecConfigDao.fetchImageSpec(dslContext) ?: return null
 
         return ImageSpec(
+            id = specR.id,
             baseRef = baseImage,
             ideRef = specR.ideRef,
             remotingRef = specR.remotingRef,
@@ -89,6 +90,7 @@ class WorkspaceImageService @Autowired constructor(
     fun listImageSpecConfig(): List<ImageSpec>? {
         return imageSpecConfigDao.listImageSpec(dslContext).map {
             ImageSpec(
+                id = it.id,
                 baseRef = "",
                 ideRef = it.ideRef,
                 remotingRef = it.remotingRef,

@@ -548,10 +548,13 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据自增id获取流水线信息")
     @GET
-    @Path("/{id}/info")
+    @Path("/projects{projectId}/pipelines/{id}/info")
     fun getPipelineInfobyAutoId(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @PathParam("id")
         @ApiParam(value = "流水线自增id", required = true)
         id: Long
-    ): Result<SimplePipeline>
+    ): Result<SimplePipeline?>
 }

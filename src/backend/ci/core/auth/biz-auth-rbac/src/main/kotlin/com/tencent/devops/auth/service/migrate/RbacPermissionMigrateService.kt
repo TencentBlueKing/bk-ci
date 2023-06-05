@@ -31,33 +31,35 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
-import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.Executors
 
 /**
  * rbac迁移服务
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReturnCount")
 class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
@@ -66,96 +68,106 @@ class RbacPermissionMigrateService constructor(
     private val migrateResultService: MigrateResultService,
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
+    private val migrateCreatorFixService: MigrateCreatorFixService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao,
-    private val deptService: DeptService
+    private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "allMembersName"
-        private const val MAX_RETRY_TIMES = 3
-        private const val IAM_NAME_CONFLICT_ERROR = 1902409L
-        private val executorService = Executors.newFixedThreadPool(2)
+        private val toRbacExecutorService = Executors.newFixedThreadPool(5)
+        private val migrateProjectsExecutorService = Executors.newFixedThreadPool(5)
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
-        logger.info("migrate $migrateProjects auth from v3 to rbac")
-        val dbProjectVos =
+    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
+        logger.info("migrate $projectCodes auth from v3 to rbac")
+        if (projectCodes.isEmpty()) return true
+        val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(
-                projectCodes = migrateProjects.map { it.projectCode }.toSet()
+                projectCodes = projectCodes.toSet()
             ).data ?: run {
                 logger.info("migrate project info is empty")
                 return false
             }
-        return v3ToRbacAuth(
-            migrateProjects = migrateProjects,
-            dbProjectVos = dbProjectVos
-        )
-    }
-
-    private fun v3ToRbacAuth(
-        migrateProjects: List<MigrateProjectDTO>,
-        dbProjectVos: List<ProjectVO>
-    ): Boolean {
-        val migrateProjectRelationIds = dbProjectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
+        val migrateProjectRelationIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = migrateProjectRelationIds
         )
-        return migrateProjects.map { migrateProject ->
-            migrateToRbacAuth(
-                migrateProject = migrateProject,
-                migrateTaskId = 0,
-                authType = AuthSystemType.V3_AUTH_TYPE
-            )
-        }.all { it }
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectCodes.forEach { projectCode ->
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateToRbacAuth(
+                    projectCode = projectCode,
+                    migrateTaskId = 0,
+                    authType = AuthSystemType.V3_AUTH_TYPE
+                )
+            }
+        }
+        return true
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
-        logger.info("migrate $migrateProjects auth from v0 to rbac")
+    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
+        logger.info("migrate $projectCodes auth from v0 to rbac")
+        if (projectCodes.isEmpty()) return true
         // 1. 启动迁移任务
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
-            projectCodes = migrateProjects.map { it.projectCode }
+            projectCodes = projectCodes
         )
-        return migrateProjects.map { migrateProject ->
-            migrateToRbacAuth(
-                migrateProject = migrateProject,
-                migrateTaskId = migrateTaskId,
-                authType = AuthSystemType.V0_AUTH_TYPE
-            )
-        }.all { it }
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectCodes.forEach { projectCode ->
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateToRbacAuth(
+                    projectCode = projectCode,
+                    migrateTaskId = migrateTaskId,
+                    authType = AuthSystemType.V0_AUTH_TYPE
+                )
+            }
+        }
+        return true
     }
 
     override fun allToRbacAuth(): Boolean {
-        executorService.submit {
+        logger.info("start to migrate all project")
+        toRbacAuthByCondition(MigrateProjectConditionDTO())
+        return true
+    }
+
+    override fun toRbacAuthByCondition(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Boolean {
+        logger.info("start to migrate project by condition|$migrateProjectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        toRbacExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 50
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
                 val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = migrateProjectConditionDTO,
                     limit = limit,
                     offset = offset
                 ).data ?: break
-                val v3MigrateProjects =
+                // 1.获取v0、v3项目
+                val v3MigrateProjectCodes =
                     migrateProjects.filter {
-                        it.routerTag == null ||
-                            it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
-                    }.map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
-                logger.info("migrate all project to rbac|v3MigrateProjects:$v3MigrateProjects")
-                val v0MigrateProjects =
+                        it.routerTag == null || it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
+                    }.map { it.englishName }
+                logger.info("migrate project to rbac|v3MigrateProjects:$v3MigrateProjectCodes")
+                val v0MigrateProjectCodes =
                     migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
-                        .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
-                logger.info("migrate all project to rbac|v0MigrateProjects:$v0MigrateProjects")
-                if (v3MigrateProjects.isNotEmpty()) {
-                    v3ToRbacAuth(migrateProjects = v3MigrateProjects)
-                }
-                if (v0MigrateProjects.isNotEmpty()) {
-                    v0ToRbacAuth(migrateProjects = v0MigrateProjects)
-                }
+                        .map { it.englishName }
+                logger.info("migrate project to rbac|v0MigrateProjects:$v0MigrateProjectCodes")
+                // 2.迁移项目
+                v3ToRbacAuth(projectCodes = v3MigrateProjectCodes)
+                v0ToRbacAuth(projectCodes = v0MigrateProjectCodes)
                 offset += limit
             } while (migrateProjects.size == limit)
         }
@@ -164,11 +176,10 @@ class RbacPermissionMigrateService constructor(
 
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
-        migrateProject: MigrateProjectDTO,
+        projectCode: String,
         migrateTaskId: Int,
         authType: AuthSystemType
     ): Boolean {
-        val projectCode = migrateProject.projectCode
         logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
         val watcher = Watcher("migrateToRbacAuth|$projectCode")
@@ -198,11 +209,19 @@ class RbacPermissionMigrateService constructor(
                 status = AuthMigrateStatus.PENDING.value,
                 routerTag = authType.value
             )
-            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
-            val iamApprover = buildResourceCreator(
-                approver = migrateProject.approver,
-                projectCreator = projectInfo.creator!!
-            )
+            val projectCreator = migrateCreatorFixService.getProjectCreator(
+                projectCode = projectCode,
+                authSystemType = authType,
+                projectCreator = projectInfo.creator!!,
+                projectUpdator = projectInfo.updator
+            ) ?: run {
+                logger.warn("project($projectCode) creator(${projectInfo.creator}) not exist")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
+                    defaultMessage = "project($projectCode) creator(${projectInfo.creator}) not exist"
+                )
+            }
+            logger.info("project creator is $projectCreator")
             // 创建分级管理员
             watcher.start("createGradeManager")
             val gradeManagerId = authResourceService.getOrNull(
@@ -213,7 +232,7 @@ class RbacPermissionMigrateService constructor(
                 createGradeManager(
                     projectCode = projectCode,
                     projectInfo = projectInfo,
-                    iamApprover = iamApprover
+                    projectCreator = projectCreator
                 )
             } ?: run {
                 logger.warn("project $projectCode gradle manager not found")
@@ -226,7 +245,7 @@ class RbacPermissionMigrateService constructor(
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
                 projectCode = projectCode,
-                iamApprover = iamApprover
+                projectCreator = projectCreator
             )
 
             when (authType) {
@@ -236,6 +255,7 @@ class RbacPermissionMigrateService constructor(
                         projectName = projectInfo.projectName,
                         migrateTaskId = migrateTaskId,
                         gradeManagerId = gradeManagerId,
+                        version = authType.value,
                         watcher = watcher
                     )
                 }
@@ -244,6 +264,7 @@ class RbacPermissionMigrateService constructor(
                         projectCode = projectCode,
                         projectName = projectInfo.projectName,
                         gradeManagerId = gradeManagerId,
+                        version = authType.value,
                         watcher = watcher
                     )
                 }
@@ -275,9 +296,9 @@ class RbacPermissionMigrateService constructor(
                 totalTime = System.currentTimeMillis() - startEpoch
             )
             return true
-        } catch (exception: Exception) {
+        } catch (ignored: Exception) {
             handleException(
-                exception = exception,
+                exception = ignored,
                 projectCode = projectCode,
                 authType = authType.value
             )
@@ -291,6 +312,7 @@ class RbacPermissionMigrateService constructor(
     private fun migrateV3Auth(
         projectCode: String,
         projectName: String,
+        version: String,
         gradeManagerId: Int,
         watcher: Watcher
     ) {
@@ -301,12 +323,14 @@ class RbacPermissionMigrateService constructor(
         migrateV3PolicyService.migrateGroupPolicy(
             projectCode = projectCode,
             projectName = projectName,
+            version = version,
             gradeManagerId = gradeManagerId
         )
         // 迁移用户自定义权限
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
-            projectCode = projectCode
+            projectCode = projectCode,
+            version = version
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -318,6 +342,7 @@ class RbacPermissionMigrateService constructor(
         projectName: String,
         migrateTaskId: Int,
         gradeManagerId: Int,
+        version: String,
         watcher: Watcher
     ) {
         // 轮询任务状态
@@ -327,12 +352,14 @@ class RbacPermissionMigrateService constructor(
         migrateV0PolicyService.migrateGroupPolicy(
             projectCode = projectCode,
             projectName = projectName,
+            version = version,
             gradeManagerId = gradeManagerId
         )
         // 迁移用户自定义权限
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
-            projectCode = projectCode
+            projectCode = projectCode,
+            version = version
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -342,48 +369,22 @@ class RbacPermissionMigrateService constructor(
     private fun createGradeManager(
         projectCode: String,
         projectInfo: ProjectVO,
-        iamApprover: String
+        projectCreator: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        val resourceName = projectInfo.projectName
-        for (suffix in 0..MAX_RETRY_TIMES) {
-            try {
-                permissionResourceService.resourceCreateRelation(
-                    userId = iamApprover,
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
-                    async = false
-                )
-                break
-            } catch (iamException: IamException) {
-                if (iamException.errorCode != IAM_NAME_CONFLICT_ERROR) throw iamException
-                if (suffix == MAX_RETRY_TIMES) throw iamException
-            }
-        }
+        permissionResourceService.resourceCreateRelation(
+            userId = projectCreator,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectInfo.projectName,
+            async = false
+        )
         return authResourceService.getOrNull(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         )?.relationId?.toInt()
-    }
-
-    private fun buildResourceCreator(
-        approver: String?,
-        projectCreator: String
-    ): String {
-        val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
-            userId = "admin",
-            name = projectCreator
-        ) == null
-        if (isDbProjectCreatorLeaveOffice && approver == null) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
-                defaultMessage = "project creator not exist $projectCreator"
-            )
-        }
-        return approver ?: projectCreator
     }
 
     private fun handleException(
