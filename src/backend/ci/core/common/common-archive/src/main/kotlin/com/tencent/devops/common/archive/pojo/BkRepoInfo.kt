@@ -20,7 +20,7 @@ data class BkRepoInfo(
     @ApiModelProperty("版本数量")
     val versions: Long,
     @ApiModelProperty("简要描述")
-    val description: String,
+    val description: String?,
     @ApiModelProperty("创建者")
     val createdBy: String,
     @ApiModelProperty("创建时间")

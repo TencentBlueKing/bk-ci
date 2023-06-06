@@ -281,7 +281,9 @@ class BkRepoClient constructor(
             .header(AUTH_HEADER_IAM_TOKEN, headers)
             .get()
             .build()
-        logger.info("")
+        logger.info("request: ${doRequest(request)}")
+        logger.info("before data: ${doRequest(request).resolveResponse<Response<QueryData>>()}")
+        logger.info("data: ${doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!}")
         return doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!
     }
     fun listFilePage(
@@ -1119,8 +1121,6 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        logger.info("before data: ${doRequest(request).resolveResponse<Response<QueryData>>()}")
-        logger.info("data: ${doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!}")
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
