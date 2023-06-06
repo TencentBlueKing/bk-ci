@@ -43,14 +43,14 @@ data class QueryLogs(
     var finished: Boolean,
     @ApiModelProperty("是否有后续日志", required = false)
     var hasMore: Boolean? = false,
-    @ApiModelProperty("是否已被清理", required = true)
-    var cleaned: Boolean? = false,
     @ApiModelProperty("日志列表", required = true)
     var logs: MutableList<LogLine> = mutableListOf(),
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
+    @ApiModelProperty("日志子tag列表", required = false)
+    var subTags: List<String>? = null,
+    @ApiModelProperty("错误信息", required = false)
+    var message: List<String>? = null
 )

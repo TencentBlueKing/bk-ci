@@ -595,10 +595,18 @@ class LogServiceLuceneImpl constructor(
         )
         val indexName = indexService.getBuildIndexName(buildId)
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
-        val cleaned = indexService.getBuildIndexName(buildId) == null
+        val (status, msg) = if (indexService.getBuildIndexName(buildId) == null) {
+            Pair(LogStatus.CLEAN, null)
+        } else {
+            Pair(LogStatus.SUCCEED, null)
+        }
         return Pair(
             QueryLogs(
-                buildId = buildId, finished = logStatus, cleaned = cleaned, subTags = subTags
+                buildId = buildId,
+                finished = logStatus,
+                status = status.status,
+                subTags = subTags,
+                message = msg
             ),
             indexName
         )
