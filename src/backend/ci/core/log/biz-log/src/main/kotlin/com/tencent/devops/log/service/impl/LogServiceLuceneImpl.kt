@@ -29,6 +29,7 @@ package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.log.constant.LogMessageCode
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -36,6 +37,7 @@ import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -596,7 +598,10 @@ class LogServiceLuceneImpl constructor(
         val indexName = indexService.getBuildIndexName(buildId)
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
         val (status, msg) = if (indexService.getBuildIndexName(buildId) == null) {
-            Pair(LogStatus.CLEAN, null)
+            Pair(
+                LogStatus.CLEAN,
+                I18nUtil.getCodeLanMessage(LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED)
+            )
         } else {
             Pair(LogStatus.SUCCEED, null)
         }
