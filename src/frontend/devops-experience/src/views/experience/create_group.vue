@@ -46,6 +46,7 @@
                         </bk-tab-panel>
                         <header class="group-importer-header">
                             <bk-select
+                                placeholder="请选择"
                                 :value="importType"
                                 @selected="handleImportTypeSelected"
                                 :loading="loadingGroup"
@@ -104,6 +105,7 @@
                         />
                         <bk-table-column
                             label="操作"
+                            width="80"
                         >
                             <template slot-scope="props">
                                 <bk-button theme="primary" text @click="remove(props.row)">移除</bk-button>
@@ -128,12 +130,7 @@
 <script>
     import OrgnizationSelector from '@/components/OrgnizationSelector'
     import { mapActions, mapGetters } from 'vuex'
-    const userTypeEnum = [
-        'unknow',
-        '内部人员',
-        '外部人员',
-        '内部组织'
-    ]
+
     export default {
         components: {
             OrgnizationSelector
@@ -192,13 +189,20 @@
                 }]
             },
             manualOptions () {
-                return userTypeEnum.map((item, index) => {
-                    return {
-                        id: index,
-                        name: item,
-                        hidden: index === 0
+                return [
+                    {
+                        id: 1,
+                        name: '内部人员'
+                    },
+                    {
+                        id: 3,
+                        name: '内部组织'
+                    },
+                    {
+                        id: 2,
+                        name: '外部人员'
                     }
-                }).filter(item => !item.hidden)
+                ]
             },
             isManual () {
                 return this.activeTab === 'manual'
@@ -207,10 +211,10 @@
                 return this.isManual ? this.manualOptions : this.userGroupList
             },
             typeFilters () {
-                return userTypeEnum.slice(1).map((item, index) => {
+                return this.manualOptions.map(item => {
                     return {
-                        text: item,
-                        value: index
+                        text: item.name,
+                        value: item.id
                     }
                 })
             },
@@ -246,7 +250,6 @@
                             listeners: {
                                 input: (org) => {
                                     this.innerOrg = org
-                                    console.log(this.innerOrg)
                                 }
                             }
                         }
@@ -268,7 +271,7 @@
                     default:
                         return {
                             props: {
-                                placeholder: '全公司人员有效',
+                                placeholder: !this.isManual ? '请从左侧选择已有用户组' : '请输入',
                                 disabled: !this.isManual,
                                 value: this.innerUsers
                             },
@@ -281,10 +284,11 @@
                 }
             },
             userList () {
+                const start = (this.pagination.current - 1) * this.pagination.limit
                 return this.createGroupForm.members.map(item => ({
                     ...item,
-                    typeLabel: userTypeEnum[item.type]
-                }))
+                    typeLabel: this.manualOptions.find(opt => opt.id === item.type)?.name ?? 'unknow'
+                })).slice(start, start + this.pagination.limit)
             },
             memberNames () {
                 return this.createGroupForm.members.map(item => item.name)
@@ -300,7 +304,7 @@
             }
         },
         watch: {
-            'userList.length': function (len) {
+            'createGroupForm.members.length': function (len) {
                 this.pagination.count = len
             },
             visible (val) {
@@ -380,7 +384,7 @@
             },
             handleTabChange (_) {
                 if (!this.isManual) {
-                    this.importType = 0
+                    this.importType = undefined
                     this.requestGroups()
                 } else {
                     this.importType = 1
@@ -392,16 +396,14 @@
                 this.pagination.limit = limit
             },
             handlePageChange (page) {
+                console.log(123, page, this.pagination)
                 this.pagination.current = page
             },
             handleImportTypeSelected (value) {
                 const option = this.importTypeList.find(item => item.id === value)
                 this.importType = value
                 if (!this.isManual) {
-                    this.innerUsers = Array.from(new Set([
-                        ...this.innerUsers,
-                        ...option.users
-                    ]))
+                    this.innerUsers = option.users
                     return
                 }
                 this.innerUsers = []
@@ -409,7 +411,7 @@
             },
             async handlerAddUser () {
                 switch (this.importType) {
-                    case 3:
+                    case 3: {
                         if (this.userSet.has(this.innerOrg?.name)) {
                             this.$bkMessage({
                                 message: `内部组织${this.innerOrg.name}已存在`,
@@ -418,20 +420,23 @@
                             this.innerOrg = null
                             return
                         }
+                        const fullName = this.getOrgFullName(this.innerOrg)
                         this.handleGroupFieldChange(
                             'members',
                             [
                                 {
-                                    name: this.innerOrg.name,
+                                    name: fullName,
                                     id: this.innerOrg.id,
                                     type: 3,
-                                    deptFullName: this.innerOrg.name
+                                    deptFullName: fullName
                                 },
                                 ...this.createGroupForm.members
                             ]
                         )
                         this.innerOrg = null
                         break
+                    }
+                        
                     case 2: {
                         const list = this.outerUsers.filter(item => !this.userSet.has(item)).map(item => ({
                             name: item,
@@ -486,7 +491,7 @@
                                 })
                             }
                             this.innerUsers = []
-                            !this.isManual && (this.importType = 0)
+                            !this.isManual && (this.importType = undefined)
                         } catch (error) {
                             
                         } finally {
@@ -500,6 +505,16 @@
                     'members',
                     this.createGroupForm.members.filter(item => item.name !== row.name)
                 )
+            },
+            getOrgFullName (org) {
+                const arr = [org.name]
+                let temp = org
+                while (temp.parent !== null) {
+                    temp = temp.parent
+                    arr.unshift(temp.name)
+                }
+                console.log(arr)
+                return arr
             },
             async handleSubmit () {
                 let message, theme
