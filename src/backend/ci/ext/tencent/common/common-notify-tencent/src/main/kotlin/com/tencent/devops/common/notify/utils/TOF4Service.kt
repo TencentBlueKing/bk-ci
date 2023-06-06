@@ -124,7 +124,7 @@ class TOF4Service @Autowired constructor(
         postData: EmailNotifyPost,
         tofConfig: Map<String, String>
     ): TOFResult {
-        logger.info("postData:$postData")
+        logger.info("postData:${postData.to}")
         if (postData.to.isBlank()) {
             logger.warn("TOF invalid argument, email receivers is empty")
             return TOFResult("TOF invalid argument, email receivers is empty")
@@ -144,7 +144,7 @@ class TOF4Service @Autowired constructor(
             "Priority" to postData.priority,
             "BodyFormat" to postData.bodyFormat.toString()
         )
-        logger.info("params:$params")
+        logger.info("params:${params["To"]}")
 
         val taskBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -157,7 +157,6 @@ class TOF4Service @Autowired constructor(
             .addFormDataPart("Title", params["Title"]!!)
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
-        logger.info("taskBody:$taskBody")
         postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)
