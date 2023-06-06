@@ -155,7 +155,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.title = wechatTemplate.title
                     this.sender = wechatTemplate.sender
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }

@@ -13,7 +13,7 @@
     title: "研发商店插件成员添加通知"
     body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您添加为该插件的成员"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 1
   id: "15a1e5f8642c4d7196270329531bf4cb"
   templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
@@ -33,7 +33,7 @@
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
     body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由:  \n${suggest} \n[电脑端点击](${reviewUrl}) \n[手机端点击](${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 2
   id: "168b9b44b7104647b2102355180a2837"
   templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
@@ -49,7 +49,7 @@
     title: "【${projectName}】项目流水线实例更新"
     body: "您在【${projectName}】项目下已成功更新${successPipelineNum}条实例: \n${successPipelineMsg}\n其中${failurePipelineNum}条实例更新失败: \n${failurePipelineMsg}\n\n查看详情: ${instanceListUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 3
   id: "1be5b658d4aa465a9f9a1d0af44c8384"
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
@@ -65,7 +65,7 @@
     title: "【蓝盾质量红线】拦截通知-待审核"
     body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 4
   id: "1dd8f74e334e4c41a20f4187b4e0e992"
   templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
@@ -81,7 +81,7 @@
     title: "研发商店扩展【${name}】V${version} 成功发布"
     body: "\n研发商店扩展【${name}】V${version} 成功发布"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 5
   id: "20e4ac3f11ff4866b95a82b30b9032a1"
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
@@ -96,7 +96,7 @@
     title: "【蓝盾研发商店】评论通知"
     body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 6
   id: "2d8c427026b049dc98630507f5e3fa38"
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
@@ -112,7 +112,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
     body: "✔️${successContent}\n查看详情:${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 7
   id: "2e9227b122024a5a83c46a9f41b94aad"
   templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
@@ -127,7 +127,7 @@
     title: "【蓝盾研发商店】评论通知"
     body: "${userId} 在 ${storeName} 回复了 ${replyToUser}\n${replyContent}//@${replyToUser}: ${replyComment}\n[去回复 | ${url}]"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 8
   id: "30c94a920c79453da784124ab41fb068"
   templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
@@ -137,7 +137,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 9
   id: "37ef4157cc254021ac7278b70f211f5e"
   templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
@@ -158,7 +158,7 @@
     title: "${content}"
     body: "审核说明: \n${reviewDesc} \n电脑端: [去审核](${reviewUrl}) \n手机端: [去审核](${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 10
   id: "3a39413a67bf404184dbd4e9309ebeb8"
   templateCode: "QUALITY_NOTIFY_TEMPLATE"
@@ -174,7 +174,7 @@
     title: "【蓝盾质量红线】审核通知"
     body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 11
   id: "3ea6c5e18d4b41a3890a150d1df16f4d"
   templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
@@ -189,7 +189,7 @@
     title: "${imageCode}(${imageVersion}) 镜像执行异常"
     body: "[查看构建链接|${url}] ${userId} 的 ${projectCode} 项目下的 ${imageCode}(${imageVersion}) 镜像执行异常，pipelineId:${pipelineId},buildId:${buildId}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 12
   id: "3fbf09f0511b424ab4480e18d6674349"
   templateCode: "STREAM_V2_BUILD_TEMPLATE"
@@ -199,7 +199,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 13
   id: "4589771c46b248079444a0e18e46a3fe"
   templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -215,7 +215,7 @@
     title: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
     body: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 14
   id: "502f34f94a0d4bc7abe7c55f4e93da46"
   templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
@@ -230,7 +230,7 @@
     title: "流水线【${pipelineName}】触发器回调注册失败"
     body: "你刚刚保存的流水线【${pipelineName}】触发器回调注册失败，失败原因: ${elementNames}查看详情: ${pipelineEditUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 15
   id: "698634fd3bae40378eeb24c8d6a5c91c"
   templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -246,7 +246,7 @@
     title: "研发商店模板【${name}】V${version} 审核不通过"
     body: "研发商店模板【${name}】V${version} 审核不通过"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 16
   id: "6a3db6f561f44d4895518e881a3cb53b"
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
@@ -262,7 +262,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
     body: "❌${failContent}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 17
   id: "6c00ffb0de6f485eb301940ca639d04d"
   templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -278,7 +278,7 @@
     title: "研发商店模板【${name}】审核通过，成功发布"
     body: "研发商店模板【${name}】审核通过，成功发布"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 18
   id: "7a64b8cd997b49858964ac34079bf234"
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
@@ -294,7 +294,7 @@
     title: "【蓝盾质量红线】审核通知"
     body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 19
   id: "7dee6377c27344818836ef1f035a14d1"
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
@@ -309,7 +309,7 @@
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
     body: "当前构建需人工审核通过后才执行后续流程，请耐心等待审核，或联系审核人${reviewers}处理。\n${reviewDesc} \n电脑端点击 ${reviewUrl} \n手机端点击 ${reviewAppUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 20
   id: "91fb62ef51a24266ae0946112e094190"
   templateCode: "GITCI_V2_BUILD_TEMPLATE"
@@ -319,7 +319,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 21
   id: "92055af946b64850a193e1090865642e"
   templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
@@ -329,7 +329,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 22
   id: "92c4e65e4cd2432eb326789ce503d698"
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
@@ -345,7 +345,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
     body: "❌${failContent}\n\n查看详情:${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 23
   id: "96c0a1adaca7428eb0b2d69820923d52"
   templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -361,7 +361,7 @@
     title: "研发商店扩展【${name}】V${version} 审核不通过"
     body: "研发商店扩展【${name}】V${version} 审核不通过，驳回原因: ${serviceStatusMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 24
   id: "a9b46a21ed7949ddb946e5186b9102c1"
   templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
@@ -377,7 +377,7 @@
     title: "研发商店扩展【${name}】V${version} 发布失败"
     body: "研发商店扩展【${name}】V${version} 发布失败"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 25
   id: "bf0ca37469cf448a86875bb2f11517c5"
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
@@ -393,7 +393,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
     body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行查看详情:${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 26
   id: "cbdd75de2c7f40a6a3bc1dfd909020a7"
   templateCode: "STORE_MEMBER_DELETE_ATOM"
@@ -409,7 +409,7 @@
     title: "研发商店插件成员移除通知"
     body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您从该插件的成员列表中移除"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 27
   id: "cd7cecc126744f13a60d655d0af116af"
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
@@ -425,7 +425,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
     body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 28
   id: "cff00f19e6884862b6f9afe0f608e91e"
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
@@ -441,7 +441,7 @@
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
     body: "✔️${successContent}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 29
   id: "d58e5895dfab4136ac898d93e3bff3ac"
   templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
@@ -457,7 +457,7 @@
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建触发审核"
     body: "触发人: ${triggerUser}\n\n审核人: ${reviewers}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 30
   id: "d77a91dd09994c54b14f118956e0d6e9"
   templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
@@ -472,7 +472,7 @@
     title: "蓝盾流水线【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 构建暂停"
     body: "【${BK_CI_PROJECT_NAME_CN}】-【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 在执行【${taskName}】前暂停，触发人: ${BK_CI_START_USER_ID}[去处理 | ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 31
   id: "d7d9e1a773fe4a658f6c51b80da282ea"
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
@@ -488,7 +488,7 @@
     title: "【蓝盾质量红线】拦截通知"
     body: "${pipelineName}(#${buildNo})被拦截\n所属项目: ${projectName}\n拦截时间: ${time}\n拦截指标: ${thresholdListString}\n详情链接: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 32
   id: "dff46cd92eab458b96b25be0d7a61054"
   templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -504,7 +504,7 @@
     title: "研发商店插件【${name}】V${version} 审核不通过"
     body: "研发商店插件【${name}】V${version} 审核不通过"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 33
   id: "e961fd2ccc1c4f5d8eefaac9d51b5cb0"
   templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -520,7 +520,7 @@
     title: "研发商店插件【${name}】V${version} 审核通过，成功发布"
     body: "研发商店插件【${name}】V${version} 审核通过，成功发布"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 34
   id: "ea98239a51a74f8db0a012a809bc1116"
   templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -536,7 +536,7 @@
     title: "研发商店镜像【${name}】V${version} 审核不通过"
     body: "研发商店镜像【${name}】V${version} 审核不通过，驳回原因: ${imageStatusMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 35
   id: "f0663e7ac2b74130ada0408bdce8cd20"
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
@@ -552,7 +552,7 @@
     title: "【蓝盾质量红线】拦截通知-已终止"
     body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 36
   id: "f0949ab70cc04aa5b1bc787d5a47eba7"
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
@@ -573,7 +573,7 @@
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
     body: "构建状态为stage sucess，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 37
   id: "f5c17a3f5dcd4c9ea7cf7a16a16e7135"
   templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
@@ -589,7 +589,7 @@
     title: "【蓝盾研发商店】协作申请被驳回"
     body: "流水线插件【${atomName}】的管理员【${atomAdmin}】驳回了你的协作申请,驳回原因: ${approveMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 38
   id: "1e7864726dd04311b21019bcceddfee8"
   templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
@@ -604,4 +604,4 @@
     title: "蓝盾流水线回调接口异常"
     body: "项目【${projectName}】所注册的【${events}】事件回调接口【${callbackUrl}】因多次调用失败，现已被禁用\n流水线链接：${pipelineListUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"

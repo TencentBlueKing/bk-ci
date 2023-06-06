@@ -13,7 +13,7 @@
     title: "Add notification to atom members of the  store"
     body: "The administrator of the [${storeName}] atom of the  store [${storeAdmin}] has added you as a member of the atom"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 1
   id: "15a1e5f8642c4d7196270329531bf4cb"
   templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
@@ -33,7 +33,7 @@
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
     body: "The build has been rejected by \"${rejectUserId}\" with a pipeline status of \"Stage successful\".\nReasons for rejection:\n${suggest}\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 2
   id: "168b9b44b7104647b2102355180a2837"
   templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
@@ -49,7 +49,7 @@
     title: "[${projectName}] Project pipeline instance update"
     body: "You have successfully updated ${successPipelineNum} instances under the [${projectName}] project:\n${successPipelineMsg}\nAmong them, ${failurePipelineNum} instances failed to update:\n${failurePipelineMsg}\n\nView details: ${instanceListUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 3
   id: "1be5b658d4aa465a9f9a1d0af44c8384"
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
@@ -65,7 +65,7 @@
     title: "[BK-CI quality Red Line] Intercept Notification-to be reviewed"
     body: "${title}\nProject: ${projectName}\nTrigger: ${cc}\nIntercept time: ${time}\n${result}\nPipeline link: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 4
   id: "1dd8f74e334e4c41a20f4187b4e0e992"
   templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
@@ -81,7 +81,7 @@
     title: "The  store extension [${name}] V$ {version} has been successfully released"
     body: "\nThe  store extension [${name}] V$ {version} has been successfully released"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 5
   id: "20e4ac3f11ff4866b95a82b30b9032a1"
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
@@ -96,7 +96,7 @@
     title: "[BK-CI  Store] comment notice"
     body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 6
   id: "2d8c427026b049dc98630507f5e3fa38"
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
@@ -112,7 +112,7 @@
     title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️ ${successContent}\nView details: ${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 7
   id: "2e9227b122024a5a83c46a9f41b94aad"
   templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
@@ -127,7 +127,7 @@
     title: "[BK-CI  Store] comment notice"
     body: "${userId} replied to ${replyToUser} on ${storeName}\n${replyContent} / / @ ${replyToUser}: ${replyComment}\n[reply | ${url}]"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 8
   id: "30c94a920c79453da784124ab41fb068"
   templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
@@ -137,7 +137,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 9
   id: "37ef4157cc254021ac7278b70f211f5e"
   templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
@@ -158,7 +158,7 @@
     title: "${content}"
     body: "Audit description:\n${reviewDesc}\nComputer side: [to audit] (${reviewUrl})\nMobile: [check] (${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 10
   id: "3a39413a67bf404184dbd4e9309ebeb8"
   templateCode: "QUALITY_NOTIFY_TEMPLATE"
@@ -174,7 +174,7 @@
     title: "[blue Shield quality Red Line] Audit notice"
     body: "${pipelineName} (# ${buildNo}) is blocked and needs to be audited\nProject: ${projectName}\nIntercept time: ${time} ${result}\nAudit link: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 11
   id: "3ea6c5e18d4b41a3890a150d1df16f4d"
   templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
@@ -189,7 +189,7 @@
     title: "${imageCode} (${imageVersion}) Image execution exception"
     body: "[view build link | ${url}] ${projectCode} under the ${projectCode} project of ${imageCode} (${imageVersion}) image execution exception, pipelineId:$ {pipelineId}, buildId:$ {buildId}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 12
   id: "3fbf09f0511b424ab4480e18d6674349"
   templateCode: "STREAM_V2_BUILD_TEMPLATE"
@@ -199,7 +199,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 13
   id: "4589771c46b248079444a0e18e46a3fe"
   templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -215,7 +215,7 @@
     title: "The  store image [${name}] V$ {version} has been approved and released successfully"
     body: "The  store image [${name}] V$ {version} has been approved and released successfully"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 14
   id: "502f34f94a0d4bc7abe7c55f4e93da46"
   templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
@@ -230,7 +230,7 @@
     title: "pipeline【${pipelineName}】Trigger callback registration failed"
     body: "The pipeline you just saved【${pipelineName}】Trigger callback registration failed，Reason for failure: ${elementNames}See details: ${pipelineEditUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 15
   id: "698634fd3bae40378eeb24c8d6a5c91c"
   templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -246,7 +246,7 @@
     title: " store template [${name}] V$ {version} failed approval"
     body: " store template [${name}] V$ {version} failed approval"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 16
   id: "6a3db6f561f44d4895518e881a3cb53b"
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
@@ -262,7 +262,7 @@
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌${failContent}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 17
   id: "6c00ffb0de6f485eb301940ca639d04d"
   templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -278,7 +278,7 @@
     title: "The  store template [${name}] has been approved and released successfully."
     body: "The  store template [${name}] has been approved and released successfully."
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 18
   id: "7a64b8cd997b49858964ac34079bf234"
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
@@ -294,7 +294,7 @@
     title: "[blue Shield quality Red Line] Audit notice"
     body: "${pipelineName} (# ${buildNo}) is blocked and needs to be audited\nProject: ${projectName}\nIntercept time: ${time} ${result}\nAudit link: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 19
   id: "7dee6377c27344818836ef1f035a14d1"
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
@@ -309,7 +309,7 @@
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
     body: "The current build needs to be manually approved before the follow-up process is carried out. Please wait patiently for the audit, or contact the auditor ${reviewers} for processing.\n${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 20
   id: "91fb62ef51a24266ae0946112e094190"
   templateCode: "GITCI_V2_BUILD_TEMPLATE"
@@ -319,7 +319,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 21
   id: "92055af946b64850a193e1090865642e"
   templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
@@ -329,7 +329,7 @@
   priority: 0
   source: 0
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 22
   id: "92c4e65e4cd2432eb326789ce503d698"
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
@@ -345,7 +345,7 @@
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌ ${failContent}\n\nView details: ${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 23
   id: "96c0a1adaca7428eb0b2d69820923d52"
   templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -361,7 +361,7 @@
     title: " store extension [${name}] V$ {version} failed audit"
     body: " store extension [${name}] V$ {version} failed audit, rejected reason: ${serviceStatusMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 24
   id: "a9b46a21ed7949ddb946e5186b9102c1"
   templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
@@ -377,7 +377,7 @@
     title: "Failed to release  store extension [${name}] V$ {version}"
     body: "Failed to release  store extension [${name}] V$ {version}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 25
   id: "bf0ca37469cf448a86875bb2f11517c5"
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
@@ -393,7 +393,7 @@
     title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} starts execution"
     body: "[${projectName}]-[${pipelineName}] # ${buildNum} start to view details: ${detailUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 26
   id: "cbdd75de2c7f40a6a3bc1dfd909020a7"
   templateCode: "STORE_MEMBER_DELETE_ATOM"
@@ -409,7 +409,7 @@
     title: "Notification of removal of atom members in  store"
     body: "The administrator of the  store's [${storeName}] atom [${storeAdmin}] has removed you from the list of members of the atom"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 27
   id: "cd7cecc126744f13a60d655d0af116af"
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
@@ -425,7 +425,7 @@
     title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} starts execution"
     body: "[${projectName}]-[${pipelineName}] # ${buildNum} start execution"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 28
   id: "cff00f19e6884862b6f9afe0f608e91e"
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
@@ -441,7 +441,7 @@
     title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️${successContent}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 29
   id: "d58e5895dfab4136ac898d93e3bff3ac"
   templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
@@ -457,7 +457,7 @@
     title: "Pipeline [${pipelineName}] # ${buildNum} build under project [${projectName}] triggers audit"
     body: "Trigger: ${triggerUser}\n\nAuditor: ${reviewers}\n\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 30
   id: "d77a91dd09994c54b14f118956e0d6e9"
   templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
@@ -472,7 +472,7 @@
     title: "Blue Shield pipeline [${BK_CI_PIPELINE_NAME}] # ${BK_CI_BUILD_NUM} construction paused"
     body: "[${BK_CI_PROJECT_NAME_CN}]-[${BK_CI_PIPELINE_NAME}] # ${BK_CI_BUILD_NUM} paused before executing [${taskName}], triggered by: ${BK_CI_START_USER_ID} [to handle | ${url}]"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 31
   id: "d7d9e1a773fe4a658f6c51b80da282ea"
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
@@ -488,7 +488,7 @@
     title: "[blue Shield quality Red Line] Intercept Notification"
     body: "${pipelineName} (# ${buildNo}) is blocked\nProject: ${projectName}\nIntercept time: ${time}\nIntercept indicator: ${thresholdListString}\nFor more information: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 32
   id: "dff46cd92eab458b96b25be0d7a61054"
   templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -504,7 +504,7 @@
     title: "The  store atom [${name}] V$ {version} failed the audit"
     body: "The  store atom [${name}] V$ {version} failed the audit"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 33
   id: "e961fd2ccc1c4f5d8eefaac9d51b5cb0"
   templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
@@ -520,7 +520,7 @@
     title: "The  store atom [${name}] V$ {version} has been approved and released successfully"
     body: "The  store atom [${name}] V$ {version} has been approved and released successfully"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 34
   id: "ea98239a51a74f8db0a012a809bc1116"
   templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
@@ -536,7 +536,7 @@
     title: "The  store image [${name}] V$ {version} failed the audit."
     body: " store image [${name}] V$ {version} failed review, rejected because of ${imageStatusMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 35
   id: "f0663e7ac2b74130ada0408bdce8cd20"
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
@@ -552,7 +552,7 @@
     title: "[blue Shield quality Red Line] Intercept Notification-terminated"
     body: "${title}\nProject: ${projectName}\nTrigger: ${cc}\nIntercept time: ${time}\n${result}\nPipeline link: ${url}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 36
   id: "f0949ab70cc04aa5b1bc787d5a47eba7"
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
@@ -573,7 +573,7 @@
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
     body: "The build status is stage sucess, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 37
   id: "f5c17a3f5dcd4c9ea7cf7a16a16e7135"
   templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
@@ -589,7 +589,7 @@
     title: "[blue Shield  Store] collaboration application was rejected"
     body: "The administrator of the pipelined atom [${atomName}] [${atomAdmin}] rejected your collaboration application for the reason: ${approveMsg}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
 - index: 38
   id: "1e7864726dd04311b21019bcceddfee8"
   templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
@@ -604,4 +604,4 @@
     title: "bk-ci pipeline callback interface is abnormal"
     body: "project【${projectName}】Registered【${events}】Event callback interface【${callbackUrl}】It is now disabled due to multiple failed calls\pipeline url：${pipelineListUrl}"
   creator: "system"
-  modifier: "system"
+  modifior: "system"
