@@ -144,7 +144,7 @@ class AuthProjectService @Autowired constructor(
 
         val routerTag = projectService.getByEnglishName(projectCode)!!.routerTag
         val managerUser = bkTag.invokeByTag(routerTag) {
-            client.get(ServiceProjectAuthResource::class).getProjectUsers(
+            client.getGateway(ServiceProjectAuthResource::class).getProjectUsers(
                 token = tokenService.getSystemToken(null)!!,
                 projectCode = projectCode,
                 group = BkAuthGroup.MANAGER

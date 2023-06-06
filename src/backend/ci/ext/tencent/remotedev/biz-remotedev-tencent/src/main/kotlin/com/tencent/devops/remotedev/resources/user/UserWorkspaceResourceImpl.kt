@@ -39,8 +39,11 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -54,7 +57,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
     private val redisHeartBeat: RedisHeartBeat,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val repositoryService: RepositoryService,
+    private val bkTicketService: BkTicketService
 ) : UserWorkspaceResource {
 
     override fun createWorkspace(
@@ -81,6 +86,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
+    override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceService.deleteWorkspace(userId, workspaceName))
     }
@@ -105,7 +114,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         gitType: RemoteDevGitType
     ): Result<List<RemoteDevRepository>> {
         return Result(
-            workspaceService.getAuthorizedGitRepository(
+            repositoryService.getAuthorizedGitRepository(
                 userId = userId,
                 search = search,
                 page = page,
@@ -121,7 +130,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         gitType: RemoteDevGitType
     ): Result<List<String>> {
         return Result(
-            workspaceService.getRepositoryBranch(
+            repositoryService.getRepositoryBranch(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
                 gitType = gitType
@@ -191,11 +200,15 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        workspaceService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
+        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
+        return Result(true)
+    }
+    override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
+        bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 
-    override fun checkUpdate(userId: String): Result<String> {
-        return Result(workspaceService.checkUpdate(userId))
+    override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
     }
 }

@@ -122,5 +122,7 @@ data class Pipeline(
     @ApiModelProperty("webhook类型", required = false)
     var webhookType: String? = null,
     @ApiModelProperty("是否已删除", required = false)
-    var delete: Boolean? = false
+    var delete: Boolean? = false,
+    @ApiModelProperty("流水线权限", required = false)
+    val permissions: PipelinePermissions? = null
 )

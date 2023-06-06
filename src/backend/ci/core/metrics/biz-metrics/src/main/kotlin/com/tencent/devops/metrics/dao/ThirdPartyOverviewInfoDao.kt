@@ -28,7 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_EXECUTE_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_INTERCEPTION_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE

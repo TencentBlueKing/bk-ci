@@ -32,6 +32,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -74,6 +75,24 @@ class GitAuthPermissionApi(
             resourceCode = resourceCode,
             relationResourceType = relationResourceType?.value
         ).data!!
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null
+        )
     }
 
     override fun getUserResourceByPermission(
@@ -126,6 +145,27 @@ class GitAuthPermissionApi(
             projectCode = scopeId,
             action = permissions.map { it.value }
         ).data ?: emptyMap()
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     override fun addResourcePermissionForUsers(

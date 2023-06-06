@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
@@ -58,10 +58,11 @@ class MarketImageService @Autowired constructor(
             imageCode = imageCode
         )
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("imageId:$imageId,imageCode:$imageCode"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return Result(true)
@@ -76,10 +77,11 @@ class MarketImageService @Autowired constructor(
         logger.info("setImageBuildStatusByImageId params :[$userId|$imageId|$imageStatus|$msg]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
         if (null == imageRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageId),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageId),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         } else {
             if (imageStatus == ImageStatusEnum.TESTING) {
@@ -125,10 +127,11 @@ class MarketImageService @Autowired constructor(
             )
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$imageCode+$version"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }

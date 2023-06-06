@@ -83,7 +83,7 @@ class AuthConfiguration {
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
 
-    @Value("\${auth.appCode:}")
+    @Value("\${auth.iamSystem:}")
     val systemId = ""
 
     @Value("\${auth.appCode:}")
@@ -107,6 +107,10 @@ class AuthConfiguration {
 
     @Bean
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
     @Primary
@@ -255,8 +259,4 @@ class AuthConfiguration {
         iamConfiguration: IamConfiguration?,
         bkPermissionProjectService: BkPermissionProjectService
     ) = BkPermissionUrlService(iamEsbService, iamConfiguration, bkPermissionProjectService)
-
-    @Bean
-    @ConditionalOnMissingBean(GrantServiceImpl::class)
-    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }

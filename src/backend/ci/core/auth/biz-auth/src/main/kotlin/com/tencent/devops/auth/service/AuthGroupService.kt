@@ -29,14 +29,14 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -65,7 +65,12 @@ class AuthGroupService @Autowired constructor(
                 "group is exsit, don't create repeatedly : userId = $userId | " +
                     "projectCode = $projectCode | groupInfo = $groupInfo "
             )
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.GROUP_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         val groupCreateInfo = GroupCreateInfo(
             groupCode = groupInfo.groupCode,
@@ -96,7 +101,9 @@ class AuthGroupService @Autowired constructor(
                 "group is exsit, don't create repeatedly : userId = $userId | " +
                     "projectCode = $projectCode | groupInfo = $groupCodes "
             )
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST, language = I18nUtil.getLanguage(userId))
+            )
         }
         val groupCreateInfos = mutableListOf<GroupCreateInfo>()
         groupInfos.forEach {
@@ -163,6 +170,13 @@ class AuthGroupService @Autowired constructor(
         } else {
             groupDao.deleteRole(dslContext, id)
         }
+    }
+
+    fun getGroupByRelationIds(relationIds: List<Int>): List<TAuthGroupInfoRecord> {
+        return groupDao.getGroupByRelationIds(
+            dslContext = dslContext,
+            relationIds = relationIds
+        )
     }
 
     companion object {

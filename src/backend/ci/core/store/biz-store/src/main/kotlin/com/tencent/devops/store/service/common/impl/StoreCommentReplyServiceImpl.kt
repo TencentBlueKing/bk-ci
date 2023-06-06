@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
@@ -126,7 +126,11 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
-        ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
+        ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(commentId),
+            language = I18nUtil.getLanguage(userId)
+        )
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
         if (userDeptNameResult.isNotOk()) {
             return Result(userDeptNameResult.status, userDeptNameResult.message ?: "")

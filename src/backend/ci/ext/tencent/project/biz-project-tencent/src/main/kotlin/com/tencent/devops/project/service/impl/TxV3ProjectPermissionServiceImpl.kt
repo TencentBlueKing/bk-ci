@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -40,9 +41,15 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode.CALL_PEM_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_CREATE_PROJECT_V0
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_ID_INVALID_V0
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -76,11 +83,12 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
+        val userId = resourceCreateInfo.userId
+        val accessToken = resourceCreateInfo.accessToken
+        val userDeptDetail = resourceCreateInfo.userDeptDetail
         // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
         // 同步创建V0项目
         val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
@@ -103,7 +111,9 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         // 资源都在接入方本地，无需修改iam侧数据
         return
     }
@@ -119,6 +129,16 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         // TODO:
         return emptyMap()
     }
+
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun needApproval(needApproval: Boolean?) = false
+
+    override fun isShowUserManageIcon(): Boolean = false
+
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
 
     override fun verifyUserProjectPermission(
         accessToken: String?,
@@ -156,21 +176,41 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
-        val responseContent = request(request, "调用权限中心创建项目失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = CALL_PEM_FAIL,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the project of response $responseContent")
-            throw OperationException("调用权限中心V0创建项目失败: ${result.message}")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = FAILED_CREATE_PROJECT_V0,
+                    language = I18nUtil.getLanguage(userId)
+                ) + ": ${result.message}")
         }
         val authProjectForCreateResult = result.data
         return if (authProjectForCreateResult != null) {
             if (authProjectForCreateResult.project_id.isBlank()) {
-                throw OperationException("权限中心创建V0的项目ID无效")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = PROJECT_ID_INVALID_V0,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             authProjectForCreateResult.project_id
         } else {
             logger.warn("Fail to get the project id from response $responseContent")
-            throw OperationException("权限中心V0创建的项目ID无效")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = PROJECT_ID_INVALID_V0,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 
@@ -180,7 +220,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code} , " +
-                            "message ${response.message} and response $responseContent")
+                        "message ${response.message} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent

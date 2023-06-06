@@ -27,10 +27,13 @@
 
 package com.tencent.devops.auth.service.permission.iam
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.auth.service.AuthPipelineIdService
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
@@ -38,7 +41,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
@@ -47,8 +55,14 @@ class TxPermissionServiceImpl @Autowired constructor(
     val managerService: ManagerService,
     val iamCacheService: IamCacheService,
     val client: Client,
-    val authPipelineIdService: AuthPipelineIdService
+    val authPipelineIdService: AuthPipelineIdService,
+    val authVerifyRecordService: AuthVerifyRecordService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
+
+    private val projectChannelCache = CacheBuilder.newBuilder()
+        .maximumSize(2000)
+        .expireAfterWrite(10, TimeUnit.HOURS)
+        .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return super.validateUserActionPermission(userId, action)
@@ -97,8 +111,7 @@ class TxPermissionServiceImpl @Autowired constructor(
         } else {
             action
         }
-
-        return super.validateUserResourcePermissionByRelation(
+        val verifyResult = super.validateUserResourcePermissionByRelation(
             userId = userId,
             action = useAction,
             projectCode = projectCode,
@@ -106,6 +119,36 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
+        logger.info("The system starts recording the verify result:$verifyResult|$resourceCode|$useAction")
+        executor.submit {
+            // 记录BS渠道创建项目的鉴权记录
+            if (checkBsChannelProject(projectCode)) {
+                authVerifyRecordService.createOrUpdateVerifyRecord(
+                    VerifyRecordDTO(
+                        userId = userId,
+                        projectId = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        action = useAction,
+                        verifyResult = verifyResult
+                    )
+                )
+            }
+        }
+        return verifyResult
+    }
+
+    private fun checkBsChannelProject(projectCode: String): Boolean {
+        return projectChannelCache.getIfPresent(projectCode) ?: run {
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            if (projectInfo != null) {
+                val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
+                projectChannelCache.put(projectCode, isBsChannelProject)
+                isBsChannelProject
+            } else {
+                false
+            }
+        }
     }
 
     override fun getUserResourceByAction(
@@ -149,5 +192,10 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = TActionUtils.getResourceTypeByStr(resourceTypeStr),
             authPermission = TActionUtils.getAuthPermissionByAction(action)
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(TxPermissionServiceImpl::class.java)
+        private val executor = Executors.newFixedThreadPool(5)
     }
 }

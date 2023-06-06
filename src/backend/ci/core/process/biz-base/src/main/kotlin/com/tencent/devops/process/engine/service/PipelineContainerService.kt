@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
@@ -40,16 +42,19 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
-import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -59,15 +64,17 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOptio
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -170,7 +177,9 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun batchUpdate(transactionContext: DSLContext?, containerList: List<PipelineBuildContainer>) {
-        return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
+        }
     }
 
     fun updateContainerStatus(
@@ -184,17 +193,19 @@ class PipelineContainerService @Autowired constructor(
         buildStatus: BuildStatus
     ) {
         logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerId|s($stageId)")
-        pipelineBuildContainerDao.updateStatus(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            buildStatus = buildStatus,
-            startTime = startTime,
-            controlOption = controlOption,
-            endTime = endTime
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                buildStatus = buildStatus,
+                startTime = startTime,
+                controlOption = controlOption,
+                endTime = endTime
+            )
+        }
     }
 
     fun updateMatrixGroupStatus(
@@ -209,14 +220,16 @@ class PipelineContainerService @Autowired constructor(
         controlOption: PipelineBuildContainerControlOption
     ) {
         logger.info("[$buildId]|updateMatrixGroupStatus|option=$controlOption|matrixGroupId=$matrixGroupId|s($stageId)")
-        pipelineBuildContainerDao.updateControlOption(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = matrixGroupId,
-            controlOption = controlOption
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.updateControlOption(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = matrixGroupId,
+                controlOption = controlOption
+            )
+        }
         containerBuildRecordService.updateMatrixGroupContainer(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -374,9 +387,6 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun prepareBuildContainerTasks(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
         stage: Stage,
         container: Container,
         context: StartBuildContext,
@@ -385,6 +395,7 @@ class PipelineContainerService @Autowired constructor(
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -393,6 +404,7 @@ class PipelineContainerService @Autowired constructor(
         var needUpdateContainer = false
         var taskSeq = 0
         val containerElements = container.elements
+        val retryFlag = lastTimeBuildTasks.isEmpty()
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -412,20 +424,30 @@ class PipelineContainerService @Autowired constructor(
                 rerun = context.needRerunTask(stage = stage, container = container)
             )
             if (status.isFinish()) {
-                logger.info("[$buildId|${atomElement.id}] status=$status")
+                logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
+                if (retryFlag) taskBuildRecords.add(
+                    BuildRecordTask(
+                        projectId = context.projectId, pipelineId = context.pipelineId,
+                        buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                        taskId = atomElement.id!!, classType = atomElement.getClassType(),
+                        atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                        resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
+                        taskVar = mutableMapOf(), timestamps = mapOf()
+                    )
+                )
                 return@nextElement
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (lastTimeBuildTasks.isEmpty()) {
+            if (retryFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     addBuildTaskToList(
                         buildTaskList = buildTaskList,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        buildId = context.buildId,
                         userId = context.userId,
                         stage = stage,
                         container = container,
@@ -452,7 +474,7 @@ class PipelineContainerService @Autowired constructor(
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
-                        logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
+                        logger.error("[${context.buildId}]|BAD_B_STATUS|${target?.taskId}|${target?.status}|$ignored")
                         return@nextElement
                     }
                 }
@@ -499,9 +521,9 @@ class PipelineContainerService @Autowired constructor(
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
                 userId = context.userId,
                 stage = stage,
                 container = container,
@@ -538,8 +560,8 @@ class PipelineContainerService @Autowired constructor(
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip =
-                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip = "${context.pipelineId}_Pipeline" +
+                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -549,8 +571,8 @@ class PipelineContainerService @Autowired constructor(
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip =
-                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip = "${context.pipelineId}_Pipeline" +
+                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -560,9 +582,9 @@ class PipelineContainerService @Autowired constructor(
                 buildContainers.add(
                     Pair(
                         PipelineBuildContainer(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            buildId = context.buildId,
                             stageId = stage.id!!,
                             containerId = container.id!!,
                             containerHashId = container.containerHashId ?: "",
@@ -582,7 +604,7 @@ class PipelineContainerService @Autowired constructor(
             // 新的构建需要为跳过的container增加SKIP的状态记录
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
                     containerId = container.containerId!!, containerType = container.getClassType(),
                     executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
@@ -746,7 +768,7 @@ class PipelineContainerService @Autowired constructor(
             target.errorCode = null
             target.errorType = null
         } else { // 跳过的需要保留下跳过的信息
-            target.errorMsg = "被手动跳过 Manually skipped"
+            target.errorMsg = I18nUtil.getCodeLanMessage(BK_MANUALLY_SKIPPED)
         }
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
@@ -827,10 +849,7 @@ class PipelineContainerService @Autowired constructor(
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
                 taskId = atomElement.id!!,
-                taskName = CommonUtils.interceptStringInLength(
-                    string = atomElement.name,
-                    length = ELEMENT_NAME_MAX_LENGTH
-                ) ?: atomElement.getAtomCode(),
+                taskName = atomElement.name.coerceAtMaxLength(ELEMENT_NAME_MAX_LENGTH),
                 taskType = atomElement.getClassType(),
                 taskAtom = atomElement.getTaskAtom(),
                 status = status,
@@ -855,11 +874,9 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun setUpTriggerContainer(
-        resourceVersion: Int,
         stage: Stage,
         container: TriggerContainer,
         context: StartBuildContext,
-        startBuildStatus: BuildStatus,
         stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
@@ -870,38 +887,6 @@ class PipelineContainerService @Autowired constructor(
 
         val buildNoObj = container.buildNo
         if (buildNoObj != null && context.actionType == ActionType.START) {
-//            val buildNoObj = container.buildNo
-//            if (buildNoObj != null && context.actionType == ActionType.START) {
-//                buildNoType = buildNoObj.buildNoType
-//                val buildNoLock = if (acquire != true) PipelineBuildNoLock(
-//                    redisOperation = redisOperation,
-//                    pipelineId = pipelineId
-//                ) else null
-//                try {
-//                    buildNoLock?.lock()
-//                    if (buildNoType == BuildNoType.CONSISTENT) {
-//                        if (currentBuildNo != null) {
-//                            // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
-//                            updateBuildNo(projectId, pipelineId, currentBuildNo!!)
-//                            logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
-//                        }
-//                    } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-//                        val buildSummary = getBuildSummaryRecord(pipelineInfo.projectId, pipelineId)
-//                        // buildNo根据数据库的记录值每次新增1
-//                        currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
-//                            1
-//                        } else buildSummary.buildNo + 1
-//                        updateBuildNo(projectId, pipelineId, currentBuildNo!!)
-//                    }
-//                    // 兼容buildNo为空的情况
-//                    if (currentBuildNo == null) {
-//                        currentBuildNo = getBuildSummaryRecord(pipelineInfo.projectId, pipelineId)?.buildNo
-//                            ?: buildNoObj.buildNo
-//                    }
-//                } finally {
-//                    buildNoLock?.unlock()
-//                }
-//            }
             context.buildNoType = buildNoObj.buildNoType
             var needUpdateBuildNoRecord = false
             var needAddCurrentBuildNo = false
@@ -914,14 +899,15 @@ class PipelineContainerService @Autowired constructor(
             }
 
             if (needAddCurrentBuildNo || needUpdateBuildNoRecord || context.currentBuildNo == null) {
-                val projectId = context.projectId
-                val pipelineId = context.pipelineId
-
-                PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { lock ->
+                PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = context.pipelineId).use { lock ->
+                    context.watcher.start("${stage.id}.currentBuildNo_lock")
                     lock.lock()
+                    context.watcher.stop()
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
-                        context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(dslContext, projectId, pipelineId)
+                        context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(
+                            dslContext = dslContext, projectId = context.projectId, pipelineId = context.pipelineId
+                        )
                             ?: let {
                                 if (needAddCurrentBuildNo) {
                                     0
@@ -938,16 +924,22 @@ class PipelineContainerService @Autowired constructor(
                     if (needUpdateBuildNoRecord) {
                         pipelineBuildSummaryDao.updateBuildNo(
                             dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
                             buildNo = context.currentBuildNo!!
                         )
                     }
                 }
+
+                if (context.buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT) { // 成功才+1的构建只在真正启动时赋值,配合排队
+                    val buildParameters = BuildParameters(BUILD_NO, value = context.currentBuildNo!!, readOnly = true)
+                    context.pipelineParamMap[BUILD_NO] = buildParameters
+                    context.buildParameters.add(buildParameters)
+                }
             }
         }
 
-        container.name = ContainerUtils.getQueuingWaitName(container.name, startBuildStatus)
+        container.name = ContainerUtils.getQueuingWaitName(container.name, context.startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
 
@@ -993,7 +985,8 @@ class PipelineContainerService @Autowired constructor(
 //                )
                 buildLogPrinter.addLine(
                     buildId = context.buildId,
-                    message = "触发人(trigger user): ${context.triggerUser}, 执行人(start user): ${context.userId}",
+                    message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
+                            " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
                     jobId = container.id,
                     executeCount = context.executeCount

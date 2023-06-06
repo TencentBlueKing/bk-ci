@@ -33,20 +33,27 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_BUILD_MACHINE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_WORKSPACE_API_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_WORKSPACE_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_FAIL_TO_GET_JOB_STATUS
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_WORKSPACE_LINK_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_WORKSPACE_URL_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspaceUrlRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
+import java.net.SocketTimeoutException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesRemoteDevClient @Autowired constructor(
@@ -78,10 +85,12 @@ class KubernetesRemoteDevClient @Autowired constructor(
                 logger.info("$userId create workspace response: ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建工作空间异常: Fail to create workspace, http response code: " +
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                                I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_ERROR) +
+                                ": Fail to create workspace, http response code: " +
                             "${response.code}"
                     )
                 }
@@ -92,10 +101,11 @@ class KubernetesRemoteDevClient @Autowired constructor(
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建工作空间接口返回失败: $msg"
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                                "${I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_API_FAIL)}: $msg"
                     )
                 }
             }
@@ -105,10 +115,11 @@ class KubernetesRemoteDevClient @Autowired constructor(
                 e
             )
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
+                errorType = ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.KUBERNETES_CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                errorMessage = I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                        "${I18nUtil.getCodeLanMessage(BK_CREATE_BUILD_MACHINE_TIMEOUT)}, url: $url"
             )
         }
     }
@@ -122,11 +133,12 @@ class KubernetesRemoteDevClient @Autowired constructor(
             logger.info("Get job: $jobName status response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
-                        "http response code: ${response.code}"
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.errorType,
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.errorCode,
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_FAIL_TO_GET_JOB_STATUS) +
+                        ", http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -149,11 +161,12 @@ class KubernetesRemoteDevClient @Autowired constructor(
             logger.info("Get job: $jobName logs response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取Job logs接口异常" +
-                        "（Fail to getJobLogs, http response code: ${response.code}"
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.errorType,
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.errorCode,
+                    ErrorCodeEnum.KUBERNETES_SYSTEM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_FAIL_TO_GET_JOB_STATUS) +
+                        ",（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -176,10 +189,11 @@ class KubernetesRemoteDevClient @Autowired constructor(
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
                     throw BuildFailureException(
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                        "获取工作空间url接口异常（Fail to get workspaceUrl, http response code: ${response.code}"
+                        ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                        I18nUtil.getCodeLanMessage(BK_GET_WORKSPACE_URL_ERROR) +
+                        "（Fail to get workspaceUrl, http response code: ${response.code}"
                     )
                 }
                 val result: KubernetesResult<KubernetesWorkspaceUrlRsp> = objectMapper.readValue(responseContent)
@@ -192,10 +206,10 @@ class KubernetesRemoteDevClient @Autowired constructor(
         } catch (e: Exception) {
             logger.error("[$userId $workspaceName get workspaceUrl failed.", e)
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "获取工作空间链接接口超时, url: $url, ${e.message}"
+                errorType = ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.KUBERNETES_WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                errorMessage = "$BK_GET_WORKSPACE_LINK_TIMEOUT, url: $url, ${e.message}"
             )
         }
     }

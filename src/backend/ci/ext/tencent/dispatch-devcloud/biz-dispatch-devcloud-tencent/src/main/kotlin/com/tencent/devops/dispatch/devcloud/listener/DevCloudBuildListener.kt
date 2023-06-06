@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.devcloud.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
@@ -11,9 +12,22 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_DEVCLOUD_EXCEPTION
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_START_DEVCLOUD
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_INTERFACE_REQUEST_TIMEOUT
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_START_MIRROR
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAIT_AGENT_START
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
@@ -23,6 +37,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
 import com.tencent.devops.dispatch.devcloud.pojo.Credential
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
@@ -36,14 +51,15 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import java.util.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.Random
 
 /**
  * deng
@@ -61,6 +77,7 @@ class DevCloudBuildListener @Autowired constructor(
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val objectMapper: ObjectMapper,
     private val buildLogPrinter: BuildLogPrinter,
+    private val commonConfig: CommonConfig,
     private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : BuildListener {
@@ -155,7 +172,13 @@ class DevCloudBuildListener @Autowired constructor(
 
     private fun startUp(dispatchMessage: DispatchMessage) {
         logger.info("On start up - ($dispatchMessage)")
-        printLogs(dispatchMessage, "准备创建腾讯自研云（云devnet资源)构建机...")
+        printLogs(
+            dispatchMessage,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+        )
 
         val buildContainerPoolNo = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
             dslContext,
@@ -179,7 +202,13 @@ class DevCloudBuildListener @Autowired constructor(
 
         try {
             val containerPool = getContainerPool(dispatchMessage)
-            printLogs(dispatchMessage, "启动镜像：${containerPool.container}")
+            printLogs(
+                dispatchMessage,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_START_MIRROR,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "：${containerPool.container}"
+            )
             if (!containerPool.performanceConfigId.isNullOrBlank() && containerPool.performanceConfigId != "0") {
                 val performanceOption =
                     dcPerformanceOptionsDao.get(dslContext, containerPool.performanceConfigId!!.toLong())
@@ -214,8 +243,10 @@ class DevCloudBuildListener @Autowired constructor(
                 e.errorType,
                 e.errorCode,
                 e.formatErrorMessage,
-                (e.message ?: "启动DevCloud构建容器失败，请联系devopsHelper反馈处理.") +
-                    "\n容器构建异常请参考：$devCloudHelpUrl"
+                (e.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILED_START_DEVCLOUD
+                )) + "\n" + I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_EXCEPTIONS) +
+                        "：$devCloudHelpUrl"
             )
         } catch (e: Exception) {
             logger.error(
@@ -226,15 +257,22 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorCode,
-                    ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 接口请求超时"
+                    ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DEVCLOUD_EXCEPTION
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_INTERFACE_REQUEST_TIMEOUT
+                    )
                 )
             }
             onFailure(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                "创建构建机失败，错误信息:${e.message}. \n容器构建异常请参考：$devCloudHelpUrl"
+                ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
+                I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_CREATE_BUILD_MACHINE) +
+                        ":${e.message}. \n" +
+                        I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_EXCEPTIONS) +
+                        "：$devCloudHelpUrl"
             )
         }
     }
@@ -311,7 +349,14 @@ class DevCloudBuildListener @Autowired constructor(
             )
             logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                             "createContainer, taskId:($devCloudTaskId)")
-            printLogs(this, "下发创建构建机请求成功，containerName: $createName 等待机器启动...")
+            printLogs(this, MessageUtil.getMessageByLocale(
+                messageCode = BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + "，containerName: $createName " + MessageUtil.getMessageByLocale(
+                messageCode = BK_WAITING_MACHINE_START,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+            )
 
             // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
             // redisUtils.setCreatingContainer(createName, dispatchMessage.userId)
@@ -331,7 +376,10 @@ class DevCloudBuildListener @Autowired constructor(
                 val containerName = createResult.second
                 logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                                 "start dev cloud vm success, wait for agent startup...")
-                printLogs(this, "构建机启动成功，等待Agent启动...")
+                printLogs(this, MessageUtil.getMessageByLocale(
+                    messageCode = BK_WAIT_AGENT_START,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ))
 
                 devCloudBuildDao.createOrUpdate(
                     dslContext = dslContext,
@@ -374,8 +422,12 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     createResult.third.errorType,
                     createResult.third.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 构建机创建失败:${createResult.second}"
+                    ErrorCodeEnum.CREATE_VM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DEVCLOUD_EXCEPTION
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_FAILED_CREATE_BUILD_MACHINE
+                    ) + ":${createResult.second}"
                 )
             }
         }
@@ -423,7 +475,16 @@ class DevCloudBuildListener @Autowired constructor(
 
             logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                             "start container, taskId:($devCloudTaskId)")
-            printLogs(this, "下发启动构建机请求成功，containerName: $containerName 等待机器启动...")
+            printLogs(
+                this,
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + "，containerName: $containerName " + MessageUtil.getMessageByLocale(
+                messageCode = BK_WAITING_MACHINE_START,
+                language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
             buildContainerPoolNoDao.setDevCloudBuildLastContainer(
                 dslContext = dslContext,
                 buildId = buildId,
@@ -447,7 +508,10 @@ class DevCloudBuildListener @Autowired constructor(
                 val instContainerName = startResult.second
                 logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                                 "start dev cloud vm success, wait for agent startup...")
-                printLogs(this, "构建机启动成功，等待Agent启动...")
+                printLogs(this, MessageUtil.getMessageByLocale(
+                    messageCode = BK_WAIT_AGENT_START,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ))
 
                 devCloudBuildDao.createOrUpdate(
                     dslContext = dslContext,
@@ -487,8 +551,13 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     startResult.third.errorType,
                     startResult.third.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 构建机启动失败，错误信息:${startResult.second}"
+                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DEVCLOUD_EXCEPTION
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_BUILD_MACHINE_FAILS_START,
+                        params = arrayOf(startResult.second)
+                    )
                 )
             }
         }
@@ -508,7 +577,8 @@ class DevCloudBuildListener @Autowired constructor(
                 ENV_KEY_GATEWAY to gateway,
                 "TERM" to "xterm-256color",
                 SLAVE_ENVIRONMENT to "DevCloud",
-                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name)
+                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
+                ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
             ))
 
             return envs
@@ -750,8 +820,8 @@ class DevCloudBuildListener @Autowired constructor(
             throw BuildFailureException(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
-                "DEVCLOUD构建机启动失败，没有空闲的构建机"
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
             )
         } finally {
             lock.unlock()

@@ -18,6 +18,10 @@ class SampleAuthPermissionProjectService : PermissionProjectService {
         return emptyList()
     }
 
+    override fun getUserProjectsByPermission(userId: String, action: String): List<String> {
+        return emptyList()
+    }
+
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         return true
     }

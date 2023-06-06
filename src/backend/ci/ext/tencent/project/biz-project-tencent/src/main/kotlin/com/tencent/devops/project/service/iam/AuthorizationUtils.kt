@@ -187,7 +187,7 @@ object AuthorizationUtils {
             .build()
     }
 
-    private const val projectAction = "project_view,all_action," +
+    private const val projectAction = "project_view," +
         "pipeline_create,project_views_manager," +
         "repertory_create,credential_create," +
         "environment_create,env_node_create," +

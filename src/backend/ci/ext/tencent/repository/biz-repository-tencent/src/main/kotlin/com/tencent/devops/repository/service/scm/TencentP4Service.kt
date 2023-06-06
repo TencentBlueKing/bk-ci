@@ -1,17 +1,18 @@
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
@@ -94,20 +95,39 @@ class TencentP4Service(
         val username = credentials[0]
         if (username.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.USER_NAME_EMPTY
+                )
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.PWD_EMPTY
+                )
             )
         }
         val password = credentials[1]
         if (password.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.PWD_EMPTY
+                )
             )
         }
         return Triple(repository, username, password)
+    }
+
+    override fun getServerInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): P4ServerInfo {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return client.getScm(ServiceP4Resource::class).getServerInfo(
+            p4Port = repository.url,
+            username = username,
+            password = URLEncoder.encode(password, "UTF-8")
+        ).data!!
     }
 }

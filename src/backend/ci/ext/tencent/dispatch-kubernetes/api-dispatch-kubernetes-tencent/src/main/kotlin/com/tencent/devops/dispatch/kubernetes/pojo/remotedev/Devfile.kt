@@ -1,6 +1,8 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.remotedev
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -25,7 +27,21 @@ data class Devfile(
     var dotfileRepo: String?,
     @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
     var workspaceFolder: String?
-)
+) {
+    fun checkWorkspaceMountType(): WorkspaceMountType {
+        if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {
+            return WorkspaceMountType.START
+        }
+        return WorkspaceMountType.DEVCLOUD
+    }
+
+    fun checkWorkspaceSystemType(): WorkspaceSystemType {
+        if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {
+            return WorkspaceSystemType.WINDOWS_GPU
+        }
+        return WorkspaceSystemType.LINUX
+    }
+}
 //
 // data class DevfileImage(
 //    @ApiModelProperty("定义公共镜像")
@@ -56,7 +72,7 @@ data class RunsOn(
 )
 
 data class Container(
-    val image: String,
+    var image: String,
     val host: String? = null,
     val credentials: Credentials? = null
 )
@@ -99,5 +115,6 @@ enum class JobRunsOnType(val type: String) {
     AGENT_LESS("agentless"),
     DEV_CLOUD("docker-on-devcloud"),
     BCS("docker-on-bcs"),
-    LOCAL("local")
+    LOCAL("local"),
+    WINDOWS_LATEST("windows-latest")
 }

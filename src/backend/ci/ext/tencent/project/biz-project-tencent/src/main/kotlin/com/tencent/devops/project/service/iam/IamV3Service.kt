@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package com.tencent.devops.project.service.iam
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
@@ -48,20 +47,21 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 class IamV3Service @Autowired constructor(
     val iamManagerService: ManagerService,
@@ -125,7 +125,6 @@ class IamV3Service @Autowired constructor(
             } else {
                 logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
             }
-
             // 修改V3项目对应的projectId
             if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
                 projectDao.updateRelationByCode(
@@ -145,18 +144,15 @@ class IamV3Service @Autowired constructor(
         val bgName = userDao.get(dslContext, userId)?.bgName!!
         val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
             ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = "获取用户$userId 信息失败",
-                    params = arrayOf(userId)
-                )
+                errorCode = QUERY_USER_INFO_FAIL,
+                params = arrayOf(userId)
             )
         val bgId = deptInfo.results[0].id
         logger.info("user $userId bg: $bgId bgName: $bgName")
         val subjectScopes = ManagerScopes(
             ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
-            bgId.toString())
+            bgId.toString()
+        )
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
@@ -164,7 +160,13 @@ class IamV3Service @Autowired constructor(
         )
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
             .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
-            .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
+            .description(
+                IamGroupUtils.buildManagerDescription(
+                    resourceRegisterInfo.resourceName,
+                    userId,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(arrayListOf(subjectScopes)).build()
@@ -172,9 +174,15 @@ class IamV3Service @Autowired constructor(
     }
 
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
+        val displayName = DefaultGroupType.MANAGER.getDisplayName(I18nUtil.getLanguage(userId))
         val defaultGroup = ManagerRoleGroup(
-            IamGroupUtils.buildIamGroup(projectCode, DefaultGroupType.MANAGER.displayName),
-            IamGroupUtils.buildDefaultDescription(projectCode, DefaultGroupType.MANAGER.displayName, userId),
+            IamGroupUtils.buildIamGroup(projectCode, displayName),
+            IamGroupUtils.buildDefaultDescription(
+                projectName = projectCode,
+                groupName = displayName,
+                userId = userId,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             true
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
@@ -195,8 +203,8 @@ class IamV3Service @Autowired constructor(
             projectCode = projectCode,
             groupInfo = GroupDTO(
                 groupCode = DefaultGroupType.MANAGER.value,
-                groupName = DefaultGroupType.MANAGER.displayName,
-                displayName = DefaultGroupType.MANAGER.displayName,
+                groupName = displayName,
+                displayName = displayName,
                 relationId = roleId.toString(),
                 groupType = true
             )
@@ -222,7 +230,6 @@ class IamV3Service @Autowired constructor(
             .paths(managerPaths)
             .build()
         managerResources.add(resources)
-
         val permission = AuthorizationScopes.builder()
             .actions(arrayListOf(Action("all_action")))
             .system(iamConfiguration.systemId)

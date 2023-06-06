@@ -28,11 +28,15 @@
 package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.constant.StreamMessageCode.BUILD_TASK_NOT_EXIST
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_EXIST_OR_DELETED
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.components.V1YamlBuild
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -57,7 +61,7 @@ class V1GitCIBuildService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V1GitCIBuildService::class.java)
-        const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
+        const val REPO_GIT_WEBHOOK_MR_IID = "CI_REPO_GIT_WEBHOOK_MR_IID"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -73,10 +77,17 @@ class V1GitCIBuildService @Autowired constructor(
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+                MessageUtil.getMessageByLocale(
+                    messageCode = PIPELINE_NOT_EXIST_OR_DELETED,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         val gitEventBuild = v1GitRequestEventBuildDao.getByBuildId(dslContext, buildId)
-            ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
+            ?: throw CustomException(Response.Status.NOT_FOUND,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BUILD_TASK_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         val newBuildId = client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = V1GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
@@ -98,7 +109,10 @@ class V1GitCIBuildService @Autowired constructor(
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+                MessageUtil.getMessageByLocale(
+                    messageCode = PIPELINE_NOT_EXIST_OR_DELETED,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
 
         return client.get(ServiceBuildResource::class).manualShutdown(

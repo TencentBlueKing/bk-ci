@@ -43,6 +43,8 @@ data class QueryLogs(
     var finished: Boolean,
     @ApiModelProperty("是否有后续日志", required = false)
     var hasMore: Boolean? = false,
+    @ApiModelProperty("是否已被清理", required = true)
+    var cleaned: Boolean? = false,
     @ApiModelProperty("日志列表", required = true)
     var logs: MutableList<LogLine> = mutableListOf(),
     @ApiModelProperty("所用时间", required = false)

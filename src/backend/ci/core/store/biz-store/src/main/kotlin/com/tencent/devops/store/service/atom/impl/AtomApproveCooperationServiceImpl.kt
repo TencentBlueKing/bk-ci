@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreApproveDao
@@ -43,12 +43,12 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.AbstractStoreApproveSpecifyBusInfoService
 import com.tencent.devops.store.service.common.StoreNotifyService
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 /**
  * 插件协作逻辑处理
@@ -80,10 +80,11 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         logger.info("approveStoreSpecifyBusInfo params: [$userId|$storeType|$storeCode|$storeApproveRequest]")
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
         if (null == atomApproveRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)

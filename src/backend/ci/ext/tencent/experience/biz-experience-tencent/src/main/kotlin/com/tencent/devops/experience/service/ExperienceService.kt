@@ -34,10 +34,11 @@ import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryReso
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
-import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
@@ -57,10 +58,16 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_PROJECT_TAKEDOWN_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_PERMISSION
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -141,28 +148,26 @@ class ExperienceService @Autowired constructor(
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
         return bkTag.invokeByTag(projectConsulTag) {
             val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
-            if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
+            if (!client.getGateway(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
                 throw ErrorCodeException(
                     statusCode = 404,
-                    defaultMessage = "文件不存在",
                     errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
                 )
             }
 
             val properties =
-                client.get(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
+                client.getGateway(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
             val propertyMap = mutableMapOf<String, String>()
             properties.forEach {
                 propertyMap[it.key] = it.value
             }
             if (!propertyMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
                 throw ErrorCodeException(
-                    defaultMessage = "体验未与流水线绑定",
                     errorCode = ExperienceMessageCode.EXP_META_DATA_PIPELINE_ID_NOT_EXISTS
                 )
             }
             val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
-            client.get(ServicePipelineArtifactoryResource::class).hasPermission(
+            client.getGateway(ServicePipelineArtifactoryResource::class).hasPermission(
                 userId = userId,
                 projectId = propertyMap[ARCHIVE_PROPS_PROJECT_ID] ?: projectId,
                 pipelineId = pipelineId,
@@ -175,20 +180,26 @@ class ExperienceService @Autowired constructor(
         val expireTime = DateUtil.today()
         val searchTime = if (expired == null || expired == false) expireTime else null
         val online = if (expired == null || expired == false) true else null
-
-        val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
+        val experienceRecordList = experienceDao.list(dslContext, projectId, searchTime, online)
+        // Rbac得校验体验是否列表权限，有才返回。
+        val experienceListResult = experiencePermissionService.filterCanListExperience(
+            user = userId,
+            projectId = projectId,
+            experienceRecordList = experienceRecordList
+        )
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
         val experiencePermissionListMap = experiencePermissionService.filterExperience(
             user = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.EDIT)
+            authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        return experienceList.map {
+        return experienceListResult.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
-
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
+            val canDelete = experiencePermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
+
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
@@ -200,15 +211,22 @@ class ExperienceService @Autowired constructor(
                 creator = it.creator,
                 expired = isExpired,
                 online = it.online,
-                permissions = ExperiencePermission(canExperience, canEdit)
+                permissions = ExperiencePermission(canExperience, canEdit, canDelete)
             )
         }
     }
 
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
+
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-
+        experiencePermissionService.validateTaskPermission(
+            user = userId,
+            projectId = experienceRecord.projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.VIEW,
+            message = I18nUtil.getCodeLanMessage(USER_NEED_VIEW_EXP_PERMISSION)
+        )
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
@@ -301,7 +319,6 @@ class ExperienceService @Autowired constructor(
                 if (!serviceCheck(it)) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
-                        defaultMessage = "体验组($it)不存在",
                         errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
                         params = arrayOf(it)
                     )
@@ -329,10 +346,20 @@ class ExperienceService @Autowired constructor(
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
-            throw RuntimeException("元数据bundleIdentifier不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("bundleIdentifier")
+                    ))
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
-            throw RuntimeException("元数据appVersion不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("appVersion")
+                    ))
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
@@ -363,7 +390,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                        "artifactoryType:$artifactoryType , path:${experience.path}"
+                    "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -614,7 +641,22 @@ class ExperienceService @Autowired constructor(
     }
 
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
-        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId).id
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        experiencePermissionService.validateDeleteExperience(
+            experienceId = experienceId,
+            userId = userId,
+            projectId = projectId,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NEED_PROJECT_TAKEDOWN_PERMISSION,
+                params = arrayOf(projectId, experienceHashId)
+            )
+        )
+        experienceDao.getOrNull(dslContext, experienceId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                params = arrayOf(experienceHashId)
+            )
         experienceDao.updateOnline(dslContext, experienceId, online)
 
         if (!online) {
@@ -637,13 +679,16 @@ class ExperienceService @Autowired constructor(
             projectId = projectId,
             experienceId = experienceId,
             authPermission = AuthPermission.EDIT,
-            message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
+            message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_EDIT_PERMISSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(projectId, experienceHashId)
+                )
         )
         return experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "体验($experienceHashId)不存在",
-                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                errorCode = EXPERIENCE_NOT_EXIST,
                 params = arrayOf(experienceHashId)
             )
     }
@@ -664,7 +709,6 @@ class ExperienceService @Autowired constructor(
         if (!experienceBaseService.userCanExperience(userId, experienceId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "用户($userId)不在体验用户名单中",
                 errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
                 params = arrayOf(userId)
             )
@@ -686,17 +730,32 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
-            throw RuntimeException("文件($path)不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = FILE_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(path)
+                    )
+            )
         }
 
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
-            throw RuntimeException("元数据buildNo不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("buildNo")
+                    ))
         }
 
         val remark = if (experience.description.isNullOrBlank()) {
-            "构建号#${propertyMap[ARCHIVE_PROPS_BUILD_NO]!!}"
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CONSTRUCTION_NUMBER,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(propertyMap[ARCHIVE_PROPS_BUILD_NO]!!)
+                )
         } else experience.description
 
         val experienceCreate = ExperienceCreate(
@@ -739,15 +798,18 @@ class ExperienceService @Autowired constructor(
         artifactoryPath: String,
         artifactoryType: ArtifactoryType
     ) {
-        if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
-                defaultMessage = AuthPermission.EXECUTE.alias
-            )
+        // Rbac 得校验是否有创建体验的权限。
+        if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
             throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_PERMISSION,
+                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        }
+        if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
+            val permissionMsg = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId))
+            throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                params = arrayOf(permissionMsg)
+                params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
     }
@@ -786,7 +848,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers:" +
-                        " $outerReceivers , subscribeUsers: $subscribeUsers "
+                    " $outerReceivers , subscribeUsers: $subscribeUsers "
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
                 logger.info("empty Receivers , experienceId:$experienceId")
@@ -933,14 +995,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
@@ -1015,7 +1077,6 @@ class ExperienceService @Autowired constructor(
                 .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
         ) {
             throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
             )
         }

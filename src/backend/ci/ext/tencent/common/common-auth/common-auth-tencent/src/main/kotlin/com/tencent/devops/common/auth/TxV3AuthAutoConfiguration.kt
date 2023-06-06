@@ -34,8 +34,8 @@ import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
+import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthResourceApiStr
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
@@ -101,9 +101,10 @@ class TxV3AuthAutoConfiguration {
     fun bsAuthResourceApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi
+        bsAuthTokenApi: BSAuthTokenApi,
+        client: Client
     ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi)
+        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
 
     @Bean
     @Primary

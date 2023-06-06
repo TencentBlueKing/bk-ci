@@ -23,11 +23,10 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
@@ -57,6 +56,13 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             // 获取扩展系统内项目下的用户
             getUserByExt(group, projectCode)
         }
+    }
+
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String
+    ): List<String> {
+        return emptyList()
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
@@ -100,6 +106,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
+        // v3 会拉取用户有 PROJECT_VIEW+ALL_ACTION的项目，rbac会拉取出用户有PROJECT_VIEW的项目
+        // 所以要拉出v3(PROJECT_VIEW+ALL_ACTION)就会包含rbac(PROJECT_VIEW)的项目
         val viewAction = PROJECT_VIEW
         val managerAction = ALL_ACTION
         val actionDTOs = mutableListOf<ActionDTO>()
@@ -199,12 +207,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         }
         if (iamProjectId.isNullOrEmpty()) {
             logger.warn("[IAM] $projectCode iamProject is empty")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
-                )
-            )
+            throw ErrorCodeException(errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY)
         }
         return iamProjectId.toInt()
     }

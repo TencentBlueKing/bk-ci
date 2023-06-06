@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '工作空间ID',
     `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '项目ID',
     `NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
+    `DISPLAY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间备注名称',
     `TEMPLATE_ID` int(11) NOT NULL DEFAULT 16 COMMENT '模板ID',
     `URL` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目URL',
     `BRANCH` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目分支',
@@ -35,6 +36,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     `LAST_STATUS_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '状态最近修改时间',
 	`PRECI_AGENT_ID` varchar(32) NULL COMMENT 'preci go-agent id',
+	`WORKSPACE_MOUNT_TYPE` varchar(32) default 'DEVCLOUD' not null comment '挂载平台（DEVCLOUD、BCS、START）',
+	`SYSTEM_TYPE` varchar(32) default 'LINUX' not null comment '系统类型（LINUX、WINDOWS-GPU）',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -173,5 +176,16 @@ CREATE TABLE IF NOT EXISTS `T_SSH_PUBLIC_KEYS` (
     PRIMARY KEY (`ID`),
     KEY `idx_user` (`USER`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户SSH公钥存储';
+
+-- ----------------------------
+-- Table structure for T_REMOTE_DEV_IMAGE_SPEC_CONFIG 镜像配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `IDE_REF` varchar(255) NOT NULL COMMENT '包含ide进程的镜像层',
+  `REMOTING_REF` varchar(255) NOT NULL COMMENT '包含remoting进程的镜像层',
+  `IDE_LAYER_REF` json NULL COMMENT '包含除去ide进程和remoting进程的其他相关进程层',
+  PRIMARY KEY (`ID`)
+);
 
 SET FOREIGN_KEY_CHECKS = 1;

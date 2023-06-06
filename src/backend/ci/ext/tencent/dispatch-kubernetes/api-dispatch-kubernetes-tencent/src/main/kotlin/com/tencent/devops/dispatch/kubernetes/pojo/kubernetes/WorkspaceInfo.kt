@@ -12,5 +12,7 @@ data class WorkspaceInfo(
     @ApiModelProperty("对应pod是否可用，可能为null")
     val ready: Boolean?,
     @ApiModelProperty("对应pod是否可用，可能为null")
-    val started: Boolean?
+    val started: Boolean?,
+    @ApiModelProperty("start 云桌面使用")
+    val curLaunchId: Int? = null
 )

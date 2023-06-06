@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
+    api(project(":core:common:common-archive"))
     api("com.tencent.bk.repo:api-webhook")
 }
 

@@ -33,9 +33,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.AcrossProjectDistributionElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SUCCESSFULLY_DISTRIBUTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SUCCESSFULLY_FAILED
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -82,15 +85,28 @@ class AcrossProjectDistributionAtom @Autowired constructor(
             )
 
         return if (result.isOk()) {
-            buildLogPrinter.addLine(buildId, "跨项目构件分发成功，共分发了${result.data}个文件", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_DISTRIBUTED,
+                    params = arrayOf(result.data.toString()),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
-            buildLogPrinter.addRedLine(buildId, "跨项目构件分发失败，$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(
+                buildId,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "跨项目构件分发失败，$result"
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$result"
             )
         }
     }

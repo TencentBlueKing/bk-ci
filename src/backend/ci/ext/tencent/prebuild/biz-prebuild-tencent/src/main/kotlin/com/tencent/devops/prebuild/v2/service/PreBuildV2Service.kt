@@ -39,7 +39,10 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.prebuild.PreBuildMessageCode.PRECI_SUPPORTS_REMOTE_TEMPLATES
+import com.tencent.devops.prebuild.PreBuildMessageCode.REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.StreamCommonVariables
@@ -58,12 +61,12 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 class PreBuildV2Service @Autowired constructor(
@@ -225,14 +228,21 @@ class PreBuildV2Service @Autowired constructor(
         param: GetTemplateParam<Any?>
     ): String {
         if (param.targetRepo == null) {
-            throw CustomException(Response.Status.BAD_REQUEST, "PreCI仅支持远程模板")
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = PRECI_SUPPORTS_REMOTE_TEMPLATES
+                )
+            )
         }
 
         if (param.targetRepo?.repository.isNullOrBlank() || param.targetRepo?.name.isNullOrBlank()
         ) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "远程仓关键字不能为空: repository, name"
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
+                )
             )
         }
 
