@@ -1,6 +1,11 @@
 <template>
     <div>
         <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
+            <Icon
+                name="angle-double-right"
+                class="angle-double-right-icon"
+                size="16"
+            />
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -27,8 +32,21 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <a @click="handleShowDetail(props.row)">{{ props.row.aliasName }}</a>
-                    <span class="pac-icon" v-if="props.row.enablePac">
+                    <Icon
+                        v-if="isListFlod"
+                        class="codelib-type-icon"
+                        :name="codelibIconMap[props.row.type]"
+                        size="16"
+                    />
+                    <a
+                        @click="handleShowDetail(props.row)"
+                    >
+                        {{ props.row.aliasName }}
+                    </a>
+                    <span
+                        v-if="props.row.enablePac"
+                        class="pac-icon"
+                    >
                         <Icon name="PACcode" size="22" class="pac-code-icon" />
                         PAC
                     </span>
@@ -42,8 +60,16 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <Icon class="codelib-type-icon" :name="codelibIconMap[props.row.type]" size="16" />
-                    <a @click="handleToCodelib(props.row.url)">{{ props.row.url }}</a>
+                    <Icon
+                        class="codelib-type-icon"
+                        :name="codelibIconMap[props.row.type]"
+                        size="16"
+                    />
+                    <a
+                        @click="handleToCodelib(props.row.url)"
+                    >
+                        {{ props.row.url }}
+                    </a>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -513,11 +539,15 @@
     z-index: 100;
     height: 42px;
     line-height: 42px;
-    left: 336px;
+    left: 320px;
     font-size: 10px;
     color: #3A84FF;
     cursor: pointer;
     text-align: center;
+    .angle-double-right-icon {
+        position: relative;
+        top: 3px;
+    }
 }
 .devops-codelib-table {
     outline: 1px solid #dfe0e5;

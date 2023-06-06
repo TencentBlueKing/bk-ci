@@ -38,17 +38,17 @@
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
                     <span>
-                        {{ curRepo.authType }}@
+                        {{ repoInfo.authType }}@
                     </span>
                     <a
-                        v-if="!['OAUTH'].includes(curRepo.authType)"
-                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${curRepo.authIdentity}`"
+                        v-if="!['OAUTH'].includes(repoInfo.authType)"
+                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
                         target="_blank"
                     >
-                        {{ curRepo.authIdentity }}
+                        {{ repoInfo.credentialId }}
                     </a>
                     <span v-else>
-                        {{ curRepo.authIdentity }}
+                        {{ repoInfo.userName }}
                     </span>
                     <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
@@ -162,6 +162,7 @@
             ext-cls="close-repo-confirm-dialog"
             :value="showClosePac"
             :show-footer="false"
+            @value-change="handlceToggleShowClosePac"
         >
             <span class="toggle-pac-warning-icon">
                 <i class="devops-icon icon-exclamation" />
@@ -198,6 +199,36 @@
                 </bk-button>
             </span>
         </bk-dialog>
+
+        <bk-dialog
+            ext-cls="oauth-confirm-dialog"
+            :width="500"
+            :value="showOauthDialog"
+            :show-footer="false"
+            @value-change="handlceToggleShowOauthDialog"
+        >
+            <span class="toggle-pac-warning-icon">
+                <i class="devops-icon icon-exclamation" />
+            </span>
+            <span class="oauth-confirm-title">
+                {{ $t('codelib.PAC 模式需使用 OAUTH 授权') }}
+            </span>
+            <span v-if="isGit" class="oauth-confirm-tips">
+                <p>{{ $t('codelib.尚未授权，请先点击按钮授权。') }}</p>
+                <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+                <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
+                <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+            </span>
+            <bk-button
+                class="ml10"
+                theme="primary"
+                @click="openValidate"
+            >
+                {{ $t('codelib.oauthCert') }}
+            </bk-button>
+        </bk-dialog>
         <ResetAuthDialog
             ref="resetAuth"
             :cur-repo="curRepo"
@@ -219,6 +250,7 @@
         isTGit
     } from '../../config/'
     import {
+        mapState,
         mapActions
     } from 'vuex'
     import {
@@ -245,6 +277,9 @@
             },
             fetchRepoDetail: {
                 type: Function
+            },
+            refreshCodelibList: {
+                type: Function
             }
         },
         data () {
@@ -254,24 +289,40 @@
                 hasCiFolder: true,
                 showClosePac: false,
                 showEnablePac: false,
+                showOauthDialog: false,
                 isP4: false,
                 isGit: false,
                 isSvn: false,
                 isTGit: false,
                 isGithub: false,
                 isGitLab: false,
-                pacProjectName: ''
+                pacProjectName: '',
+                codelibTypeConstants: ''
             }
         },
         computed: {
+            ...mapState('codelib', [
+                'gitOAuth',
+                'githubOAuth',
+                'tGitOAuth'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
             isOAUTH () {
-                return this.curRepo.authType === 'OAUTH'
+                return this.authType.authType === 'OAUTH'
             },
             repoId () {
                 return this.$route.query.id
+            },
+            hasPower () {
+                return (
+                    (this.isTGit
+                        ? this.tGitOAuth.status
+                        : this.isGit
+                            ? this.gitOAuth.status
+                            : this.githubOAuth.status) !== 403
+                )
             }
         },
         watch: {
@@ -283,23 +334,48 @@
                     this.isTGit = isTGit(val)
                     this.isGithub = isGithub(val)
                     this.isGitLab = isGitLab(val)
+                    this.codelibTypeConstants = val.toLowerCase()
+                        .replace(/^\S*?([github|git|tgit])/i, '$1')
                 },
                 immediate: true
             },
             'repoInfo.url': {
                 handler (val) {
-                    setTimeout(() => {
-                        this.handleCheckPacProject(val)
+                    setTimeout(async () => {
+                        await this.handleCheckPacProject(val)
+                        const { resetType } = this.$route.query
+                        if (resetType) {
+                            await this.handleTogglePacStatus()
+                        }
                     }, 200)
                 },
                 deep: true
             },
             repoId () {
                 this.pacProjectName = ''
+            },
+            codelibTypeConstants (val) {
+                // 校验是否已经授权了OAUTh
+                switch (val) {
+                    case 'git':
+                        this.refreshGitOauth({
+                            resetType: 'checkGitOauth'
+                        })
+                        break
+                    case 'github':
+                        this.refreshGithubOauth({
+                            projectId: this.projectId,
+                            resetType: 'checkGithubOauth'
+                        })
+                        break
+                }
             }
         },
         methods: {
             ...mapActions('codelib', [
+                'editRepo',
+                'refreshGitOauth',
+                'refreshGithubOauth',
                 'closePac',
                 'enablePac',
                 'changeMrBlock',
@@ -319,7 +395,7 @@
              * 校验仓库是否已经在其他项目开启了PAC
              */
             handleCheckPacProject (repoUrl) {
-                if (this.isGit && this.isOAUTH && repoUrl) {
+                if (this.isGit && repoUrl) {
                     this.checkPacProject(repoUrl).then((res) => {
                         this.pacProjectName = res
                     })
@@ -332,7 +408,7 @@
             handleSaveCommon () {
                 this.changeMrBlock({
                     projectId: this.projectId,
-                    repositoryHashId: this.curRepo.repositoryHashId,
+                    repositoryHashId: this.repoInfo.repoHashId,
                     enableMrBlock: this.repoInfo.settings.enableMrBlock
                 }).then(() => {
                     this.$bkMessage({
@@ -363,7 +439,7 @@
                     this.pacProjectName = ''
                     await this.checkHasCiFolder({
                         projectId: this.projectId,
-                        repositoryHashId: this.curRepo.repositoryHashId
+                        repositoryHashId: this.repoInfo.repoHashId
                     }).then(res => {
                         this.hasCiFolder = !res
                     })
@@ -376,6 +452,10 @@
                         })
                     }
                 } else {
+                    if (!this.hasPower) {
+                        this.showOauthDialog = true
+                        return
+                    }
                     if (this.isOAUTH) {
                         this.$bkInfo({
                             title: this.$t('codelib.确定开启 PAC 模式？'),
@@ -386,10 +466,46 @@
                             type: 'warning',
                             title: this.$t('codelib.PAC 模式需使用 OAUTH 授权'),
                             subTitle: this.$t('codelib.确定重置授权为 OAUTH，同时开启 PAC 模式吗？'),
-                            confirmFn: this.handleEnablePac
+                            confirmFn: async () => {
+                                const newRepoInfo = {
+                                    ...this.repoInfo
+                                }
+                                if (newRepoInfo.authType === 'SSH' && newRepoInfo['@type'] === 'codeGit') {
+                                    const urlMap = newRepoInfo.url.split(':')
+                                    const hostName = urlMap[0].split('@')[1]
+                                    const repoName = urlMap[1]
+                                    newRepoInfo.url = `https://${hostName}/${repoName}`
+                                }
+                                newRepoInfo.authType = 'OAUTH'
+                                newRepoInfo.enablePac = true
+                                await this.handleUpdateRepo(newRepoInfo)
+                            }
                         })
                     }
                 }
+            },
+
+            /**
+             * 更新代码库
+             */
+            handleUpdateRepo (repo) {
+                this.editRepo({
+                    projectId: this.projectId,
+                    repositoryHashId: repo.repoHashId,
+                    params: repo
+                }).then(async () => {
+                    await this.fetchRepoDetail(repo.repoHashId)
+                    await this.refreshCodelibList()
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('codelib.开启成功')
+                    })
+                }).catch((e) => {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e || e.message
+                    })
+                })
             },
 
             /**
@@ -398,14 +514,15 @@
             handleClosePac () {
                 this.closePac({
                     projectId: this.projectId,
-                    repositoryHashId: this.curRepo.repositoryHashId
-                }).then(() => {
+                    repositoryHashId: this.repoInfo.repoHashId
+                }).then(async () => {
                     this.$bkMessage({
                         message: this.$t('codelib.关闭成功'),
                         theme: 'success'
                     })
                     this.showClosePac = false
-                    this.fetchRepoDetail(this.curRepo.repositoryHashId)
+                    await this.fetchRepoDetail(this.repoInfo.repoHashId)
+                    await this.refreshCodelibList()
                 })
             },
             /**
@@ -414,19 +531,45 @@
             handleEnablePac () {
                 this.enablePac({
                     projectId: this.projectId,
-                    repositoryHashId: this.curRepo.repositoryHashId
-                }).then(() => {
+                    repositoryHashId: this.repoInfo.repoHashId
+                }).then(async () => {
                     this.$bkMessage({
                         message: this.$t('codelib.开启成功'),
                         theme: 'success'
                     })
-                    this.fetchRepoDetail(this.curRepo.repositoryHashId)
+                    const { id, page, limit } = this.$route.query
+                    this.$router.push({
+                        query: {
+                            id,
+                            page,
+                            limit
+                        }
+                    })
+                    await this.fetchRepoDetail(this.repoInfo.repoHashId)
+                    await this.refreshCodelibList()
                 }).catch((e) => {
                     this.$bkMessage({
                         message: e.message || e,
                         theme: 'error'
                     })
                 })
+            },
+
+            handlceToggleShowClosePac (val) {
+                if (!val) {
+                    this.showClosePac = val
+                    this.isDeleted = false
+                }
+            },
+
+            handlceToggleShowOauthDialog (val) {
+                if (!val) {
+                    this.showOauthDialog = val
+                }
+            },
+
+            async openValidate () {
+                window.location.href = this[`${this.codelibTypeConstants}OAuth`].url
             }
         }
     }
@@ -564,6 +707,7 @@
             }
         }
     }
+    .oauth-confirm-dialog,
     .close-repo-confirm-dialog {
         text-align: center;
         .bk-dialog-body {
@@ -584,6 +728,7 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
+        .oauth-confirm-title,
         .close-confirm-title {
             font-size: 20px;
             color: #313238;
@@ -597,6 +742,13 @@
             span {
                 color: #FF9C01;
             }
+        }
+        .oauth-confirm-tips {
+            text-align: left;
+            margin-top: 16px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #979BA5;
         }
         .close-confirm-footer {
             position: relative;

@@ -240,6 +240,7 @@
                     this.curRepoId = id
                     this.$router.push({
                         query: {
+                            ...this.$route.query,
                             id,
                             page,
                             limit

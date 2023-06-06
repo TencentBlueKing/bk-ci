@@ -106,7 +106,7 @@
                     </span>
                 </div>
                 <div class="pac-tips">
-                    <p>1. {{ $t('codelib.同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC(Pipeline As Code) 模式') }}</p>
+                    <p>1. {{ $t('codelib.同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC (Pipeline As Code) 模式') }}</p>
                     <p>
                         2. {{ $t('codelib.PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。') }}
                         <bk-popover width="380" placement="right-end">

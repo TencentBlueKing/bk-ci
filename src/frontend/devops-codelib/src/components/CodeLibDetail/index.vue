@@ -47,6 +47,11 @@
                 </bk-button>
             </div>
             <div class="address-content">
+                <Icon
+                    class="codelib-type-icon"
+                    :name="codelibIconMap[curRepo.type]"
+                    size="16"
+                />
                 <a
                     class="codelib-address"
                     v-bk-overflow-tips
@@ -74,6 +79,7 @@
                     :cur-repo="curRepo"
                     :type="repoInfo['@type']"
                     :fetch-repo-detail="fetchRepoDetail"
+                    :refresh-codelib-list="refreshCodelibList"
                 >
                 </component>
             </bk-tab-panel>
@@ -137,6 +143,14 @@
                     page: 1,
                     pageSize: 20,
                     repositoryHashId: ''
+                },
+                codelibIconMap: {
+                    CODE_SVN: 'code-SVN',
+                    CODE_GIT: 'code-Git',
+                    CODE_GITLAB: 'code-Gitlab',
+                    GITHUB: 'code-Github',
+                    CODE_TGIT: 'code-TGit',
+                    CODE_P4: 'code-P4'
                 }
             }
         },
@@ -353,6 +367,10 @@
         }
         .address-content {
             white-space: nowrap;
+        }
+        .codelib-type-icon {
+            position: relative;
+            bottom: 16px;
         }
         .codelib-address {
             display: inline-block;

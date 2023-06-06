@@ -6,6 +6,7 @@
         :padding="24"
         :quick-close="false"
         render-directive="if"
+        :show-footer="!isOAUTH"
     >
         <h3 slot="header" class="bk-dialog-title">{{ $t('codelib.resetAuth') }}</h3>
         <bk-form
@@ -69,10 +70,10 @@
                 v-if="!isOAUTH"
                 :label="$t('codelib.codelibCredential')"
                 :required="true"
-                property="authIdentity"
+                property="credentialId"
             >
                 <bk-select
-                    v-model="newRepoInfo.authIdentity"
+                    v-model="newRepoInfo.credentialId"
                     :loading="isLoadingTickets"
                     searchable
                     :clearable="false"
@@ -210,14 +211,33 @@
             ]),
             openValidate () {
                 if (this.isGit) {
-                    this.refreshGitOauth().then(res => {
-                        window.location.href = res.url
+                    this.refreshGitOauth({
+                        resetType: 'resetGitOauth'
+                    }).then(res => {
+                        if (res.status === 200) {
+                            this.newRepoInfo = {
+                                ...this.newRepoInfo,
+                                userName: this.$store.state.user.username
+                            }
+                            this.handleUpdateRepo()
+                        } else {
+                            window.location.href = res.url
+                        }
                     })
                 } else if (this.isGithub) {
                     this.refreshGithubOauth({
-                        projectId: this.projectId
+                        projectId: this.projectId,
+                        resetType: 'resetGithubOauth'
                     }).then(res => {
-                        window.location.href = res.url
+                        if (res.status === 200) {
+                            this.newRepoInfo = {
+                                ...this.newRepoInfo,
+                                userName: this.$store.state.user.username
+                            }
+                            this.handleUpdateRepo()
+                        } else {
+                            window.location.href = res.url
+                        }
                     })
                 }
             },
@@ -250,8 +270,7 @@
                 )
             },
 
-            handleConfirm () {
-                if (this.isOAUTH) return
+            handleUpdateRepo () {
                 this.isSaveLoading = true
                 this.editRepo({
                     projectId: this.projectId,
@@ -272,6 +291,10 @@
                     this.isSaveLoading = false
                     this.isShow = false
                 })
+            },
+            handleConfirm () {
+                if (this.isOAUTH) return
+                this.handleUpdateRepo()
             }
         }
     }
@@ -279,7 +302,7 @@
 
 <style lang="scss">
     .codelib-oauth {
-        margin-top: 20px;
+        margin: 20px 0;
         .refresh-oauth {
             color: #3A84FF;
             cursor: pointer;

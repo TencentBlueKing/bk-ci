@@ -230,9 +230,7 @@ export default {
                 codelib.authType,
                 codelib.svnType
             )
-            if (msg) {
-                this.urlErrMsg = msg
-            }
+            this.urlErrMsg = msg
             
             if (!newVal) {
                 this.urlErrMsg = ''

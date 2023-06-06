@@ -98,7 +98,7 @@ const actions = {
         }
     },
     /**
-     * 新增or编辑代码库
+     * 新增代码库
      *
      * @param {Function} commit store commit mutation handler
      * @param {Object} state store state
@@ -118,7 +118,9 @@ const actions = {
             ...params
         })
     },
-
+    /**
+     * 编辑代码库
+     */
     editRepo ({ commit },
         {
             projectId,
@@ -340,17 +342,28 @@ const actions = {
     /**
      * 刷新git工蜂授权token
      */
-    async refreshGitOauth ({ commit }) {
-        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/git/isOauth?refreshToken=true`)
+    async refreshGitOauth ({ commit }, { resetType = '' }) {
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/git/isOauth?resetType=${resetType}`)
+        commit(SET_OAUTH_MUTATION, {
+            oAuth: res,
+            type: 'git'
+        })
+        return res
     },
 
     /**
      * 刷新github授权token
      */
     async refreshGithubOauth ({ commit }, {
-        projectId
+        projectId,
+        resetType = ''
     }) {
-        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?refreshToken=true&projectId=${projectId}`)
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&resetType=${resetType}`)
+        commit(SET_OAUTH_MUTATION, {
+            oAuth: res,
+            type: 'github'
+        })
+        return res
     },
 
     /**

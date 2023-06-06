@@ -337,29 +337,35 @@
                             if (this.isSvn) {
                                 params.region = parsePathRegion(codelib.url)
                             }
-                            const res = await createRepo({
+                            await createRepo({
                                 projectId,
                                 params,
                                 hashId: repositoryHashId
-                            })
-                            this.$router.push({
-                                query: {
+                            }).then((res) => {
+                                this.$router.push({
+                                    query: {
+                                        id: res.hashId
+                                    }
+                                })
+                                localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
                                     id: res.hashId
-                                }
+                                }))
+                                this.$emit('updateRepoId', res.hashId)
+                                this.toggleCodelibDialog(false)
+                                this.hasValidate = false
+                                this.$bkMessage({
+                                    message: repositoryHashId
+                                        ? this.$t('codelib.successfullyEdited')
+                                        : this.$t('codelib.successfullyAdded'),
+                                    theme: 'success'
+                                })
+                                this.refreshCodelibList()
+                            }).catch(e => {
+                                this.$bkMessage({
+                                    theme: 'error',
+                                    message: e.message || e
+                                })
                             })
-                            localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
-                                id: res.hashId
-                            }))
-                            this.$emit('updateRepoId', res.hashId)
-                            this.toggleCodelibDialog(false)
-                            this.hasValidate = false
-                            this.$bkMessage({
-                                message: repositoryHashId
-                                    ? this.$t('codelib.successfullyEdited')
-                                    : this.$t('codelib.successfullyAdded'),
-                                theme: 'success'
-                            })
-                            this.refreshCodelibList()
                         }
                     }, validator => {
                         console.error(validator)
