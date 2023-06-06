@@ -39,16 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
-import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
-import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
-import com.tencent.devops.experience.dao.ExperienceInnerDao
-import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
-import com.tencent.devops.experience.dao.ExperienceOuterDao
-import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.*
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -140,9 +131,10 @@ class ExperienceBaseService @Autowired constructor(
     ): List<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
+        val redPointKey = ExperienceConstant.redPointKey(userId)
+        val redPointIds = redisOperation.getSetMembers(redPointKey) ?: emptySet()
         val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
             .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
-        val getRedPoint = records.size < 3000 // 避免查询太多次
 
         val result = records.map {
             AppExperience(
@@ -165,12 +157,15 @@ class ExperienceBaseService @Autowired constructor(
                 expired = now.isAfter(it.endDate),
                 subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
                         userId == it.creator,
-                redPointEnabled = if (getRedPoint) redisOperation.isMember(
-                    ExperienceConstant.redPointKey(userId),
-                    it.id.toString()
-                ) else false
+                redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
+
+        // 如果红点太多没有清理, 则自动帮用户清理掉,避免redis堆积
+        if (redPointIds.size > 1000) {
+            redisOperation.delete(redPointKey)
+        }
+
         return result
     }
 
