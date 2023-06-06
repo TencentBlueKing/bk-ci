@@ -161,7 +161,7 @@ object CommonMessageCode {
     const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
     const val SERVICE_PROVIDER_NOT_FOUND = "2100111" // 找不到任何有效的{0}【{1}】服务提供者
     const val ILLEGAL_JOB_TYPE = "2100112" // 非法的job类型!
-    const val ERROR_YAML_FORMAT_EXCEPTION = "2100113" // {0} 中 {1} 格式有误,应为 {2}, error message:${3}
+    const val ERROR_YAML_FORMAT_EXCEPTION = "2100113" // {0} 中 {1} 格式有误,应为 {2}, error message:{3}
     const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2100114" // 请核对Stage标签是否正确
     const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2100115" // "{0} job.id 超过长度限制64 {1}}"
     const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2100116" // {0} 中的step必须包含uses或run或checkout!
