@@ -1375,9 +1375,18 @@ class TemplateFacadeService @Autowired constructor(
                 params = arrayOf("version or versionName")
             )
         }
+
+        // 查询该模板的源模板ID(只查研发商店模板的源模板ID这种情况)
+        val srcTemplateId = templateDao.getSrcTemplateId(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            type = TemplateType.CONSTRAINT.name
+        )
+
         val template = templateDao.getTemplate(
             dslContext = dslContext,
-            templateId = templateId,
+            templateId = srcTemplateId ?: templateId,
             versionName = versionName,
             version = version
         )
@@ -1391,7 +1400,8 @@ class TemplateFacadeService @Autowired constructor(
                     templateVersion = template.version,
                     versionName = template.versionName,
                     templateContent = template.template,
-                    templateInstanceUpdate = it
+                    templateInstanceUpdate = it,
+                    srcTemplateId = srcTemplateId
                 )
                 successPipelines.add(it.pipelineName)
             } catch (ignored: DuplicateKeyException) {
@@ -1424,20 +1434,25 @@ class TemplateFacadeService @Autowired constructor(
         templateVersion: Long,
         versionName: String,
         templateContent: String,
-        templateInstanceUpdate: TemplateInstanceUpdate
+        templateInstanceUpdate: TemplateInstanceUpdate,
+        srcTemplateId: String? = null
     ) {
-        val srcTemplateId = templateDao.getSrcTemplateId(
-            dslContext = dslContext,
-            projectId = projectId,
-            templateId = templateId,
-            type = TemplateType.CONSTRAINT.name
-        )
-        if (srcTemplateId != null) {
+        val templateSrcTemplateId = if (srcTemplateId.isNullOrBlank()) {
+            templateDao.getSrcTemplateId(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = templateId,
+                type = TemplateType.CONSTRAINT.name
+            )
+        } else {
+            srcTemplateId
+        }
+        if (templateSrcTemplateId != null) {
             // 安装的研发商店模板需校验模板下组件可见范围
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateUserTemplateComponentVisibleDept(
                     userId = userId,
-                    templateCode = srcTemplateId,
+                    templateCode = templateSrcTemplateId,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
