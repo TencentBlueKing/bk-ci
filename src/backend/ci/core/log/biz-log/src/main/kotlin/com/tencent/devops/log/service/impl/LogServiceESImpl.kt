@@ -924,7 +924,7 @@ class LogServiceESImpl constructor(
         subTag: String?,
         executeCount: Int?
     ): Pair<QueryLogs, String?> {
-        val logStatus = logStatusService.isFinish(
+        val finished = logStatusService.isFinish(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -932,14 +932,20 @@ class LogServiceESImpl constructor(
             executeCount = executeCount
         )
         val indexName = indexService.getBuildIndexName(buildId)
-        val cleaned = if (!indexName.isNullOrBlank()) {
-            !isExistIndex(buildId, indexName)
+        val (status, msg) = if (indexName.isNullOrBlank() || !isExistIndex(buildId, indexName)) {
+            Pair(LogStatus.CLEAN, null)
         } else {
-            true
+            Pair(LogStatus.SUCCEED, null)
         }
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
         return Pair(
-            QueryLogs(buildId = buildId, finished = logStatus, cleaned = cleaned, subTags = subTags),
+            QueryLogs(
+                buildId = buildId,
+                finished = finished,
+                status = status.status,
+                subTags = subTags,
+                message = msg
+            ),
             indexName
         )
     }
