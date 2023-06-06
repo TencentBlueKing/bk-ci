@@ -247,7 +247,7 @@ class StreamBasicSettingService @Autowired constructor(
                     centerName = "",
                     secrecy = false,
                     kind = 0,
-                    properties = ProjectProperties(PipelineAsCodeSettings(defaultEnable == true))
+                    properties = ProjectProperties(PipelineAsCodeSettings(defaultEnable != false))
                 ),
                 needValidate = false,
                 needAuth = false,
