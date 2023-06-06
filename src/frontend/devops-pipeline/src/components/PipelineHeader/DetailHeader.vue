@@ -79,41 +79,12 @@
         methods: {
             ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline']),
             async handleClick () {
-                this.loading = true
-                if (this.isRunning) {
-                    await this.stopExecute(this.execDetail?.id)
-                } else {
-                    await this.retry(this.execDetail?.id)
-                }
-            },
-            async retry (buildId, goDetail = false) {
-                let message, theme
-                const { projectId, pipelineId } = this.$route.params
                 try {
-                    // 请求执行构建
-                    const res = await this.requestRetryPipeline({
-                        ...this.$route.params,
-                        buildId
-                    })
-
-                    if (res && res.id) {
-                        message = this.$t('subpage.rebuildSuc')
-                        theme = 'success'
-                        this.$router.replace({
-                            name: 'pipelinesDetail',
-                            params: {
-                                ...this.$route.params,
-                                projectId,
-                                pipelineId,
-                                buildNo: res.id,
-                                type: 'executeDetail',
-                                executeCount: res.executeCount
-                            }
-                        })
-                        this.$emit('update-table')
+                    this.loading = true
+                    if (this.isRunning) {
+                        await this.stopExecute(this.execDetail?.id)
                     } else {
-                        message = this.$t('subpage.rebuildFail')
-                        theme = 'error'
+                        await this.retry(this.execDetail?.id)
                     }
                 } catch (err) {
                     this.handleError(err, [
@@ -122,60 +93,62 @@
                             resourceId: this.$permissionResourceMap.pipeline,
                             instanceId: [
                                 {
-                                    id: pipelineId,
-                                    name: this.curPipeline.pipelineName
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
-                } finally {
-                    message
-                        && this.$showTips({
-                            message,
-                            theme
-                        })
-                }
-            },
-            /**
-             *  终止流水线
-             */
-            async stopExecute (buildId) {
-                let message, theme
-
-                try {
-                    const res = await this.requestTerminatePipeline({
-                        ...this.$route.params,
-                        buildId
-                    })
-
-                    if (res) {
-                        message = this.$t('subpage.stopSuc')
-                        theme = 'success'
-                    } else {
-                        message = this.$t('subpage.stopFail')
-                        theme = 'error'
-                    }
-                } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.curPipeline.pipelineId,
+                                    id: this.$route.params.pipelineId,
                                     name: this.curPipeline.pipelineName
                                 }
                             ],
                             projectId: this.$route.params.projectId
                         }
                     ])
-                } finally {
-                    message
-                        && this.$showTips({
-                            message,
-                            theme
-                        })
+                    this.loading = false
+                }
+            },
+            async retry (buildId, goDetail = false) {
+                const { projectId, pipelineId } = this.$route.params
+
+                // 请求执行构建
+                const res = await this.requestRetryPipeline({
+                    ...this.$route.params,
+                    buildId
+                })
+
+                if (res && res.id) {
+                    this.$router.replace({
+                        name: 'pipelinesDetail',
+                        params: {
+                            ...this.$route.params,
+                            projectId,
+                            pipelineId,
+                            buildNo: res.id,
+                            type: 'executeDetail',
+                            executeCount: res.executeCount
+                        }
+                    })
+                    this.$emit('update-table')
+                    this.$showTips({
+                        message: this.$t('subpage.rebuildSuc'),
+                        theme: 'success'
+                    })
+                } else {
+                    throw Error(this.$t('subpage.rebuildFail'))
+                }
+            },
+            /**
+             *  终止流水线
+             */
+            async stopExecute (buildId) {
+                const res = await this.requestTerminatePipeline({
+                    ...this.$route.params,
+                    buildId
+                })
+
+                if (res) {
+                    this.$showTips({
+                        message: this.$t('subpage.stopSuc'),
+                        theme: 'success'
+                    })
+                } else {
+                    throw Error(this.$t('subpage.stopFail'))
                 }
             },
             goExecPreview () {
