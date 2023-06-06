@@ -222,7 +222,7 @@ interface ProjectService {
 
     fun getProjectByName(projectName: String): ProjectVO?
 
-    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties?): Boolean
 
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
