@@ -68,9 +68,7 @@ class TOF4Service @Autowired constructor(
     fun post(url: String, postData: Any, tofConfig: Map<String, String>): TOFResult {
         val body: String
         try {
-            logger.info("TOF4Service postData:$postData")
             body = objectMapper.writeValueAsString(postData)
-            logger.info("TOF4Service body:$body")
         } catch (e: JsonProcessingException) {
             logger.error(String.format("TOF error, post tof data cannot serialize, url: %s", url), e)
             return TOFResult("TOF error, post tof data cannot serialize")
@@ -90,7 +88,6 @@ class TOF4Service @Autowired constructor(
                 .post(requestBody)
                 .headers(headers)
                 .build()
-            logger.info("TOF4Service requestBody:$requestBody")
             okHttpClient.newCall(request).execute().use { response ->
                 responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
@@ -127,6 +124,7 @@ class TOF4Service @Autowired constructor(
         postData: EmailNotifyPost,
         tofConfig: Map<String, String>
     ): TOFResult {
+        logger.info("postData:$postData")
         if (postData.to.isBlank()) {
             logger.warn("TOF invalid argument, email receivers is empty")
             return TOFResult("TOF invalid argument, email receivers is empty")
@@ -146,6 +144,7 @@ class TOF4Service @Autowired constructor(
             "Priority" to postData.priority,
             "BodyFormat" to postData.bodyFormat.toString()
         )
+        logger.info("params:$params")
 
         val taskBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -158,7 +157,7 @@ class TOF4Service @Autowired constructor(
             .addFormDataPart("Title", params["Title"]!!)
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
-
+        logger.info("taskBody:$taskBody")
         postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)
@@ -167,6 +166,7 @@ class TOF4Service @Autowired constructor(
         var responseBody = ""
         val finalUrl = tofConfig["host"]!! + TOF4_EMAIL_URL_WITH_ATTACH
         try {
+            logger.info("taskBody:${taskBody.build()}")
             val taskRequest = Request.Builder()
                 .url(finalUrl)
                 .headers(headers)
