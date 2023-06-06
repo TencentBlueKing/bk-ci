@@ -104,7 +104,6 @@
                         />
                         <bk-table-column
                             label="操作"
-                            width="150"
                         >
                             <template slot-scope="props">
                                 <bk-button theme="primary" text @click="remove(props.row)">移除</bk-button>
@@ -385,8 +384,9 @@
                     this.requestGroups()
                 } else {
                     this.importType = 1
-                    this.innerUsers = []
                 }
+                this.innerUsers = []
+                this.outerUsers = []
             },
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
