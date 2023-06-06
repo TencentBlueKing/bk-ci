@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
     api("org.glassfish.jersey.media:jersey-media-multipart")
 }
 

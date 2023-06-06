@@ -407,26 +407,42 @@ class ImageArtifactoryService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<DockerTag> {
-        val response = bkRepoClient.getBkrepoImage(
+        val data = bkRepoClient.getBkrepoImage(
             projectCode = projectCode,
             repoName = repoName,
             searchKey = searchKey,
             page = page,
             pageSize = pageSize,
-            headers = getHeaders()
+            headers = credential
         )
-        try {
+      /*  try {
             if (!response.isSuccessful) {
                 logger.error("images repository search failed, statusCode: ${response.code}")
                 throw RuntimeException("images repository search failed")
             }
             val responseBody = response.body?.string()
-            logger.info("responseBody: $responseBody")
             return processingImages(responseBody)
         } catch (e: Exception) {
             logger.error("images repository search failed", e)
             throw RuntimeException("images repository search failed")
+        }*/
+        logger.info("data:$data")
+        val records = data.records
+        logger.info("records:$records")
+        val images = mutableListOf<DockerTag>()
+        records.forEach {
+            val dockerTag = DockerTag()
+            dockerTag.created = DateTimeUtil.toDateTime(LocalDateTime.parse(it.createdDate))
+            dockerTag.createdBy = it.createdBy
+            dockerTag.modified = DateTimeUtil.toDateTime(LocalDateTime.parse(it.lastModifiedDate))
+            dockerTag.modifiedBy = it.lastModifiedBy
+            dockerTag.desc = it.description
+            dockerTag.repo = "${it.projectId}/${it.repoName}/${it.name}"
+            dockerTag.tag = it.latest
+            dockerTag.image = "${bkRepoClientConfig.bkRepoIdcHost}/${dockerTag.repo}:${dockerTag.tag}"
+            images.add(dockerTag)
         }
+        return images
     }
     private fun aqlSearchImage(aql: String): List<DockerTag> {
         val url = "${dockerConfig.registryUrl}/api/search/aql"

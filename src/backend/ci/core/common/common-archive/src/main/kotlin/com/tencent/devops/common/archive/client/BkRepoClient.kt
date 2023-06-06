@@ -56,6 +56,7 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -65,6 +66,7 @@ import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
@@ -255,7 +257,7 @@ class BkRepoClient constructor(
         val end = "pageNumber=$page&pageSize=$pageSize"
         stringBuilder.append(start)
         if (!searchKey.isNullOrBlank()) {
-            stringBuilder.append(middle)
+            stringBuilder.append("packageName=$searchKey&")
         }
         return stringBuilder.append(end).toString()
     }
@@ -265,9 +267,22 @@ class BkRepoClient constructor(
         searchKey: String?,
         page: Int,
         pageSize: Int,
-        headers: Map<String, String>
-    ): okhttp3.Response {
-        return OkhttpUtils.doGet(getUrl(projectCode, repoName, searchKey, page, pageSize), headers)
+        headers: String
+    ): BkRepoData {
+        val stringBuilder = StringBuilder("${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?")
+        val end = "pageNumber=$page&pageSize=$pageSize"
+        if (!searchKey.isNullOrBlank()) {
+            stringBuilder.append("packageName=$searchKey&")
+        }
+        val url = stringBuilder.append(end).toString()
+        logger.info("url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .header(AUTH_HEADER_IAM_TOKEN, headers)
+            .get()
+            .build()
+        logger.info("")
+        return doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!
     }
     fun listFilePage(
         userId: String,
@@ -1104,6 +1119,8 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
+        logger.info("before data: ${doRequest(request).resolveResponse<Response<QueryData>>()}")
+        logger.info("data: ${doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!}")
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 

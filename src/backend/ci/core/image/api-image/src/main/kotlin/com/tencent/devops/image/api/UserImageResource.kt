@@ -30,6 +30,8 @@ package com.tencent.devops.image.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -166,8 +168,9 @@ interface UserImageResource {
         @QueryParam("page")
         page: Int,
         @ApiParam(value = "每页数量", required = true)
-        @QueryParam("size")
-        size: Int
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        @QueryParam("pageSize")
+        pageSize: Int
     ): Result<ImageListResp>
 
     @ApiOperation("获取项目构建镜像列表")
