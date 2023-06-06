@@ -68,7 +68,9 @@ class TOF4Service @Autowired constructor(
     fun post(url: String, postData: Any, tofConfig: Map<String, String>): TOFResult {
         val body: String
         try {
+            logger.info("TOF4Service postData:$postData")
             body = objectMapper.writeValueAsString(postData)
+            logger.info("TOF4Service body:$body")
         } catch (e: JsonProcessingException) {
             logger.error(String.format("TOF error, post tof data cannot serialize, url: %s", url), e)
             return TOFResult("TOF error, post tof data cannot serialize")
@@ -88,7 +90,7 @@ class TOF4Service @Autowired constructor(
                 .post(requestBody)
                 .headers(headers)
                 .build()
-
+            logger.info("TOF4Service requestBody:$requestBody")
             okHttpClient.newCall(request).execute().use { response ->
                 responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
