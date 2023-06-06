@@ -124,7 +124,6 @@ class TOF4Service @Autowired constructor(
         postData: EmailNotifyPost,
         tofConfig: Map<String, String>
     ): TOFResult {
-        logger.info("postData:${postData.to}")
         if (postData.to.isBlank()) {
             logger.warn("TOF invalid argument, email receivers is empty")
             return TOFResult("TOF invalid argument, email receivers is empty")
@@ -144,7 +143,6 @@ class TOF4Service @Autowired constructor(
             "Priority" to postData.priority,
             "BodyFormat" to postData.bodyFormat.toString()
         )
-        logger.info("params:${params["To"]}")
 
         val taskBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -165,7 +163,6 @@ class TOF4Service @Autowired constructor(
         var responseBody = ""
         val finalUrl = tofConfig["host"]!! + TOF4_EMAIL_URL_WITH_ATTACH
         try {
-            logger.info("taskBody:${taskBody.build()}")
             val taskRequest = Request.Builder()
                 .url(finalUrl)
                 .headers(headers)
