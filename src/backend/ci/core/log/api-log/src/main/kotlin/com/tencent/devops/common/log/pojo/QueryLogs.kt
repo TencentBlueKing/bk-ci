@@ -52,5 +52,5 @@ data class QueryLogs(
     @ApiModelProperty("日志子tag列表", required = false)
     var subTags: List<String>? = null,
     @ApiModelProperty("错误信息", required = false)
-    var message: List<String>? = null
+    var message: String? = null
 )
