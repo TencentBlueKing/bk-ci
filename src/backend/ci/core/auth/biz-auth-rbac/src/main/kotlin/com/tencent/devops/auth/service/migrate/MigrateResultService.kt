@@ -103,6 +103,7 @@ class MigrateResultService constructor(
                     if (resourceCode == "*" ||
                         action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                        projectCode = projectCode,
                         resourceType = resourceType,
                         migrateResourceCode = resourceCode
                     )
