@@ -168,7 +168,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.body = weworkGroupTemplate.body
                     this.title = weworkGroupTemplate.title
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
@@ -182,7 +182,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.title = weworkTemplate.title
                     this.sender = weworkTemplate.sender
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
@@ -197,7 +197,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.bodyFormat = emailTemplate.bodyFormat?.getValue()?.toByte()
                     this.emailType = emailTemplate.emailType?.getValue()?.toByte()
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
