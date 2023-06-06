@@ -310,7 +310,7 @@
                 return this.$route.params.projectId
             },
             isOAUTH () {
-                return this.authType.authType === 'OAUTH'
+                return this.repoInfo.authType === 'OAUTH'
             },
             repoId () {
                 return this.$route.query.id
