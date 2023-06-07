@@ -28,6 +28,18 @@
                                     </bk-popover>
                                 </template>
                             </bk-table-column>
+                            <bk-table-column label="内部组织" prop="deptsCount">
+                                <template slot-scope="props">
+                                    <bk-popover placement="bottom" :trigger="props.row.deptsCount ? 'mouseenter focus' : 'manual'">
+                                        <span class="handler-inner">{{ props.row.deptsCount }}</span>
+                                        <template slot="content">
+                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                                                {{ props.row.depts.join(",") }}
+                                            </p>
+                                        </template>
+                                    </bk-popover>
+                                </template>
+                            </bk-table-column>
                             <bk-table-column label="外部人员" prop="outerUsersCount">
                                 <template slot-scope="props">
                                     <bk-popover placement="bottom" :trigger="props.row.outerUsersCount ? 'mouseenter focus' : 'manual'">
@@ -218,7 +230,7 @@
                 return true
             },
             afterCreateGroup () {
-                this.requestList()
+                this.init()
                 this.groupSideslider.visible = false
             },
             cancelFn () {
