@@ -176,7 +176,7 @@ class QualityHistoryService @Autowired constructor(
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
-                        )
+                        ) + "\n"
                 )
             }
             val remark = sb.toString()
@@ -439,7 +439,7 @@ class QualityHistoryService @Autowired constructor(
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
-                        )
+                        ) + "\n"
                     )
             }
             val remark = sb.toString()
@@ -597,12 +597,12 @@ class QualityHistoryService @Autowired constructor(
                 if (result == RuleInterceptResult.PASS) {
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_VALIDATION_PASSED,
-                        params = arrayOf("$pipelineName", buildName, "$time")
+                        params = arrayOf("$pipelineName", buildName, time)
                     )
                 } else {
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_VALIDATION_INTERCEPTED,
-                        params = arrayOf("$pipelineName", buildName, "$time")
+                        params = arrayOf("$pipelineName", buildName, time)
                     )
                 }
             } else {
@@ -711,7 +711,7 @@ class QualityHistoryService @Autowired constructor(
                             "${intercept.actualValue}",
                             "$thresholdOperationName${intercept.value}"
                         )
-                    )
+                    ) + "\n"
                 )
             }
             val remark = sb.toString()

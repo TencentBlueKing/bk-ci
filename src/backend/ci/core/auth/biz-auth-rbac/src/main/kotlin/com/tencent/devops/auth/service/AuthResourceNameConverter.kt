@@ -26,41 +26,38 @@
  *
  */
 
-package com.tencent.devops.auth.service.migrate
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 
 /**
- * 资源code转换
+ * 蓝盾资源名转换iam资源名
  */
-class MigrateResourceCodeConverter constructor(
-    private val client: Client
-) {
+class AuthResourceNameConverter {
 
-    fun getRbacResourceCode(projectCode: String, resourceType: String, migrateResourceCode: String): String? {
+    fun generateIamName(
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): String {
         return when (resourceType) {
-            // v3流水线使用的是流水线自增Id，rbac需获取具体的pipelineId
-            AuthResourceType.PIPELINE_DEFAULT.value -> {
-                getPipelineId(projectCode = projectCode, resourceCode = migrateResourceCode)
-            }
-            // v3代码库使用的是代码库自增ID，rbac使用的是hashId
-            AuthResourceType.CODE_REPERTORY.value -> {
-                HashUtil.encodeOtherLongId(migrateResourceCode.toLong())
-            }
-            else -> migrateResourceCode
-        }
-    }
+            // 质量红线规则、质量红线通知组、版本体验组、版本体验资源名可以重复,创建二级管理员时就会报名称冲突,需要转换
+            AuthResourceType.EXPERIENCE_GROUP_NEW.value,
+            AuthResourceType.EXPERIENCE_TASK_NEW.value,
+            AuthResourceType.QUALITY_RULE.value,
+            AuthResourceType.QUALITY_GROUP_NEW.value ->
+                IamGroupUtils.buildSubsetManagerGroupName(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
 
-    private fun getPipelineId(projectCode: String, resourceCode: String): String? {
-        return try {
-            val pipelineInfo = client.get(ServicePipelineResource::class)
-                .getPipelineInfobyAutoId(projectId = projectCode, id = resourceCode.toLong()).data
-            pipelineInfo?.pipelineId
-        } catch (ignore: Exception) {
-            resourceCode
+            else ->
+                IamGroupUtils.buildSubsetManagerGroupName(
+                    resourceType = resourceType,
+                    resourceName = resourceName
+                )
         }
     }
 }

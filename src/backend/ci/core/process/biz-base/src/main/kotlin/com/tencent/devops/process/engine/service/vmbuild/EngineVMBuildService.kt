@@ -414,8 +414,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
 
         // #1613 完善日志
-        val typeName = errorType?.typeName
-        errorType?.let { message = "$message \nerrorType: ${I18nUtil.getCodeLanMessage("errorType.$typeName")}" }
+        errorType?.let { message = "$message \nerrorType: ${errorType.getI18n(I18nUtil.getDefaultLocaleLanguage())}" }
         errorCode?.let { message = "$message \nerrorCode: $errorCode" }
         errorMsg?.let { message = "$message \nerrorMsg: $errorMsg" }
 

@@ -39,6 +39,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
@@ -79,13 +80,15 @@ class RbacServiceConfiguration {
         iamV2ManagerService: V2ManagerService,
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authResourceNameConverter: AuthResourceNameConverter
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         iamV2ManagerService = iamV2ManagerService,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceNameConverter = authResourceNameConverter
     )
 
     @Bean
@@ -158,4 +161,7 @@ class RbacServiceConfiguration {
         dslContext = dslContext,
         authResourceDao = authResourceDao
     )
+
+    @Bean
+    fun authResourceNameConverter() = AuthResourceNameConverter()
 }
