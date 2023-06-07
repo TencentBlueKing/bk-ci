@@ -103,6 +103,7 @@ class ManualTriggerService @Autowired constructor(
     streamYamlBuild: StreamYamlBuild,
     private val yamlTemplateService: YamlTemplateService
 ) : BaseManualTriggerService(
+    client = client,
     dslContext = dslContext,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
