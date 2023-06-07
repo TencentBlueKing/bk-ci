@@ -163,7 +163,7 @@
                 innerOrg: null,
                 pagination: {
                     current: 1,
-                    count: 0,
+                    count: this.createGroupForm.members.length,
                     limit: 10
                 }
             }
@@ -333,17 +333,17 @@
                     this.innerUsers = []
                     this.outerUsers = []
                     this.innerOrg = null
-                    this.pagination = {
-                        current: 1,
-                        count: 0,
-                        limit: 10
-                    }
+                    
+                    this.filters = {}
+                    this.clearFilter()
+                    this.clearSort()
                 }
             }
         },
         created () {
             this.fetchOuterUserList()
         },
+    
         methods: {
             ...mapActions('experience', [
                 'requestUserGroup',
