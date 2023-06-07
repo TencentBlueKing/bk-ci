@@ -400,9 +400,9 @@
                 this.pagination.current = page
             },
             handleImportTypeSelected (value) {
+                this.importType = value
                 const option = this.importTypeList.find(item => item.id === value)
                 if (!this.isManual) {
-                    this.importType = value
                     this.innerUsers = option.users
                     return
                 }
