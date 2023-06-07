@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.annotation.PreDestroy
 
 /**
  * 线程池封装类
@@ -54,6 +55,7 @@ class MacOSThreadPoolUtils private constructor() {
         }
     }
 
+    @PreDestroy
     fun destroy() {
         // 当线程池内还有线程执行时，阻塞服务的退出
         ThreadPoolName.values().forEach { poolName ->

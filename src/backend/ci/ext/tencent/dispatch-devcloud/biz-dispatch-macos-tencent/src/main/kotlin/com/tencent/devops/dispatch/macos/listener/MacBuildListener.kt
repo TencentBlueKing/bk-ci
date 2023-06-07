@@ -68,7 +68,7 @@ class MacBuildListener @Autowired constructor(
             // 构建任务被线程池拒绝，重新回队列
             logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId}|${dispatchMessage.executeCount} " +
                             "build task rejected. Retry")
-            retry(sleepTimeInMS = 5000, retryTimes = 120)
+            retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
         }
     }
 
@@ -147,7 +147,7 @@ class MacBuildListener @Autowired constructor(
                 )
 
                 logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 5s")
-                retry(sleepTimeInMS = 5000, retryTimes = 120)
+                retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
             }
         } catch (e: BuildFailureException) {
             handleStartupException(
