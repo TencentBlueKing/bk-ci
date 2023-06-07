@@ -226,6 +226,7 @@ class MigrateV0PolicyService constructor(
                         val v0ResourceCode = managerPath.id
                         // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
                         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                            projectCode = projectCode,
                             resourceType = pathResourceType,
                             migrateResourceCode = v0ResourceCode
                         ) ?: v0ResourceCode
@@ -313,6 +314,7 @@ class MigrateV0PolicyService constructor(
         logger.info("match min resource group|$userId|$projectCode|$resourceType|$v0ResourceCode|$userActions")
         // 先将v0资源code转换成rbac资源code
         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+            projectCode = projectCode,
             resourceType = resourceType,
             migrateResourceCode = v0ResourceCode
         ) ?: return null
@@ -363,7 +365,7 @@ class MigrateV0PolicyService constructor(
         }
     }
 
-    override fun getGroupName(result: MigrateTaskDataResult): String {
+    override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
         return result.subject.name!!
     }
 }

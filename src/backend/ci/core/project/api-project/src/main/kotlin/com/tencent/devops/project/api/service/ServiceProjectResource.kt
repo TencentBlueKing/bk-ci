@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
@@ -77,15 +78,17 @@ interface ServiceProjectResource {
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
 
-    @GET
-    @Path("/listMigrateProjects")
-    @ApiOperation("获取迁移项目")
+    @POST
+    @Path("/listMigrateProjects/{offset}/{limit}")
+    @ApiOperation("条件迁移项目实体")
     fun listMigrateProjects(
+        @ApiParam("条件迁移项目实体", required = false)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         @ApiParam("limit", required = true)
-        @QueryParam("limit")
+        @PathParam("limit")
         limit: Int,
         @ApiParam("offset", required = true)
-        @QueryParam("offset")
+        @PathParam("offset")
         offset: Int
     ): Result<List<ProjectWithPermission>>
 
