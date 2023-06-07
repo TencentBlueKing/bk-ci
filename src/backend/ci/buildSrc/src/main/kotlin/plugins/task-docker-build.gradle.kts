@@ -36,19 +36,16 @@ val serviceName = System.getProperty("serviceName")
 // 加这个判断 , 主要是为了编译kts时不报错
 if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNullOrBlank())) {
     val service = serviceName.takeUnless { it.isNullOrBlank() }
-        ?: name.replace("boot-", "")
-            .replace("-tencent", "")
-
+        ?: name.replace("boot-", "").replace("-tencent", "")
     if (toImage.isNullOrBlank() && !toImageRepo.isNullOrBlank()) {
         toImage = toImageRepo.let {
             if (toImageRepo.endsWith("/")) it else it + "/"
         } + "bkci-" + service + ":" + toImageTag
     }
-
     val configNamespace = System.getProperty("config.namespace")
-
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
     val multiModelDataSource = System.getProperty("devops.multi.datasource")
+
     val finalJvmFlags = mutableListOf(
         "-server",
         "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8080",
@@ -88,7 +85,9 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
             it.add("-Ddevops.multi.datasource=$multiModelDataSource")
         }
     }
+
     finalJvmFlags.addAll(jvmFlagList)
+
     jib {
         // 环境变量
         container {
