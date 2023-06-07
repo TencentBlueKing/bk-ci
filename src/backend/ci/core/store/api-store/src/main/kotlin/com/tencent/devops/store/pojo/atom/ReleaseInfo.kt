@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("插件发布部署模型")
 data class ReleaseInfo(
     @ApiModelProperty("项目编码", required = true)
-    var projectId: String,
+    var projectId: String = "",
     @ApiModelProperty("插件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,

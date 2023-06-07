@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -107,14 +108,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
-        // 校验用户是否是该插件的开发成员
-        val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        if (!flag) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(atomCode)
-            )
-        }
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
             return I18nUtil.generateResponseDataObject(
@@ -124,6 +117,21 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             )
         }
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        if (atomRecord.classType != atomCode) {
+            // 校验用户是否是该插件的开发成员
+            val flag = storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+            if (!flag) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PERMISSION_DENIED,
+                    params = arrayOf(atomCode)
+                )
+            }
+        }
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>

@@ -414,7 +414,6 @@ class OpAtomServiceImpl @Autowired constructor(
         if (addMarketAtomResult.isNotOk()) {
             return Result(data = false, message = addMarketAtomResult.message)
         }
-        val atomId = addMarketAtomResult.data!!
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
@@ -475,7 +474,6 @@ class OpAtomServiceImpl @Autowired constructor(
                 val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
-                    atomId = atomId,
                     atomCode = atomCode,
                     version = releaseInfo.versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
@@ -536,6 +534,7 @@ class OpAtomServiceImpl @Autowired constructor(
         if (releaseInfo.configInfo.defaultFlag) {
             setDefault(userId, atomCode)
         }
+        val atomId = updateMarketAtomResult.data!!
         // 确认测试通过
         return atomReleaseService.passTest(userId, atomId)
     }
