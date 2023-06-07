@@ -275,15 +275,15 @@ class BkRepoClient constructor(
             stringBuilder.append("packageName=$searchKey&")
         }
         val url = stringBuilder.append(end).toString()
-        logger.info("url: $url")
+        logger.info("getBkrepoImage url: $url")
         val request = Request.Builder()
             .url(url)
             .header(AUTH_HEADER_IAM_TOKEN, headers)
             .get()
             .build()
         logger.info("request: ${doRequest(request)}")
-        logger.info("before data: ${doRequest(request).resolveResponse<Response<QueryData>>()}")
-        logger.info("data: ${doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!}")
+        logger.info("before data: ${doRequest(request).resolveResponse<Response<BkRepoData>>()}")
+        logger.info("data: ${doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!}")
         return doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!
     }
     fun listFilePage(
