@@ -61,11 +61,17 @@ class GithubOAuthService @Autowired constructor(
     private val githubUserService: GithubUserService
 ) {
 
-    fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
+    fun getGithubOauth(
+        projectId: String,
+        userId: String,
+        repoHashId: String?,
+        popupTag: String? = "#popupGithub"
+    ): GithubOauth {
         val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId).toString() else ""
-        val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
+        val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}," +
+            "$popupTag"
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
         return GithubOauth(redirectUrl)
     }
 
@@ -120,7 +126,8 @@ class GithubOAuthService @Autowired constructor(
         val projectId = arrays[1]
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""
         val githubToken = getAccessTokenImpl(code, githubTokenType)
-
+        // 弹框标志位
+        val popupTag = arrays.getOrNull(4) ?: ""
         githubTokenService.createAccessToken(
             userId = userId,
             accessToken = githubToken.accessToken,
@@ -130,7 +137,7 @@ class GithubOAuthService @Autowired constructor(
         )
         return GithubOauthCallback(
             userId = userId,
-            redirectUrl = "${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId"
+            redirectUrl = "${gitConfig.githubRedirectUrl}/$projectId$popupTag$repoHashId"
         )
     }
 
