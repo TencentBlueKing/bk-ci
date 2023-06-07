@@ -127,7 +127,7 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
                 errorInfoList = null,
