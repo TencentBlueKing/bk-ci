@@ -120,6 +120,7 @@ class GroupService @Autowired constructor(
 
         val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
         val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
+        val groupIdToDepts = experienceBaseService.getGroupIdToDept(groupIds, true)
 
         val list = groupListResult.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
@@ -131,6 +132,7 @@ class GroupService @Autowired constructor(
                 outerUsersCount = groupIdToOuters[it.id]?.size ?: 0,
                 innerUsers = groupIdToInnerUserIds[it.id] ?: emptySet(),
                 outerUsers = groupIdToOuters[it.id] ?: emptySet(),
+                depts = groupIdToDepts[it.id] ?: emptySet(),
                 creator = it.creator,
                 remark = it.remark ?: "",
                 permissions = GroupPermission(canEdit, canDelete)
@@ -147,6 +149,7 @@ class GroupService @Autowired constructor(
                     outerUsersCount = 0,
                     innerUsers = ExperienceConstant.PUBLIC_INNER_USERS,
                     outerUsers = emptySet(),
+                    depts = emptySet(),
                     creator = "admin",
                     remark = "",
                     permissions = GroupPermission(canEdit = false, canDelete = false)
@@ -237,11 +240,13 @@ class GroupService @Autowired constructor(
         val groupRecord = groupDao.get(dslContext, groupId)
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
+        val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, setOf(groupId)).map { it.deptName }.toSet()
         return Group(
             groupHashId = groupHashId,
             name = groupRecord.name,
             innerUsers = userIds,
             outerUsers = outers,
+            depts = depts,
             remark = groupRecord.remark ?: ""
         )
     }

@@ -40,6 +40,8 @@ data class Group(
     val innerUsers: Set<String>,
     @ApiModelProperty("外部人员")
     val outerUsers: Set<String>,
+    @ApiModelProperty("组织架构")
+    val depts: Set<String>,
     @ApiModelProperty("描述")
     val remark: String?
 )

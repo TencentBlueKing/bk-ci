@@ -39,7 +39,17 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
-import com.tencent.devops.experience.dao.*
+import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
+import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceGroupDepartmentDao
+import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
+import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
+import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperienceOuterDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -235,8 +245,8 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
+        val groupIds = getGroupIdsByRecordId(experienceId)
         val inGroup = lazy {
-            val groupIds = getGroupIdsByRecordId(experienceId)
             if (isOuter) {
                 getGroupIdToOuters(groupIds)
             } else {
@@ -253,9 +263,28 @@ class ExperienceBaseService @Autowired constructor(
                     .contains(userId)
             }
         }
+
+        val isInDept = lazy {
+            if (isOuter) return@lazy false else {
+                for (depts in getGroupIdToDept(groupIds, false).values) {
+                    for (dept in depts) {
+                        val staffInfoList =
+                            client.get(ServiceProjectOrganizationResource::class).getDeptStaffsWithLevel(dept, 10).data
+                                ?: continue
+                        for (staffInfo in staffInfoList) {
+                            if (staffInfo.loginName == userId) {
+                                return@lazy true
+                            }
+                        }
+                    }
+                }
+                return@lazy false
+            }
+        }
+
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
-        return inGroup.value || isInnerUser.value || isCreator.value
+        return inGroup.value || isInnerUser.value || isCreator.value || isInDept.value
     }
 
     /**
@@ -289,32 +318,7 @@ class ExperienceBaseService @Autowired constructor(
         experienceId: Long,
         userId: String
     ): Boolean {
-        val groupIds = getGroupIdsByRecordId(experienceId)
-        val isOuterGroup = lazy {
-            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
-                .contains(userId)
-        }
-        val isInnerGroup = lazy {
-            getGroupIdToInnerUserIds(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
-                .contains(userId)
-        }
-        val isInnerUser = lazy {
-            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
-        }
-        val isOuterUser = lazy {
-            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
-        }
-        val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
-
-        logger.info(
-            "isOuterGroup:${isOuterGroup.value}, " +
-                    "isInnerGroup:${isInnerGroup.value}, isInnerUser:${isInnerUser.value}, " +
-                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator.value}"
-        )
-        return isOuterGroup.value || isInnerGroup.value ||
-                isInnerUser.value || isOuterUser.value || isCreator.value
+        return isInPrivate(experienceId, userId, false) || isInPrivate(experienceId, userId, true)
     }
 
     /**
@@ -372,20 +376,27 @@ class ExperienceBaseService @Autowired constructor(
             }
             userIds.add(it.userId)
         }
-        experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds).forEach { dept ->
-            client.get(ServiceProjectOrganizationResource::class)
-                .getDeptStaffsWithLevel(dept.deptId, 10)
-                .data?.forEach {
-                    var userIds = groupIdToUserIds[dept.groupId]
-                    if (null == userIds) {
-                        userIds = mutableSetOf()
-                        groupIdToUserIds[dept.groupId] = userIds!!
-                    }
-                    userIds!!.add(it.loginName)
-                }
-        }
 
         return groupIdToUserIds
+    }
+
+    fun getGroupIdToDept(groupIds: Set<Long>, useName: Boolean): MutableMap<Long, MutableSet<String>> {
+        val groupIdToDeptIds = mutableMapOf<Long, MutableSet<String>>()
+
+        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
+            groupIdToDeptIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+        }
+
+        experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds).forEach {
+            var userIds = groupIdToDeptIds[it.groupId]
+            if (null == userIds) {
+                userIds = mutableSetOf()
+                groupIdToDeptIds[it.groupId] = userIds
+            }
+            userIds.add(if (useName) it.deptName else it.deptId)
+        }
+
+        return groupIdToDeptIds
     }
 
     /**
