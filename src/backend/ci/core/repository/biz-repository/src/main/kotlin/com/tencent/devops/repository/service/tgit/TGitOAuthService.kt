@@ -71,7 +71,12 @@ class TGitOAuthService @Autowired constructor(
     fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
         logger.info("start to get project: userId:$userId")
         val accessToken =
-            getAccessToken(userId) ?: return isOAuth(userId, redirectUrl = gitConfig.redirectUrl + "/$projectId")
+            getAccessToken(userId) ?: return isOAuth(
+                userId = userId,
+                redirectUrlType = RedirectUrlTypeEnum.SPEC,
+                redirectUrl = gitConfig.redirectUrl + "/$projectId/#popupTGit",
+                refreshToken = true
+            )
         val authResult = AuthorizeResult(200, "")
         return try {
             authResult.project.addAll(
