@@ -80,29 +80,32 @@
                         :pagination="pagination"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange"
+                        @filter-change="handleFilterChange"
                     >
                         <bk-table-column
                             label="人员名称"
                             prop="name"
+                            column-key="name"
                             sortable
                             show-overflow-tooltip
                             :filters="nameFilter"
                             filter-searchable
-                            :filter-method="filterMethod"
                             
                         />
                         <bk-table-column
                             label="内部/外部"
                             prop="typeLabel"
+                            column-key="type"
                             :filters="typeFilters"
-                            :filter-method="typeFilterMethod"
+                            
                         />
                         <bk-table-column
                             label="所属组织架构"
                             prop="deptFullName"
+                            column-key="deptFullName"
                             show-overflow-tooltip
                             :filters="orgFilters"
-                            :filter-method="filterMethod"
+                            
                         />
                         <bk-table-column
                             label="操作"
@@ -147,6 +150,7 @@
         },
         data () {
             return {
+                filters: {},
                 adding: false,
                 userGroupList: [],
                 externalUserList: [],
@@ -284,9 +288,21 @@
                         }
                 }
             },
+            filterMembers () {
+                const filterKeys = Object.keys(this.filters)
+                if (filterKeys.length === 0) { // 没有过滤条件
+                    return this.createGroupForm.members
+                }
+                console.log(this.filters, filterKeys)
+                return this.createGroupForm.members.filter(item => {
+                    return filterKeys.every(key => {
+                        return this.filters[key].includes(item[key])
+                    })
+                })
+            },
             userList () {
                 const start = (this.pagination.current - 1) * this.pagination.limit
-                return this.createGroupForm.members.map(item => ({
+                return this.filterMembers.map(item => ({
                     ...item,
                     typeLabel: this.manualOptions.find(opt => opt.id === item.type)?.name ?? 'unknow'
                 })).slice(start, start + this.pagination.limit)
@@ -305,8 +321,9 @@
             }
         },
         watch: {
-            'createGroupForm.members.length': function (len) {
+            'filterMembers.length': function (len) {
                 this.pagination.count = len
+                this.pagination.current = 1
             },
             visible (val) {
                 if (!val) { // 重置
@@ -513,8 +530,7 @@
                     temp = temp.parent
                     arr.unshift(temp.name)
                 }
-                console.log(arr)
-                return arr
+                return arr.join('/')
             },
             async handleSubmit () {
                 let message, theme
@@ -558,6 +574,18 @@
             },
             typeFilterMethod (value, row) {
                 return row.type === value
+            },
+            handleFilterChange (filter) {
+                const filters = {
+                    ...this.filters,
+                    ...filter
+                }
+                this.filters = Object.keys(filters).filter(key => {
+                    return filters[key].length > 0
+                }).reduce((acc, key) => {
+                    acc[key] = filters[key]
+                    return acc
+                }, {})
             }
         }
     }
