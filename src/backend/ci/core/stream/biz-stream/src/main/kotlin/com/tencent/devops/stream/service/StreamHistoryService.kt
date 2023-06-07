@@ -123,7 +123,9 @@ class StreamHistoryService @Autowired constructor(
             commitMsg = search?.commitMsg,
             buildStatus = null,
             pipelineIds = search?.pipelineIds,
-            buildIds = buildIds?.toSet()
+            buildIds = buildIds?.toSet(),
+            startTime = startTime,
+            endTime = endTime
         )
         if (totalPage == 0) {
             return Page(
