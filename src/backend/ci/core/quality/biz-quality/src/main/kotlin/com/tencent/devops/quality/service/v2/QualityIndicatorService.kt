@@ -124,8 +124,8 @@ class QualityIndicatorService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality indicator")
                     val classPathResource = ClassPathResource(
@@ -136,8 +136,8 @@ class QualityIndicatorService @Autowired constructor(
                     val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
                     indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
                     logger.info("init quality indicator end")
-                } catch (e: Exception) {
-                    logger.debug("init quality indicator fail! error:$e")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality indicator fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }

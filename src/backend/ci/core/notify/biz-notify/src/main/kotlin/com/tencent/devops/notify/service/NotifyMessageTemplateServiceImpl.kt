@@ -113,14 +113,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init MessageTemplate")
                     updateMessageTemplate()
                     logger.info("start init MessageTemplate succeed")
-                } catch (e: Exception) {
-                    logger.warn("start init MessageTemplate fail! error:$e")
+                } catch (ignored: Throwable) {
+                    logger.warn("start init MessageTemplate fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }

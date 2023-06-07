@@ -76,8 +76,8 @@ class QualityControlPointService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality control point")
                     val classPathResource = ClassPathResource(
@@ -88,8 +88,8 @@ class QualityControlPointService @Autowired constructor(
                     val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
                     controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
                     logger.info("init quality control point end")
-                } catch (e: Exception) {
-                    logger.debug("init quality control point fail! error:$e")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality control point fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
