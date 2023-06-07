@@ -47,18 +47,20 @@ data class MutexGroup(
     var timeoutVar: String? = null,
     @ApiModelProperty("排队队列大小", required = false)
     val queue: Int = 0,
-    @ApiModelProperty("是否已经初始化", required = false)
-    var inited: Boolean? = null,
+    @ApiModelProperty("运行时实际互斥锁名称（有值则已初始化）", required = false)
+    var runtimeMutexGroup: String? = null,
     @ApiModelProperty("占用锁定的信息用于日志提示", required = false)
     var linkTip: String? = null // #5454 占用锁定的信息用于日志提示/不写入到Model，仅在构建开始时产生
 ) {
+    fun fetchRuntimeMutexGroup() = runtimeMutexGroup ?: mutexGroupName ?: ""
+
     fun genMutexLockKey(projectId: String): String {
-        val mutexGroupName = mutexGroupName ?: ""
+        val mutexGroupName = fetchRuntimeMutexGroup()
         return "lock:container:mutex:$projectId:$mutexGroupName:lock"
     }
 
     fun genMutexQueueKey(projectId: String): String {
-        val mutexGroupName = mutexGroupName ?: ""
+        val mutexGroupName = fetchRuntimeMutexGroup()
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
     }
 
