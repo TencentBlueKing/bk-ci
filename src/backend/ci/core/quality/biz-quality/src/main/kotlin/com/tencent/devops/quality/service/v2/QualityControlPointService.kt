@@ -88,6 +88,8 @@ class QualityControlPointService @Autowired constructor(
                     val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
                     controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
                     logger.info("init quality control point end")
+                } catch (e: Exception) {
+                    logger.debug("init quality control point fail! error:$e")
                 } finally {
                     redisLock.unlock()
                 }

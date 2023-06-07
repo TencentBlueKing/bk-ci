@@ -89,6 +89,8 @@ class QualityTemplateService @Autowired constructor(
                         JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
                     ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
                     logger.info("init quality rule template end")
+                } catch (e: Exception) {
+                    logger.debug("init quality rule template fail! error:$e")
                 } finally {
                     redisLock.unlock()
                 }

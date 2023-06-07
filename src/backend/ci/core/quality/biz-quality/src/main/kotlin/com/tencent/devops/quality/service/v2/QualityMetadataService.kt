@@ -83,7 +83,9 @@ class QualityMetadataService @Autowired constructor(
                     val qualityMetadataPOs = JsonUtil.to(json, object : TypeReference<List<QualityMetadataPO>>() {})
                     metadataDao.batchCrateQualityMetadata(dslContext, qualityMetadataPOs)
                     logger.info("init quality metadata end")
-                } finally {
+                } catch (e: Exception) {
+                    logger.debug("init quality metadata fail! error:$e")
+                }  finally {
                     redisLock.unlock()
                 }
             }

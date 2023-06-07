@@ -118,8 +118,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 try {
                     logger.info("start init MessageTemplate")
                     updateMessageTemplate()
+                    logger.info("start init MessageTemplate succeed")
                 } catch (e: Exception) {
-                    logger.debug("start init MessageTemplate fail! error:$e")
+                    logger.warn("start init MessageTemplate fail! error:$e")
                 } finally {
                     redisLock.unlock()
                 }

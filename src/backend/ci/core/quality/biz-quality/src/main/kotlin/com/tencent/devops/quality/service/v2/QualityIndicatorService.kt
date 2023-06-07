@@ -136,6 +136,8 @@ class QualityIndicatorService @Autowired constructor(
                     val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
                     indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
                     logger.info("init quality indicator end")
+                } catch (e: Exception) {
+                    logger.debug("init quality indicator fail! error:$e")
                 } finally {
                     redisLock.unlock()
                 }
