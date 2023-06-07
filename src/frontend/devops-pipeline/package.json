@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "@blueking/search-select": "0.0.1-beta.2",
-        "@blueking/log": "2.0.12-beta.3",
+        "@blueking/log": "2.0.14",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.15-beta.7",
