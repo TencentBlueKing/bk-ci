@@ -15,5 +15,6 @@ export const BkciDocs = {
 }
 export const pipelineDocs = {
     ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档
+    PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/FAQS/FAQ.md`, // 流水线编辑指引文档
     NAMESPACE_DOC: `${DOCS_URL_PREFIX}/docs/document/6.1/183/22916` // 命名空间文档
 }

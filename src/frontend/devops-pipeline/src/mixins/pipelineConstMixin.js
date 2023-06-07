@@ -110,11 +110,6 @@ const pipelineConstMixin = {
         customColumn () {
             return ['material', 'stageStatus', 'errorCode']
         }
-    },
-    methods: {
-        getStatusLabel (STATUS) {
-            return this.$t(`details.statusMap.${STATUS}`)
-        }
     }
 }
 
