@@ -127,12 +127,12 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 /**
  *
@@ -423,11 +423,18 @@ class PipelineBuildFacadeService(
             )
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
+            val webHookStartParam = HashMap<String, BuildParameters>(100, 1F)
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
             buildVariableService.getVariable(
                 projectId, pipelineId, buildId, PIPELINE_START_TASK_ID
             )?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
+            }
+
+            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+            buildInfo.buildParameters?.forEach { param -> webHookStartParam[param.key] = param }
+            webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
+                webHookStartParam[param.key] = param
             }
             val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
@@ -502,11 +509,7 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
-                    val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
-                    buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
-                    webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
-                        paramMap[param.key] = param
-                    }
+                    paramMap.putAll(webHookStartParam)
                     if (setting?.cleanVariablesWhenRetry == true) {
                         buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
                     }
@@ -539,7 +542,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = buildInfo.version,
                 frequencyLimit = true,
-                handlePostFlag = false
+                handlePostFlag = false,
+                webHookStartParam = webHookStartParam
             )
         } finally {
             redisLock.unlock()
@@ -2164,7 +2168,8 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
+                msg = "$msg| ${
+                    I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
                 }"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")
