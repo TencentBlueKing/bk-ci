@@ -36,10 +36,12 @@ data class GroupSummaryWithPermission(
     val groupHashId: String,
     @ApiModelProperty("体验组名称", required = true)
     val name: String,
-    @ApiModelProperty("内部人员", required = true)
+    @ApiModelProperty("内部人员数量", required = true)
     val innerUsersCount: Int,
-    @ApiModelProperty("外部人员", required = true)
+    @ApiModelProperty("外部人员数量", required = true)
     val outerUsersCount: Int,
+    @ApiModelProperty("组织架构数量", required = true)
+    val deptsCount: Int,
     @ApiModelProperty("内部人员")
     val innerUsers: Set<String>,
     @ApiModelProperty("外部人员")
