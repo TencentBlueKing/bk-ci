@@ -277,7 +277,7 @@ data class StartBuildContext(
                     ?.concurrencyGroup?.let {
                         val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
                         val tConcurrencyGroup = EnvUtils.parseEnv(
-                            it, PipelineVarUtil.fillContextVarMap(params.plus(webhookParam))
+                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
                         )
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
