@@ -659,7 +659,7 @@ class PipelineBuildFacadeService(
     ): String? {
 
         if (checkPermission) {
-            val permission = AuthPermission.DELETE
+            val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
