@@ -29,8 +29,6 @@ data class BkRepoInfo(
     val lastModifiedBy: String,
     @ApiModelProperty("修改时间")
     val lastModifiedDate: String,
-/*    @ApiModelProperty("扩展信息")
-    val extension: List<Map<String,String>>,*/
     @ApiModelProperty("历史版本")
     val historyVersion: List<String>
 
