@@ -98,7 +98,10 @@ class TGitOAuthService @Autowired constructor(
         } catch (e: Exception) {
             logger.info("get oauth project fail: ${e.message}")
             isOAuth(
-                userId = userId, redirectUrl = gitConfig.redirectUrl + "/$projectId/#popupTGit", refreshToken = true
+                userId = userId,
+                redirectUrlType = RedirectUrlTypeEnum.SPEC,
+                redirectUrl = gitConfig.redirectUrl + "/$projectId/#popupTGit",
+                refreshToken = true
             )
         }
     }
