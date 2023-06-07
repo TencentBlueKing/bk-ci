@@ -87,6 +87,7 @@
                             sortable
                             show-overflow-tooltip
                             :filters="nameFilter"
+                            filter-searchable
                             :filter-method="filterMethod"
                             
                         />
@@ -388,9 +389,8 @@
                     this.requestGroups()
                 } else {
                     this.importType = 1
+                    this.innerUsers = []
                 }
-                this.innerUsers = []
-                this.outerUsers = []
             },
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
@@ -401,8 +401,8 @@
             },
             handleImportTypeSelected (value) {
                 const option = this.importTypeList.find(item => item.id === value)
-                this.importType = value
                 if (!this.isManual) {
+                    this.importType = value
                     this.innerUsers = option.users
                     return
                 }
