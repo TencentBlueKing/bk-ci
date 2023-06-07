@@ -240,7 +240,8 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
-        if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
+        // #8890 当保存model时的timeout有值则以timeout为准，只有仅传timeoutVar能生效
+        if (!element.additionalOptions?.timeoutVar.isNullOrBlank() && element.additionalOptions?.timeout == null) {
             val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
@@ -255,6 +256,8 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             element.additionalOptions?.timeout = obj.minutes.toLong()
+        } else {
+            element.additionalOptions?.timeoutVar = element.additionalOptions?.timeout.toString()
         }
     }
 
@@ -394,9 +397,9 @@ open class DefaultModelCheckPlugin constructor(
             is VMBuildContainer -> container.mutexGroup
             is NormalContainer -> container.mutexGroup
             else -> return
-        }
-
-        if (mutexGroup != null) {
+        } ?: return
+        // #8890 当保存model时的timeout有值则以timeout为准，只有仅传timeoutVar能生效
+        if (mutexGroup.timeout == null) {
             val obj = Timeout.decTimeout(timeoutVar = mutexGroup.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
@@ -411,6 +414,8 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             mutexGroup.timeout = obj.minutes
+        } else if (mutexGroup.timeoutVar.isNullOrBlank()) {
+            mutexGroup.timeoutVar = mutexGroup.timeout.toString()
         }
     }
 
@@ -444,8 +449,8 @@ open class DefaultModelCheckPlugin constructor(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION)
             }
         }
-
-        if (!jobControlOption.timeoutVar.isNullOrBlank()) {
+        // #8890 当保存model时的timeout有值则以timeout为准，只有仅传timeoutVar能生效
+        if (!jobControlOption.timeoutVar.isNullOrBlank() && jobControlOption.timeout == null) {
             val obj = Timeout.decTimeout(timeoutVar = jobControlOption.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
@@ -467,6 +472,9 @@ open class DefaultModelCheckPlugin constructor(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                         "|bad timeout: ${obj.beforeChangeStr}"
                 )
+            }
+            if (jobControlOption.timeoutVar.isNullOrBlank()) {
+                jobControlOption.timeoutVar = jobControlOption.timeout.toString()
             }
         }
     }

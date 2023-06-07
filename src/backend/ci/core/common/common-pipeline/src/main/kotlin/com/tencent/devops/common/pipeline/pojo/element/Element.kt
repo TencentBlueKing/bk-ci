@@ -165,9 +165,10 @@ abstract class Element(
     /**
      * 兼容性初始化等处理
      */
-    fun transformCompatibility() {
+    fun transformCompatibility(reset: Boolean = false) {
         if (additionalOptions != null && additionalOptions!!.timeoutVar.isNullOrBlank()) {
             additionalOptions!!.timeoutVar = additionalOptions!!.timeout.toString()
+            if (reset) additionalOptions!!.timeout = null
         }
     }
 

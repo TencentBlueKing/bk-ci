@@ -334,10 +334,12 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
         checkParam(userId, projectId)
+        // #8890 当保存model时的timeout有值则以timeout为准，只有仅传timeoutVar能生效
         val pipeline = pipelineInfoFacadeService.getPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            reset = true,
             channelCode = ChannelCode.BS
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -352,7 +354,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = ChannelCode.BS,
-                version = version
+                version = version,
+                reset = true
             )
         )
     }

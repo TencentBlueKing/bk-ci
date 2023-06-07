@@ -118,10 +118,10 @@ class MutexControl @Autowired constructor(
                     mutexGroup.timeoutVar!!.toInt()
                 }
             } catch (ignore: NumberFormatException) { // 解析失败，以timeout为准
-                mutexGroup.timeout
+                mutexGroup.timeout ?: 0
             }
         } else {
-            mutexGroup.timeout
+            mutexGroup.timeout ?: 0
         }).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
 
     internal fun acquireMutex(mutexGroup: MutexGroup?, container: PipelineBuildContainer): ContainerMutexStatus {
@@ -301,7 +301,10 @@ class MutexControl @Autowired constructor(
             val currentTime = LocalDateTime.now().timestamp()
             val timeDiff = currentTime - startTime
             // 排队等待时间为0的时候，立即超时, 退出队列，并失败, 没有就继续在队列中,timeOut时间为分钟
-            if (mutexGroup.timeout == 0 || timeDiff > TimeUnit.MINUTES.toSeconds(mutexGroup.timeout.toLong())) {
+            if (
+                mutexGroup.timeout == 0 ||
+                mutexGroup.timeout?.let { timeDiff > TimeUnit.MINUTES.toSeconds(it.toLong()) } == true
+            ) {
                 val desc = "${
                     if (mutexGroup.timeoutVar.isNullOrBlank()) {
                         "[${mutexGroup.timeout} minutes]"

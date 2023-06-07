@@ -803,6 +803,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode,
         version: Int? = null,
+        reset: Boolean? = false,
         checkPermission: Boolean = true
     ): Model {
         if (checkPermission) {
@@ -871,7 +872,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
-                it.transformCompatibility()
+                it.transformCompatibility(reset == true)
             }
 
             // 部分老的模板实例没有templateId，需要手动加上

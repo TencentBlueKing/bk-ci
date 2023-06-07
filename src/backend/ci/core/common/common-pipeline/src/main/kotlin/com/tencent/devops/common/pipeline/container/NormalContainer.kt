@@ -130,13 +130,15 @@ data class NormalContainer(
         return matrixContext
     }
 
-    override fun transformCompatibility() {
+    override fun transformCompatibility(reset: Boolean) {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
+            if (reset) jobControlOption?.timeout = null
         }
         if (mutexGroup?.timeoutVar.isNullOrBlank()) {
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
+            if (reset) mutexGroup?.timeout = null
         }
-        super.transformCompatibility()
+        super.transformCompatibility(reset)
     }
 }
