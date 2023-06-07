@@ -261,7 +261,7 @@ class BkRepoClient constructor(
         }
         return stringBuilder.append(end).toString()
     }
-    fun getBkrepoImage(
+    fun getBkRepoImage(
         projectCode: String,
         repoName: String,
         searchKey: String?,
@@ -269,21 +269,19 @@ class BkRepoClient constructor(
         pageSize: Int,
         headers: String
     ): BkRepoData {
-        val stringBuilder = StringBuilder("${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?")
+        val stringBuilder = StringBuilder(
+            "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
+        )
         val end = "pageNumber=$page&pageSize=$pageSize"
         if (!searchKey.isNullOrBlank()) {
             stringBuilder.append("packageName=$searchKey&")
         }
         val url = stringBuilder.append(end).toString()
-        logger.info("getBkrepoImage url: $url")
         val request = Request.Builder()
             .url(url)
             .header(AUTH_HEADER_IAM_TOKEN, headers)
             .get()
             .build()
-        logger.info("request: ${doRequest(request)}")
-        logger.info("before data: ${doRequest(request).resolveResponse<Response<BkRepoData>>()}")
-        logger.info("data: ${doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!}")
         return doRequest(request).resolveResponse<Response<BkRepoData>>()!!.data!!
     }
     fun listFilePage(

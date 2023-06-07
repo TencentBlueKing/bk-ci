@@ -156,7 +156,7 @@ class ImageArtifactoryService @Autowired constructor(
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): ImageListResp {
         // 查询项目镜像列表
         val imageList = mutableListOf<ImageItem>()
-        val projectImages = getImagesByUrl(projectCode, repoName, searchKey, page, pageSize)
+        val projectImages = getBkRepoImages(projectCode, repoName, searchKey, page, pageSize)
         if (projectImages.isEmpty()) {
             return ImageListResp(imageList)
         }
@@ -400,14 +400,14 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getImagesByUrl(
+    fun getBkRepoImages(
         projectCode: String,
         repoName: String,
         searchKey: String?,
         page: Int,
         pageSize: Int
     ): List<DockerTag> {
-        val data = bkRepoClient.getBkrepoImage(
+        val bkRepoData = bkRepoClient.getBkRepoImage(
             projectCode = projectCode,
             repoName = repoName,
             searchKey = searchKey,
@@ -415,22 +415,8 @@ class ImageArtifactoryService @Autowired constructor(
             pageSize = pageSize,
             headers = credential
         )
-      /*  try {
-            if (!response.isSuccessful) {
-                logger.error("images repository search failed, statusCode: ${response.code}")
-                throw RuntimeException("images repository search failed")
-            }
-            val responseBody = response.body?.string()
-            return processingImages(responseBody)
-        } catch (e: Exception) {
-            logger.error("images repository search failed", e)
-            throw RuntimeException("images repository search failed")
-        }*/
-        logger.info("data:$data")
-        val records = data.records
-        logger.info("records:$records")
         val images = mutableListOf<DockerTag>()
-        records.forEach {
+        bkRepoData.records.forEach {
             val dockerTag = DockerTag()
             dockerTag.created = DateTimeUtil.toDateTime(LocalDateTime.parse(it.createdDate))
             dockerTag.createdBy = it.createdBy
@@ -475,29 +461,6 @@ class ImageArtifactoryService @Autowired constructor(
                 throw RuntimeException("aql search failed")
             }
         }
-    }
-
-    fun processingImages(dataStr: String?): List<DockerTag> {
-        val images = mutableListOf<DockerTag>()
-        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
-        if (responseData["data"] == null) {
-            return images
-        }
-        val results: Map<String, Any> = responseData["data"] as Map<String, Any>
-        val records = results["records"] as List<Map<String, Any>>
-        records.forEach {
-            val dockerTag = DockerTag()
-            dockerTag.created = DateTimeUtil.toDateTime(LocalDateTime.parse(it["createdDate"] as String))
-            dockerTag.createdBy = it["createdBy"] as String?
-            dockerTag.modified = DateTimeUtil.toDateTime(LocalDateTime.parse(it["lastModifiedDate"] as String))
-            dockerTag.modifiedBy = it["lastModifiedBy"] as String?
-            dockerTag.desc = it["description"] as String?
-            dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"
-            dockerTag.tag = it["latest"] as String?
-            dockerTag.image = "${bkRepoClientConfig.bkRepoIdcHost}/${dockerTag.repo}:${dockerTag.tag}"
-            images.add(dockerTag)
-        }
-        return images
     }
 
     private fun parseImages(dataStr: String): List<DockerTag> {
