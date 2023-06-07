@@ -85,7 +85,7 @@ class QualityMetadataService @Autowired constructor(
                     logger.info("init quality metadata end")
                 } catch (e: Exception) {
                     logger.debug("init quality metadata fail! error:$e")
-                }  finally {
+                } finally {
                     redisLock.unlock()
                 }
             }
