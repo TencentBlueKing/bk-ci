@@ -1,5 +1,8 @@
 <template>
     <article class="log-home">
+        <span @click="closeLog" class="log-home-close-bar">
+            <i class="devops-icon icon-angle-right"></i>
+        </span>
         <section :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
@@ -35,18 +38,9 @@
             }
         },
 
-        mounted () {
-            document.addEventListener('mousedown', this.closeLog)
-        },
-
-        beforeDestroy () {
-            document.removeEventListener('mousedown', this.closeLog)
-        },
-
         methods: {
             closeLog (event) {
-                const curTarget = event.target
-                if (curTarget.classList.contains('log-home')) this.$emit('close')
+                this.$emit('close')
             }
         }
     }
@@ -84,11 +78,11 @@
 
     .log-home {
         position: fixed;
+        width: 80vw;
+        right: 26px;
         top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background-color: rgba(0, 0, 0, .2);
+        height: calc(100vh - 32px);
+        // background-color: rgba(0, 0, 0, .2);
         z-index: 1000;
         .scroll-loading {
             position: absolute;
@@ -98,13 +92,13 @@
         }
         .log-main {
             position: relative;
-            width: 80%;
-            height: calc(100% - 32px);
-            float: right;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             margin: 16px;
             border-radius: 6px;
+            border-top-left-radius: 0;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
             &.over-hidden {
@@ -137,11 +131,26 @@
             &.white-theme {
                 background: #fff;
                 overflow: auto;
+                box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
                 &.log-main .log-head {
-                    border-top-left-radius: 6px;
                     border-top-right-radius: 6px;
                 }
             }
         }
+    }
+    .log-home-close-bar {
+        cursor: pointer;
+        height: 59px;
+        width: 26px;
+        position: absolute;
+        left: -10px;
+        top: 16px;
+        background: #464953;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-top-left-radius: 6px;
+        border-bottom-left-radius: 6px;
     }
 </style>

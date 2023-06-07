@@ -9,7 +9,7 @@
         </vertical-tab>
         <div class="artifactory-empty" v-else-if="showContent && !codeCommitList.length">
             <div class="no-data-right">
-                <img src="../../images/box.png">
+                <logo name="empty" size="180" />
                 <p>{{ $t('details.noCodeRecords') }}</p>
             </div>
         </div>
@@ -18,8 +18,10 @@
 
 <script>
     import VerticalTab from '../PipelineEditTabs/VerticalTab'
+    import Logo from '@/components/Logo'
     export default {
         components: {
+            Logo,
             VerticalTab
         },
         data () {

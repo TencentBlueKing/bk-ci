@@ -5,7 +5,7 @@
         current-tab="log"
     >
         <template v-slot:content>
-            <plugin-log :build-id="execDetail.id" :execute-count="1" />
+            <plugin-log :build-id="execDetail.id" :execute-count="executeCount" :exec-detail="execDetail" />
         </template>
     </detail-container>
 </template>
@@ -19,6 +19,12 @@
         components: {
             detailContainer,
             pluginLog
+        },
+        props: {
+            executeCount: {
+                type: Number,
+                default: 1
+            }
         },
 
         computed: {
