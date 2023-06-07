@@ -400,19 +400,21 @@ class OpAtomServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        // 新增插件
-        val addMarketAtomResult = atomReleaseService.addMarketAtom(
-            userId,
-            MarketAtomCreateRequest(
-                projectCode = releaseInfo.projectId,
-                atomCode = atomCode,
-                name = releaseInfo.name,
-                language = releaseInfo.language,
-                frontendType = releaseInfo.configInfo.frontendType
+        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW) {
+            // 新增插件
+            val addMarketAtomResult = atomReleaseService.addMarketAtom(
+                userId,
+                MarketAtomCreateRequest(
+                    projectCode = releaseInfo.projectId,
+                    atomCode = atomCode,
+                    name = releaseInfo.name,
+                    language = releaseInfo.language,
+                    frontendType = releaseInfo.configInfo.frontendType
+                )
             )
-        )
-        if (addMarketAtomResult.isNotOk()) {
-            return Result(data = false, message = addMarketAtomResult.message)
+            if (addMarketAtomResult.isNotOk()) {
+                return Result(data = false, message = addMarketAtomResult.message)
+            }
         }
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
