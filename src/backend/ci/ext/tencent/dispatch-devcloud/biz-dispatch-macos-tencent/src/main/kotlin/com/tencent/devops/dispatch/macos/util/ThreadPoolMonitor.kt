@@ -10,7 +10,7 @@ import javax.annotation.PreDestroy
  * 线程池监控类
  */
 @Component
-class ThreadPoolMonitor{
+class ThreadPoolMonitor {
 
     @PreDestroy
     fun destroy() {
