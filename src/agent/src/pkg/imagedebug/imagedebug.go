@@ -34,7 +34,6 @@ var imageDebugLogs *logrus.Entry
 
 func DoPullAndDebug() {
 	if !systemutil.IsLinux() {
-		logs.Info("image debug not support windows/macos")
 		return
 	}
 
@@ -341,9 +340,15 @@ func CreateExecServer(
 	containerReady chan string,
 	debugDone chan struct{},
 ) error {
+	port, err := NewPortAllocator().AllocateNodePort()
+	if err != nil {
+		imageDebugLogs.WithError(err).Error("allocator port error")
+		return err
+	}
+
 	conf := &ConsoleProxyConfig{
 		Address:        "0.0.0.0",
-		Port:           8072,
+		Port:           port,
 		ServCert:       &CertConfig{},
 		DockerEndpoint: "unix:///var/run/docker.sock",
 		Privilege:      false,
@@ -356,7 +361,7 @@ func CreateExecServer(
 
 	backend := NewManager(conf)
 
-	err := backend.Start()
+	err = backend.Start()
 	if err != nil {
 		imageDebugLogs.Errorf("exec server start manager error %s", err.Error())
 		return err
@@ -395,6 +400,8 @@ func CreateExecServer(
 	imageDebugLogs.Debugf("ws url: %s", url)
 
 	select {
+	case <-debugDone:
+		return nil
 	case <-ctx.Done():
 		return nil
 	}

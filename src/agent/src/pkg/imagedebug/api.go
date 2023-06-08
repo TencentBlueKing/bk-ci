@@ -7,8 +7,6 @@ import (
 	"net"
 	"net/http"
 	"sync"
-
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 // Router is api router
@@ -62,7 +60,7 @@ func InitRouter(ctx context.Context, b Manager, conf *ConsoleProxyConfig, errorC
 	// 	fmt.Printf("tls server failed: %v\n", err)
 	// }()
 	// } else {
-	logs.Infof("Start http service on(%s:%d)", r.conf.Address, r.conf.Port)
+	imageDebugLogs.Infof("Start http service on(%s:%d)", r.conf.Address, r.conf.Port)
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
