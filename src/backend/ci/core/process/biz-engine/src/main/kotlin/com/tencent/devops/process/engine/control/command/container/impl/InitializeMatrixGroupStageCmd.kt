@@ -331,6 +331,14 @@ class InitializeMatrixGroupStageCmd(
                         )
                     )
                     recordContainer?.let {
+                        val containerVar = mutableMapOf<String, Any>(
+                            "@type" to newContainer.getClassType(),
+                            Container::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            Container::name.name to (newContainer.name)
+                        )
+                        modelContainer.mutexGroup?.let {
+                            containerVar[VMBuildContainer::mutexGroup.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -343,11 +351,7 @@ class InitializeMatrixGroupStageCmd(
                                 executeCount = context.executeCount,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
-                                containerVar = mutableMapOf(
-                                    "@type" to newContainer.getClassType(),
-                                    Container::containerHashId.name to (newContainer.containerHashId ?: ""),
-                                    Container::name.name to (newContainer.name)
-                                ),
+                                containerVar = containerVar,
                                 status = newContainer.status,
                                 startTime = null,
                                 endTime = null,
@@ -439,6 +443,14 @@ class InitializeMatrixGroupStageCmd(
                         )
                     )
                     recordContainer?.let {
+                        val containerVar = mutableMapOf<String, Any>(
+                            "@type" to newContainer.getClassType(),
+                            Container::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            Container::name.name to (newContainer.name)
+                        )
+                        modelContainer.mutexGroup?.let {
+                            containerVar[VMBuildContainer::mutexGroup.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -451,11 +463,7 @@ class InitializeMatrixGroupStageCmd(
                                 executeCount = context.executeCount,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
-                                containerVar = mutableMapOf(
-                                    "@type" to newContainer.getClassType(),
-                                    Container::containerHashId.name to (newContainer.containerHashId ?: ""),
-                                    Container::name.name to (newContainer.name)
-                                ),
+                                containerVar = containerVar,
                                 status = newContainer.status,
                                 startTime = null,
                                 endTime = null,

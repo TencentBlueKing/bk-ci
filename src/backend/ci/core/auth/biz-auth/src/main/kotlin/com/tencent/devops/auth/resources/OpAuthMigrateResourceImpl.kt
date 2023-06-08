@@ -31,6 +31,7 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,5 +50,13 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
 
     override fun allToRbacAuth(): Result<Boolean> {
         return Result(permissionMigrateService.allToRbacAuth())
+    }
+
+    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.toRbacAuthByCondition(
+                migrateProjectConditionDTO = migrateProjectConditionDTO
+            )
+        )
     }
 }

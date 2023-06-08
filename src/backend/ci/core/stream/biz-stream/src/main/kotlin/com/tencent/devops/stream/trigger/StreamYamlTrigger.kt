@@ -56,6 +56,8 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
+import com.tencent.devops.stream.trigger.actions.tgit.TGitNoteActionGit
+import com.tencent.devops.stream.trigger.actions.tgit.TGitReviewActionGit
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -72,6 +74,7 @@ import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.util.GitCommonUtils
+import com.tencent.devops.stream.util.HandsomeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -292,6 +295,10 @@ class StreamYamlTrigger @Autowired constructor(
             "StreamYamlTrigger|triggerBuild|pipelineId|${pipeline.pipelineId}" +
                 "|parsedYaml|$parsedYaml|normalize yaml|$normalizedYaml"
         )
+
+        if (action is TGitNoteActionGit || action is TGitReviewActionGit) {
+            HandsomeUtil.issue8910(normalizedYaml, pipeline.gitProjectId, pipeline.pipelineId, pipeline.filePath)
+        }
         // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
         if (needChangePipelineDisplayName(action)) {
             pipeline.displayName = yamlObject.name?.ifBlank {

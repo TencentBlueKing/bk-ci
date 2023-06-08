@@ -59,8 +59,8 @@ class TxPermissionServiceImpl @Autowired constructor(
     val authVerifyRecordService: AuthVerifyRecordService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
 
-    private val v3BsProjectsCache = CacheBuilder.newBuilder()
-        .maximumSize(500)
+    private val projectChannelCache = CacheBuilder.newBuilder()
+        .maximumSize(2000)
         .expireAfterWrite(10, TimeUnit.HOURS)
         .build<String/*projectCode*/, Boolean/*isBsChannel*/>()
 
@@ -139,11 +139,11 @@ class TxPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkBsChannelProject(projectCode: String): Boolean {
-        return v3BsProjectsCache.getIfPresent(projectCode) ?: run {
+        return projectChannelCache.getIfPresent(projectCode) ?: run {
             val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
             if (projectInfo != null) {
                 val isBsChannelProject = projectInfo.channelCode == ProjectChannelCode.BS.name
-                v3BsProjectsCache.put(projectCode, isBsChannelProject)
+                projectChannelCache.put(projectCode, isBsChannelProject)
                 isBsChannelProject
             } else {
                 false

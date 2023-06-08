@@ -203,7 +203,7 @@ abstract class AbMigratePolicyService(
             }
 
             // 创建用户组
-            val groupName = getGroupName(result)
+            val groupName = getGroupName(projectName = projectName, result = result)
             val groupInfo = authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -247,7 +247,7 @@ abstract class AbMigratePolicyService(
 
     abstract fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?)
 
-    abstract fun getGroupName(result: MigrateTaskDataResult): String
+    abstract fun getGroupName(projectName: String, result: MigrateTaskDataResult): String
 
     fun migrateUserCustomPolicy(projectCode: String, version: String) {
         logger.info("start to migrate user custom policy|$projectCode")

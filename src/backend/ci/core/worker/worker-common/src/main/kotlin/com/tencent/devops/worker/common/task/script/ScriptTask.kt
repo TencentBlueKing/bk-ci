@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -52,9 +51,9 @@ import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
-import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -151,11 +150,14 @@ open class ScriptTask : ITask() {
                     )
                 }
             }
-            val errorMsg = (if (ignore is TaskExecuteException) {
-                ignore.errorMsg
-            } else "") + I18nUtil.getCodeLanMessage(
+            val errorMsg = (
+                if (ignore is TaskExecuteException) {
+                    ignore.errorMsg
+                } else ""
+                ) + MessageUtil.getMessageByLocale(
                 messageCode = "$USER_SCRIPT_TASK_FAIL",
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage(),
+                checkUrlDecoder = true
             )
 
             throw TaskExecuteException(
