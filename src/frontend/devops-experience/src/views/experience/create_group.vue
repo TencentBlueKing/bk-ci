@@ -88,8 +88,8 @@
                             column-key="name"
                             sortable
                             show-overflow-tooltip
-                            :filters="nameFilter"
                             filter-searchable
+                            :filters="nameFilter"
                             
                         />
                         <bk-table-column
@@ -104,6 +104,7 @@
                             prop="deptFullName"
                             column-key="deptFullName"
                             show-overflow-tooltip
+                            filter-searchable
                             :filters="orgFilters"
                             
                         />
@@ -133,7 +134,7 @@
 
 <script>
     import OrgnizationSelector from '@/components/OrgnizationSelector'
-    import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -445,7 +446,7 @@
                                     name: fullName,
                                     id: this.innerOrg.id,
                                     type: 3,
-                                    deptFullName: fullName
+                                    deptFullName: this.innerOrg?.parent?.name ?? '--'
                                 },
                                 ...this.createGroupForm.members
                             ]
