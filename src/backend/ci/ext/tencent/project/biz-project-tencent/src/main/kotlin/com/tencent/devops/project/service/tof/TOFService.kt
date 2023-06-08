@@ -46,7 +46,15 @@ import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
-import com.tencent.devops.project.pojo.tof.*
+import com.tencent.devops.project.pojo.tof.APIModule
+import com.tencent.devops.project.pojo.tof.ChildDeptRequest
+import com.tencent.devops.project.pojo.tof.ChildDeptResponse
+import com.tencent.devops.project.pojo.tof.DeptInfoRequest
+import com.tencent.devops.project.pojo.tof.DeptInfoResponse
+import com.tencent.devops.project.pojo.tof.DeptStaffsRequest
+import com.tencent.devops.project.pojo.tof.ParentDeptInfoRequest
+import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils

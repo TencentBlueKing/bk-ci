@@ -17,7 +17,7 @@ class ExperienceGroupDepartmentDao {
         deptId: String,
         deptLevel: Int,
         deptName: String,
-        deptFullName: String,
+        deptFullName: String
     ) {
         with(TExperienceGroupDepartment.T_EXPERIENCE_GROUP_DEPARTMENT) {
             val now = LocalDateTime.now()

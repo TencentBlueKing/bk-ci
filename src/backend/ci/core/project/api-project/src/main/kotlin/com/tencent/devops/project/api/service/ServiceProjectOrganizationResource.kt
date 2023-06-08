@@ -97,5 +97,5 @@ interface ServiceProjectOrganizationResource {
         @ApiParam("向上查询的层级数")
         @PathParam("level")
         level: Int
-    ):Result<List<StaffInfo>>
+    ): Result<List<StaffInfo>>
 }

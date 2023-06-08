@@ -12,7 +12,7 @@ data class GroupV2(
     @ApiModelProperty("描述")
     val remark: String,
     @ApiModelProperty("成员列表")
-    val members: List<Member>,
+    val members: List<Member>
 ) {
     @ApiModel("版本体验-体验组-成员信息")
     data class Member(

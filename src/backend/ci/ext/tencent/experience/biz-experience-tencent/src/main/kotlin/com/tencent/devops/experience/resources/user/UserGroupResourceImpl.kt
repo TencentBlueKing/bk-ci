@@ -34,7 +34,15 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
-import com.tencent.devops.experience.pojo.group.*
+import com.tencent.devops.experience.pojo.group.Group
+import com.tencent.devops.experience.pojo.group.GroupBatchName
+import com.tencent.devops.experience.pojo.group.GroupCommit
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupDeptFullName
+import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
+import com.tencent.devops.experience.pojo.group.GroupV2
 import com.tencent.devops.experience.service.GroupService
 import org.springframework.beans.factory.annotation.Autowired
 
