@@ -1388,7 +1388,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
         }
-        return buildRecordService.get(
+        return buildRecordService.getBuildRecord(
             buildInfo = buildInfo,
             executeCount = executeCount
         ) ?: throw ErrorCodeException(
