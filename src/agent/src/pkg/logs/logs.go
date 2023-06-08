@@ -43,6 +43,7 @@ func Init(filepath string, isDebug bool) error {
 func UNTestDebugInit() {
 	logInfo := log.WithFields(log.Fields{})
 	logInfo.Logger.SetOutput(os.Stdout)
+	logInfo.Logger.SetLevel(logrus.DebugLevel)
 	Logs = logInfo
 }
 

@@ -56,12 +56,12 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId         string         `json:"agentId"`
-	SecretKey       string         `json:"secretKey"`
-	Image           string         `json:"image"`
+	AgentId         string        `json:"agentId"`
+	SecretKey       string        `json:"secretKey"`
+	Image           string        `json:"image"`
 	Credential      Credential    `json:"credential"`
 	Options         DockerOptions `json:"options"`
-	ImagePullPolicy string         `json:"imagePullPolicy"`
+	ImagePullPolicy string        `json:"imagePullPolicy"`
 }
 
 type ImagePullPolicyEnum string
@@ -204,12 +204,12 @@ type LogMessage struct {
 }
 
 type ImageDebug struct {
-	ProjectId  string         `json:"projectId"`
-	BuildId    string         `json:"buildId"`
-	VmSeqId    string         `json:"vmSeqId"`
-	Workspace  string         `json:"workspace"`
-	PipelineId string         `json:"pipelineId"`
-	Image      string         `json:"image"`
+	ProjectId  string        `json:"projectId"`
+	BuildId    string        `json:"buildId"`
+	VmSeqId    string        `json:"vmSeqId"`
+	Workspace  string        `json:"workspace"`
+	PipelineId string        `json:"pipelineId"`
+	Image      string        `json:"image"`
 	Credential Credential    `json:"credential"`
 	Options    DockerOptions `json:"options"`
 }

@@ -93,7 +93,11 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSoc
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
-	defer ws.Close()
+
+	defer func() {
+		ws.Close()
+		close(m.doneChan)
+	}()
 
 	if m.conf.IsOneSeesion {
 		m.Lock()
@@ -148,7 +152,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSoc
 
 	err = m.startExec(newWsConn(ws), conf)
 	if err != nil {
-		imageDebugLogs.Errorf("start exec failed for container %s: %s", conf.ContainerID, err.Error())
+		imageDebugLogs.WithError(err).Warnf("start exec failed for container %s", conf.ContainerID)
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
@@ -202,7 +206,6 @@ func (m *manager) CreateExecNoHttp(conf *WebSocketConfig) (*docker.Exec, error) 
 }
 
 func (m *manager) startExec(ws io.ReadWriter, conf *WebSocketConfig) error {
-	fmt.Println("start exec")
 	// 执行连接
 	err := m.dockerClient.StartExec(conf.ExecID, docker.StartExecOptions{
 		InputStream:  ws,

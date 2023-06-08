@@ -97,11 +97,11 @@ func isNodePortInUse(port int) bool {
 	// Check if the port is already in use
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		imageDebugLogs.Infof("Port %d is already in use\n", port)
+		imageDebugLogs.Infof("Port %d is already in use", port)
 		return true
 	}
 	listener.Close()
-	imageDebugLogs.Infof("Port %d is available\n", port)
+	imageDebugLogs.Infof("Port %d is available", port)
 
 	return false
 }

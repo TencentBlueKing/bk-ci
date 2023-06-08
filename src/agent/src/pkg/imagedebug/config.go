@@ -1,6 +1,5 @@
 package imagedebug
 
-
 // CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string

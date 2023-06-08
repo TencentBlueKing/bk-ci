@@ -28,6 +28,7 @@ import (
 const (
 	imageDebugIntervalInSeconds = 5
 	entryPointCmd               = "while true; do sleep 5m; done"
+	imageDebugMaxHoldHour       = 24
 )
 
 var imageDebugLogs *logrus.Entry
@@ -60,7 +61,7 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 	// 登录调试结束
 	debugDone := make(chan struct{})
 	// 登录调试最大等待结束时间
-	c, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
+	c, cancel := context.WithTimeout(context.Background(), imageDebugMaxHoldHour*time.Hour)
 	defer cancel()
 
 	group, ctx := errgroup.WithContext(c)
@@ -82,15 +83,27 @@ func CreateDebugContainer(
 	containerReady chan string,
 	debugDone chan struct{},
 ) error {
-	if debugInfo.Credential.ErrMsg != "" {
-		imageDebugLogs.Error("get docker cred error ", debugInfo.Credential.ErrMsg)
-		return errors.New(i18n.Localize("GetDockerCertError", map[string]interface{}{"err": debugInfo.Credential.ErrMsg}))
-	}
-
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		imageDebugLogs.Error("create docker client error ", err)
 		return errors.New(i18n.Localize("LinkDockerError", map[string]interface{}{"err": err}))
+	}
+
+	// 先判断本地是否存在已经运行的容器
+	containerId, ok, err := checkLoclRunningContainer(ctx, cli, debugInfo.BuildId, debugInfo.VmSeqId)
+	if err != nil {
+		return errors.Wrap(err, "check local running container error")
+	}
+	if ok {
+		imageDebugLogs.Infof("use local exist container %s", containerId)
+		containerReady <- containerId
+		close(containerReady)
+		return nil
+	}
+
+	if debugInfo.Credential.ErrMsg != "" {
+		imageDebugLogs.Error("get docker cred error ", debugInfo.Credential.ErrMsg)
+		return errors.New(i18n.Localize("GetDockerCertError", map[string]interface{}{"err": debugInfo.Credential.ErrMsg}))
 	}
 
 	imageName := strings.TrimSpace(debugInfo.Image)
@@ -270,6 +283,24 @@ func CreateDebugContainer(
 	return nil
 }
 
+func checkLoclRunningContainer(ctx context.Context, cli *client.Client, buildId string, vmId string) (string, bool, error) {
+	conList, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return "", false, err
+	}
+
+	findName := fmt.Sprintf("dispatch-%s-%s-", buildId, vmId)
+	for _, c := range conList {
+		for _, n := range c.Names {
+			if strings.Contains(n, findName) {
+				return c.ID, true, nil
+			}
+		}
+	}
+
+	return "", false, nil
+}
+
 // parseContainerMounts 解析生成容器挂载内容
 func parseContainerMounts(debugInfo *api.ImageDebug) ([]mount.Mount, error) {
 	var mounts []mount.Mount
@@ -352,14 +383,14 @@ func CreateExecServer(
 		ServCert:       &CertConfig{},
 		DockerEndpoint: "unix:///var/run/docker.sock",
 		Privilege:      false,
-		Cmd:            []string{"/bin/sh"},
+		Cmd:            []string{"/bin/bash"},
 		Tty:            true,
 		Ips:            []string{},
 		IsAuth:         false,
 		IsOneSeesion:   true,
 	}
 
-	backend := NewManager(conf)
+	backend := NewManager(conf, debugDone)
 
 	err = backend.Start()
 	if err != nil {
@@ -397,7 +428,7 @@ func CreateExecServer(
 	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.AgentIp, conf.Port, exec.ID, containerId)
 
 	// TODO: 上报url
-	imageDebugLogs.Debugf("ws url: %s", url)
+	imageDebugLogs.Infof("ws url: %s", url)
 
 	select {
 	case <-debugDone:
@@ -405,6 +436,4 @@ func CreateExecServer(
 	case <-ctx.Done():
 		return nil
 	}
-
-	return nil
 }
