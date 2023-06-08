@@ -85,6 +85,8 @@ class Client @Autowired constructor(
         private const val connectTimeoutSeconds = 5L
         private const val CACHE_SIZE = 1000L
         private val longTimeOptions = Request.Options(10L, TimeUnit.SECONDS, 30L, TimeUnit.MINUTES, true)
+        private val accessoriesServiceList = listOf("experience")
+        private const val accessoriesName = "accessories"
     }
 
     private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
@@ -277,6 +279,42 @@ class Client @Autowired constructor(
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
         ).url()
+    }
+
+    private fun findServiceName(clz: KClass<*>): String {
+        // 单体结构，不分微服务的方式
+        if (!assemblyServiceName.isNullOrBlank()) {
+            return assemblyServiceName
+        }
+        var serviceName = interfaces.getOrPut(clz) {
+            val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
+            if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
+                serviceInterface.value
+            } else {
+                val packageName = clz.qualifiedName.toString()
+                val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
+                val matches = regex.find(packageName)
+                    ?: throw ErrorCodeException(
+                        errorCode = SERVICE_COULD_NOT_BE_ANALYZED,
+                        params = arrayOf(packageName)
+                    )
+                matches.groupValues[1]
+            }
+        }
+        // 得加一个标识，如果为集成的，才这么操作
+        if (isAccessoriesService(serviceName)) {
+            logger.info("findServiceName:serviceName({})", serviceName)
+            serviceName = accessoriesName
+        }
+        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
+            serviceName
+        } else {
+            "$serviceName$serviceSuffix"
+        }
+    }
+
+    private fun isAccessoriesService(serviceName: String): Boolean {
+        return accessoriesServiceList.contains(serviceName)
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
