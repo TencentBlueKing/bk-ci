@@ -465,6 +465,7 @@ class GroupService @Autowired constructor(
     }
 
     // 把组织架构更新到数据表中
+    @SuppressWarnings("NestedBlockDepth")
     private fun updateDeptFullName(inners: Result<TExperienceGroupInnerRecord>) {
         for (inner in inners) {
             if (inner.deptFullName.isNullOrBlank()) {
