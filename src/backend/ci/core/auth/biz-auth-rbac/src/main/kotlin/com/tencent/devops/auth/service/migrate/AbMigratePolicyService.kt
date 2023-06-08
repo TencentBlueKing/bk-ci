@@ -251,7 +251,12 @@ abstract class AbMigratePolicyService(
 
     abstract fun getGroupName(projectName: String, result: MigrateTaskDataResult): String
 
-    fun migrateUserCustomPolicy(projectCode: String, projectName: String, version: String) {
+    fun migrateUserCustomPolicy(
+        projectCode: String,
+        projectName: String,
+        version: String,
+        gradeManagerId: Int
+    ) {
         logger.info("start to migrate user custom policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
@@ -269,7 +274,7 @@ abstract class AbMigratePolicyService(
             loopMigrateUserCustom(
                 projectCode = projectCode,
                 projectName = projectName,
-                managerGroupId = managerGroupId,
+                gradeManagerId = gradeManagerId,
                 version = version
             )
         } finally {
@@ -282,7 +287,7 @@ abstract class AbMigratePolicyService(
     private fun loopMigrateUserCustom(
         projectCode: String,
         projectName: String,
-        managerGroupId: Int,
+        gradeManagerId: Int,
         version: String
     ): Int {
         var page = 1
@@ -299,7 +304,7 @@ abstract class AbMigratePolicyService(
             migrateUserCustom(
                 projectCode = projectCode,
                 projectName = projectName,
-                managerGroupId = managerGroupId,
+                gradeManagerId = gradeManagerId,
                 results = taskDataResp.results
             )
             page++
@@ -311,7 +316,7 @@ abstract class AbMigratePolicyService(
     private fun migrateUserCustom(
         projectCode: String,
         projectName: String,
-        managerGroupId: Int,
+        gradeManagerId: Int,
         results: List<MigrateTaskDataResult>
     ) {
         results.forEach { result ->
@@ -328,7 +333,7 @@ abstract class AbMigratePolicyService(
                     userId = userId,
                     projectCode = projectCode,
                     projectName = projectName,
-                    managerGroupId = managerGroupId,
+                    gradeManagerId = gradeManagerId,
                     permission = permission
                 )
                 if (groupId != null) {
@@ -348,7 +353,7 @@ abstract class AbMigratePolicyService(
         userId: String,
         projectCode: String,
         projectName: String,
-        managerGroupId: Int,
+        gradeManagerId: Int,
         permission: AuthorizationScopes
     ): Int?
 
@@ -399,7 +404,7 @@ abstract class AbMigratePolicyService(
         projectCode: String,
         projectName: String,
         actions: List<String>,
-        managerGroupId: Int
+        gradeManagerId: Int
     ): Int? {
         val (groupConfigId, groupId) = getMatchResourceGroupId(
             resourceType = AuthResourceType.PROJECT.value,
@@ -412,7 +417,7 @@ abstract class AbMigratePolicyService(
             groupConfigId?.let {
                 createProjectResourceGroup(
                     groupConfigId = groupConfigId,
-                    gradeManagerId = managerGroupId,
+                    gradeManagerId = gradeManagerId,
                     projectCode = projectCode,
                     projectName = projectName
                 )

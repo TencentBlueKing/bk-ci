@@ -286,7 +286,7 @@ class MigrateV0PolicyService constructor(
         userId: String,
         projectCode: String,
         projectName: String,
-        managerGroupId: Int,
+        gradeManagerId: Int,
         permission: AuthorizationScopes
     ): Int? {
         val resource = permission.resources[0]
@@ -301,7 +301,7 @@ class MigrateV0PolicyService constructor(
                 projectCode = projectCode,
                 projectName = projectName,
                 actions = finalUserActions,
-                managerGroupId = managerGroupId
+                gradeManagerId = gradeManagerId
             )
         } else {
             val v0ResourceCode = resource.paths[0][0].id

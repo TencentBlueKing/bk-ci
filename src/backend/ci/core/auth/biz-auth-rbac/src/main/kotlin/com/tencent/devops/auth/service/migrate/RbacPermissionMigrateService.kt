@@ -332,7 +332,8 @@ class RbacPermissionMigrateService constructor(
         migrateV3PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
             projectName = projectName,
-            version = version
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -362,7 +363,8 @@ class RbacPermissionMigrateService constructor(
         migrateV0PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
             projectName = projectName,
-            version = version
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")

@@ -244,7 +244,7 @@ class MigrateV3PolicyService constructor(
         userId: String,
         projectCode: String,
         projectName: String,
-        managerGroupId: Int,
+        gradeManagerId: Int,
         permission: AuthorizationScopes
     ): Int? {
         // v3资源都只有一层
@@ -258,7 +258,7 @@ class MigrateV3PolicyService constructor(
         }
         return when {
             // 如果有all_action,直接加入管理员组
-            userActions.contains(Constants.ALL_ACTION) -> managerGroupId
+            userActions.contains(Constants.ALL_ACTION) -> gradeManagerId
             // 项目类型
             resource.type == AuthResourceType.PROJECT.value ->
                 v3MatchMinResourceGroup(
@@ -276,7 +276,7 @@ class MigrateV3PolicyService constructor(
                     projectCode = projectCode,
                     projectName = projectName,
                     actions = finalUserActions,
-                    managerGroupId = managerGroupId
+                    gradeManagerId = gradeManagerId
                 )
             }
             // 具体资源权限
