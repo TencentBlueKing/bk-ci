@@ -49,7 +49,7 @@
                     >
                         {{ $t('codelib.oauthCert') }}
                     </bk-button>
-                    <div class="oauth-tips" v-if="isGit">
+                    <div class="oauth-tips" v-if="isGit || isTGit">
                         <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
                         <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
                         <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
@@ -140,6 +140,7 @@
                 type: String,
                 default: ''
             },
+            isTGit: Boolean,
             isGit: Boolean,
             isGithub: Boolean,
             fetchRepoDetail: Function
@@ -210,8 +211,9 @@
                 'refreshGithubOauth'
             ]),
             openValidate () {
-                if (this.isGit) {
+                if (this.isGit || this.isTGit) {
                     this.refreshGitOauth({
+                        type: this.isGit ? 'git' : 'tgit',
                         resetType: 'resetGitOauth'
                     }).then(res => {
                         if (res.status === 200) {

@@ -234,6 +234,7 @@
             :cur-repo="curRepo"
             :repo-info="repoInfo"
             :type="type"
+            :is-t-git="isTGit"
             :is-git="isGit"
             :is-github="isGithub"
             :fetch-repo-detail="fetchRepoDetail"
@@ -304,7 +305,7 @@
             ...mapState('codelib', [
                 'gitOAuth',
                 'githubOAuth',
-                'tGitOAuth'
+                'tgitOAuth'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -318,7 +319,7 @@
             hasPower () {
                 return (
                     (this.isTGit
-                        ? this.tGitOAuth.status
+                        ? this.tgitOAuth.status
                         : this.isGit
                             ? this.gitOAuth.status
                             : this.githubOAuth.status) !== 403

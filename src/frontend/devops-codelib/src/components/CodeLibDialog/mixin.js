@@ -53,12 +53,12 @@ export default {
             'fetchingCodelibDetail',
             'gitOAuth',
             'githubOAuth',
-            'tGitOAuth'
+            'tgitOAuth'
         ]),
         hasPower () {
             return (
                 (this.isTGit
-                    ? this.tGitOAuth.status
+                    ? this.tgitOAuth.status
                     : this.isGit
                         ? this.gitOAuth.status
                         : this.githubOAuth.status) !== 403
@@ -66,7 +66,7 @@ export default {
         },
         oAuth () {
             return this.isTGit
-                ? this.tGitOAuth
+                ? this.tgitOAuth
                 : this.isGit
                     ? this.gitOAuth
                     : this.githubOAuth
@@ -183,7 +183,7 @@ export default {
                     {
                         required: true,
                         message: this.$t('codelib.aliasNameEnter'),
-                        trigger: 'change'
+                        trigger: 'blur'
                     },
                     {
                         validator: async function (value) {
@@ -268,7 +268,7 @@ export default {
         },
 
         openValidate () {
-            window.open(this[`${this.codelibTypeConstants}OAuth`].url)
+            window.location.href = this[`${this.codelibTypeConstants}OAuth`].url
         },
         
         authTypeChange (codelib) {

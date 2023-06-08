@@ -1,7 +1,7 @@
 <template>
     <bk-form
         ref="form"
-        v-bkloading="{ isLoading: saving || fetchingCodelibDetail }"
+        v-bkloading="{ isLoading: fetchingCodelibDetail }"
         :label-width="120"
         :model="codelib"
         :rules="formRules"
@@ -13,7 +13,6 @@
         >
             <bk-radio-group
                 v-model="codelib.authType"
-                @change="authTypeChange(codelib)"
             >
                 <bk-radio
                     class="mr20"

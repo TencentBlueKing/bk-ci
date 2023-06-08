@@ -270,6 +270,7 @@ const actions = {
                 repositoryHashId,
                 search
             }
+            commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/${type}/getProject?${queryStr}`)
             const projectIndex = res?.project?.findIndex(project => project.httpUrl === state.templateCodeLib?.url)
@@ -283,6 +284,7 @@ const actions = {
                 oAuth: res,
                 type
             })
+            commit(DIALOG_LOADING_MUTATION, false)
         } catch (e) {
             commit(FETCH_ERROR, e, {
                 root: true
@@ -340,13 +342,13 @@ const actions = {
     },
 
     /**
-     * 刷新git工蜂授权token
+     * 刷新 git / tgit 工蜂授权token
      */
-    async refreshGitOauth ({ commit }, { resetType = '' }) {
-        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/git/isOauth?resetType=${resetType}`)
+    async refreshGitOauth ({ commit }, { type, resetType = '' }) {
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?resetType=${resetType}`)
         commit(SET_OAUTH_MUTATION, {
             oAuth: res,
-            type: 'git'
+            type
         })
         return res
     },

@@ -199,10 +199,13 @@
             if (
                 this.$route.hash.includes('popupGit')
                 || this.$route.hash.includes('popupGithub')
+                || this.$route.hash.includes('popupTGit')
             ) {
                 const type = this.$route.hash.includes('popupGithub')
                     ? 'github'
-                    : 'git'
+                    : this.$route.hash.includes('popupGit')
+                        ? 'git'
+                        : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
             }
@@ -286,14 +289,14 @@
                     typeName,
                     svnType: 'ssh'
                 }
-                if (isGit(typeName) || isGithub(typeName)) {
+                if (isGit(typeName) || isGithub(typeName) || isTGit(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'OAUTH' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
-                if (isTGit(typeName)) {
-                    Object.assign(CodelibDialog, { authType: 'HTTPS' })
-                    if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
-                }
+                // if (isTGit(typeName)) {
+                //     Object.assign(CodelibDialog, { authType: 'HTTPS' })
+                //     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
+                // }
                 if (isGitLab(typeName) || isSvn(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'SSH' })
                 }
