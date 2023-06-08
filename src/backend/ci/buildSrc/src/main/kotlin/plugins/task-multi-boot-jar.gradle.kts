@@ -27,7 +27,7 @@
 tasks.register("multiBootJar") {
     System.getProperty("devops.multi.from")?.let { multiModuleStr ->
         val multiModuleList = multiModuleStr.split(",").toMutableList()
-        allprojects.filter {
+        rootProject.subprojects.filter {
             isSpecifiedModulePath(it.path, multiModuleList)
         }.forEach { subProject -> addDependencies(subProject.path) }
         dependsOn("copyToRelease")
