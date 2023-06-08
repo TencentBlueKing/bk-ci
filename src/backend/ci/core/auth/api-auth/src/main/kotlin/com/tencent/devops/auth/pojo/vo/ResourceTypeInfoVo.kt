@@ -11,7 +11,7 @@ data class ResourceTypeInfoVo(
     @ApiModelProperty("资源类型")
     val resourceType: String,
     @ApiModelProperty("资源类型名")
-    @BkFieldI18n(keyPrefixName = "ResourceType")
+    @BkFieldI18n(keyPrefixName = "resourceType")
     val name: String,
     @ApiModelProperty("父类资源")
     val parent: String,
