@@ -451,7 +451,6 @@ abstract class AbMigratePolicyService(
         return Pair(null, null)
     }
 
-
     private fun createRbacGroup(
         groupName: String,
         gradeManagerId: Int,
@@ -492,7 +491,6 @@ abstract class AbMigratePolicyService(
         )
         return groupId
     }
-
 
     /**
      * 创建项目级资源用户组

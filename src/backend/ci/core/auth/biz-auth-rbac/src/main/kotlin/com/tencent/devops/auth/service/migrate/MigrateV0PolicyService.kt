@@ -368,7 +368,7 @@ class MigrateV0PolicyService constructor(
             // 自定义用户组,半年或者一年过期
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 1)]
         }
-        val expiredAt= System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
+        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
         members?.forEach member@{ member ->
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
