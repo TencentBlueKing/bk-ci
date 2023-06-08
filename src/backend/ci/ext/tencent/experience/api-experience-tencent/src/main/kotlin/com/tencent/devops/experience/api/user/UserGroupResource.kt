@@ -139,7 +139,7 @@ interface UserGroupResource {
         projectId: String,
         @ApiParam("体验组HashID", required = true)
         @PathParam("groupHashId")
-        groupHashId: String,
+        groupHashId: String
     ): Result<GroupV2>
 
     @ApiOperation("根据名字查询组织全称")
