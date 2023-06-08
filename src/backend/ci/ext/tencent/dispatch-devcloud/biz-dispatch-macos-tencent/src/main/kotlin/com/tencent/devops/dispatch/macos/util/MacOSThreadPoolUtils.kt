@@ -12,7 +12,7 @@ class MacOSThreadPoolUtils private constructor() {
     @Volatile
     private var threadPoolMap = hashMapOf<String, ThreadPoolExecutor>()
 
-    private val coolPoolSize = 30
+    private val corePoolSize = 30
     private val maxPoolSize = 30
     private val keepAliveTime: Long = 600
     private val queueSize = 10
@@ -23,7 +23,7 @@ class MacOSThreadPoolUtils private constructor() {
             synchronized(this) {
                 if (null == threadPoolExecutor) {
                     threadPoolExecutor = ThreadPoolExecutor(
-                        coolPoolSize,
+                        corePoolSize,
                         maxPoolSize,
                         keepAliveTime,
                         TimeUnit.SECONDS,
