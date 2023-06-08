@@ -299,7 +299,7 @@ class PipelineContextService @Autowired constructor(
                 contextMap["steps.$stepId.name"] = e.name
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
                 contextMap["steps.$stepId.status"] = statusStr
-                contextMap["steps.$stepId.outcome"] = statusStr
+                e.status?.let { contextMap["steps.$stepId.outcome"] = it }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
