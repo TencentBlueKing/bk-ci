@@ -593,13 +593,14 @@ import { mapActions, mapGetters } from 'vuex'
 </script>
 
 <style lang="scss">
+    .bk-table-filter-panel .panel-checkbox-group {
+        max-height: 360px;
+        overflow: auto;
+    }
     .group-form-content {
         padding: 24px;
         height: calc(100vh - 114px);
-        .bk-table-filter-panel .panel-checkbox-group {
-            max-height: 360px;
-            overflow: auto;
-        }
+        
         .group-importer {
             height: 100%;
             background-color: #F5F7FA;
