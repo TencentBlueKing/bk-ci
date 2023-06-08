@@ -424,7 +424,7 @@ class RbacPermissionService constructor(
             if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associate {
                     val authPermission = it.substringAfterLast("_")
-                    AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+                    AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
             val instanceList = resources.map { resource ->
@@ -452,12 +452,23 @@ class RbacPermissionService constructor(
             actions.parallelStream().forEach { action ->
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    iamResourceCodes = iamResourceCodes
-                )
+                // 具有action管理员权限,那么有所有资源权限
+                if (permissionSuperManagerService.reviewManagerCheck(
+                        userId = userId,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        action = action
+                    )
+                ) {
+                    permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
+                } else {
+                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                    permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = iamResourceCodes
+                    )
+                }
             }
             return permissionMap
         } finally {

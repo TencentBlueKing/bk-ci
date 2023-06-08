@@ -44,9 +44,12 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import java.util.Calendar
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -73,7 +76,8 @@ class MigrateV3PolicyService constructor(
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
     private val authMigrationDao: AuthMigrationDao,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -84,7 +88,8 @@ class MigrateV3PolicyService constructor(
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
-    deptService = deptService
+    deptService = deptService,
+    permissionGroupPoliciesService = permissionGroupPoliciesService
 ) {
 
     companion object {
@@ -238,6 +243,7 @@ class MigrateV3PolicyService constructor(
     override fun matchResourceGroup(
         userId: String,
         projectCode: String,
+        projectName: String,
         managerGroupId: Int,
         permission: AuthorizationScopes
     ): Int? {
@@ -262,13 +268,18 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = projectCode,
                     userActions = permission.actions.map { it.id }
                 )
-            isSkipMatchResourceGroup(resource) -> {
-                logger.info(
-                    "user cannot match all resources and matching will be skipped|" +
-                        "$userId|$projectCode|$resourceType|$userActions"
+            // 项目任意资源
+            isAnyResource(resource) -> {
+                val finalUserActions = replaceOrRemoveAction(userActions)
+                matchOrCreateProjectResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    actions = finalUserActions,
+                    managerGroupId = managerGroupId
                 )
-                null
             }
+            // 具体资源权限
             resource.paths[0].size >= 2 -> {
                 v3MatchMinResourceGroup(
                     userId = userId,
@@ -282,10 +293,12 @@ class MigrateV3PolicyService constructor(
         }
     }
 
-    private fun isSkipMatchResourceGroup(
+    /**
+     * 有项目下任意资源权限
+     */
+    private fun isAnyResource(
         resource: ManagerResources
     ): Boolean {
-        // 项目下所有的资源不能找到对应的用户组,直接跳过,如自定义权限是项目下所有流水线pipeline_execute权限,默认的用户组是不能匹配改策略
         return resource.paths[0].size >= 2 && resource.paths[0][1].id == "*" ||
             (resource.paths[0].size == 1 && resource.paths[0][0].type == AuthResourceType.PROJECT.value)
     }
@@ -342,14 +355,16 @@ class MigrateV3PolicyService constructor(
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
         members?.forEach member@{ member ->
-            // 过期的用户直接移除
-            if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
-                return@member
+            // 已过期用户,迁移时无法添加到用户组成员,增加1分钟添加到iam就过期，方便用户续期
+            val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
+                DateTimeUtil.getFutureDateFromNow(Calendar.MINUTE, 1).time
+            } else {
+                member.expiredAt
             }
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
-                .expiredAt(member.expiredAt)
+                .expiredAt(expiredAt)
                 .build()
             v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
         }

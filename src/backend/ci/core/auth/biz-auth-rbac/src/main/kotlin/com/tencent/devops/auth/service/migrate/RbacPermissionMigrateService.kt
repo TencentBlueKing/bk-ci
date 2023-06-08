@@ -50,6 +50,7 @@ import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.ProjectVO
+import java.util.concurrent.CompletionException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -330,6 +331,7 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
+            projectName = projectName,
             version = version
         )
         // 对比迁移结果
@@ -359,6 +361,7 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
+            projectName = projectName,
             version = version
         )
         // 对比迁移结果
@@ -398,6 +401,9 @@ class RbacPermissionMigrateService constructor(
             }
             is ErrorCodeException -> {
                 exception.defaultMessage
+            }
+            is CompletionException -> {
+                exception.cause?.message
             }
             else -> {
                 exception.toString()

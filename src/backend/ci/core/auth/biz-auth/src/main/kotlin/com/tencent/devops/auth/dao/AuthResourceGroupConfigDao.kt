@@ -87,6 +87,17 @@ class AuthResourceGroupConfigDao {
         }
     }
 
+    fun getById(
+        dslContext: DSLContext,
+        id: Long
+    ): TAuthResourceGroupConfigRecord? {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
     fun countByResourceType(
         dslContext: DSLContext,
         resourceType: String
