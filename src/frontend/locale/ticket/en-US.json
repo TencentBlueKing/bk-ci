@@ -9,7 +9,7 @@
     "certList": "Certificate list",
     "createCert": "Create certificate",
     "editCert": "Edit certificate",
-    "id": "Code",
+    "id": "ID",
     "name": "Name",
     "type": "Type",
     "remark": "Description",

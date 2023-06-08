@@ -64,8 +64,8 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -1553,7 +1553,11 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = latestRunningBuild.pipelineId,
                 startTime = startTime
             )
-            pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
+            pipelineBuildSummaryDao.startLatestRunningBuild(
+                dslContext = transactionContext,
+                latestRunningBuild = latestRunningBuild,
+                executeCount = executeCount
+            )
         }
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
