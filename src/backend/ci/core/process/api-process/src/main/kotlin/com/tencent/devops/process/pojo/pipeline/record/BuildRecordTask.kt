@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -55,6 +56,8 @@ data class BuildRecordTask(
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
     var taskVar: MutableMap<String, Any>,
+    @ApiModelProperty("插件post信息", required = false)
+    val elementPostInfo: ElementPostInfo?,
     @ApiModelProperty("插件类型标识", required = true)
     val classType: String,
     @ApiModelProperty("市场插件标识", required = true)
