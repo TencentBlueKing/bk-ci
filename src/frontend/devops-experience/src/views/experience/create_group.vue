@@ -87,6 +87,7 @@
                             prop="name"
                             column-key="name"
                             sortable
+                            :key="nameFilter.length"
                             show-overflow-tooltip
                             filter-searchable
                             :filters="nameFilter"
@@ -134,7 +135,7 @@
 
 <script>
     import OrgnizationSelector from '@/components/OrgnizationSelector'
-import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -278,6 +279,7 @@ import { mapActions, mapGetters } from 'vuex'
                         return {
                             props: {
                                 placeholder: !this.isManual ? '请从左侧选择已有用户组' : '请输入',
+                                key: this.isManual,
                                 disabled: !this.isManual,
                                 value: this.innerUsers
                             },
@@ -407,8 +409,10 @@ import { mapActions, mapGetters } from 'vuex'
                     this.requestGroups()
                 } else {
                     this.importType = 1
-                    this.innerUsers = []
                 }
+                this.innerUsers = []
+                this.outerUsers = []
+                this.innerOrg = null
             },
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
