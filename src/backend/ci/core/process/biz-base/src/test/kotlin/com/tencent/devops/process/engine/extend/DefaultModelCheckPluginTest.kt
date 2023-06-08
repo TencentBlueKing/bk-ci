@@ -264,7 +264,28 @@ class DefaultModelCheckPluginTest : TestBase() {
         checkModelIntegrityTimeoutElement("60") // timeout 60 minutes
 
         checkModelIntegrityVarTimeoutJobMutex("\${{$timeoutVar}}") // 正常的互斥组变量场景
-        checkModelIntegrityVarTimeoutJobMutex("60") // timeout 60 minutes
+        checkCompatibilityTimeoutAndVar() // timeout 60 minutes
+        checkCompatibilityTimeoutWithoutVar() // timeout 60 minutes
+    }
+
+    private fun checkCompatibilityTimeoutAndVar() {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setElementTimeoutAndVar(model, "60", 120)
+        Assertions.assertDoesNotThrow {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
+        Assertions.assertEquals(120, model.stages[1].containers[0].elements[0].additionalOptions?.timeout)
+        Assertions.assertEquals("120", model.stages[1].containers[0].elements[0].additionalOptions?.timeoutVar)
+    }
+
+    private fun checkCompatibilityTimeoutWithoutVar() {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setElementTimeoutAndVar(model, null, 120)
+        Assertions.assertDoesNotThrow {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
+        Assertions.assertEquals(120, model.stages[1].containers[0].elements[0].additionalOptions?.timeout)
+        Assertions.assertEquals("120", model.stages[1].containers[0].elements[0].additionalOptions?.timeoutVar)
     }
 
     private fun checkModelIntegrityTimeoutElement(varName: String, illegal: Boolean = false): ErrorCodeException? {
@@ -308,6 +329,14 @@ class DefaultModelCheckPluginTest : TestBase() {
         }
     }
 
+    private fun setElementTimeoutAndVar(model: Model, timeoutVar: String?, timeout: Long?) {
+        model.stages[1].containers[0].elements.forEach {
+            val jop = it.additionalOptions
+            jop?.timeoutVar = timeoutVar
+            jop?.timeout = timeout
+        }
+    }
+
     private fun setJobTimeoutVar(model: Model, varName: String) {
         model.stages[1].containers.forEach {
             val jop = when (it) {
@@ -347,7 +376,7 @@ class DefaultModelCheckPluginTest : TestBase() {
             enable = true,
             mutexGroupName = "mutexGroupName\${var1}",
             queueEnable = true,
-            timeout = 100800,
+            timeout = null,
             queue = 15
         )
     }

@@ -42,9 +42,9 @@ data class MutexGroup(
     @ApiModelProperty("是否排队", required = false)
     val queueEnable: Boolean,
     @ApiModelProperty("排队等待时间（分钟）0表示不等待直接失败", required = false)
-    var timeout: Int? = 0,
+    var timeout: Int? = null,
     @ApiModelProperty("支持变量解析的timeout，变量值非数字则会改取timeout值", required = false)
-    var timeoutVar: String? = null,
+    var timeoutVar: String? = "0",
     @ApiModelProperty("排队队列大小", required = false)
     val queue: Int = 0,
     @ApiModelProperty("是否已经初始化", required = false)

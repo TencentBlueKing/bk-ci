@@ -47,9 +47,9 @@ data class ElementAdditionalOptions(
     @ApiModelProperty("是否允许手动重试", required = false)
     val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
     @ApiModelProperty("超时分钟", required = false)
-    var timeout: Long? = 100, // 超时分钟
+    var timeout: Long? = null, // 超时分钟
     @ApiModelProperty("新的执行的超时时间，支持变量(分钟Minutes)，出错则取timeout的值", required = false)
-    var timeoutVar: String? = null, // Job执行的超时时间 分钟Minutes
+    var timeoutVar: String? = "100", // Job执行的超时时间 分钟Minutes
     @JsonIgnore // 表示是否有修改，比如timeout. 注解 @JsonIgnore 表示本字段不会持久到数据库存储，只做临时的校验字段，不做任何保证
     var change: Boolean = false,
     @ApiModelProperty("执行条件", required = false)
