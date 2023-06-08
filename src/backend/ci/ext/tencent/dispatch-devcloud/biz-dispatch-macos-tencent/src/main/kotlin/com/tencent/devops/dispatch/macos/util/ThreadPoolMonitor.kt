@@ -15,6 +15,7 @@ class ThreadPoolMonitor{
     @PreDestroy
     fun destroy() {
         // 当线程池内还有线程执行时，阻塞服务的退出
+        logger.warn("Start destroy threadPool")
         ThreadPoolName.values().forEach { poolName ->
             MacOSThreadPoolUtils.instance.getThreadPool(poolName).let {
                 it.shutdown()
@@ -23,6 +24,7 @@ class ThreadPoolMonitor{
                 }
             }
         }
+        logger.warn("Finish destroy threadPool")
     }
 
     @Scheduled(cron = "0/10 * * * * ?")

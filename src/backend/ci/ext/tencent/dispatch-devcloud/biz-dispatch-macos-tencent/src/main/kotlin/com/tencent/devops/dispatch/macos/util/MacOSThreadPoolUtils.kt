@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.macos.util
 
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -15,7 +15,6 @@ class MacOSThreadPoolUtils private constructor() {
     private val corePoolSize = 30
     private val maxPoolSize = 30
     private val keepAliveTime: Long = 600
-    private val queueSize = 10
 
     fun getThreadPool(poolName: ThreadPoolName): ThreadPoolExecutor {
         var threadPoolExecutor = threadPoolMap[poolName.name]
@@ -27,7 +26,7 @@ class MacOSThreadPoolUtils private constructor() {
                         maxPoolSize,
                         keepAliveTime,
                         TimeUnit.SECONDS,
-                        LinkedBlockingQueue(queueSize)
+                        SynchronousQueue()
                     ).apply { allowCoreThreadTimeOut(true) }
                     threadPoolMap[poolName.name] = threadPoolExecutor!!
                 }
