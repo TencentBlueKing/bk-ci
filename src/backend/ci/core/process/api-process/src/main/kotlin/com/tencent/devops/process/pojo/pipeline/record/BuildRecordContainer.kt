@@ -134,7 +134,8 @@ data class BuildRecordContainer(
                         taskSeq = index,
                         status = buildStatus?.name,
                         taskVar = mutableMapOf(),
-                        timestamps = mapOf()
+                        timestamps = mapOf(),
+                        elementPostInfo = element.additionalOptions?.elementPostInfo
                     )
                 )
             }
