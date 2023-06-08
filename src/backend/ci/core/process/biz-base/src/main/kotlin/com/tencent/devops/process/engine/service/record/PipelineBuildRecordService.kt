@@ -33,7 +33,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -251,6 +253,18 @@ class PipelineBuildRecordService @Autowired constructor(
                     element.timeCost?.executeCost?.let {
                         element.elapsed = it
                         elementElapsed += it
+                    }
+                    element.additionalOptions?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
+                }
+                if (container is NormalContainer) {
+                    container.jobControlOption?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
+                } else if (container is VMBuildContainer) {
+                    container.jobControlOption?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
                     }
                 }
                 container.elementElapsed = container.elementElapsed ?: elementElapsed
