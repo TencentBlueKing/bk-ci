@@ -393,7 +393,7 @@ class ExperienceBaseService @Autowired constructor(
                 userIds = mutableSetOf()
                 groupIdToDeptIds[it.groupId] = userIds
             }
-            userIds.add(if (useName) it.deptFullName else it.deptId)
+            userIds.add(if (useName) StringUtils.joinWith("/", it.deptFullName, it.deptName) else it.deptId)
         }
 
         return groupIdToDeptIds
