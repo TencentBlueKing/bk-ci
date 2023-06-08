@@ -443,10 +443,10 @@ import { mapActions, mapGetters } from 'vuex'
                             'members',
                             [
                                 {
-                                    name: fullName,
+                                    name: this.innerOrg.name,
                                     id: this.innerOrg.id,
                                     type: 3,
-                                    deptFullName: this.innerOrg?.parent?.name ?? '--'
+                                    deptFullName: fullName
                                 },
                                 ...this.createGroupForm.members
                             ]
@@ -525,7 +525,7 @@ import { mapActions, mapGetters } from 'vuex'
                 )
             },
             getOrgFullName (org) {
-                const arr = [org.name]
+                const arr = []
                 let temp = org
                 while (temp.parent !== null) {
                     temp = temp.parent
@@ -596,6 +596,10 @@ import { mapActions, mapGetters } from 'vuex'
     .group-form-content {
         padding: 24px;
         height: calc(100vh - 114px);
+        .bk-table-filter-panel .panel-checkbox-group {
+            max-height: 360px;
+            overflow: auto;
+        }
         .group-importer {
             height: 100%;
             background-color: #F5F7FA;
