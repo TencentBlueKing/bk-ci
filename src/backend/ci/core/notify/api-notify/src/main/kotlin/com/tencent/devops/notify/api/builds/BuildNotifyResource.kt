@@ -69,7 +69,10 @@ interface BuildNotifyResource {
     @ApiOperation("发送电子邮件通知")
     @POST
     @Path("/email")
-    fun sendEmailNotify(@ApiParam(value = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
+    fun sendEmailNotify(
+        @ApiParam(value = "电子邮件信息内容", required = true)
+        message: EmailNotifyMessage
+    ): Result<Boolean>
 
     @ApiOperation("发送微信通知")
     @POST
