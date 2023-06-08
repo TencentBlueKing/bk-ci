@@ -262,10 +262,22 @@ class PipelineBuildRecordService @Autowired constructor(
                     container.jobControlOption?.let {
                         if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
                     }
+<<<<<<< hotfix/2023-06-08-17 16e2578e10730a50377cff195525ab57c0af6fef
+                    container.mutexGroup?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
+=======
+>>>>>>> grayHotfix/2023-06-08-17 72565d50ec3ab9cb4f0f52d1731d77e12bc95f75
                 } else if (container is VMBuildContainer) {
                     container.jobControlOption?.let {
                         if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
                     }
+<<<<<<< hotfix/2023-06-08-17 16e2578e10730a50377cff195525ab57c0af6fef
+                    container.mutexGroup?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
+=======
+>>>>>>> grayHotfix/2023-06-08-17 72565d50ec3ab9cb4f0f52d1731d77e12bc95f75
                 }
                 container.elementElapsed = container.elementElapsed ?: elementElapsed
                 container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
