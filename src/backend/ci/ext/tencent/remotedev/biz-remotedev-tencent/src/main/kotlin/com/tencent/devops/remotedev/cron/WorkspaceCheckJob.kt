@@ -5,7 +5,9 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -28,6 +30,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
         private const val stopJobLockKey = "dispatch_devcloud_cron_workspace_clear_job"
         private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
+        private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
     }
 
@@ -97,7 +100,28 @@ class WorkspaceCheckJob @Autowired constructor(
             redisLock.unlock()
         }
     }
-
+    /**
+     * 每天10点触发，检测即将空闲超过14天的工作空间并做邮件推送
+     */
+    @Scheduled(cron = "0 0 10 * * ?")
+    fun sendIdleWorkspaceNotify() {
+        logger.info("=========>> send idle workspace notify <<=========")
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
+            return
+        }
+        val redisLock = RedisLock(redisOperation, nofityJobLockKey + bkTag.getLocalTag(), 3600L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("send idle workspace notify get lock.")
+                workspaceService.sendInactivityWorkspaceNotify()
+            }
+        } catch (e: Throwable) {
+            logger.error("send idle workspace notify failed", e)
+        } finally {
+            redisLock.unlock()
+        }
+    }
     /**
      * 每月1号4点执行任务触发，对用户收费时间进行重置
      */

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Watermark
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -87,6 +88,15 @@ interface UserRemoteDevResource {
         headers: HttpHeaders,
         data: BKGPT
     ): ChunkedOutput<String>
+    @ApiOperation("watermark")
+    @POST
+    @Path("/watermark")
+    fun getWatermark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: Watermark
+    ): Result<String>
 
     @ApiOperation("上报preci agent id")
     @POST
@@ -117,4 +127,12 @@ interface UserRemoteDevResource {
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
+    @ApiOperation("根据bi_ticket或bk_token获取用户名称")
+    @GET
+    @Path("/get_user")
+    fun getUser(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
 }

@@ -121,23 +121,6 @@ class RemoteDevSettingDao {
         }
     }
 
-    fun fetchAnyOpUserSetting(
-        dslContext: DSLContext,
-        userId: String
-    ): OPUserSetting? {
-        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()?.let {
-                OPUserSetting(
-                    userId = it.userId,
-                    wsMaxRunningCount = it.workspaceMaxRunningCount,
-                    wsMaxHavingCount = it.workspaceMaxHavingCount,
-                    grayFlag = ByteUtils.byte2Bool(it.inGray),
-                    onlyCloudIDE = JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.onlyCloudIDE
-                )
-            }
-        }
-    }
-
     fun fetchSingleUserBilling(
         dslContext: DSLContext,
         userId: String
@@ -163,6 +146,7 @@ class RemoteDevSettingDao {
         }
     }
 
+    @Suppress("ComplexMethod")
     fun createOrUpdateSetting4OP(
         dslContext: DSLContext,
         opSetting: OPUserSetting
@@ -180,7 +164,6 @@ class RemoteDevSettingDao {
                 DOTFILE_REPO,
                 WORKSPACE_MAX_RUNNING_COUNT,
                 WORKSPACE_MAX_HAVING_COUNT,
-                IN_GRAY,
                 USER_SETTING
             )
                 .values(
@@ -192,7 +175,6 @@ class RemoteDevSettingDao {
                     setting.dotfileRepo,
                     opSetting.wsMaxRunningCount,
                     opSetting.wsMaxHavingCount,
-                    ByteUtils.bool2Byte(opSetting.grayFlag ?: false),
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -215,14 +197,44 @@ class RemoteDevSettingDao {
                     } else it
                 }
                 .let {
-                    if (opSetting.grayFlag != null) it.set(
-                        IN_GRAY,
-                        ByteUtils.bool2Byte(opSetting.grayFlag!!)
-                    ) else it
-                }
-                .let {
                     if (opSetting.onlyCloudIDE != null) {
                         userSetting.onlyCloudIDE = opSetting.onlyCloudIDE!!
+                        it.set(
+                            USER_SETTING,
+                            JsonUtil.toJson(userSetting, false)
+                        )
+                    } else it
+                }
+                .let {
+                    if (opSetting.allowedCopy != null) {
+                        userSetting.allowedCopy = opSetting.allowedCopy!!
+                        it.set(
+                            USER_SETTING,
+                            JsonUtil.toJson(userSetting, false)
+                        )
+                    } else it
+                }
+                .let {
+                    if (opSetting.allowedDownload != null) {
+                        userSetting.allowedDownload = opSetting.allowedDownload!!
+                        it.set(
+                            USER_SETTING,
+                            JsonUtil.toJson(userSetting, false)
+                        )
+                    } else it
+                }
+                .let {
+                    if (opSetting.needWatermark != null) {
+                        userSetting.needWatermark = opSetting.needWatermark!!
+                        it.set(
+                            USER_SETTING,
+                            JsonUtil.toJson(userSetting, false)
+                        )
+                    } else it
+                }
+                .let {
+                    if (opSetting.autoDeletedDays != null) {
+                        userSetting.autoDeletedDays = opSetting.autoDeletedDays!!
                         it.set(
                             USER_SETTING,
                             JsonUtil.toJson(userSetting, false)
