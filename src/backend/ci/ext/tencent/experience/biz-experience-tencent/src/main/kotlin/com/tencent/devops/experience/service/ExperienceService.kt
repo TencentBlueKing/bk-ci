@@ -96,7 +96,6 @@ import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
 import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
-import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
@@ -968,9 +967,9 @@ class ExperienceService @Autowired constructor(
             val wechatGroupList = regex.split(experienceRecord.wechatGroups)
             wechatGroupList.forEach {
                 if (it.startsWith("ww")) {
-                    sendForApp(projectName, experienceRecord, pcUrl, appUrl, it)
+                    sendForApp(projectName, experienceRecord, appUrl, it)
                 } else {
-                    sendForRobot(projectName, experienceRecord, pcUrl, appUrl, it)
+                    sendForRobot(projectName, experienceRecord, appUrl, it)
                 }
             }
         }
@@ -982,24 +981,11 @@ class ExperienceService @Autowired constructor(
                     projectName = projectName,
                     name = experienceRecord.name,
                     version = experienceRecord.version,
-                    pcUrl = pcUrl,
                     appUrl = appUrl,
                     receivers = setOf(it)
                 )
                 client.get(ServiceNotifyResource::class).sendRtxNotify(message)
             }
-            if (notifyTypeList.contains(NotifyType.WECHAT)) {
-                val message = WechatUtil.makeMessage(
-                    projectName = projectName,
-                    name = experienceRecord.name,
-                    version = experienceRecord.version,
-                    innerUrl = pcUrl,
-                    outerUrl = appUrl,
-                    receivers = setOf(it)
-                )
-                client.get(ServiceNotifyResource::class).sendWechatNotify(message)
-            }
-
             // 发送APP通知
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
@@ -1015,7 +1001,6 @@ class ExperienceService @Autowired constructor(
     private fun sendForRobot(
         projectName: String,
         experienceRecord: TExperienceRecord,
-        pcUrl: String,
         appUrl: String,
         it: String
     ) {
@@ -1023,7 +1008,6 @@ class ExperienceService @Autowired constructor(
                         【$projectName】最新体验版本分享
     
                         【$projectName】发布了最新体验版本，【${experienceRecord.name}_${experienceRecord.version}】诚邀您参与体验。
-                        [PC体验地址]($pcUrl)
                         [手机体验地址]($appUrl)
                     """.trimIndent()
 
@@ -1034,7 +1018,6 @@ class ExperienceService @Autowired constructor(
     private fun sendForApp(
         projectName: String,
         experienceRecord: TExperienceRecord,
-        pcUrl: String,
         appUrl: String,
         it: String
     ) {
@@ -1042,7 +1025,6 @@ class ExperienceService @Autowired constructor(
             projectName = projectName,
             name = experienceRecord.name,
             version = experienceRecord.version,
-            innerUrl = pcUrl,
             outerUrl = appUrl,
             groupId = it
         )
