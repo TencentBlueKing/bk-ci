@@ -385,7 +385,8 @@ class GithubService @Autowired constructor(
             url = githubOAuthService.getGithubOauth(
                 projectId = projectId,
                 userId = userId,
-                repoHashId = null
+                repoHashId = null,
+                popupTag = ""
             ).redirectUrl
         )
         if (validationCheck == true) {
@@ -397,7 +398,8 @@ class GithubService @Autowired constructor(
                     url = githubOAuthService.getGithubOauth(
                         projectId = projectId,
                         userId = userId,
-                        repoHashId = null
+                        repoHashId = null,
+                        popupTag = ""
                     ).redirectUrl
                 )
             }
