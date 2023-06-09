@@ -114,7 +114,7 @@
                                                     class="exp-group-popup-item"
                                                 >
                                                     <span>{{item.typeLabel}}</span>
-                                                    <span>{{ col[item.key].join(',') }}</span>
+                                                    <span>{{ col[item.key].join(', ') }}</span>
                                                 </p>
                                             </div>
                                         </bk-popover>
@@ -964,6 +964,7 @@
         .exp-group-popup-item {
             display: flex;
             align-items: flex-start;
+            word-break: break-all;
             > span:first-child {
                 flex-shrink: 0;
             }
