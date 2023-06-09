@@ -8,6 +8,7 @@ import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -27,6 +28,7 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -332,7 +334,10 @@ class RbacPermissionApplyService @Autowired constructor(
         // 判断action是否为空
         val actionInfo = if (action != null) rbacCacheService.getActionInfo(action) else null
         val iamRelatedResourceType = actionInfo?.relatedResourceType ?: resourceType
-        val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
+        val resourceTypeName = MessageUtil.getMessageByLocale(
+            messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
+            language = I18nUtil.getDefaultLocaleLanguage()
+        )
 
         val projectInfo = authResourceService.get(
             projectCode = projectId,
