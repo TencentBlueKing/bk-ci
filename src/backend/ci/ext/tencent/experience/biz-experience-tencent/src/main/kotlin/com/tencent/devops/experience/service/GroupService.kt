@@ -605,6 +605,14 @@ class GroupService @Autowired constructor(
                 params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
+
+        if (groupDao.has(dslContext, projectId, groupCommit.name)) {
+            throw ErrorCodeException(
+                errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
+                params = arrayOf(groupCommit.name)
+            )
+        }
+
         val groupId = groupDao.create(
             dslContext = dslContext,
             projectId = projectId,
