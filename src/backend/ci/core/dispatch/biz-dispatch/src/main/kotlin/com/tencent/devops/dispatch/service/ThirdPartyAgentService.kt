@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
+import com.tencent.devops.dispatch.dao.ThirdPartyAgentDockerDebugDao
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
@@ -51,8 +52,10 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
 import com.tencent.devops.dispatch.utils.CommonUtils
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
@@ -80,7 +83,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val dispatchService: DispatchService
+    private val dispatchService: DispatchService,
+    private val thirdPartyAgentDockerDebugDao: ThirdPartyAgentDockerDebugDao
 ) {
 
     fun queueBuild(
@@ -535,6 +539,113 @@ class ThirdPartyAgentService @Autowired constructor(
                 error = buildInfo.error
             )
         )
+    }
+
+    fun startDockerDebug(
+        projectId: String,
+        agentId: String,
+        secretKey: String
+    ): AgentResult<ThirdPartyDockerDebugInfo?> {
+        logger.debug("Start the docker debug agent($agentId) of project($projectId)")
+        try {
+            val agentResult = try {
+                client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
+            } catch (e: RemoteServiceException) {
+                logger.warn("Fail to get the agent($agentId) of project($projectId) because of ${e.message}")
+                return AgentResult(1, e.message ?: "Fail to get the agent")
+            }
+
+            if (agentResult.agentStatus == AgentStatus.DELETE) {
+                return AgentResult(AgentStatus.DELETE, null)
+            }
+
+            if (agentResult.isNotOk()) {
+                logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
+                throw NotFoundException("Fail to get the agent")
+            }
+
+            if (agentResult.data == null) {
+                logger.warn("Get the null third party agent($agentId)")
+                throw NotFoundException("Fail to get the agent")
+            }
+
+            if (agentResult.data!!.secretKey != secretKey) {
+                logger.warn(
+                    "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
+                            "of project($projectId) and agent($agentId)"
+                )
+                throw NotFoundException("Fail to get the agent")
+            }
+
+            if (agentResult.data!!.status != AgentStatus.IMPORT_OK) {
+                logger.warn("The agent($agentId) is not import(${agentResult.data!!.status})")
+                throw NotFoundException("Fail to get the agent")
+            }
+
+            logger.debug("Third party agent($agentId) start up")
+
+            val redisLock = ThirdPartyAgentDockerDebugLock(redisOperation, projectId, agentId)
+            try {
+                redisLock.lock()
+                val debug = thirdPartyAgentDockerDebugDao.fetchOneQueueBuild(dslContext, agentId, buildType) ?: run {
+                    logger.debug("There is not docker debug by agent($agentId) in queue")
+                    return AgentResult(AgentStatus.IMPORT_OK, null)
+                }
+
+                logger.info("Start the build(${debug.buildId}) of agent($agentId) and seq(${debug.vmSeqId})")
+                thirdPartyAgentBuildDao.updateStatus(dslContext, debug.id, PipelineTaskStatus.RUNNING)
+
+                // 第三方构建机docker启动获取镜像凭据
+                val dockerInfo = if (debug.dockerInfo == null) {
+                    null
+                } else {
+                    JsonUtil.getObjectMapper().readValue(
+                        build.dockerInfo.data(),
+                        object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
+                    )
+                }
+                var errMsg: String? = null
+                var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
+                // 只有凭据ID的参与计算
+                if (dockerInfo != null) {
+                    if ((dockerInfo.credential?.user.isNullOrBlank() &&
+                                dockerInfo.credential?.password.isNullOrBlank()) &&
+                        !(dockerInfo.credential?.credentialId.isNullOrBlank())
+                    ) {
+                        val (userName, password) = try {
+                            getTicket(projectId, dockerInfo.credential!!)
+                        } catch (e: Exception) {
+                            logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error", e)
+                            errMsg = e.message
+                            Pair(null, null)
+                        }
+                        dockerInfo.credential?.user = userName
+                        dockerInfo.credential?.password = password
+                    }
+                    buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                    buildDockerInfo.credential?.errMsg = errMsg
+                }
+
+                return AgentResult(
+                    AgentStatus.IMPORT_OK,
+                    ThirdPartyBuildInfo(
+                        projectId = build.projectId,
+                        buildId = build.buildId,
+                        vmSeqId = build.vmSeqId,
+                        workspace = build.workspace,
+                        pipelineId = build.pipelineId,
+                        dockerBuildInfo = buildDockerInfo,
+                        executeCount = build.executeCount,
+                        containerHashId = build.containerHashId
+                    )
+                )
+            } finally {
+                redisLock.unlock()
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to start build for agent($agentId)", ignored)
+            throw ignored
+        }
     }
 
     companion object {
