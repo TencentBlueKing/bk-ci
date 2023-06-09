@@ -21,7 +21,7 @@
                             @page-change="requestList"
                             @page-limit-change="handlePageLimitChange"
                         >
-                            <bk-table-column label="名称" prop="name"></bk-table-column>
+                            <bk-table-column label="名称" show-overflow-tooltip prop="name"></bk-table-column>
                             <bk-table-column label="内部人员" prop="innerUsersCount">
                                 <template slot-scope="props">
                                     <bk-popover placement="bottom" :disabled="props.row.innerUsersCount <= 0">
