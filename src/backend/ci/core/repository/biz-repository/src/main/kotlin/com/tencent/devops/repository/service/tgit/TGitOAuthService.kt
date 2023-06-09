@@ -68,6 +68,23 @@ class TGitOAuthService @Autowired constructor(
             "&redirect_uri=${gitConfig.tGitWebhookUrl}&response_type=code&state=${URLEncoder.encode(id, "UTF-8")}"
     }
 
+    private fun getOauthUrl(
+        gitProjectId: Long?,
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?
+    ): AuthorizeResult {
+        val id = initRedisUser(
+            OauthParams(
+                gitProjectId = gitProjectId,
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl
+            )
+        )
+        return AuthorizeResult(403, getOauthUrl(id))
+    }
+
     fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
         logger.info("start to get project: userId:$userId")
         val accessToken =
@@ -169,7 +186,8 @@ class TGitOAuthService @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum? = RedirectUrlTypeEnum.DEFAULT,
         redirectUrl: String? = null,
         gitProjectId: Long? = null,
-        refreshToken: Boolean? = null
+        refreshToken: Boolean? = null,
+        validationCheck: Boolean? = false
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
@@ -185,15 +203,14 @@ class TGitOAuthService @Autowired constructor(
         } else {
             tGitTokenService.getAccessToken(userId)
         } ?: kotlin.run {
-            val id = initRedisUser(
-                OauthParams(
-                    gitProjectId = gitProjectId,
-                    userId = userId,
-                    redirectUrlType = redirectUrlType,
-                    redirectUrl = redirectUrl
-                )
-            )
-            return AuthorizeResult(403, getOauthUrl(id))
+            return getOauthUrl(gitProjectId, userId, redirectUrlType, redirectUrl)
+        }
+
+        if (validationCheck == true) {
+            kotlin.runCatching { tGitService.getUserInfoByToken(accessToken.accessToken) }.onFailure {
+                logger.info("Oauth token expired, need reauthorize.|$userId")
+                return getOauthUrl(gitProjectId, userId, redirectUrlType, redirectUrl)
+            }
         }
         logger.info("isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
