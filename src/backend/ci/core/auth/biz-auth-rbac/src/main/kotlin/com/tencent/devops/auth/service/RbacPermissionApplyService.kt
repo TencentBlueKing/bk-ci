@@ -334,9 +334,9 @@ class RbacPermissionApplyService @Autowired constructor(
         // 判断action是否为空
         val actionInfo = if (action != null) rbacCacheService.getActionInfo(action) else null
         val iamRelatedResourceType = actionInfo?.relatedResourceType ?: resourceType
-        val resourceTypeName = MessageUtil.getMessageByLocale(
+        val resourceTypeName = I18nUtil.getCodeLanMessage(
             messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
-            language = I18nUtil.getDefaultLocaleLanguage()
+            defaultMessage = rbacCacheService.getResourceTypeInfo(resourceType).name
         )
 
         val projectInfo = authResourceService.get(
