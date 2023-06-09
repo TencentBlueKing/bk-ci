@@ -121,6 +121,7 @@
                         <bk-table-column
                             label="内部/外部"
                             prop="typeLabel"
+                            column-key="type"
                             :filters="typeFilters"
                         />
                         <bk-table-column
