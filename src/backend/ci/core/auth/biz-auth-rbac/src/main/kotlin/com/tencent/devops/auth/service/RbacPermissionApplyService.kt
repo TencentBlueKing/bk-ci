@@ -11,6 +11,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -296,7 +297,9 @@ class RbacPermissionApplyService @Autowired constructor(
             buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
+                name = I18nUtil.getCodeLanMessage(
+                    relatedResourceTypesDTO.type + RESOURCE_TYPE_NAME_SUFFIX
+                ),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             GroupPermissionDetailVo(
