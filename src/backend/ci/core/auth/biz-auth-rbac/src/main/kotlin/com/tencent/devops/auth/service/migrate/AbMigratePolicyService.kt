@@ -328,7 +328,7 @@ abstract class AbMigratePolicyService(
             val userId = result.subject.id
             // 离职人员,直接忽略
             if (deptService.getUserInfo(userId = "admin", name = userId) == null) {
-                logger.warn("user has left, skip custom policy migration|${result.projectId}|$userId")
+                logger.warn("user has resigned, skip custom policy migration|${result.projectId}|$userId")
                 return@forEach
             }
 
