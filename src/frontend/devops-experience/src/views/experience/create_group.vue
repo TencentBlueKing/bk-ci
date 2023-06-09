@@ -87,7 +87,7 @@
                         @filter-change="handleFilterChange"
                     >
                         <bk-table-column
-                            label="人员名称"
+                            label="名称"
                             prop="name"
                             column-key="name"
                             sortable

@@ -27,7 +27,7 @@ const actions = {
     /**
      * 用户组列表
      */
-    requestGroupList ({ commit }, { projectId, params }) {
+    requestGroupList ({ commit }, { projectId, ...params }) {
         return vue.$ajax.get(`${prefix}/user/groups/${projectId}/list`, { params })
     },
     /**

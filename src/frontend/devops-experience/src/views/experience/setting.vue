@@ -1,9 +1,9 @@
 <template>
-    <div class="release-setting-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
+    <div class="release-setting-wrapper">
         <content-header>
             <div slot="left">{{ $route.meta.title }}</div>
         </content-header>
-        <section class="sub-view-port">
+        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <bk-tab :active.sync="curTab" type="unborder-card">
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
@@ -14,7 +14,13 @@
                         <div v-if="showContent && experienceList.length" class="table-operate-bar">
                             <bk-button theme="primary" @click="toCreateGroup">新增</bk-button>
                         </div>
-                        <bk-table v-if="showContent && experienceList.length" :data="experienceList">
+                        <bk-table
+                            v-if="showContent && experienceList.length"
+                            :data="experienceList"
+                            :pagination="pagination"
+                            @page-change="requestList"
+                            @page-limit-change="handlePageLimitChange"
+                        >
                             <bk-table-column label="名称" prop="name"></bk-table-column>
                             <bk-table-column label="内部人员" prop="innerUsersCount">
                                 <template slot-scope="props">
@@ -121,7 +127,12 @@
                     title: '暂无体验组',
                     desc: '您可以新增一个体验组'
                 },
-                urlParams: getQueryString('groupId') || ''
+                urlParams: getQueryString('groupId') || '',
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
         computed: {
@@ -148,48 +159,38 @@
             }
         },
         async mounted () {
-            await this.init()
+            await this.requestList()
         },
         methods: {
-            async init () {
+            handlePageLimitChange (limit) {
+                this.pagination.limit = limit
+                this.requestList()
+            },
+            /**
+             * 获取列表
+             */
+            async requestList (page = 1) {
                 const {
                     loading
                 } = this
 
                 loading.isLoading = true
                 loading.title = '数据加载中，请稍候'
-
-                try {
-                    this.requestList()
-                } catch (err) {
-                    this.$bkMessage({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                    }, 1000)
-                }
-            },
-            
-            /**
-             * 获取列表
-             */
-            async requestList () {
                 try {
                     const res = await this.$store.dispatch('experience/requestGroupList', {
-                        projectId: this.projectId
+                        projectId: this.projectId,
+                        page,
+                        pageSize: this.pagination.limit
                     })
-
-                    this.experienceList.splice(0, this.experienceList.length)
-                    res.records.forEach(item => {
-                        this.experienceList.push(item)
+                    this.pagination.count = res.count
+                    this.pagination.current = page
+                    this.experienceList = res.records.map(item => {
                         if (this.urlParams === item.groupHashId) {
                             setTimeout(() => {
                                 this.toEditGroup(item)
                             }, 800)
                         }
+                        return item
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -199,6 +200,10 @@
                         message,
                         theme
                     })
+                } finally {
+                    setTimeout(() => {
+                        this.loading.isLoading = false
+                    }, 1000)
                 }
 
                 this.showContent = true
@@ -230,7 +235,7 @@
                 return true
             },
             afterCreateGroup () {
-                this.init()
+                this.requestList()
                 this.groupSideslider.visible = false
             },
             cancelFn () {

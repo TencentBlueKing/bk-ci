@@ -217,8 +217,7 @@
                 hasPermission: true,
                 curPipelineId: '',
                 curPipelineName: '',
-                defaultDate: '2018-05-04',
-                groupIdDesc: "可发通知至企业微信群。群ID获取方法：将'CI-Notice' 拉进群，手动@CI-Notice 并输入关键字'会话ID'，发送后即可获取群ID",
+                groupIdDesc: "可发通知至企业微信群。群ID获取方法：添加'DevOps-notice' 群机器人，手动@DevOps-notice并输入关键字'群ID', 发送后即可获取",
                 experienceGroup: [],
                 groupIdStorage: [],
                 categoryList: [
