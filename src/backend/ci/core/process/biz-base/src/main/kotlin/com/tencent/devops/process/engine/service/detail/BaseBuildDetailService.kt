@@ -253,8 +253,7 @@ open class BaseBuildDetailService constructor(
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary,
-                executeCount = pipelineBuildInfo.executeCount
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
             )
         )
     }
