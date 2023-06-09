@@ -240,7 +240,8 @@ class BuildRecordTaskDao {
 
     private fun TPipelineBuildRecordTask.generateBuildRecordTask(
         record: Record18<String, String, String, Int, String,
-            String, String, Int, Int, String, String, String, String, String, LocalDateTime, LocalDateTime, String, String>
+            String, String, Int, Int, String, String, String,
+            String, String, LocalDateTime, LocalDateTime, String, String>
     ) =
         BuildRecordTask(
             buildId = record[BUILD_ID],
