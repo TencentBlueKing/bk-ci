@@ -173,4 +173,22 @@ interface ServiceNodeResource {
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
+
+    @ApiOperation("指定构建环境获取所有节点信息")
+    @GET
+    @Path("/projects/{projectId}/third_party_env2nodes")
+    fun thirdPartyEnv2Nodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId (envHashId和envName选填一项)", required = false)
+        @QueryParam("envHashId")
+        envHashId: String?,
+        @ApiParam("环境名称", required = false)
+        @QueryParam("envName (envHashId和envName选填一项)")
+        envName: String?
+    ): Result<List<NodeWithPermission>>
 }
