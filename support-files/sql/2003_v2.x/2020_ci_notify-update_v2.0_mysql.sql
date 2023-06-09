@@ -38,7 +38,7 @@ BEGIN
     SET AUTOCOMMIT = 0;
 SELECT DATABASE() INTO db;
 
-    IF NOT EXISTS(SELECT 1
+    IF EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE'
@@ -49,7 +49,8 @@ SELECT DATABASE() INTO db;
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE') THEN
+                    AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE'
+                    AND INDEX_NAME = 'UNI_TCNMT_TEMPLATE_CODE') THEN
         ALTER TABLE `T_COMMON_NOTIFY_MESSAGE_TEMPLATE` ADD UNIQUE INDEX UNI_TCNMT_TEMPLATE_CODE (TEMPLATE_CODE);
     END IF;
 

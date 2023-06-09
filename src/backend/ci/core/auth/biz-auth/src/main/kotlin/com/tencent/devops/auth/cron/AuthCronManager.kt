@@ -139,8 +139,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthActionI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_ACTION_UPDATE_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth Action I18n")
                     val authActionI18nMap = mutableMapOf<String, String>()
@@ -174,8 +174,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthResourceTypeI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_RESOURCE_TYPE_UPDATE_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth resource type I18n")
                     var page = PageUtil.DEFAULT_PAGE
@@ -215,8 +215,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthResourceGroupConfigI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_RESOURCE_TYPE_GROUP_CONFIG_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth resource group config type I18n")
                     val authAuthResourceGroupConfigs = mutableListOf<TAuthResourceGroupConfigRecord>()
