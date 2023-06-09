@@ -421,7 +421,7 @@ abstract class AbMigratePolicyService(
             )
         }
         if (hasPermission) {
-            logger.info("user has project any resource permission|$userId|$actions$projectCode")
+            logger.info("user has project any resource permission|$userId|$actions|$projectCode")
             return null
         }
         val (groupConfigId, groupId) = getMatchResourceGroupId(
