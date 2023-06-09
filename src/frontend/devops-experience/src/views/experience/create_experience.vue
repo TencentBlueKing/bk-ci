@@ -96,21 +96,29 @@
                         </bk-form-item>
                         <bk-form-item v-show="showExperienceGroup" label="体验组" :required="true" label-width="190" property="experienceGroups">
                             <div class="bkdevop-checkbox-group">
-                                <bk-checkbox v-for="(col, index) in experienceGroup" :key="index" v-model="col.isChecked" @change="handleGroupChange" class="exp-group-item">
-                                    {{ col.name }}
-                                    <bk-popover :delay="[300, 0]" max-width="600" placement="bottom">
-                                        <i class="devops-icon icon-member-list"></i>
-                                        <div class="exp-group-popup-box" slot="content">
-                                            <p
-                                                v-for="item in expGroupPopupConf"
-                                                :key="item.key"
-                                                class="exp-group-popup-item"
-                                            >
-                                                <span>{{item.typeLabel}}</span>
-                                                <span>{{ col[item.key].join(',') }}</span>
-                                            </p>
-                                        </div>
-                                    </bk-popover>
+                                <bk-checkbox
+                                    class="exp-group-item"
+                                    v-for="(col, index) in experienceGroup"
+                                    :key="index"
+                                    v-model="col.isChecked"
+                                    @change="handleGroupChange"
+                                >
+                                    <span class="exp-group-item-content">
+                                        <span class="exp-group-item-name">{{ col.name }}</span>
+                                        <bk-popover :delay="[300, 0]" max-width="600" placement="bottom">
+                                            <i class="devops-icon icon-member-list"></i>
+                                            <div class="exp-group-popup-box" slot="content">
+                                                <p
+                                                    v-for="item in expGroupPopupConf"
+                                                    :key="item.key"
+                                                    class="exp-group-popup-item"
+                                                >
+                                                    <span>{{item.typeLabel}}</span>
+                                                    <span>{{ col[item.key].join(',') }}</span>
+                                                </p>
+                                            </div>
+                                        </bk-popover>
+                                    </span>
                                 </bk-checkbox>
                             </div>
                             <span class="create-group-entry" @click="toCreateGroup">
@@ -813,16 +821,22 @@
 
     .create-experience-wrapper {
         .experience-form {
-            width: 800px;
+            width: 830px;
             .bkdevop-checkbox-group {
-                .bk-form-checkbox {
-                    width: 180px;
-                    line-height: 30px;
-                    margin-bottom: 10px;
-                }
+                
                 .exp-group-item {
                     .icon-member-list {
                         display: none;
+                    }
+                    .exp-group-item-content {
+                        display: flex;
+                        align-items: center;
+                        width: 180px;
+                        margin-right: 10px;
+                        .exp-group-item-name {
+                            flex: 1;
+                            @include ellipsis();
+                        }
                     }
                     &:hover {
                         .icon-member-list {

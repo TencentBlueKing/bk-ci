@@ -24,7 +24,7 @@
                             <bk-table-column label="名称" prop="name"></bk-table-column>
                             <bk-table-column label="内部人员" prop="innerUsersCount">
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :trigger="props.row.innerUsersCount ? 'mouseenter focus' : 'manual'">
+                                    <bk-popover placement="bottom" :disabled="props.row.innerUsersCount <= 0">
                                         <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -36,7 +36,7 @@
                             </bk-table-column>
                             <bk-table-column label="内部组织" prop="deptsCount">
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :trigger="props.row.deptsCount ? 'mouseenter focus' : 'manual'">
+                                    <bk-popover placement="bottom" :disabled="props.row.deptsCount <= 0">
                                         <span class="handler-inner">{{ props.row.deptsCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -48,7 +48,7 @@
                             </bk-table-column>
                             <bk-table-column label="外部人员" prop="outerUsersCount">
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :trigger="props.row.outerUsersCount ? 'mouseenter focus' : 'manual'">
+                                    <bk-popover placement="bottom" :disabled="props.row.outerUsersCount <= 0">
                                         <span class="handler-outer">{{ props.row.outerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
