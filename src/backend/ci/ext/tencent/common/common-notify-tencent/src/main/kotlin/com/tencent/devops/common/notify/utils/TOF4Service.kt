@@ -88,7 +88,6 @@ class TOF4Service @Autowired constructor(
                 .post(requestBody)
                 .headers(headers)
                 .build()
-
             okHttpClient.newCall(request).execute().use { response ->
                 responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
@@ -156,7 +155,6 @@ class TOF4Service @Autowired constructor(
             .addFormDataPart("Title", params["Title"]!!)
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
-
         postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)

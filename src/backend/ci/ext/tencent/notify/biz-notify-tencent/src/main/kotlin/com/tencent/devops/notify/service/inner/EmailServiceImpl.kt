@@ -234,8 +234,8 @@ class EmailServiceImpl @Autowired constructor(
         contentMd5: String,
         frequencyLimit: Int
     ): Set<String> {
-        val filteredReceivers = HashSet(receivers)
-        val filteredOutReceivers = HashSet<String>()
+        val filteredReceivers = LinkedHashSet(receivers)
+        val filteredOutReceivers = LinkedHashSet<String>()
         if (frequencyLimit > 0) {
             val recordedReceivers = emailNotifyDao.getTosByContentMd5AndTime(
                 contentMd5, (frequencyLimit * 60).toLong()
