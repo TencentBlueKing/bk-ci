@@ -55,6 +55,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -965,15 +967,11 @@ class ExperienceService @Autowired constructor(
         if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
             val wechatGroupList = regex.split(experienceRecord.wechatGroups)
             wechatGroupList.forEach {
-                val message = WechatGroupUtil.makeRichtextMessage(
-                    projectName = projectName,
-                    name = experienceRecord.name,
-                    version = experienceRecord.version,
-                    innerUrl = pcUrl,
-                    outerUrl = appUrl,
-                    groupId = it
-                )
-                wechatWorkService.sendRichText(message)
+                if (it.startsWith("ww")) {
+                    sendForApp(projectName, experienceRecord, pcUrl, appUrl, it)
+                } else {
+                    sendForRobot(projectName, experienceRecord, pcUrl, appUrl, it)
+                }
             }
         }
 
@@ -1012,6 +1010,48 @@ class ExperienceService @Autowired constructor(
             )
             experiencePushService.pushMessage(appMessage)
         }
+    }
+
+    private fun sendForRobot(
+        projectName: String,
+        experienceRecord: TExperienceRecord,
+        pcUrl: String,
+        appUrl: String,
+        it: String
+    ) {
+        val content = """
+                        【$projectName】最新体验版本分享
+    
+                        【$projectName】发布了最新体验版本，【${experienceRecord.name}_${experienceRecord.version}】诚邀您参与体验。
+                        [PC体验地址]($pcUrl)
+                        [手机体验地址]($appUrl)
+                    """.trimIndent()
+
+        client.get(ServiceNotifyResource::class).sendWeworkTextNotify(
+            receivers = it,
+            receiverType = WeworkReceiverType.group,
+            textType = WeworkTextType.markdown,
+            message = content
+        )
+    }
+
+    @Deprecated("CI-Notice账号废除 , 用后面用Devops-Notice机器人发布")
+    private fun sendForApp(
+        projectName: String,
+        experienceRecord: TExperienceRecord,
+        pcUrl: String,
+        appUrl: String,
+        it: String
+    ) {
+        val message = WechatGroupUtil.makeRichtextMessage(
+            projectName = projectName,
+            name = experienceRecord.name,
+            version = experienceRecord.version,
+            innerUrl = pcUrl,
+            outerUrl = appUrl,
+            groupId = it
+        )
+        wechatWorkService.sendRichText(message)
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
