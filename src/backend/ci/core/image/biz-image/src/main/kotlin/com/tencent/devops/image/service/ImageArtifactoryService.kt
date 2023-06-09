@@ -156,19 +156,27 @@ class ImageArtifactoryService @Autowired constructor(
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): ImageListResp {
         // 查询项目镜像列表
         val imageList = mutableListOf<ImageItem>()
-        val projectImages = getBkRepoImages(projectCode, repoName, searchKey, page, pageSize)
+        val projectImages = getBkRepoImages(
+            projectCode = projectCode,
+            repoName = repoName,
+            searchKey = searchKey,
+            page = page,
+            pageSize = pageSize
+        )
         if (projectImages.isEmpty()) {
             return ImageListResp(imageList)
         }
         val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
         repoNames.forEach {
-            imageList.add(
-                ImageItem(
-                    repoUrl = bkRepoClientConfig.bkRepoIdcHost!!,
-                    repo = it!!,
-                    name = parseName(it)
+            if (!it.isNullOrBlank()) {
+                imageList.add(
+                    ImageItem(
+                        repoUrl = bkRepoClientConfig.bkRepoIdcHost!!,
+                        repo = it,
+                        name = parseName(it)
+                    )
                 )
-            )
+            }
         }
         return ImageListResp(imageList)
     }

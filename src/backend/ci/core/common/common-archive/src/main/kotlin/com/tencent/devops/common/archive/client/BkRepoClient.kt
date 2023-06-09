@@ -250,17 +250,6 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<List<FileInfo>>>()!!.data!!
     }
 
-    fun getUrl(projectCode: String, repoName: String, searchKey: String?, page: Int, pageSize: Int): String {
-        val stringBuilder = StringBuilder()
-        val start = "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
-        val middle = "packageName=$searchKey&"
-        val end = "pageNumber=$page&pageSize=$pageSize"
-        stringBuilder.append(start)
-        if (!searchKey.isNullOrBlank()) {
-            stringBuilder.append("packageName=$searchKey&")
-        }
-        return stringBuilder.append(end).toString()
-    }
     fun getBkRepoImage(
         projectCode: String,
         repoName: String,
@@ -269,14 +258,13 @@ class BkRepoClient constructor(
         pageSize: Int,
         headers: String
     ): BkRepoData {
-        val stringBuilder = StringBuilder(
+        val sb = StringBuilder(
             "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?"
         )
-        val end = "pageNumber=$page&pageSize=$pageSize"
         if (!searchKey.isNullOrBlank()) {
-            stringBuilder.append("packageName=$searchKey&")
+            sb.append("packageName=$searchKey&")
         }
-        val url = stringBuilder.append(end).toString()
+        val url = sb.append("pageNumber=$page&pageSize=$pageSize").toString()
         val request = Request.Builder()
             .url(url)
             .header(AUTH_HEADER_IAM_TOKEN, headers)
