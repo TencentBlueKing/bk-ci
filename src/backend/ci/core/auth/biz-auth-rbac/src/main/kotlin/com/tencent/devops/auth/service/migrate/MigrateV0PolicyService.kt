@@ -287,6 +287,7 @@ class MigrateV0PolicyService constructor(
         projectCode: String,
         projectName: String,
         gradeManagerId: Int,
+        managerGroupId: Int,
         permission: AuthorizationScopes
     ): Int? {
         val resource = permission.resources[0]

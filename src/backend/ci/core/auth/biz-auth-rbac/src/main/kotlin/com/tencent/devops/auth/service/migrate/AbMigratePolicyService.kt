@@ -275,6 +275,7 @@ abstract class AbMigratePolicyService(
                 projectCode = projectCode,
                 projectName = projectName,
                 gradeManagerId = gradeManagerId,
+                managerGroupId = managerGroupId,
                 version = version
             )
         } finally {
@@ -288,6 +289,7 @@ abstract class AbMigratePolicyService(
         projectCode: String,
         projectName: String,
         gradeManagerId: Int,
+        managerGroupId: Int,
         version: String
     ): Int {
         var page = 1
@@ -305,6 +307,7 @@ abstract class AbMigratePolicyService(
                 projectCode = projectCode,
                 projectName = projectName,
                 gradeManagerId = gradeManagerId,
+                managerGroupId = managerGroupId,
                 results = taskDataResp.results
             )
             page++
@@ -317,6 +320,7 @@ abstract class AbMigratePolicyService(
         projectCode: String,
         projectName: String,
         gradeManagerId: Int,
+        managerGroupId: Int,
         results: List<MigrateTaskDataResult>
     ) {
         results.forEach { result ->
@@ -334,6 +338,7 @@ abstract class AbMigratePolicyService(
                     projectCode = projectCode,
                     projectName = projectName,
                     gradeManagerId = gradeManagerId,
+                    managerGroupId = managerGroupId,
                     permission = permission
                 )
                 if (groupId != null) {
@@ -354,6 +359,7 @@ abstract class AbMigratePolicyService(
         projectCode: String,
         projectName: String,
         gradeManagerId: Int,
+        managerGroupId: Int,
         permission: AuthorizationScopes
     ): Int?
 
