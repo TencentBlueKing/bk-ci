@@ -73,7 +73,16 @@ class MacBuildListener @Autowired constructor(
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
-        onStartup(dispatchMessage)
+        try {
+            MacOSThreadPoolUtils.instance.getThreadPool(ThreadPoolName.DEMOTE_STARTUP).execute {
+                doStartup(dispatchMessage)
+            }
+        } catch (e: RejectedExecutionException) {
+            // 构建任务被线程池拒绝，重新回队列
+            logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId}|${dispatchMessage.executeCount} " +
+                            "build task rejected. Retry")
+            retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
+        }
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
@@ -85,7 +94,7 @@ class MacBuildListener @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation,
             lockKey,
-            20
+            30
         )
         try {
             if (!redisLock.tryLock()) {
@@ -115,13 +124,17 @@ class MacBuildListener @Autowired constructor(
 
     private fun doStartup(dispatchMessage: DispatchMessage) {
         logger.info("MacOS Dispatch on start up - ($dispatchMessage)")
-
         try {
-            val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
+            val buildHistoryId = buildHistoryService.saveBuildHistory(dispatchMessage)
+            // 保存构建任务失败，直接返回，对此次构建任务不做处理
+            if (buildHistoryId < 0) {
+                return
+            }
 
+            val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
             devCloudMacosVmInfo?.let {
                 devCloudMacosService.saveVM(it)
-                buildHistoryService.saveBuildHistory(dispatchMessage, it.ip, it.id, "DEVCLOUD")
+                buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage)
                 macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
 
                 logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
@@ -208,9 +221,7 @@ class MacBuildListener @Autowired constructor(
             try {
                 val vmIp = buildTask.vmIp
                 val vmId = buildTask.vmId
-                logger.info(
-                    "${event.buildId}|${event.vmSeqId} Shutdown MacOS ip($vmIp), id($vmId)"
-                )
+                logger.info("${event.buildId}|${event.vmSeqId} Shutdown MacOS ip($vmIp), id($vmId)")
                 macosVMRedisService.deleteRedisBuild(vmIp)
                 devCloudMacosService.deleteVM(
                     creator = creator,

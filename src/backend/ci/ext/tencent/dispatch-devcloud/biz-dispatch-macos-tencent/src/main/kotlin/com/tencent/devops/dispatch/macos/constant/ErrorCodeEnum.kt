@@ -14,5 +14,5 @@ enum class ErrorCodeEnum(
         ErrorType.THIRD_PARTY,
         2133022,
         "DEVCLOUD MACOS构建机启动失败，没有空闲的构建机"
-    );
+    )
 }

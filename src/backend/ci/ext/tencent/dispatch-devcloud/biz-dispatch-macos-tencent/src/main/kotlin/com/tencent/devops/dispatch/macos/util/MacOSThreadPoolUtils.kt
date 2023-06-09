@@ -12,19 +12,15 @@ class MacOSThreadPoolUtils private constructor() {
     @Volatile
     private var threadPoolMap = hashMapOf<String, ThreadPoolExecutor>()
 
-    private val corePoolSize = 30
-    private val maxPoolSize = 30
-    private val keepAliveTime: Long = 600
-
     fun getThreadPool(poolName: ThreadPoolName): ThreadPoolExecutor {
         var threadPoolExecutor = threadPoolMap[poolName.name]
         if (null == threadPoolExecutor) {
             synchronized(this) {
                 if (null == threadPoolExecutor) {
                     threadPoolExecutor = ThreadPoolExecutor(
-                        corePoolSize,
-                        maxPoolSize,
-                        keepAliveTime,
+                        poolName.corePoolSize,
+                        poolName.maxPoolSize,
+                        poolName.keepAliveTime,
                         TimeUnit.SECONDS,
                         SynchronousQueue()
                     ).apply { allowCoreThreadTimeOut(true) }
@@ -52,14 +48,23 @@ class MacOSThreadPoolUtils private constructor() {
     }
 }
 
-enum class ThreadPoolName {
+enum class ThreadPoolName(
+    val corePoolSize: Int,
+    val maxPoolSize: Int,
+    val keepAliveTime: Long,
+) {
     /**
      * 启动构建任务线程池
      */
-    STARTUP,
+    STARTUP(30, 30, 600),
+
+    /**
+     * 启动降级队列构建任务线程池
+     */
+    DEMOTE_STARTUP(2, 2, 600),
 
     /**
      * 结束构建任务线程池
      */
-    SHUTDOWN
+    SHUTDOWN(20, 20, 60)
 }
