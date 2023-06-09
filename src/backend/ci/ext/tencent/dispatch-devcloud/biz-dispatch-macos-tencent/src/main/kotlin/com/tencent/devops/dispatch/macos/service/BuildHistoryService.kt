@@ -34,7 +34,7 @@ class BuildHistoryService @Autowired constructor(
             executeCount = dispatchMessage.executeCount ?: 1
         )
 
-        if (buildHistory != null) {
+        if (buildHistory != null && buildHistory.isNotEmpty) {
             logger.error("$dispatchMessage has been consumed.")
             return -1L
         }
