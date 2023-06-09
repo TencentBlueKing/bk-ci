@@ -88,6 +88,7 @@
                     >
                         
                         <bk-exception
+                            v-if="Object.keys(filters).length > 0"
                             slot="empty"
                             type="search-empty"
                             scene="part"
