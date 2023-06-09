@@ -127,7 +127,7 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
                 errorInfoList = null,
@@ -159,6 +159,8 @@ open class BaseBuildRecordService(
         buildRecordModel: BuildRecordModel,
         executeCount: Int?
     ): Model? {
+        val watcher = Watcher(id = "getRecordModel#$buildId")
+        watcher.start("getVersionModelString")
         val resourceStr = pipelineResVersionDao.getVersionModelString(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
         ) ?: pipelineResDao.getVersionModelString(
@@ -172,6 +174,7 @@ open class BaseBuildRecordService(
         )
         var recordMap: Map<String, Any>? = null
         return try {
+            watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
             // 为model填充element
             pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
@@ -184,7 +187,9 @@ open class BaseBuildRecordService(
                 recordModelMap = buildRecordModel.modelVar,
                 pipelineBaseModelMap = baseModelMap
             )
+            watcher.start("generateFieldRecordModelMap")
             recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            watcher.start("generatePipelineBuildModel")
             ModelUtils.generatePipelineBuildModel(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
@@ -195,6 +200,9 @@ open class BaseBuildRecordService(
                     "-$executeCount with error: ", t
             )
             null
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 

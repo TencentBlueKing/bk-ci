@@ -4,72 +4,56 @@
             isLoading: loading.isLoading,
             title: loading.title
         }">
-        <div class="part-table" v-if="showContent && partList.length">
-            <div class="table-head">
-                <div class="table-part-item part-item-name">{{ $t('details.artifactName') }}</div>
-                <div class="table-part-item part-item-path">{{ $t('details.path') }}</div>
-                <div class="table-part-item part-item-size">{{ $t('details.filesize') }}</div>
-                <div class="table-part-item part-item-type">{{ $t('details.repoType') }}</div>
-                <div class="table-part-item part-item-handler">{{ $t('operate') }}</div>
-            </div>
-            <div class="table-body">
-                <div class="table-row" v-for="(row, index) of partList" :key="index">
-                    <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
-                        <Logo v-if="row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
-                        <i v-else :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
-                        <span :title="row.name">{{ row.name }}</span>
-                    </div>
-                    <div class="table-part-item part-item-path">
-                        <span :title="row.fullName">{{ row.fullName }}</span>
-                    </div>
-                    <div class="table-part-item part-item-size">
-                        <span>{{ convertInfoItem('size', row.size) }}</span>
-                    </div>
-                    <div class="table-part-item part-item-type">
-                        {{ repoTypeNameMap[row.artifactoryType].i18n }}
-                    </div>
-                    <div class="table-part-item part-item-handler">
-                        <span @click.stop="gotoArtifactory(row)" class="handler-btn" v-bk-tooltips="$t('editPage.atomForm.toArtifactory')">
-                            {{ $t('locate') }}
-                        </span>
-                        <span class="handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" v-bk-tooltips="$t('download')"
-                            @click="requestUrl(row, 'download')">
-                            {{$t('download')}}
-                        </span>
-                        <span class="handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" v-bk-tooltips="$t('details.mofDownload')"
-                            @click="requestUrl(row, 'download', null, 'MoF')">
-                            {{ $t('details.mofDownload') }}
-                        </span>
-                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" v-bk-tooltips="$t('details.saveToCustom')" @click="copyToCustom(row)">
-                            {{ $t('saveAs') }}
-                        </span>
-                        <span class="handler-btn-tool qrcode"
-                            v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
-                            <span class="handler-btn"
-                                id="partviewqrcode"
-                                v-bk-tooltips="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)">
-                                {{ $t('details.qrcode') }}
-                            </span>
-                            <p class="qrcode-box" v-if="row.display"
-                                v-bkloading="{
-                                    isLoading: !curIndexItemUrl,
-                                    title: ''
-                                }">
-                                <qrcode class="qrcode-view" :text="curIndexItemUrl" :size="100"></qrcode>
-                            </p>
-                        </span>
-                        <bk-popover placement="left" v-if="!hasPermission">
-                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
-                            <template slot="content">
-                                <p>{{ $t('details.noDownloadPermTips') }}</p>
-                            </template>
-                        </bk-popover>
-                        <artifactory-operation :artifact="row" />
-                    </div>
+        <bk-table class="part-table" v-if="showContent && partList.length" :data="partList">
+            <bk-table-column :label="$t('details.artifactName')">
+                <div slot-scope="{ row }" @click.stop="showDetail(row)">
+                    <Logo v-if="row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
+                    <i v-else :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
+                    <span :title="row.name">{{ row.name }}</span>
                 </div>
-            </div>
-        </div>
+            </bk-table-column>
+            <bk-table-column :label="$t('details.path')" prop="fullName"></bk-table-column>
+            <bk-table-column :label="$t('details.filesize')" prop="size">
+                <span slot-scope="{ row }">
+                    {{convertInfoItem('size', row.size)}}
+                </span>
+            </bk-table-column>
+            <bk-table-column :label="$t('details.repoType')">
+                <span slot-scope="{ row }">{{repoTypeNameMap[row.artifactoryType]}}</span>
+            </bk-table-column>
+            <bk-table-column class="part-item-handler" :label="$t('operate')">
+                <div class="part-item-handler" slot-scope="{ row }">
+                    <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
+                    <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" :title="$t('download')"
+                        @click="requestUrl(row, 'download')"></i>
+                    <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')"></i>
+                    <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
+                            <Logo class="icon-copy" name="copy" size="15"></Logo>
+                        </span> -->
+                    <span class="handler-btn-tool qrcode"
+                        v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
+                        <i class="devops-icon icon-qrcode handler-btn"
+                            id="partviewqrcode"
+                            :title="$t('details.qrcode')"
+                            @click="requestUrl(row, 'url', index)"></i>
+                        <p class="qrcode-box" v-if="row.display"
+                            v-bkloading="{
+                                isLoading: !curIndexItemUrl,
+                                title: ''
+                            }">
+                            <qrcode class="qrcode-view" :text="curIndexItemUrl" :size="100"></qrcode>
+                        </p>
+                    </span>
+                    <bk-popover placement="left" v-if="!hasPermission">
+                        <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
+                        <template slot="content">
+                            <p>{{ $t('details.noDownloadPermTips') }}</p>
+                        </template>
+                    </bk-popover>
+                </div>
+            </bk-table-column>
+        </bk-table>
         <div class="artifactory-empty" v-if="showContent && !partList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">
@@ -443,15 +427,12 @@
             async copyToCustom (artifactory) {
                 let message, theme
                 try {
-                    const { projectId, pipelineId, buildNo } = this.$route.params
                     const params = {
                         files: [artifactory.name],
                         copyAll: false
                     }
                     const res = await this.$store.dispatch('common/requestCopyArtifactory', {
-                        projectId,
-                        pipelineId,
-                        buildId: buildNo,
+                        ...this.$route.params,
                         params
                     })
                     if (res) {
@@ -481,67 +462,7 @@
     .view-part-wrapper {
         height: 100%;
         overflow: auto;
-        .part-table {
-            border: 1px solid $borderWeightColor;
-        }
-        .table-head,
-        .table-row {
-            padding: 0 20px;
-            @extend %flex;
-            height: 43px;
-            font-size: 14px;
-            color: #333C48;
-            cursor: default;
-        }
-        .table-body {
-            background-color: #fff;
-        }
-        .table-row {
-            height: 60px;
-            border-top: 1px solid $borderWeightColor;
-            color: $fontWeightColor;
-            .part-item-name, .part-item-type {
-                // color: $primaryColor;
-                // cursor: pointer;
-                // a {
-                //     color: $primaryColor;
-                // }
-            }
-        }
-        .table-part-item {
-            flex: 1;
-            padding-right: 20px;
-        }
-        .part-item-name {
-            flex: 2;
-            position: relative;
-            padding-left: 38px;
-            line-height: 60px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            i {
-                position: absolute;
-                top: 15px;
-                left: 0;
-                font-size: 30px;
-                width: 38px;
-                color: $fontLighterColor;
-            }
-            .image-icon {
-                position: absolute;
-                top: 14px;
-                left: -4px;
-                font-size: 30px;
-                width: 38px;
-            }
-        }
-        .part-item-path {
-            flex: 3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+
         .part-item-handler {
             flex: 2;
             max-width: 222px;

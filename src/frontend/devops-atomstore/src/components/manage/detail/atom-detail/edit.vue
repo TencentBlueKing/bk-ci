@@ -73,6 +73,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
 
@@ -105,6 +106,10 @@
         },
 
         computed: {
+            ...mapGetters('store', {
+                userInfo: 'getUserInfo'
+            }),
+
             userName () {
                 return this.$store.state.user.username
             },
