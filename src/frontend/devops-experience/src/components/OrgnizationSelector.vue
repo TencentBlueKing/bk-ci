@@ -33,11 +33,6 @@
                 treeData: []
             }
         },
-        watch: {
-            value (val) {
-                console.log('watch value', val)
-            }
-        },
         created () {
             this.init()
         },
@@ -67,6 +62,10 @@
             },
             handleSelectChange (node) {
                 this.$emit('input', node)
+            },
+            clear () {
+                console.log(this.$refs.tree)
+                this.$refs.tree.setSelected()
             }
         }
         

@@ -98,16 +98,18 @@
                             <div class="bkdevop-checkbox-group">
                                 <bk-checkbox v-for="(col, index) in experienceGroup" :key="index" v-model="col.isChecked" @change="handleGroupChange" class="exp-group-item">
                                     {{ col.name }}
-                                    <bk-popover :delay="500" placement="bottom">
+                                    <bk-popover :delay="[300, 0]" max-width="600" placement="bottom">
                                         <i class="devops-icon icon-member-list"></i>
-                                        <template slot="content">
-                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">内部人员名单：
-                                                <span v-for="(entry, uIndex) in col.innerUsers" :key="uIndex">{{ entry.replace('"', '') }}<span v-if="index !== (col.innerUsers.length - 1)">,</span></span>
+                                        <div class="exp-group-popup-box" slot="content">
+                                            <p
+                                                v-for="item in expGroupPopupConf"
+                                                :key="item.key"
+                                                class="exp-group-popup-item"
+                                            >
+                                                <span>{{item.typeLabel}}</span>
+                                                <span>{{ col[item.key].join(',') }}</span>
                                             </p>
-                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">外部人员名单：
-                                                <span>{{ col.outerUsers.join(',') }}</span>
-                                            </p>
-                                        </template>
+                                        </div>
                                     </bk-popover>
                                 </bk-checkbox>
                             </div>
@@ -180,14 +182,14 @@
                 </div>
             </div>
             <experience-group
-                :node-select-conf="nodeSelectConf"
-                :outers-list="outersList"
+                v-bind="groupSideslider"
                 :create-group-form="createGroupForm"
-                :loading="dialogLoading"
-                :on-change="onChange"
+                :handle-group-field-change="handleGroupFieldChange"
                 :error-handler="errorHandler"
                 @after-submit="afterCreateGroup"
-                :cancel-fn="cancelFn"></experience-group>
+                :cancel-fn="cancelFn"
+            >
+            </experience-group>
 
             <version-package :version-select-conf="versionSelectConf"
                 :loading="packageLoading"
@@ -198,11 +200,11 @@
 </template>
 
 <script>
+    import GroupIdSelector from '@/components/common/groupIdSelector'
+    import { convertTime } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import experienceGroup from './create_group'
     import versionPackage from './version_package'
-    import { convertTime } from '@/utils/util'
-    import GroupIdSelector from '@/components/common/groupIdSelector'
 
     export default {
         components: {
@@ -253,10 +255,6 @@
                     enableWechatGroups: false,
                     experienceGroups: []
                 },
-                dialogLoading: {
-                    isLoading: false,
-                    title: ''
-                },
                 packageLoading: {
                     isLoading: false,
                     title: ''
@@ -265,13 +263,6 @@
                     isLoading: true,
                     title: ''
                 },
-                nodeSelectConf: {
-                    title: '',
-                    isShow: false,
-                    closeIcon: false,
-                    hasHeader: false,
-                    quickClose: false
-                },
                 versionSelectConf: {
                     isShow: false,
                     closeIcon: false,
@@ -279,12 +270,16 @@
                     quickClose: false,
                     confirmText: '确定'
                 },
+                groupSideslider: {
+                    title: '',
+                    visible: false,
+                    isLoading: false
+                },
                 createGroupForm: {
-                    idEdit: false,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
+                  
                 },
                 errorHandler: {
                     nameError: false
@@ -320,6 +315,18 @@
             },
             showExperienceGroup () {
                 return this.experienceRange === 'internals'
+            },
+            expGroupPopupConf () {
+                return [{
+                    typeLabel: '内部人员：',
+                    key: 'innerUsers'
+                }, {
+                    typeLabel: '内部组织：',
+                    key: 'depts'
+                }, {
+                    typeLabel: '外部人员：',
+                    key: 'outerUsers'
+                }]
             }
         },
         watch: {
@@ -358,7 +365,6 @@
             if (this.isEdit) {
                 this.requestExperienceDetail()
             }
-            this.fetchOutersList()
         },
         mounted () {
             this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
@@ -405,34 +411,6 @@
                     }
                 })
                 this.createReleaseForm.experienceGroups = newExperienceGroups
-            },
-            /**
-             * 获取外部体验人员列表
-             */
-            async fetchOutersList () {
-                this.loading.isLoading = true
-                try {
-                    const res = await this.$store.dispatch('experience/fetchOutersList', {
-                        projectId: this.projectId,
-                        experienceHashId: this.experienceHashId
-                    })
-                    res.forEach(item => {
-                        this.outersList.push({
-                            id: item.username,
-                            name: item.username
-                        })
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.loading.isLoading = false
-                }
             },
 
             /**
@@ -545,18 +523,15 @@
             },
             toCreateGroup () {
                 this.createGroupForm = {
-                    isEdit: false,
-                    groupHashId: '',
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 }
-                this.nodeSelectConf.title = '新增体验组'
-                this.nodeSelectConf.isShow = true
+                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.visible = true
             },
-            onChange (tags) {
-                this.createGroupForm.internal_list = tags
+            handleGroupFieldChange (name, value) {
+                this.createGroupForm[name] = value
             },
             
             productResult () {
@@ -577,11 +552,12 @@
             },
             afterCreateGroup () {
                 this.requestGroupList()
-                this.nodeSelectConf.isShow = false
+                this.groupSideslider.visible = false
             },
             cancelFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.nodeSelectConf.isShow = false
+                console.log(1111, this.groupSideslider)
+                if (!this.groupSideslider.isLoading) {
+                    this.groupSideslider.visible = false
                 }
             },
             toShowPackageList () {
@@ -651,24 +627,6 @@
                     this.versionSelectConf.confirmText = '确定'
                 }
             },
-            // submitValidate () {
-            //     let errorCount = 0
-            //     if (!this.createReleaseForm.name) {
-            //         this.errorFormHandler.nameError = true
-            //         errorCount++
-            //     }
-
-            //     if (!this.createReleaseForm.end_date) {
-            //         this.errorFormHandler.dateError = true
-            //         errorCount++
-            //     }
-
-            //     if (errorCount > 0) {
-            //         return false
-            //     }
-
-            //     return true
-            // },
             groupIdChange (name, value) {
                 this.createReleaseForm.wechatGroups = value
             },
@@ -852,6 +810,7 @@
 
 <style lang="scss">
     @import './../../scss/conf';
+    @import '@/scss/mixins/ellipsis';
 
     .create-experience-wrapper {
         .experience-form {
@@ -982,6 +941,20 @@
                 border-top: 1px solid $borderWeightColor;
                 font-size: 12px;
             }
+        }
+    }
+    .exp-group-popup-box {
+        display: grid;
+        grid-template-rows: auto;
+        grid-gap: 10px;
+
+        .exp-group-popup-item {
+            display: flex;
+            align-items: flex-start;
+            > span:first-child {
+                flex-shrink: 0;
+            }
+            font-weight: 400;
         }
     }
 </style>

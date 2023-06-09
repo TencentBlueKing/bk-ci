@@ -53,7 +53,7 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column label="创建人" prop="creator"></bk-table-column>
-                            <bk-table-column label="描述" prop="remark"></bk-table-column>
+                            <bk-table-column label="描述" show-overflow-tooltip prop="remark"></bk-table-column>
                             <bk-table-column label="操作" prop="creator">
                                 <template slot-scope="props">
                                     <div class="handler-group">
@@ -234,7 +234,6 @@
                 this.groupSideslider.visible = false
             },
             cancelFn () {
-                console.log(1111, this.groupSideslider)
                 if (!this.groupSideslider.isLoading) {
                     this.groupSideslider.visible = false
                 }

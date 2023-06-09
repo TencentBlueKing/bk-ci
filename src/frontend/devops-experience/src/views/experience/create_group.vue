@@ -3,6 +3,7 @@
         :title="title"
         :is-show.sync="visible"
         :quick-close="false"
+        :before-close="beforeClose"
         :width="640"
     >
         <bk-form
@@ -16,19 +17,20 @@
         >
             <bk-form-item label="体验组名称" required property="name">
                 <bk-input
-                    placeholder="最长不超过10个汉字"
-                    maxlength="10"
+                    placeholder="最长不超过20个汉字"
+                    maxlength="20"
                     name="groupName"
-                    v-model="createGroupForm.name"
+                    :input-style="inputStyle"
+                    v-model.trim="createGroupForm.name"
                 />
             </bk-form-item>
             <bk-form-item label="描述" property="remark">
                 <bk-input
                     type="textarea"
                     placeholder="请输入"
-                    max-length="100"
+                    :maxlength="200"
                     name="groupDesc"
-                    v-model="createGroupForm.remark"
+                    v-model.trim="createGroupForm.remark"
                 />
             </bk-form-item>
             <bk-form-item label="人员">
@@ -55,11 +57,13 @@
                                 <bk-option v-for="option in importTypeList"
                                     :key="option.id"
                                     :id="option.id"
+                                    :disabled="option.disabled"
                                     :name="option.name"
                                 />
                             </bk-select>
                             <component
                                 :is="typeComponent"
+                                ref="inputComp"
                                 v-bind="typeProps.props"
                                 v-on="typeProps.listeners"
                             />
@@ -126,7 +130,7 @@
             <bk-button :disabled="isLoading || submitting" theme="primary" @click="handleSubmit">
                 提交
             </bk-button>
-            <bk-button :disabled="isLoading || submitting" @click="cancelFn">
+            <bk-button :disabled="isLoading || submitting" @click="beforeClose">
                 取消
             </bk-button>
         </footer>
@@ -176,6 +180,11 @@
             ]),
             projectId () {
                 return this.$route.params.projectId
+            },
+            inputStyle () {
+                return {
+                    'box-shadow': '0 0 0 30px white inset !important'
+                }
             },
             groupRules () {
                 return {
@@ -389,6 +398,7 @@
                     this.userGroupList = res.map(item => ({
                         id: item.groupId,
                         name: `${item.groupName} (${item.users?.length ?? 0})`,
+                        disabled: !item.users?.length,
                         ...item
                     }))
                 } catch (err) {
@@ -434,11 +444,13 @@
             async handlerAddUser () {
                 switch (this.importType) {
                     case 3: {
+                        console.log(this.$refs.inputComp?.clear?.())
                         if (this.userSet.has(this.innerOrg?.name)) {
                             this.$bkMessage({
                                 message: `内部组织${this.innerOrg.name}已存在`,
                                 theme: 'error'
                             })
+                            this.$refs.inputComp?.clear?.()
                             this.innerOrg = null
                             return
                         }
@@ -455,6 +467,7 @@
                                 ...this.createGroupForm.members
                             ]
                         )
+                        this.$refs.inputComp?.clear?.()
                         this.innerOrg = null
                         break
                     }
@@ -566,6 +579,16 @@
                         theme
                     })
                 }
+            },
+            beforeClose () {
+                this.$bkInfo({
+                    title: '离开后，新编辑的数据将会丢失',
+                    type: 'warning',
+                    theme: 'warning',
+                    confirmFn: () => {
+                        this.cancelFn()
+                    }
+                })
             },
             clearSort () {
                 this.$refs.filterTable.clearSort()
