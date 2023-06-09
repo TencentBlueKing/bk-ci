@@ -76,6 +76,9 @@ class RbacPermissionService constructor(
         }
     }
 
+    /**
+     * 如果没有具体资源,则校验是否有项目下任意资源权限
+     */
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -86,8 +89,8 @@ class RbacPermissionService constructor(
             userId = userId,
             action = action,
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
+            resourceType = resourceType!!,
+            resourceCode = "*",
             relationResourceType = null
         )
     }
@@ -102,8 +105,8 @@ class RbacPermissionService constructor(
     ): Boolean {
         val resource = if (resourceType == AuthResourceType.PROJECT.value) {
             AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
             )
         } else {
             val projectResourceInstance = AuthResourceInstance(

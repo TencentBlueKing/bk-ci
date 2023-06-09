@@ -300,6 +300,7 @@ class MigrateV0PolicyService constructor(
                 userId = userId,
                 projectCode = projectCode,
                 projectName = projectName,
+                resourceType = resourceType,
                 actions = finalUserActions,
                 gradeManagerId = gradeManagerId
             )

@@ -367,6 +367,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         actions: List<String>
     ): Int? {
+        // 判断用户是否已有资源actions权限
         val hasPermission = permissionService.batchValidateUserResourcePermission(
             userId = userId,
             actions = actions,
@@ -374,24 +375,21 @@ abstract class AbMigratePolicyService(
             resourceCode = resourceCode,
             resourceType = resourceType
         ).all { it.value }
-        // 没有action的权限，匹配资源默认用户组权限
-        if (!hasPermission) {
-            return getMatchResourceGroupId(
-                resourceType = resourceType,
-                actions = actions,
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                userId = userId
-            ).second ?: run {
-                logger.info("user not match resource group|$userId|$actions$projectCode|$resourceCode")
-                null
-            }
-        } else {
-            logger.info(
-                "user has resource action permission|$userId|$resourceCode|$actions$projectCode|$resourceCode"
-            )
+
+        if (hasPermission) {
+            logger.info("user has resource action permission|$userId|$actions$projectCode|$resourceCode")
+            return null
         }
-        return null
+        return getMatchResourceGroupId(
+            resourceType = resourceType,
+            actions = actions,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            userId = userId
+        ).second ?: run {
+            logger.info("user not match resource group|$userId|$actions$projectCode|$resourceCode")
+            null
+        }
     }
 
     /**
@@ -403,9 +401,23 @@ abstract class AbMigratePolicyService(
         userId: String,
         projectCode: String,
         projectName: String,
+        resourceType: String,
         actions: List<String>,
         gradeManagerId: Int
     ): Int? {
+        // 判断用户是否已有项目任意资源actions权限
+        val hasPermission = actions.all { action ->
+            permissionService.validateUserResourcePermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
+            )
+        }
+        if (hasPermission) {
+            logger.info("user has project any resource permission|$userId|$actions$projectCode")
+            return null
+        }
         val (groupConfigId, groupId) = getMatchResourceGroupId(
             resourceType = AuthResourceType.PROJECT.value,
             actions = actions,
