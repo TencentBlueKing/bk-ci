@@ -86,6 +86,27 @@
                         @page-limit-change="handlePageLimitChange"
                         @filter-change="handleFilterChange"
                     >
+                        
+                        <bk-exception
+                            slot="empty"
+                            type="search-empty"
+                            scene="part"
+                        >
+                            <p class="memeber-search-empty-title">搜索结果为空</p>
+                            <p class="memeber-search-empty-desc">
+                                可以尝试
+                                <span>调整关键词</span>
+                                或
+                                <bk-button
+                                    text
+                                    theme="primary"
+                                    @click="clearFilter"
+                                >
+                                    清空筛选条件
+                                </bk-button>
+                            </p>
+                        </bk-exception>
+                        
                         <bk-table-column
                             label="名称"
                             prop="name"
@@ -100,9 +121,7 @@
                         <bk-table-column
                             label="内部/外部"
                             prop="typeLabel"
-                            column-key="type"
                             :filters="typeFilters"
-                            
                         />
                         <bk-table-column
                             label="所属组织架构"
@@ -594,14 +613,12 @@
                 this.$refs.filterTable.clearSort()
             },
             clearFilter () {
+                this.filters = {}
                 this.$refs.filterTable.clearFilter()
             },
             filterMethod (value, row, column) {
                 const property = column.property
                 return row[property] === value
-            },
-            typeFilterMethod (value, row) {
-                return row.type === value
             },
             handleFilterChange (filter) {
                 const filters = {
@@ -615,6 +632,7 @@
                     return acc
                 }, {})
             }
+            
         }
     }
 </script>
@@ -648,6 +666,15 @@
                     &:active {
                         background: white;
                     }
+                }
+            }
+            .memeber-search-empty-title {
+                font-size: 12px;
+            }
+            .memeber-search-empty-desc {
+                font-size: 12px;
+                > span {
+                    color: #979BA5;
                 }
             }
             .bk-tab-section {
