@@ -13,6 +13,6 @@ data class GroupPermissionDetailVo(
     @BkFieldI18n(convertName = "actionName")
     val name: String,
     @ApiModelProperty("关联资源")
-    @BkFieldI18n
+    @BkFieldI18n(reusePrefixFlag = false)
     val relatedResourceInfo: RelatedResourceInfo
 )
