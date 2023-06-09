@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 
 class RbacEnvironmentPermissionService(
@@ -168,6 +169,17 @@ class RbacEnvironmentPermissionService(
             resourceType = nodeResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
         ).data ?: emptyMap()
+    }
+
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
+        val hasRbacPermissionNodeIds = listNodeByPermission(userId, projectId, authPermission)
+        val hasRbacPermissionNode = nodeRecordList.filter { hasRbacPermissionNodeIds.contains(it.nodeId) }
+        return hasRbacPermissionNode.ifEmpty { emptyList() }
     }
 
     override fun checkNodePermission(

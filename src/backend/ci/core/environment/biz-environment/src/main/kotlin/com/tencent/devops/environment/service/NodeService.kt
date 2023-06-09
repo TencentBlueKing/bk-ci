@@ -131,6 +131,13 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId, projectId = projectId,
             permissions = setOf(
@@ -160,13 +167,6 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -236,6 +236,14 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
+
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId, projectId,
             permissions = setOf(
@@ -265,13 +273,7 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
+
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -324,17 +326,24 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
-        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
-
-        val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
-
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+        val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId,
             projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.VIEW
-        ).map { it.nodeId }
+            permissions = setOf(AuthPermission.USE, AuthPermission.VIEW)
+        )
 
+        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+        val canViewNodeIds = if (permissionMap.containsKey(AuthPermission.VIEW)) {
+            permissionMap[AuthPermission.VIEW]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
         return validRecordList.map {
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(

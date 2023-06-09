@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
 /**
  * 权限校验接口
@@ -169,6 +170,15 @@ abstract class AbstractEnvironmentPermissionService constructor(
             permissions = permissions,
             supplier = supplierForNodeFakePermission(projectId)
         )
+    }
+
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
+        return nodeRecordList
     }
 
     override fun checkNodePermission(
