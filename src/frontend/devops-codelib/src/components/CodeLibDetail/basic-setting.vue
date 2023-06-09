@@ -345,8 +345,10 @@
                     setTimeout(async () => {
                         await this.handleCheckPacProject(val)
                         const { resetType } = this.$route.query
-                        if (resetType) {
+                        if (['checkGitOauth', 'checkTGitOauth', 'checkGithubOauth'].includes(resetType)) {
                             await this.handleTogglePacStatus()
+                        } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
+                            await this.handleResetAuth()
                         }
                     }, 200)
                 },
@@ -360,13 +362,23 @@
                 switch (val) {
                     case 'git':
                         this.refreshGitOauth({
-                            resetType: 'checkGitOauth'
+                            type: 'git',
+                            resetType: 'checkGitOauth',
+                            redirectUrl: window.location.href
                         })
                         break
                     case 'github':
                         this.refreshGithubOauth({
                             projectId: this.projectId,
-                            resetType: 'checkGithubOauth'
+                            resetType: 'checkGithubOauth',
+                            redirectUrl: window.location.href
+                        })
+                        break
+                    case 'tgit':
+                        this.refreshGitOauth({
+                            type: 'tgit',
+                            resetType: 'checkTGitOauth',
+                            redirectUrl: window.location.href
                         })
                         break
                 }
@@ -480,6 +492,16 @@
                                 newRepoInfo.authType = 'OAUTH'
                                 newRepoInfo.enablePac = true
                                 await this.handleUpdateRepo(newRepoInfo)
+                                    .finally(() => {
+                                        const { id, page, limit } = this.$route.query
+                                        this.$router.push({
+                                            query: {
+                                                id,
+                                                page,
+                                                limit
+                                            }
+                                        })
+                                    })
                             }
                         })
                     }

@@ -214,7 +214,8 @@
                 if (this.isGit || this.isTGit) {
                     this.refreshGitOauth({
                         type: this.isGit ? 'git' : 'tgit',
-                        resetType: 'resetGitOauth'
+                        resetType: this.isGit ? 'resetGitOauth' : 'resetTGitOauth',
+                        redirectUrl: window.location.href
                     }).then(res => {
                         if (res.status === 200) {
                             this.newRepoInfo = {
@@ -225,11 +226,21 @@
                         } else {
                             window.location.href = res.url
                         }
+                    }).finally(() => {
+                        const { id, page, limit } = this.$route.query
+                        this.$router.push({
+                            query: {
+                                id,
+                                page,
+                                limit
+                            }
+                        })
                     })
                 } else if (this.isGithub) {
                     this.refreshGithubOauth({
                         projectId: this.projectId,
-                        resetType: 'resetGithubOauth'
+                        resetType: 'resetGithubOauth',
+                        redirectUrl: window.location.href
                     }).then(res => {
                         if (res.status === 200) {
                             this.newRepoInfo = {
@@ -240,6 +251,15 @@
                         } else {
                             window.location.href = res.url
                         }
+                    }).finally(() => {
+                        const { id, page, limit } = this.$route.query
+                        this.$router.push({
+                            query: {
+                                id,
+                                page,
+                                limit
+                            }
+                        })
                     })
                 }
             },

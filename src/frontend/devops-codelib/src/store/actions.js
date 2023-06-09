@@ -344,8 +344,12 @@ const actions = {
     /**
      * 刷新 git / tgit 工蜂授权token
      */
-    async refreshGitOauth ({ commit }, { type, resetType = '' }) {
-        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?resetType=${resetType}`)
+    async refreshGitOauth ({ commit }, {
+        type,
+        resetType = '',
+        redirectUrl = ''
+    }) {
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
         commit(SET_OAUTH_MUTATION, {
             oAuth: res,
             type
@@ -358,9 +362,10 @@ const actions = {
      */
     async refreshGithubOauth ({ commit }, {
         projectId,
-        resetType = ''
+        resetType = '',
+        redirectUrl = ''
     }) {
-        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&resetType=${resetType}`)
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
         commit(SET_OAUTH_MUTATION, {
             oAuth: res,
             type: 'github'
