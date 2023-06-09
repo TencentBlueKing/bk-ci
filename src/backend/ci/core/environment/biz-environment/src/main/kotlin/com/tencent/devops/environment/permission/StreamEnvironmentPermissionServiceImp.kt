@@ -35,7 +35,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -130,15 +129,6 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
             resultMap[it] = instances
         }
         return resultMap
-    }
-
-    override fun listNodeByRbacPermission(
-        userId: String,
-        projectId: String,
-        nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
-    ): List<TNodeRecord> {
-        return nodeRecordList
     }
 
     override fun checkNodePermission(
