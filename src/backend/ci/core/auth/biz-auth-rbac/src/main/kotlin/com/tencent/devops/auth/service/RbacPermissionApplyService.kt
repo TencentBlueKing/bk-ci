@@ -8,6 +8,8 @@ import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -25,7 +27,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -375,9 +376,8 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceTypeName = resourceTypeName,
             resourceName = resourceName,
             actionName = actionInfo?.let {
-                MessageUtil.getMessageByLocale(
-                    messageCode = "${it.action}.actionName",
-                    language = I18nUtil.getDefaultLocaleLanguage(),
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${it.action}$ACTION_NAME_SUFFIX",
                     defaultMessage = it.actionName
                 )
             },
@@ -464,10 +464,9 @@ class RbacPermissionApplyService @Autowired constructor(
                         authApplyRedirectUrl, projectId, projectName, resourceType,
                         resourceName, iamResourceCode, action, resourceGroup.groupName, resourceGroup.relationId
                     ),
-                    groupName = MessageUtil.getMessageByLocale(
+                    groupName = I18nUtil.getCodeLanMessage(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
-                                ".AuthResourceGroupConfig.groupName",
-                        language = I18nUtil.getDefaultLocaleLanguage(),
+                                AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                         defaultMessage = resourceGroup.groupName
                     )
                 )

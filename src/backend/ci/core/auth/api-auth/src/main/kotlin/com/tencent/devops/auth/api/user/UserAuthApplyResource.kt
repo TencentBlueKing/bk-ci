@@ -80,7 +80,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("{groupId}/getGroupPermissionDetail")
     @ApiOperation("查询用户组权限详情")
-    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}"])
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}", "{data[*].relatedResourceInfo.type}"])
     fun getGroupPermissionDetail(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -76,8 +76,8 @@ class QualityTemplateService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality rule template")
                     val classPathResource = ClassPathResource(
@@ -89,6 +89,8 @@ class QualityTemplateService @Autowired constructor(
                         JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
                     ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
                     logger.info("init quality rule template end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality rule template fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }

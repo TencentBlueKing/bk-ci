@@ -34,6 +34,8 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -90,8 +92,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val description = I18nUtil.getCodeLanMessage(
             messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
-                    ".AuthResourceGroupConfig.description",
-            language = I18nUtil.getDefaultLocaleLanguage(),
+                    AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
             defaultMessage = managerGroupConfig.description
         )
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
@@ -114,8 +115,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .groupName(
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
-                            ".AuthResourceGroupConfig.groupName",
-                    language = I18nUtil.getDefaultLocaleLanguage(),
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                     defaultMessage = managerGroupConfig.groupName
                 )
             )
@@ -172,8 +172,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .groupName(
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
-                            ".AuthResourceGroupConfig.groupName",
-                    language = I18nUtil.getDefaultLocaleLanguage(),
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                     defaultMessage = managerGroupConfig.groupName
                 )
             )
@@ -256,14 +255,12 @@ class PermissionSubsetManagerService @Autowired constructor(
             }
             val name = I18nUtil.getCodeLanMessage(
                 messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                        ".AuthResourceGroupConfig.groupName",
-                language = I18nUtil.getDefaultLocaleLanguage(),
+                        AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                 defaultMessage = groupConfig.groupName
             )
             val description = I18nUtil.getCodeLanMessage(
                 messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                        ".AuthResourceGroupConfig.description",
-                language = I18nUtil.getDefaultLocaleLanguage(),
+                        AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                 defaultMessage = groupConfig.description
             )
             val managerRoleGroup = ManagerRoleGroup(name, description, false)

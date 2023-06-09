@@ -71,8 +71,8 @@ class QualityMetadataService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality metadata")
                     val classPathResource = ClassPathResource(
@@ -83,6 +83,8 @@ class QualityMetadataService @Autowired constructor(
                     val qualityMetadataPOs = JsonUtil.to(json, object : TypeReference<List<QualityMetadataPO>>() {})
                     metadataDao.batchCrateQualityMetadata(dslContext, qualityMetadataPOs)
                     logger.info("init quality metadata end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality metadata fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }

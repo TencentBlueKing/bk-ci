@@ -27,6 +27,10 @@
 
 package com.tencent.devops.auth.cron
 
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_DESC_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
@@ -184,11 +188,11 @@ class AuthCronManager @Autowired constructor(
                         )
                         resourceTypeResult.forEach {
                             it.name = MessageUtil.getMessageByLocale(
-                                messageCode = "${it.resourceType}.ResourceType.name",
+                                messageCode = it.resourceType + RESOURCE_TYPE_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             it.desc = MessageUtil.getMessageByLocale(
-                                messageCode = "${it.resourceType}.ResourceType.desc",
+                                messageCode = it.resourceType + RESOURCE_TYPE_DESC_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             it.updateTime = LocalDateTime.now()
@@ -225,11 +229,13 @@ class AuthCronManager @Autowired constructor(
                         )
                         resourceGroupConfigResult.forEach {
                             it.groupName = MessageUtil.getMessageByLocale(
-                                messageCode = "${it.resourceType}.${it.groupCode}.AuthResourceGroupConfig.groupName",
+                                messageCode = "${it.resourceType}.${it.groupCode}" +
+                                        AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             it.description = MessageUtil.getMessageByLocale(
-                                messageCode = "${it.resourceType}.${it.groupCode}.AuthResourceGroupConfig.description",
+                                messageCode = "${it.resourceType}.${it.groupCode}" +
+                                        AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             it.updateTime = LocalDateTime.now()
