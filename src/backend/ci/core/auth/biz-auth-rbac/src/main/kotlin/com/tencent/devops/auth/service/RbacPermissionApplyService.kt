@@ -28,7 +28,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
