@@ -457,7 +457,7 @@ class PipelineBuildQualityService(
                     pipelineId = task.pipelineId,
                     userId = task.starter,
                     buildId = task.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary
+                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
                 )
             )
             return AtomResponse(BuildStatus.RUNNING)

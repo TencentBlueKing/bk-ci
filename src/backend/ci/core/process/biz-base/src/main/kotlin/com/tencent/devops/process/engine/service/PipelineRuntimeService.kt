@@ -1315,7 +1315,7 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 // 刷新历史列表和详情页面
-                refreshTypes = RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
             ), // 广播构建排队事件
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",
@@ -1568,7 +1568,10 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = latestRunningBuild.userId,
                 buildId = latestRunningBuild.buildId,
                 // 刷新历史列表、详情、状态页面
-                refreshTypes = RefreshType.HISTORY.binary or RefreshType.DETAIL.binary or RefreshType.STATUS.binary
+                refreshTypes = RefreshType.HISTORY.binary or
+                    RefreshType.DETAIL.binary or
+                    RefreshType.STATUS.binary or
+                    RefreshType.RECORD.binary
             )
         )
 
@@ -1634,7 +1637,9 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     // 刷新详情、状态页面
                     // #3400 在BuildEnd处会有HISTORY，历史列表此处不需要，减少负载
-                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.STATUS.binary
+                    refreshTypes = RefreshType.DETAIL.binary or
+                        RefreshType.STATUS.binary or
+                        RefreshType.RECORD.binary
                 )
             )
             logger.info("[$pipelineId]|finishLatestRunningBuild-$buildId|status=$status")

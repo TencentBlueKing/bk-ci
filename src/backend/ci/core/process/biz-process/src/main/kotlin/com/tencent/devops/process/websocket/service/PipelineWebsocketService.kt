@@ -176,7 +176,7 @@ class PipelineWebsocketService @Autowired constructor(
                 executeCount = executeCount
             )
         )
-        logger.debug("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        logger.debug("record websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
         return RecordWebsocketPush(
             buildId = buildId,
             projectId = projectId,
