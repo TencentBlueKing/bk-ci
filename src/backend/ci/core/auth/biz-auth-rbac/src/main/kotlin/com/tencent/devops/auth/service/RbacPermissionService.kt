@@ -155,11 +155,15 @@ class RbacPermissionService constructor(
             ) {
                 return true
             }
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resource.resourceType,
-                resourceCode = resource.resourceCode
-            ) ?: return false
+            val iamResourceCode = if (resource.resourceCode == "*") {
+                resource.resourceCode
+            } else {
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
+            } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
                 .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
