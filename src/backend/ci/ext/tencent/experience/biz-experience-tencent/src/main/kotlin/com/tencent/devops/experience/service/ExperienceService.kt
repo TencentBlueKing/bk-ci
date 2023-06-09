@@ -55,12 +55,11 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -127,6 +126,7 @@ class ExperienceService @Autowired constructor(
     private val groupDao: GroupDao,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
+    private val wechatWorkRobotService: WechatWorkRobotService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val experienceBaseService: ExperienceBaseService,
@@ -1027,12 +1027,7 @@ class ExperienceService @Autowired constructor(
                         [手机体验地址]($appUrl)
                     """.trimIndent()
 
-        client.get(ServiceNotifyResource::class).sendWeworkTextNotify(
-            receivers = it,
-            receiverType = WeworkReceiverType.group,
-            textType = WeworkTextType.markdown,
-            message = content
-        )
+        wechatWorkRobotService.sendByRobot(it, content, true)
     }
 
     @Deprecated("CI-Notice账号废除 , 用后面用Devops-Notice机器人发布")
