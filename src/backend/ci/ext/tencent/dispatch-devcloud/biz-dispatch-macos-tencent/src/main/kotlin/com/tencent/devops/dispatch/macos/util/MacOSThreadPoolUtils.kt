@@ -51,7 +51,7 @@ class MacOSThreadPoolUtils private constructor() {
 enum class ThreadPoolName(
     val corePoolSize: Int,
     val maxPoolSize: Int,
-    val keepAliveTime: Long,
+    val keepAliveTime: Long
 ) {
     /**
      * 启动构建任务线程池

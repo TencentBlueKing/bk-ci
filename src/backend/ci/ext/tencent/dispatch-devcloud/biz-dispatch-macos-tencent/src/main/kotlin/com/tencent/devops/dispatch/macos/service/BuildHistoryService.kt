@@ -1,8 +1,6 @@
 package com.tencent.devops.dispatch.macos.service
 
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.dispatch.macos.constant.ErrorCodeEnum
 import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.macos.dao.BuildTaskDao
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
