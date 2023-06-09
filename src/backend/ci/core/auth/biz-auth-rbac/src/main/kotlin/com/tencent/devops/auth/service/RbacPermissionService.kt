@@ -127,7 +127,7 @@ class RbacPermissionService constructor(
         )
     }
 
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
