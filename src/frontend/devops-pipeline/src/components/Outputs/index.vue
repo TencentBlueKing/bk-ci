@@ -386,7 +386,7 @@
                     }
                     const [res, qrcodeUrl] = await Promise.all([
                         this.requestFileInfo(params),
-                        this.getQrcodeUrl(params)
+                        ...(output.isApp ? [this.getQrcodeUrl(params)] : [])
                     ])
                     this.activeOutputDetail = {
                         ...output,
