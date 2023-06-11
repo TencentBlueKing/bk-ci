@@ -203,19 +203,8 @@ class PipelinePostElementService @Autowired constructor(
             if (originAtomElement.name.length > 128) originAtomElement.name.substring(0, 128)
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
-        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-        when (postCondition) {
-            "failed()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-            }
-            "always()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-            }
-            "canceledOrTimeOut()" -> {
-                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
-            }
-        }
-        val additionalOptions = ElementAdditionalOptions(
+        val postAtomRunCondition = getPostAtomRunCondition(postCondition)
+/*        val additionalOptions = ElementAdditionalOptions(
             enable = true,
             continueWhenFailed = true,
             retryWhenFailed = false,
@@ -227,7 +216,20 @@ class PipelinePostElementService @Autowired constructor(
             otherTask = null,
             customCondition = null,
             elementPostInfo = elementPostInfo
-        )
+        )*/
+        val additionalOptions = originAtomElement.additionalOptions
+        additionalOptions?.let {
+            additionalOptions.enable = true
+            additionalOptions.continueWhenFailed = true
+            additionalOptions.retryWhenFailed = false
+            additionalOptions.runCondition = postAtomRunCondition
+            additionalOptions.pauseBeforeExec = null
+            additionalOptions.subscriptionPauseUser = null
+            additionalOptions.retryCount = 0
+            additionalOptions.otherTask = null
+            additionalOptions.customCondition = null
+            additionalOptions.elementPostInfo = elementPostInfo
+        }
         // 生成post操作的element
         val postElementName = "$postPrompt$elementName"
         if (originAtomElement is MarketBuildAtomElement) {
@@ -253,5 +255,23 @@ class PipelinePostElementService @Autowired constructor(
             marketBuildLessAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildLessAtomElement)
         }
+    }
+
+    fun getPostAtomRunCondition(postCondition: String): RunCondition {
+        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
+        when (postCondition) {
+            "failed()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            }
+
+            "always()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            }
+
+            "canceledOrTimeOut()" -> {
+                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
+            }
+        }
+        return postAtomRunCondition
     }
 }
