@@ -204,19 +204,6 @@ class PipelinePostElementService @Autowired constructor(
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
         val postAtomRunCondition = getPostAtomRunCondition(postCondition)
-/*        val additionalOptions = ElementAdditionalOptions(
-            enable = true,
-            continueWhenFailed = true,
-            retryWhenFailed = false,
-            runCondition = postAtomRunCondition,
-            pauseBeforeExec = null,
-            subscriptionPauseUser = null,
-            customVariables = originAtomElement.additionalOptions?.customVariables,
-            retryCount = 0,
-            otherTask = null,
-            customCondition = null,
-            elementPostInfo = elementPostInfo
-        )*/
         val additionalOptions = originAtomElement.additionalOptions
         additionalOptions?.let {
             additionalOptions.enable = true
@@ -231,7 +218,7 @@ class PipelinePostElementService @Autowired constructor(
             additionalOptions.elementPostInfo = elementPostInfo
         }
         // 生成post操作的element
-        val postElementName = "$postPrompt$elementName"
+        val postElementName = getPostElementName(elementName)
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
                 name = postElementName,
@@ -255,6 +242,10 @@ class PipelinePostElementService @Autowired constructor(
             marketBuildLessAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildLessAtomElement)
         }
+    }
+
+    fun getPostElementName(elementName: String): String {
+        return "$postPrompt$elementName"
     }
 
     fun getPostAtomRunCondition(postCondition: String): RunCondition {

@@ -245,6 +245,8 @@ class PipelineRecordModelService @Autowired constructor(
                 val parentElementJobIndex = elementPostInfo.parentElementJobIndex
                 val taskBaseMap =
                     (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
+                val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
+                taskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
                 taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.toMutableMap(), taskVarMap)
             }
             if (matrixTaskFlag && elementPostInfo == null) {
