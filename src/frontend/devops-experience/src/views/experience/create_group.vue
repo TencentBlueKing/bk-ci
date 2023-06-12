@@ -17,7 +17,7 @@
         >
             <bk-form-item label="体验组名称" required property="name">
                 <bk-input
-                    placeholder="最长不超过20个汉字"
+                    placeholder="最长不超过20个字符"
                     maxlength="20"
                     name="groupName"
                     :input-style="inputStyle"

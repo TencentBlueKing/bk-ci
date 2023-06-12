@@ -150,7 +150,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item label="通知方式" label-width="190" desc="三种通知方式均不会对公开体验生效" desc-type="icon" desc-icon="icon-info-circle">
-                            <div class="bkdevop-checkbox-group">
+                            <div class="bkdevop-checkbox-group notify-group">
                                 <bk-checkbox v-for="(col, index) in noticeTypeList" :key="index" v-model="col.isChecked">{{ col.name }}</bk-checkbox>
                             </div>
                             <bk-checkbox
@@ -202,7 +202,8 @@
             <version-package :version-select-conf="versionSelectConf"
                 :loading="packageLoading"
                 :confirm-fn="confirmSelect"
-                :cancel-fn="cancelSelect"></version-package>
+                :cancel-fn="cancelSelect"
+            />
         </section>
     </div>
 </template>
@@ -512,7 +513,14 @@
                 }
             },
             cancel () {
-                this.toExperienceList()
+                this.$bkInfo({
+                    title: '离开后，新编辑的数据将会丢失',
+                    type: 'warning',
+                    theme: 'warning',
+                    confirmFn: () => {
+                        this.toExperienceList()
+                    }
+                })
             },
             selectGroups (col) {
                 this.experienceGroup.forEach(item => {
@@ -821,8 +829,15 @@
 
     .create-experience-wrapper {
         .experience-form {
-            width: 830px;
+            width: 800px;
             .bkdevop-checkbox-group {
+                &.notify-group {
+                    display: grid;
+                    grid-gap: 20px;
+                    grid-auto-flow: column;
+                    grid-template-columns: max-content;
+                    margin-bottom: 10px;
+                }
                 
                 .exp-group-item {
                     .icon-member-list {
@@ -831,7 +846,7 @@
                     .exp-group-item-content {
                         display: flex;
                         align-items: center;
-                        width: 180px;
+                        width: 170px;
                         margin-right: 10px;
                         .exp-group-item-name {
                             flex: 1;
@@ -904,7 +919,7 @@
                 border-width: 1px;
                 border-style: solid solid solid solid;
                 border-color: $borderWeightColor transparent transparent $borderWeightColor;
-                background-color: #fff;
+                background-color: #f5f7fa;
                 top: 12px;
                 left: -5px;
                 transform: rotate(45deg);
