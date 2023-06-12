@@ -1,6 +1,9 @@
 <template>
     <bk-dialog
-        class="codelib-operate-dialog"
+        :class="{
+            'codelib-operate-dialog': true,
+            'codelib-orerate-oauth-dialog': !showDialogFooter
+        }"
         v-model="isShow"
         :width="780"
         :padding="24"
@@ -311,6 +314,11 @@
 </script>
 
 <style lang="scss">
+    .codelib-orerate-oauth-dialog {
+        .bk-dialog-footer {
+            display: none;
+        }
+    }
     .bk-dialog-title {
         text-align: left;
         font-size: 14px;
