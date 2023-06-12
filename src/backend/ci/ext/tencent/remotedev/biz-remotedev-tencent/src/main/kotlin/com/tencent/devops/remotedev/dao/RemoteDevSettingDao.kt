@@ -152,7 +152,15 @@ class RemoteDevSettingDao {
         opSetting: OPUserSetting
     ) {
         val setting = RemoteDevSettings()
-        val userSetting = RemoteDevUserSettings()
+        val userSetting = RemoteDevUserSettings().apply {
+            maxRunningCount = opSetting.wsMaxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting.wsMaxHavingCount ?: maxHavingCount
+            onlyCloudIDE = opSetting.onlyCloudIDE ?: onlyCloudIDE
+            allowedCopy = opSetting.allowedCopy ?: allowedCopy
+            allowedDownload = opSetting.allowedDownload ?: allowedDownload
+            needWatermark = opSetting.needWatermark ?: needWatermark
+            autoDeletedDays = opSetting.autoDeletedDays ?: autoDeletedDays
+        }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
                 this,
@@ -178,69 +186,10 @@ class RemoteDevSettingDao {
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .let {
-                    if (opSetting.wsMaxRunningCount != null) {
-                        userSetting.maxRunningCount = opSetting.wsMaxRunningCount!!
-                        it.set(
-                            WORKSPACE_MAX_RUNNING_COUNT,
-                            opSetting.wsMaxRunningCount
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.wsMaxHavingCount != null) {
-                        userSetting.maxHavingCount = opSetting.wsMaxHavingCount!!
-                        it.set(
-                            WORKSPACE_MAX_HAVING_COUNT,
-                            opSetting.wsMaxHavingCount
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.onlyCloudIDE != null) {
-                        userSetting.onlyCloudIDE = opSetting.onlyCloudIDE!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.allowedCopy != null) {
-                        userSetting.allowedCopy = opSetting.allowedCopy!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.allowedDownload != null) {
-                        userSetting.allowedDownload = opSetting.allowedDownload!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.needWatermark != null) {
-                        userSetting.needWatermark = opSetting.needWatermark!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.autoDeletedDays != null) {
-                        userSetting.autoDeletedDays = opSetting.autoDeletedDays!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
+                .set(
+                    USER_SETTING,
+                    JsonUtil.toJson(userSetting, false)
+                )
                 .execute()
         }
     }

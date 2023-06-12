@@ -48,8 +48,8 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user|desktop/remotedev")
+@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
+@Path("/{apiType:user|desktop}/remotedev")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserRemoteDevResource {

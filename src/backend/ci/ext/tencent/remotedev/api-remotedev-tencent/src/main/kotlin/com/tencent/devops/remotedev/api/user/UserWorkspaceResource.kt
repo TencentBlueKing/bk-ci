@@ -59,7 +59,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user/workspaces")
+@Path("/{apiType:user|desktop}/workspaces")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWorkspaceResource {
