@@ -1,5 +1,7 @@
-package com.tencent.devops.dispatch.macos.util
+package com.tencent.devops.dispatch.macos.config
 
+import com.tencent.devops.dispatch.macos.util.MacOSThreadPoolUtils
+import com.tencent.devops.dispatch.macos.util.ThreadPoolName
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

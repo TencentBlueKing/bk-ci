@@ -1,5 +1,7 @@
 package com.tencent.devops.dispatch.macos.util
 
+import com.tencent.devops.dispatch.macos.constant.Constant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -10,7 +12,7 @@ import java.util.concurrent.TimeUnit
 class MacOSThreadPoolUtils private constructor() {
 
     @Volatile
-    private var threadPoolMap = hashMapOf<String, ThreadPoolExecutor>()
+    private var threadPoolMap = ConcurrentHashMap<String, ThreadPoolExecutor>()
 
     fun getThreadPool(poolName: ThreadPoolName): ThreadPoolExecutor {
         var threadPoolExecutor = threadPoolMap[poolName.name]
@@ -56,15 +58,10 @@ enum class ThreadPoolName(
     /**
      * 启动构建任务线程池
      */
-    STARTUP(30, 30, 600),
+    STARTUP(Constant.MAX_STARTUP_CONCURRENCY, Constant.MAX_STARTUP_CONCURRENCY, 600),
 
     /**
      * 启动降级队列构建任务线程池
      */
-    DEMOTE_STARTUP(2, 2, 600),
-
-    /**
-     * 结束构建任务线程池
-     */
-    SHUTDOWN(20, 20, 60)
+    DEMOTE_STARTUP(Constant.MAX_DEMOTE_STARTUP_CONCURRENCY, Constant.MAX_DEMOTE_STARTUP_CONCURRENCY, 600),
 }
