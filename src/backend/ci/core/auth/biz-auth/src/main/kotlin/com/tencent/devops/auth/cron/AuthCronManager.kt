@@ -156,7 +156,9 @@ class AuthCronManager @Autowired constructor(
                                 messageCode = "${it.action}.actionName",
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            authActionI18nMap[it.action] = actionName
+                            if (actionName.isNotBlank()) {
+                                authActionI18nMap[it.action] = actionName
+                            }
                         }
                         if (authActionI18nMap.isNotEmpty()) {
                             authActionDao.updateActionName(
@@ -189,17 +191,25 @@ class AuthCronManager @Autowired constructor(
                             pageSize = PageUtil.DEFAULT_PAGE_SIZE
                         )
                         resourceTypeResult.forEach {
-                            it.name = MessageUtil.getMessageByLocale(
+                            val name = MessageUtil.getMessageByLocale(
                                 messageCode = it.resourceType + RESOURCE_TYPE_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.desc = MessageUtil.getMessageByLocale(
+                            val desc = MessageUtil.getMessageByLocale(
                                 messageCode = it.resourceType + RESOURCE_TYPE_DESC_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.updateTime = LocalDateTime.now()
-                            it.updateUser = SYSTEM
-                            authResourceTypes.add(it)
+                            if (name.isNotBlank() || desc.isNotBlank()) {
+                                if (name.isNotBlank()) {
+                                    it.name = name
+                                }
+                                if (desc.isNotBlank()) {
+                                    it.desc = desc
+                                }
+                                it.updateTime = LocalDateTime.now()
+                                it.updateUser = SYSTEM
+                                authResourceTypes.add(it)
+                            }
                         }
                         if (authResourceTypes.isNotEmpty()) {
                             authResourceTypeDao.batchUpdateAuthResourceType(
@@ -232,18 +242,26 @@ class AuthCronManager @Autowired constructor(
                             pageSize = PageUtil.DEFAULT_PAGE_SIZE
                         )
                         resourceGroupConfigResult.forEach {
-                            it.groupName = MessageUtil.getMessageByLocale(
+                            val groupName = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
                                         AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.description = MessageUtil.getMessageByLocale(
+                            val description = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
                                         AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.updateTime = LocalDateTime.now()
-                            authAuthResourceGroupConfigs.add(it)
+                            if (groupName.isNotBlank() || description.isNotBlank()) {
+                                if (groupName.isNotBlank()) {
+                                    it.groupName = groupName
+                                }
+                                if (description.isNotBlank()) {
+                                    it.description = description
+                                }
+                                it.updateTime = LocalDateTime.now()
+                                authAuthResourceGroupConfigs.add(it)
+                            }
                         }
                         if (authAuthResourceGroupConfigs.isNotEmpty()) {
                             authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
