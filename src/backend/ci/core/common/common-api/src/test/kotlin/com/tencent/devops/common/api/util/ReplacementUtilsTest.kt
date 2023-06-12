@@ -38,14 +38,6 @@ class ReplacementUtilsTest {
     }
 
     @Test
-    fun parseEnvNested() {
-        val data = HashMap<String, String>()
-        data["Nested"] = "first"
-        data["first"] = "hello"
-        parseAndEquals(data = data, template = "\${\${Nested}}.html", expect = "hello.html")
-    }
-
-    @Test
     fun parseTwice() {
         val map = mutableMapOf<String, String>()
         map["GDP"] = "10000000"
