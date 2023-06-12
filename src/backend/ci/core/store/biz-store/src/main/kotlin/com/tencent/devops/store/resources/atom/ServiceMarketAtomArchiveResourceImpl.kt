@@ -63,9 +63,14 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String,
-        projectCode: String,
+        projectCode: String
     ): Result<GetAtomConfigResult?> {
-        return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
+        return marketAtomArchiveService.verifyAtomTaskJson(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version
+        )
     }
 
     override fun validateReleaseType(

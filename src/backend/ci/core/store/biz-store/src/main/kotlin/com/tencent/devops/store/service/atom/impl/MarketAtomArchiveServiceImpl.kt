@@ -49,7 +49,6 @@ import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
-import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -234,7 +233,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
         val propsMap = mutableMapOf<String, Any?>()
         val releaseInfoMap = taskDataMap[KEY_RELEASE_INFO] as? Map<String, Any>
-        val configInfoMap =  releaseInfoMap?.get(ReleaseInfo::configInfo.name) as? Map<String, Any>
+        val configInfoMap = releaseInfoMap?.get(ReleaseInfo::configInfo.name) as? Map<String, Any>
         val frontendType = configInfoMap?.get(AtomConfigInfo::frontendType.name) as? String
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
         if (frontendType == FrontendTypeEnum.HISTORY.name) {
