@@ -166,7 +166,7 @@ class MigrateIamApiService {
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("request ${request.url} response|$responseContent")
+            logger.info("request iam migrate api ${request.url} response|$responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Failed to request(${request.url}), code ${response.code}, content: $responseContent")
                 throw RemoteServiceException(operation)

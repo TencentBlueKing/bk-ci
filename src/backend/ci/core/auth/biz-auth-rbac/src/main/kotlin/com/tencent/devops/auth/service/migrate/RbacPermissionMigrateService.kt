@@ -405,7 +405,7 @@ class RbacPermissionMigrateService constructor(
                 exception.defaultMessage
             }
             is CompletionException -> {
-                exception.cause?.message
+                exception.cause?.message ?: exception.message
             }
             else -> {
                 exception.toString()
