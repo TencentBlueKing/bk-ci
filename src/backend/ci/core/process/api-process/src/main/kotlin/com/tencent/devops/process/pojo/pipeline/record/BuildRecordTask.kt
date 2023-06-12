@@ -57,7 +57,7 @@ data class BuildRecordTask(
     @ApiModelProperty("执行变量", required = true)
     var taskVar: MutableMap<String, Any>,
     @ApiModelProperty("插件post信息", required = false)
-    val elementPostInfo: ElementPostInfo?,
+    val elementPostInfo: ElementPostInfo? = null,
     @ApiModelProperty("插件类型标识", required = true)
     val classType: String,
     @ApiModelProperty("市场插件标识", required = true)
