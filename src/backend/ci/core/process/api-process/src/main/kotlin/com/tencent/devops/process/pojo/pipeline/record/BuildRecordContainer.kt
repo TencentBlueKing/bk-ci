@@ -135,7 +135,9 @@ data class BuildRecordContainer(
                         status = buildStatus?.name,
                         taskVar = mutableMapOf(),
                         timestamps = mapOf(),
-                        elementPostInfo = element.additionalOptions?.elementPostInfo
+                        elementPostInfo = element.additionalOptions?.elementPostInfo?.let { info ->
+                            if (info.parentElementId == element.id) null else info
+                        }
                     )
                 )
             }
