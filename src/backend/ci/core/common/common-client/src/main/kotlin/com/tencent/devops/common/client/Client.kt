@@ -90,7 +90,7 @@ class Client @Autowired constructor(
         private const val connectTimeoutSeconds = 5L
         private const val CACHE_SIZE = 1000L
         private val longTimeOptions = Request.Options(10L, TimeUnit.SECONDS, 30L, TimeUnit.MINUTES, true)
-        private val accessoriesServiceList = listOf("experience")
+        private val accessoriesServiceList = listOf("experience,support,image,lambda,monitoring")
         private const val accessoriesName = "accessories"
     }
 
