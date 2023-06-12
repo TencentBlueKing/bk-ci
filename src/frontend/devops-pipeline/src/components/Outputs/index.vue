@@ -1,6 +1,17 @@
 <template>
     <div class="pipeline-exec-outputs">
-        <aside class="pipeline-exec-outputs-aside">
+
+        <aside :class="['pipeline-exec-outputs-aside', {
+            'pipeline-exec-outputs-aside-collapse': asideCollpased
+        }]">
+            <div class="pipeline-exec-outputs-filter-input">
+                <bk-input
+                    clearable
+                    right-icon="bk-icon icon-search"
+                    :placeholder="$t('outputsFilterPlaceholder')"
+                    v-model="keyWord"
+                />
+            </div>
             <ul class="pipeline-exec-output-classify-tab">
                 <li
                     v-for="classify in outputClassifyList"
@@ -29,12 +40,21 @@
                 >
                     <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                     <span :title="output.name">{{ output.name }}</span>
+                    <output-qrcode
+                        v-if="output.isApp"
+                        class="output-hover-icon"
+                        :output="output"
+                    />
+                    <i v-else-if="output.downloadable" class="output-hover-icon devops-icon icon-download"></i>
                 </li>
             </ul>
 
             <div v-else class="no-outputs-placeholder">
                 <logo name="empty" size="180" />
                 <span>{{ $t("empty") }}</span>
+            </div>
+            <div @click="toggleCollapseAside" class="collapse-handler">
+                <i class="aside-collapse-icon devops-icon icon-angle-double-left"></i>
             </div>
         </aside>
         <section v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
@@ -63,41 +83,39 @@
                         >
                             {{ btn.text }}
                         </bk-button>
-                        <bk-popover
-                            style="font-size: 0"
-                            theme="light"
-                            placement="bottom-end"
+                        <output-qrcode
+                            :output="activeOutput"
                             v-if="activeOutputDetail.isApp"
-                        >
-                            <i style="font-size: 16px" class="devops-icon icon-qrcode" />
-                            <qrcode slot="content" :text="activeOutputDetail.qrcodeUrl" :size="100" />
-                        </bk-popover>
+                        />
+
                         <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
                     </p>
                 </div>
-                <div
-                    v-for="block in infoBlocks"
-                    :key="block.title"
-                    class="pipeline-exec-output-block"
-                >
-                    <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
-                    <bk-table v-if="block.key === 'meta'" :data="block.value">
-                        <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
-                        <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
-                        <bk-table-column :label="$t('desc')" prop="description">
-                            <template slot-scope="scope">
-                                <span>{{ scope.row.description || '--' }}</span>
-                            </template>
-                        </bk-table-column>
-                    </bk-table>
-                    <ul v-else slot="content" class="pipeline-exec-output-block-content">
-                        <li v-for="row in block.block" :key="row.key">
-                            <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
-                            <span class="pipeline-exec-output-block-row-value">
-                                {{ block.value[row.key] || "--" }}
-                            </span>
-                        </li>
-                    </ul>
+                <div class="pipeline-exec-output-artifact">
+                    <div
+                        v-for="block in infoBlocks"
+                        :key="block.title"
+                        class="pipeline-exec-output-block"
+                    >
+                        <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
+                        <bk-table v-if="block.key === 'meta'" :data="block.value">
+                            <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
+                            <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
+                            <bk-table-column :label="$t('desc')" prop="description">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.description || '--' }}</span>
+                                </template>
+                            </bk-table-column>
+                        </bk-table>
+                        <ul v-else slot="content" class="pipeline-exec-output-block-content">
+                            <li v-for="row in block.block" :key="row.key">
+                                <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
+                                <span class="pipeline-exec-output-block-row-value">
+                                    {{ block.value[row.key] || "--" }}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </template>
             <div v-else class="no-outputs-placeholder">
@@ -114,7 +132,7 @@
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
-    import qrcode from '@/components/devops/qrcode'
+    import OutputQrcode from '@/components/Outputs/OutputQrcode'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
@@ -125,12 +143,13 @@
             Logo,
             ThirdPartyReport,
             IframeReport,
-            qrcode,
             ExtMenu,
-            CopyToCustomRepoDialog
+            CopyToCustomRepoDialog,
+            OutputQrcode
         },
         data () {
             return {
+                keyWord: '',
                 isCopyDialogShow: false,
                 isCopying: false,
                 currentTab: 'all',
@@ -138,7 +157,8 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                asideCollpased: false
             }
         },
         computed: {
@@ -183,17 +203,19 @@
                             }
                         ]
                         : []
+                let visibleOutputs = [
+                    ...this.outputs.filter((output) => !this.isThirdReport(output.reportType)),
+                    ...thirdReportList
+                ]
                 switch (this.currentTab) {
                     case 'artifact':
-                        return this.artifacts
+                        visibleOutputs = this.artifacts
+                        break
                     case 'report':
-                        return [...this.reports, ...thirdReportList]
-                    default:
-                        return [
-                            ...this.outputs.filter((output) => !this.isThirdReport(output.reportType)),
-                            ...thirdReportList
-                        ]
+                        visibleOutputs = [...this.reports, ...thirdReportList]
+                        break
                 }
+                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase()))
             },
             isActiveThirdReport () {
                 return this.isThirdReport(this.activeOutput?.reportType)
@@ -301,12 +323,16 @@
                 'requestExternalUrl',
                 'requestDownloadUrl'
             ]),
+            toggleCollapseAside () {
+                console.log(this.asideCollpased)
+                this.asideCollpased = !this.asideCollpased
+            },
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
 
                 try {
                     this.isLoading = true
-                    const [, res] = await Promise.all([
+                    const [hasPermission, res] = await Promise.all([
                         this.requestHasPermission(),
                         this.requestOutputs({
                             projectId,
@@ -325,7 +351,8 @@
                             ...item,
                             id,
                             icon,
-                            isApp: ['ipafile', 'apkfile'].includes(icon)
+                            isApp: ['ipafile', 'apkfile'].includes(icon),
+                            downloadable: hasPermission && this.isArtifact(item.artifactoryType) && item.artifactoryType !== 'IMAGE'
                         }
                     })
                 } catch (err) {
@@ -345,6 +372,7 @@
                     })
 
                     this.hasPermission = res
+                    return res
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -355,26 +383,6 @@
                     })
                 }
             },
-            async getQrcodeUrl (params) {
-                try {
-                    const external = await this.requestExternalUrl(params)
-                    return external?.url
-                } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.download,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.$route.params.pipelineId
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
-                }
-            },
             async showDetail (output) {
                 const { projectId } = this.$route.params
                 try {
@@ -382,12 +390,9 @@
                     const params = {
                         projectId,
                         type: output.artifactoryType,
-                        path: `${output.fullPath}`
+                        path: output.fullPath
                     }
-                    const [res, qrcodeUrl] = await Promise.all([
-                        this.requestFileInfo(params),
-                        ...(output.isApp ? [this.getQrcodeUrl(params)] : [])
-                    ])
+                    const res = await this.requestFileInfo(params)
                     this.activeOutputDetail = {
                         ...output,
                         ...res,
@@ -395,8 +400,7 @@
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: extForFile(res.name),
-                        qrcodeUrl
+                        icon: extForFile(res.name)
                     }
                     this.isLoading = false
                 } catch (err) {
@@ -453,12 +457,46 @@
     }
   }
   .pipeline-exec-outputs-aside {
-    width: 295px;
+    position: relative;
+    width: 30vw;
     flex-shrink: 0;
     padding: 16px 11px;
     border-right: 1px solid #dcdee5;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s;
+
+    &.pipeline-exec-outputs-aside-collapse {
+        width: 0;
+        padding: 0;
+        .pipeline-exec-output-classify-tab {
+            display: none;
+        }
+        .aside-collapse-icon {
+            transform: rotate(180deg);
+        }
+    }
+    .collapse-handler {
+        position: absolute;
+        right: -16px;
+        top: 50%;
+        display: flex;
+        cursor: pointer;
+        align-items: center;
+        width: 16px;
+        height: 100px;
+        background: #DCDEE5;
+        border-radius: 0 4px 4px 0;
+        transform: translateY(-50px);
+        color: white;
+        font-size: 12px;
+        justify-content: center;
+        font-weight: 700;
+        z-index: 2;
+        .aside-collapse-icon {
+            transition: all 0.3s;
+        }
+    }
     .pipeline-exec-output-classify-tab {
       display: flex;
       align-items: center;
@@ -493,6 +531,9 @@
         }
       }
     }
+    .pipeline-exec-outputs-filter-input {
+        margin: 12px 0;
+    }
     .pipeline-exec-outputs-filter {
       position: relative;
       margin: 16px 0 21px 0;
@@ -525,11 +566,16 @@
         border-radius: 2px;
         font-size: 12px;
         margin-bottom: 10px;
-        > .devops-icon {
-          display: inline-block;
+        > .devops-icon,
+        .output-hover-icon {
+          display: inline-flex;
           font-size: 16px;
           margin-right: 4px;
           flex-shrink: 0;
+        }
+        .output-hover-icon {
+            font-size: 12px;
+            display: none;
         }
         > span {
           flex: 1;
@@ -537,21 +583,27 @@
         }
         &.active,
         &:hover {
-          color: $primaryColor;
-          background: #f5f7fa;
+            color: $primaryColor;
+            background: #f5f7fa;
+            .output-hover-icon  {
+                display: inline-flex;
+            }
         }
       }
     }
   }
   .pipeline-exec-outputs-section {
     flex: 1;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     .pipeline-exec-output-header {
       display: flex;
       align-items: center;
       height: 48px;
       background: #fafbfd;
       padding: 0 24px;
+      flex-shrink: 0;
       &-name {
         display: flex;
         align-items: center;
@@ -570,6 +622,10 @@
         justify-self: flex-end;
         margin-left: auto;
       }
+    }
+    .pipeline-exec-output-artifact {
+        flex: 1;
+        overflow: auto;
     }
     .pipeline-exec-output-block {
       padding: 16px 24px;

@@ -14,7 +14,7 @@
                         />
                     </span>
                     <span class="build-param-span">
-                        <template v-if="param.value">
+                        <template v-if="typeof param.value !== 'undefined'">
                             <span
                                 :class="{
                                     'build-param-value-span': true,
@@ -46,10 +46,7 @@
             >
                 <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
                     <p>{{ activeParam.key }}</p>
-                    <pre>
-                        {{ activeParam.value }}
-                    </pre
-                    >
+                    <pre>{{ activeParam.value }}</pre>
                 </div>
             </bk-sideslider>
         </div>
@@ -117,9 +114,9 @@
                 }
             },
             isDefaultDiff ({ key, value }) {
-                let defaultValue = this.defaultParamMap[key]
+                const defaultValue = this.defaultParamMap[key]
                 if (typeof defaultValue === 'boolean') {
-                    defaultValue = defaultValue.toString()
+                    return defaultValue.toString() === value.toString()
                 }
                 return defaultValue !== value
             },

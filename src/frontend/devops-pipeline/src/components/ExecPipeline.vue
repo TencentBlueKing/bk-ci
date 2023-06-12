@@ -124,7 +124,9 @@
                         </bk-link>
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
+
                         <bk-table
+                            max-height="calc(30vh - 42px)"
                             :data="errorList"
                             :border="false"
                             @row-click="(row) => setAtomLocate(row)"
@@ -175,6 +177,7 @@
                                 </template>
                             </bk-table-column>
                         </bk-table>
+
                     </bk-tab-panel>
                 </bk-tab>
             </footer>
@@ -924,6 +927,7 @@
     right: 24px;
     overflow: hidden;
     will-change: auto;
+    max-height: 30vh;
     transition: all 0.5s ease;
     transform: translateY(calc(100% - 42px));
     box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
