@@ -262,8 +262,14 @@ class PipelineBuildRecordService @Autowired constructor(
                     container.jobControlOption?.let {
                         if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
                     }
+                    container.mutexGroup?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
                 } else if (container is VMBuildContainer) {
                     container.jobControlOption?.let {
+                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+                    }
+                    container.mutexGroup?.let {
                         if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
                     }
                 }
