@@ -91,10 +91,10 @@ class MetricsServiceImpl constructor(
             !allowReportProjectConfig.split(",").contains(projectId)) {
             return
         }
-       if (buildInfo.endTime == null) {
-           logger.warn("Warning: The post of metrics data is abnormal, build info end time is null.")
-           return
-       }
+        if (buildInfo.endTime == null) {
+            logger.warn("Warning: The post of metrics data is abnormal, build info end time is null.")
+            return
+        }
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId
         val pipelineName = pipelineInfoDao.getPipelineInfo(
