@@ -70,7 +70,7 @@
                             v-if="activeOutputDetail.isApp"
                         >
                             <i style="font-size: 16px" class="devops-icon icon-qrcode" />
-                            <qrcode slot="content" :text="activeOutputDetail.shortUrl" :size="100" />
+                            <qrcode slot="content" :text="activeOutputDetail.qrcodeUrl" :size="100" />
                         </bk-popover>
                         <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
                     </p>
@@ -110,15 +110,15 @@
 </template>
 
 <script>
-    import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
-    import qrcode from '@/components/devops/qrcode'
-    import { mapActions } from 'vuex'
-    import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
-    import IframeReport from '@/components/Outputs/IframeReport'
-    import { convertTime, convertFileSize } from '@/utils/util'
-    import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
-    import ExtMenu from '@/components/pipelineList/extMenu'
     import Logo from '@/components/Logo'
+    import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
+    import IframeReport from '@/components/Outputs/IframeReport'
+    import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
+    import qrcode from '@/components/devops/qrcode'
+    import ExtMenu from '@/components/pipelineList/extMenu'
+    import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
+    import { convertFileSize, convertTime } from '@/utils/util'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -355,17 +355,10 @@
                     })
                 }
             },
-            async getDownloadUrl () {
+            async getQrcodeUrl (params) {
                 try {
-                    const params = {
-                        projectId: this.$route.params.projectId,
-                        ...this.activeOutput
-                    }
-                    const [download, external] = await Promise.all([
-                        this.requestDownloadUrl(params),
-                        ...(this.activeOutput.isApp ? [this.requestExternalUrl(params)] : [])
-                    ])
-                    return [download.url, external?.url2]
+                    const external = await this.requestExternalUrl(params)
+                    return external?.url
                 } catch (err) {
                     this.handleError(err, [
                         {
@@ -380,18 +373,21 @@
                             projectId: this.$route.params.projectId
                         }
                     ])
-                    return []
                 }
             },
             async showDetail (output) {
                 const { projectId } = this.$route.params
                 try {
                     this.isLoading = true
-                    const res = await this.requestFileInfo({
+                    const params = {
                         projectId,
                         type: output.artifactoryType,
                         path: `${output.fullPath}`
-                    })
+                    }
+                    const [res, qrcodeUrl] = await Promise.all([
+                        this.requestFileInfo(params),
+                        ...(output.isApp ? [this.getQrcodeUrl(params)] : [])
+                    ])
                     this.activeOutputDetail = {
                         ...output,
                         ...res,
@@ -399,7 +395,8 @@
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: extForFile(res.name)
+                        icon: extForFile(res.name),
+                        qrcodeUrl
                     }
                     this.isLoading = false
                 } catch (err) {

@@ -39,7 +39,7 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 import { pipelineDocs } from '../../common-lib/docs'
 import {
