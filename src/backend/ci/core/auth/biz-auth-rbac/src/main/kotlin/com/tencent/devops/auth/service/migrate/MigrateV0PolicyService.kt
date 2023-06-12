@@ -48,10 +48,10 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "NestedBlockDepth", "TooManyFunctions")
 class MigrateV0PolicyService constructor(
