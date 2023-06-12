@@ -70,9 +70,9 @@
                             <bk-button
                                 theme="primary"
                                 outline
-                                :disabled="adding"
+                                :disabled="adding || !hasUser"
                                 :icon="adding ? 'loading' : ''"
-                                @click="handlerAddUser"
+                                @click="handleAddUser"
                             >
                                 添加
                             </bk-button>
@@ -265,6 +265,17 @@
                             value: item
                         }
                     })
+            },
+            hasUser () {
+                switch (this.importType) {
+                    case 3:
+                        return !!this.innerOrg
+                    case 2:
+                        return this.outerUsers.length > 0
+                    case 1:
+                    default:
+                        return this.innerUsers.length > 0
+                }
             },
             typeComponent () {
                 switch (this.importType) {
@@ -462,11 +473,11 @@
                 this.innerUsers = []
                 this.outerUsers = []
             },
-            async handlerAddUser () {
+            async handleAddUser () {
                 switch (this.importType) {
                     case 3: {
-                        console.log(this.$refs.inputComp?.clear?.())
-                        if (this.userSet.has(this.innerOrg?.name)) {
+                        if (!this.innerOrg) return
+                        if (this.userSet.has(this.innerOrg.name)) {
                             this.$bkMessage({
                                 message: `内部组织${this.innerOrg.name}已存在`,
                                 theme: 'error'
@@ -509,7 +520,7 @@
                                     ...this.createGroupForm.members
                                 ]
                             )
-                        } else {
+                        } else if (this.outerUsers.length > 0) {
                             this.$bkMessage({
                                 message: `外部体验人员${this.outerUsers.join(',')}已存在`,
                                 theme: 'error'
@@ -540,7 +551,7 @@
                                         ...this.createGroupForm.members
                                     ]
                                 )
-                            } else {
+                            } else if (this.innerUsers.length > 0) {
                                 this.$bkMessage({
                                     message: `内部体验人员${this.innerUsers.join(',')}已存在`,
                                     theme: 'error'
@@ -549,7 +560,7 @@
                             this.innerUsers = []
                             !this.isManual && (this.importType = undefined)
                         } catch (error) {
-                            
+                            console.error(error)
                         } finally {
                             this.adding = false
                         }
