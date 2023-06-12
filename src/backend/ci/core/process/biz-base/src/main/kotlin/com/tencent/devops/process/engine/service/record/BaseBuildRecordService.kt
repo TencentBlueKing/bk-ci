@@ -195,7 +195,7 @@ open class BaseBuildRecordService(
                 modelFieldRecordMap = recordMap
             )
         } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
                     "-$executeCount with error: ", t
             )
