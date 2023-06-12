@@ -121,23 +121,6 @@ class RemoteDevSettingDao {
         }
     }
 
-    fun fetchAnyOpUserSetting(
-        dslContext: DSLContext,
-        userId: String
-    ): OPUserSetting? {
-        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()?.let {
-                OPUserSetting(
-                    userId = it.userId,
-                    wsMaxRunningCount = it.workspaceMaxRunningCount,
-                    wsMaxHavingCount = it.workspaceMaxHavingCount,
-                    grayFlag = ByteUtils.byte2Bool(it.inGray),
-                    onlyCloudIDE = JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.onlyCloudIDE
-                )
-            }
-        }
-    }
-
     fun fetchSingleUserBilling(
         dslContext: DSLContext,
         userId: String
@@ -163,12 +146,21 @@ class RemoteDevSettingDao {
         }
     }
 
+    @Suppress("ComplexMethod")
     fun createOrUpdateSetting4OP(
         dslContext: DSLContext,
         opSetting: OPUserSetting
     ) {
         val setting = RemoteDevSettings()
-        val userSetting = RemoteDevUserSettings()
+        val userSetting = RemoteDevUserSettings().apply {
+            maxRunningCount = opSetting.wsMaxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting.wsMaxHavingCount ?: maxHavingCount
+            onlyCloudIDE = opSetting.onlyCloudIDE ?: onlyCloudIDE
+            allowedCopy = opSetting.allowedCopy ?: allowedCopy
+            allowedDownload = opSetting.allowedDownload ?: allowedDownload
+            needWatermark = opSetting.needWatermark ?: needWatermark
+            autoDeletedDays = opSetting.autoDeletedDays ?: autoDeletedDays
+        }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
                 this,
@@ -180,7 +172,6 @@ class RemoteDevSettingDao {
                 DOTFILE_REPO,
                 WORKSPACE_MAX_RUNNING_COUNT,
                 WORKSPACE_MAX_HAVING_COUNT,
-                IN_GRAY,
                 USER_SETTING
             )
                 .values(
@@ -192,43 +183,13 @@ class RemoteDevSettingDao {
                     setting.dotfileRepo,
                     opSetting.wsMaxRunningCount,
                     opSetting.wsMaxHavingCount,
-                    ByteUtils.bool2Byte(opSetting.grayFlag ?: false),
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .let {
-                    if (opSetting.wsMaxRunningCount != null) {
-                        userSetting.maxRunningCount = opSetting.wsMaxRunningCount!!
-                        it.set(
-                            WORKSPACE_MAX_RUNNING_COUNT,
-                            opSetting.wsMaxRunningCount
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.wsMaxHavingCount != null) {
-                        userSetting.maxHavingCount = opSetting.wsMaxHavingCount!!
-                        it.set(
-                            WORKSPACE_MAX_HAVING_COUNT,
-                            opSetting.wsMaxHavingCount
-                        )
-                    } else it
-                }
-                .let {
-                    if (opSetting.grayFlag != null) it.set(
-                        IN_GRAY,
-                        ByteUtils.bool2Byte(opSetting.grayFlag!!)
-                    ) else it
-                }
-                .let {
-                    if (opSetting.onlyCloudIDE != null) {
-                        userSetting.onlyCloudIDE = opSetting.onlyCloudIDE!!
-                        it.set(
-                            USER_SETTING,
-                            JsonUtil.toJson(userSetting, false)
-                        )
-                    } else it
-                }
+                .set(
+                    USER_SETTING,
+                    JsonUtil.toJson(userSetting, false)
+                )
                 .execute()
         }
     }

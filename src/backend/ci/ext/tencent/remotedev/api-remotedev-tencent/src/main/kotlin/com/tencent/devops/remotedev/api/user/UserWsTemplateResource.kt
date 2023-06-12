@@ -42,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WORKSPACE_TEMPLATE"], description = "用户-工作空间模板")
-@Path("/user/wstemplate")
+@Path("/{apiType:user|desktop}/wstemplate")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWsTemplateResource {
