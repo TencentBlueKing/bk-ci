@@ -1130,7 +1130,9 @@ class PipelineRuntimeService @Autowired constructor(
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
                     taskVar = mutableMapOf(), timestamps = mapOf(),
-                    elementPostInfo = it.additionalOptions?.elementPostInfo
+                    elementPostInfo = it.additionalOptions?.elementPostInfo?.let { info ->
+                        if (info.parentElementId == it.taskId) null else info
+                    }
                 )
             )
         }
