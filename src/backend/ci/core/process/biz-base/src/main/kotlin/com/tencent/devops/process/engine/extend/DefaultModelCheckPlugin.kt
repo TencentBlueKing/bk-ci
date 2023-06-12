@@ -255,6 +255,18 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             element.additionalOptions?.timeout = obj.minutes.toLong()
+        } else { // 历史0值兼容
+            element.additionalOptions?.timeoutVar = element.additionalOptions?.timeout.toString()
+            val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
+
+            if (obj.change) {
+                element.additionalOptions?.timeoutVar = obj.minutes.toString()
+                element.additionalOptions?.timeout = obj.minutes.toLong()
+                logger.info(
+                    "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
+                            "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
         }
     }
 
@@ -460,12 +472,14 @@ open class DefaultModelCheckPlugin constructor(
             }
             jobControlOption.timeout = obj.minutes
         } else { // 历史0值兼容
-            val obj = Timeout.decTimeout(jobControlOption.timeout.toString(), contextMap)
+            jobControlOption.timeoutVar = jobControlOption.timeout.toString()
+            val obj = Timeout.decTimeout(timeoutVar = jobControlOption.timeoutVar, contextMap = contextMap)
             if (obj.change) {
+                jobControlOption.timeoutVar = obj.minutes.toString()
                 jobControlOption.timeout = obj.minutes
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
-                        "|bad timeout: ${obj.beforeChangeStr}"
+                            "|bad timeout: ${obj.beforeChangeStr}"
                 )
             }
         }

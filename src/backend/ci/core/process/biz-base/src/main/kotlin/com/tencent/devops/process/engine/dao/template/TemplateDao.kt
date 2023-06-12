@@ -305,7 +305,7 @@ class TemplateDao {
     fun getTemplate(
         dslContext: DSLContext,
         templateId: String,
-        versionName: String?,
+        versionName: String? = null,
         version: Long? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {

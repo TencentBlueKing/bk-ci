@@ -103,7 +103,7 @@
             </div>
             <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
                 <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
-                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('pause') }}</bk-button>
+                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
             </section>
         </div>
     </section>
@@ -218,19 +218,9 @@
                 'fetchingAtmoModal',
                 'atomVersionList',
                 'isPropertyPanelVisible',
-                'showPanelType'
+                'showPanelType',
+                'editingElementPos'
             ]),
-            visible: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.toggleAtomSelectorPopup(value)
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -404,6 +394,8 @@
                     bus.$emit('validate')
                 })
                 if (atomCode) {
+                    const version = this.element.version ? this.element.version : this.getDefaultVersion(atomCode)
+                    this.handleFetchAtomModal(atomCode, version)
                     this.fetchAtomVersionList({
                         projectCode: this.projectId,
                         atomCode
@@ -436,6 +428,7 @@
             }
             this.toggleAtomSelectorPopup(!atomCode)
         },
+
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
@@ -465,7 +458,14 @@
                     containerId: this.container.id,
                     element: this.element
                 }
+                const editingElementPos = {
+                    ...this.editingElementPos
+                }
                 this[loadingKey] = true
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
                 this.pausePlugin(postData).then(() => {
                     return this.requestPipelineExecDetail(this.$route.params)
                 }).catch((err) => {
@@ -473,12 +473,13 @@
                         message: err.message || err,
                         theme: 'error'
                     })
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos,
+                        showPanelType: 'PAUSE'
+                    })
                 }).finally(() => {
                     this[loadingKey] = false
-                    this.togglePropertyPanel({
-                        isShow: false,
-                        showPanelType: ''
-                    })
                 })
             },
 
@@ -675,7 +676,7 @@
     .atom-form-box.readonly {
         pointer-events: none;
     }
-    
+
     .atom-main-content {
         font-size: 12px;
         .atom-link {
