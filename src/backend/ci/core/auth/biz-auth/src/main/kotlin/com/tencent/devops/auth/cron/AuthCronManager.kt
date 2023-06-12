@@ -199,17 +199,15 @@ class AuthCronManager @Autowired constructor(
                                 messageCode = it.resourceType + RESOURCE_TYPE_DESC_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            if (name.isNotBlank() || desc.isNotBlank()) {
-                                if (name.isNotBlank()) {
-                                    it.name = name
-                                }
-                                if (desc.isNotBlank()) {
-                                    it.desc = desc
-                                }
-                                it.updateTime = LocalDateTime.now()
-                                it.updateUser = SYSTEM
-                                authResourceTypes.add(it)
+                            if (name.isNotBlank()) {
+                                it.name = name
                             }
+                            if (desc.isNotBlank()) {
+                                it.desc = desc
+                            }
+                            it.updateTime = LocalDateTime.now()
+                            it.updateUser = SYSTEM
+                            authResourceTypes.add(it)
                         }
                         if (authResourceTypes.isNotEmpty()) {
                             authResourceTypeDao.batchUpdateAuthResourceType(
@@ -252,16 +250,14 @@ class AuthCronManager @Autowired constructor(
                                         AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            if (groupName.isNotBlank() || description.isNotBlank()) {
-                                if (groupName.isNotBlank()) {
-                                    it.groupName = groupName
-                                }
-                                if (description.isNotBlank()) {
-                                    it.description = description
-                                }
-                                it.updateTime = LocalDateTime.now()
-                                authAuthResourceGroupConfigs.add(it)
+                            if (groupName.isNotBlank()) {
+                                it.groupName = groupName
                             }
+                            if (description.isNotBlank()) {
+                                it.description = description
+                            }
+                            it.updateTime = LocalDateTime.now()
+                            authAuthResourceGroupConfigs.add(it)
                         }
                         if (authAuthResourceGroupConfigs.isNotEmpty()) {
                             authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
