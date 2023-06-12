@@ -325,22 +325,7 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
-        val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId = userId,
-            projectId = projectId,
-            permissions = setOf(AuthPermission.USE, AuthPermission.VIEW)
-        )
-
-        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
-            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canViewNodeIds = if (permissionMap.containsKey(AuthPermission.VIEW)) {
-            permissionMap[AuthPermission.VIEW]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
         return validRecordList.map {
@@ -360,7 +345,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = null,
                 canDelete = null,
-                canView = canViewNodeIds.contains(it.nodeId),
+                canView = null,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
