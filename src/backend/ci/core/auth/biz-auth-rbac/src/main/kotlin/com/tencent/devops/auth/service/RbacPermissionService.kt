@@ -76,6 +76,9 @@ class RbacPermissionService constructor(
         }
     }
 
+    /**
+     * 如果没有具体资源,则校验是否有项目下任意资源权限
+     */
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -86,8 +89,8 @@ class RbacPermissionService constructor(
             userId = userId,
             action = action,
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
+            resourceType = resourceType!!,
+            resourceCode = "*",
             relationResourceType = null
         )
     }
@@ -102,8 +105,8 @@ class RbacPermissionService constructor(
     ): Boolean {
         val resource = if (resourceType == AuthResourceType.PROJECT.value) {
             AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
             )
         } else {
             val projectResourceInstance = AuthResourceInstance(
@@ -124,7 +127,7 @@ class RbacPermissionService constructor(
         )
     }
 
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -152,11 +155,15 @@ class RbacPermissionService constructor(
             ) {
                 return true
             }
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resource.resourceType,
-                resourceCode = resource.resourceCode
-            ) ?: return false
+            val iamResourceCode = if (resource.resourceCode == "*") {
+                resource.resourceCode
+            } else {
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
+            } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
                 .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
@@ -424,7 +431,7 @@ class RbacPermissionService constructor(
             if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associate {
                     val authPermission = it.substringAfterLast("_")
-                    AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+                    AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
             val instanceList = resources.map { resource ->
@@ -452,12 +459,23 @@ class RbacPermissionService constructor(
             actions.parallelStream().forEach { action ->
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    iamResourceCodes = iamResourceCodes
-                )
+                // 具有action管理员权限,那么有所有资源权限
+                if (permissionSuperManagerService.reviewManagerCheck(
+                        userId = userId,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        action = action
+                    )
+                ) {
+                    permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
+                } else {
+                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                    permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = iamResourceCodes
+                    )
+                }
             }
             return permissionMap
         } finally {

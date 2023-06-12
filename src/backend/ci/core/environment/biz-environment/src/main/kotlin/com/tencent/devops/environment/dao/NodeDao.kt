@@ -61,11 +61,16 @@ class NodeDao {
         }
     }
 
-    fun listThirdpartyNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
+    fun listThirdpartyNodes(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
+                .let { if (nodeIds != null) it.and(NODE_ID.`in`(nodeIds)) else it }
                 .orderBy(NODE_ID.desc())
                 .fetch()
         }
