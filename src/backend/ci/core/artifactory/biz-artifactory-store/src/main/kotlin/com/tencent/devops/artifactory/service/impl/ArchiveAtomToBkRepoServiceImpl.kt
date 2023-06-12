@@ -4,7 +4,6 @@ import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
-import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
@@ -12,15 +11,11 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import javax.ws.rs.NotFoundException
 
-@Service
-@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
+abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
@@ -102,10 +97,6 @@ class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
         } finally {
             tmpFile.delete()
         }
-    }
-
-    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
-        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
     }
 
     override fun clearServerTmpFile(projectCode: String, atomCode: String, version: String) {

@@ -161,6 +161,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         atomCode: String
     ): Result<Map<String, String>?> {
         logger.info("handleAtomPackage params:[$marketAtomCreateRequest|$atomCode|$userId]")
+        if (marketAtomCreateRequest.packageSourceType == PackageSourceTypeEnum.UPLOAD) {
+            return Result(data = null)
+        }
         marketAtomCreateRequest.authType ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("authType"),
@@ -235,11 +238,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
-    override fun getAtomPackageSourceType(): PackageSourceTypeEnum {
-        // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
-        return PackageSourceTypeEnum.REPO
-    }
-
     override fun getFileStr(
         projectCode: String,
         atomCode: String,
@@ -249,12 +247,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         branch: String?
     ): String? {
         logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
-        val atomPackageSourceType = getAtomPackageSourceType()
-        return if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
+        return if (!repositoryHashId.isNullOrBlank()) {
             // 从工蜂拉取文件
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
-                    repoId = repositoryHashId!!,
+                    repoId = repositoryHashId,
                     filePath = fileName,
                     reversion = null,
                     branch = branch,
@@ -300,12 +297,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): Result<Boolean> {
         logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
         val frontendType = marketAtomUpdateRequest.frontendType
-        if (frontendType != FrontendTypeEnum.SPECIAL) {
+        val repositoryHashId = atomRecord.repositoryHashId
+        if (frontendType != FrontendTypeEnum.SPECIAL || repositoryHashId.isNullOrBlank()) {
             return Result(true)
         }
         val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
             userId = userId,
-            repoId = atomRecord.repositoryHashId,
+            repoId = repositoryHashId,
             refName = null,
             path = null,
             tokenType = TokenTypeEnum.PRIVATE_KEY
@@ -434,6 +432,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
+        val repositoryHashId = atomReleaseRequest.repositoryHashId
+        if (repositoryHashId.isNullOrBlank()) {
+            return
+        }
         val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val tagName = "prod-v${atomReleaseRequest.version}-$date"
         val branch = if (atomReleaseRequest.branch.isNullOrBlank()) MASTER else atomReleaseRequest.branch
@@ -495,7 +497,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val taskJsonMap = getAtomConfResult.taskDataMap
         val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
         val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
-        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType())
+        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repoId))
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
@@ -617,6 +619,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         validOsArchFlag: Boolean? = null
     ): Boolean {
         val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
+        val repositoryHashId = atomRecord.repositoryHashId
+        if (repositoryHashId.isNullOrBlank()) {
+            return false
+        }
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
@@ -624,7 +630,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
-        val repositoryHashId = atomRecord.repositoryHashId
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,

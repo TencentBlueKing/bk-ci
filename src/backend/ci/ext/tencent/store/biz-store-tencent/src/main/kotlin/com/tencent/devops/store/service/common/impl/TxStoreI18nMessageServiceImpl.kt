@@ -27,11 +27,16 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
@@ -48,17 +53,30 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): String? {
-        return try {
-            client.get(ServiceGitRepositoryResource::class).getFileContent(
-                repoId = repositoryHashId!!,
-                filePath = "$i18nDir/$fileName",
-                reversion = null,
-                branch = branch,
-                repositoryType = null
+        return if (!repositoryHashId.isNullOrBlank()) {
+            // 从工蜂拉取文件
+            try {
+                client.get(ServiceGitRepositoryResource::class).getFileContent(
+                    repoId = repositoryHashId,
+                    filePath = "$i18nDir/$fileName",
+                    reversion = null,
+                    branch = branch,
+                    repositoryType = null
+                ).data
+            } catch (ignored: Throwable) {
+                logger.warn("getPropertiesFileStr fileName:$fileName,branch:$branch error", ignored)
+                null
+            }
+        } else {
+            // 直接从仓库拉取文件
+            val filePath =
+                URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
+            return client.get(ServiceArtifactoryResource::class).getFileContent(
+                userId = BKREPO_DEFAULT_USER,
+                projectId = BKREPO_STORE_PROJECT_ID,
+                repoName = REPO_NAME_PLUGIN,
+                filePath = filePath
             ).data
-        } catch (ignored: Throwable) {
-            logger.warn("getPropertiesFileStr fileName:$fileName,branch:$branch error", ignored)
-            null
         }
     }
 
@@ -69,13 +87,23 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            repoId = repositoryHashId!!,
-            refName = branch,
-            path = i18nDir,
-            tokenType = TokenTypeEnum.PRIVATE_KEY
-        ).data
-        return gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
+        return if (!repositoryHashId.isNullOrBlank()) {
+            val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
+                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                repoId = repositoryHashId,
+                refName = branch,
+                path = i18nDir,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            ).data
+            gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
+        } else {
+            val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
+            client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
+                userId = BKREPO_DEFAULT_USER,
+                projectId = BKREPO_STORE_PROJECT_ID,
+                repoName = REPO_NAME_PLUGIN,
+                filePath = filePath
+            ).data
+        }
     }
 }
