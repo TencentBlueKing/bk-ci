@@ -29,9 +29,11 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -203,7 +205,7 @@ class PipelinePostElementService @Autowired constructor(
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
         val postAtomRunCondition = getPostAtomRunCondition(postCondition)
-        val additionalOptions = originAtomElement.additionalOptions
+        val additionalOptions = originAtomElement.additionalOptions?.deepCopy<ElementAdditionalOptions>()
         additionalOptions?.let {
             additionalOptions.enable = true
             additionalOptions.continueWhenFailed = true
