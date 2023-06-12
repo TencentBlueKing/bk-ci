@@ -492,16 +492,6 @@
                                 newRepoInfo.authType = 'OAUTH'
                                 newRepoInfo.enablePac = true
                                 await this.handleUpdateRepo(newRepoInfo)
-                                    .finally(() => {
-                                        const { id, page, limit } = this.$route.query
-                                        this.$router.push({
-                                            query: {
-                                                id,
-                                                page,
-                                                limit
-                                            }
-                                        })
-                                    })
                             }
                         })
                     }
@@ -527,6 +517,15 @@
                     this.$bkMessage({
                         theme: 'error',
                         message: e || e.message
+                    })
+                }).finally(() => {
+                    const { id, page, limit } = this.$route.query
+                    this.$router.push({
+                        query: {
+                            id,
+                            page,
+                            limit
+                        }
                     })
                 })
             },
