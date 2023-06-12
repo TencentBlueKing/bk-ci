@@ -233,12 +233,12 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
 
-                const id = (query && query.id) || (cachae && cachae.id) || ''
-                const page = (query && query.page) || (cachae && cachae.page) || 1
-                const limit = (query && query.limit) || (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
+                const id = (cachae && cachae.id) || ''
+                const page = (cachae && cachae.page) || 1
+                const limit = (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
-                if (id) {
+                if (!query.id) {
                     this.isListFlod = true
                     this.curRepoId = id
                     this.$router.push({

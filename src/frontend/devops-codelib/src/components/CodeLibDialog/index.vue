@@ -4,14 +4,28 @@
         v-model="isShow"
         :width="780"
         :padding="24"
-        :loading="isLoading"
         :quick-close="false"
-        :show-footer="showDialogFooter"
-        :confirm-fn="submitCodelib"
-        :on-close="handleCancel"
     >
         <h3 slot="header" class="bk-dialog-title">{{ title }}</h3>
         <component ref="form" :is="comName"></component>
+        <footer slot="footer">
+            <template v-if="showDialogFooter">
+                <bk-button
+                    class="mr5"
+                    theme="primary"
+                    :loading="isLoading"
+                    @click="submitCodelib"
+                >
+                    {{ $t('codelib.confirm') }}
+                </bk-button>
+                <bk-button
+                    @click="handleCancel"
+                    :loading="isLoading"
+                >
+                    {{ $t('codelib.cancel') }}
+                </bk-button>
+            </template>
+        </footer>
     </bk-dialog>
 </template>
 
@@ -75,6 +89,9 @@
                             ? this.gitOAuth.status
                             : this.githubOAuth.status) !== 403
                 )
+            },
+            showDialogFooter () {
+                return (this.hasPower && this.isOAUTH) || !this.isOAUTH
             },
             title () {
                 return this.$t('codelib.linkRepo', [
@@ -246,7 +263,7 @@
                                     message: e.message || e
                                 })
                             }).finally(() => {
-                                // this.isLoading = false
+                                this.isLoading = false
                             })
                         }
                     }, validator => {
@@ -279,6 +296,7 @@
             handleCancel () {
                 this.hasValidate = false
                 this.$refs.form.$refs.form.clearError()
+                this.toggleCodelibDialog(false)
                 this.updateCodelib({
                     url: '',
                     aliasName: '',
