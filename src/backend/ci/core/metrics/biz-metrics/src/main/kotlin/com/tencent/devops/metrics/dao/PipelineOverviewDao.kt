@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.JooqUtils.avg
 import com.tencent.devops.common.db.utils.JooqUtils.productSum
 import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
@@ -38,17 +39,17 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
-import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Repository
 class PipelineOverviewDao {
@@ -101,8 +102,8 @@ class PipelineOverviewDao {
                 STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT),
                 sum<Long>(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
-                sum<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME),
-                sum<Long>(FAIL_AVG_COST_TIME).`as`(BK_FAIL_AVG_COST_TIME)
+                avg<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME),
+                avg<Long>(FAIL_AVG_COST_TIME).`as`(BK_FAIL_AVG_COST_TIME)
             ).from(this)
             if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
