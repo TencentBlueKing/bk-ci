@@ -27,16 +27,19 @@
 
 package com.tencent.devops.process.service.record
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
@@ -49,6 +52,7 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val pipelinePostElementService: PipelinePostElementService,
     private val dslContext: DSLContext
 ) {
 
@@ -150,15 +154,21 @@ class PipelineRecordModelService @Autowired constructor(
             containerVarMap[Container::status.name] = stageRecordContainer.status ?: ""
             containerVarMap[Container::executeCount.name] = stageRecordContainer.executeCount
             containerVarMap[Container::containPostTaskFlag.name] = stageRecordContainer.containPostTaskFlag ?: false
-            handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
+            val stageBaseMap = (pipelineBaseModelMap[Model::stages.name] as List<Map<String, Any>>).first {
+                it[Stage::id.name] == stageId
+            }
+            val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
+                it[Container::id.name] == containerId
+            }
+            val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
+            handleContainerRecordTask(
+                stageRecordTasks = stageRecordTasks,
+                containerId = containerId,
+                containerVarMap = containerVarMap,
+                containerBaseMap = containerBaseModelMap
+            )
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
-                val stageBaseMap = (pipelineBaseModelMap[Model::stages.name] as List<Map<String, Any>>).first {
-                    it[Stage::id.name] == stageId
-                }
-                val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
-                    it[Container::id.name] == containerId
-                }
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers =
                     stageRecordContainers.filter { it.matrixGroupId == containerId }.sortedBy { it.containerId.toInt() }
@@ -167,7 +177,6 @@ class PipelineRecordModelService @Autowired constructor(
                     // 生成矩阵job的变量模型
                     var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
-                    val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
                     matrixContainerVarMap[Container::id.name] = matrixContainerId
                     matrixContainerVarMap[Container::status.name] = matrixRecordContainer.status ?: ""
                     matrixContainerVarMap[Container::executeCount.name] = matrixRecordContainer.executeCount
@@ -177,7 +186,8 @@ class PipelineRecordModelService @Autowired constructor(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
                         containerVarMap = matrixContainerVarMap,
-                        containerBaseMap = containerBaseModelMap
+                        containerBaseMap = containerBaseModelMap,
+                        matrixTaskFlag = true
                     )
                     containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
                     containerBaseModelMap.remove(VMBuildContainer::groupContainers.name)
@@ -199,7 +209,8 @@ class PipelineRecordModelService @Autowired constructor(
         stageRecordTasks: List<BuildRecordTask>,
         containerId: String,
         containerVarMap: MutableMap<String, Any>,
-        containerBaseMap: Map<String, Any>? = null
+        containerBaseMap: Map<String, Any>,
+        matrixTaskFlag: Boolean = false
     ) {
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
@@ -210,10 +221,39 @@ class PipelineRecordModelService @Autowired constructor(
             taskVarMap[Element::id.name] = taskId
             taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
             taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
-            containerBaseMap?.let {
+            val elementPostInfo = containerRecordTask.elementPostInfo
+            if (elementPostInfo != null) {
+                // 生成post类型task的变量模型
+                val additionalOptions = ElementAdditionalOptions(
+                    enable = true,
+                    continueWhenFailed = true,
+                    retryWhenFailed = false,
+                    runCondition = pipelinePostElementService.getPostAtomRunCondition(elementPostInfo.postCondition),
+                    pauseBeforeExec = null,
+                    subscriptionPauseUser = null,
+                    otherTask = null,
+                    customCondition = null,
+                    elementPostInfo = elementPostInfo
+                )
+                val additionalOptionsMap = taskVarMap[Element::additionalOptions.name] as? MutableMap<String, Any>
+                val finalAdditionalOptionsMap = if (additionalOptionsMap != null) {
+                    ModelUtils.generateBuildModelDetail(additionalOptionsMap, JsonUtil.toMutableMap(additionalOptions))
+                } else {
+                    JsonUtil.toMutableMap(additionalOptions)
+                }
+                taskVarMap[Element::additionalOptions.name] = finalAdditionalOptionsMap
+                val parentElementJobIndex = elementPostInfo.parentElementJobIndex
+                val taskBaseMap =
+                    (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
+                val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
+                taskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
+                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.toMutableMap(), taskVarMap)
+            }
+            if (matrixTaskFlag && elementPostInfo == null) {
                 // 生成矩阵task的变量模型
-                val taskBaseMap = (it[Container::elements.name] as List<Map<String, Any>>)[index].toMutableMap()
-                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap, taskVarMap)
+                val taskBaseMap =
+                    (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[index]
+                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.toMutableMap(), taskVarMap)
             }
             tasks.add(taskVarMap)
         }
