@@ -3,9 +3,9 @@ package com.tencent.devops.experience.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.pojo.GroupCreate
-import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.GroupUsers
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

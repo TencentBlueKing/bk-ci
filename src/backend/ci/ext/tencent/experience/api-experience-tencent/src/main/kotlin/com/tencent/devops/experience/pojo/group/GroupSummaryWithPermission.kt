@@ -25,20 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.util
+package com.tencent.devops.experience.pojo.group
 
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_INFO
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object WechatUtil {
-    fun makeMessage(projectName: String, name: String, version: String, innerUrl: String, outerUrl: String, receivers: Set<String>): WechatNotifyMessage {
-        val message = WechatNotifyMessage()
-        message.addAllReceivers(receivers)
-        message.body = I18nUtil.getCodeLanMessage(
-            messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
-            params = arrayOf(projectName, name, version, innerUrl, outerUrl)
-        )
-        return message
-    }
-}
+@ApiModel("版本体验-体验组摘要信息")
+data class GroupSummaryWithPermission(
+    @ApiModelProperty("体验组HashID", required = true)
+    val groupHashId: String,
+    @ApiModelProperty("体验组名称", required = true)
+    val name: String,
+    @ApiModelProperty("内部人员数量", required = true)
+    val innerUsersCount: Int,
+    @ApiModelProperty("外部人员数量", required = true)
+    val outerUsersCount: Int,
+    @ApiModelProperty("组织架构数量", required = true)
+    val deptsCount: Int,
+    @ApiModelProperty("内部人员")
+    val innerUsers: Set<String>,
+    @ApiModelProperty("外部人员")
+    val outerUsers: Set<String>,
+    @ApiModelProperty("组织架构")
+    val depts: Set<String>,
+    @ApiModelProperty("创建者", required = true)
+    val creator: String,
+    @ApiModelProperty("描述", required = true)
+    val remark: String,
+    @ApiModelProperty("权限", required = true)
+    val permissions: GroupPermission
+)

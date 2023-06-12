@@ -38,7 +38,6 @@ object RtxUtil {
         projectName: String,
         name: String,
         version: String,
-        pcUrl: String,
         appUrl: String,
         receivers: Set<String>
     ): RtxNotifyMessage {
@@ -50,7 +49,7 @@ object RtxUtil {
         )
         message.body = I18nUtil.getCodeLanMessage(
                 messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
-                params = arrayOf(projectName, name, version, pcUrl, appUrl)
+                params = arrayOf(projectName, name, version, appUrl)
             )
         return message
     }

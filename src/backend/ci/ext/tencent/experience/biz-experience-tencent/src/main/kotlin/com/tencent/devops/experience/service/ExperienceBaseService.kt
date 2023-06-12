@@ -42,6 +42,7 @@ import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceGroupDepartmentDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
@@ -54,7 +55,9 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -64,11 +67,13 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 // 服务共用部分在这里
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 @Service
 class ExperienceBaseService @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
+    private val experienceGroupDepartmentDao: ExperienceGroupDepartmentDao,
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
@@ -179,7 +184,6 @@ class ExperienceBaseService @Autowired constructor(
         groupIdType: GroupIdTypeEnum,
         isOuter: Boolean = false
     ): MutableSet<Long> {
-        val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
             if (isOuter) {
@@ -188,11 +192,25 @@ class ExperienceBaseService @Autowired constructor(
             } else {
                 groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
                     .toMutableSet())
+
+                val deptIds = mutableSetOf<String>()
+                client.get(ServiceTxUserResource::class).get(userId).data?.let {
+                    deptIds.add(it.bgId)
+                    deptIds.add(it.deptId)
+                    deptIds.add(it.centerId)
+                    deptIds.add(it.groupId)
+                }
+                groupIds.addAll(
+                    experienceGroupDepartmentDao.listGroupIdsByDeptIds(dslContext, deptIds).map { it.value1() }
+                        .toMutableSet()
+                )
             }
         }
         if (groupIdType == GroupIdTypeEnum.JUST_PUBLIC || groupIdType == GroupIdTypeEnum.ALL) {
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)
         }
+
+        val recordIds = mutableSetOf<Long>()
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
         if (isOuter) {
             recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())
@@ -227,8 +245,8 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
+        val groupIds = getGroupIdsByRecordId(experienceId)
         val inGroup = lazy {
-            val groupIds = getGroupIdsByRecordId(experienceId)
             if (isOuter) {
                 getGroupIdToOuters(groupIds)
             } else {
@@ -245,9 +263,28 @@ class ExperienceBaseService @Autowired constructor(
                     .contains(userId)
             }
         }
+
+        val isInDept = lazy {
+            if (isOuter) return@lazy false else {
+                for (depts in getGroupIdToDept(groupIds, false).values) {
+                    for (dept in depts) {
+                        val staffInfoList =
+                            client.get(ServiceProjectOrganizationResource::class).getDeptStaffsWithLevel(dept, 10).data
+                                ?: continue
+                        for (staffInfo in staffInfoList) {
+                            if (staffInfo.loginName == userId) {
+                                return@lazy true
+                            }
+                        }
+                    }
+                }
+                return@lazy false
+            }
+        }
+
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
-        return inGroup.value || isInnerUser.value || isCreator.value
+        return inGroup.value || isInnerUser.value || isCreator.value || isInDept.value
     }
 
     /**
@@ -281,32 +318,7 @@ class ExperienceBaseService @Autowired constructor(
         experienceId: Long,
         userId: String
     ): Boolean {
-        val groupIds = getGroupIdsByRecordId(experienceId)
-        val isOuterGroup = lazy {
-            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
-                .contains(userId)
-        }
-        val isInnerGroup = lazy {
-            getGroupIdToInnerUserIds(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
-                .contains(userId)
-        }
-        val isInnerUser = lazy {
-            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
-        }
-        val isOuterUser = lazy {
-            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
-        }
-        val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
-
-        logger.info(
-            "isOuterGroup:${isOuterGroup.value}, " +
-                    "isInnerGroup:${isInnerGroup.value}, isInnerUser:${isInnerUser.value}, " +
-                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator.value}"
-        )
-        return isOuterGroup.value || isInnerGroup.value ||
-                isInnerUser.value || isOuterUser.value || isCreator.value
+        return isInPrivate(experienceId, userId, false) || isInPrivate(experienceId, userId, true)
     }
 
     /**
@@ -364,14 +376,33 @@ class ExperienceBaseService @Autowired constructor(
             }
             userIds.add(it.userId)
         }
+
         return groupIdToUserIds
+    }
+
+    fun getGroupIdToDept(groupIds: Set<Long>, useName: Boolean): MutableMap<Long, MutableSet<String>> {
+        val groupIdToDeptIds = mutableMapOf<Long, MutableSet<String>>()
+
+        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
+            groupIdToDeptIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+        }
+
+        experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds).forEach {
+            var userIds = groupIdToDeptIds[it.groupId]
+            if (null == userIds) {
+                userIds = mutableSetOf()
+                groupIdToDeptIds[it.groupId] = userIds
+            }
+            userIds.add(if (useName) StringUtils.joinWith("/", it.deptFullName, it.deptName) else it.deptId)
+        }
+
+        return groupIdToDeptIds
     }
 
     /**
      * 获取内部用户列表
      */
     fun getInnerReceivers(
-        dslContext: DSLContext,
         experienceId: Long,
         userId: String
     ): MutableSet<String> {
@@ -407,7 +438,6 @@ class ExperienceBaseService @Autowired constructor(
      * 获取外部用户列表
      */
     fun getOuterReceivers(
-        dslContext: DSLContext,
         experienceId: Long,
         groupIds: Set<Long>
     ): MutableSet<String> {
@@ -420,6 +450,19 @@ class ExperienceBaseService @Autowired constructor(
         outerReceivers.addAll(outerGroup)
         outerReceivers.addAll(outerUser)
         return outerReceivers
+    }
+
+    fun getDeptUserReceivers(
+        groupIds: Set<Long>
+    ): MutableSet<String> {
+        val deptUsers = mutableSetOf<String>()
+        val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds)
+        for (dept in depts) {
+            client.get(ServiceProjectOrganizationResource::class)
+                .getDeptStaffsWithLevel(dept.deptId, 10)
+                .data?.forEach { deptUsers.add(it.loginName) }
+        }
+        return deptUsers
     }
 
     /**

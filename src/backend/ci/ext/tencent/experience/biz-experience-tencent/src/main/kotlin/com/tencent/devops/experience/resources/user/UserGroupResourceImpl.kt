@@ -32,13 +32,17 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
-import com.tencent.devops.experience.pojo.Group
-import com.tencent.devops.experience.pojo.GroupCreate
-import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
-import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
+import com.tencent.devops.experience.pojo.group.Group
+import com.tencent.devops.experience.pojo.group.GroupBatchName
+import com.tencent.devops.experience.pojo.group.GroupCommit
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupDeptFullName
+import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
+import com.tencent.devops.experience.pojo.group.GroupV2
 import com.tencent.devops.experience.service.GroupService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -72,6 +76,11 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         )
     }
 
+    override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
+        checkParam(userId, projectId)
+        return Result(groupService.commit(userId, projectId, groupCommit))
+    }
+
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {
         checkParam(userId, projectId)
         return Result(groupService.getProjectUsers(userId = userId, projectId = projectId, projectGroup = projectGroup))
@@ -102,6 +111,25 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         checkParam(userId, projectId, groupHashId)
         groupService.edit(userId = userId, projectId = projectId, groupHashId = groupHashId, group = group)
         return Result(true)
+    }
+
+    override fun getV2(
+        userId: String,
+        projectId: String,
+        groupHashId: String
+    ): Result<GroupV2> {
+        checkParam(userId, projectId, groupHashId)
+        return Result(
+            groupService.getUsersV2(
+                userId = userId,
+                projectId = projectId,
+                groupHashId = groupHashId
+            )
+        )
+    }
+
+    override fun batchDeptFullName(groupBatchName: GroupBatchName): Result<List<GroupDeptFullName>> {
+        return Result(groupService.batchDeptFullName(groupBatchName))
     }
 
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {
