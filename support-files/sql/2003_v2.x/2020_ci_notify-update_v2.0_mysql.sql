@@ -42,7 +42,7 @@ SELECT DATABASE() INTO db;
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE'
-                    AND INDEX_NAME = '`idx_code`') THEN
+                    AND INDEX_NAME = 'idx_code') THEN
         ALTER TABLE T_COMMON_NOTIFY_MESSAGE_TEMPLATE DROP INDEX `idx_code`;
     END IF;
 
