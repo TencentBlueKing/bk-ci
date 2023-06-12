@@ -187,8 +187,8 @@ interface ServiceNodeResource {
         @ApiParam("环境 hashId (envHashId和envName选填一项)", required = false)
         @QueryParam("envHashId")
         envHashId: String?,
-        @ApiParam("环境名称", required = false)
-        @QueryParam("envName (envHashId和envName选填一项)")
+        @ApiParam("环境名称 (envHashId和envName选填一项)", required = false)
+        @QueryParam("envName")
         envName: String?
     ): Result<List<NodeWithPermission>>
 }
