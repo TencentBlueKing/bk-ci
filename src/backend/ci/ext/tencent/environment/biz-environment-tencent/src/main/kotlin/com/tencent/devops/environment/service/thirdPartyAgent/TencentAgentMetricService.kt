@@ -52,8 +52,46 @@ class TencentAgentMetricService @Autowired constructor(
     dslContext, thirdPartyAgentDao
 ) {
 
-    @Value("\${kafka.topics.agentMetricTopic:#{null}}")
-    val agentMetricTopic: String? = null
+    companion object {
+        private val logger = LoggerFactory.getLogger(AgentMetricService::class.java)
+
+        private const val AGENT_TELEGRAF_CPU_DETAIL = "cpu_detail"
+        private const val AGENT_TELEGRAF_NET = "net"
+        private const val AGENT_TELEGRAF_MEM = "mem"
+        private const val AGENT_TELEGRAF_IO = "io"
+        private const val AGENT_TELEGRAF_DISK = "disk"
+        private const val AGENT_TELEGRAF_SWAP = "swap"
+        private const val AGENT_TELEGRAF_LOAD = "load"
+        private const val AGENT_TELEGRAF_NETSTAT = "netstat"
+        private const val AGENT_TELEGRAF_ENV = "env"
+    }
+
+    @Value("\${kafka.topics.agentMetricCpuDetailTopic:#{null}}")
+    val agentMetricCpuDetailTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricNetTopic:#{null}}")
+    val agentMetricNetTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricMemTopic:#{null}}")
+    val agentMetricMemTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricIoTopic:#{null}}")
+    val agentMetricIoTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricDiskTopic:#{null}}")
+    val agentMetricDiskTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricSwapTopic:#{null}}")
+    val agentMetricSwapTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricLoadTopic:#{null}}")
+    val agentMetricLoadTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricNetstatTopic:#{null}}")
+    val agentMetricNetstatTopic: String? = null
+
+    @Value("\${kafka.topics.agentMetricEnvTopic:#{null}}")
+    val agentMetricEnvTopic: String? = null
 
     override fun reportAgentMetrics(data: String): Boolean {
         logger.debug("reportAgentMetrics|origin")
@@ -69,50 +107,49 @@ class TencentAgentMetricService @Autowired constructor(
             objectMapper.readValue<TelegrafStandData>(data)
         }
 
-        // 拼接成数据平台类型
-        val reportData: List<AgentTelegrafData>? = when (jsonData) {
+
+        when (jsonData) {
             is TelegrafMulData -> {
-                jsonData.metrics?.map { dd ->
-                    AgentTelegrafData(
-                        dimensions = dd.tags?.map { it.key to it.value.toString() }?.toMap(),
-                        time = dd.timestamp,
-                        metrics = dd.fields?.map { "${dd.name ?: ""}_${it.key}" to it.value }?.toMap()
-                    )
+                jsonData.metrics?.forEach {
+                    sendMetric(it)
                 }
             }
 
             is TelegrafStandData -> {
-                listOf(
-                    AgentTelegrafData(
-                        dimensions = jsonData.tags?.map { it.key to it.value.toString() }?.toMap(),
-                        time = jsonData.timestamp,
-                        metrics = jsonData.fields?.map { "${jsonData.name ?: ""}_${it.key}" to it.value }?.toMap()
-                    )
-                )
+                sendMetric(jsonData)
             }
-
-            else -> {
-                emptyList()
-            }
-        }
-
-        logger.info("reportAgentMetrics json cost ${System.currentTimeMillis() - startTime}")
-
-        // 上报
-        if (!agentMetricTopic.isNullOrBlank()) {
-            logger.debug("reportAgentMetrics|kafka ${reportData?.size ?: 0}")
-            if (reportData.isNullOrEmpty()) {
-                kafkaClient.send(agentMetricTopic!!, "{}")
-            } else {
-                kafkaClient.send(agentMetricTopic!!, objectMapper.writeValueAsString(reportData))
-            }
-        } else {
-            logger.error("agentMetricTopic is null")
         }
 
         logger.info("reportAgentMetrics report cost ${System.currentTimeMillis() - startTime}")
 
         return true
+    }
+
+    private fun sendMetric(data: TelegrafStandData) {
+        val topicName = when (data.name) {
+            AGENT_TELEGRAF_CPU_DETAIL -> agentMetricCpuDetailTopic
+            AGENT_TELEGRAF_NET -> agentMetricNetTopic
+            AGENT_TELEGRAF_MEM -> agentMetricMemTopic
+            AGENT_TELEGRAF_IO -> agentMetricIoTopic
+            AGENT_TELEGRAF_DISK -> agentMetricDiskTopic
+            AGENT_TELEGRAF_SWAP -> agentMetricSwapTopic
+            AGENT_TELEGRAF_LOAD -> agentMetricLoadTopic
+            AGENT_TELEGRAF_NETSTAT -> agentMetricNetstatTopic
+            AGENT_TELEGRAF_ENV -> agentMetricEnvTopic
+            else -> return
+        }
+        val new = AgentTelegrafData(
+            dimensions = data.tags?.map { it.key to it.value.toString() }?.toMap(),
+            time = data.timestamp,
+            metrics = data.fields
+        )
+
+        if (topicName.isNullOrBlank()) {
+            logger.error("${data.name}'s agentMetricTopic is null")
+            return
+        }
+
+        kafkaClient.send(topicName, objectMapper.writeValueAsString(new))
     }
 
     override fun queryCpuUsageMetrix(
@@ -149,9 +186,5 @@ class TencentAgentMetricService @Autowired constructor(
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
         return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentMetricService::class.java)
     }
 }
