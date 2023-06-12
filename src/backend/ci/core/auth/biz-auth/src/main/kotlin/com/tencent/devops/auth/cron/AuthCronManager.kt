@@ -158,10 +158,12 @@ class AuthCronManager @Autowired constructor(
                             )
                             authActionI18nMap[it.action] = actionName
                         }
-                        authActionDao.updateActionName(
-                            dslContext = dslContext,
-                            authActionI18nMap = authActionI18nMap
-                        )
+                        if (authActionI18nMap.isNotEmpty()) {
+                            authActionDao.updateActionName(
+                                dslContext = dslContext,
+                                authActionI18nMap = authActionI18nMap
+                            )
+                        }
                         page ++
                     } while (actionRecordResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth Action I18n end")
@@ -199,10 +201,12 @@ class AuthCronManager @Autowired constructor(
                             it.updateUser = SYSTEM
                             authResourceTypes.add(it)
                         }
-                        authResourceTypeDao.batchUpdateAuthResourceType(
-                            dslContext = dslContext,
-                            authActionResourceTypes = authResourceTypes
-                        )
+                        if (authResourceTypes.isNotEmpty()) {
+                            authResourceTypeDao.batchUpdateAuthResourceType(
+                                dslContext = dslContext,
+                                authActionResourceTypes = authResourceTypes
+                            )
+                        }
                         page++
                     } while (resourceTypeResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth resource type I18n end")
@@ -241,10 +245,12 @@ class AuthCronManager @Autowired constructor(
                             it.updateTime = LocalDateTime.now()
                             authAuthResourceGroupConfigs.add(it)
                         }
-                        authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
-                            dslContext,
-                            authAuthResourceGroupConfigs
-                        )
+                        if (authAuthResourceGroupConfigs.isNotEmpty()) {
+                            authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
+                                dslContext,
+                                authAuthResourceGroupConfigs
+                            )
+                        }
                         page++
                     } while (resourceGroupConfigResult.size == PageUtil.DEFAULT_PAGE)
                     logger.info("init auth resource group config I18n end")
