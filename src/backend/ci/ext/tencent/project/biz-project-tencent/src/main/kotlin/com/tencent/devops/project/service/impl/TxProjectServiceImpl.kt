@@ -352,7 +352,12 @@ class TxProjectServiceImpl @Autowired constructor(
         projectTagService.updateTagByProject(
             projectTagUpdate
         )
-        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
+        updateProjectProperties(
+            userId = userId,
+            projectCode = projectCode,
+            properties = projectCreateInfo.properties
+                ?: ProjectProperties(PipelineAsCodeSettings(true))
+        )
         return projectVO
     }
 

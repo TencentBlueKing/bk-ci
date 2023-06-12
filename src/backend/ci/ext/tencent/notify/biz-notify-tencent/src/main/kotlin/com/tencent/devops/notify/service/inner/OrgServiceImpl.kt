@@ -33,9 +33,9 @@ import org.springframework.stereotype.Service
 class OrgServiceImpl : OrgService {
 
     override fun parseStaff(staffs: Set<String>): Set<String> {
-        val result = HashSet<String>()
-        val staffIds = HashSet<Int>()
-        if (!staffs.isEmpty()) {
+        val result = LinkedHashSet<String>()
+        val staffIds = LinkedHashSet<Int>()
+        if (staffs.isNotEmpty()) {
             staffs.forEach { staff ->
                 try {
                     val staffId = Integer.parseInt(staff, 10)
@@ -47,7 +47,7 @@ class OrgServiceImpl : OrgService {
                 }
             }
         }
-        if (!staffIds.isEmpty()) {
+        if (staffIds.isNotEmpty()) {
             // TODO: 转换数字用户ID为rtx名
         }
         return result

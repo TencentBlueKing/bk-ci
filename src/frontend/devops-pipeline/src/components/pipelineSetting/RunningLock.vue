@@ -51,6 +51,7 @@
             <template v-if="!pipelineSetting.concurrencyCancelInProgress">
                 <bk-form-item
                     :label="$t('settings.largestNum')"
+                    error-display-type="normal"
                     property="maxQueueSize"
                 >
                     <bk-input
@@ -65,6 +66,7 @@
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('settings.lagestTime')"
+                    error-display-type="normal"
                     property="waitQueueTimeMinute"
                 >
                     <bk-input
@@ -131,7 +133,7 @@
                                 return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
                             },
                             message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
-                            trigger: 'change'
+                            trigger: 'blur'
                         }
                     ],
                     waitQueueTimeMinute: [
@@ -142,7 +144,7 @@
                                 return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
                             },
                             message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
-                            trigger: 'change'
+                            trigger: 'blur'
                         }
                     ]
                 }

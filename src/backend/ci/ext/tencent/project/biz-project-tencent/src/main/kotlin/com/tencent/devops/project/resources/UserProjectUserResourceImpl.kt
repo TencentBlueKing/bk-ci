@@ -53,10 +53,10 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val avatarUrl: String? = null
 
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
-        val staff = tofService.getStaffInfo(userId, bkToken!!)
+        val name = bkToken?.let { tofService.getStaffInfo(userId, it).ChineseName } ?: userId
         return Result(
             ProjectUser(
-                chineseName = staff.ChineseName,
+                chineseName = name,
                 avatarUrl = avatarUrl?.replace("##UserId##", userId) ?: "",
                 username = userId
             )
@@ -76,11 +76,13 @@ class UserProjectUserResourceImpl @Autowired constructor(
     }
 
     override fun mangerRoleCheck(userId: String, projectCode: String): Result<Boolean> {
-        return Result(projectService.verifyUserProjectPermission(
-            userId = userId,
-            projectId = projectCode,
-            accessToken = null,
-            permission = AuthPermission.MANAGE
-        ))
+        return Result(
+            projectService.verifyUserProjectPermission(
+                userId = userId,
+                projectId = projectCode,
+                accessToken = null,
+                permission = AuthPermission.MANAGE
+            )
+        )
     }
 }

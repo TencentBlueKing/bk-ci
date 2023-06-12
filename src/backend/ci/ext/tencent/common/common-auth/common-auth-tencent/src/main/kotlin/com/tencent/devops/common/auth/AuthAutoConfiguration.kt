@@ -81,9 +81,10 @@ class AuthAutoConfiguration {
     fun bsAuthResourceApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi
+        bsAuthTokenApi: BSAuthTokenApi,
+        client: Client
     ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi)
+        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
 
     @Bean
     @Primary

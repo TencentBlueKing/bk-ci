@@ -111,6 +111,13 @@ span.skip-name {
     }
 }
 
+.un-exec-this-time {
+    .un-exec-this-time {
+      opacity: 1;
+    }
+    opacity: .5;
+}
+
 .readonly {
     .stage-connector {
         background: $lineColor;
@@ -336,8 +343,9 @@ span.skip-name {
             }
         }
         &.FAILED,
-        &.QUALITY_CHECK_FAIL,
+        &.TERMINATE,
         &.HEARTBEAT_TIMEOUT,
+        &.QUALITY_CHECK_FAIL,
         &.QUEUE_TIMEOUT,
         &.EXEC_TIMEOUT {
             border-color: $dangerColor;

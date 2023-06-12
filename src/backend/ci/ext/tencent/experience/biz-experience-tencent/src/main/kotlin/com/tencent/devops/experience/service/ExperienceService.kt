@@ -347,19 +347,21 @@ class ExperienceService @Autowired constructor(
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf("bundleIdentifier")
-                    ))
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("bundleIdentifier")
+                )
+            )
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf("appVersion")
-                    ))
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("appVersion")
+                )
+            )
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
@@ -680,10 +682,10 @@ class ExperienceService @Autowired constructor(
             experienceId = experienceId,
             authPermission = AuthPermission.EDIT,
             message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_EDIT_PERMISSION,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(projectId, experienceHashId)
-                )
+                messageCode = BK_USER_NOT_EDIT_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(projectId, experienceHashId)
+            )
         )
         return experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
@@ -731,11 +733,11 @@ class ExperienceService @Autowired constructor(
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
             throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = FILE_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(path)
-                    )
+                MessageUtil.getMessageByLocale(
+                    messageCode = FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(path)
+                )
             )
         }
 
@@ -899,15 +901,21 @@ class ExperienceService @Autowired constructor(
         subscribeUsers: Set<String>,
         experienceRecord: TExperienceRecord
     ) {
-        subscribeUsers.forEach {
-            val appMessage = AppNotifyUtil.makeMessage(
-                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
-                experienceName = experienceRecord.experienceName,
-                appVersion = experienceRecord.version,
-                receiver = it,
-                platform = experienceRecord.platform
-            )
-            experiencePushService.pushMessage(appMessage)
+        val isPublicExperience = experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceRecord.id
+        ) != null
+        if (isPublicExperience) {
+            subscribeUsers.forEach {
+                val appMessage = AppNotifyUtil.makeMessage(
+                    experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                    experienceName = experienceRecord.experienceName,
+                    appVersion = experienceRecord.version,
+                    receiver = it,
+                    platform = experienceRecord.platform
+                )
+                experiencePushService.pushMessage(appMessage)
+            }
         }
     }
 

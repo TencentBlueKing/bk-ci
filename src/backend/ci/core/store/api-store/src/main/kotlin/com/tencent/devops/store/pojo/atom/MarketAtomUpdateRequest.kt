@@ -48,7 +48,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
     val jobType: JobTypeEnum = JobTypeEnum.AGENT,
     @ApiModelProperty("支持的操作系统", required = true)
-    val os: ArrayList<String>,
+    val os: ArrayList<String> = arrayListOf(),
     @ApiModelProperty("插件简介", required = false)
     @field:BkField(maxLength = 256)
     val summary: String?,
@@ -64,9 +64,9 @@ data class MarketAtomUpdateRequest(
     )
     val releaseType: ReleaseTypeEnum,
     @ApiModelProperty("版本日志内容", required = true)
-    val versionContent: String,
+    val versionContent: String = "",
     @ApiModelProperty("发布者", required = true)
-    val publisher: String,
+    val publisher: String = "",
     @ApiModelProperty("插件标签列表", required = false)
     val labelIdList: ArrayList<String>?,
     @ApiModelProperty(value = "前端UI渲染方式", required = true)

@@ -69,7 +69,7 @@ class BkTicketService @Autowired constructor(
         if (bkTicket.isBlank()) return false
         // 获取user的所有运行中的容器
         workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.RUNNING
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             updateBkTicket(userId, bkTicket, it.hostName)

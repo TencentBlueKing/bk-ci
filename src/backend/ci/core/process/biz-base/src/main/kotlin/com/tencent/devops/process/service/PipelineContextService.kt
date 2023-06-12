@@ -233,7 +233,7 @@ class PipelineContextService @Autowired constructor(
             c.jobId?.let { contextMap["job.id"] = it }
             contextMap["job.name"] = c.name
             contextMap["job.status"] = statusStr
-            contextMap["job.outcome"] = statusStr
+            c.status?.let { contextMap["job.outcome"] = it }
             getNetWork(c)?.let { contextMap["job.container.network"] = it }
             stage.id?.let { contextMap["job.stage_id"] = it }
             stage.name?.let { contextMap["job.stage_name"] = it }
@@ -245,7 +245,7 @@ class PipelineContextService @Autowired constructor(
         contextMap["jobs.$jobId.id"] = jobId
         contextMap["jobs.$jobId.name"] = c.name
         contextMap["jobs.$jobId.status"] = statusStr
-        contextMap["jobs.$jobId.outcome"] = statusStr
+        c.status?.let { contextMap["jobs.$jobId.outcome"] = it }
         getNetWork(c)?.let { contextMap["jobs.$jobId.container.network"] = it }
         stage.id?.let { contextMap["jobs.$jobId.stage_id"] = it }
         stage.name?.let { contextMap["jobs.$jobId.stage_name"] = it }
@@ -289,7 +289,7 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.name"] = e.name
                 e.id?.let { contextMap["step.id"] = it }
                 contextMap["step.status"] = statusStr
-                contextMap["step.outcome"] = statusStr
+                e.status?.let { contextMap["step.outcome"] = it }
                 contextMap["step.atom_version"] = e.version
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
@@ -299,13 +299,13 @@ class PipelineContextService @Autowired constructor(
                 contextMap["steps.$stepId.name"] = e.name
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
                 contextMap["steps.$stepId.status"] = statusStr
-                contextMap["steps.$stepId.outcome"] = statusStr
+                e.status?.let { contextMap["steps.$stepId.outcome"] = it }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
             e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
             contextMap["jobs.$jobId.steps.$stepId.status"] = statusStr
-            contextMap["jobs.$jobId.steps.$stepId.outcome"] = statusStr
+            e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
                     jobPrefix = "jobs.$jobId.",

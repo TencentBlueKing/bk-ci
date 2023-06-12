@@ -345,14 +345,13 @@
                 localStorage.setItem('pipelineLayout', layout)
             },
             changeSortType (sortType) {
-                this.$refs?.pipelineBox?.clearSort?.()
                 const { sortType: currentSort, collation, ...restQuery } = this.$route.query
                 const newSortQuery = {
                     ...restQuery,
                     sortType,
                     collation
                 }
-                
+
                 if (sortType === currentSort) {
                     newSortQuery.collation = collation === ORDER_ENUM.descending ? ORDER_ENUM.ascending : ORDER_ENUM.descending
                 } else {
@@ -369,6 +368,7 @@
                 }
                 localStorage.setItem('pipelineSortType', sortType)
                 localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
+
                 this.$router.push({
                     ...this.$route,
                     query: newSortQuery

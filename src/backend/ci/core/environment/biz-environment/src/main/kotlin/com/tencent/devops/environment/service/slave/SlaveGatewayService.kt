@@ -63,7 +63,7 @@ class SlaveGatewayService @Autowired constructor(
                 return it.showName
             }
         }
-        return I18nUtil.getCodeLanMessage(Zone.SHENZHEN.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+        return Zone.SHENZHEN.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
     fun getFileGateway(zoneName: String?): String? {

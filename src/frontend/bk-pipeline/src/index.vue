@@ -1,21 +1,25 @@
 <template>
-    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="bk-pipeline">
+    <draggable
+        v-model="computedStages"
+        v-bind="dragOptions"
+        :move="checkMove"
+        class="bk-pipeline"
+    >
         <Stage
             class="list-item"
-            v-for="(stage, index) in computedStage"
+            v-for="(stage, index) in computedStages"
+            :ref="stage.id"
             :key="stage.id"
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
             :is-exec-detail="isExecDetail"
-            :can-skip-element="canSkipElement"
             :has-finally-stage="hasFinallyStage"
             :stage-index="index"
-            :user-name="userName"
             :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
             :is-latest-build="isLatestBuild"
-            :stage-length="computedStage.length"
+            :stage-length="computedStages.length"
             :containers="stage.containers"
             :match-rules="matchRules"
             @[COPY_EVENT_NAME]="handleCopyStage"
@@ -28,10 +32,8 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import {
-        eventBus,
-        hashID
-    } from './util'
+    import { eventBus, hashID, isTriggerContainer } from './util'
+
     import {
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
@@ -60,7 +62,7 @@
         STAGE_RETRY,
         DEBUG_CONTAINER
     ]
-    
+
     export default {
         components: {
             Stage,
@@ -75,6 +77,10 @@
             isPreview: {
                 type: Boolean,
                 default: false
+            },
+            currentExecCount: {
+                type: Number,
+                default: 1
             },
             isExecDetail: {
                 type: Boolean,
@@ -105,6 +111,29 @@
                 default: () => []
             }
         },
+        provide () {
+            const reactiveData = {};
+            [
+                'currentExecCount',
+                'isPreview',
+                'userName',
+                'matchRules',
+                'editable',
+                'isExecDetail',
+                'isLatestBuild',
+                'canSkipElement',
+                'cancelUserId'
+            ].forEach((key) => {
+                Object.defineProperty(reactiveData, key, {
+                    enumerable: true,
+                    get: () => this[key]
+                })
+            })
+
+            return {
+                reactiveData
+            }
+        },
         data () {
             return {
                 DELETE_EVENT_NAME,
@@ -112,15 +141,18 @@
             }
         },
         computed: {
-            computedStage: {
+            computedStages: {
                 get () {
-                    return this.pipeline.stages
+                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
+                        isTrigger: this.checkIsTriggerStage(stage)
+                    })) ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
                         const name = `stage-${index + 1}`
                         const id = `s-${hashID()}`
-                        if (!stage.containers) { // container
+                        if (!stage.containers) {
+                            // container
                             return {
                                 id,
                                 name,
@@ -130,7 +162,7 @@
                         return stage
                     })
                     this.updatePipeline(this.pipeline, {
-                        stages: data
+                        stages: data.filter(stage => stage.containers.length)
                     })
                 }
             },
@@ -145,8 +177,8 @@
             },
             hasFinallyStage () {
                 try {
-                    const stageLength = this.computedStage.length
-                    const last = this.computedStage[stageLength - 1]
+                    const stageLength = this.computedStages.length
+                    const last = this.computedStages[stageLength - 1]
                     return last.finally
                 } catch (error) {
                     return false
@@ -177,12 +209,19 @@
         },
         methods: {
             registeCustomEvent (destory = false) {
-                customEvents.forEach(eventName => {
+                customEvents.forEach((eventName) => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
                     fn(eventName, (...args) => {
                         this.$emit(eventName, ...args)
                     })
                 })
+            },
+            checkIsTriggerStage (stage) {
+                try {
+                    return isTriggerContainer(stage.containers[0])
+                } catch (e) {
+                    return false
+                }
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)
@@ -196,49 +235,87 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = relatedelement.containers && relatedelement.containers[0]['@type'] === 'trigger'
+
+                const isTriggerStage = this.checkIsTriggerStage(relatedelement)
                 const isRelatedFinally = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinally && !isRelatedFinally
+                return (
+                    !isTrigger
+                    && !isRelatedTrigger
+                    && !isTriggerStage
+                    && !isFinally
+                    && !isRelatedFinally
+                )
             },
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
             },
-            handleDeleteStage (stageIndex) {
-                if (Number.isInteger(stageIndex)) {
-                    this.pipeline.stages.splice(stageIndex, 1)
-                }
+            handleDeleteStage (stageId) {
+                this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
+            },
+            expandPostAction (stageId, matrixId, containerId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        let jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                        if (matrixId) {
+                            jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox?.$refs[containerId]?.[0]
+                        }
+                        console.log(jobInstance, 'jobInstance')
+                        jobInstance?.$refs?.atomList?.expandPostAction?.()
+                        this.$nextTick(() => {
+                            resolve(true)
+                        })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
+            },
+            expandMatrix (stageId, matrixId, containerId) {
+                console.log('expandMatrix', stageId, matrixId, containerId)
+                return new Promise((resolve, reject) => {
+                    try {
+                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
+                        jobInstance?.toggleMatrixOpen?.(true)
+                        this.$nextTick(() => {
+                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(true)
+                            resolve(true)
+                        })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
             }
         }
     }
 </script>
 
 <style lang="scss">
-    .bk-pipeline {
-        display: flex;
-        padding-right: 120px;
-        width: fit-content;
-        position: relative;
-        align-items: flex-start;
-        ul,
-        li {
-            margin: 0;
-            padding: 0;
-        }
-    }
+.bk-pipeline {
+  display: flex;
+  padding-right: 120px;
+  width: fit-content;
+  position: relative;
+  align-items: flex-start;
+  ul,
+  li {
+    margin: 0;
+    padding: 0;
+  }
+}
 
-    .list-item {
-        transition: transform .2s ease-out;
-    }
+.list-item {
+  transition: transform 0.2s ease-out;
+}
 
-    .list-enter, .list-leave-to
+.list-enter, .list-leave-to
         /* .list-complete-leave-active for below version 2.1.8 */ {
-        opacity: 0;
-        transform: translateY(36px) scale(0, 1);
-    }
+  opacity: 0;
+  transform: translateY(36px) scale(0, 1);
+}
 
-    .list-leave-active {
-        position: absolute !important;
-    }
-
+.list-leave-active {
+  position: absolute !important;
+}
 </style>

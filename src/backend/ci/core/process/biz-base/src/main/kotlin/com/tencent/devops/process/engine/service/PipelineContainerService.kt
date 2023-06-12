@@ -562,6 +562,7 @@ class PipelineContainerService @Autowired constructor(
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
                                 "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -573,6 +574,7 @@ class PipelineContainerService @Autowired constructor(
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
                                 "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )

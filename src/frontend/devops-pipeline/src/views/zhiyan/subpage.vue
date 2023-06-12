@@ -16,7 +16,7 @@
 <script>
     import PipelineEdit from '../subpages/edit.vue'
     import PipelinePreview from '../subpages/preview.vue'
-    import PipelineExecDetail from '../subpages/exec_detail.vue'
+    import PipelineExecDetail from '../subpages/ExecDetail.vue'
 
     const COMPONENTS = {
         zyPipelinesEdit: PipelineEdit,

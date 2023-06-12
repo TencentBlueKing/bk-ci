@@ -18,7 +18,7 @@ import (
 
 // ConfigGit 配置Git
 func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
-	gitcache := "cache"
+	gitcache := "cache --timeout=1296000"
 	if cfg.WorkSpace.DebugEnable {
 		gitcache = "store"
 	}
@@ -50,6 +50,12 @@ func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
+			// 针对 git unset 命令 exit status 5 优化
+			if len(s) > 1 && s[0] == "--unset" {
+				if exiterr, ok := err.(*exec.ExitError); ok && exiterr.ExitCode() == 5 {
+					continue
+				}
+			}
 			logs.Warn("git config error", logs.Err(err))
 		}
 	}

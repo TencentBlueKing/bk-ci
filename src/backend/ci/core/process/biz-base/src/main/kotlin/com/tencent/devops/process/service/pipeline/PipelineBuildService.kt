@@ -106,6 +106,7 @@ class PipelineBuildService(
         buildNo: Int? = null,
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
+        webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null
     ): BuildId {
 
@@ -174,6 +175,7 @@ class PipelineBuildService(
                 currentBuildNo = buildNo,
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
+                webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
                 realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             )

@@ -51,7 +51,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
-                        v-bk-tooltips="viewName"
+                        v-bk-tooltips="{ content: viewName, delay: [300, 0] }"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -72,7 +72,7 @@
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
                                 ext-cls="pipeline-group-name-tag"
                                 :key="hiddenGroup"
-                                v-bk-tooltips="hiddenGroup"
+                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0] }"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
@@ -132,7 +132,7 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate">
+            <bk-table-column width="200" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
                 <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
@@ -172,7 +172,7 @@
                     {{ $t('apply') }}
                 </bk-button>
                 <template
-                    v-else-if="props.row.hasPermission"
+                    v-else-if="props.row.hasPermission && !props.row.delete"
                 >
                     <bk-button
                         text
@@ -292,16 +292,18 @@
             },
             sortField () {
                 const { sortType, collation } = this.$route.query
+                const prop = sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime
+                const order = collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 return {
-                    prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
-                    order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
+                    prop: this.getkeyByValue(PIPELINE_SORT_FILED, prop),
+                    order: this.getkeyByValue(ORDER_ENUM, order)
                 }
             }
         },
 
         watch: {
             '$route.params.viewId': function (viewId) {
-                this.clearSort()
+                this.$refs?.pipelineTable?.clearSort?.()
                 this.requestList({
                     viewId,
                     page: 1
@@ -309,6 +311,8 @@
             },
             sortField: function (newSortField, oldSortField) {
                 if (!isShallowEqual(newSortField, oldSortField)) {
+                    this.$refs?.pipelineTable?.clearSort?.()
+                    this.$refs?.pipelineTable?.sort?.(newSortField.prop, newSortField.order)
                     this.$nextTick(this.requestList)
                 }
             },
@@ -325,6 +329,9 @@
             this.requestList()
         },
         methods: {
+            getkeyByValue (obj, value) {
+                return Object.keys(obj).find(key => obj[key] === value)
+            },
             setRowCls ({ row }) {
                 const clsObj = {
                     'has-delete': row.delete,
@@ -413,9 +420,6 @@
                 if (res) {
                     this.refresh()
                 }
-            },
-            clearSort () {
-                this.$refs?.pipelineTable?.clearSort?.()
             },
             calcOverPos () {
                 const tagMargin = 6

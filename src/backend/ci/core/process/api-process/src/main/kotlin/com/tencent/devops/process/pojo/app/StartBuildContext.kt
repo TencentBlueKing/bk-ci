@@ -225,6 +225,7 @@ data class StartBuildContext(
             pipelineSetting: PipelineSetting? = null,
             realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
+            webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
@@ -274,7 +275,10 @@ data class StartBuildContext(
                 // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
                     ?.concurrencyGroup?.let {
-                        val tConcurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(params))
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        val tConcurrencyGroup = EnvUtils.parseEnv(
+                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
                     },

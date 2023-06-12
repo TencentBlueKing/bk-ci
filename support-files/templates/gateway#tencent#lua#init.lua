@@ -112,7 +112,8 @@ config = {
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         }
     },
-    openHttps = "__BKCI_OPEN_HTTPS__"
+    openHttps = "__BKCI_OPEN_HTTPS__",
+    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__"
 }
 
 require("init_common")
