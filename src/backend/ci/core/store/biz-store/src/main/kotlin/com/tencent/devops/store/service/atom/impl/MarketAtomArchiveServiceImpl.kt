@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -108,6 +107,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
+        logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
             return I18nUtil.generateResponseDataObject(
@@ -136,11 +136,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
             val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(
-                    atomRecord = atomRecord,
-                    releaseType = releaseType,
-                    osList = osList,
-                    version = version
-                )
+                atomRecord = atomRecord,
+                releaseType = releaseType,
+                osList = osList,
+                version = version
+            )
             logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
             if (validateAtomVersionResult.isNotOk()) {
                 return validateAtomVersionResult

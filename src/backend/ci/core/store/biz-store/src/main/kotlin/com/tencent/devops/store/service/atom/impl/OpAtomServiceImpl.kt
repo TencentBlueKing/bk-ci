@@ -70,6 +70,7 @@ import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
@@ -409,7 +410,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     atomCode = atomCode,
                     name = releaseInfo.name,
                     language = releaseInfo.language,
-                    frontendType = releaseInfo.configInfo.frontendType
+                    frontendType = releaseInfo.configInfo.frontendType,
+                    packageSourceType = PackageSourceTypeEnum.UPLOAD
                 )
             )
             if (addMarketAtomResult.isNotOk()) {
@@ -430,7 +432,7 @@ class OpAtomServiceImpl @Autowired constructor(
             val relativePath = logoUrlAnalysisResult.data
             val logoFile = File(
                 "$atomPath${File.separator}file" +
-                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
+                    "${File.separator}${relativePath?.removePrefix(File.separator)}"
             )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
