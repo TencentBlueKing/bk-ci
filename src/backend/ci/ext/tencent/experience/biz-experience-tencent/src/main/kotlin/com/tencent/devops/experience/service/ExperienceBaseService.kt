@@ -145,7 +145,8 @@ class ExperienceBaseService @Autowired constructor(
     ): List<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
-        val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
+        val redPointKey = ExperienceConstant.redPointKey(userId)
+        val redPointIds = redisOperation.getSetMembers(redPointKey) ?: emptySet()
         val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
             .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
 
@@ -173,6 +174,12 @@ class ExperienceBaseService @Autowired constructor(
                 redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
+
+        // 如果红点太多没有清理, 则自动帮用户清理掉,避免redis堆积
+        if (redPointIds.size > 1000) {
+            redisOperation.delete(redPointKey)
+        }
+
         return result
     }
 
