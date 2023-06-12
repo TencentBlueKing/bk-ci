@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.SECURITY
 import com.tencent.devops.common.api.constant.TEST
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonSchemaUtil
@@ -464,7 +465,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val propsMap = mutableMapOf<String, Any?>()
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
-        if (packagePath.isNullOrBlank()) {
+        if (convertUpdateRequest.frontendType == FrontendTypeEnum.HISTORY) {
             inputDataMap?.let { propsMap.putAll(inputDataMap) }
         } else {
             propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
