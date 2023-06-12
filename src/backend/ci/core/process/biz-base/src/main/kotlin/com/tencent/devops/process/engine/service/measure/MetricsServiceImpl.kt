@@ -118,7 +118,11 @@ class MetricsServiceImpl constructor(
             startUser = buildInfo.startUser,
             startTime = buildInfo.startTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
             endTime = DateTimeUtil.formatMilliTime(buildInfo.endTime!!, DateTimeUtil.YYYY_MM_DD_HH_MM_SS),
-            costTime = buildInfo.endTime!! - buildInfo.queueTime,
+            costTime = if (buildInfo.queueTime == 0L) {
+                buildInfo.queueTime
+            } else {
+                buildInfo.endTime!! - buildInfo.queueTime
+            },
             successFlag = buildInfo.status.isSuccess(),
             errorInfos = buildInfo.errorInfoList,
             stages = stageMetricsDatas,
