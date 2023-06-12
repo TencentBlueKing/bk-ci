@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -203,33 +202,22 @@ class PipelinePostElementService @Autowired constructor(
             if (originAtomElement.name.length > 128) originAtomElement.name.substring(0, 128)
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
-        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-        when (postCondition) {
-            "failed()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-            }
-            "always()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-            }
-            "canceledOrTimeOut()" -> {
-                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
-            }
+        val postAtomRunCondition = getPostAtomRunCondition(postCondition)
+        val additionalOptions = originAtomElement.additionalOptions
+        additionalOptions?.let {
+            additionalOptions.enable = true
+            additionalOptions.continueWhenFailed = true
+            additionalOptions.retryWhenFailed = false
+            additionalOptions.runCondition = postAtomRunCondition
+            additionalOptions.pauseBeforeExec = null
+            additionalOptions.subscriptionPauseUser = null
+            additionalOptions.retryCount = 0
+            additionalOptions.otherTask = null
+            additionalOptions.customCondition = null
+            additionalOptions.elementPostInfo = elementPostInfo
         }
-        val additionalOptions = ElementAdditionalOptions(
-            enable = true,
-            continueWhenFailed = true,
-            retryWhenFailed = false,
-            runCondition = postAtomRunCondition,
-            pauseBeforeExec = null,
-            subscriptionPauseUser = null,
-            customVariables = originAtomElement.additionalOptions?.customVariables,
-            retryCount = 0,
-            otherTask = null,
-            customCondition = null,
-            elementPostInfo = elementPostInfo
-        )
         // 生成post操作的element
-        val postElementName = "$postPrompt$elementName"
+        val postElementName = getPostElementName(elementName)
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
                 name = postElementName,
@@ -253,5 +241,27 @@ class PipelinePostElementService @Autowired constructor(
             marketBuildLessAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildLessAtomElement)
         }
+    }
+
+    fun getPostElementName(elementName: String): String {
+        return "$postPrompt$elementName"
+    }
+
+    fun getPostAtomRunCondition(postCondition: String): RunCondition {
+        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
+        when (postCondition) {
+            "failed()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            }
+
+            "always()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            }
+
+            "canceledOrTimeOut()" -> {
+                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
+            }
+        }
+        return postAtomRunCondition
     }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -70,11 +71,14 @@ class PipelineElementService @Autowired constructor(
         startParamsMap: MutableMap<String, BuildParameters>? = null,
         handlePostFlag: Boolean = true
     ) {
+        val watcher = Watcher(id = "fillElementWhenNewBuild#$pipelineId")
+        watcher.start("getTemplateIdByPipeline")
         val templateId = if (model.instanceFromTemplate == true) {
             templateService.getTemplateIdByPipeline(projectId, pipelineId)
         } else {
             null
         }
+        watcher.start("getMatchRuleList")
         val ruleMatchList = getMatchRuleList(projectId, pipelineId, templateId)
         val qualityRuleFlag = ruleMatchList.isNotEmpty()
         var beforeElementSet: List<String>? = null
@@ -87,6 +91,7 @@ class PipelineElementService @Autowired constructor(
             elementRuleMap = triple.third
         }
         val qaSet = setOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+        watcher.start("fillElement")
         model.stages.forEachIndexed { index, stage ->
             if (index == 0) {
                 return@forEachIndexed
@@ -170,6 +175,7 @@ class PipelineElementService @Autowired constructor(
                 container.elements = finalElementList
             }
         }
+        watcher.stop()
     }
 
     fun getMatchRuleList(projectId: String, pipelineId: String, templateId: String?): List<QualityRuleMatchTask> {
