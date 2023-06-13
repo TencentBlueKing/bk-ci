@@ -15,7 +15,7 @@ data class ThirdPartyDockerDebugInfo(
     @ApiModelProperty("工作空间")
     val workspace: String,
     @ApiModelProperty("流水线ID")
-    val pipelineId: String?,
+    val pipelineId: String,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,
     val options: DockerOptions?

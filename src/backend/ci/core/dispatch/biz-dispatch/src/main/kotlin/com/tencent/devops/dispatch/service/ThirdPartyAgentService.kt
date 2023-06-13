@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDi
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentDockerDebugDao
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
@@ -52,6 +54,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
 import com.tencent.devops.dispatch.utils.CommonUtils
@@ -68,12 +71,12 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -587,7 +590,7 @@ class ThirdPartyAgentService @Autowired constructor(
             val redisLock = ThirdPartyAgentDockerDebugLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
-                val debug = thirdPartyAgentDockerDebugDao.fetchOneQueueBuild(dslContext, agentId, buildType) ?: run {
+                val debug = thirdPartyAgentDockerDebugDao.fetchOneQueueBuild(dslContext, agentId) ?: run {
                     logger.debug("There is not docker debug by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
@@ -597,54 +600,143 @@ class ThirdPartyAgentService @Autowired constructor(
 
                 // 第三方构建机docker启动获取镜像凭据
                 val dockerInfo = if (debug.dockerInfo == null) {
-                    null
+                    logger.warn("There is no docker info debug by agent($agentId) project($projectId)")
+                    return AgentResult(AgentStatus.IMPORT_OK, null)
                 } else {
                     JsonUtil.getObjectMapper().readValue(
-                        build.dockerInfo.data(),
+                        debug.dockerInfo.data(),
                         object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
                     )
                 }
                 var errMsg: String? = null
-                var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
+                val buildDockerInfo: ThirdPartyBuildDockerInfo?
+
                 // 只有凭据ID的参与计算
-                if (dockerInfo != null) {
-                    if ((dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()) &&
-                        !(dockerInfo.credential?.credentialId.isNullOrBlank())
-                    ) {
-                        val (userName, password) = try {
-                            getTicket(projectId, dockerInfo.credential!!)
-                        } catch (e: Exception) {
-                            logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error", e)
-                            errMsg = e.message
-                            Pair(null, null)
-                        }
-                        dockerInfo.credential?.user = userName
-                        dockerInfo.credential?.password = password
+                if ((dockerInfo.credential?.user.isNullOrBlank() &&
+                            dockerInfo.credential?.password.isNullOrBlank()) &&
+                    !(dockerInfo.credential?.credentialId.isNullOrBlank())
+                ) {
+                    val (userName, password) = try {
+                        getTicket(projectId, dockerInfo.credential!!)
+                    } catch (e: Exception) {
+                        logger.error("$projectId agent docker debug get ticket ${dockerInfo.credential} error", e)
+                        errMsg = e.message
+                        Pair(null, null)
                     }
-                    buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
-                    buildDockerInfo.credential?.errMsg = errMsg
+                    dockerInfo.credential?.user = userName
+                    dockerInfo.credential?.password = password
                 }
+                buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                buildDockerInfo.credential?.errMsg = errMsg
 
                 return AgentResult(
                     AgentStatus.IMPORT_OK,
-                    ThirdPartyBuildInfo(
-                        projectId = build.projectId,
-                        buildId = build.buildId,
-                        vmSeqId = build.vmSeqId,
-                        workspace = build.workspace,
-                        pipelineId = build.pipelineId,
-                        dockerBuildInfo = buildDockerInfo,
-                        executeCount = build.executeCount,
-                        containerHashId = build.containerHashId
+                    ThirdPartyDockerDebugInfo(
+                        projectId = debug.projectId,
+                        buildId = debug.buildId,
+                        vmSeqId = debug.vmSeqId,
+                        workspace = debug.workspace,
+                        pipelineId = debug.pipelineId,
+                        image = buildDockerInfo.image,
+                        credential = buildDockerInfo.credential,
+                        options = buildDockerInfo.options
                     )
                 )
             } finally {
                 redisLock.unlock()
             }
         } catch (ignored: Throwable) {
-            logger.warn("Fail to start build for agent($agentId)", ignored)
+            logger.warn("Fail to start debug for agent($agentId)", ignored)
             throw ignored
+        }
+    }
+
+    fun startDockerDebugDone(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        debugInfo: ThirdPartyDockerDebugDoneInfo
+    ) {
+        val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
+        if (agentResult.isNotOk()) {
+            logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
+            throw NotFoundException("Fail to get the agent")
+        }
+        if (agentResult.data == null) {
+            logger.warn("Get the null third party agent($agentId)")
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        if (agentResult.data!!.secretKey != secretKey) {
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        thirdPartyAgentDockerDebugDao.updateStatus(
+            dslContext = dslContext,
+            buildId = debugInfo.buildId,
+            vmSeqId = debugInfo.vmSeqId,
+            debugUrl = debugInfo.debugUrl,
+            errMsg = debugInfo.error?.errorMessage,
+            status = if (!debugInfo.success) {
+                PipelineTaskStatus.FAILURE
+            } else {
+                PipelineTaskStatus.DONE
+            }
+        )
+    }
+
+    fun createThirdDockerDebugUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String {
+        logger.info("$userId start debug third agent docker pipeline: $pipelineId build: $buildId vmSeq:$vmSeqId")
+        // 根据是否传入buildId 查找agentId
+        val his: TDispatchThirdpartyAgentBuildRecord? = if (buildId.isNullOrBlank()) {
+            thirdPartyAgentBuildDao.getLastDockerBuild(dslContext, projectId, pipelineId, vmSeqId)
+        } else {
+            thirdPartyAgentBuildDao.getDockerBuild(dslContext, buildId, vmSeqId)
+        }
+
+        if (his == null || his.dockerInfo == null) {
+            throw ErrorCodeException(
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
+                defaultMessage = "Can not found debug container.",
+                params = arrayOf(pipelineId)
+            )
+        }
+
+        // 下发登录调试任务
+        val id = thirdPartyAgentDockerDebugDao.add(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = his.agentId,
+            pipelineId = pipelineId,
+            buildId = his.buildId,
+            vmSeqId = vmSeqId,
+            thirdPartyAgentWorkspace = his.workspace,
+            dockerInfo = his.dockerInfo
+        )
+
+        // 轮训等待调试任务完成
+        while (true) {
+            try {
+                Thread.sleep(THIRD_DOCKER_TASK_INTERVAL)
+            } catch (e: InterruptedException) {
+                logger.error("third agent docker wait error", e)
+            }
+            val record = thirdPartyAgentDockerDebugDao.getDoneDebugById(dslContext, id) ?: continue
+            if (record.status == PipelineTaskStatus.FAILURE.status) {
+                logger.error("get debug container url error id $id error ${record.errMsg}")
+                throw ErrorCodeException(
+                    errorCode = "${ErrorCodeEnum.DEBUG_CONTAINER_URL_ERROR.errorCode}",
+                    defaultMessage = "Get debug container url error.",
+                    params = arrayOf(record.errMsg)
+                )
+            }
+            return record.debugUrl
         }
     }
 
@@ -652,5 +744,7 @@ class ThirdPartyAgentService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
 
         private const val QUEUE_RETRY_COUNT = 3
+
+        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000; // 轮询间隔时间，单位为毫秒
     }
 }
