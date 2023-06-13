@@ -25,16 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 
-@ApiModel("插件配置信息")
-data class AtomConfigInfo(
-    @ApiModelProperty(value = "前端UI渲染方式", required = true)
-    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
-    @ApiModelProperty(value = "是否为默认插件", required = true)
-    val defaultFlag: Boolean = false
-)
+@Service
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
+class TxArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
+
+    @Autowired
+    private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+
+    override fun getBkRepoProjectId(): String {
+        return bkRepoStoreConfig.bkrepoStoreProjectName
+    }
+
+    override fun getBkRepoName(): String {
+        return BkRepoEnum.PLUGIN.repoName
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(
+            userId = bkRepoStoreConfig.bkrepoStoreUserName,
+            projectId = bkRepoStoreConfig.bkrepoStoreProjectName,
+            repoName = BkRepoEnum.PLUGIN.repoName,
+            path = atomCode
+        )
+    }
+}
