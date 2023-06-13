@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -62,7 +63,6 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_YAML_PATH
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -457,7 +457,7 @@ object PipelineVarUtil {
         val buildNo = buildParameters.firstOrNull { it.key == BUILD_NO || it.key == "BuildNo" }?.value?.toString()
             ?: return null
 
-        return CommonUtils.interceptStringInLength("$recommendVersionPrefix.$buildNo", MAX_VERSION_LEN)
+        return "$recommendVersionPrefix.$buildNo".coerceAtMaxLength(MAX_VERSION_LEN)
     }
 
     /**

@@ -32,27 +32,30 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PathParam
-import javax.ws.rs.QueryParam
 import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PROJECT"], description = "项目列表接口")
@@ -74,6 +77,20 @@ interface ServiceProjectResource {
     @Path("/getAllProject")
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
+
+    @POST
+    @Path("/listMigrateProjects/{offset}/{limit}")
+    @ApiOperation("条件迁移项目实体")
+    fun listMigrateProjects(
+        @ApiParam("条件迁移项目实体", required = false)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        @ApiParam("limit", required = true)
+        @PathParam("limit")
+        limit: Int,
+        @ApiParam("offset", required = true)
+        @PathParam("offset")
+        offset: Int
+    ): Result<List<ProjectWithPermission>>
 
     @POST
     @Path("/")
@@ -293,5 +310,16 @@ interface ServiceProjectResource {
         @ApiParam("权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}/updateProjectSubjectScopes")
+    @ApiOperation("修改项目最大可授权范围")
+    fun updateProjectSubjectScopes(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "ke", required = true)
+        subjectScopes: List<SubjectScopeInfo>
     ): Result<Boolean>
 }

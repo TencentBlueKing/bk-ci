@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ScmException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.common.pipeline.enums.SvnDepth
@@ -42,6 +43,8 @@ import com.tencent.devops.plugin.worker.task.scm.git.GithubPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.git.GitlabPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.svn.CodeSvnPullCodeSetting
 import com.tencent.devops.process.utils.PIPELINE_BUILD_SVN_REVISION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.CODE_REPO_PARAM_NOT_IN_PARAMS
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
@@ -116,11 +119,19 @@ object SCM {
         val repositoryType = RepositoryType.valueOf(taskParams[CodeSvnElement.REPO_TYPE] ?: RepositoryType.ID.name)
         val repositoryId = when (repositoryType) {
             RepositoryType.ID -> taskParams[CodeSvnElement.REPO_HASH_ID] ?: throw ScmException(
-                "代码仓库ID没存在参数中",
+                MessageUtil.getMessageByLocale(
+                    CODE_REPO_PARAM_NOT_IN_PARAMS,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf("ID")
+                ),
                 scmType.name
             )
             RepositoryType.NAME -> taskParams[CodeSvnElement.REPO_NAME] ?: throw ScmException(
-                "代码仓库名没存在参数中",
+                MessageUtil.getMessageByLocale(
+                    CODE_REPO_PARAM_NOT_IN_PARAMS,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf("name")
+                ),
                 scmType.name
             )
         }

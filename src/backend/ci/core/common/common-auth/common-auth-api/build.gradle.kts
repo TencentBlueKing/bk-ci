@@ -37,6 +37,5 @@ dependencies {
     api("org.apache.commons:commons-collections4")
     api("org.apache.httpcomponents:httpclient")
 //    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+    api("com.tencent.bk.sdk:iam-java-sdk")
 }

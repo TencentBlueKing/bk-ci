@@ -33,13 +33,14 @@ import com.tencent.devops.model.quality.tables.TQualityControlPoint
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
+import com.tencent.devops.quality.pojo.po.ControlPointPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -266,6 +267,21 @@ class QualityControlPointDao {
                 .where(ID.eq(id))
                 .and(CONTROL_POINT_HASH_ID.isNull)
                 .execute()
+        }
+    }
+
+    fun batchCrateControlPoint(dslContext: DSLContext, controlPointPOs: List<ControlPointPO>) {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            dslContext.batch(
+                controlPointPOs.map { controlPointPO ->
+                    dslContext.insertInto(this)
+                        .set(dslContext.newRecord(this, controlPointPO))
+                        .onDuplicateKeyUpdate()
+                        .set(NAME, controlPointPO.name)
+                        .set(STAGE, controlPointPO.stage)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                }
+            ).execute()
         }
     }
 }

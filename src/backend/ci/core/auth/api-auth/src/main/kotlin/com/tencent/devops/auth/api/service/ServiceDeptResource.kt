@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -66,4 +67,16 @@ interface ServiceDeptResource {
         @ApiParam("组织名称", required = true)
         deptName: String
     ): Result<DeptInfoVo?>
+
+    @GET
+    @Path("/getUserInfo")
+    @ApiOperation("获取单个用户信息")
+    fun getUserInfo(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String,
+        @QueryParam("name")
+        @ApiParam("用户名称", required = true)
+        name: String
+    ): Result<UserAndDeptInfoVo?>
 }

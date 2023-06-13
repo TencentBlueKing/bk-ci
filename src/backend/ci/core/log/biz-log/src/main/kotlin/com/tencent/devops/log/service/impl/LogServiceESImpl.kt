@@ -30,6 +30,7 @@ package com.tencent.devops.log.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.PageQueryLogs
@@ -40,6 +41,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
@@ -88,7 +90,8 @@ import kotlin.math.ceil
     "TooManyFunctions",
     "NestedBlockDepth",
     "LongMethod",
-    "ReturnCount"
+    "ReturnCount",
+    "ComplexMethod"
 )
 class LogServiceESImpl constructor(
     private val logClient: LogClient,
@@ -189,7 +192,6 @@ class LogServiceESImpl constructor(
     ): QueryLogs {
         return doQueryInitLogs(
             buildId = buildId,
-            index = indexService.getIndexName(buildId),
             debug = debug,
             logType = logType,
             tag = tag,
@@ -212,7 +214,8 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
         try {
             val query = getQuery(
                 buildId = buildId,
@@ -225,7 +228,7 @@ class LogServiceESImpl constructor(
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
             val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
-            val searchRequest = SearchRequest(indexService.getIndexName(buildId))
+            val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
                         .query(query)
@@ -273,7 +276,6 @@ class LogServiceESImpl constructor(
     ): QueryLogs {
         return doQueryLogsAfterLine(
             buildId = buildId,
-            index = indexService.getIndexName(buildId),
             start = start,
             debug = debug,
             logType = logType,
@@ -297,7 +299,6 @@ class LogServiceESImpl constructor(
     ): QueryLogs {
         return doQueryLogsBeforeLine(
             buildId = buildId,
-            index = indexService.getIndexName(buildId),
             end = end,
             debug = debug,
             logType = logType,
@@ -318,6 +319,8 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
+        val (_, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return Response.status(Response.Status.NOT_FOUND).build()
         val query = getQuery(
             buildId = buildId,
             debug = false,
@@ -329,7 +332,7 @@ class LogServiceESImpl constructor(
         )
 
         val scrollClient = logClient.hashClient(buildId)
-        val searchRequest = SearchRequest(indexService.getIndexName(buildId))
+        val searchRequest = SearchRequest(index)
             .source(
                 SearchSourceBuilder()
                     .query(query)
@@ -447,7 +450,14 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): PageQueryLogs {
-        var queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
+        var (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return PageQueryLogs(
+            buildId = queryLogs.buildId,
+            finished = queryLogs.finished,
+            timeUsed = queryLogs.timeUsed,
+            logs = null,
+            status = queryLogs.status
+        )
         var logSize = 0L
         try {
             queryLogs = doQueryInitLogsPage(
@@ -462,7 +472,7 @@ class LogServiceESImpl constructor(
                 pageSize = pageSize
             )
             logSize = getLogSize(
-                index = indexService.getIndexName(buildId),
+                index = index,
                 buildId = buildId,
                 debug = debug,
                 logType = logType,
@@ -522,8 +532,8 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
-        val index = indexService.getIndexName(buildId)
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
 
         val boolQuery = QueryBuilders.boolQuery()
         if (page != -1 && pageSize != -1) {
@@ -584,22 +594,9 @@ class LogServiceESImpl constructor(
         size: Int
     ): QueryLogs {
         logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(
-            buildId = buildId,
-            tag = jobId,
-            subTag = null,
-            jobId = null,
-            executeCount = executeCount
-        ) else getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        val queryLogs = QueryLogs(buildId, logStatus)
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
         try {
-            val index = indexService.getIndexName(buildId)
             val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
@@ -651,7 +648,6 @@ class LogServiceESImpl constructor(
 
     private fun doQueryInitLogs(
         buildId: String,
-        index: String,
         debug: Boolean,
         logType: LogType?,
         tag: String? = null,
@@ -659,8 +655,8 @@ class LogServiceESImpl constructor(
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
-
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
         try {
             val logSize = getLogSize(
                 index = index,
@@ -719,7 +715,6 @@ class LogServiceESImpl constructor(
 
     private fun doQueryLogsAfterLine(
         buildId: String,
-        index: String,
         start: Long,
         debug: Boolean,
         logType: LogType?,
@@ -728,8 +723,8 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
-
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
             val logSize = getLogSize(
@@ -814,7 +809,6 @@ class LogServiceESImpl constructor(
 
     private fun doQueryLogsBeforeLine(
         buildId: String,
-        index: String,
         end: Long,
         size: Int,
         debug: Boolean,
@@ -824,7 +818,8 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
             val logSize = getLogSize(
@@ -930,41 +925,33 @@ class LogServiceESImpl constructor(
         tag: String?,
         subTag: String?,
         executeCount: Int?
-    ): QueryLogs {
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
-        val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
-        return QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
-    }
-
-    private fun getLogStatus(
-        buildId: String,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Boolean {
-        return logStatusService.isFinish(
+    ): Pair<QueryLogs, String?> {
+        val finished = logStatusService.isFinish(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
+        )
+        val indexName = indexService.getBuildIndexName(buildId)
+        val (status, msg) = if (indexName.isNullOrBlank() || !isExistIndex(buildId, indexName)) {
+            Pair(
+                LogStatus.CLEAN,
+                I18nUtil.getCodeLanMessage(LOG_INDEX_HAS_BEEN_CLEANED)
+            )
+        } else {
+            Pair(LogStatus.SUCCEED, null)
+        }
+        val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
+        return Pair(
+            QueryLogs(
+                buildId = buildId,
+                finished = finished,
+                status = status.status,
+                subTags = subTags,
+                message = msg
+            ),
+            indexName
         )
     }
 

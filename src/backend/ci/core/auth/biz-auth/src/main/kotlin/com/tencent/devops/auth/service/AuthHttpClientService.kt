@@ -29,10 +29,12 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.service.BkTag
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -51,7 +53,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class AuthHttpClientService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val jwtManager: JwtManager
+    private val jwtManager: JwtManager,
+    private val bkTag: BkTag
 ) {
     fun requestForResponse(
         request: Request,
@@ -123,8 +126,13 @@ class AuthHttpClientService @Autowired constructor(
 
     fun buildPost(path: String, requestBody: RequestBody, gateway: String, token: String?): Request {
         val url = gateway + path
-        logger.info("iam callback url: $url")
-        return Request.Builder().url(url).post(requestBody).headers(buildJwtAndToken(token).toHeaders()).build()
+        val tag = bkTag.getFinalTag()
+        logger.info("iam callback url: $url,tag:$tag")
+        return Request.Builder().url(url).post(requestBody)
+            .headers(buildJwtAndToken(token).toHeaders())
+            // 指定回调集群
+            .header(AUTH_HEADER_GATEWAY_TAG, tag)
+            .build()
     }
 
     private fun buildJwtAndToken(iamToken: String?): Map<String, String> {

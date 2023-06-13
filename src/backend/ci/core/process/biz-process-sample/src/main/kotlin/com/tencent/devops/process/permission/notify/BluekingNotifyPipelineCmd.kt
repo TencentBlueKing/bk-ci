@@ -3,6 +3,7 @@ package com.tencent.devops.process.permission.notify
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.ExecutionVariables
@@ -68,7 +69,11 @@ class BluekingNotifyPipelineCmd @Autowired constructor(
             }
         }
 
-        val trigger = StartType.toReadableString(triggerType, channelCode)
+        val trigger = StartType.toReadableString(
+            triggerType,
+            channelCode,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         return ExecutionVariables(pipelineVersion = pipelineVersion,
             buildNum = buildNum,
             trigger = trigger,

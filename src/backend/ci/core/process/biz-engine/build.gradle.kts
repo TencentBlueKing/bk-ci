@@ -29,6 +29,6 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client"))
     api(project(":core:process:biz-base"))
-    api(project(":core:process:common-pipeline-yaml"))
+    api(project(":core:common:common-pipeline-yaml"))
     testImplementation(project(":core:common:common-test"))
 }
