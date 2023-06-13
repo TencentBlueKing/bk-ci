@@ -40,6 +40,8 @@ import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 
@@ -109,6 +111,26 @@ class BuildAgentBuildResourceImpl constructor(
     ): Result<Boolean> {
         checkParam(projectId, agentId, secretKey)
         thirdPartyAgentBuildService.workerBuildFinish(projectId, agentId, secretKey, buildInfo)
+        return Result(true)
+    }
+
+    override fun dockerStartDebug(
+        projectId: String,
+        agentId: String,
+        secretKey: String
+    ): AgentResult<ThirdPartyDockerDebugInfo?> {
+        checkParam(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.startDockerDebug(projectId, agentId, secretKey)
+    }
+
+    override fun dockerStartDebugDone(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        debugInfo: ThirdPartyDockerDebugDoneInfo
+    ): Result<Boolean> {
+        checkParam(projectId, agentId, secretKey)
+        thirdPartyAgentBuildService.startDockerDebugDone(projectId, agentId, secretKey, debugInfo)
         return Result(true)
     }
 
