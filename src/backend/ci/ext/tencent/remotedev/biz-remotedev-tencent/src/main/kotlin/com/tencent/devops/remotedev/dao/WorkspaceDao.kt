@@ -35,6 +35,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -140,7 +141,8 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String,
         unionShared: Boolean = true,
-        status: Set<WorkspaceStatus>? = null
+        status: Set<WorkspaceStatus>? = null,
+        systemType: WorkspaceSystemType? = null
     ): Long {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
@@ -153,6 +155,7 @@ class WorkspaceDao {
                         it.and(STATUS.`in`(status.map { s -> s.ordinal }))
                     }
                 }
+                .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
                 .let {
                     if (unionShared) it.unionAll(
                         DSL.selectCount().from(this).where(
@@ -163,7 +166,7 @@ class WorkspaceDao {
                                     )
                                 )
                             )
-                        )
+                        ).let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
                     ) else it
                 }
                 .fetch(0, Long::class.java).sum()
@@ -309,18 +312,19 @@ class WorkspaceDao {
             }
         }
     }
+
     fun updateWorkspaceDisplayName(
         dslContext: DSLContext,
         workspaceName: String,
         displayName: String? = ""
     ) {
         with(TWorkspace.T_WORKSPACE) {
-                dslContext.update(this)
-                    .set(DISPLAY_NAME, displayName)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                    .where(NAME.eq(workspaceName))
-                    .execute()
+            dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.eq(workspaceName))
+                .execute()
         }
     }
 

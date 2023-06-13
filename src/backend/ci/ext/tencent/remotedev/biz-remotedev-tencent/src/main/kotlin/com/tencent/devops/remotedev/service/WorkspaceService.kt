@@ -123,6 +123,7 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val bkTicketServie: BkTicketService,
+    private val whiteListService: WhiteListService,
     private val profile: Profile,
     private val commonConfig: RemoteDevCommonConfig
 ) {
@@ -203,6 +204,18 @@ class WorkspaceService @Autowired constructor(
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
         }
 
+        if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
+            whiteListService.numberLimit(
+                key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
+                id = userId,
+                value = workspaceDao.countUserWorkspace(
+                    dslContext = dslContext,
+                    userId = userId,
+                    unionShared = false,
+                    systemType = WorkspaceSystemType.WINDOWS_GPU)
+            )
+        }
+
         val bizId = MDC.get(TraceTag.BIZID)
         val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
@@ -236,8 +249,11 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 替换部分devfile内容，兼容使用老remoting的情况
-        if (!isImageInDefaultList(devfile.runsOn?.container?.image,
-                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet())) {
+        if (!isImageInDefaultList(
+                devfile.runsOn?.container?.image,
+                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
+            )
+        ) {
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }

@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.slf4j.LoggerFactory
@@ -30,5 +32,23 @@ class WhiteListService @Autowired constructor(
             }
         }
         return true
+    }
+
+    /* 有关数量的限制:
+        如果value大于指定key中id规定的数量，则抛出异常
+        如果没有白名单，则抛出异常
+        如果白名单中没有对应id，则抛出异常
+        */
+    fun numberLimit(key: String, id: String, value: Long) {
+        val limit = cacheService.hentries(key)?.get(id)?.toLong()
+        logger.info("numberLimit|$key|$id|$value|$limit")
+        if (limit != null && value < limit) {
+            // 没有达到限制，直接return
+            return
+        }
+        throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+            params = arrayOf("id($id) have a constraint on $key")
+        )
     }
 }
