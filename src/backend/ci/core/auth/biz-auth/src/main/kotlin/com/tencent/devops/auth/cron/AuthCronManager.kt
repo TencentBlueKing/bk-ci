@@ -139,8 +139,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthActionI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_ACTION_UPDATE_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth Action I18n")
                     val authActionI18nMap = mutableMapOf<String, String>()
@@ -156,12 +156,16 @@ class AuthCronManager @Autowired constructor(
                                 messageCode = "${it.action}.actionName",
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            authActionI18nMap[it.action] = actionName
+                            if (actionName.isNotBlank()) {
+                                authActionI18nMap[it.action] = actionName
+                            }
                         }
-                        authActionDao.updateActionName(
-                            dslContext = dslContext,
-                            authActionI18nMap = authActionI18nMap
-                        )
+                        if (authActionI18nMap.isNotEmpty()) {
+                            authActionDao.updateActionName(
+                                dslContext = dslContext,
+                                authActionI18nMap = authActionI18nMap
+                            )
+                        }
                         page ++
                     } while (actionRecordResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth Action I18n end")
@@ -174,8 +178,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthResourceTypeI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_RESOURCE_TYPE_UPDATE_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth resource type I18n")
                     var page = PageUtil.DEFAULT_PAGE
@@ -187,22 +191,30 @@ class AuthCronManager @Autowired constructor(
                             pageSize = PageUtil.DEFAULT_PAGE_SIZE
                         )
                         resourceTypeResult.forEach {
-                            it.name = MessageUtil.getMessageByLocale(
+                            val name = MessageUtil.getMessageByLocale(
                                 messageCode = it.resourceType + RESOURCE_TYPE_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.desc = MessageUtil.getMessageByLocale(
+                            val desc = MessageUtil.getMessageByLocale(
                                 messageCode = it.resourceType + RESOURCE_TYPE_DESC_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
+                            if (name.isNotBlank()) {
+                                it.name = name
+                            }
+                            if (desc.isNotBlank()) {
+                                it.desc = desc
+                            }
                             it.updateTime = LocalDateTime.now()
                             it.updateUser = SYSTEM
                             authResourceTypes.add(it)
                         }
-                        authResourceTypeDao.batchUpdateAuthResourceType(
-                            dslContext = dslContext,
-                            authActionResourceTypes = authResourceTypes
-                        )
+                        if (authResourceTypes.isNotEmpty()) {
+                            authResourceTypeDao.batchUpdateAuthResourceType(
+                                dslContext = dslContext,
+                                authActionResourceTypes = authResourceTypes
+                            )
+                        }
                         page++
                     } while (resourceTypeResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth resource type I18n end")
@@ -215,8 +227,8 @@ class AuthCronManager @Autowired constructor(
 
     private fun updateAuthResourceGroupConfigI18n() {
         val redisLock = RedisLock(redisOperation, AUTH_RESOURCE_TYPE_GROUP_CONFIG_LOCK, expiredTimeInSeconds)
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init auth resource group config type I18n")
                     val authAuthResourceGroupConfigs = mutableListOf<TAuthResourceGroupConfigRecord>()
@@ -228,23 +240,31 @@ class AuthCronManager @Autowired constructor(
                             pageSize = PageUtil.DEFAULT_PAGE_SIZE
                         )
                         resourceGroupConfigResult.forEach {
-                            it.groupName = MessageUtil.getMessageByLocale(
+                            val groupName = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
                                         AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
-                            it.description = MessageUtil.getMessageByLocale(
+                            val description = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
                                         AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
+                            if (groupName.isNotBlank()) {
+                                it.groupName = groupName
+                            }
+                            if (description.isNotBlank()) {
+                                it.description = description
+                            }
                             it.updateTime = LocalDateTime.now()
                             authAuthResourceGroupConfigs.add(it)
                         }
-                        authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
-                            dslContext,
-                            authAuthResourceGroupConfigs
-                        )
+                        if (authAuthResourceGroupConfigs.isNotEmpty()) {
+                            authResourceGroupConfigDao.batchUpdateAuthResourceGroupConfig(
+                                dslContext,
+                                authAuthResourceGroupConfigs
+                            )
+                        }
                         page++
                     } while (resourceGroupConfigResult.size == PageUtil.DEFAULT_PAGE)
                     logger.info("init auth resource group config I18n end")

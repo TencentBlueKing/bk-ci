@@ -46,8 +46,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX
-import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AUTH_SECRECY
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT_APPLICATION
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
@@ -143,12 +141,7 @@ class PermissionGradeManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
-
-        val description = I18nUtil.getCodeLanMessage(
-            messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
-                    AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
-            defaultMessage = manageGroupConfig.description
-        )
+        val description = manageGroupConfig.description
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
@@ -172,13 +165,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorization_scopes(authorizationScopes)
                 .subject_scopes(subjectScopes)
                 .sync_perm(true)
-                .groupName(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
-                                AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
-                        defaultMessage = manageGroupConfig.description
-                    )
-                )
+                .groupName(manageGroupConfig.groupName)
                 .build()
             logger.info("create grade manager|$name|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
@@ -208,13 +195,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = "${manageGroupConfig.resourceType}.${manageGroupConfig.groupCode}" +
-                                ".authResourceGroupConfig.groupName",
-                        defaultMessage = manageGroupConfig.groupName
-                    )
-                )
+                .groupName(manageGroupConfig.groupName)
                 .applicant(userId)
                 .reason(
                     IamGroupUtils.buildItsmDefaultReason(
@@ -299,13 +280,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                                ".authResourceGroupConfig.groupName",
-                        defaultMessage = groupConfig.groupName
-                    )
-                )
+                .groupName(groupConfig.groupName)
                 .build()
             logger.info("update grade manager|$name|${gradeManagerDetail.members}")
             iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
@@ -334,13 +309,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
-                .groupName(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                                ".authResourceGroupConfig.groupName",
-                        defaultMessage = groupConfig.groupName
-                    )
-                )
+                .groupName(groupConfig.groupName)
                 .applicant(projectApprovalInfo.updator)
                 .members(gradeManagerDetail.members)
                 .reason(
@@ -402,16 +371,8 @@ class PermissionGradeManagerService @Autowired constructor(
             if (resourceGroupInfo != null) {
                 return@forEach
             }
-            val name = I18nUtil.getCodeLanMessage(
-                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                        ".authResourceGroupConfig.groupName",
-                defaultMessage = groupConfig.groupName
-            )
-            val description = I18nUtil.getCodeLanMessage(
-                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
-                        ".authResourceGroupConfig.description",
-                defaultMessage = groupConfig.description
-            )
+            val name = groupConfig.groupName
+            val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
