@@ -213,3 +213,13 @@ type ImageDebug struct {
 	Credential Credential    `json:"credential"`
 	Options    DockerOptions `json:"options"`
 }
+
+type ImageDebugFinish struct {
+	ProjectId  string `json:"projectId"`
+	BuildId    string `json:"buildId"`
+	VmSeqId    string `json:"vmSeqId"`
+	PipelineId string `json:"pipelineId"`
+	DebugUrl   string `json:"debugUrl"`
+	Success    bool   `json:"success"`
+	Error      *Error `json:"error"`
+}

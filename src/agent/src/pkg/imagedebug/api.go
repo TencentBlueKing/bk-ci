@@ -46,28 +46,15 @@ func InitRouter(ctx context.Context, b Manager, conf *ConsoleProxyConfig, errorC
 		Handler:     mux,
 		BaseContext: func(net.Listener) context.Context { return ctx },
 	}
-	// if r.conf.ServCert.IsSSL {
-	// tlsConf, err := ssl.ServerTslConf(r.conf.ServCert.CAFile, r.conf.ServCert.CertFile, r.conf.ServCert.KeyFile,
-	// 	r.conf.ServCert.CertPasswd)
-	// if err != nil {
-	// 	logs.Error("fail to load certfile, err:%s", logs.Err(err))
-	// 	return
-	// }
-	// s.TLSConfig = tlsConf
-	// logs.Infof("Start https service on(%s:%d)", r.conf.Address, r.conf.Port)
-	// go func() {
-	// 	err := s.ListenAndServeTLS("", "")
-	// 	fmt.Printf("tls server failed: %v\n", err)
-	// }()
-	// } else {
+
 	imageDebugLogs.Infof("Start http service on(%s:%d)", r.conf.Address, r.conf.Port)
+
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
 			errorChan <- err
 		}
 	}()
-	// }
 	return s
 }
 

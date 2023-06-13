@@ -142,6 +142,10 @@ func WithField(key string, value interface{}) *logrus.Entry {
 	return Logs.WithField(key, value)
 }
 
+func WithError(err error) *logrus.Entry {
+	return Logs.WithError(err)
+}
+
 // TODO: 删掉自己的format全部改用原生logrus的格式
 func formatLog(f interface{}, v ...interface{}) string {
 	var msg string

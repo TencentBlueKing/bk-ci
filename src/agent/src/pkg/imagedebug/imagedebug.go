@@ -48,11 +48,41 @@ func DoPullAndDebug() {
 			continue
 		}
 
-		// TODO: 接受登录调试任务
+		// 接受登录调试任务
+		debugInfo, err := getDebugTask()
+		if err != nil {
+			imageDebugLogs.WithError(err).Error("get image deubg failed, retry, err")
+			continue
+		}
 
 		// 启动登录调试
-		go doImageDebug(nil)
+		go doImageDebug(debugInfo)
 	}
+}
+
+// getDebugTask 从服务器认领要登录调试的信息
+func getDebugTask() (*api.ImageDebug, error) {
+	result, err := api.PullDockerDebugTask()
+	if err != nil {
+		return nil, err
+	}
+
+	if result.IsNotOk() {
+		logs.Error("get build info failed, message", result.Message)
+		return nil, errors.New("get build info failed")
+	}
+
+	if result.Data == nil {
+		return nil, nil
+	}
+
+	debugInfo := new(api.ImageDebug)
+	err = util.ParseJsonToData(result.Data, debugInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return debugInfo, nil
 }
 
 func doImageDebug(debugInfo *api.ImageDebug) {
@@ -72,8 +102,16 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 	// 启动登录调试
 	group.Go(func() error { return CreateExecServer(ctx, debugInfo, containerReady, debugDone) })
 
+	// 上报结束并附带错误信息
 	if err := group.Wait(); err != nil {
-		// TODO: 上报结束并附带错误信息
+		_, err2 := api.FinishDockerDebug(debugInfo, false, "", &api.Error{
+			ErrorType:    api.DockerImageDebugErrorEnum.Type,
+			ErrorMessage: i18n.Localize("DockerImageDebugError", map[string]interface{}{"err": err.Error()}),
+			ErrorCode:    api.DockerImageDebugErrorEnum.Code,
+		})
+		if err2 != nil {
+			imageDebugLogs.WithError(err).Error("post image debug url error")
+		}
 	}
 }
 
@@ -427,8 +465,12 @@ func CreateExecServer(
 
 	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.AgentIp, conf.Port, exec.ID, containerId)
 
-	// TODO: 上报url
+	// 上报结束并附带 url
 	imageDebugLogs.Infof("ws url: %s", url)
+	_, err = api.FinishDockerDebug(debugInfo, true, url, nil)
+	if err != nil {
+		imageDebugLogs.WithError(err).Error("post image debug url error")
+	}
 
 	select {
 	case <-debugDone:
