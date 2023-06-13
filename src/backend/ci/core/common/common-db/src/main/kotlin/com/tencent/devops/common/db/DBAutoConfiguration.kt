@@ -52,7 +52,7 @@ import javax.sql.DataSource
 @Configuration
 @PropertySource("classpath:/common-db.properties")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnMissingClass("com.tencent.devops.AccessoriesJooqConfiguration")
+@ConditionalOnMissingClass("com.tencent.devops.accessories.AccessoriesJooqConfiguration")
 @AutoConfigureBefore(DataSourceAutoConfiguration::class, JooqAutoConfiguration::class)
 @Import(DBBaseConfiguration::class)
 @EnableTransactionManagement
