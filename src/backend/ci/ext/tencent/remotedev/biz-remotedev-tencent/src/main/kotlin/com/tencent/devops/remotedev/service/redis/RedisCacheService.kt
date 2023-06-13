@@ -32,9 +32,16 @@ class RedisCacheService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
+    private val redisCacheHash = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Map<String, String>?> { key -> redisOperation.hentries(key) }
+
     fun get(key: String) = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
+
+    fun hentries(key: String) = redisCacheHash.get(key)
 
     fun saveWorkspaceDetail(
         workspaceName: String,
