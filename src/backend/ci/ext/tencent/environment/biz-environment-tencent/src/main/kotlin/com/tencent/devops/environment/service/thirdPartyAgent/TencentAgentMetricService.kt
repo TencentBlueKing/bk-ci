@@ -157,6 +157,10 @@ class TencentAgentMetricService @Autowired constructor(
     }
 
     private fun sendMetric(tableName: String?, data: List<AgentTelegrafData>) {
+        if (data.isEmpty()) {
+            return
+        }
+
         val topicName = when (tableName) {
             AGENT_TELEGRAF_CPU_DETAIL -> agentMetricCpuDetailTopic
             AGENT_TELEGRAF_NET -> agentMetricNetTopic
