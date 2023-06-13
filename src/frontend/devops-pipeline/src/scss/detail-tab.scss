@@ -8,38 +8,7 @@
             .bk-tab-label-item {
                 position: relative;
 
-                &:not(.is-first)::before {
-                    position: absolute;
-                    content: '';
-                    width: 1px;
-                    height: 16px;
-                    background-color: #C4C6CC;
-                    top: 13px;
-                    left: 0;
-                }
 
-                &.is-last::after {
-                    position: absolute;
-                    content: '';
-                    width: 1px;
-                    height: 16px;
-                    background-color: #C4C6CC;
-                    top: 13px;
-                    right: 0;
-                }
-
-                &.active {
-                    background-color: white;
-                    border-radius: 4px 4px 0 0;
-
-                    &::before,
-                    &::after {
-                        background-color: white;
-                    }
-                }
-                &.active + ::before {
-                    display: none;
-                }
             }
         }
     }

@@ -925,7 +925,7 @@
     position: fixed;
     bottom: 0;
     left: 24px;
-    right: 24px;
+    right: 34px;
     overflow: hidden;
     will-change: auto;
     max-height: 30vh;
