@@ -116,7 +116,7 @@
             isDefaultDiff ({ key, value }) {
                 const defaultValue = this.defaultParamMap[key]
                 if (typeof defaultValue === 'boolean') {
-                    return defaultValue.toString() === value.toString()
+                    return defaultValue.toString() !== value.toString()
                 }
                 return defaultValue !== value
             },
@@ -140,7 +140,7 @@
                 const canvas = document.createElement('canvas')
                 const context = canvas.getContext('2d')
                 const { width } = context.measureText(text)
-                return width > 183
+                return width > 282
             }
         }
     }
@@ -180,12 +180,12 @@
         font-size: 12px;
         height: 42px;
         line-height: 42px;
-        width: 280px;
+        width: 382px;
         padding: 0 16px;
         &:first-child {
           color: #313238;
           background-color: #fafbfd;
-          width: 160px;
+          width: 218px;
         }
         > .icon-question-circle {
           margin-left: auto;
