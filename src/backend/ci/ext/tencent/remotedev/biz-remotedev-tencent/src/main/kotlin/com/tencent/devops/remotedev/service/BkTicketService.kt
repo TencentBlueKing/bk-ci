@@ -132,7 +132,7 @@ class BkTicketService @Autowired constructor(
         if (ticket.isBlank()) {
             return false
         }
-        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
+        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_token=$ticket")
                     else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
         val request = Request.Builder()
             .url(url)
@@ -156,8 +156,8 @@ class BkTicketService @Autowired constructor(
                 val contentMap = JsonUtil.toMap(content)
                 val dataMap = contentMap["data"] as Map<*, *>
                 logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
-                val status = contentMap["ret"]
-                return (status == 0) && (dataMap["username"].toString() == userId)
+                val result = if (isOffshore) (contentMap["result"] is Boolean) else (contentMap["ret"] == 0)
+                return result && (dataMap["username"].toString() == userId)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
