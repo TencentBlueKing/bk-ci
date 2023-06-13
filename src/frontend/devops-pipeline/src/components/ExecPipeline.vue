@@ -124,9 +124,9 @@
                         </bk-link>
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
-
                         <bk-table
-                            max-height="calc(30vh - 42px)"
+                            height="calc(100% - 42px)"
+                            ext-cls="error-popup-table"
                             :data="errorList"
                             :border="false"
                             @row-click="(row) => setAtomLocate(row)"
@@ -136,9 +136,7 @@
                                 <div slot-scope="props" class="exec-error-type-cell">
                                     <span class="exec-error-locate-icon">
                                         <Logo
-                                            v-if="
-                                                activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
-                                            "
+                                            v-if="isActiveErrorAtom(props.row)"
                                             name="location-right"
                                             size="18"
                                         />
@@ -505,6 +503,9 @@
                     ]
 
                 )
+            },
+            isActiveErrorAtom (atom) {
+                return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
             },
             isSkip (status) {
                 return ['SKIP'].includes(status)
@@ -942,6 +943,9 @@
         padding: 0;
         position: static;
       }
+    }
+    .error-popup-table {
+        max-height: calc(30vh - 42px);
     }
     .toggle-error-popup-icon {
         display: flex;
