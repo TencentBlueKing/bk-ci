@@ -77,7 +77,7 @@ spec:
             httpGet:
               path: /api/management/health/liveness
               port: http
-            initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
@@ -86,7 +86,7 @@ spec:
             httpGet:
               path: /api/management/health/readiness
               port: http
-            initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
