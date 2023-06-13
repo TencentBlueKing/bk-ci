@@ -47,11 +47,10 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 /**
  * v3权限策略迁移到rbac
@@ -105,6 +104,8 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_ENABLE = "project_enable"
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
+        // 过期用户增加5分钟
+        private const val EXPIRED_MEMBER_ADD_TIME = 5L
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
 
@@ -359,7 +360,7 @@ class MigrateV3PolicyService constructor(
         members?.forEach member@{ member ->
             // 已过期用户,迁移时无法添加到用户组成员,增加5分钟添加到iam就过期，方便用户续期
             val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
-                DateTimeUtil.getFutureDateFromNow(Calendar.MINUTE, 5).time / MILLISECOND
+                System.currentTimeMillis() / MILLISECOND + TimeUnit.MINUTES.toSeconds(EXPIRED_MEMBER_ADD_TIME)
             } else {
                 member.expiredAt
             }
