@@ -39,7 +39,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
-@Path("/user/websocket/sessions")
+@Path("/{apiType:user|desktop}/websocket/sessions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.TEXT_PLAIN)
 interface UserWebsocketResource {
