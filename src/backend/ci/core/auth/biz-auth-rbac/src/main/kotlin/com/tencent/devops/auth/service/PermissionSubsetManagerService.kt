@@ -34,6 +34,8 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -42,6 +44,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,7 +90,11 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceCode = resourceCode,
             resourceName = resourceName
         )
-        val description = managerGroupConfig.description
+        val description = I18nUtil.getCodeLanMessage(
+            messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
+                    AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
+            defaultMessage = managerGroupConfig.description
+        )
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
@@ -105,7 +112,13 @@ class PermissionSubsetManagerService @Autowired constructor(
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
             .syncPerm(syncPerm)
-            .groupName(managerGroupConfig.groupName)
+            .groupName(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                    defaultMessage = managerGroupConfig.groupName
+                )
+            )
             .build()
         return iamV2ManagerService.createSubsetManager(
             gradeManagerId,
@@ -156,7 +169,13 @@ class PermissionSubsetManagerService @Autowired constructor(
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
             .syncPerm(syncPerm)
-            .groupName(managerGroupConfig.groupName)
+            .groupName(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${managerGroupConfig.resourceType}.${managerGroupConfig.groupCode}" +
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                    defaultMessage = managerGroupConfig.groupName
+                )
+            )
             .build()
         iamV2ManagerService.updateSubsetManager(
             subsetManagerId,
@@ -234,8 +253,16 @@ class PermissionSubsetManagerService @Autowired constructor(
             if (resourceGroupInfo != null) {
                 return@forEach
             }
-            val name = groupConfig.groupName
-            val description = groupConfig.description
+            val name = I18nUtil.getCodeLanMessage(
+                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                        AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                defaultMessage = groupConfig.groupName
+            )
+            val description = I18nUtil.getCodeLanMessage(
+                messageCode = "${groupConfig.resourceType}.${groupConfig.groupCode}" +
+                        AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
+                defaultMessage = groupConfig.description
+            )
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateSubsetRoleGroup(subsetManagerId, managerRoleGroupDTO)
