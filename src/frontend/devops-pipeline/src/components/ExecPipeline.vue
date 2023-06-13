@@ -323,21 +323,22 @@
             },
             errorsTableColumns () {
                 return [
+                    // {
+                    //     label: this.$t('details.pipelineErrorType'),
+                    //     prop: 'errorTypeAlias',
+                    //     width: 150
+                    // },
                     {
-                        label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorTypeAlias',
-                        width: 150
+                        label: this.$t('details.pipelineErrorPos'),
+                        prop: 'taskName',
+                        width: 200
                     },
                     {
                         label: this.$t('details.pipelineErrorCode'),
                         prop: 'errorCode',
                         width: 150
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorPos'),
-                        prop: 'taskName',
-                        width: 200
                     }
+
                 ]
             },
             userName () {

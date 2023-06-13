@@ -60,6 +60,7 @@
         <section v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
             <iframe-report
                 v-if="isCustomizeReport"
+                :report-name="activeOutput.name"
                 :index-file-url="activeOutput.indexFileUrl"
             />
             <third-party-report
