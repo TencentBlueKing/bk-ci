@@ -31,6 +31,7 @@ enum class BuildType {
     WORKER,
     AGENT,
     MACOS,
+    MACOS_NEW,
     DOCKER;
 
     companion object {

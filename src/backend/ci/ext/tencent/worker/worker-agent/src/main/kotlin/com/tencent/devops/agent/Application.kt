@@ -38,11 +38,9 @@ import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
-import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
 import okhttp3.Response
@@ -103,74 +101,7 @@ fun main(args: Array<String>) {
         }
 
         BuildType.MACOS.name -> {
-            var startBuild = false
-            val gateyway = AgentEnv.getGateway()
-            val url = "http://$gateyway/dispatch-macos/gw/build/macos/startBuild"
-            println("url:$url")
-            val request = Request.Builder()
-                .url(url)
-                .header("Accept", "application/json")
-                .header("X-DEVOPS-BUILD-TYPE", "MACOS")
-                .get()
-                .build()
-
-            var xcodeVersion = ""
-            do {
-                try {
-                    OkhttpUtils.doHttp(request).use { resp ->
-                        val resoCode = resp.code
-                        val responseStr = resp.body!!.string()
-                        println("resoCode: $resoCode;responseStr:$responseStr")
-                        if (resoCode == 200) {
-                            val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
-
-                            // 将变量写入到property当中
-                            response.forEach { (key, value) ->
-                                when (key) {
-                                    "agentId" -> System.setProperty("devops.agent.id", value)
-                                    "secretKey" -> System.setProperty("devops.agent.secret.key", value)
-                                    "projectId" -> System.setProperty("devops.project.id", value)
-                                    "xcodeVersion" -> xcodeVersion = value
-                                }
-                            }
-                            startBuild = true
-                        } else {
-                            println("There is no build for this macos,sleep for 5s.")
-                        }
-                    }
-                    if (!startBuild) {
-                        Thread.sleep(5000)
-                    }
-                } catch (e: Exception) {
-                    println("Failed to connect to devops server.")
-                }
-            } while (!startBuild)
-            println("Start to run.")
-
-            println("Start to select xcode.")
-            // 选择XCODE版本
-            val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
-            val xcodeFile = File(xcodePath)
-            // 当指定XCode版本存在的时候，切换xcode
-            if (xcodeFile.exists() && xcodeFile.isDirectory) {
-                try {
-                    // 删除软链
-                    val rmCommand = "sudo rm -rf /Applications/Xcode.app"
-                    runCommand(rmCommand, rmCommand)
-                    // 新建软链
-                    val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  /Applications/Xcode.app"
-                    runCommand(lnCommand, lnCommand)
-                    // 选择xcode
-                    val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
-                    runCommand(selectCommand, selectCommand)
-                    println("End to select xcode:select Xcode_$xcodeVersion.app.")
-                } catch (e: Exception) {
-                    println("End to select xcode with error: $e")
-                }
-            } else {
-                println("End to select xcode:nothing to do.")
-            }
-
+            MacAgentEnv.initEnv()
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
                     variables: Map<String, String>,

@@ -27,6 +27,7 @@ spec:
         app.kubernetes.io/component: microservice
         app.kubernetes.io/name: dispatch-devcloud
     spec:
+      terminationGracePeriodSeconds: 80
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.dispatchDevcloud.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.hostAliases "context" $) | nindent 8 }}
