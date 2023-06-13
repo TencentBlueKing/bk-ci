@@ -37,7 +37,7 @@ if res.status ~= 200 then
 end
 
 --- 获取所有回复
-local responseBody = res:read_body()
+local responseBody = res.body
 --- 设置HTTP保持连接
 httpc:set_keepalive(60000, 5)
 
@@ -58,7 +58,7 @@ if result.code ~= "00" then
 end
 
 --- 设置用户信息
-local ticket=result.data
+local ticket = result.data
 ngx.header["x-devops-uid"] = ticket.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.exit(200)
