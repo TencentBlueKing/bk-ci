@@ -45,7 +45,11 @@
                         class="output-hover-icon"
                         :output="output"
                     />
-                    <i v-else-if="output.downloadable" class="output-hover-icon devops-icon icon-download"></i>
+                    <i
+                        v-else-if="output.downloadable"
+                        class="output-hover-icon devops-icon icon-download"
+                        @click.stop="downloadArtifact(output)"
+                    />
                 </li>
             </ul>
 
@@ -434,6 +438,19 @@
             },
             isThirdReport (reportType) {
                 return ['THIRDPARTY'].includes(reportType)
+            },
+            async downloadArtifact (output) {
+                try {
+                    const res = await this.requestDownloadUrl({
+                        projectId: this.$route.params.projectId,
+                        artifactoryType: output.artifactoryType,
+                        path: output.fullPath
+                    })
+
+                    window.open(res.url2, '_blank')
+                } catch (error) {
+                    console.error(error)
+                }
             }
         }
     }
