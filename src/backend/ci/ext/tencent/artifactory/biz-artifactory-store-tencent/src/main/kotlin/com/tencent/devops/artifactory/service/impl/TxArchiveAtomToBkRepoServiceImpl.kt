@@ -40,6 +40,15 @@ class TxArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
 
     @Autowired
     private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+
+    override fun getBkRepoProjectId(): String {
+        return bkRepoStoreConfig.bkrepoStoreProjectName
+    }
+
+    override fun getBkRepoName(): String {
+        return BkRepoEnum.PLUGIN.repoName
+    }
+
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
         bkRepoClient.delete(
             userId = bkRepoStoreConfig.bkrepoStoreUserName,

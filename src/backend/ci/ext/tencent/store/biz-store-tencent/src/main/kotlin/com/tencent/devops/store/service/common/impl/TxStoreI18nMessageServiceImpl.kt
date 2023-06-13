@@ -29,17 +29,20 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
-import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+
+    @Value("\${store.bkrepo.projectId:bk-store}")
+    private val bkrepoStoreProjectId: String = "bk-store"
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
@@ -73,8 +76,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
             return client.get(ServiceArtifactoryResource::class).getFileContent(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
-                repoName = REPO_NAME_PLUGIN,
+                projectId = bkrepoStoreProjectId,
+                repoName = BkRepoEnum.PLUGIN.repoName,
                 filePath = filePath
             ).data
         }
@@ -100,8 +103,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
             client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
-                repoName = REPO_NAME_PLUGIN,
+                projectId = bkrepoStoreProjectId,
+                repoName = BkRepoEnum.PLUGIN.repoName,
                 filePath = filePath
             ).data
         }

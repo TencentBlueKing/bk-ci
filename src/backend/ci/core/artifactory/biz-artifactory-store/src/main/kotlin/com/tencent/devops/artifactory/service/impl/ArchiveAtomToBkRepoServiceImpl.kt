@@ -1,10 +1,8 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
-import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
@@ -43,7 +41,7 @@ abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
             directoryFile = File(atomArchivePath),
             prefix = "${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR",
             directoryPath = atomArchivePath,
-            repoName = REPO_NAME_PLUGIN
+            repoName = getBkRepoName()
         )
         directoryIteration(
             directoryFile = File(frontendDir),
@@ -68,7 +66,7 @@ abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
-                    projectId = BKREPO_STORE_PROJECT_ID,
+                    projectId = getBkRepoProjectId(),
                     repoName = repoName,
                     path = path,
                     file = it
@@ -82,17 +80,17 @@ abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
         return try {
             bkRepoClient.downloadFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
-                repoName = REPO_NAME_PLUGIN,
+                projectId = getBkRepoProjectId(),
+                repoName = getBkRepoName(),
                 fullPath = filePath,
                 destFile = tmpFile
             )
             tmpFile.readText(Charsets.UTF_8)
-        } catch (e: NotFoundException) {
+        } catch (ignored: NotFoundException) {
             logger.warn("file[$filePath] not exists")
             ""
-        } catch (e: RemoteServiceException) {
-            logger.warn("download file[$filePath] error: $e")
+        } catch (ignored: RemoteServiceException) {
+            logger.warn("download file[$filePath] error: $ignored")
             ""
         } finally {
             tmpFile.delete()
@@ -105,6 +103,10 @@ abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
         File(atomArchivePath).deleteRecursively()
         File(frontendDir).deleteRecursively()
     }
+
+    abstract fun getBkRepoProjectId(): String
+
+    abstract fun getBkRepoName(): String
 
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveAtomToBkRepoServiceImpl::class.java)
