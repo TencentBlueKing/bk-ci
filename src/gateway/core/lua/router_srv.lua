@@ -38,6 +38,11 @@ if service_name == "bkrepo" then
     return
 end
 
+-- 服务合并
+if config.accessories and config.accessories[service_name] then
+    service_name = config.accessories[service_name]
+end
+
 -- 获取灰度设置
 local cache_tail = ""
 local ns_config = nil
