@@ -78,7 +78,7 @@ spec:
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
             - name: JAVA_TOOL_OPTIONS
-              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.artifactory.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.artifactory.jvm.heapPct }}
+              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.repository.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.repository.jvm.heapPct }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -97,7 +97,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
+            initialDelaySeconds: {{ .Values.repository.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -106,7 +106,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
+            initialDelaySeconds: {{ .Values.repository.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
