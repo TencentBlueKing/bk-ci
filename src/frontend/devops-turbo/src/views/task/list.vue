@@ -15,7 +15,7 @@
                     <h3 :class="['card-head', { 'disabled': !task.openStatus }]" @click="toggleShowCard(task)">
                         <p class="task-name">
                             <span class="g-turbo-deep-black-font name-desc" @click.stop="$router.push({ name: 'taskDetail', params: { id: task.planId } })">
-                                <span class="g-turbo-text-overflow plan-name">{{ task.planName }}</span>
+                                <span v-bk-overflow-tips class="g-turbo-text-overflow plan-name">{{ task.planName }}</span>
                                 <span class="name-detail">{{ task.engineName }}</span>
                             </span>
                             <span class="g-turbo-gray-font name-hash g-turbo-text-overflow">
