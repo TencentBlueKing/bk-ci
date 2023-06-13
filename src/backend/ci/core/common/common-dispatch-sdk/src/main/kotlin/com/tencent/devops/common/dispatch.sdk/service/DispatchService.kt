@@ -48,6 +48,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KE
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -195,7 +196,7 @@ class DispatchService constructor(
         }
     }
 
-    fun redispatch(event: PipelineAgentStartupEvent) {
+    fun redispatch(event: IPipelineEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }

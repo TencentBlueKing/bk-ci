@@ -36,6 +36,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -153,8 +154,12 @@ interface BuildListener {
         )
     }
 
-    fun retry(sleepTimeInMS: Int = 30000, retryTimes: Int = 3): Boolean {
-        val event = DispatcherContext.getEvent()
+    fun retry(
+        sleepTimeInMS: Int = 30000,
+        retryTimes: Int = 3,
+        pipelineEvent: IPipelineEvent? = null
+    ): Boolean {
+        val event = pipelineEvent ?: DispatcherContext.getEvent()
         if (event == null) {
             logger.warn("The event is empty")
             return false
