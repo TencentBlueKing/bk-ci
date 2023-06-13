@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
@@ -125,7 +125,7 @@ func cleanLogFile(timeBeforeInHours int) {
 	logs.Info("clean log file done")
 
 	// 清理docker构建记录
-	dockerLogDir := job.LocalDockerWorkSpaceDirName + "/logs"
+	dockerLogDir := job_docker.LocalDockerWorkSpaceDirName + "/logs"
 	dockerFiles, err := ioutil.ReadDir(dockerLogDir)
 	if err != nil {
 		logs.Warn("read docker log dir error: ", err.Error())

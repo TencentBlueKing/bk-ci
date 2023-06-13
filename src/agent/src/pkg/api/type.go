@@ -56,12 +56,12 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId         string         `json:"agentId"`
-	SecretKey       string         `json:"secretKey"`
-	Image           string         `json:"image"`
-	Credential      *Credential    `json:"credential"`
-	Options         *DockerOptions `json:"options"`
-	ImagePullPolicy string         `json:"imagePullPolicy"`
+	AgentId         string        `json:"agentId"`
+	SecretKey       string        `json:"secretKey"`
+	Image           string        `json:"image"`
+	Credential      Credential    `json:"credential"`
+	Options         DockerOptions `json:"options"`
+	ImagePullPolicy string        `json:"imagePullPolicy"`
 }
 
 type ImagePullPolicyEnum string
@@ -201,4 +201,25 @@ type LogMessage struct {
 	LogType      LogType `json:"logType"`
 	ExecuteCount *int    `json:"executeCount"`
 	SubTag       *string `json:"subTag"`
+}
+
+type ImageDebug struct {
+	ProjectId  string        `json:"projectId"`
+	BuildId    string        `json:"buildId"`
+	VmSeqId    string        `json:"vmSeqId"`
+	Workspace  string        `json:"workspace"`
+	PipelineId string        `json:"pipelineId"`
+	Image      string        `json:"image"`
+	Credential Credential    `json:"credential"`
+	Options    DockerOptions `json:"options"`
+}
+
+type ImageDebugFinish struct {
+	ProjectId  string `json:"projectId"`
+	BuildId    string `json:"buildId"`
+	VmSeqId    string `json:"vmSeqId"`
+	PipelineId string `json:"pipelineId"`
+	DebugUrl   string `json:"debugUrl"`
+	Success    bool   `json:"success"`
+	Error      *Error `json:"error"`
 }

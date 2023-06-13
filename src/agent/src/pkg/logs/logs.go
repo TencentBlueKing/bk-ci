@@ -8,13 +8,14 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var logs *logrus.Logger
+var Logs = log.WithFields(log.Fields{})
 
 func Init(filepath string, isDebug bool) error {
-	logInfo := logrus.New()
+	logInfo := log.WithFields(log.Fields{})
 
 	lumLog := &lumberjack.Logger{
 		Filename:   filepath,
@@ -23,26 +24,27 @@ func Init(filepath string, isDebug bool) error {
 		LocalTime:  true,
 	}
 
-	logInfo.Out = lumLog
+	logInfo.Logger.Out = lumLog
 
-	logInfo.SetFormatter(&MyFormatter{})
+	logInfo.Logger.SetFormatter(&MyFormatter{})
 
 	go DoDailySplitLog(filepath, lumLog)
 
 	if isDebug {
-		logInfo.SetLevel(logrus.DebugLevel)
+		logInfo.Logger.SetLevel(logrus.DebugLevel)
 	}
 
-	logs = logInfo
+	Logs = logInfo
 
 	return nil
 }
 
 // DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
-func DebugInit() {
-	logInfo := logrus.New()
-	logInfo.SetOutput(os.Stdout)
-	logs = logInfo
+func UNTestDebugInit() {
+	logInfo := log.WithFields(log.Fields{})
+	logInfo.Logger.SetOutput(os.Stdout)
+	logInfo.Logger.SetLevel(logrus.DebugLevel)
+	Logs = logInfo
 }
 
 type MyFormatter struct{}
@@ -97,45 +99,54 @@ func parseLevel(l logrus.Level) (string, error) {
 }
 
 func Info(f interface{}, v ...interface{}) {
-	logs.Info(formatLog(f, v...))
+	Logs.Info(formatLog(f, v...))
 }
 
 func Infof(format string, args ...interface{}) {
-	logs.Infof(format, args...)
+	Logs.Infof(format, args...)
 }
 
 func Warn(f interface{}, v ...interface{}) {
-	logs.Warn(formatLog(f, v...))
+	Logs.Warn(formatLog(f, v...))
 }
 
 func Warnf(format string, args ...interface{}) {
-	logs.Warnf(format, args...)
+	Logs.Warnf(format, args...)
 }
 
 func Error(f interface{}, v ...interface{}) {
-	logs.Error(formatLog(f, v...))
+	Logs.Error(formatLog(f, v...))
 }
 
 func Errorf(format string, args ...interface{}) {
-	logs.Errorf(format, args...)
+	Logs.Errorf(format, args...)
 }
 
 func Fatal(f interface{}, v ...interface{}) {
-	logs.Fatal(formatLog(f, v...))
+	Logs.Fatal(formatLog(f, v...))
 }
 
 func Fatalf(format string, args ...interface{}) {
-	logs.Fatalf(format, args...)
+	Logs.Fatalf(format, args...)
 }
 
 func Debug(args ...interface{}) {
-	logs.Debug(args...)
+	Logs.Debug(args...)
 }
 
 func Debugf(format string, args ...interface{}) {
-	logs.Debugf(format, args...)
+	Logs.Debugf(format, args...)
 }
 
+func WithField(key string, value interface{}) *logrus.Entry {
+	return Logs.WithField(key, value)
+}
+
+func WithError(err error) *logrus.Entry {
+	return Logs.WithError(err)
+}
+
+// TODO: 删掉自己的format全部改用原生logrus的格式
 func formatLog(f interface{}, v ...interface{}) string {
 	var msg string
 	switch f := f.(type) {

@@ -39,8 +39,13 @@ import (
 // MkBuildTmpDir 创建构建提供的临时目录
 func MkBuildTmpDir() (string, error) {
 	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
-	err := os.MkdirAll(tmpDir, os.ModePerm)
+	err := MkDir(tmpDir)
 	return tmpDir, err
+}
+
+func MkDir(dir string) error {
+	err := os.MkdirAll(dir, os.ModePerm)
+	return err
 }
 
 // Chmod windows go的win实现只有 0400 只读和 0600 读写的区分，所以这里暂时先和0666对比
