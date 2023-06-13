@@ -48,7 +48,7 @@ class WhiteListService @Autowired constructor(
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("id($id) have a constraint on $key")
+            params = arrayOf("User($id) not in the whiteList or exceeding the limit")
         )
     }
 }
