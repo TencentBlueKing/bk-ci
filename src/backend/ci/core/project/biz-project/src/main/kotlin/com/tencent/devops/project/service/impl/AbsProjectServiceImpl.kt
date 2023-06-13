@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -294,7 +295,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultProjectId = projectCode,
             createExtInfo = projectCreateExtInfo
         )
-        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
+        updateProjectProperties(
+            userId = userId,
+            projectCode = projectCode,
+            properties = projectCreateInfo.properties
+                ?: ProjectProperties(PipelineAsCodeSettings(true))
+        )
         return getByEnglishName(projectCode)
     }
 
@@ -740,11 +746,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
         offset: Int
     ): List<ProjectWithPermission> {
         return projectDao.listMigrateProjects(
             dslContext = dslContext,
+            migrateProjectConditionDTO = migrateProjectConditionDTO,
             limit = limit,
             offset = offset
         ).map {

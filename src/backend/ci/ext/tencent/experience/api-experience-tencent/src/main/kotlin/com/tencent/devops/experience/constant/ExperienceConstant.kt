@@ -39,5 +39,6 @@ object ExperienceConstant {
 
     /****************** 红点相关 ***********************/
     private const val RED_POINT_KEY = "experience:red:point"
+    const val RED_POINT_MAX_TIME = 60 * 60 * 24 * 30L // 30天
     fun redPointKey(userId: String) = "$RED_POINT_KEY:$userId"
 }

@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_APPLICATION_STATE_REQUIRED
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
@@ -827,8 +827,9 @@ class DocumentService {
     }
 
     private fun getI18n(code: String, params: Array<String>? = null): String {
-        return I18nUtil.getCodeLanMessage(
+        return MessageUtil.getMessageByLocale(
             messageCode = code,
+            language = "zh_CN",
             params = params
         )
     }

@@ -69,7 +69,7 @@ class BkTicketService @Autowired constructor(
         if (bkTicket.isBlank()) return false
         // 获取user的所有运行中的容器
         workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.RUNNING
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             updateBkTicket(userId, bkTicket, it.hostName)
@@ -103,8 +103,7 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                     )
                 }
 
@@ -121,8 +120,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                 )
             }
         }
@@ -152,8 +150,7 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                     )
                 }
                 val contentMap = JsonUtil.toMap(content)
@@ -171,8 +168,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("check user $userId ticket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                 )
             }
         }

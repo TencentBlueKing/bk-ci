@@ -77,6 +77,7 @@ data class BuildRecordContainer(
 ) {
     companion object {
 
+        @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stage: Stage,
             container: Container,
@@ -134,7 +135,10 @@ data class BuildRecordContainer(
                         taskSeq = index,
                         status = buildStatus?.name,
                         taskVar = mutableMapOf(),
-                        timestamps = mapOf()
+                        timestamps = mapOf(),
+                        elementPostInfo = element.additionalOptions?.elementPostInfo?.let { info ->
+                            if (info.parentElementId == element.id) null else info
+                        }
                     )
                 )
             }

@@ -106,8 +106,7 @@ class SshPublicKeysService @Autowired constructor(
         val userResult = client.get(ServiceTxUserResource::class).get(userId)
         if (userResult.isNotOk()) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.USER_NOT_EXISTS.errorCode,
-                defaultMessage = ErrorCodeEnum.USER_NOT_EXISTS.formatErrorMessage.format(userId)
+                errorCode = ErrorCodeEnum.USER_NOT_EXISTS.errorCode
             )
         }
     }

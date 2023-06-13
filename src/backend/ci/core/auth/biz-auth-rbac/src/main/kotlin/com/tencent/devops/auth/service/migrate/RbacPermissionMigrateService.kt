@@ -37,8 +37,10 @@ import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -52,12 +54,13 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
 
 /**
  * rbac迁移服务
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReturnCount")
 class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
@@ -75,7 +78,7 @@ class RbacPermissionMigrateService constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "allMembersName"
-        private val allToRbacExecutorService = Executors.newFixedThreadPool(2)
+        private val toRbacExecutorService = Executors.newFixedThreadPool(5)
         private val migrateProjectsExecutorService = Executors.newFixedThreadPool(5)
     }
 
@@ -84,6 +87,7 @@ class RbacPermissionMigrateService constructor(
 
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         logger.info("migrate $projectCodes auth from v3 to rbac")
+        if (projectCodes.isEmpty()) return true
         val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(
                 projectCodes = projectCodes.toSet()
@@ -98,8 +102,8 @@ class RbacPermissionMigrateService constructor(
         )
         val traceId = MDC.get(TraceTag.BIZID)
         projectCodes.forEach { projectCode ->
-            MDC.put(TraceTag.BIZID, traceId)
             migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
                 migrateToRbacAuth(
                     projectCode = projectCode,
                     migrateTaskId = 0,
@@ -112,6 +116,7 @@ class RbacPermissionMigrateService constructor(
 
     override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
         logger.info("migrate $projectCodes auth from v0 to rbac")
+        if (projectCodes.isEmpty()) return true
         // 1. 启动迁移任务
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
             projectCodes = projectCodes
@@ -131,31 +136,39 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun allToRbacAuth(): Boolean {
+        logger.info("start to migrate all project")
+        toRbacAuthByCondition(MigrateProjectConditionDTO())
+        return true
+    }
+
+    override fun toRbacAuthByCondition(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Boolean {
+        logger.info("start to migrate project by condition|$migrateProjectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
-        allToRbacExecutorService.submit {
+        toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 50
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
                 val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = migrateProjectConditionDTO,
                     limit = limit,
                     offset = offset
                 ).data ?: break
+                // 1.获取v0、v3项目
                 val v3MigrateProjectCodes =
                     migrateProjects.filter {
                         it.routerTag == null || it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
                     }.map { it.englishName }
-                logger.info("migrate all project to rbac|v3MigrateProjects:$v3MigrateProjectCodes")
+                logger.info("migrate project to rbac|v3MigrateProjects:$v3MigrateProjectCodes")
                 val v0MigrateProjectCodes =
                     migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
                         .map { it.englishName }
-                logger.info("migrate all project to rbac|v0MigrateProjects:$v0MigrateProjectCodes")
-                if (v3MigrateProjectCodes.isNotEmpty()) {
-                    v3ToRbacAuth(projectCodes = v3MigrateProjectCodes)
-                }
-                if (v0MigrateProjectCodes.isNotEmpty()) {
-                    v0ToRbacAuth(projectCodes = v0MigrateProjectCodes)
-                }
+                logger.info("migrate project to rbac|v0MigrateProjects:$v0MigrateProjectCodes")
+                // 2.迁移项目
+                v3ToRbacAuth(projectCodes = v3MigrateProjectCodes)
+                v0ToRbacAuth(projectCodes = v0MigrateProjectCodes)
                 offset += limit
             } while (migrateProjects.size == limit)
         }
@@ -318,7 +331,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -347,7 +362,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -386,6 +403,9 @@ class RbacPermissionMigrateService constructor(
             }
             is ErrorCodeException -> {
                 exception.defaultMessage
+            }
+            is CompletionException -> {
+                exception.cause?.message ?: exception.message
             }
             else -> {
                 exception.toString()

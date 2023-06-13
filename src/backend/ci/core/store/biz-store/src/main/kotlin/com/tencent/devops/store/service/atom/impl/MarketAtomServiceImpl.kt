@@ -1058,10 +1058,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         }
         // 删除仓库插件包文件
-        val initProjectCode =
-            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        ) ?: ""
         val deleteAtomFileResult =
-            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode!!, atomCode)
+            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode, atomCode)
         if (deleteAtomFileResult.isNotOk()) {
             return deleteAtomFileResult
         }
