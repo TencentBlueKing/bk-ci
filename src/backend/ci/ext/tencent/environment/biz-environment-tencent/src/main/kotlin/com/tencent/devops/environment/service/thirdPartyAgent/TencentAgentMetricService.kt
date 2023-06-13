@@ -110,13 +110,44 @@ class TencentAgentMetricService @Autowired constructor(
 
         when (jsonData) {
             is TelegrafMulData -> {
-                jsonData.metrics?.forEach {
-                    sendMetric(it)
+                // 将相同表单的聚合在一起
+                val tableMap = mutableMapOf<String, MutableList<AgentTelegrafData>>()
+                tableMap[AGENT_TELEGRAF_CPU_DETAIL] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_NET] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_MEM] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_IO] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_DISK] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_SWAP] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_LOAD] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_NETSTAT] = mutableListOf()
+                tableMap[AGENT_TELEGRAF_ENV] = mutableListOf()
+
+                jsonData.metrics?.forEach { metric ->
+                    val new = AgentTelegrafData(
+                        dimensions = metric.tags?.map { t -> t.key to t.value.toString() }?.toMap(),
+                        time = metric.timestamp,
+                        metrics = metric.fields
+                    )
+
+                    tableMap[metric.name]?.add(new)
+                }
+
+                tableMap.forEach { (table, list) ->
+                    sendMetric(table, list)
                 }
             }
 
             is TelegrafStandData -> {
-                sendMetric(jsonData)
+                sendMetric(
+                    jsonData.name,
+                    listOf(
+                        AgentTelegrafData(
+                            dimensions = jsonData.tags?.map { t -> t.key to t.value.toString() }?.toMap(),
+                            time = jsonData.timestamp,
+                            metrics = jsonData.fields
+                        )
+                    )
+                )
             }
         }
 
@@ -125,8 +156,8 @@ class TencentAgentMetricService @Autowired constructor(
         return true
     }
 
-    private fun sendMetric(data: TelegrafStandData) {
-        val topicName = when (data.name) {
+    private fun sendMetric(tableName: String?, data: List<AgentTelegrafData>) {
+        val topicName = when (tableName) {
             AGENT_TELEGRAF_CPU_DETAIL -> agentMetricCpuDetailTopic
             AGENT_TELEGRAF_NET -> agentMetricNetTopic
             AGENT_TELEGRAF_MEM -> agentMetricMemTopic
@@ -138,18 +169,13 @@ class TencentAgentMetricService @Autowired constructor(
             AGENT_TELEGRAF_ENV -> agentMetricEnvTopic
             else -> return
         }
-        val new = AgentTelegrafData(
-            dimensions = data.tags?.map { it.key to it.value.toString() }?.toMap(),
-            time = data.timestamp,
-            metrics = data.fields
-        )
 
         if (topicName.isNullOrBlank()) {
-            logger.error("${data.name}'s agentMetricTopic is null")
+            logger.error("${tableName}'s agentMetricTopic is null")
             return
         }
 
-        kafkaClient.send(topicName, objectMapper.writeValueAsString(new))
+        kafkaClient.send(topicName, objectMapper.writeValueAsString(data))
     }
 
     override fun queryCpuUsageMetrix(
