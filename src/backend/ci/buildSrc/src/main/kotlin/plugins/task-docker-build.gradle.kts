@@ -44,7 +44,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     }
     val configNamespace = System.getProperty("config.namespace")
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
-    val multiModelDataSource = System.getProperty("devops.multi.datasource")
+    val multiModelService = System.getProperty("devops.multi.from")
 
     val finalJvmFlags = mutableListOf(
         "-server",
@@ -53,17 +53,16 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:+PrintTenuringDistribution",
         "-XX:+PrintGCDetails",
         "-XX:+PrintGCDateStamps",
-        "-XX:MaxGCPauseMillis=200",
+        "-XX:MaxGCPauseMillis=100",
         "-XX:+UseG1GC",
         "-XX:NativeMemoryTracking=summary",
         "-XX:+HeapDumpOnOutOfMemoryError",
         "-XX:HeapDumpPath=/data/workspace/$service/jvm/oom.hprof",
         "-XX:ErrorFile=/data/workspace/$service/jvm/error_sys.log",
         "-XX:+UseContainerSupport",
-        "-XX:InitialRAMPercentage=70.0",
-        "-XX:MaxRAMPercentage=70.0",
-        "-XX:MetaspaceSize=500m",
         "-XX:MaxMetaspaceSize=500m",
+        "-XX:CompressedClassSpaceSize=100m",
+        "-XX:ReservedCodeCacheSize=400m",
         "-XX:-UseAdaptiveSizePolicy",
         "-Dspring.jmx.enabled=true",
         "-Dservice.log.dir=/data/workspace/$service/logs/",
@@ -80,9 +79,9 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false",
         "-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true",
         "-Dserver.port=80"
-    ).also{
-        if (multiModelDataSource != null) {
-            it.add("-Ddevops.multi.datasource=$multiModelDataSource")
+    ).also {
+        if (multiModelService != null) {
+            it.add("-Ddevops.multi.from=$multiModelService")
         }
     }
 
