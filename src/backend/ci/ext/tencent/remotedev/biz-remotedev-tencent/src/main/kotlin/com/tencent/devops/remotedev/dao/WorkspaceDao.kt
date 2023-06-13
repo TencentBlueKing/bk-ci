@@ -393,7 +393,7 @@ class WorkspaceDao {
                         timeOutDays
                     )
                 )
-                .and(STATUS.eq(3))
+                .and(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
                 .limit(1000)
                 .fetch()
         }

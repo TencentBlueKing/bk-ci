@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
+import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -120,6 +121,15 @@ interface OpRemoteDevResource {
         userId: String,
         data: List<OPUserSetting>
     ): Result<Boolean>
+
+    @ApiOperation("获取用户设置")
+    @POST
+    @Path("/get_user_setting")
+    fun getUserSetting(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<RemoteDevUserSettings>
 
     @ApiOperation("更新用户组织架构")
     @POST

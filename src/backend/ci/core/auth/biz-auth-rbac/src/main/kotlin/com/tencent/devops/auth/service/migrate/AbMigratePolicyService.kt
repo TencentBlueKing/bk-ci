@@ -46,6 +46,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
@@ -61,10 +62,10 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "TooManyFunctions")
 abstract class AbMigratePolicyService(
@@ -77,7 +78,8 @@ abstract class AbMigratePolicyService(
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
 ) {
 
     companion object {
@@ -249,7 +251,12 @@ abstract class AbMigratePolicyService(
 
     abstract fun getGroupName(projectName: String, result: MigrateTaskDataResult): String
 
-    fun migrateUserCustomPolicy(projectCode: String, version: String) {
+    fun migrateUserCustomPolicy(
+        projectCode: String,
+        projectName: String,
+        version: String,
+        gradeManagerId: Int
+    ) {
         logger.info("start to migrate user custom policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
@@ -266,6 +273,8 @@ abstract class AbMigratePolicyService(
             )
             loopMigrateUserCustom(
                 projectCode = projectCode,
+                projectName = projectName,
+                gradeManagerId = gradeManagerId,
                 managerGroupId = managerGroupId,
                 version = version
             )
@@ -278,6 +287,8 @@ abstract class AbMigratePolicyService(
 
     private fun loopMigrateUserCustom(
         projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
         managerGroupId: Int,
         version: String
     ): Int {
@@ -294,6 +305,8 @@ abstract class AbMigratePolicyService(
             )
             migrateUserCustom(
                 projectCode = projectCode,
+                projectName = projectName,
+                gradeManagerId = gradeManagerId,
                 managerGroupId = managerGroupId,
                 results = taskDataResp.results
             )
@@ -305,6 +318,8 @@ abstract class AbMigratePolicyService(
 
     private fun migrateUserCustom(
         projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
         managerGroupId: Int,
         results: List<MigrateTaskDataResult>
     ) {
@@ -313,7 +328,7 @@ abstract class AbMigratePolicyService(
             val userId = result.subject.id
             // 离职人员,直接忽略
             if (deptService.getUserInfo(userId = "admin", name = userId) == null) {
-                logger.warn("user has left, skip custom policy migration|${result.projectId}|$userId")
+                logger.warn("user has resigned, skip custom policy migration|${result.projectId}|$userId")
                 return@forEach
             }
 
@@ -321,6 +336,8 @@ abstract class AbMigratePolicyService(
                 val groupId = matchResourceGroup(
                     userId = userId,
                     projectCode = projectCode,
+                    projectName = projectName,
+                    gradeManagerId = gradeManagerId,
                     managerGroupId = managerGroupId,
                     permission = permission
                 )
@@ -340,6 +357,8 @@ abstract class AbMigratePolicyService(
     abstract fun matchResourceGroup(
         userId: String,
         projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
     ): Int?
@@ -354,6 +373,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         actions: List<String>
     ): Int? {
+        // 判断用户是否已有资源actions权限
         val hasPermission = permissionService.batchValidateUserResourcePermission(
             userId = userId,
             actions = actions,
@@ -361,32 +381,92 @@ abstract class AbMigratePolicyService(
             resourceCode = resourceCode,
             resourceType = resourceType
         ).all { it.value }
-        // 没有action的权限，匹配资源默认用户组权限
-        if (!hasPermission) {
-            rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
-                if (groupConfig.actions.containsAll(actions)) {
-                    val groupId = authResourceGroupDao.get(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        groupCode = groupConfig.groupCode
-                    )?.relationId?.toInt()
-                    logger.info(
-                        "user match resource group" +
-                            "|$userId|$actions|$projectCode|$resourceCode|${groupConfig.groupCode}|$groupId"
-                    )
-                    return groupId
-                }
-            }
+
+        if (hasPermission) {
+            logger.info("user has resource action permission|$userId|$actions$projectCode|$resourceCode")
+            return null
+        }
+        return getMatchResourceGroupId(
+            resourceType = resourceType,
+            actions = actions,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            userId = userId
+        ).second ?: run {
             logger.info("user not match resource group|$userId|$actions$projectCode|$resourceCode")
-        } else {
-            logger.info(
-                "user has resource action permission" +
-                    "|$userId|$resourceCode|$actions$projectCode|$resourceCode"
+            null
+        }
+    }
+
+    /**
+     * 匹配或创建项目资源用户组
+     *
+     * 有任意资源权限,直接匹配项目下资源权限组,如果没有匹配到,则创建
+     */
+    protected fun matchOrCreateProjectResourceGroup(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        actions: List<String>,
+        gradeManagerId: Int
+    ): Int? {
+        // 判断用户是否已有项目任意资源actions权限
+        val hasPermission = actions.all { action ->
+            permissionService.validateUserResourcePermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
             )
         }
-        return null
+        if (hasPermission) {
+            logger.info("user has project any resource permission|$userId|$actions|$projectCode")
+            return null
+        }
+        val (groupConfigId, groupId) = getMatchResourceGroupId(
+            resourceType = AuthResourceType.PROJECT.value,
+            actions = actions,
+            projectCode = projectCode,
+            resourceCode = projectCode,
+            userId = userId
+        )
+        return groupId ?: run {
+            groupConfigId?.let {
+                createProjectResourceGroup(
+                    groupConfigId = groupConfigId,
+                    gradeManagerId = gradeManagerId,
+                    projectCode = projectCode,
+                    projectName = projectName
+                )
+            }
+        }
+    }
+
+    private fun getMatchResourceGroupId(
+        resourceType: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        userId: String
+    ): Pair<Long? /*groupConfigId*/, Int? /*groupId*/> {
+        rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
+            if (groupConfig.actions.containsAll(actions)) {
+                val groupId = authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    groupCode = groupConfig.groupCode
+                )?.relationId?.toInt()
+                logger.info(
+                    "user match resource group" +
+                        "|$userId|$actions|$projectCode|$resourceCode|${groupConfig.groupCode}|$groupId"
+                )
+                return Pair(groupConfig.id, groupId)
+            }
+        }
+        return Pair(null, null)
     }
 
     private fun createRbacGroup(
@@ -428,6 +508,55 @@ abstract class AbMigratePolicyService(
             relationId = groupId.toString()
         )
         return groupId
+    }
+
+    /**
+     * 创建项目级资源用户组
+     *
+     * 针对用户自定义权限,当用户有资源任意权限,如有任意流水线执行权限，项目默认组不能匹配该action,需要创建项目级流水线执行者组,用于管理这类权限
+     */
+    private fun createProjectResourceGroup(
+        groupConfigId: Long,
+        gradeManagerId: Int,
+        projectCode: String,
+        projectName: String
+    ): Int? {
+        logger.info("create project resource group|$groupConfigId|$gradeManagerId|$projectCode|$projectName")
+        val groupConfig = authResourceGroupConfigDao.getById(dslContext = dslContext, id = groupConfigId) ?: run {
+            logger.warn("group config not found|id:$groupConfigId")
+            return null
+        }
+        val managerRoleGroup = ManagerRoleGroup().apply {
+            name = groupConfig.groupName
+            description = groupConfig.description
+        }
+        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+            .groups(listOf(managerRoleGroup))
+            .createAttributes(false)
+            .build()
+        val iamGroupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
+
+        authResourceGroupDao.create(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName,
+            iamResourceCode = projectCode,
+            groupCode = groupConfig.groupCode,
+            groupName = groupConfig.groupName,
+            defaultGroup = false,
+            relationId = iamGroupId.toString()
+        )
+        permissionGroupPoliciesService.grantGroupPermission(
+            authorizationScopesStr = groupConfig.authorizationScopes,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = projectCode,
+            resourceName = projectName,
+            iamGroupId = iamGroupId
+        )
+        return iamGroupId
     }
 
     private fun calculateGroupCount(projectCode: String, beforeGroupCount: Int) {

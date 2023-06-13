@@ -15,5 +15,6 @@ data class DevCloudMacosVmCreateInfo(
     var createdAt: String,
     var cpu: String,
     var user: String = "",
-    var password: String = ""
+    var password: String = "",
+    var status: String = ""
 )

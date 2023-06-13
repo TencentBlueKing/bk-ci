@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.experience.pojo.group
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本体验-体验组信息")
-data class Group(
-    @ApiModelProperty("体验组HashID", required = true)
-    val groupHashId: String,
-    @ApiModelProperty("体验组名称", required = true)
-    val name: String,
-    @ApiModelProperty("内部人员")
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
-    val outerUsers: Set<String>,
-    @ApiModelProperty("描述")
-    val remark: String?
+@ApiModel("版本体验-体验组权限")
+data class GroupPermission(
+    @ApiModelProperty("是否可编辑", required = true)
+    val canEdit: Boolean,
+    @ApiModelProperty("是否可删除", required = true)
+    val canDelete: Boolean
 )

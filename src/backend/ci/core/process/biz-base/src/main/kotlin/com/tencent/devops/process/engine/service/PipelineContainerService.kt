@@ -337,6 +337,9 @@ class PipelineContainerService @Autowired constructor(
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
                         timestamps = mapOf(),
+                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.let { info ->
+                            if (info.parentElementId == atomElement.id) null else info
+                        },
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(
                             "@type" to MatrixStatusElement.classType,
@@ -433,7 +436,10 @@ class PipelineContainerService @Autowired constructor(
                         taskId = atomElement.id!!, classType = atomElement.getClassType(),
                         atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
-                        taskVar = mutableMapOf(), timestamps = mapOf()
+                        taskVar = mutableMapOf(), timestamps = mapOf(),
+                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.let { info ->
+                            if (info.parentElementId == atomElement.id) null else info
+                        }
                     )
                 )
                 return@nextElement

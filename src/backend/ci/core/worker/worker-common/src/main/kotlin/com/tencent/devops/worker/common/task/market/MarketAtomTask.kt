@@ -510,7 +510,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS -> {
+            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS, BuildType.MACOS_NEW -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,

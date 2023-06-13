@@ -4,7 +4,10 @@ data class OPUserSetting(
     val userId: String,
     val wsMaxRunningCount: Int?,
     val wsMaxHavingCount: Int?,
+    val onlyCloudIDE: Boolean?,
     val grayFlag: Boolean?,
-    val onlyCloudIDE: Boolean?
-
+    val allowedCopy: Boolean?,
+    val allowedDownload: Boolean?,
+    val needWatermark: Boolean?,
+    val autoDeletedDays: Int?
 )

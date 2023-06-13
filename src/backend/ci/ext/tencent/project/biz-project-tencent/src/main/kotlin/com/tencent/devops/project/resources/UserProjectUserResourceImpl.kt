@@ -53,7 +53,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val avatarUrl: String? = null
 
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
-        val name = bkToken?.let { tofService.getStaffInfo(userId, it).ChineseName } ?: userId
+        val name = bkToken?.let { tofService.getStaffInfo(userId, it).chineseName } ?: userId
         return Result(
             ProjectUser(
                 chineseName = name,

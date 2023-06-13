@@ -265,8 +265,8 @@ export const actions = {
         const res = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${buildId}/search`, params)
         return res.data
     },
-    requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
+    requestExternalUrl: async ({ commit }, { projectId, type, path }) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
         })
     },
