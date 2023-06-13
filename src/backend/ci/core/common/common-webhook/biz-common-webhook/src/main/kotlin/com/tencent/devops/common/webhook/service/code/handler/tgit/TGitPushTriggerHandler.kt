@@ -277,11 +277,10 @@ class TGitPushTriggerHandler(
     ): Set<String> {
         val changeFileList = mutableSetOf<String>()
         event.diffFiles?.forEach {
-            if (it.newFile || it.renamedFile) {
-                changeFileList.add(it.newPath)
-            }
             if (it.deletedFile) {
                 changeFileList.add(it.oldPath)
+            } else {
+                changeFileList.add(it.newPath)
             }
         }
         return changeFileList
