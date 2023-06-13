@@ -25,7 +25,7 @@ function _M:isAccess()
 
     local isAccess = true
 
-    if ngx.var.access_type == 'user' or ngx.var.access_type == 'desktop' then -- 用户请求类型访问频率限制
+    if ngx.var.access_type == 'user' then -- 用户请求类型访问频率限制
         isAccess = self:isUserAccess()
     elseif ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then -- ip地址请求类型访问频率限制
         isAccess = self:isIpAccess()
