@@ -164,6 +164,9 @@ log:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -202,82 +205,9 @@ auth:
     limits:
       cpu: 1000m
       memory: 2500Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# agentless Deployment
-agentless:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 2500Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# dockerhost Deployment
-dockerhost:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -316,6 +246,9 @@ artifactory:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -354,6 +287,9 @@ dispatch:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -392,6 +328,9 @@ dispatchDocker:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -430,6 +369,9 @@ dispatchDevcloud:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -468,6 +410,9 @@ dispatchKubernetes:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -506,6 +451,9 @@ remotedev:
     limits:
       cpu: 500m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: [ ]
   containerSecurityContext:
     enabled: false
@@ -544,6 +492,9 @@ environment:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -582,6 +533,9 @@ image:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -620,6 +574,9 @@ misc:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -658,6 +615,9 @@ monitoring:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -696,6 +656,9 @@ notify:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -736,6 +699,9 @@ openapi:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -774,6 +740,9 @@ plugin:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -812,6 +781,9 @@ process:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -850,6 +822,9 @@ project:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -888,6 +863,9 @@ quality:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -926,6 +904,9 @@ repository:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -964,6 +945,9 @@ sign:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1002,6 +986,9 @@ store:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1040,6 +1027,9 @@ ticket:
     limits:
       cpu: 1000m
       memory: 2500Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1078,44 +1068,9 @@ websocket:
     limits:
       cpu: 1000m
       memory: 2500Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# angetless Deployment
-angetless:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1243,6 +1198,9 @@ experience:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1281,6 +1239,9 @@ metrics:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1319,6 +1280,9 @@ metrics:
     limits:
       cpu: 500m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1357,6 +1321,9 @@ lambda:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1395,6 +1362,9 @@ engine:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1433,6 +1403,9 @@ monitoring:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1471,6 +1444,9 @@ prebuild:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1509,6 +1485,9 @@ statistics:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1547,6 +1526,9 @@ support:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1585,6 +1567,9 @@ stream:
     limits:
       cpu: 1000m
       memory: 3000Mi
+  jvm:
+    heapPct: 60.0
+    initSecs: 20
   hostAliases: []
   containerSecurityContext:
     enabled: false
