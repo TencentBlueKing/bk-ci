@@ -38,6 +38,14 @@ import org.springframework.stereotype.Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
 class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
 
+    override fun getBkRepoProjectId(): String {
+        return BKREPO_STORE_PROJECT_ID
+    }
+
+    override fun getBkRepoName(): String {
+        return REPO_NAME_PLUGIN
+    }
+
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
         bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
     }
