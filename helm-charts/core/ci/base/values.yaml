@@ -485,7 +485,7 @@ log:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -526,7 +526,7 @@ auth:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -567,7 +567,7 @@ artifactory:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -608,7 +608,7 @@ dispatch:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -649,7 +649,7 @@ dispatchDocker:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -690,7 +690,7 @@ dispatchKubernetes:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -731,7 +731,7 @@ environment:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -772,7 +772,7 @@ image:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -813,7 +813,7 @@ misc:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -854,7 +854,7 @@ metrics:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -895,7 +895,7 @@ monitoring:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -936,7 +936,7 @@ notify:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -980,7 +980,7 @@ openapi:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1021,7 +1021,7 @@ plugin:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1062,7 +1062,7 @@ process:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1103,7 +1103,7 @@ project:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1144,7 +1144,7 @@ quality:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1185,7 +1185,7 @@ repository:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1226,7 +1226,7 @@ store:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1267,7 +1267,7 @@ ticket:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1308,7 +1308,7 @@ websocket:
       cpu: 500m
       memory: 1500Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:
@@ -1438,7 +1438,7 @@ stream:
       cpu: 500m
       memory: 3000Mi
   jvm:
-    heapPct: 70
+    heapPct: 70.0
     initSecs: 50
   hostAliases: []
   containerSecurityContext:

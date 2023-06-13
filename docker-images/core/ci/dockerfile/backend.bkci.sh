@@ -1,7 +1,10 @@
 #!/bin/bash
+JAVA_TOOL_OPTIONS_TMP=$JAVA_TOOL_OPTIONS
 echo "source env files..."
 source service.env
-MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MaxMetaspaceSize=500m -XX:CompressedClassSpaceSize=100m -XX:ReservedCodeCacheSize=400m -XX:-UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=100"
+export JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS $JAVA_TOOL_OPTIONS_TMP"
+
+MEM_OPTS="-XX:+UseContainerSupport -XX:MaxMetaspaceSize=500m -XX:CompressedClassSpaceSize=100m -XX:ReservedCodeCacheSize=400m -XX:-UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=100"
 GC_LOG="-Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 API_PORT=80
 
