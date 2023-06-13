@@ -23,22 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.vo
+USE devops_ci_notify;
+SET NAMES utf8mb4;
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+DROP PROCEDURE IF EXISTS ci_notify_schema_update;
 
-@ApiModel("组策略")
-data class IamGroupPoliciesVo(
-    @ApiModelProperty("操作")
-    val action: String,
-    @ApiModelProperty("操作名")
-    @BkFieldI18n
-    val actionName: String,
-    @ApiModelProperty("是否该action操作权限")
-    val permission: Boolean
-)
+DELIMITER <CI_UBF>
+CREATE PROCEDURE ci_notify_schema_update()
+BEGIN
+
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+SELECT DATABASE() INTO db;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE'
+                    AND INDEX_NAME = 'idx_code') THEN
+        ALTER TABLE T_COMMON_NOTIFY_MESSAGE_TEMPLATE DROP INDEX `idx_code`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_COMMON_NOTIFY_MESSAGE_TEMPLATE'
+                    AND INDEX_NAME = 'UNI_TCNMT_TEMPLATE_CODE') THEN
+        ALTER TABLE `T_COMMON_NOTIFY_MESSAGE_TEMPLATE` ADD UNIQUE INDEX UNI_TCNMT_TEMPLATE_CODE (TEMPLATE_CODE);
+    END IF;
+
+COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+
+CALL ci_notify_schema_update();
