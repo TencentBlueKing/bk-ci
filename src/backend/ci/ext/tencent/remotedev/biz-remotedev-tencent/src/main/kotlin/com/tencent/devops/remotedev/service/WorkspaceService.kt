@@ -211,7 +211,9 @@ class WorkspaceService @Autowired constructor(
                     dslContext = dslContext,
                     userId = userId,
                     unionShared = false,
-                    systemType = WorkspaceSystemType.WINDOWS_GPU)
+                    status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING),
+                    systemType = WorkspaceSystemType.WINDOWS_GPU
+                )
             )
         }
 
