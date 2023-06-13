@@ -357,9 +357,9 @@ class MigrateV3PolicyService constructor(
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
         members?.forEach member@{ member ->
-            // 已过期用户,迁移时无法添加到用户组成员,增加1分钟添加到iam就过期，方便用户续期
+            // 已过期用户,迁移时无法添加到用户组成员,增加5分钟添加到iam就过期，方便用户续期
             val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
-                DateTimeUtil.getFutureDateFromNow(Calendar.MINUTE, 1).time
+                DateTimeUtil.getFutureDateFromNow(Calendar.MINUTE, 5).time / MILLISECOND
             } else {
                 member.expiredAt
             }
