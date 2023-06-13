@@ -661,11 +661,11 @@
                         ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(this.skipTask ? 'skipSuc' : 'subpage.retrySuc')
                         theme = 'success'
                         res?.executeCount && this.handleExecuteCountChange(res.executeCount)
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = res?.message ?? this.$t(this.skipTask ? 'skipFail' : 'subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {

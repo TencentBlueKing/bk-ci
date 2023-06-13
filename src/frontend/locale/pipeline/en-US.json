@@ -1164,5 +1164,7 @@
   "noReleatedPipeline": "No Related Pipeline",
   "outputsFilterPlaceholder": "Artifactory name / Report name",
   "fullScreenView": "Fullscreen",
-  "exitFullscreen": "Exit FullScreen"
+  "exitFullscreen": "Exit FullScreen",
+  "skipSuc": "Skipped the failed step and continued running",
+  "skipFail": "Skip failed"
 }
