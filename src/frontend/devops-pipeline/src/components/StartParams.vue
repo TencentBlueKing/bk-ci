@@ -14,7 +14,7 @@
                         />
                     </span>
                     <span class="build-param-span">
-                        <template v-if="param.value">
+                        <template v-if="typeof param.value !== 'undefined'">
                             <span
                                 :class="{
                                     'build-param-value-span': true,
@@ -46,10 +46,7 @@
             >
                 <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
                     <p>{{ activeParam.key }}</p>
-                    <pre>
-                        {{ activeParam.value }}
-                    </pre
-                    >
+                    <pre>{{ activeParam.value }}</pre>
                 </div>
             </bk-sideslider>
         </div>
@@ -117,9 +114,9 @@
                 }
             },
             isDefaultDiff ({ key, value }) {
-                let defaultValue = this.defaultParamMap[key]
+                const defaultValue = this.defaultParamMap[key]
                 if (typeof defaultValue === 'boolean') {
-                    defaultValue = defaultValue.toString()
+                    return defaultValue.toString() !== value.toString()
                 }
                 return defaultValue !== value
             },
@@ -143,7 +140,7 @@
                 const canvas = document.createElement('canvas')
                 const context = canvas.getContext('2d')
                 const { width } = context.measureText(text)
-                return width > 183
+                return width > 282
             }
         }
     }
@@ -183,12 +180,12 @@
         font-size: 12px;
         height: 42px;
         line-height: 42px;
-        width: 280px;
+        width: 382px;
         padding: 0 16px;
         &:first-child {
           color: #313238;
           background-color: #fafbfd;
-          width: 160px;
+          width: 218px;
         }
         > .icon-question-circle {
           margin-left: auto;

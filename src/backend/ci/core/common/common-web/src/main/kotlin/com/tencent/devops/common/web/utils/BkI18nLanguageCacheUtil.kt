@@ -23,22 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.vo
+package com.tencent.devops.common.web.utils
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-@ApiModel("组策略")
-data class IamGroupPoliciesVo(
-    @ApiModelProperty("操作")
-    val action: String,
-    @ApiModelProperty("操作名")
-    @BkFieldI18n
-    val actionName: String,
-    @ApiModelProperty("是否该action操作权限")
-    val permission: Boolean
-)
+/**
+ * 国际化语言信息缓存
+ *
+ * @since: 2023-06-13
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object BkI18nLanguageCacheUtil {
+
+    private val i18nLanguageCache = Caffeine.newBuilder()
+        .maximumSize(20000)
+        .expireAfterWrite(6, TimeUnit.SECONDS)
+        .build<String, String>()
+
+    /**
+     * 保存国际化语言信息缓存
+     * @param userId 用户Id
+     * @param language 国际化语言信息
+     */
+    fun put(userId: String, language: String) {
+        i18nLanguageCache.put(userId, language)
+    }
+
+    /**
+     * 从缓存中获取国际化语言信息
+     * @param userId 用户Id
+     * @return 国际化语言信息
+     */
+    fun getIfPresent(userId: String): String? {
+        return i18nLanguageCache.getIfPresent(userId)
+    }
+}

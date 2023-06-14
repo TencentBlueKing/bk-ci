@@ -171,8 +171,8 @@ abstract class AbMigratePolicyService(
                 results = taskDataResp.results
             )
             page++
-            totalCount += taskDataResp.count
-        } while (taskDataResp.count == pageSize)
+            totalCount = taskDataResp.count
+        } while (taskDataResp.results.size == pageSize)
         return totalCount
     }
 
@@ -311,8 +311,8 @@ abstract class AbMigratePolicyService(
                 results = taskDataResp.results
             )
             page++
-            totalCount += taskDataResp.count
-        } while (taskDataResp.count == pageSize)
+            totalCount = taskDataResp.count
+        } while (taskDataResp.results.size == pageSize)
         return totalCount
     }
 

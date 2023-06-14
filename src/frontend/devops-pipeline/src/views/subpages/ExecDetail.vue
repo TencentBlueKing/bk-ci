@@ -57,32 +57,27 @@
                 ref="detailSummary"
                 :exec-detail="execDetail"
             ></Summary>
-
+            <p class="pipeline-exec-gap"></p>
+            <header class="exec-detail-switcher">
+                <span
+                    v-for="panel in panels"
+                    :key="panel.name"
+                    :class="['exec-detail-switcher-tab', {
+                        active: curItemTab === panel.name
+                    }]"
+                    @click="switchTab(panel)"
+                >
+                    {{ panel.label }}
+                </span>
+            </header>
             <main :class="['exec-detail-main', {
                 'is-outputs-panel': curItemTab === 'outputs'
             }]">
-                <bk-tab
-                    :active="curItemTab"
-                    @tab-change="switchTab"
-                    :label-height="42"
-                    class="pipeline-detail-tab-card"
-                    type="unborder-card"
-                >
-                    <bk-tab-panel
-                        v-for="panel in panels"
-                        v-bind="{ name: panel.name, label: panel.label }"
-                        render-directive="if"
-                        :key="panel.name"
-                    >
-                        <div :class="panel.className" style="height: 100%">
-                            <component
-                                :is="panel.component"
-                                v-bind="panel.bindData"
-                                v-on="panel.listeners"
-                            ></component>
-                        </div>
-                    </bk-tab-panel>
-                </bk-tab>
+                <component
+                    :is="curPanel.component"
+                    v-bind="curPanel.bindData"
+                    v-on="curPanel.listeners"
+                ></component>
             </main>
         </template>
         <template v-if="editingElementPos && execDetail">
@@ -328,6 +323,9 @@
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
             },
+            curPanel () {
+                return this.panels.find(panel => panel.name === this.curItemTab)
+            },
             statusTagTheme () {
                 return mapThemeOfStatus(this.execDetail?.status)
             },
@@ -447,12 +445,12 @@
                 }
             },
 
-            switchTab (tabType = 'executeDetail') {
+            switchTab (panel) {
                 this.$router.push({
                     name: 'pipelinesDetail',
                     params: {
                         ...this.routerParams,
-                        type: tabType
+                        type: panel.name
                     }
                 })
             }
@@ -471,8 +469,8 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid #dde4eb;
-  overflow-y: scroll;
-  overflow-y: overlay;
+  overflow: auto;
+  scrollbar-gutter: stable;
   background: #F5F7FA;
 
   .exec-detail-summary-header {
@@ -542,33 +540,79 @@
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   }
 
-  .exec-detail-main {
-    margin: 16px 24px 0 24px;
+  .pipeline-exec-gap {
     background: #f5f7fa;
+    height: 16px;
+    width: 100%;
+    flex-shrink: 0;
+    position: sticky;
+    top: 40px;
+    z-index: 8;
+  }
+  .exec-detail-switcher {
+    background: #f0f1f5;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin: 0 24px;
+    position: sticky;
+    top: 56px;
+    z-index: 8;
+
+    .exec-detail-switcher-tab {
+        padding: 0 18px;
+        height: 42px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
+        }
+        &:not(:first-child)::before {
+            position: absolute;
+            content: '';
+            width: 1px;
+            height: 16px;
+            background-color: #C4C6CC;
+            top: 13px;
+            left: 0;
+        }
+
+        &:last-child::after {
+            position: absolute;
+            content: '';
+            width: 1px;
+            height: 16px;
+            background-color: #C4C6CC;
+            top: 13px;
+            right: 0;
+        }
+
+        &.active {
+            background-color: white;
+            border-radius: 4px 4px 0 0;
+
+            &::before,
+            &::after {
+                background-color: white;
+            }
+        }
+        &.active + ::before {
+            display: none;
+        }
+    }
+  }
+
+  .exec-detail-main {
+    background: white;
+    margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
     &.is-outputs-panel {
         overflow: hidden;
-        .pipeline-detail-tab-card {
-            .bk-tab-section {
-                overflow: hidden;
-            }
-        }
-    }
-  }
-  .pipeline-detail-tab-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: white;
-    .bk-tab-section {
-      position: relative;
-      flex: 1;
-      padding: 0;
-      overflow: auto;
-    }
-    .bk-tab-content {
-      height: 100%;
     }
   }
   .exec-pipeline {
