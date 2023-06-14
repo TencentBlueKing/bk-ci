@@ -60,6 +60,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:HeapDumpPath=/data/workspace/$service/jvm/oom.hprof",
         "-XX:ErrorFile=/data/workspace/$service/jvm/error_sys.log",
         "-XX:+UseContainerSupport",
+        "-Xss512k",
         "-XX:MaxMetaspaceSize=500m",
         "-XX:CompressedClassSpaceSize=100m",
         "-XX:ReservedCodeCacheSize=400m",
