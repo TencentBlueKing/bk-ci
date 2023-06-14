@@ -175,7 +175,7 @@ watch(
           </ul>
         </section>
         <section class="use-list">
-          <span class="list-header use-header">{{ t('The selected plugin') }} （{{ projectPluginList.length }}）</span>
+          <span class="list-header use-header">{{ t('Selected Plugins') }} （{{ projectPluginList.length }}）</span>
           <ul class="list-main">
             <li
               class="list-item"

@@ -73,7 +73,7 @@
 
                     <!-- 凭据别名 start -->
                     <div class="bk-form-item">
-                        <label class="bk-label">{{ $t('ticket.name') }}：</label>
+                        <label class="bk-label">{{ $t('ticket.alias') }}：</label>
                         <div class="bk-form-content">
                             <input type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,64}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
                                 v-model="localConfig.credentialName"

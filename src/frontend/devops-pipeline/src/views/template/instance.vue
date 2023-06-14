@@ -54,7 +54,7 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
+                    <bk-table-column :label="$t('lastModify')" prop="updateTime">
                         <template slot-scope="props">
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
