@@ -169,6 +169,10 @@ class PipelineSettingVersionDao {
         }
     }
 
+    fun batchUpdate(dslContext: DSLContext, tPipelineSettingVersionRecords: List<TPipelineSettingVersionRecord>) {
+        dslContext.batchUpdate(tPipelineSettingVersionRecords).execute()
+    }
+
     fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.deleteFrom(this)
