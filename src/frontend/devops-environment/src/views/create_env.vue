@@ -69,7 +69,7 @@
                             <div class="node-table-message">
                                 <div class="table-node-head">
                                     <div class="table-node-item node-item-ip">IP</div>
-                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
                                     <div class="table-node-item node-item-type">{{ $t('environment.nodeInfo.nodeType') }}</div>
                                     <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.nodeStatus') }}</div>
                                 </div>
