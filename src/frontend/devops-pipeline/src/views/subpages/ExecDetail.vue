@@ -469,8 +469,8 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid #dde4eb;
-  overflow-y: scroll;
-  overflow-y: overlay;
+  overflow: auto;
+  scrollbar-gutter: stable;
   background: #F5F7FA;
 
   .exec-detail-summary-header {
