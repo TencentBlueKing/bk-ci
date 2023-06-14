@@ -112,10 +112,10 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(OpTxPipelineSettingResourceImpl::class.java)
-        private val projectNameChinese = "\$$PROJECT_NAME_CHINESE"
-        private val pipelineName = "\$$PIPELINE_NAME"
-        private val pipelineBuildNum = "\$$PIPELINE_BUILD_NUM"
-        private val pipelineTimeDuration = "\$$PIPELINE_TIME_DURATION"
-        private val pipelineStartUserName = "\$$PIPELINE_START_USER_NAME"
+        private const val projectNameChinese = "\$$PROJECT_NAME_CHINESE"
+        private const val pipelineName = "\$$PIPELINE_NAME"
+        private const val pipelineBuildNum = "\$$PIPELINE_BUILD_NUM"
+        private const val pipelineTimeDuration = "\$$PIPELINE_TIME_DURATION"
+        private const val pipelineStartUserName = "\$$PIPELINE_START_USER_NAME"
     }
 }
