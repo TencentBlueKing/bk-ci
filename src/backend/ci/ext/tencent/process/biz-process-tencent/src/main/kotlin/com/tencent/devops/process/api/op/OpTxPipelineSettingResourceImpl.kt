@@ -51,7 +51,7 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
 ) : OpTxPipelineSettingResource {
 
     override fun updatePipelineSettingContent(userId: String): Result<Boolean> {
-        val startTime = LocalDateTime.of(2023, 6, 11, 13, 0)
+        val startTime = LocalDateTime.of(2023, 5, 18, 15, 0)
         val endTime = LocalDateTime.now()
         var page = PageUtil.DEFAULT_PAGE
         val pageSize = PageUtil.MAX_PAGE_SIZE
