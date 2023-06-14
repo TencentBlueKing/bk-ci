@@ -32,7 +32,7 @@
                                     <span class="bk-form-content">
                                         <bk-input
                                             ref="labelInput"
-                                            style="width: 95%; margin-right: 10px;"
+                                            style="width: 94%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
                                             v-model="labelValue"
                                             v-validate="'required|max:20'"

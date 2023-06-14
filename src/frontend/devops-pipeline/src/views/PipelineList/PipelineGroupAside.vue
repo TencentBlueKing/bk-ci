@@ -107,9 +107,9 @@
             :loading="isAdding"
             @cancel="closeAddPipelineGroupDialog"
         >
-            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
+            <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" />
+                    <bk-input v-model.trim="newPipelineGroup.name" :placeholder="$t('groupNamePlaceholder')" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">

@@ -7,7 +7,7 @@
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
                     <bk-radio value="SSH" v-if="!isTGit">SSH</bk-radio>
-                    <bk-radio value="HTTP">HTTP</bk-radio>
+                    <bk-radio value="HTTP">Username + Password + PrivateToken</bk-radio>
                     <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
@@ -61,7 +61,7 @@
             </div>
             <div class="bk-form-item" v-else>
                 <div class="bk-form-item is-required" v-if="codelibConfig.label === 'SVN'">
-                    <label class="bk-label">{{ $t('codelib.codelibPullType') }}:</label>
+                    <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                     <bk-radio-group v-model="codelib.svnType" @change="svnTypeChange(codelib)" class="bk-form-content form-radio">
                         <bk-radio value="ssh">SSH</bk-radio>
                         <bk-radio value="http">HTTP/HTTPS</bk-radio>
@@ -174,7 +174,7 @@
                     url: {
                         SVN: this.$t('codelib.svnUrlPlaceholder'),
                         Git: this.$t('codelib.gitUrlPlaceholder'),
-                        TGit: this.$t('codelib.tgitUrlPlaceholder'),
+                        TGit: this.$t('codelib.tgitUrlEnterPlaceholder'),
                         Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
                         HTTP: this.$t('codelib.httpUrlPlaceholder'),
                         HTTPS: this.$t('codelib.httpsUrlPlaceholder')
@@ -222,6 +222,9 @@
                             ? this.gitOAuth.status
                             : this.githubOAuth.status) !== 403
                 )
+            },
+            isOAUTH () {
+                return this.codelib.authType === 'OAUTH'
             },
             oAuth () {
                 return this.isTGit

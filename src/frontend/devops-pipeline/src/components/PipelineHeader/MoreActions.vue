@@ -258,6 +258,7 @@
       font-size: 12px;
       line-height: 32px;
       text-align: left;
+      white-space: nowrap;
       padding: 0 12px;
       cursor: pointer;
       &:hover {

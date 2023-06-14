@@ -379,7 +379,7 @@
                     line-height: 19px;
                     span:nth-child(1) {
                         display: inline-block;
-                        width: 70px;
+                        width: 90px;
                         text-align: right;
                         margin-right: 14px;
                         color: $fontWeightColor;

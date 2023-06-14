@@ -10,7 +10,7 @@
     "createCert": "新增证书",
     "editCert": "编辑证书",
     "id": "名称",
-    "name": "别名",
+    "alias": "别名",
     "type": "类型",
     "remark": "描述",
     "operation": "操作",
