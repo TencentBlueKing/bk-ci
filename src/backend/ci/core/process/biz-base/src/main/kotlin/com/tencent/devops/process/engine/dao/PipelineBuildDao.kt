@@ -822,17 +822,17 @@ class PipelineBuildDao {
         }
     }
 
-    fun getBuildByBuildNo(
+    fun getBuildByBuildNum(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        buildNo: Int
+        buildNum: Int
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_NUM.eq(buildNo))
+                .and(BUILD_NUM.eq(buildNum))
                 .fetchAny()
         }
     }
