@@ -70,14 +70,14 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
                 pipelineIds
             ).forEach {
                 val newSuccessContent = replaceContent(it.successContent)
-                if (it.successContent.isNotBlank()) {
-                    it.successContent = newSuccessContent
-                }
                 val newFailContent = replaceContent(it.failContent)
-                if (it.failContent.isNotBlank()) {
-                    it.failContent = newFailContent
-                }
                 if (newSuccessContent != it.successContent || newFailContent != it.failContent) {
+                    if (it.successContent.isNotBlank()) {
+                        it.successContent = newSuccessContent
+                    }
+                    if (it.failContent.isNotBlank()) {
+                        it.failContent = newFailContent
+                    }
                     tPipelineSettingVersions.add(it)
                 }
             }
