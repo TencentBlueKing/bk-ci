@@ -1252,7 +1252,9 @@ class WorkspaceService @Autowired constructor(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            logger.info("updateUserWorkspaceDetailCache|name|${it.name}|WorkspaceMountType|${WorkspaceMountType.valueOf(it.workspaceMountType)}")
+            logger.info("updateUserWorkspaceDetailCache|name|${it.name}" +
+                "|WorkspaceMountType|${WorkspaceMountType.valueOf(it.workspaceMountType)}")
+            redisCache.deleteWorkspaceDetail(it.name)
             getOrSaveWorkspaceDetail(it.name, WorkspaceMountType.valueOf(it.workspaceMountType))
         }
     }
