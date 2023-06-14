@@ -1381,6 +1381,7 @@ class WorkspaceService @Autowired constructor(
             heartBeatDeleteWS(it)
         }
     }
+
     // 提前2天邮件提醒，云环境即将自动回收
     fun sendInactivityWorkspaceNotify() {
         logger.info("sendInactivityWorkspaceNotify")
@@ -1408,6 +1409,7 @@ class WorkspaceService @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }
     }
+
     private fun getSystemOperator(workspaceOwner: String, mountType: String): String =
         when (mountType) {
             WorkspaceMountType.START.name -> workspaceOwner
