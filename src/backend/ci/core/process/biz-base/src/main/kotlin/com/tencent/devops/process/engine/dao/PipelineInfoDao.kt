@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -45,7 +46,6 @@ import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Repository
@@ -732,6 +732,18 @@ class PipelineInfoDao {
                 .set(LATEST_START_TIME, startTime)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun getIdByCreateTimePeriod(
+        dslContext: DSLContext,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Result<TPipelineInfoRecord> {
+        with(T_PIPELINE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_TIME.between(startTime, endTime))
+                .fetch()
         }
     }
 
