@@ -9,12 +9,15 @@ import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.service.redis.RedisKeys.WORKSPACE_CACHE_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
 class RedisCacheService @Autowired constructor(
     private val redisOperation: RedisOperation,
+    @Qualifier("redisStringHashOperation")
+    private val redisHashOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -32,9 +35,16 @@ class RedisCacheService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
+    private val redisCacheHash = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Map<String, String>?> { key -> redisHashOperation.hentries(key) }
+
     fun get(key: String) = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
+
+    fun hentries(key: String) = redisCacheHash.get(key)
 
     fun saveWorkspaceDetail(
         workspaceName: String,

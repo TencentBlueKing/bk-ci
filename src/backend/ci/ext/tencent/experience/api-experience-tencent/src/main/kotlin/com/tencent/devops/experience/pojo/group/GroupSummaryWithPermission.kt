@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.experience.pojo.group
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -36,14 +36,18 @@ data class GroupSummaryWithPermission(
     val groupHashId: String,
     @ApiModelProperty("体验组名称", required = true)
     val name: String,
-    @ApiModelProperty("内部人员", required = true)
+    @ApiModelProperty("内部人员数量", required = true)
     val innerUsersCount: Int,
-    @ApiModelProperty("外部人员", required = true)
+    @ApiModelProperty("外部人员数量", required = true)
     val outerUsersCount: Int,
+    @ApiModelProperty("组织架构数量", required = true)
+    val deptsCount: Int,
     @ApiModelProperty("内部人员")
     val innerUsers: Set<String>,
     @ApiModelProperty("外部人员")
     val outerUsers: Set<String>,
+    @ApiModelProperty("组织架构")
+    val depts: Set<String>,
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("描述", required = true)

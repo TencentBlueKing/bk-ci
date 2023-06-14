@@ -14,52 +14,52 @@ enum class ErrorCodeEnum(
     USER_NOT_EXISTS(
         errorType = ErrorType.USER,
         errorCode = "2132001",
-        formatErrorMessage = "Account [%s] does not exist, please contact DevOps-helper to register"
+        formatErrorMessage = "Account [{0}] does not exist, please contact DevOps-helper to register"
     ),
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
         errorCode = "2132002",
-        formatErrorMessage = "%s oauth invalid, need to re-authorize"
+        formatErrorMessage = "{0} oauth invalid, need to re-authorize"
     ),
     WORKSPACE_NOT_FIND(
         errorType = ErrorType.USER,
         errorCode = "2132003",
-        formatErrorMessage = "workspace %s not find"
+        formatErrorMessage = "workspace {0} not find"
     ),
     DEVFILE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132004",
-        formatErrorMessage = "load devfile error: %s"
+        formatErrorMessage = "load devfile error: {0}"
     ),
     USERINFO_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132005",
-        formatErrorMessage = "load user info error: %s"
+        formatErrorMessage = "load user info error: {0}"
     ),
     WORKSPACE_STATUS_CHANGE_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2132006",
-        formatErrorMessage = "workspace(%s) change failed: %s"
+        formatErrorMessage = "workspace({0}) change failed: {1}"
     ),
     WORKSPACE_SHARE_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2132007",
-        formatErrorMessage = "workspace share failed: %s"
+        formatErrorMessage = "workspace share failed: {0}"
     ),
     FORBIDDEN(
         errorType = ErrorType.USER,
         errorCode = "2132008",
-        formatErrorMessage = "You do not have permission: %s"
+        formatErrorMessage = "You do not have permission: {0}"
     ),
     WORKSPACE_MAX_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132009",
-        formatErrorMessage = "The current workspace running count(%s) has reached the user limit(%s)"
+        formatErrorMessage = "The current workspace running count({0}) has reached the user limit({1})"
     ),
     WORKSPACE_MAX_HAVING(
         errorType = ErrorType.USER,
         errorCode = "2132010",
-        formatErrorMessage = "The number of created workspaces(%s) has reached the user limit(%s)"
+        formatErrorMessage = "The number of created workspaces({0}) has reached the user limit({1})"
     ),
     UPDATE_BK_TICKET_FAIL(
         errorType = ErrorType.USER,
@@ -84,17 +84,22 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
         errorCode = "2132015",
-        formatErrorMessage = "The errored workspace has been restored to [%s], please try again."
+        formatErrorMessage = "The errored workspace has been restored to [{0}], please try again."
     ),
     WORKSPACE_NOT_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132016",
-        formatErrorMessage = "Workspace is not currently running."
+        formatErrorMessage = "Workspace [{0}] is not currently running."
     ),
     CHECK_USER_TICKET_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2132017",
         formatErrorMessage = "check user login ticket fail."
+    ),
+    GET_WATERMARK_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2132018",
+        formatErrorMessage = "get watermark fail."
     );
 
     fun getErrorMessage(): String {

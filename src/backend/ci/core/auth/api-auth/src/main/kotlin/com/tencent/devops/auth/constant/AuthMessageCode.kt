@@ -89,7 +89,7 @@ object AuthMessageCode {
     const val RESOURCE_TYPE_NOT_FOUND = "2121040" // 权限系统：资源类型{0}不存在
     const val RESOURCE_TYPE_NOT_EMPTY = "2121041" // 权限系统：资源类型不能为空
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121042" // 权限系统: 申请加入用户组失败
-    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组权限信息失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组{0}权限信息失败
     const val GET_IAM_GROUP_FAIL = "2121044" // 权限系统: 获取用户组失败
     const val GET_REDIRECT_INFORMATION_FAIL = "2121045" // 权限系统: 获取跳转链接失败
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121046" // 用户没有管理员权限

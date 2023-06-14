@@ -38,8 +38,5 @@ import org.springframework.context.annotation.ComponentScan
 class Application
 
 fun main(args: Array<String>) {
-    println("sleep 20000 ms...")
-    Thread.sleep(20000)
-    println("start.....")
     MicroServiceApplication.run(Application::class, args)
 }

@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -81,7 +82,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val redisOperation: RedisOperation,
-    private val messageTemplateDao: MessageTemplateDao
+    private val messageTemplateDao: MessageTemplateDao,
+    private val commonConfig: CommonConfig
 ) : NotifyMessageTemplateServiceImpl(
     dslContext = dslContext,
     notifyMessageTemplateDao = notifyMessageTemplateDao,
@@ -93,7 +95,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     wechatWorkService = wechatWorkService,
     wechatWorkRobotService = wechatWorkRobotService,
     messageTemplateDao = messageTemplateDao,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    commonConfig = commonConfig
 ) {
 
     companion object {

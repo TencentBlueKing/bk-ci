@@ -77,7 +77,6 @@ class WhitelistApiFilter constructor(
                             messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
                             params = null,
                             data = null,
-                            defaultMessage = ErrorCodeEnum.DENIAL_OF_SERVICE.formatErrorMessage,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                     )
