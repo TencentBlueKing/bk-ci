@@ -1252,10 +1252,23 @@ class WorkspaceService @Autowired constructor(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            logger.info("updateUserWorkspaceDetailCache|name|${it.name}" +
-                "|WorkspaceMountType|${WorkspaceMountType.valueOf(it.workspaceMountType)}")
-            redisCache.deleteWorkspaceDetail(it.name)
-            getOrSaveWorkspaceDetail(it.name, WorkspaceMountType.valueOf(it.workspaceMountType))
+            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userId, it.name, WorkspaceMountType.valueOf(it.workspaceMountType)).data!!
+            val cache = WorkSpaceCacheInfo(
+                sshKey,
+                workspaceInfo.environmentHost,
+                workspaceInfo.hostIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.namespace,
+                workspaceInfo.curLaunchId
+            )
+            redisCache.saveWorkspaceDetail(
+                it.name,
+                cache
+            )
         }
     }
 
