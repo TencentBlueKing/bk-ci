@@ -23,7 +23,7 @@ function _M:isSafe()
 
     -- 根请求直接忽略
     local path = ngx.var.uri
-    if path == '/index.html' or path == '/' or path == '/ms/index.html' then
+    if path == '/index.html' or path == '/' then
         return true
     end
 
