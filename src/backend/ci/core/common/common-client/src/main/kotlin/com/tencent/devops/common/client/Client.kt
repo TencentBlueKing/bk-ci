@@ -52,6 +52,13 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.context.annotation.DependsOn
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
 import java.util.concurrent.ConcurrentHashMap
@@ -60,13 +67,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.context.annotation.DependsOn
-import org.springframework.core.annotation.AnnotationUtils
-import org.springframework.stereotype.Component
 import kotlin.reflect.KClass
 
 /**
@@ -81,6 +81,7 @@ class Client @Autowired constructor(
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
     private val bkTag: BkTag,
+    private val mutilJarServiceMapConfiguration: MutilJarServiceMapConfiguration,
     objectMapper: ObjectMapper
 ) {
 
@@ -90,8 +91,6 @@ class Client @Autowired constructor(
         private const val connectTimeoutSeconds = 5L
         private const val CACHE_SIZE = 1000L
         private val longTimeOptions = Request.Options(10L, TimeUnit.SECONDS, 30L, TimeUnit.MINUTES, true)
-        private val accessoriesServiceList = listOf("experience,support,image,lambda,monitoring")
-        private const val accessoriesName = "accessories"
     }
 
     private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
@@ -296,7 +295,7 @@ class Client @Autowired constructor(
         if (!assemblyServiceName.isNullOrBlank()) {
             return assemblyServiceName
         }
-        var serviceName = interfaces.getOrPut(clz) {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
                 serviceInterface.value
@@ -311,20 +310,18 @@ class Client @Autowired constructor(
                 matches.groupValues[1]
             }
         }
-        // 得加一个标识，如果为集成的，才这么操作
-        if (isAccessoriesService(serviceName)) {
-            logger.info("findServiceName:serviceName({})", serviceName)
-            serviceName = accessoriesName
-        }
-        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
-            serviceName
-        } else {
-            "$serviceName$serviceSuffix"
-        }
+        return generateServiceName(serviceName)
     }
 
-    private fun isAccessoriesService(serviceName: String): Boolean {
-        return accessoriesServiceList.contains(serviceName)
+    private fun generateServiceName(serviceName: String): String {
+        val mutilJarServiceMap = mutilJarServiceMapConfiguration.propertiesMap
+        val finalServiceName = mutilJarServiceMap[serviceName] ?: serviceName
+        logger.info("findServiceName:serviceName({})", finalServiceName)
+        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
+            finalServiceName
+        } else {
+            "$finalServiceName$serviceSuffix"
+        }
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
