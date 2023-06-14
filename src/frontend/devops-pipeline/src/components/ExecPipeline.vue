@@ -125,7 +125,6 @@
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
                         <bk-table
-                            height="calc(100% - 42px)"
                             ext-cls="error-popup-table"
                             :data="errorList"
                             :border="false"
@@ -945,6 +944,14 @@
     }
     .error-popup-table {
         max-height: calc(30vh - 42px);
+        display: flex;
+        flex-direction: column;
+        .bk-table-header-wrapper {
+            flex-shrink: 0;
+        }
+        .bk-table-body-wrapper {
+            overflow-y: auto;
+        }
     }
     .toggle-error-popup-icon {
         display: flex;
