@@ -54,7 +54,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -159,7 +159,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 val (status, expiredDisplay) = if (between <= 0) {
                     Pair(
                         GroupMemberStatus.EXPIRED.name,
-                        MessageCodeUtil.getCodeLanMessage(
+                        I18nUtil.getCodeLanMessage(
                             AUTH_GROUP_MEMBER_EXPIRED_DESC,
                             "expired"
                         )
@@ -336,7 +336,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
         val gradeManagerRoleGroupList =
             iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
-        if (gradeManagerRoleGroupList.results.isNotEmpty()) {
+        if (gradeManagerRoleGroupList.results.isNotEmpty() &&
+            gradeManagerRoleGroupList.results.map { it.name }.contains(groupName)
+        ) {
             throw ErrorCodeException(
                 errorCode = GROUP_EXIST,
                 defaultMessage = "group name already exists"

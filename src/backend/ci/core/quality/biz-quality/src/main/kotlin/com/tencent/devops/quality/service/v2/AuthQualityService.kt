@@ -60,7 +60,7 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info("$projectId 项目下红线规则")
+            logger.info(projectId + "Quality rules under the project")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -85,7 +85,7 @@ class AuthQualityService @Autowired constructor(
             ruleIds = ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (qualityRuleInfos == null || qualityRuleInfos.isEmpty()) {
-            logger.info("$ids 无红线规则")
+            logger.info("$ids not quality rule")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -116,7 +116,9 @@ class AuthQualityService @Autowired constructor(
             name = keyword)
         val result = SearchInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info("$projectId 项目下无红线用户组")
+            logger.info(
+                projectId + "There is no Quality user group under the project"
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -144,7 +146,7 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityGroupInfos == null) {
-            logger.info("$projectId 项目下红线分组")
+            logger.info(projectId + "The project is grouped under the Quality")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -169,7 +171,7 @@ class AuthQualityService @Autowired constructor(
         )
         val result = FetchInstanceInfo()
         if (qualityGroupInfos == null || qualityGroupInfos.isEmpty()) {
-            logger.info("$ids 无红线规则")
+            logger.info("$ids not quality rule")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -200,7 +202,9 @@ class AuthQualityService @Autowired constructor(
             name = keyword)
         val result = SearchInstanceInfo()
         if (qualityGroupInfos == null) {
-            logger.info("$projectId 项目下无红线用户组")
+            logger.info(
+                projectId + "There is no Quality user group under the project"
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

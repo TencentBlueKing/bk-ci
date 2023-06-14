@@ -49,8 +49,9 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
@@ -58,6 +59,9 @@ import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
@@ -128,7 +132,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
-    private val envShareProjectDao: EnvShareProjectDao
+    private val envShareProjectDao: EnvShareProjectDao,
+    private val commonConfig: CommonConfig
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -142,7 +147,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.VIEW)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
             )
         }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
@@ -255,7 +260,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
     }
@@ -728,7 +736,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$realEnvName] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "第三方构建机环境不存在($projectId:$realEnvName)"
+                I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) + "($projectId:$realEnvName)"
             )
         }
         thirdPartyAgentList.addAll(
@@ -759,7 +767,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         envName = sharedEnvName
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
-                        "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
+                        I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -789,7 +798,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 envId = it.envId
             ) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
+                I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) + "($sharedProjectId:$sharedEnvId)"
             )
             if (env.envName != it.envName) {
                 envShareProjectDao.batchUpdateEnvName(dslContext, it.envId, env.envName)
@@ -802,7 +811,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "无权限使用第三方构建机环境($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -847,7 +857,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedThirdPartyAgents.isEmpty()) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)"
+                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -874,7 +885,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "第三方构建机环境节点不存在($projectId:$envHashId)"
+                I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST) + "($projectId:$envHashId)"
             )
         }
         val nodeIds = nodes.map {
@@ -1125,7 +1136,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ParallelTaskCount = -1,
                     envs = mapOf(),
                     props = mapOf(),
-                    dockerParallelTaskCount = -1
+                    dockerParallelTaskCount = -1,
+                    language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
@@ -1236,7 +1248,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 ParallelTaskCount = -1,
                                 envs = mapOf(),
                                 props = mapOf(),
-                                dockerParallelTaskCount = -1
+                                dockerParallelTaskCount = -1,
+                                language = commonConfig.devopsDefaultLocaleLanguage
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1272,7 +1285,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
+                language = commonConfig.devopsDefaultLocaleLanguage
             )
         }
     }

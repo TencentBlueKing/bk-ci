@@ -28,17 +28,20 @@
 package com.tencent.devops.environment.constant
 
 /**
- * 环境管理微服务模块请求返回状态码
+ * 流水线微服务模块请求返回状态码
  * 返回码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
  * 1、返回码总长度为7位，
- * 2、前2位数字代表系统名称（如21代表蓝盾平台）
+ * 2、前2位数字代表系统名称（如21代表平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
- *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
+ *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
+ *    32: remotedev）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
- * @since: 2019-03-05
+ *
+ * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
@@ -61,7 +64,6 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_EDIT_PERMISSSION = "2105015" // 环境管理：没有节点编辑权限
     const val ERROR_NODE_NO_VIEW_PERMISSSION = "2105016" // 环境管理：没有节点查看权限
     const val ERROR_NODE_NO_DEL_PERMISSSION = "2105017" // 环境管理：没有节点删除权限
-    const val ERROR_NODE_NO_USE_PERMISSSION = "2105039" // 环境管理：没有节点使用权限
     const val ERROR_NODE_AGENT_STATUS_EXCEPTION = "2105018" // 环境管理：构建机状态异常
     const val ERROR_NODE_AGENT_SECRET_KEY_INVALID = "2105019" // 环境管理：构建机密钥不对
     const val ERROR_ENV_EXPIRED_DAYS = "2105020" // 环境管理：有效期不能超过[{0}]天
@@ -84,9 +86,17 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
     const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
-    const val ERROR_PIPE_NOT_FOUND = "2105039" // 环境管理：不存在该管道信息
     const val ERROR_NOT_THIRD_PARTY_BUILD_MACHINE = "2105040" // 环境管理：这个节点不是第三方构建机
     const val THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST = "2105041" // 第三方构建机环境不存在
     const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
     const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
+    const val ERROR_PIPE_NOT_FOUND = "2105044" // 环境管理：不存在该管道信息
+    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：没有节点使用权限
+
+    const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
+    const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器
+    const val BK_MEMORY = "bkMemory" // 32GB*12 DDR3 内存
+    const val BK_SOLID_STATE_DISK = "bkSolidStateDisk" // {0}GB 固态硬盘
+    const val BK_ESTIMATED_DELIVERY_TIME = "bkEstimatedDeliveryTime" // 预计交付周期：{0}分钟
+    const val BK_HIGH_END_VERSION = "bkHighEndVersion" // 32核64G（高配版）
 }

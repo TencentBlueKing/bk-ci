@@ -120,7 +120,7 @@ class PipelineBuildDao {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_START_WITH_ERROR,
-                defaultMessage = "流水线启动准备失败: ${t.message}"
+                params = arrayOf(t.message ?: "")
             )
         }
     }
@@ -822,17 +822,17 @@ class PipelineBuildDao {
         }
     }
 
-    fun getBuildByBuildNo(
+    fun getBuildByBuildNum(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        buildNo: Int
+        buildNum: Int
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_NUM.eq(buildNo))
+                .and(BUILD_NUM.eq(buildNum))
                 .fetchAny()
         }
     }

@@ -7,10 +7,10 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.log.constant.LogMessageCode
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import org.springframework.beans.factory.annotation.Autowired
 
 class RbacLogPermissionService @Autowired constructor(
@@ -29,8 +29,7 @@ class RbacLogPermissionService @Autowired constructor(
                 pipelineId = pipelineId,
                 channelCode = null
             ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = LogMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
         // 兼容CodeCC场景，CodeCC创建的流水线未向权限中心注册，调鉴权接口会报错。
         return pipelineInfo.channelCode != ChannelCode.BS ||

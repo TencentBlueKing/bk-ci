@@ -28,7 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ActivityDao
 import com.tencent.devops.project.pojo.ActivityInfo
@@ -50,9 +50,9 @@ class ActivityService @Autowired constructor(
     fun list(type: ActivityType): List<ActivityInfo> {
         return activityDao.list(dslContext, type, ActivityStatus.ACTIVITY).map {
             ActivityInfo(
-                name = MessageCodeUtil.getMessageByLocale(chinese = it.name, english = it.englishName),
+                name = it.name,
                 link = it.link,
-                createTime = it.createTime.toLocalTime().toString()
+                createTime = DateTimeUtil.toDateTime(it.createTime)
             )
         }
     }
@@ -81,7 +81,10 @@ class ActivityService @Autowired constructor(
                 )
             })
         }
-        return Result(405, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID))
+        return Result(
+            405,
+            I18nUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
+        )
     }
 
     fun listOPActivity(userId: String): List<OPActivityVO> {

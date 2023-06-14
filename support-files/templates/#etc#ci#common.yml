@@ -226,6 +226,8 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   
 # certificate server 配置
 certificate:
@@ -298,6 +300,8 @@ bkci:
     public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
     private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
     enable: false
+  defaultLocale: __BK_CI_DEFAULT_LOCALE__
+  supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
     
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672

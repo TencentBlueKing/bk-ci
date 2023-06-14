@@ -28,8 +28,8 @@
 
 package com.tencent.devops.auth.api.migrate
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,24 +50,27 @@ interface OpAuthMigrateResource {
     @ApiOperation("v3权限批量升级到rbac权限")
     fun v3ToRbacAuth(
         @ApiParam("迁移项目", required = true)
-        migrateProjects: List<MigrateProjectDTO>
+        projectCodes: List<String>
     ): Result<Boolean>
-
-    @POST
-    @Path("/allV3ToRbacAuth")
-    @ApiOperation("v3权限全部升级到rbac权限")
-    fun allV3ToRbacAuth(): Result<Boolean>
 
     @POST
     @Path("/v0ToRbac")
     @ApiOperation("v0权限批量升级到rbac权限")
     fun v0ToRbacAuth(
         @ApiParam("迁移项目", required = true)
-        migrateProjects: List<MigrateProjectDTO>
+        projectCodes: List<String>
     ): Result<Boolean>
 
     @POST
-    @Path("/allV0ToRbacAuth")
-    @ApiOperation("v0权限全部升级到rbac权限")
-    fun allV0ToRbacAuth(): Result<Boolean>
+    @Path("/allToRbac")
+    @ApiOperation("权限全部升级到rbac权限")
+    fun allToRbacAuth(): Result<Boolean>
+
+    @POST
+    @Path("/toRbacAuthByCondition")
+    @ApiOperation("按条件升级到rbac权限")
+    fun toRbacAuthByCondition(
+        @ApiParam("按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
 }

@@ -27,12 +27,12 @@
 
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
@@ -114,18 +114,20 @@ class P4Service(
         val username = credentials[0]
         if (username.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
             )
         }
         val password = credentials[1]
         if (password.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.PWD_EMPTY
+                )
             )
         }
         return Triple(repository, username, password)

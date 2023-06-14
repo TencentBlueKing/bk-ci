@@ -27,12 +27,15 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildScriptResource
 import com.tencent.devops.dispatch.service.DownloadScriptService
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptService: DownloadScriptService) :
@@ -40,7 +43,13 @@ class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptS
 
     override fun download(scriptName: String, eTag: String?): Response {
         if (scriptName.isBlank()) {
-            throw ParamBlankException("无效的脚本名称")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(),
+                    arrayOf("scriptName")
+                )
+            )
         }
         return downloadScriptService.downloadScript(scriptName, eTag)
     }

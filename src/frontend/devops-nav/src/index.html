@@ -88,7 +88,6 @@
       var BK_CI_VERSION = '__BK_CI_VERSION__'
       var ENTERPRISE_VERSION = false
     </script>
-
     <script>
       // 动态加载js
       function importScript(src, oHead, fOnload) {
@@ -266,6 +265,10 @@
         return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
       }
 
+      function getLocaleBackend() {
+        return asyncGet(API_URL_PREFIX + '/project/api/user/locales/get')
+      }
+
       function fetchAllProjects() {
         return asyncGet(
           API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
@@ -429,12 +432,14 @@
           fetchAllProjects(),
           fetchAllServices(),
           requestUser(),
+          getLocaleBackend(),
           fetchProjectById(pathPid),
         ]).then((response) => {
           var project = response.pop()
           var cahceArray = ['projectList', 'allServices', 'userInfo']
           var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
           var projectList = response[0]
+          window.INIT_LOCALE = response.pop().language
 
           if (project && project.projectCode) {
             for (var j = 0; j < projectList.length; j++) {

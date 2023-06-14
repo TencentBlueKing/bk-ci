@@ -28,7 +28,9 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_RESOURCE_CREATE_FAIL
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
@@ -45,12 +47,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotFoundException
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
@@ -61,6 +63,7 @@ class RbacPermissionResourceService(
     private val permissionService: PermissionService,
     private val permissionProjectService: PermissionProjectService,
     private val traceEventDispatcher: TraceEventDispatcher,
+    private val iamV2ManagerService: V2ManagerService,
     private val client: Client
 ) : PermissionResourceService {
 
@@ -74,7 +77,8 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
@@ -110,8 +114,43 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode
             )
         }
-        // 项目创建需要审批时,不需要保存资源信息
-        if (managerId != 0) {
+        // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
+        val isCreateResourceAndGroup = managerId != 0
+        if (isCreateResourceAndGroup) {
+            createResource(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                resourceCode = resourceCode,
+                iamResourceCode = iamResourceCode,
+                managerId = managerId
+            )
+            createResourceDefaultGroup(
+                userId = userId,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                resourceCode = resourceCode,
+                iamResourceCode = iamResourceCode,
+                async = async,
+                managerId = managerId
+            )
+        }
+        return true
+    }
+
+    private fun createResource(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceName: String,
+        resourceCode: String,
+        iamResourceCode: String,
+        managerId: Int
+    ) {
+        try {
             authResourceService.create(
                 userId = userId,
                 projectCode = projectCode,
@@ -123,6 +162,32 @@ class RbacPermissionResourceService(
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
+        } catch (ignore: Exception) {
+            if (resourceType == AuthResourceType.PROJECT.value) {
+                iamV2ManagerService.deleteManagerV2(managerId.toString())
+            } else {
+                iamV2ManagerService.deleteSubsetManager(managerId.toString())
+            }
+            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName", ignore)
+            throw ErrorCodeException(
+                errorCode = ERROR_RESOURCE_CREATE_FAIL,
+                defaultMessage = "create resource failed|$userId|$projectCode|$resourceType|$resourceName"
+            )
+        }
+    }
+
+    private fun createResourceDefaultGroup(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceName: String,
+        resourceCode: String,
+        iamResourceCode: String,
+        async: Boolean,
+        managerId: Int
+    ) {
+        if (async) {
             traceEventDispatcher.dispatch(
                 AuthResourceGroupCreateEvent(
                     managerId = managerId,
@@ -135,8 +200,29 @@ class RbacPermissionResourceService(
                     iamResourceCode = iamResourceCode
                 )
             )
+        } else {
+            // 同步创建组，主要用于迁移数据；正常创建资源，走异步
+            if (resourceType == AuthResourceType.PROJECT.value) {
+                permissionGradeManagerService.createGradeDefaultGroup(
+                    gradeManagerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName
+                )
+            } else {
+                permissionSubsetManagerService.createSubsetManagerDefaultGroup(
+                    subsetManagerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode,
+                    createMode = AuthGroupCreateMode.CREATE
+                )
+            }
         }
-        return true
     }
 
     override fun resourceModifyRelation(
@@ -248,7 +334,7 @@ class RbacPermissionResourceService(
         // TODO 流水线组一期先不上,流水线组权限由项目控制
         if (resourceType == AuthResourceType.PROJECT.value || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         } else {
             val checkResourceManage = permissionService.validateUserResourcePermissionByRelation(
@@ -264,7 +350,7 @@ class RbacPermissionResourceService(
             )
             if (!checkResourceManage) {
                 throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                    message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
                 )
             }
         }
