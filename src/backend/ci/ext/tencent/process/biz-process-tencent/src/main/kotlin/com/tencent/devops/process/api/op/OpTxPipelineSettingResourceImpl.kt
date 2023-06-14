@@ -28,9 +28,7 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -52,32 +50,54 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
 ) : OpTxPipelineSettingResource {
 
     override fun updatePipelineSettingContent(userId: String): Result<Boolean> {
-        val startTime = LocalDateTime.of(2023, 5, 18, 16, 0)
+        val startTime = LocalDateTime.of(2023, 6, 18, 13, 0)
         val endTime = LocalDateTime.now()
-        val page = PageUtil.DEFAULT_PAGE
+        var page = PageUtil.DEFAULT_PAGE
         val pageSize = PageUtil.MAX_PAGE_SIZE
+        logger.info("start update pipeline setting content")
         do {
             val pipelineIds = pipelineInfoDao.getIdByCreateTimePeriod(
                 dslContext = dslContext,
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                page = page,
+                pageSize = pageSize
             )
-            val tPipelineSettingVersionRecords = pipelineSettingVersionDao.getSettingByPipelineIds(
+            pipelineSettingVersionDao.getSettingByPipelineIds(
                 dslContext,
                 pipelineIds
             ).map {
-
+                if (it.successContent.isNotBlank()) {
+                    it.successContent = replaceContent(it.successContent)
+                }
+                if (it.failContent.isNotBlank()) {
+                    it.failContent = replaceContent(it.failContent)
+                }
             }
-        } while ()
-
+            page ++
+        } while (pipelineIds.size == pageSize)
+        logger.info("update pipeline setting content end")
+        return Result(true)
     }
 
     private fun replaceContent(content: String): String {
         var newContent = content
-        if (content.contains(projectNameChinese) {
-                newContent = content.replace(projectNameChinese, "\${$projectNameChinese}")
+        if (newContent.contains(projectNameChinese)) {
+                newContent = newContent.replace(projectNameChinese, "\${$PROJECT_NAME_CHINESE}")
         }
-            return newContent
+        if (newContent.contains(pipelineName)) {
+            newContent = newContent.replace(pipelineName, "\${$PIPELINE_NAME}")
+        }
+        if (newContent.contains(pipelineBuildNum)) {
+            newContent = newContent.replace(pipelineBuildNum, "\${$PIPELINE_BUILD_NUM}")
+        }
+        if (newContent.contains(pipelineTimeDuration)) {
+            newContent = newContent.replace(pipelineTimeDuration, "\${$PIPELINE_TIME_DURATION}")
+        }
+        if (newContent.contains(pipelineStartUserName)) {
+            newContent = newContent.replace(pipelineStartUserName, "\${$PIPELINE_START_USER_NAME}")
+        }
+        return newContent
     }
 
     companion object {
