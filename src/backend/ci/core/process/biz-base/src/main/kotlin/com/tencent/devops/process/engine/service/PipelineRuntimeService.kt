@@ -1792,12 +1792,12 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.getLatestFailedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
-    fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {
-        return pipelineBuildDao.getBuildByBuildNo(
+    fun getBuildIdByBuildNum(projectId: String, pipelineId: String, buildNum: Int): String? {
+        return pipelineBuildDao.getBuildByBuildNum(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildNo = buildNo
+            buildNum = buildNum
         )?.buildId
     }
 

@@ -1355,7 +1355,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdbyBuildNo(projectId, pipelineId, buildNo)
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1363,6 +1363,40 @@ class PipelineBuildFacadeService(
             )
         return getBuildDetail(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
+        )
+    }
+
+    fun getBuildRecordByBuildNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNum: Int,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): ModelRecord {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
+            )
+        )
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf("buildNum=$buildNum")
+            )
+        return getBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = null,
+            channelCode = channelCode
         )
     }
 
