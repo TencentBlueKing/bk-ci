@@ -57,8 +57,6 @@ class SshPublicKeysService @Autowired constructor(
             "SshPublicKeysService|addSshPublicKey|userId" +
                 "|$userId|sshPublicKey|$sshPublicKey"
         )
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
         // ssh key信息写入DB
         sshPublicKeysDao.createSshKey(
             dslContext = dslContext,
@@ -72,9 +70,6 @@ class SshPublicKeysService @Autowired constructor(
         userIds: Set<String>
     ): List<SshPublicKey> {
         logger.info("SshPublicKeysService|getSshPublicKeysList|userId|$userIds")
-        userIds.forEach {
-            checkCommonUser(it)
-        }
         val result = mutableListOf<SshPublicKey>()
         sshPublicKeysDao.queryUserSshKeys(
             dslContext = dslContext,
