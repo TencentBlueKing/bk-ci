@@ -118,5 +118,4 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
         private val pipelineTimeDuration = "\$$PIPELINE_TIME_DURATION"
         private val pipelineStartUserName = "\$$PIPELINE_START_USER_NAME"
     }
-
 }
