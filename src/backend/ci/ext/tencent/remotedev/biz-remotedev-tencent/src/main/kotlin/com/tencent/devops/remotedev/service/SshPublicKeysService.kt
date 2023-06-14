@@ -52,7 +52,7 @@ class SshPublicKeysService @Autowired constructor(
             "SshPublicKeysService|addSshPublicKey|userId" +
                 "|$userId|sshPublicKey|$sshPublicKey"
         )
-        if (checkSshKeyExists(sshPublicKey)) return true
+        if (checkSshKeyExists(sshPublicKey)) return false
         // ssh key信息写入DB
         sshPublicKeysDao.createSshKey(
             dslContext = dslContext,
