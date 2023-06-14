@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -63,16 +64,21 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
+            val tPipelineSettingVersions = mutableListOf<TPipelineSettingVersionRecord>()
             pipelineSettingVersionDao.getSettingByPipelineIds(
                 dslContext,
                 pipelineIds
-            ).map {
+            ).forEach {
                 if (it.successContent.isNotBlank()) {
                     it.successContent = replaceContent(it.successContent)
                 }
                 if (it.failContent.isNotBlank()) {
                     it.failContent = replaceContent(it.failContent)
                 }
+                tPipelineSettingVersions.add(it)
+            }
+            if (tPipelineSettingVersions.isNotEmpty()) {
+                pipelineSettingVersionDao.batchUpdate(dslContext, tPipelineSettingVersions)
             }
             page ++
         } while (pipelineIds.size == pageSize)
