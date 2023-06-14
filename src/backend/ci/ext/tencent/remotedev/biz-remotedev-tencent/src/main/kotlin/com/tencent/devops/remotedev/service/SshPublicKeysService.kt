@@ -28,25 +28,18 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.dao.SshPublicKeysDao
-import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.SshPublicKey
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SshPublicKeysService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
-    private val sshPublicKeysDao: SshPublicKeysDao,
-    private val workspaceService: WorkspaceService
+    private val sshPublicKeysDao: SshPublicKeysDao
 ) {
 
     companion object {
@@ -65,8 +58,6 @@ class SshPublicKeysService @Autowired constructor(
             dslContext = dslContext,
             sshPublicKey = sshPublicKey
         )
-        // 有新的ssh上报，需刷新所有当前在运行中的空间的detail缓存信息。
-        updateUserWorkspaceDetailCache(userId)
         return true
     }
 
@@ -103,14 +94,4 @@ class SshPublicKeysService @Autowired constructor(
     // 校验sshkey是否已存在
     fun checkSshKeyExists(sshPublicKey: SshPublicKey) = sshPublicKeysDao.getSshKeysRecord(dslContext, sshPublicKey)
         ?.let { true } ?: false
-
-    // 更新用户运行中的空间的detail缓存信息
-    fun updateUserWorkspaceDetailCache(userId: String) {
-        workspaceDao.fetchWorkspace(
-            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
-        )?.parallelStream()?.forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            workspaceService.getOrSaveWorkspaceDetail(it.name, WorkspaceMountType.valueOf(it.workspaceMountType))
-        }
-    }
 }

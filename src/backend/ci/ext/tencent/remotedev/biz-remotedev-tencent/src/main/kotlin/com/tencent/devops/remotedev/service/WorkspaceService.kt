@@ -1246,6 +1246,16 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    // 更新用户运行中的空间的detail缓存信息
+    fun updateUserWorkspaceDetailCache(userId: String) {
+        workspaceDao.fetchWorkspace(
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            getOrSaveWorkspaceDetail(it.name, WorkspaceMountType.valueOf(it.workspaceMountType))
+        }
+    }
+
     fun preCiAgent(agentId: String, workspaceName: String): Boolean {
         logger.info("update preCiAgent id|$workspaceName|$agentId")
         return workspaceDao.updatePreCiAgentId(dslContext, agentId, workspaceName)
