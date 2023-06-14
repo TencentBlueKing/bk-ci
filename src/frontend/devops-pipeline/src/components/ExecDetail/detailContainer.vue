@@ -1,9 +1,9 @@
 <template>
     <article class="log-home">
-        <span @click="closeLog" class="log-home-close-bar">
+        <!-- <span @click="closeLog" class="log-home-close-bar">
             <i class="devops-icon icon-angle-right"></i>
-        </span>
-        <section :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
+        </span> -->
+        <section v-bk-clickoutside="closeLog" :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
@@ -78,11 +78,11 @@
 
     .log-home {
         position: fixed;
-        width: 80vw;
-        right: 26px;
+        width: 100vw;
+        height: 100vh;
+        right: 0;
         top: 0;
-        height: calc(100vh - 32px);
-        // background-color: rgba(0, 0, 0, .2);
+        background-color: rgba(0, 0, 0, .2);
         z-index: 1000;
         .scroll-loading {
             position: absolute;
@@ -91,14 +91,14 @@
             height: 16px;
         }
         .log-main {
-            position: relative;
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            right: 26px;
+            width: 80vw;
+            height: calc(100vh - 32px);
             display: flex;
             flex-direction: column;
             margin: 16px;
             border-radius: 6px;
-            border-top-left-radius: 0;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
             &.over-hidden {
@@ -143,7 +143,7 @@
         height: 59px;
         width: 26px;
         position: absolute;
-        left: -10px;
+        right: calc(80vw + 42px);
         top: 16px;
         background: #464953;
         color: white;
