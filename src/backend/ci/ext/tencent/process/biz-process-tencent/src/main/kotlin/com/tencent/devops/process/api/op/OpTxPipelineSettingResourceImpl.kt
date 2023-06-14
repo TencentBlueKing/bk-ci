@@ -69,19 +69,17 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
                 dslContext,
                 pipelineIds
             ).forEach {
+                val newSuccessContent = replaceContent(it.successContent)
                 if (it.successContent.isNotBlank()) {
-                    val newSuccessContent = replaceContent(it.successContent)
-                    if (newSuccessContent != it.successContent) {
-                        it.successContent = newSuccessContent
-                    }
+                    it.successContent = newSuccessContent
                 }
+                val newFailContent = replaceContent(it.failContent)
                 if (it.failContent.isNotBlank()) {
-                    val newFailContent = replaceContent(it.failContent)
-                    if (newFailContent != it.failContent) {
-                        it.failContent = newFailContent
-                    }
+                    it.failContent = newFailContent
                 }
-                tPipelineSettingVersions.add(it)
+                if (newSuccessContent != it.successContent || newFailContent != it.failContent) {
+                    tPipelineSettingVersions.add(it)
+                }
             }
             if (tPipelineSettingVersions.isNotEmpty()) {
                 pipelineSettingVersionDao.batchUpdate(dslContext, tPipelineSettingVersions)
