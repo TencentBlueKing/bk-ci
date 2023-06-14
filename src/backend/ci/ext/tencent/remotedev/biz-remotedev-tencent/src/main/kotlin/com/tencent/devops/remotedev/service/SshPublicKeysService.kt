@@ -49,7 +49,7 @@ class SshPublicKeysService @Autowired constructor(
     // 新增SSH公钥
     fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Boolean {
         logger.info(
-            "SshPublicKeysService|addSshPublicKey|userId" +
+            "SshPublicKeysService|createPublicKey|userId" +
                 "|$userId|sshPublicKey|$sshPublicKey"
         )
         if (checkSshKeyExists(sshPublicKey)) return false
@@ -58,6 +58,7 @@ class SshPublicKeysService @Autowired constructor(
             dslContext = dslContext,
             sshPublicKey = sshPublicKey
         )
+        logger.info("SshPublicKeysService|createPublicKey|new create")
         return true
     }
 

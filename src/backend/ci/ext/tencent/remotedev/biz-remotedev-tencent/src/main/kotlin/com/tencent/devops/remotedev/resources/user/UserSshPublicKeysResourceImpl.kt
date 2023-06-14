@@ -49,6 +49,7 @@ class UserSshPublicKeysResourceImpl @Autowired constructor(
     override fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Result<Boolean> {
         val res = sshPublicKeysService.createPublicKey(userId, sshPublicKey)
         // 有新的ssh上报，需刷新所有当前在运行中的空间的detail缓存信息。
+
         if (res) {
             workspaceService.updateUserWorkspaceDetailCache(userId)
         }
