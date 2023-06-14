@@ -70,7 +70,7 @@
                     {{ panel.label }}
                 </span>
             </header>
-            <main :class="['exec-detail-main', {
+            <div :class="['exec-detail-main', {
                 'is-outputs-panel': curItemTab === 'outputs'
             }]">
                 <component
@@ -78,7 +78,7 @@
                     v-bind="curPanel.bindData"
                     v-on="curPanel.listeners"
                 ></component>
-            </main>
+            </div>
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showPanelType === 'PAUSE'">
