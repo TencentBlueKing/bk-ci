@@ -199,6 +199,10 @@
                 return !isTriggerContainer(this.container) && this.reactiveData.editable
             },
             containerSerialNum () {
+                if (this.reactiveData.isExecDetail) {
+                    const jobSerialNum = this.container.id - this.stage.containers[0].id + 1
+                    return `${this.stage.id.replace('stage-', '')}-${jobSerialNum}`
+                }
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
             },
             isOnlyOneContainer () {

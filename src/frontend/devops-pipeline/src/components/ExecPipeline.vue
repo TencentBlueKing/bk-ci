@@ -125,6 +125,7 @@
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
                         <bk-table
+                            ext-cls="error-popup-table"
                             :data="errorList"
                             :border="false"
                             @row-click="(row) => setAtomLocate(row)"
@@ -134,9 +135,7 @@
                                 <div slot-scope="props" class="exec-error-type-cell">
                                     <span class="exec-error-locate-icon">
                                         <Logo
-                                            v-if="
-                                                activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
-                                            "
+                                            v-if="isActiveErrorAtom(props.row)"
                                             name="location-right"
                                             size="18"
                                         />
@@ -175,6 +174,7 @@
                                 </template>
                             </bk-table-column>
                         </bk-table>
+
                     </bk-tab-panel>
                 </bk-tab>
             </footer>
@@ -320,21 +320,22 @@
             },
             errorsTableColumns () {
                 return [
+                    // {
+                    //     label: this.$t('details.pipelineErrorType'),
+                    //     prop: 'errorTypeAlias',
+                    //     width: 150
+                    // },
                     {
-                        label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorTypeAlias',
-                        width: 150
+                        label: this.$t('details.pipelineErrorPos'),
+                        prop: 'taskName',
+                        width: 200
                     },
                     {
                         label: this.$t('details.pipelineErrorCode'),
                         prop: 'errorCode',
                         width: 150
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorPos'),
-                        prop: 'taskName',
-                        width: 200
                     }
+
                 ]
             },
             userName () {
@@ -502,6 +503,9 @@
 
                 )
             },
+            isActiveErrorAtom (atom) {
+                return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
+            },
             isSkip (status) {
                 return ['SKIP'].includes(status)
             },
@@ -657,11 +661,11 @@
                         ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(this.skipTask ? 'skipSuc' : 'subpage.retrySuc')
                         theme = 'success'
                         res?.executeCount && this.handleExecuteCountChange(res.executeCount)
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = res?.message ?? this.$t(this.skipTask ? 'skipFail' : 'subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
@@ -767,8 +771,7 @@
                 }
             },
             setAtomLocate (row, showLog = false) {
-                console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible', this.activeErrorAtom)
-                if (this.activeErrorAtom?.taskId === row.taskId && !showLog) return
+                if (this.isActiveErrorAtom(row) && !showLog) return
                 if (this.activeErrorAtom) {
                     this.locateError(this.activeErrorAtom, false, showLog)
                 }
@@ -921,9 +924,10 @@
     position: fixed;
     bottom: 0;
     left: 24px;
-    right: 24px;
+    right: 34px;
     overflow: hidden;
     will-change: auto;
+    max-height: 30vh;
     transition: all 0.5s ease;
     transform: translateY(calc(100% - 42px));
     box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
@@ -937,6 +941,17 @@
         padding: 0;
         position: static;
       }
+    }
+    .error-popup-table {
+        max-height: calc(30vh - 42px);
+        display: flex;
+        flex-direction: column;
+        .bk-table-header-wrapper {
+            flex-shrink: 0;
+        }
+        .bk-table-body-wrapper {
+            overflow-y: auto;
+        }
     }
     .toggle-error-popup-icon {
         display: flex;
