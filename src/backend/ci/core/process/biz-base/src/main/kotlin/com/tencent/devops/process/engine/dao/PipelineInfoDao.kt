@@ -741,13 +741,14 @@ class PipelineInfoDao {
         endTime: LocalDateTime,
         page: Int,
         pageSize: Int
-    ): Result<TPipelineInfoRecord> {
+    ): List<String> {
         with(T_PIPELINE_INFO) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(PIPELINE_ID)
+                .from(this)
                 .where(CREATE_TIME.between(startTime, endTime))
                 .orderBy(CREATE_TIME, PIPELINE_ID)
                 .limit((page - 1) * pageSize, pageSize)
-                .fetch()
+                .fetchInto(String::class.java)
         }
     }
 
