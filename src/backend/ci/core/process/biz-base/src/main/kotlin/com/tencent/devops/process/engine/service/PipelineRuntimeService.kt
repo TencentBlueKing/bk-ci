@@ -1416,6 +1416,7 @@ class PipelineRuntimeService @Autowired constructor(
                             ManualReviewUserTaskElement::suggest.name to (params.suggest ?: ""),
                             ManualReviewUserTaskElement::params.name to params.params
                         ),
+                        operation = "manualDealReview#$taskId",
                         timestamps = mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                                 BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
