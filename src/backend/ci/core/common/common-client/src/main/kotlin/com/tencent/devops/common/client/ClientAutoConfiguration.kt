@@ -77,9 +77,10 @@ class ClientAutoConfiguration {
         clientErrorDecoder: ClientErrorDecoder,
         commonConfig: CommonConfig,
         bkTag: BkTag,
+        mutilJarServiceMapConfiguration: MutilJarServiceMapConfiguration,
         objectMapper: ObjectMapper,
         @Autowired(required = false) compositeDiscoveryClient: CompositeDiscoveryClient?
-    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
+    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, mutilJarServiceMapConfiguration, objectMapper)
 
     @Bean
     fun consulFilter(bkTag: BkTag) = ConsulFilter(bkTag)
