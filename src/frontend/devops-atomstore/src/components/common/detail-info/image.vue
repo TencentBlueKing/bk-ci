@@ -253,7 +253,7 @@
             }
         }
         .detail-info.detail-label {
-            width: 994px;
+            width: 800px;
             padding-left: 90px;
             padding-top: 0;
             display: inline-block;

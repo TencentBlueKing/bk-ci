@@ -15,7 +15,7 @@
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.name')" prop="certId"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.alias')" prop="certId"></bk-table-column>
                     <bk-table-column :label="$t('ticket.type')" prop="certType" :formatter="getShowType"></bk-table-column>
                     <bk-table-column :label="$t('ticket.cert.uploader')" prop="creator"></bk-table-column>
                     <bk-table-column :label="$t('ticket.cert.expireDate')" prop="expireTime" :formatter="convertToTime"></bk-table-column>

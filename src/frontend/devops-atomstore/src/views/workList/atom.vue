@@ -69,14 +69,20 @@
             </bk-table>
         </main>
         <bk-sideslider
-            class="create-atom-slider g-slide-radio"
+            :class="{
+                'g-slide-radio': true,
+                'create-atom-slider': true,
+                'create-atom-slider-en': !isZH
+            }"
             :is-show.sync="createAtomsideConfig.show"
             :title="createAtomsideConfig.title"
             :quick-close="createAtomsideConfig.quickClose"
             :width="createAtomsideConfig.width"
             :before-close="cancelCreateAtom">
             <template slot="content">
-                <form class="bk-form create-atom-form" v-if="hasOauth"
+                <form
+                    v-if="hasOauth"
+                    class="bk-form create-atom-form"
                     v-bkloading="{
                         isLoading: createAtomsideConfig.isLoading
                     }">
@@ -105,12 +111,6 @@
                                 </template>
                             </bk-popover>
                         </div>
-                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
-                            </template>
-                        </bk-popover>
                     </div>
 
                     <div class="bk-form-item is-required">
@@ -138,12 +138,6 @@
                                 </template>
                             </bk-popover>
                         </div>
-                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
-                            </template>
-                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.调试项目') }} </label>
@@ -207,17 +201,10 @@
                                     </a>
                                 </div>
                             </bk-select>
-                            <div v-if="atomErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                         </div>
-                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.debugProjectTips') }} </p>
-                            </template>
-                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.自定义前端') }} </label>
+                        <label class="bk-label"> {{ $t('store.自定义前端UI') }} </label>
                         <div class="bk-form-content atom-item-content">
                             <bk-radio-group
                                 v-model="createAtomForm.frontendType"
@@ -436,7 +423,8 @@
                 },
                 showConvention: false,
                 agreeWithConvention: false,
-                conventionSecond: 5
+                conventionSecond: 5,
+                isZH: true
             }
         },
 
@@ -461,6 +449,7 @@
         },
 
         created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             this.getLanguage()
             this.requestList()
         },
@@ -856,6 +845,16 @@
         display: flex;
         align-items: center;
         padding-left: 8px;
+    }
+    ::v-deep .create-atom-slider-en {
+        .bk-form-item{
+            .bk-label {
+                width: 160px;
+            }
+            .bk-form-content {
+                margin-left: 160px;
+            }
+        }
     }
     ::v-deep .atom-dialog-wrapper {
         .bk-form-item{
