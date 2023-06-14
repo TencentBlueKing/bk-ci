@@ -30,7 +30,9 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
+import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -47,13 +49,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpTxPipelineSettingResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val pipelineSettingDao: PipelineSettingDao
 ) : OpTxPipelineSettingResource {
 
     override fun updatePipelineSettingContent(userId: String): Result<Boolean> {
         val startTime = LocalDateTime.of(2023, 5, 18, 15, 0)
         val endTime = LocalDateTime.now()
-        var page = PageUtil.DEFAULT_PAGE
+        var page1 = PageUtil.DEFAULT_PAGE
         val pageSize = PageUtil.MAX_PAGE_SIZE
         logger.info("start update pipeline setting content")
         do {
@@ -61,7 +64,7 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
                 dslContext = dslContext,
                 startTime = startTime,
                 endTime = endTime,
-                page = page,
+                page = page1,
                 pageSize = pageSize
             )
             val tPipelineSettingVersions = mutableListOf<TPipelineSettingVersionRecord>()
@@ -80,7 +83,35 @@ class OpTxPipelineSettingResourceImpl @Autowired constructor(
             if (tPipelineSettingVersions.isNotEmpty()) {
                 pipelineSettingVersionDao.batchUpdate(dslContext, tPipelineSettingVersions)
             }
-            page ++
+            page1 ++
+        } while (pipelineIds.size == pageSize)
+
+        var page2 = PageUtil.DEFAULT_PAGE
+        do {
+            val pipelineIds = pipelineInfoDao.getIdByCreateTimePeriod(
+                dslContext = dslContext,
+                startTime = startTime,
+                endTime = endTime,
+                page = page2,
+                pageSize = pageSize
+            )
+            val tPipelineSettings = mutableListOf<TPipelineSettingRecord>()
+            pipelineSettingDao.getSettings(
+                dslContext,
+                pipelineIds.toSet()
+            ).forEach {
+                val newSuccessContent = replaceContent(it.successContent)
+                val newFailContent = replaceContent(it.failContent)
+                if (newSuccessContent != it.successContent || newFailContent != it.failContent) {
+                    it.successContent = newSuccessContent
+                    it.failContent = newFailContent
+                    tPipelineSettings.add(it)
+                }
+            }
+            if (tPipelineSettings.isNotEmpty()) {
+                pipelineSettingDao.batchUpdate(dslContext, tPipelineSettings)
+            }
+            page2 ++
         } while (pipelineIds.size == pageSize)
         logger.info("update pipeline setting content end")
         return Result(true)
