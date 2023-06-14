@@ -738,11 +738,15 @@ class PipelineInfoDao {
     fun getIdByCreateTimePeriod(
         dslContext: DSLContext,
         startTime: LocalDateTime,
-        endTime: LocalDateTime
+        endTime: LocalDateTime,
+        page: Int,
+        pageSize: Int
     ): Result<TPipelineInfoRecord> {
         with(T_PIPELINE_INFO) {
             return dslContext.selectFrom(this)
                 .where(CREATE_TIME.between(startTime, endTime))
+                .orderBy(CREATE_TIME, PIPELINE_ID)
+                .limit((page - 1) * pageSize, pageSize)
                 .fetch()
         }
     }
