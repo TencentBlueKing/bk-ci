@@ -1,0 +1,15 @@
+.pipeline-detail-tab-card {
+    > .bk-tab-header {
+        .bk-tab-label-list::after {
+            display: none;
+        }
+        .bk-tab-label-wrapper {
+            background: #F0F1F5;
+            .bk-tab-label-item {
+                position: relative;
+
+
+            }
+        }
+    }
+}

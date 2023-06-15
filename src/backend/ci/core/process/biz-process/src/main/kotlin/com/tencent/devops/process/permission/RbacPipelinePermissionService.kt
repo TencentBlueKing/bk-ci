@@ -54,13 +54,23 @@ class RbacPipelinePermissionService constructor(
 ) : PipelinePermissionService {
 
     override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
-            permission = permission,
-            projectCode = projectId
-        )
+        return if (permission == AuthPermission.CREATE) {
+            authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                permission = permission,
+                projectCode = projectId
+            )
+        } else {
+            authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                permission = permission,
+                projectCode = projectId
+            )
+        }
     }
 
     override fun checkPipelinePermission(

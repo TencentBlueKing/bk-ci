@@ -23,25 +23,25 @@
 
 import Vue from 'vue'
 import App from './App'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
-import focus from './directives/focus/index.js'
 
+import '@icon-cool/bk-icon-devops'
+import '@icon-cool/bk-icon-devops/src/index'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+import PortalVue from "portal-vue"; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
+import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
-import mavonEditor from 'mavon-editor'
-import 'mavon-editor/dist/css/index.css'
-import PortalVue from "portal-vue" // eslint-disable-line
-import createLocale from '../../locale'
-import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
 
-import { pipelineDocs } from '../../common-lib/docs'
 import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
+import { pipelineDocs } from '../../common-lib/docs'
 import {
     handlePipelineNoPermission,
     RESOURCE_ACTION
@@ -79,6 +79,7 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
+console.log(i18n.locale)
 Vue.use(BkPipeline, {
     i18n
 })

@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ReturnCount", "LongParameterList")
 class PipelineRetryFacadeService @Autowired constructor(
     val dslContext: DSLContext,
     val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -85,7 +86,7 @@ class PipelineRetryFacadeService @Autowired constructor(
         checkStopTask(projectId, buildId, containerInfo!!)
         // 刷新当前job的开关机以及job状态， container状态， detail数据
         refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo, skipFailedTask)
-        // 发送container Refreash事件，重新开始task对应的调度
+        // 发送container Refresh事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
         buildLogPrinter.addYellowLine(
             buildId = buildId,

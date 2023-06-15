@@ -70,6 +70,7 @@ import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
@@ -391,30 +392,32 @@ class OpAtomServiceImpl @Autowired constructor(
         try {
             val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
             taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
-            val releaseInfoMap = taskJsonMap["releaseInfo"]
+            val releaseInfoMap = taskJsonMap[KEY_RELEASE_INFO]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                params = arrayOf("releaseInfo"),
+                params = arrayOf(KEY_RELEASE_INFO),
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        // 新增插件
-        val addMarketAtomResult = atomReleaseService.addMarketAtom(
-            userId,
-            MarketAtomCreateRequest(
-                projectCode = releaseInfo.projectId,
-                atomCode = atomCode,
-                name = releaseInfo.name,
-                language = releaseInfo.language,
-                frontendType = releaseInfo.configInfo.frontendType
+        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW) {
+            // 新增插件
+            val addMarketAtomResult = atomReleaseService.addMarketAtom(
+                userId,
+                MarketAtomCreateRequest(
+                    projectCode = releaseInfo.projectId,
+                    atomCode = atomCode,
+                    name = releaseInfo.name,
+                    language = releaseInfo.language,
+                    frontendType = releaseInfo.configInfo.frontendType,
+                    packageSourceType = PackageSourceTypeEnum.UPLOAD
+                )
             )
-        )
-        if (addMarketAtomResult.isNotOk()) {
-            return Result(data = false, message = addMarketAtomResult.message)
+            if (addMarketAtomResult.isNotOk()) {
+                return Result(data = false, message = addMarketAtomResult.message)
+            }
         }
-        val atomId = addMarketAtomResult.data!!
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
@@ -429,7 +432,7 @@ class OpAtomServiceImpl @Autowired constructor(
             val relativePath = logoUrlAnalysisResult.data
             val logoFile = File(
                 "$atomPath${File.separator}file" +
-                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
+                    "${File.separator}${relativePath?.removePrefix(File.separator)}"
             )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
@@ -475,7 +478,6 @@ class OpAtomServiceImpl @Autowired constructor(
                 val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
-                    atomId = atomId,
                     atomCode = atomCode,
                     version = releaseInfo.versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
@@ -533,6 +535,10 @@ class OpAtomServiceImpl @Autowired constructor(
                 message = updateMarketAtomResult.message
             )
         }
+        if (releaseInfo.configInfo.defaultFlag) {
+            setDefault(userId, atomCode)
+        }
+        val atomId = updateMarketAtomResult.data!!
         // 确认测试通过
         return atomReleaseService.passTest(userId, atomId)
     }

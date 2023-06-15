@@ -50,7 +50,6 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
     override fun archiveAtomFile(
         userId: String,
         projectCode: String,
-        atomId: String,
         atomCode: String,
         version: String,
         releaseType: ReleaseTypeEnum,
@@ -62,7 +61,6 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            atomId = atomId,
             archiveAtomRequest = ArchiveAtomRequest(
                 projectCode = projectCode,
                 atomCode = atomCode,

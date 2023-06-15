@@ -34,7 +34,7 @@
     "codelibCredential": "Credential",
     "credentialPlaceholder": "please select credential accordingly",
     "credentialRequired": "credential ID required",
-    "svnUrlPlaceholder": "please enter SVN url accordingly",
+    "svnUrlPlaceholder": "please enter SVN address",
     "gitUrlPlaceholder": "please select Git url",
     "tgitUrlPlaceholder": "please select TGit url",
     "gitlabUrlPlaceholder": "please select Gitlab url",

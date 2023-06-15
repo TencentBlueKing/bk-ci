@@ -142,14 +142,10 @@
     @import './../../../scss/conf';
 
     .machine-params-form {
+
         .bk-form-radio {
             margin-right: 20px;
         }
-
-        .bk-radio-text {
-            color: $fontWeightColor;
-        }
-
         .handler-prompt {
             margin-top: 24px;
             text-align: left;

@@ -573,7 +573,7 @@
                         this.requestGrouptLists()
                         done?.()
                         this.$showTips({
-                            message: messageMap[method],
+                            message: this.$t(messageMap[method]),
                             theme: 'success'
                         })
                     }

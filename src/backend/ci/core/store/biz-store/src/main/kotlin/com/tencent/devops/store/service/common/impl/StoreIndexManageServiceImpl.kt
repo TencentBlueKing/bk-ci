@@ -152,7 +152,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
-                )!!
+                ) ?: ""
                 val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
                     initProjectCode,
                     listOf(pipelineId)
