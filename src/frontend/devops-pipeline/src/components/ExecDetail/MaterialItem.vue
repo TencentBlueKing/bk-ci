@@ -1,7 +1,7 @@
 <template>
     <div class="exec-material-row">
         <div class="material-row-info-spans">
-            <span v-for="(field) in materialInfos" :key="field">
+            <span v-for="field in materialInfoKeys" :key="field">
                 <logo :name="iconArray[field] || 'commit'" size="14" />
                 <!-- <bk-link
                     v-if="includeLink(field)"
@@ -21,7 +21,16 @@
                     <logo :name="iconArray[field] || 'commit'" size="14" />
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch }">{{ material.webhookBranch }}</span>
                 </span>
-                <span class="material-span" v-bk-tooltips="{ delay: [300, 0], content: formatField(field) }" v-else>{{ formatField(field) }}</span>
+                <bk-popover
+                    v-else
+                    :content="materialInfoValueMap[field]"
+                    :delay="[300, 0]"
+                    class="material-span-tooltip-box"
+                >
+                    <span class="material-span">
+                        {{ materialInfoValueMap[field] }}
+                    </span>
+                </bk-popover>
             </span>
         </div>
         <span v-if="showMore" @mouseenter="emitMouseEnter" class="exec-more-material">
@@ -80,7 +89,7 @@
                     webhookSourceTarget: 'branch'
                 }
             },
-            materialInfos () {
+            materialInfoKeys () {
                 if (!this.isWebhook) {
                     return [
                         'aliasName',
@@ -144,6 +153,12 @@
                             'webhookBranch'
                         ]
                 }
+            },
+            materialInfoValueMap () {
+                return this.materialInfoKeys.reduce((acc, key) => {
+                    acc[key] = this.formatField(key)
+                    return acc
+                }, {})
             }
         },
         methods: {
@@ -172,7 +187,7 @@
                     case 'webhookCommitId':
                         return this.material?.[field]?.slice?.(0, 8) ?? '--'
                     default:
-                        return this.material[field] ?? '--'
+                        return this.material?.[field] ?? '--'
                 }
             },
             getLink (field) {

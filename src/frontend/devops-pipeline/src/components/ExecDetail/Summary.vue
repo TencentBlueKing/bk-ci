@@ -2,9 +2,9 @@
     <header class="exec-detail-summary">
         <div class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
-                <span class="exec-detail-summary-info-block-title">{{
-                    $t("details.triggerRepo")
-                }}</span>
+                <span class="exec-detail-summary-info-block-title">
+                    {{ $t("details.triggerRepo") }}
+                </span>
                 <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
                     <material-item
                         class="visible-material-row"
@@ -84,9 +84,9 @@
 </template>
 
 <script>
+    import { convertMStoString } from '@/utils/util'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
-    import { convertMStoString } from '@/utils/util'
     export default {
         components: {
             MaterialItem
@@ -221,7 +221,7 @@
           padding: 0 8px;
           .all-exec-material-list {
             position: absolute;
-            z-index: 6;
+            z-index: 9;
             width: 100%;
             border: 1px solid #dcdee5;
             border-radius: 2px;
@@ -283,7 +283,16 @@
                     @include ellipsis();
                 }
             }
-
+            .material-span-tooltip-box {
+                flex: 1;
+                overflow: hidden;
+                > .bk-tooltip-ref {
+                    width: 100%;
+                    .material-span {
+                        width: 100%;
+                    }
+                }
+            }
             .material-span {
               @include ellipsis();
               .bk-link-text {
