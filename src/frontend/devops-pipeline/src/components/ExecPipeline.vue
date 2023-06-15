@@ -472,7 +472,6 @@
             if (this.errorList?.length > 0) {
                 setTimeout(() => {
                     this.setAtomLocate(this.errorList[0])
-                    this.setShowErrorPopup()
                 }, 600)
             }
         },
