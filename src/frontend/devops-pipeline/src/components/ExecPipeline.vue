@@ -69,27 +69,36 @@
                     {{ $t("history.viewLog") }}
                 </bk-button>
             </header>
-            <div class="exec-pipeline-ui-wrapper">
-                <bk-pipeline
-                    :editable="false"
-                    ref="bkPipeline"
-                    is-exec-detail
-                    :current-exec-count="executeCount"
-                    :cancel-user-id="cancelUserId"
-                    :user-name="userName"
-                    :pipeline="curPipeline"
-                    v-bind="$attrs"
-                    @click="handlePiplineClick"
-                    @stage-check="handleStageCheck"
-                    @stage-retry="handleRetry"
-                    @atom-quality-check="qualityCheck"
-                    @atom-review="reviewAtom"
-                    @atom-continue="handleContinue"
-                    @atom-exec="handleExec"
-                />
-            </div>
+            <simplebar
+                class="exec-pipeline-scroll-box"
+                :class-names="{
+                    track: 'pipeline-scrollbar-track'
+                }"
+                data-simplebar-auto-hide="false"
+            >
+                <div class="exec-pipeline-ui-wrapper">
+                    <bk-pipeline
+                        :editable="false"
+                        ref="bkPipeline"
+                        is-exec-detail
+                        :current-exec-count="executeCount"
+                        :cancel-user-id="cancelUserId"
+                        :user-name="userName"
+                        :pipeline="curPipeline"
+                        v-bind="$attrs"
+                        @click="handlePiplineClick"
+                        @stage-check="handleStageCheck"
+                        @stage-retry="handleRetry"
+                        @atom-quality-check="qualityCheck"
+                        @atom-review="reviewAtom"
+                        @atom-continue="handleContinue"
+                        @atom-exec="handleExec"
+                    />
+                </div>
+            </simplebar>
             <footer
                 v-if="showErrorPopup"
+                ref="errorPopup"
                 :class="{
                     'exec-errors-popup': true,
                     visible: showErrors
@@ -232,10 +241,14 @@
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import simplebar from 'simplebar-vue'
+    import 'simplebar-vue/dist/simplebar.min.css'
     export default {
         components: {
+            simplebar,
             CheckAtomDialog,
             CompleteLog,
+
             Logo
         },
         props: {
@@ -416,6 +429,9 @@
             },
             routerParams () {
                 return this.$route.params
+            },
+            errorPopupHeight () {
+                return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
         watch: {
@@ -444,6 +460,10 @@
                 })
             }
 
+        },
+        updated () {
+            const rootCssVar = document.querySelector(':root')
+            rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
@@ -802,6 +822,9 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+:root {
+  --track-bottom: 42px;
+}
 .exec-pipeline-wrapper {
   height: 100%;
   display: flex;
@@ -915,11 +938,17 @@
       }
     }
   }
-  .exec-pipeline-ui-wrapper {
-    flex: 1;
-    overflow: auto;
-    padding: 0 24px 42px 24px;
-  }
+    .exec-pipeline-scroll-box {
+        flex: 1;
+        .simplebar-wrapper,
+        .simplebar-content-wrapper {
+            height: 100%;
+        }
+        .exec-pipeline-ui-wrapper {
+            padding: 0 24px 42px 24px;
+            height: 100%;
+        }
+    }
   .exec-errors-popup {
     position: fixed;
     bottom: 0;
@@ -962,11 +991,11 @@
     }
 
     &.visible {
-      transform: translateY(0);
-      .toggle-error-popup-icon {
-        transition: transform 0.6s ease;
-        transform: rotate(180deg);
-    }
+        transform: translateY(0);
+        .toggle-error-popup-icon {
+            transition: transform 0.6s ease;
+            transform: rotate(180deg);
+        }
     }
     .drag-dot {
       position: absolute;
@@ -1063,5 +1092,19 @@
   .exec-count-select-option-user {
     color: #979ba5;
   }
+}
+.pipeline-scrollbar-track {
+    left: 24px;
+    right: 34px;
+    position: fixed;
+    bottom: var(--track-bottom);
+    height: 10px;
+    transition: all 0.3s;
+    .simplebar-scrollbar {
+        height: 12px;
+        &:before {
+            background: #a5a5a5;
+        }
+    }
 }
 </style>
