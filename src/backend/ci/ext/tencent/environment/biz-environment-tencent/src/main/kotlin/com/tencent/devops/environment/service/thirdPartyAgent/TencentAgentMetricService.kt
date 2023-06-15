@@ -107,7 +107,6 @@ class TencentAgentMetricService @Autowired constructor(
             objectMapper.readValue<TelegrafStandData>(data)
         }
 
-
         when (jsonData) {
             is TelegrafMulData -> {
                 // 将相同表单的聚合在一起
@@ -175,7 +174,7 @@ class TencentAgentMetricService @Autowired constructor(
         }
 
         if (topicName.isNullOrBlank()) {
-            logger.error("${tableName}'s agentMetricTopic is null")
+            logger.error("$tableName's agentMetricTopic is null")
             return
         }
 
