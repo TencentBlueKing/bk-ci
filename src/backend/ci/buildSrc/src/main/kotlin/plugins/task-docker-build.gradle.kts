@@ -62,6 +62,8 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:+UseContainerSupport",
         "-Xss512k",
         "-XX:MaxMetaspaceSize=500m",
+        "-XX:CompressedClassSpaceSize=100m",
+        "-XX:ReservedCodeCacheSize=400m",
         "-XX:-UseAdaptiveSizePolicy",
         "-Dspring.jmx.enabled=true",
         "-Dservice.log.dir=/data/workspace/$service/logs/",
