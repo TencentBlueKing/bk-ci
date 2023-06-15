@@ -9,6 +9,14 @@ object RbacAuthUtils {
         return "${extResourceType(authResourceType)}_${authPermission.value}"
     }
 
+    fun getRelationResourceType(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
+        return if (authPermission == AuthPermission.CREATE) {
+            AuthResourceType.PROJECT.value
+        } else {
+            authResourceType.value
+        }
+    }
+
     fun extResourceType(authResourceType: AuthResourceType): String {
         return when (authResourceType) {
             AuthResourceType.QUALITY_GROUP -> "quality_group"
