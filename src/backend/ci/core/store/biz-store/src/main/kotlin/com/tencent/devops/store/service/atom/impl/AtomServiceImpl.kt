@@ -616,7 +616,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     props = pipelineAtomRecord.props?.let {
                         val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
                             jsonStr = it,
-                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                                storeType = StoreTypeEnum.ATOM,
+                                storeCode = atomCode,
+                                version = pipelineAtomRecord.version
+                            )
                         )
                         AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
                             ?.decorate(propJsonStr) as Map<String, Any>?
@@ -962,7 +966,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$atomClassifyCode",
                 defaultMessage = classifyName
             )
             result.add(

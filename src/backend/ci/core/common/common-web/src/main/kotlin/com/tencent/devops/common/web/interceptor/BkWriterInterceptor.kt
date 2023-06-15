@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -44,7 +45,11 @@ class BkWriterInterceptor : WriterInterceptor {
      * @param context 拦截器上下文
      */
     override fun aroundWriteTo(context: WriterInterceptorContext?) {
-        if (context == null || resourceInfo == null) {
+        // 判断请求用户的语言是否和默认语言是否一致，如果一致则无需进行国际化替换
+        val defaultLanguage = SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+        val i18nLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        if (context == null || resourceInfo == null || i18nLanguage == defaultLanguage) {
+            context?.proceed()
             return
         }
         // 1、只需拦截标上BkInterfaceI18n注解的接口
@@ -54,7 +59,6 @@ class BkWriterInterceptor : WriterInterceptor {
             context.proceed()
             return
         }
-        val fixKeyHeadPrefixName = bkInterfaceI18nAnnotation.fixKeyHeadPrefixName
         val keyPrefixNames = bkInterfaceI18nAnnotation.keyPrefixNames
         // 2、获取实体对象里需要进行国际化翻译的字段集合
         val entity = context.entity
@@ -69,11 +73,7 @@ class BkWriterInterceptor : WriterInterceptor {
         val dbI18nKeyMap = mutableMapOf<String, String>()
         // 4、获取需要进行国际化翻译的字段的国际化key值
         bkI18nFieldMap.forEach nextBkI18nField@{ fieldPath, i18nFieldInfo ->
-            val i18nKeySb = if (fixKeyHeadPrefixName.isBlank()) {
-                StringBuilder()
-            } else {
-                StringBuilder("$fixKeyHeadPrefixName.")
-            }
+            val i18nKeySb = StringBuilder()
             // 获取字段的key值
             val fieldKey = getFieldKey(fieldPath, i18nFieldInfo)
             // 判断字段是否需要复用接口定义的公共前缀
@@ -85,9 +85,6 @@ class BkWriterInterceptor : WriterInterceptor {
                     i18nKeySb = i18nKeySb,
                     keyPrefixMap = keyPrefixMap
                 )
-            }
-            if (bkInterfaceI18nAnnotation.fixKeyTailPrefixName.isNotBlank()) {
-                i18nKeySb.append("${bkInterfaceI18nAnnotation.fixKeyTailPrefixName}.")
             }
             i18nKeySb.append(fieldKey)
             val i18nKey = i18nKeySb.toString()
@@ -165,23 +162,29 @@ class BkWriterInterceptor : WriterInterceptor {
     ) {
         keyPrefixNames.forEach nextKeyPrefixName@{ keyPrefixName ->
             if (keyPrefixName.contains(ARRAY_WILDCARD_TEMPLATE)) {
-                val keyPrefixTemplateLastIndex = keyPrefixName.lastIndexOf(".")
-                // 如果前缀名称不是固定的，需要将前缀名称往上退一级作为模板进行正则匹配替换
-                val keyPrefixTemplate = getVarTemplate(keyPrefixTemplateLastIndex, keyPrefixName)
-                // 把前缀名称中数组的通配符换成正则表达式
-                val regex = keyPrefixTemplate.replace(ARRAY_WILDCARD_TEMPLATE, ARRAY_REGEX_TEMPLATE).toRegex()
-                // 如果前缀名称不是固定的，需要将字段路径往上退一级作为模板进行正则匹配替换
-                val fieldPathTemplate = getVarTemplate(fieldPath.lastIndexOf("."), fieldPath)
-                // 通过字段路径模板获取真实的前缀名称
-                val matchResult = regex.find(fieldPathTemplate)
-                // 如果通过正则表达式获取不到真实的前缀名称则中断流程
-                val convertKeyPrefixTemplate = matchResult?.groupValues?.get(0) ?: return@nextKeyPrefixName
-                // 获取前缀名称的叶子节点
-                val keyPrefixLastNodeName = keyPrefixName.substring(keyPrefixTemplateLastIndex + 1)
-                // 生成真实的前缀名称
-                val convertKeyPrefixName = "$convertKeyPrefixTemplate.$keyPrefixLastNodeName"
-                // 从实体对象map中获取
-                val keyPrefixValue = getKeyPrefixValue(convertKeyPrefixName, entity)
+                // 判断前缀名称是否是动态参数，如果是动态参数前缀名称的值要从实体对象获取
+                val keyPrefixNameVar = MessageUtil.getPrefixNameVar(keyPrefixName)
+                val keyPrefixValue = if (keyPrefixNameVar.isNullOrBlank()) {
+                    keyPrefixName
+                } else {
+                    val keyPrefixTemplateLastIndex = keyPrefixNameVar.lastIndexOf(".")
+                    // 如果前缀名称不是固定的，需要将前缀名称往上退一级作为模板进行正则匹配替换
+                    val keyPrefixTemplate = getVarTemplate(keyPrefixTemplateLastIndex, keyPrefixNameVar)
+                    // 把前缀名称中数组的通配符换成正则表达式
+                    val regex = keyPrefixTemplate.replace(ARRAY_WILDCARD_TEMPLATE, ARRAY_REGEX_TEMPLATE).toRegex()
+                    // 如果前缀名称不是固定的，需要将字段路径往上退一级作为模板进行正则匹配替换
+                    val fieldPathTemplate = getVarTemplate(fieldPath.lastIndexOf("."), fieldPath)
+                    // 通过字段路径模板获取真实的前缀名称
+                    val matchResult = regex.find(fieldPathTemplate)
+                    // 如果通过正则表达式获取不到真实的前缀名称则中断流程
+                    val convertKeyPrefixTemplate = matchResult?.groupValues?.get(0) ?: return@nextKeyPrefixName
+                    // 获取前缀名称的叶子节点
+                    val keyPrefixLastNodeName = keyPrefixNameVar.substring(keyPrefixTemplateLastIndex + 1)
+                    // 生成真实的前缀名称
+                    val convertKeyPrefixName = "{$convertKeyPrefixTemplate.$keyPrefixLastNodeName}"
+                    // 从实体对象map中获取
+                    getKeyPrefixValue(convertKeyPrefixName, entity)
+                }
                 appendI18nKeyNodeName(keyPrefixValue, i18nKeySb)
             } else {
                 appendI18nKeyNodeName(keyPrefixMap[keyPrefixName], i18nKeySb)
@@ -299,8 +302,10 @@ class BkWriterInterceptor : WriterInterceptor {
      * @return 前缀名称对应的值
      */
     private fun getKeyPrefixValue(keyPrefixName: String, entity: Any): String? {
+        // 判断前缀名称是否是动态参数，如果是动态参数那么前缀名称的值要从实体对象获取
+        val keyPrefixNameVar = MessageUtil.getPrefixNameVar(keyPrefixName) ?: return keyPrefixName
         // 把前缀名称按照点切割成数组
-        val partNames = keyPrefixName.split(".")
+        val partNames = keyPrefixNameVar.split(".")
         var nodeObj: Any? = null
         // 按切割的数组取出前缀名称对应的值
         partNames.forEachIndexed { index, partName ->

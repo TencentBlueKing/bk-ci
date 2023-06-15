@@ -37,6 +37,12 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS
 import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
@@ -44,10 +50,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
@@ -86,13 +88,12 @@ import com.tencent.devops.process.yaml.v2.stageCheck.Flow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -117,18 +118,16 @@ object ScriptYmlUtils {
         // replace custom tag
         val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        val yaml = Yaml()
-        val obj = yaml.load(yamlNormal) as Any
-        return YamlUtil.toYaml(obj)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
+
     fun parseVersion(yamlStr: String?): YmlVersion? {
         if (yamlStr == null) {
             return null
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
             null
@@ -141,8 +140,7 @@ object ScriptYmlUtils {
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
             null
@@ -154,8 +152,7 @@ object ScriptYmlUtils {
             return false
         }
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
@@ -434,7 +431,7 @@ object ScriptYmlUtils {
             if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
                 throw YamlFormatException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
                         params = arrayOf("oldStep")
                     )
                 )
@@ -444,7 +441,7 @@ object ScriptYmlUtils {
             if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
                 throw YamlFormatException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
                         params = arrayOf(preStep.id)
                     )
                 )
@@ -543,7 +540,7 @@ object ScriptYmlUtils {
                 newLabels.add(stageLabel.id)
             } else {
                 throw YamlFormatException(
-                    I18nUtil.getCodeLanMessage(ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL)
+                    I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL)
                 )
             }
         }
