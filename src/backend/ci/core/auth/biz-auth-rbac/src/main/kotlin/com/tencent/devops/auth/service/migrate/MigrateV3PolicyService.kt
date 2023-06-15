@@ -248,7 +248,7 @@ class MigrateV3PolicyService constructor(
         gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int? {
+    ): List<Int> {
         // v3资源都只有一层
         val resource = permission.resources[0]
         val resourceType = resource.type
@@ -256,9 +256,10 @@ class MigrateV3PolicyService constructor(
         logger.info("match resource group|$projectCode|$resourceType|$userActions")
         // 如果path为空,则直接跳过
         if (resource.paths.isEmpty()) {
-            return null
+            return emptyList()
         }
-        return when {
+        val groupIds = mutableListOf<Int>()
+        val matchGroupId = when {
             // 如果有all_action,直接加入管理员组
             userActions.contains(Constants.ALL_ACTION) -> managerGroupId
             // 项目类型
@@ -294,6 +295,8 @@ class MigrateV3PolicyService constructor(
             }
             else -> null
         }
+        matchGroupId?.let { groupIds.add(it) }
+        return groupIds
     }
 
     /**
