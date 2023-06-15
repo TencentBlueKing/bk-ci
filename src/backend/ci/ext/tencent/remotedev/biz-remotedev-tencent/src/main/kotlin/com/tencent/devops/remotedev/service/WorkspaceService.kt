@@ -1219,7 +1219,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
+    fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
         return redisCache.getWorkspaceDetail(workspaceName) ?: run {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
@@ -1243,6 +1243,32 @@ class WorkspaceService @Autowired constructor(
                 cache
             )
             return cache
+        }
+    }
+
+    // 更新用户运行中的空间的detail缓存信息
+    fun updateUserWorkspaceDetailCache(userId: String) {
+        workspaceDao.fetchWorkspace(
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userId, it.name, WorkspaceMountType.valueOf(it.workspaceMountType)).data!!
+            val cache = WorkSpaceCacheInfo(
+                sshKey,
+                workspaceInfo.environmentHost,
+                workspaceInfo.hostIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.namespace,
+                workspaceInfo.curLaunchId
+            )
+            redisCache.saveWorkspaceDetail(
+                it.name,
+                cache
+            )
         }
     }
 

@@ -27,11 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SshPublicKeysDao
 import com.tencent.devops.remotedev.pojo.SshPublicKey
 import org.jolokia.util.Base64Util
@@ -43,7 +39,6 @@ import org.springframework.stereotype.Service
 @Service
 class SshPublicKeysService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val sshPublicKeysDao: SshPublicKeysDao
 ) {
 
@@ -54,14 +49,16 @@ class SshPublicKeysService @Autowired constructor(
     // 新增SSH公钥
     fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Boolean {
         logger.info(
-            "SshPublicKeysService|addSshPublicKey|userId" +
+            "SshPublicKeysService|createPublicKey|userId" +
                 "|$userId|sshPublicKey|$sshPublicKey"
         )
+        if (checkSshKeyExists(sshPublicKey)) return false
         // ssh key信息写入DB
         sshPublicKeysDao.createSshKey(
             dslContext = dslContext,
             sshPublicKey = sshPublicKey
         )
+        logger.info("SshPublicKeysService|createPublicKey|new create")
         return true
     }
 
@@ -95,14 +92,7 @@ class SshPublicKeysService @Autowired constructor(
         return Base64Util.encode(JsonUtil.toJson(res, false).toByteArray())
     }
 
-    // 校验用户是否存在
-    fun checkCommonUser(userId: String) {
-        // get接口先查本地，再查tof
-        val userResult = client.get(ServiceTxUserResource::class).get(userId)
-        if (userResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.USER_NOT_EXISTS.errorCode
-            )
-        }
-    }
+    // 校验sshkey是否已存在
+    fun checkSshKeyExists(sshPublicKey: SshPublicKey) = sshPublicKeysDao.getSshKeysRecord(dslContext, sshPublicKey)
+        ?.let { true } ?: false
 }
