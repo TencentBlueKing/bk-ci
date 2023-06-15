@@ -443,7 +443,6 @@
             },
             'execDetail.model': function (val) {
                 if (val) {
-                    console.log('cha ge, modle')
                     this.curPipeline = val
                 }
             },
