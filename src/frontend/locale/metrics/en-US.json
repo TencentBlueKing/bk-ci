@@ -1,7 +1,7 @@
 {
     "Metrics": "Metrics",
-    "Fail analysis": "Fail analysis",
-    "Plugin trend": "Plugin trend",
+    "Fail analysis": "Failure Analysis",
+    "Plugin trend": "Plugin Trend",
     "Overview": "Overview",
     "Pipeline": "Pipeline",
     "Branch": "Branch",
@@ -9,7 +9,7 @@
     "Username": "Username",
     "Error Type": "Error Type",
     "Error Code": "Error Code",
-    "Pipeline Lable": "Pipeline Lable",
+    "Pipeline Label": "Pipeline Label",
     "Error Message": "Error Message",
     "Details": "Details",
     "Stat by error type": "Stat by error type",

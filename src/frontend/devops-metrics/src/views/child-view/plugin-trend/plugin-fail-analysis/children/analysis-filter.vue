@@ -52,7 +52,7 @@ const disableDate = (time) => time && time.getTime() > Date.now()
       class="mr8 w240"
       id-key="labelId"
       name-key="labelName"
-      :placeholder="t('Pipeline lable')"
+      :placeholder="t('Pipeline Label')"
       :multiple="true"
       :api-method="http.getPipelineLabels"
       :select-value="status.pipelineLabelIds"
