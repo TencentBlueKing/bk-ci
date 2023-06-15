@@ -252,6 +252,10 @@ class PipelineSettingDao {
         }
     }
 
+    fun batchUpdate(dslContext: DSLContext, tPipelineSettingRecords: List<TPipelineSettingRecord>) {
+        dslContext.batchUpdate(tPipelineSettingRecords).execute()
+    }
+
     /**
      * 获取简单的数据(避免select大字段)
      *
