@@ -165,7 +165,7 @@ class PipelineWebsocketService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        executeCount: Int
+        executeCount: Int?
     ): RecordWebsocketPush {
         val page = recordPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
