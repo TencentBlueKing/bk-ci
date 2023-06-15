@@ -483,6 +483,8 @@
             if (this.activeErrorAtom?.taskId) {
                 this.locateError(this.activeErrorAtom, false)
             }
+            const rootCssVar = document.querySelector(':root')
+            rootCssVar.style.setProperty('--track-bottom', 0)
         },
         methods: {
             ...mapActions('atom', [
