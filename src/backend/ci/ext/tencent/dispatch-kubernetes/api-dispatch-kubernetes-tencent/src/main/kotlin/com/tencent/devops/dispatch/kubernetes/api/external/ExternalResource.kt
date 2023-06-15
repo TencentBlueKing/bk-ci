@@ -53,7 +53,7 @@ interface ExternalResource {
     fun workspaceTaskCallback(
         @ApiParam(value = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
         @QueryParam("type")
-        type: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
+        type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
         @ApiParam(value = "回调信息", required = true)
         taskStatus: TaskStatus
     ): Result<Boolean>
