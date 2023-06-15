@@ -1161,6 +1161,9 @@ class PipelineRuntimeService @Autowired constructor(
                     containerVar[VMBuildContainer::mutexGroup.name] = it
                 }
             }
+            if (detail.matrixGroupFlag == true) {
+                containerVar[Container::elements.name] = detail.elements
+            }
             containerBuildRecords.add(
                 BuildRecordContainer(
                     projectId = build.projectId, pipelineId = build.pipelineId, resourceVersion = resourceVersion,
