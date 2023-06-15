@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.common.client.ClientAutoConfiguration,\
-com.tencent.devops.common.client.MutilJarServiceMapConfiguration
+com.tencent.devops.common.client.ClientAutoConfiguration
