@@ -380,6 +380,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         actions: List<String>
     ): Int? {
+        logger.info("match min resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有资源actions权限
         val hasPermission = permissionService.batchValidateUserResourcePermission(
             userId = userId,
@@ -418,6 +419,7 @@ abstract class AbMigratePolicyService(
         actions: List<String>,
         gradeManagerId: Int
     ): Int? {
+        logger.info("match or create project resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有项目任意资源actions权限
         val hasPermission = actions.all { action ->
             permissionService.validateUserResourcePermission(

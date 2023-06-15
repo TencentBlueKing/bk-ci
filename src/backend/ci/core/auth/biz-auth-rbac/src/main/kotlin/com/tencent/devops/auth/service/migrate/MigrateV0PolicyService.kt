@@ -293,7 +293,7 @@ class MigrateV0PolicyService constructor(
         val resource = permission.resources[0]
         val resourceType = oldResourceTypeMappingNewResourceType[resource.type] ?: resource.type
         val userActions = permission.actions.map { it.id }
-        logger.info("find match resource group|$projectCode|$resourceType|$userActions")
+        logger.info("find match resource group|$userId|$projectCode|$resourceType|$userActions")
         val (resourceCreateActions, resourceActions) = buildRbacActions(
             actions = permission.actions.map { it.id }
         )
@@ -311,13 +311,12 @@ class MigrateV0PolicyService constructor(
         // 资源action匹配到的组
         if (resourceActions.isNotEmpty()) {
             val matchResourceGroupId = if (resource.paths.isEmpty() || resource.paths[0].isEmpty()) {
-                val finalUserActions = replaceOrRemoveAction(userActions)
                 matchOrCreateProjectResourceGroup(
                     userId = userId,
                     projectCode = projectCode,
                     projectName = projectName,
                     resourceType = resourceType,
-                    actions = finalUserActions,
+                    actions = resourceActions.map { it.id },
                     gradeManagerId = gradeManagerId
                 )
             } else {
@@ -327,7 +326,7 @@ class MigrateV0PolicyService constructor(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     v0ResourceCode = v0ResourceCode,
-                    userActions = userActions
+                    userActions = resourceActions.map { it.id }
                 )
             }
             matchResourceGroupId?.let { matchGroupIds.add(matchResourceGroupId) }
