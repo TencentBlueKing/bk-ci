@@ -192,7 +192,7 @@ class PipelineRecordModelService @Autowired constructor(
                     containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
                     containerBaseModelMap.remove(VMBuildContainer::groupContainers.name)
                     matrixContainerVarMap = ModelUtils.generateBuildModelDetail(
-                        baseModelMap = containerBaseModelMap,
+                        baseModelMap = containerBaseModelMap.deepCopy(),
                         modelFieldRecordMap = matrixContainerVarMap
                     )
                     groupContainers.add(matrixContainerVarMap)
