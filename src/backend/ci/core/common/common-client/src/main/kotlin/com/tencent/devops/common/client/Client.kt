@@ -84,7 +84,6 @@ class Client @Autowired constructor(
     private val mutilJarServiceMapConfiguration: MutilJarServiceMapConfiguration,
     objectMapper: ObjectMapper
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(Client::class.java)
         private const val readWriteTimeoutSeconds = 15L
