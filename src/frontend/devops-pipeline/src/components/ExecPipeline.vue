@@ -462,8 +462,10 @@
 
         },
         updated () {
-            const rootCssVar = document.querySelector(':root')
-            rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+            if (this.showErrorPopup) {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+            }
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
@@ -823,7 +825,7 @@
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
 :root {
-  --track-bottom: 42px;
+  --track-bottom: 0;
 }
 .exec-pipeline-wrapper {
   height: 100%;
