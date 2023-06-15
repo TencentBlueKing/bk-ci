@@ -1058,7 +1058,7 @@
       color: #979ba5;
       font-weight: normal;
       width: 60px;
-      flex-shrik: 0;
+      flex-shrink: 0;
     }
   }
   &.time-detail-popup .pipeline-time-detail-sum {
@@ -1077,7 +1077,7 @@
       > span:first-child {
         color: #979ba5;
         width: 60px;
-        flex-shrik: 0;
+        flex-shrink: 0;
       }
       &:last-child {
         margin-bottom: 0;
