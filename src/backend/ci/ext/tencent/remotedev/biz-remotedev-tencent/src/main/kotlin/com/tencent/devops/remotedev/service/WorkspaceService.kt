@@ -339,7 +339,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            if (WorkspaceSystemType.valueOf(ws.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            }
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
 
@@ -574,7 +576,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
-            redisHeartBeat.refreshHeartbeat(workspaceName)
+            if (WorkspaceSystemType.valueOf(workspace.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(workspaceName)
+            }
         } else {
             // 启动失败,记录为EXCEPTION
             logger.warn("start workspace $workspaceName failed")
