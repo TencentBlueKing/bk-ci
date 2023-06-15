@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -39,7 +40,7 @@ class ExternalResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ExternalResource {
 
-    override fun workspaceTaskCallback(taskStatus: TaskStatus): Result<Boolean> {
-        return Result(remoteDevService.workspaceTaskCallback(taskStatus))
+    override fun workspaceTaskCallback(type: WorkspaceMountType, taskStatus: TaskStatus): Result<Boolean> {
+        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type))
     }
 }
