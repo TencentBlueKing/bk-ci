@@ -172,7 +172,7 @@
                     url: {
                         SVN: this.$t('codelib.svnUrlPlaceholder'),
                         Git: this.$t('codelib.gitUrlPlaceholder'),
-                        TGit: this.$t('codelib.tgitUrlEnterPlaceholder'),
+                        TGit: this.$t('codelib.httpsUrlPlaceholder'),
                         Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
                         HTTP: this.$t('codelib.httpUrlPlaceholder'),
                         HTTPS: this.$t('codelib.httpsUrlPlaceholder')
