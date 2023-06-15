@@ -51,7 +51,10 @@ func DoPullAndDebug() {
 		// 接受登录调试任务
 		debugInfo, err := getDebugTask()
 		if err != nil {
-			imageDebugLogs.WithError(err).Error("get image deubg failed, retry, err")
+			imageDebugLogs.WithError(err).Warn("get image deubg failed, retry, err")
+			continue
+		}
+		if debugInfo == nil {
 			continue
 		}
 
@@ -68,8 +71,8 @@ func getDebugTask() (*api.ImageDebug, error) {
 	}
 
 	if result.IsNotOk() {
-		logs.Error("get build info failed, message", result.Message)
-		return nil, errors.New("get build info failed")
+		logs.Error("get debug info failed, message", result.Message)
+		return nil, errors.New("get debug info failed")
 	}
 
 	if result.Data == nil {
