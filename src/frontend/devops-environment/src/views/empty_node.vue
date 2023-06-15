@@ -58,20 +58,12 @@
         .create-node-row {
             margin-top: 28px;
 
-            .bk-button {
-                width: 120px;
-            }
-
             .create-node-btn {
                 margin-right: 4px;
             }
 
             .create-env-btn {
                 margin-left: 4px;
-            }
-
-            .import-node-btn {
-                width: 100px;
             }
         }
     }

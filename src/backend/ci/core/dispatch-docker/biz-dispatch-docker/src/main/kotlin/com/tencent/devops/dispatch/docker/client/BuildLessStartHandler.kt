@@ -63,6 +63,7 @@ class BuildLessStartHandler @Autowired constructor(
 ) : Handler<BuildLessStartHandlerContext>() {
     private val logger = LoggerFactory.getLogger(BuildLessStartHandler::class.java)
 
+    @Suppress("NestedBlockDepth")
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
             val buildLessStartInfo = BuildLessStartInfo(

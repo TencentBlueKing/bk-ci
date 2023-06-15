@@ -20,15 +20,14 @@
 <script>
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
-    import InfiniteScroll from '@/components/InfiniteScroll'
     import emptyTips from '@/components/devops/emptyTips'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import { AUTH_URL_PREFIX, PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { bus } from '@/utils/bus'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
+    import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
+    import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import InfiniteScroll from '@/components/InfiniteScroll'
     import webSocketMessage from '@/utils/webSocketMessage'
-    import { mapActions, mapGetters, mapState } from 'vuex'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -139,7 +138,10 @@
                         disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
-                            !this.executeStatus && bus.$emit('trigger-excute')
+                            !this.executeStatus && this.$router.push({
+                                name: 'pipelinesPreview',
+                                ...this.$route.params
+                            })
                         },
                         text: this.$t('history.startBuildTips')
                     }]
@@ -165,7 +167,11 @@
             queryStr (newStr) {
                 let hashParam = ''
                 if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
-                this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
+                const url = `${this.$route.path}${newStr ? `?${newStr}` : ''}${hashParam}`
+                console.log(url, this.$route.fullPath)
+                if (url !== this.$route.fullPath) {
+                    this.$router.push(url)
+                }
             }
         },
 

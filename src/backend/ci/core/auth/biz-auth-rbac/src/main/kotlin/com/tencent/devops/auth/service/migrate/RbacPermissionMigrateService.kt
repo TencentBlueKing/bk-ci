@@ -54,6 +54,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
 
 /**
@@ -330,7 +331,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -359,7 +362,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -398,6 +403,9 @@ class RbacPermissionMigrateService constructor(
             }
             is ErrorCodeException -> {
                 exception.defaultMessage
+            }
+            is CompletionException -> {
+                exception.cause?.message ?: exception.message
             }
             else -> {
                 exception.toString()
