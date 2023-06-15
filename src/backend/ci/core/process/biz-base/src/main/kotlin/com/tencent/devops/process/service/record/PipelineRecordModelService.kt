@@ -198,6 +198,9 @@ class PipelineRecordModelService @Autowired constructor(
                     groupContainers.add(matrixContainerVarMap)
                 }
                 containerVarMap[VMBuildContainer::groupContainers.name] = groupContainers
+                containerBaseModelMap[Container::elements.name]?.let {
+                    containerVarMap[Container::elements.name] = it
+                }
             }
             containers.add(containerVarMap)
         }
