@@ -47,7 +47,7 @@ class TencentAgentMetricService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val objectMapper: ObjectMapper,
-    private val kafkaClient: KafkaClient,
+    private val kafkaClient: KafkaClient
 ) : AgentMetricService(
     dslContext, thirdPartyAgentDao
 ) {
