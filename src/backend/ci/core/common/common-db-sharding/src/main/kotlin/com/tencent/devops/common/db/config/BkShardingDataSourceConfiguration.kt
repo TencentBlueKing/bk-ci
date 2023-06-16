@@ -53,7 +53,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import java.util.*
+import java.util.Properties
 import javax.sql.DataSource
 
 @Suppress("LongParameterList", "MagicNumber")
