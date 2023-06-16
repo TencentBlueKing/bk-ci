@@ -78,17 +78,17 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -705,6 +705,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
                 )
 
+            logger.info("Pipeline :$pipeline")
             if (pipeline.channelCode != channelCode) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -718,6 +719,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
+            logger.info("existModel :$existModel")
+
             // 对已经存在的模型做处理
             val param = BeforeDeleteParam(
                 userId = userId,

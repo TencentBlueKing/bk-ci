@@ -89,13 +89,13 @@ import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -621,6 +621,7 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
+        logger.info("Updating ${model.latestVersion}")
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
@@ -655,6 +656,7 @@ class PipelineRepositoryService constructor(
                         latestVersion = model.latestVersion
                     )
                 }
+                logger.info("version:$version")
                 if (version == 0) {
                     // 传过来的latestVersion已经不是最新
                     throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)

@@ -123,10 +123,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -137,6 +133,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -450,13 +450,14 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        versionName: String,
+        //versionName: String,
         template: Model
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        val versionName = latestTemplate.versionName + 1
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE
@@ -481,6 +482,7 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = versionName,
                 saveNum = maxSaveVersionRecordNum
             )
+            logger.info("saveRecordVersions: ${saveRecordVersions.toString()}")
             if (saveRecordVersions?.isNotEmpty == true) {
                 // 版本名称为versionName的版本只保存最近maxSaveVersionRecordNum条记录
                 templateDao.deleteSpecVersion(
