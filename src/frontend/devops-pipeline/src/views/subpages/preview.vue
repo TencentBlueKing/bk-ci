@@ -107,14 +107,12 @@
             pipeline: {
                 immediate: true,
                 handler (newVal, oldVal) {
-                    console.log(oldVal, newVal, 123)
                     if (oldVal === null && newVal) {
                         this.setPipelineSkipProp(newVal.stages, this.checkTotal)
                         this.previewPipeline = {
                             ...newVal,
                             stages: newVal.stages.slice(1)
                         }
-                        console.log(this.previewPipeline, 123)
                     }
                 }
             },
@@ -128,7 +126,6 @@
             bus.$on('start-execute', this.getExecuteParams)
         },
         beforeDestroy () {
-            console.log('up bedestory')
             bus.$off('start-execute')
             this.togglePropertyPanel({
                 isShow: false
@@ -175,7 +172,7 @@
                     } else {
                         this.curPipelineInfo = this.curParamList
                     }
-                    console.log(this.curPipelineInfo)
+
                     if (this.curPipelineInfo.canManualStartup) {
                         if (this.curPipelineInfo.buildNo) {
                             this.buildNo = this.curPipelineInfo.buildNo

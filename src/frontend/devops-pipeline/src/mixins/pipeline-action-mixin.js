@@ -463,7 +463,6 @@ export default {
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
-                console.log(this.pipelineMap, pipelineId)
                 if (this.pipelineMap[pipelineId]) {
                     // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                     Object.assign(this.pipelineMap[pipelineId], {
