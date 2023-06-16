@@ -158,7 +158,7 @@ class MigrateResourceService @Autowired constructor(
                 resourceType = resourceType,
                 projectCode = projectCode
             )
-            logger.info("MigrateResourceService|projectCode:$projectCode|resourceData:$resourceData")
+            logger.info("MigrateResourceService|projectCode:$projectCode|resourceType:$resourceType|resourceData:$resourceData")
             if (resourceData == null || resourceData.data.result.isNullOrEmpty()) {
                 return
             }
