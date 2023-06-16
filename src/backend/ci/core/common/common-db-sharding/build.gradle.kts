@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    implementation("io.micrometer:micrometer-core")
     api(project(":core:common:common-db-base"))
     api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
 }
