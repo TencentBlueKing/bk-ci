@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ExtServiceEntity
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
@@ -41,6 +42,7 @@ import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
@@ -49,11 +51,11 @@ import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
 import com.tencent.devops.store.api.ServiceItemRelResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class ServiceItemService @Autowired constructor(
@@ -288,7 +290,7 @@ class ServiceItemService @Autowired constructor(
             } else {
                 val serviceEntity = ExtServiceEntity(
                     id = serviceRecord!!.id.toString(),
-                    name = serviceRecord.name.substringBefore("("),
+                    name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + serviceRecord.englishName),
                     code = serviceRecord.englishName
                 )
                 projectServiceMap[serviceId] = serviceEntity
