@@ -146,10 +146,10 @@ interface UserPTemplateResource {
         @PathParam("templateId")
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
-        @ApiParam("版本名", required = true)
+/*        @ApiParam("版本名", required = true)
         @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
-        versionName: String?,
+        versionName: String?,*/
         @ApiParam("模板", required = true)
         template: Model
     ): Result<Boolean>
