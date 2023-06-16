@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CODECC_OPENAPI_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
@@ -44,6 +45,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -56,6 +58,9 @@ class AuthHttpClientService @Autowired constructor(
     private val jwtManager: JwtManager,
     private val bkTag: BkTag
 ) {
+    @Value("\${codecc.openapi.token:#{null}}")
+    private val codeccOpenApiToken: String = ""
+
     fun requestForResponse(
         request: Request,
         connectTimeoutInSec: Long? = null,
@@ -124,18 +129,27 @@ class AuthHttpClientService @Autowired constructor(
         return RequestBody.create(JsonMediaType, objectMapper.writeValueAsString(data))
     }
 
-    fun buildPost(path: String, requestBody: RequestBody, gateway: String, token: String?): Request {
+    fun buildPost(
+        path: String,
+        requestBody: RequestBody,
+        gateway: String,
+        token: String?,
+        system: String? = bkciSystem
+    ): Request {
         val url = gateway + path
         val tag = bkTag.getFinalTag()
         logger.info("iam callback url: $url,tag:$tag")
         return Request.Builder().url(url).post(requestBody)
-            .headers(buildJwtAndToken(token).toHeaders())
+            .headers(buildJwtAndToken(token, system!!).toHeaders())
             // 指定回调集群
             .header(AUTH_HEADER_GATEWAY_TAG, tag)
             .build()
     }
 
-    private fun buildJwtAndToken(iamToken: String?): Map<String, String> {
+    private fun buildJwtAndToken(
+        iamToken: String?,
+        system: String
+    ): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
         if (jwtManager.isAuthEnable()) {
             val jwtToken = jwtManager.getToken() ?: ""
@@ -143,6 +157,9 @@ class AuthHttpClientService @Autowired constructor(
         }
         if (!iamToken.isNullOrEmpty()) {
             headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken!!
+        }
+        if (system == codeccSystem) {
+            headerMap[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         }
         return headerMap
     }
@@ -160,7 +177,9 @@ class AuthHttpClientService @Autowired constructor(
         private const val CONNECT_TIMEOUT = 5L
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
-        val logger = LoggerFactory.getLogger(AuthHttpClientService::class.java)
+        private val logger = LoggerFactory.getLogger(AuthHttpClientService::class.java)
+        private const val bkciSystem = "ci"
+        private const val codeccSystem = "codecc"
     }
 
     private fun buildBuilder(
