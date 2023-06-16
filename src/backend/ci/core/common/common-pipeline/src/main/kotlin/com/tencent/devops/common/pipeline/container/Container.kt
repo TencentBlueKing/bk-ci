@@ -78,7 +78,7 @@ interface Container {
     /**
      * 兼容性初始化等处理
      */
-    fun transformCompatibility() {
+    fun transformCompatibility(language: String? = null) {
         elements.forEach {
             it.transformCompatibility()
         }

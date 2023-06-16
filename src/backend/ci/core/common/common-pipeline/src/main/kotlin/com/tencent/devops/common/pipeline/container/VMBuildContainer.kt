@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_ENV_TYPE
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
@@ -156,13 +158,19 @@ data class VMBuildContainer(
         return matrixContext
     }
 
-    override fun transformCompatibility() {
+    override fun transformCompatibility(language: String?) {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
         }
         if (mutexGroup?.timeoutVar.isNullOrBlank()) {
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
-        super.transformCompatibility()
+        language?.let {
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_ENV_TYPE + baseOS.name,
+                language = language
+            )
+        }
+        super.transformCompatibility(language)
     }
 }
