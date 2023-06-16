@@ -457,7 +457,7 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
-        val latestVersionName = versionName ?: (latestTemplate.versionName + 1)
+        val latestVersionName = versionName ?: (latestTemplate.versionName.toInt() + 1).toString()
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE
