@@ -94,13 +94,6 @@ object JooqUtils {
         )
     }
 
-    fun <T> avg(data: Field<T>): Field<BigDecimal> {
-        return DSL.field(
-            "avg(${data.name})",
-            BigDecimal::class.java
-        )
-    }
-
     fun <T> productSum(t1: Field<T>, t2: Field<T>): Field<BigDecimal> {
         return DSL.field(
             "sum(${t1.name} * ${t2.name})",
