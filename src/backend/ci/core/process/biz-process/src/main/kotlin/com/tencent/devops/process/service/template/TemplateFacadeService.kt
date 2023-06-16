@@ -450,14 +450,14 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        //versionName: String,
+        versionName: String?,
         template: Model
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
-        val versionName = latestTemplate.versionName + 1
+        val latestVersionName = versionName ?: (latestTemplate.versionName + 1)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE
@@ -479,7 +479,7 @@ class TemplateFacadeService @Autowired constructor(
                 dslContext = context,
                 projectId = projectId,
                 templateId = templateId,
-                versionName = versionName,
+                versionName = latestVersionName,
                 saveNum = maxSaveVersionRecordNum
             )
             logger.info("saveRecordVersions: ${saveRecordVersions.toString()}")
@@ -489,7 +489,7 @@ class TemplateFacadeService @Autowired constructor(
                     dslContext = context,
                     projectId = projectId,
                     templateId = templateId,
-                    versionName = versionName,
+                    versionName = latestVersionName,
                     saveVersions = saveRecordVersions.map { it.value1() }
                 )
             }
@@ -498,7 +498,7 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 templateName = template.name,
-                versionName = versionName,
+                versionName = latestVersionName,
                 userId = userId,
                 template = JsonUtil.toJson(template, formatted = false),
                 type = latestTemplate.type,
