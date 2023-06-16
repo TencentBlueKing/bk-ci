@@ -34,6 +34,22 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        whiteListUser.apply {
+            val whiteListUserArray = this.split(";")
+            for (user in whiteListUserArray) {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?: run {
+                    logger.info("whiteListUser($user) not in the GPU whiteList")
+                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
+                }
+            }
+        }
+
+        return true
+    }
+
     /* 有关数量的限制:
         如果value大于指定key中id规定的数量，则抛出异常
         如果没有白名单，则抛出异常

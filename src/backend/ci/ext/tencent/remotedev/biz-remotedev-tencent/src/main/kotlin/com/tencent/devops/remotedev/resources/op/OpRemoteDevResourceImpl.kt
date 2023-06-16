@@ -67,6 +67,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(whiteListService.addWhiteListUser(userId, whiteListUser))
     }
 
+    override fun addGPUWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
+        return Result(whiteListService.addGPUWhiteListUser(userId, whiteListUser))
+    }
+
     override fun addImageSpec(spec: ImageSpec): Result<Boolean> {
         return Result(workspaceImageService.addImageSpecConfig(spec))
     }
