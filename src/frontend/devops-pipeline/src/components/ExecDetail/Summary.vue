@@ -1,6 +1,6 @@
 <template>
     <header class="exec-detail-summary">
-        <div class="exec-detail-summary-info">
+        <div v-if="visible" class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
@@ -80,6 +80,11 @@
                 </div>
             </div>
         </div>
+        <span @click="collapseSummary" :class="['summary-collapsed-handler', {
+            'is-collapsed': !visible
+        }]">
+            <i class="devops-icon icon-angle-double-up"></i>
+        </span>
     </header>
 </template>
 
@@ -92,10 +97,6 @@
             MaterialItem
         },
         props: {
-            showInfoRow: {
-                type: Boolean,
-                default: true
-            },
             execDetail: {
                 type: Object,
                 required: true
@@ -103,6 +104,7 @@
         },
         data () {
             return {
+                visible: true,
                 remarkEditable: false,
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
@@ -141,6 +143,9 @@
             ...mapActions('pipelines', ['updateBuildRemark']),
             showRemarkEdit () {
                 this.remarkEditable = true
+            },
+            collapseSummary () {
+                this.visible = !this.visible
             },
             hideRemarkEdit () {
                 this.remarkEditable = false
@@ -188,7 +193,8 @@
 
 .exec-detail-summary {
   background: white;
-  padding: 0 24px 18px 24px;
+  position: relative;
+  padding: 0 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   &-info {
     display: grid;
@@ -196,6 +202,7 @@
     grid-template-columns: 8fr 8fr 3fr minmax(168px, 4fr);
     font-size: 12px;
     grid-gap: 100px;
+    padding-top: 18px;
 
     > div {
       display: flex;
@@ -221,7 +228,7 @@
           padding: 0 8px;
           .all-exec-material-list {
             position: absolute;
-            z-index: 9;
+            z-index: 11;
             width: 100%;
             border: 1px solid #dcdee5;
             border-radius: 2px;
@@ -349,6 +356,33 @@
           }
         }
       }
+    }
+  }
+
+  .summary-collapsed-handler {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-60px);
+    width: 120px;
+    height: 12px;
+    background: #EAEBF0;
+    border-radius: 2px 2px 0 0;
+    text-align: center;
+    line-height: 12px;
+    font-size: 12px;
+    transition: all 0.3s;
+    z-index: 10;
+    cursor: pointer;
+    &:hover {
+        color: $primaryColor;
+    }
+    &.is-collapsed {
+        bottom: -12px;
+        > i {
+            display: block;
+            transform: rotate(180deg);
+        }
     }
   }
 }
