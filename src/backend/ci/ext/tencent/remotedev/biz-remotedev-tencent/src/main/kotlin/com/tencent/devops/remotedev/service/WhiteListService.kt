@@ -42,7 +42,7 @@ class WhiteListService @Autowired constructor(
             for (user in whiteListUserArray) {
                 cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?: run {
                     logger.info("whiteListUser($user) not in the GPU whiteList")
-                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
+                    redisOperation.hmset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, mapOf(user.toString() to "1"))
                 }
             }
         }
