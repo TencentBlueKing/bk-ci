@@ -44,12 +44,14 @@ import org.springframework.stereotype.Service
 @Primary
 @Service
 class TencentAgentMetricService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    val dslContext: DSLContext,
+    val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val objectMapper: ObjectMapper,
-    private val kafkaClient: KafkaClient
+    private val kafkaClient: KafkaClient,
+    private val bkMonitorMetricsService: BkMonitorMetricsService
 ) : AgentMetricService(
-    dslContext, thirdPartyAgentDao
+    dslContext,
+    thirdPartyAgentDao
 ) {
 
     companion object {
@@ -187,7 +189,12 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
+        return bkMonitorMetricsService.queryCpuUsageMetrics(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            timeRange = timeRange
+        )
     }
 
     override fun queryMemoryUsageMetrix(
@@ -196,7 +203,12 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
+        return bkMonitorMetricsService.queryMemoryUsageMetrics(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            timeRange = timeRange
+        )
     }
 
     override fun queryDiskioMetrix(
@@ -205,7 +217,12 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
+        return bkMonitorMetricsService.queryDiskioMetrics(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            timeRange = timeRange
+        )
     }
 
     override fun queryNetMetrix(
@@ -214,6 +231,11 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
+        return bkMonitorMetricsService.queryNetMetrics(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            timeRange = timeRange
+        )
     }
 }
