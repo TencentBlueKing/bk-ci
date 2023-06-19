@@ -106,6 +106,7 @@ class MigrateV0PolicyService constructor(
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private const val V0_QC_GROUP_NAME = "质量管理员"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -400,6 +401,10 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
-        return result.subject.name!!
+        return if (result.subject.name == V0_QC_GROUP_NAME) {
+            RBAC_QC_GROUP_NAME
+        } else {
+            result.subject.name!!
+        }
     }
 }
