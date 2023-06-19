@@ -46,6 +46,7 @@ class AuthResourceNameConverter {
             AuthResourceType.EXPERIENCE_GROUP_NEW.value,
             AuthResourceType.EXPERIENCE_TASK_NEW.value,
             AuthResourceType.QUALITY_RULE.value,
+            AuthResourceType.CODECC_TASK.value,
             AuthResourceType.QUALITY_GROUP_NEW.value ->
                 IamGroupUtils.buildSubsetManagerGroupName(
                     resourceType = resourceType,
