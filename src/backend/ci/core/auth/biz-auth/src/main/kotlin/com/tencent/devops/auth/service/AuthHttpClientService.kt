@@ -151,7 +151,7 @@ class AuthHttpClientService @Autowired constructor(
         system: String
     ): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
-        if (system == codeccSystem) {
+        if (system == codeccSystem && codeccOpenApiToken.isNotEmpty()) {
             headerMap[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         } else {
             if (jwtManager.isAuthEnable()) {
