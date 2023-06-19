@@ -104,9 +104,8 @@ enum class ErrorCodeEnum(
     NOT_ALLOWED_ENVIRONMENT(
         errorType = ErrorType.USER,
         errorCode = "2132019",
-        formatErrorMessage = "Not allowed to create in the current environment"
-    )
-    ;
+        formatErrorMessage = "Not allowed to create in the current environment[{0}]."
+    );
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)
