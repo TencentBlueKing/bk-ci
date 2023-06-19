@@ -352,13 +352,15 @@ class PipelineSettingDao {
 
     fun updateMaxConRunningQueueSize(
         dslContext: DSLContext,
-        pipelineIdList: List<String>,
+        projectId: String,
+        pipelineId: String,
         maxConRunningQueueSize: Int
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.update(this)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, maxConRunningQueueSize)
-                .where(PIPELINE_ID.`in`(pipelineIdList))
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
