@@ -199,7 +199,7 @@ class PipelineRecordModelService @Autowired constructor(
                 }
                 containerVarMap[VMBuildContainer::groupContainers.name] = groupContainers
             }
-            containers.add(ModelUtils.generateBuildModelDetail(containerBaseModelMap.deepCopy(), containerVarMap))
+            containers.add(containerVarMap)
         }
         stageVarMap[Stage::containers.name] = containers
     }
