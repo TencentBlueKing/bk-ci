@@ -50,8 +50,8 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_EVENT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_WAREHOUSE_EVENTS
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -78,14 +78,14 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Suppress(
     "LongParameterList",
@@ -173,8 +173,8 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // 如果请求的executeCount异常则直接返回错误，防止数据错乱
         if (
-            executeCount?.let {
-                request -> request < 1 || buildInfo.executeCount?.let { request > it } == true
+            executeCount?.let { request ->
+                request < 1 || buildInfo.executeCount?.let { request > it } == true
             } == true
         ) {
             return null

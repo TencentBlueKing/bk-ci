@@ -1526,6 +1526,14 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo)
     }
 
+    fun updateExecuteCount(
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ) {
+        pipelineBuildDao.updateExecuteCount(dslContext, projectId, buildId, executeCount)
+    }
+
     /**
      * 开始最新一次构建
      */
@@ -1788,7 +1796,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     // 获取流水线最后成功的构建号
     fun getLatestSucceededBuildId(projectId: String, pipelineId: String): String? {
-        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, projectId, pipelineId)?.buildId
+        return pipelineBuildDao.getLatestSucceedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
     // 获取流水线最后失败的构建号
