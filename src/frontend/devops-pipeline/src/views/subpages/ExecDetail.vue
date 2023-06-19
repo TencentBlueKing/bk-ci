@@ -593,7 +593,6 @@
             color: $primaryColor;
         }
         &.is-collapsed {
-            bottom: -12px;
             > i {
                 display: block;
                 transform: rotate(180deg);
