@@ -141,8 +141,6 @@ class AuthHttpClientService @Autowired constructor(
         logger.info("iam callback url: $url,tag:$tag")
         return Request.Builder().url(url).post(requestBody)
             .headers(buildJwtAndToken(token, system!!).toHeaders())
-            // 指定回调集群
-            .header(AUTH_HEADER_GATEWAY_TAG, tag)
             .build()
     }
 
@@ -150,16 +148,23 @@ class AuthHttpClientService @Autowired constructor(
         iamToken: String?,
         system: String
     ): Map<String, String> {
+        val tag = bkTag.getFinalTag()
         val headerMap = mutableMapOf<String, String>()
         if (system == codeccSystem && codeccOpenApiToken.isNotEmpty()) {
+            // codecc回调请求头
             headerMap[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         } else {
+            // bkci回调请求头
             if (jwtManager.isAuthEnable()) {
                 val jwtToken = jwtManager.getToken() ?: ""
                 headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
             }
             if (!iamToken.isNullOrEmpty()) {
-                headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken!!
+                headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken
+            }
+            if (tag.isNotEmpty()) {
+                // 指定回调集群
+                headerMap[AUTH_HEADER_GATEWAY_TAG] = tag
             }
         }
         return headerMap
