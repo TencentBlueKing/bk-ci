@@ -123,6 +123,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -1079,15 +1080,17 @@ class PipelineRuntimeService @Autowired constructor(
                     BuildRecordTimeStamp(context.now.timestampmilli(), null)
             ), queueTime = context.now
         )
-
+        // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录
+        val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
         if (updateExistsTask.isNotEmpty()) {
             pipelineTaskService.batchUpdate(transactionContext, updateExistsTask)
-            saveTaskRecords(updateExistsTask, taskBuildRecords, context.resourceVersion)
+            taskBuildRecordResult.addRecords(updateExistsTask, context.resourceVersion)
         }
         if (buildTaskList.isNotEmpty()) {
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
-            saveTaskRecords(buildTaskList, taskBuildRecords, context.resourceVersion)
+            taskBuildRecordResult.addRecords(buildTaskList, context.resourceVersion)
         }
+        taskBuildRecordResult.addAll(taskBuildRecords)
         if (updateExistsContainer.isNotEmpty()) {
             pipelineContainerService.batchUpdate(
                 transactionContext, updateExistsContainer.map { it.first }
@@ -1111,7 +1114,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         pipelineBuildRecordService.batchSave(
             transactionContext, modelRecord, stageBuildRecords,
-            containerBuildRecords, taskBuildRecords
+            containerBuildRecords, taskBuildRecordResult
         )
     }
 

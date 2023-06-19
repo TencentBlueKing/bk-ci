@@ -39,6 +39,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,6 +55,7 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
+    val pipelineBuildRecordService: PipelineBuildRecordService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -64,6 +69,8 @@ class PipelineRetryFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        executeCount: Int,
+        resourceVersion: Int,
         taskId: String? = null,
         skipFailedTask: Boolean? = false
     ): Boolean {
@@ -84,8 +91,17 @@ class PipelineRetryFacadeService @Autowired constructor(
 
         // 校验当前job的关机事件是否有完成
         checkStopTask(projectId, buildId, containerInfo!!)
-        // 刷新当前job的开关机以及job状态， container状态， detail数据
-        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo, skipFailedTask)
+        // 刷新当前job的开关机以及job状态， container状态， detail数据, record数据
+        refreshTaskAndJob(
+            userId = userId,
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            resourceVersion = resourceVersion,
+            taskId = taskId,
+            containerInfo = containerInfo,
+            skipFailedTask = skipFailedTask
+        )
         // 发送container Refresh事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
         buildLogPrinter.addYellowLine(
@@ -133,14 +149,18 @@ class PipelineRetryFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         buildId: String,
+        executeCount: Int,
+        resourceVersion: Int,
         taskId: String,
         containerInfo: PipelineBuildContainer,
         skipFailedTask: Boolean? = false
     ) {
-        val taskRecords = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerInfo.containerId)
+        val taskBuilds = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerInfo.containerId)
+        val taskRecords = mutableListOf<BuildRecordTask>()
         // 待重试task所属job对应的startVm，stopVm，endTask，对应task状态重置为Queue
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
-        taskRecords.forEach { task ->
+        taskBuilds.forEach { t ->
+            val task = t.copy(executeCount = executeCount)
             if (task.taskId == taskId) {
                 // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件,直接把task内状态改为SKIP
                 if (task.additionalOptions?.manualSkip == true && skipFailedTask!!) {
@@ -148,22 +168,45 @@ class PipelineRetryFacadeService @Autowired constructor(
                     return@forEach
                 }
                 startAndEndTask.add(task)
+                taskRecords.addRecords(mutableListOf(task), resourceVersion)
             } else if (task.taskName.startsWith(VMUtils.getCleanVmLabel()) &&
-                task.taskId.startsWith(VMUtils.getStopVmLabel())) {
+                task.taskId.startsWith(VMUtils.getStopVmLabel())
+            ) {
                 startAndEndTask.add(task)
             } else if (task.taskName.startsWith(VMUtils.getPrepareVmLabel()) &&
-                task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                task.taskId.startsWith(VMUtils.getStartVmLabel())
+            ) {
                 startAndEndTask.add(task)
             } else if (task.taskName.startsWith(VMUtils.getWaitLabel()) &&
-                task.taskId.startsWith(VMUtils.getEndLabel())) {
+                task.taskId.startsWith(VMUtils.getEndLabel())
+            ) {
                 startAndEndTask.add(task)
             } else if (task.status == BuildStatus.UNEXEC) {
                 startAndEndTask.add(task)
+                taskRecords.addRecords(mutableListOf(task), resourceVersion)
             }
         }
         startAndEndTask.forEach {
             pipelineTaskService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
         }
+        val containerRecord = BuildRecordContainer(
+            projectId = containerInfo.projectId,
+            pipelineId = containerInfo.pipelineId,
+            resourceVersion = resourceVersion,
+            buildId = containerInfo.buildId,
+            stageId = containerInfo.stageId,
+            containerId = containerInfo.containerId,
+            containerType = containerInfo.containerType,
+            executeCount = executeCount,
+            matrixGroupFlag = containerInfo.matrixGroupFlag,
+            status = BuildStatus.QUEUE.name,
+            containerVar = mutableMapOf(),
+            timestamps = mapOf()
+        )
+        pipelineBuildRecordService.batchSave(
+            transactionContext = null, model = null, stageList = null,
+            containerList = listOf(containerRecord), taskList = taskRecords
+        )
         // 修改容器状态位运行
         pipelineContainerService.updateContainerStatus(
             projectId = containerInfo.projectId,

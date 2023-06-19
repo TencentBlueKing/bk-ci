@@ -135,15 +135,16 @@ class PipelineBuildRecordService @Autowired constructor(
 
     fun batchSave(
         transactionContext: DSLContext?,
-        model: BuildRecordModel,
-        stageList: List<BuildRecordStage>,
-        containerList: List<BuildRecordContainer>,
-        taskList: List<BuildRecordTask>
+        model: BuildRecordModel?,
+        stageList: List<BuildRecordStage>?,
+        containerList: List<BuildRecordContainer>?,
+        taskList: List<BuildRecordTask>?
     ) {
-        recordModelDao.createRecord(transactionContext ?: dslContext, model)
-        recordStageDao.batchSave(transactionContext ?: dslContext, stageList)
-        recordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
-        recordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+        val dsl = transactionContext ?: dslContext
+        model?.let { recordModelDao.createRecord(dsl, model) }
+        stageList?.let { recordStageDao.batchSave(dsl, stageList) }
+        containerList?.let { recordContainerDao.batchSave(dsl, containerList) }
+        taskList?.let { recordTaskDao.batchSave(dsl, taskList) }
     }
 
     private fun checkPassDays(startTime: Long?): Boolean {
