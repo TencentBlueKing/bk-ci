@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ExtServiceEntity
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
@@ -42,7 +41,6 @@ import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
-import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
@@ -290,7 +288,7 @@ class ServiceItemService @Autowired constructor(
             } else {
                 val serviceEntity = ExtServiceEntity(
                     id = serviceRecord!!.id.toString(),
-                    name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + serviceRecord.englishName),
+                    name = serviceRecord.name.substringBefore("("),
                     code = serviceRecord.englishName
                 )
                 projectServiceMap[serviceId] = serviceEntity
