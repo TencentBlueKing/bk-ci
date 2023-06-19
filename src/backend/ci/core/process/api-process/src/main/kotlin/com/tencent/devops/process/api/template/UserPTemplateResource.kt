@@ -148,7 +148,6 @@ interface UserPTemplateResource {
         templateId: String,
         @ApiParam("版本名", required = false)
         @QueryParam("versionName")
-        @BkField(maxLength = 64)
         versionName: String?=null,
         @ApiParam("模板", required = true)
         template: Model
