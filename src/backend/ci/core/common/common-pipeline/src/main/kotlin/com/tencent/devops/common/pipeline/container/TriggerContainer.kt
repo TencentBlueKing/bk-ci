@@ -100,7 +100,7 @@ data class TriggerContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? = null
 
-    override fun transformCompatibility(language: String? = null) {
+    override fun transformCompatibility(language: String?) {
         language?.let {
             name = MessageUtil.getMessageByLocale(
                 messageCode = CommonMessageCode.BK_BUILD_ENV_TYPE_BUILD_TRIGGERS,
