@@ -54,9 +54,20 @@
             <p class="summary-header-shadow" v-show="show"></p>
             <Summary
                 ref="detailSummary"
+                :visible="summaryVisible"
                 :exec-detail="execDetail"
             ></Summary>
-            <p class="pipeline-exec-gap"></p>
+            
+            <p class="pipeline-exec-gap">
+                <span
+                    @click="collapseSummary"
+                    :class="['summary-collapsed-handler', {
+                        'is-collapsed': !summaryVisible
+                    }]"
+                >
+                    <i class="devops-icon icon-angle-double-up"></i>
+                </span>
+            </p>
             <header class="exec-detail-switcher">
                 <span
                     v-for="panel in panels"
@@ -167,6 +178,7 @@
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
                 show: false,
+                summaryVisible: true,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -463,6 +475,9 @@
                         type: panel.name
                     }
                 })
+            },
+            collapseSummary () {
+                this.summaryVisible = !this.summaryVisible
             }
         }
     }
@@ -558,6 +573,33 @@
     position: sticky;
     top: 40px;
     z-index: 8;
+    .summary-collapsed-handler {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-60px);
+        width: 120px;
+        height: 12px;
+        background: #EAEBF0;
+
+        border-radius: 2px 2px 0 0;
+        text-align: center;
+        line-height: 12px;
+        font-size: 12px;
+        transition: all 0.3s;
+        z-index: 10;
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
+        }
+        &.is-collapsed {
+            bottom: -12px;
+            > i {
+                display: block;
+                transform: rotate(180deg);
+            }
+        }
+      }
   }
   .exec-detail-switcher {
     background: #f0f1f5;
