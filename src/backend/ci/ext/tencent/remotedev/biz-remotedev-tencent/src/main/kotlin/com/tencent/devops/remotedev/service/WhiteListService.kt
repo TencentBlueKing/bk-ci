@@ -7,10 +7,12 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 @Service
 class WhiteListService @Autowired constructor(
+    @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation,
     private val cacheService: RedisCacheService
 ) {
@@ -40,9 +42,9 @@ class WhiteListService @Autowired constructor(
         whiteListUser.apply {
             val whiteListUserArray = this.split(";")
             for (user in whiteListUserArray) {
-                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?: run {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user) ?: run {
                     logger.info("whiteListUser($user) not in the GPU whiteList")
-                    redisOperation.hmset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, mapOf(user.toString() to "1"))
+                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
                 }
             }
         }
