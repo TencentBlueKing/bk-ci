@@ -80,11 +80,6 @@
                 </div>
             </div>
         </div>
-        <span @click="collapseSummary" :class="['summary-collapsed-handler', {
-            'is-collapsed': !visible
-        }]">
-            <i class="devops-icon icon-angle-double-up"></i>
-        </span>
     </header>
 </template>
 
@@ -97,6 +92,10 @@
             MaterialItem
         },
         props: {
+            visible: {
+                type: Boolean,
+                default: true
+            },
             execDetail: {
                 type: Object,
                 required: true
@@ -104,7 +103,6 @@
         },
         data () {
             return {
-                visible: true,
                 remarkEditable: false,
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
@@ -143,9 +141,6 @@
             ...mapActions('pipelines', ['updateBuildRemark']),
             showRemarkEdit () {
                 this.remarkEditable = true
-            },
-            collapseSummary () {
-                this.visible = !this.visible
             },
             hideRemarkEdit () {
                 this.remarkEditable = false
@@ -356,33 +351,6 @@
           }
         }
       }
-    }
-  }
-
-  .summary-collapsed-handler {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-60px);
-    width: 120px;
-    height: 12px;
-    background: #EAEBF0;
-    border-radius: 2px 2px 0 0;
-    text-align: center;
-    line-height: 12px;
-    font-size: 12px;
-    transition: all 0.3s;
-    z-index: 10;
-    cursor: pointer;
-    &:hover {
-        color: $primaryColor;
-    }
-    &.is-collapsed {
-        bottom: -12px;
-        > i {
-            display: block;
-            transform: rotate(180deg);
-        }
     }
   }
 }

@@ -16,10 +16,10 @@
                     v-if="isMR && field === 'webhookSourceTarget'"
                     class="mr-source-target"
                 >
-                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch }">{{ material.webhookSourceBranch }}</span>
+                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch, allowHTML: false }">{{ material.webhookSourceBranch }}</span>
                     <i class="devops-icon icon-arrows-right"></i>
                     <logo :name="iconArray[field] || 'commit'" size="14" />
-                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch }">{{ material.webhookBranch }}</span>
+                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch, allowHTML: false }">{{ material.webhookBranch }}</span>
                 </span>
                 <bk-popover
                     v-else
