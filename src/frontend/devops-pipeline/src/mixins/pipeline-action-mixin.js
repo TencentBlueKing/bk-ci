@@ -120,6 +120,7 @@ export default {
                         latestBuildRoute: {
                             name: 'pipelinesDetail',
                             params: {
+                                type: 'executeDetail',
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
                                 buildNo: item.latestBuildId
