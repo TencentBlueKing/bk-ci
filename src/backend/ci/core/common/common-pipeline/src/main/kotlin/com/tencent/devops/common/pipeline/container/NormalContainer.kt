@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_ENV_TYPE_BUILDLESS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -132,19 +130,13 @@ data class NormalContainer(
         return matrixContext
     }
 
-    override fun transformCompatibility(language: String?) {
+    override fun transformCompatibility() {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
         }
         if (mutexGroup?.timeoutVar.isNullOrBlank()) {
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
-        language?.let {
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_ENV_TYPE_BUILDLESS,
-                language = language
-            )
-        }
-        super.transformCompatibility(language)
+        super.transformCompatibility()
     }
 }
