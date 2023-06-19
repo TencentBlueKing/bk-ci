@@ -148,7 +148,7 @@ interface UserPTemplateResource {
         templateId: String,
         @ApiParam("版本名", required = false)
         @QueryParam("versionName")
-        versionName: String?=null,
+        versionName: String? = null,
         @ApiParam("模板", required = true)
         template: Model
     ): Result<Boolean>

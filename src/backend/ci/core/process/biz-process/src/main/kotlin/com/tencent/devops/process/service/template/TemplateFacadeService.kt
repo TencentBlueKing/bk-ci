@@ -482,7 +482,6 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = latestVersionName,
                 saveNum = maxSaveVersionRecordNum
             )
-            logger.info("saveRecordVersions: ${saveRecordVersions.toString()}")
             if (saveRecordVersions?.isNotEmpty == true) {
                 // 版本名称为versionName的版本只保存最近maxSaveVersionRecordNum条记录
                 templateDao.deleteSpecVersion(
