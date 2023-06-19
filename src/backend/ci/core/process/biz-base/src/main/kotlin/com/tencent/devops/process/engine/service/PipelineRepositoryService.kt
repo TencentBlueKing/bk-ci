@@ -621,7 +621,6 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
-        logger.info("Updating ${model.latestVersion}")
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
@@ -656,7 +655,6 @@ class PipelineRepositoryService constructor(
                         latestVersion = model.latestVersion
                     )
                 }
-                logger.info("version:$version")
                 if (version == 0) {
                     // 传过来的latestVersion已经不是最新
                     throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)

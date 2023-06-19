@@ -705,7 +705,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
                 )
 
-            logger.info("Pipeline :$pipeline")
             if (pipeline.channelCode != channelCode) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -719,8 +718,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
-            logger.info("existModel :$existModel")
-
             // 对已经存在的模型做处理
             val param = BeforeDeleteParam(
                 userId = userId,
