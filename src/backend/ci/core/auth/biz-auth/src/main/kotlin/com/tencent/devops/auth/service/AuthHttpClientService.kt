@@ -117,7 +117,7 @@ class AuthHttpClientService @Autowired constructor(
                 val responseContent = response.body?.string()
                 logger.warn(
                     "Fail to request($request) with code ${response.code} ," +
-                            " message ${response.message} and response ($responseContent)"
+                        " message ${response.message} and response ($responseContent)"
                 )
                 throw RemoteServiceException(errorMessage, response.code, responseContent)
             }
@@ -151,15 +151,16 @@ class AuthHttpClientService @Autowired constructor(
         system: String
     ): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
-        if (jwtManager.isAuthEnable()) {
-            val jwtToken = jwtManager.getToken() ?: ""
-            headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
-        }
-        if (!iamToken.isNullOrEmpty()) {
-            headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken!!
-        }
         if (system == codeccSystem) {
             headerMap[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
+        } else {
+            if (jwtManager.isAuthEnable()) {
+                val jwtToken = jwtManager.getToken() ?: ""
+                headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+            }
+            if (!iamToken.isNullOrEmpty()) {
+                headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken!!
+            }
         }
         return headerMap
     }
