@@ -100,7 +100,13 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132018",
         formatErrorMessage = "get watermark fail."
-    );
+    ),
+    NOT_ALLOWED_ENVIRONMENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132019",
+        formatErrorMessage = "Not allowed to create in the current environment"
+    )
+    ;
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)

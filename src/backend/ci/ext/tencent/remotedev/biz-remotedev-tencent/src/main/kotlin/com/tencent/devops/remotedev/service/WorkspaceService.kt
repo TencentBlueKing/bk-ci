@@ -204,6 +204,12 @@ class WorkspaceService @Autowired constructor(
         }
 
         if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
+            whiteListService.checkRunsOnOs(
+                key = RedisKeys.REDIS_RUNS_ON_OS_KEY,
+                runsOnKey = WorkspaceSystemType.WINDOWS_GPU.name,
+                currentOs = workspaceCreate.currentOS
+            )
+
             whiteListService.numberLimit(
                 key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
                 id = userId,
