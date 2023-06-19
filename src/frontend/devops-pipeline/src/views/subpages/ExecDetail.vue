@@ -123,25 +123,25 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import webSocketMessage from '@/utils/webSocketMessage'
-    import codeRecord from '@/components/codeRecord'
-    import StartParams from '@/components/StartParams'
+    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import Summary from '@/components/ExecDetail/Summary'
+    import job from '@/components/ExecDetail/job'
+    import plugin from '@/components/ExecDetail/plugin'
+    import stage from '@/components/ExecDetail/stage'
     import ExecPipeline from '@/components/ExecPipeline'
+    import Logo from '@/components/Logo'
     import Outputs from '@/components/Outputs'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
-    import emptyTips from '@/components/devops/emptyTips'
-    import plugin from '@/components/ExecDetail/plugin'
-    import job from '@/components/ExecDetail/job'
-    import Summary from '@/components/ExecDetail/Summary'
-    import stage from '@/components/ExecDetail/stage'
     import stageReviewPanel from '@/components/StageReviewPanel'
+    import StartParams from '@/components/StartParams'
+    import codeRecord from '@/components/codeRecord'
+    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import Logo from '@/components/Logo'
-    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -350,7 +350,19 @@
                 }
             }
         },
-
+        beforeRouteEnter (to, from, next) {
+            if (!to.params.type) {
+                next({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...to.params,
+                        type: 'executeDetail'
+                    }
+                })
+            } else {
+                next()
+            }
+        },
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
             webSocketMessage.installWsMessage(this.setPipelineDetail)
