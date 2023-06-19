@@ -83,8 +83,7 @@ class WhiteListService @Autowired constructor(
         if (runsOnValue != currentOs) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ErrorCodeEnum.NOT_ALLOWED_ENVIRONMENT.errorCode,
-                params = arrayOf("$currentOs")
+                errorCode = ErrorCodeEnum.NOT_ALLOWED_ENVIRONMENT.errorCode
             )
         }
     }
