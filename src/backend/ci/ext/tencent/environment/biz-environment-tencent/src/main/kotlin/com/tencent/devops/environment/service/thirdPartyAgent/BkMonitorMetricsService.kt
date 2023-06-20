@@ -269,7 +269,7 @@ class BkMonitorMetricsService @Autowired constructor(
                     interval = when (timeRange) {
                         TIME_RANGE_WEEK -> 600
                         else -> 60
-                    },
+                    }
                 )
             ),
             expression = "",
