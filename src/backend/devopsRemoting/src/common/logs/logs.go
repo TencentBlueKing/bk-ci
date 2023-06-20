@@ -95,7 +95,7 @@ func Init(tops []TeeOption, service, version string) error {
 		cores = append(cores, core)
 	}
 
-	Logs = zap.New(zapcore.NewTee(cores...), zap.AddCaller()).With(zap.Object("serviceContext", &ServiceContext{service, version}))
+	Logs = zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(1)).With(zap.Object("serviceContext", &ServiceContext{service, version}))
 
 	return nil
 }
