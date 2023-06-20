@@ -486,7 +486,10 @@ class PipelineBuildDao {
     ): Boolean {
         with(T_PIPELINE_BUILD_HISTORY) {
             return dslContext.update(this)
-                .set(EXECUTE_COUNT, executeCount).execute() == 1
+                .set(EXECUTE_COUNT, executeCount)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute() == 1
         }
     }
 
