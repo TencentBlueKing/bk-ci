@@ -30,6 +30,8 @@ package com.tencent.devops.dispatch.bcs.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.bcs.client.WorkspaceBcsClient
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpPatch
+import com.tencent.devops.dispatch.kubernetes.pojo.PatchOp
 import com.tencent.devops.dispatch.devcloud.service.DevCloudRemoteDevService
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -37,6 +39,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Container
 import com.tencent.devops.dispatch.kubernetes.pojo.DataDiskSource
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvVar
 import com.tencent.devops.dispatch.kubernetes.pojo.Environment
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.kubernetes.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.kubernetes.pojo.ImagePullCertificate
@@ -47,16 +50,19 @@ import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.kubernetes.pojo.Volume
 import com.tencent.devops.dispatch.kubernetes.pojo.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.Base64Utils
 
 @Service
 class BcsRemoteDevService @Autowired constructor(
@@ -199,15 +205,56 @@ class BcsRemoteDevService @Autowired constructor(
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
+        val environmentUid = getEnvironmentUid(workspaceName)
+        val environment = workspaceBcsClient.getWorkspaceDetail(userId, environmentUid)
+        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.START,
+            envPatchStr = envPatchStr
+        )
+
+        return resp.taskUid
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
+        val environmentUid = getEnvironmentUid(workspaceName)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.STOP
+        )
+
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.stopped,
+            dslContext = dslContext
+        )
+
+        return resp.taskUid
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-        TODO("Not yet implemented")
+        val environmentUid = getEnvironmentUid(event.workspaceName)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = event.workspaceName,
+            environmentAction = EnvironmentAction.DELETE
+        )
+
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = event.workspaceName,
+            status = EnvStatusEnum.deleted,
+            dslContext = dslContext
+        )
+
+        return resp.taskUid
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
@@ -215,11 +262,27 @@ class BcsRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        devcloudWorkspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        return true
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        TODO("Not yet implemented")
+        val environmentStatus = workspaceBcsClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
+        return WorkspaceInfo(
+            status = environmentStatus.status,
+            hostIP = environmentStatus.hostIP,
+            environmentIP = environmentStatus.environmentIP,
+            clusterId = environmentStatus.clusterId,
+            namespace = environmentStatus.namespace,
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            ready = podInfo?.ready,
+            started = podInfo?.started
+        )
+    }
+    private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
+        return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId, "")}"
     }
     private fun generateContainerEnvVar(
         userId: String,
@@ -257,5 +320,29 @@ class BcsRemoteDevService @Autowired constructor(
         }
 
         return envVarList
+    }
+    private fun getEnvironmentUid(workspaceName: String): String {
+        val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+        return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
+    }
+    private fun getWorkspaceEnvPatchStr(
+        envName: String,
+        patchValue: String,
+        environment: Environment
+    ): String {
+        val envList = environment.spec.containers[0].env
+        if (envList.isEmpty()) return ""
+
+        val envNameIndex = envList.indexOfFirst { it.name == envName }
+        if (envNameIndex < 0) return ""
+
+        val environmentPatch = EnvironmentOpPatch(
+            op = PatchOp.ADD.value,
+            path = "/spec/containers/0/env/$envNameIndex/value",
+            value = patchValue
+        )
+
+        val patchJson = JsonUtil.toJson(listOf(environmentPatch)).toByteArray()
+        return Base64Utils.encodeToString(patchJson)
     }
 }

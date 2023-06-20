@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.kubernetes.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

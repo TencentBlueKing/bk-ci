@@ -41,6 +41,6 @@ class ExternalResourceImpl @Autowired constructor(
 ) : ExternalResource {
 
     override fun workspaceTaskCallback(type: WorkspaceMountType?, taskStatus: TaskStatus): Result<Boolean> {
-        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type ?:WorkspaceMountType.DEVCLOUD))
+        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type ?: WorkspaceMountType.DEVCLOUD))
     }
 }
