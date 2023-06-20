@@ -32,7 +32,6 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpPatch
 import com.tencent.devops.dispatch.kubernetes.pojo.PatchOp
-import com.tencent.devops.dispatch.devcloud.service.DevCloudRemoteDevService
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.Container
@@ -101,7 +100,7 @@ class BcsRemoteDevService @Autowired constructor(
     val idePort: String = ""
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DevCloudRemoteDevService::class.java)
+        private val logger = LoggerFactory.getLogger(BcsRemoteDevService::class.java)
 
         private const val WORKSPACE_PATH = "/data/landun/workspace"
         private const val VOLUME_MOUNT_NAME = "workspace"

@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import io.swagger.annotations.ApiModelProperty
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_CREATE_STARTUP)
@@ -52,6 +53,7 @@ data class WorkspaceCreateEvent(
     val settingEnvs: Map<String, String>,
     @ApiModelProperty("bkTicket")
     val bkTicket: String? = null,
+    val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

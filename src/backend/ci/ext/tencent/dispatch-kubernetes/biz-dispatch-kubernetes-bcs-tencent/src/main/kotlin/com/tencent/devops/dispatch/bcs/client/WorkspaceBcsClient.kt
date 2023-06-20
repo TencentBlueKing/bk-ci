@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATION_FAIL
 import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
@@ -32,7 +31,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,8 +43,10 @@ class WorkspaceBcsClient @Autowired constructor(
     private val commonService: CommonService,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
-    private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
+        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+    }
     @Value("\${bcsCloud.appId}")
     val bcsCloudAppId: String = ""
 
@@ -64,9 +64,7 @@ class WorkspaceBcsClient @Autowired constructor(
             .url(commonService.getProxyUrl(url))
             .headers(
                 makeHeaders(
-                    bcsCloudAppId,
-                    bcsCloudToken,
-                    userId
+                    bcsCloudToken
                 )
                     .toHeaders()
             )
@@ -125,7 +123,7 @@ class WorkspaceBcsClient @Autowired constructor(
 
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
-            .headers(makeHeaders(bcsCloudAppId, bcsCloudToken, userId).toHeaders())
+            .headers(makeHeaders(bcsCloudToken).toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -188,9 +186,7 @@ class WorkspaceBcsClient @Autowired constructor(
             .url(commonService.getProxyUrl(url))
             .headers(
                 makeHeaders(
-                    bcsCloudAppId,
-                    bcsCloudToken,
-                    userId
+                    bcsCloudToken
                 )
                     .toHeaders()
             )
@@ -264,9 +260,7 @@ class WorkspaceBcsClient @Autowired constructor(
             .url(commonService.getProxyUrl(url))
             .headers(
                 makeHeaders(
-                    bcsCloudAppId,
-                    bcsCloudToken,
-                    userId
+                    bcsCloudToken
                 )
                     .toHeaders()
             )
@@ -342,9 +336,7 @@ class WorkspaceBcsClient @Autowired constructor(
             .url(commonService.getProxyUrl(url))
             .headers(
                 makeHeaders(
-                    bcsCloudAppId,
-                    bcsCloudToken,
-                    userId
+                    bcsCloudToken
                 )
                     .toHeaders()
             )
@@ -410,9 +402,7 @@ class WorkspaceBcsClient @Autowired constructor(
             .url(commonService.getProxyUrl(url))
             .headers(
                 makeHeaders(
-                    bcsCloudAppId,
-                    bcsCloudToken,
-                    userId
+                    bcsCloudToken
                 )
                     .toHeaders()
             )
@@ -520,21 +510,9 @@ class WorkspaceBcsClient @Autowired constructor(
     }
 
     fun makeHeaders(
-        appId: String,
-        token: String,
-        userId: String
+        token: String
     ): Map<String, String> {
-        val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["APPID"] = appId
-        val timestampMillis = System.currentTimeMillis().toString()
-        headerBuilder["X-Timestamp"] = timestampMillis
-        headerBuilder["X-Staffname"] = userId
-        val requestId = RandomStringUtils.randomAlphabetic(8)
-        headerBuilder["X-Reqeust-Id"] = requestId
-        val encKey = ShaUtils.sha256("$appId,$timestampMillis,$userId,$requestId,$token")
-        headerBuilder["Key"] = encKey
-
-        return headerBuilder
+        return mapOf(BCS_TOKEN_KEY to token)
     }
 }
 data class TaskResult(

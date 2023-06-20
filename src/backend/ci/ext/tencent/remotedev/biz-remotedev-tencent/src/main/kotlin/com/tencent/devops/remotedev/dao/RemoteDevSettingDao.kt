@@ -160,6 +160,7 @@ class RemoteDevSettingDao {
             allowedDownload = opSetting.allowedDownload ?: allowedDownload
             needWatermark = opSetting.needWatermark ?: needWatermark
             autoDeletedDays = opSetting.autoDeletedDays ?: autoDeletedDays
+            mountType = opSetting.mountType ?: mountType
         }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(

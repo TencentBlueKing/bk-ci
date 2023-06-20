@@ -271,7 +271,9 @@ class WorkspaceService @Autowired constructor(
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                bkTicket = bkTicket
+                bkTicket = bkTicket,
+                mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
+                    ?: devfile.checkWorkspaceMountType()
             )
         )
 

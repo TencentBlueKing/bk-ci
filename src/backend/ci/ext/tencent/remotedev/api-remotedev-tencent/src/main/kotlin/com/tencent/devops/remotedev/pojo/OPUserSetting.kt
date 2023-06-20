@@ -9,5 +9,6 @@ data class OPUserSetting(
     val allowedCopy: Boolean?,
     val allowedDownload: Boolean?,
     val needWatermark: Boolean?,
-    val autoDeletedDays: Int?
+    val autoDeletedDays: Int?,
+    val mountType: WorkspaceMountType?
 )

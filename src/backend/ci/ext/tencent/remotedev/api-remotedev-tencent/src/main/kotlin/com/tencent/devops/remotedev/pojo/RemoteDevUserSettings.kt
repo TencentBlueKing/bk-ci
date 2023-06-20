@@ -18,5 +18,7 @@ data class RemoteDevUserSettings(
     @ApiModelProperty("是否需要数字水印")
     var needWatermark: Boolean = true,
     @ApiModelProperty("自动销毁连续空闲时间")
-    var autoDeletedDays: Int = 14
+    var autoDeletedDays: Int = 14,
+    @ApiModelProperty("设置linux构建集群类型")
+    var mountType: WorkspaceMountType? = null
 )
