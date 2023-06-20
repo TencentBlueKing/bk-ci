@@ -125,7 +125,7 @@ class AgentMetricService @Autowired constructor(
         }
     }
 
-    fun queryHostInfo(projectId: String, agentHashId: String): AgentHostInfo {
+    fun queryHostInfo(agentHashId: String): AgentHostInfo {
         return influxdbClient.queryHostInfo(agentHashId)
     }
 
