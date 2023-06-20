@@ -203,7 +203,7 @@ class ManualReviewTaskAtom(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildReviewReminderEvent(
                     source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
-                    userId = task.starter, delayMills = param.reminderTime!! * 60 * 1000,
+                    userId = task.starter, delayMills = param.reminderTime!! * 60 * 60 * 1000,
                     reviewUsers = reviewUsersList.toSet(),
                     notifyTitle = notifyTitle.ifBlank {
                         MessageUtil.getMessageByLocale(

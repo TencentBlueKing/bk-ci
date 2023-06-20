@@ -73,7 +73,7 @@ class ReviewReminderService @Autowired constructor(
      */
     private fun PipelineBuildReviewReminderEvent.execute() {
         LOG.info(
-            "ENGINE|$buildId|$source|ATOM_$actionType|t($taskId)" +
+            "ReviewReminder|$buildId|$source|ATOM_$actionType|t($taskId)" +
                 "|ec=$executeCount|rc=$reminderCount"
         )
 
@@ -83,7 +83,7 @@ class ReviewReminderService @Autowired constructor(
         // 检查event的执行次数是否和当前执行次数是否一致
         if (executeCount != buildTask?.executeCount) {
             LOG.info(
-                "ENGINE|$buildId|$source|ATOM_$actionType|t($taskId)" +
+                "ReviewReminder|$buildId|$source|ATOM_$actionType|t($taskId)" +
                     "|ec=$executeCount|tec=${buildTask?.executeCount}|BAD_EC_WARN"
             )
             return
@@ -91,7 +91,7 @@ class ReviewReminderService @Autowired constructor(
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isRunning() != true || !buildTask.status.isRunning()) {
             LOG.info(
-                "ENGINE|$buildId|$source|ATOM_$actionType|t($taskId)" +
+                "ReviewReminder|$buildId|$source|ATOM_$actionType|t($taskId)" +
                     "|build=${buildInfo?.status}|task=${buildTask.status}｜TASK_DONE_WARNING"
             )
             return
