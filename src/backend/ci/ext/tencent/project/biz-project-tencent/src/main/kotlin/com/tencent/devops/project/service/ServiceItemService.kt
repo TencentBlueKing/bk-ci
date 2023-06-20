@@ -307,7 +307,15 @@ class ServiceItemService @Autowired constructor(
                 serviceEntity
             }
         } else {
-            projectServiceMap[serviceId]!!
+            val extServiceEntity = projectServiceMap[serviceId]!!
+            ExtServiceEntity(
+                id = extServiceEntity.id,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = T_SERVICE_PREFIX + extServiceEntity.code,
+                    language = language
+                ),
+                code = extServiceEntity.code
+            )
         }
     }
 
