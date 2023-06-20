@@ -3,7 +3,9 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.client.UsageMetrics
+import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentHostInfo
 import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -13,13 +15,14 @@ import org.springframework.stereotype.Service
 @Service
 class AgentMetricService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val influxdbClient: InfluxdbClient
 ) {
 
     fun reportAgentMetrics(
         data: String
     ): Boolean {
-        // 开源版本需自主实现
+        // 开源版本直接上报给influxdb，不需要这个接口
         return true
     }
 
@@ -120,6 +123,10 @@ class AgentMetricService @Autowired constructor(
             logger.warn("influx query error: ", e)
             emptyMap()
         }
+    }
+
+    fun queryHostInfo(agentHashId: String): AgentHostInfo {
+        return influxdbClient.queryHostInfo(agentHashId)
     }
 
     companion object {
