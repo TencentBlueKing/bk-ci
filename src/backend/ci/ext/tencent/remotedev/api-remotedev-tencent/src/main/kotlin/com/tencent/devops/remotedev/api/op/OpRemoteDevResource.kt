@@ -113,7 +113,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
 
     @ApiOperation("更新用户级别设置")
-    @POST
+    @GET
     @Path("/user_setting")
     fun updateUserSetting(
         @ApiParam(value = "用户ID", required = true)
