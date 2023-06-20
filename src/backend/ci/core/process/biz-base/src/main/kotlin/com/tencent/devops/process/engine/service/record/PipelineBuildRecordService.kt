@@ -172,15 +172,6 @@ class PipelineBuildRecordService @Autowired constructor(
         logger.info("[$$buildId|$projectId|QUERY_BUILD_RECORD|$refreshStatus|executeCount=$executeCount")
         val watcher = Watcher(id = "getBuildRecord#$buildId")
 
-        // 如果请求的executeCount异常则直接返回错误，防止数据错乱
-        if (
-            executeCount?.let { request ->
-                request < 1 || buildInfo.executeCount?.let { request > it } == true
-            } == true
-        ) {
-            return null
-        }
-
         // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         watcher.start("buildRecordModel")
