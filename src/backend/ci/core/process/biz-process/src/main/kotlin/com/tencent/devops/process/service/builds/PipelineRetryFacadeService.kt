@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -39,6 +41,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -49,13 +52,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("ReturnCount", "LongParameterList")
+@Suppress("ReturnCount", "LongParameterList", "LongMethod")
 class PipelineRetryFacadeService @Autowired constructor(
     val dslContext: DSLContext,
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
     val pipelineBuildRecordService: PipelineBuildRecordService,
+    val containerBuildRecordService: ContainerBuildRecordService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -189,20 +193,34 @@ class PipelineRetryFacadeService @Autowired constructor(
         startAndEndTask.forEach {
             pipelineTaskService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
         }
-        val containerRecord = BuildRecordContainer(
+
+        val lastContainerRecord = containerBuildRecordService.getRecord(
+            transactionContext = null,
             projectId = containerInfo.projectId,
             pipelineId = containerInfo.pipelineId,
-            resourceVersion = resourceVersion,
             buildId = containerInfo.buildId,
-            stageId = containerInfo.stageId,
             containerId = containerInfo.containerId,
-            containerType = containerInfo.containerType,
-            executeCount = executeCount,
-            matrixGroupFlag = containerInfo.matrixGroupFlag,
-            status = BuildStatus.QUEUE.name,
-            containerVar = mutableMapOf(),
-            timestamps = mapOf()
+            executeCount = executeCount - 1
         )
+        val containerRecord = if (lastContainerRecord != null) {
+            val containerVar = lastContainerRecord.containerVar
+            containerVar.remove(Container::timeCost.name)
+            containerVar.remove(Container::startVMStatus.name)
+            containerVar.remove(Container::startEpoch.name)
+            containerVar.remove(BuildRecordTimeLine::class.java.simpleName)
+            lastContainerRecord.copy(
+                status = BuildStatus.QUEUE.name, containerVar = containerVar, timestamps = mapOf()
+            )
+        } else {
+            BuildRecordContainer(
+                projectId = containerInfo.projectId, pipelineId = containerInfo.pipelineId,
+                resourceVersion = resourceVersion, buildId = containerInfo.buildId,
+                stageId = containerInfo.stageId, containerId = containerInfo.containerId,
+                containerType = containerInfo.containerType, executeCount = executeCount,
+                matrixGroupFlag = containerInfo.matrixGroupFlag, status = BuildStatus.QUEUE.name,
+                containerVar = mutableMapOf(), timestamps = mapOf()
+            )
+        }
         pipelineBuildRecordService.batchSave(
             transactionContext = null, model = null, stageList = null,
             containerList = listOf(containerRecord), taskList = taskRecords

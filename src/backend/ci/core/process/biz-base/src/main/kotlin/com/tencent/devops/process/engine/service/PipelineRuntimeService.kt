@@ -726,7 +726,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                     context.containerSeq++
                     containerBuildRecords.addRecords(
-                        stage = stage,
+                        stageId = stage.id!!,
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -737,7 +737,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
-                            stage = stage,
+                            stageId = stage.id!!,
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -749,7 +749,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
-                            stage = stage,
+                            stageId = stage.id!!,
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
