@@ -34,12 +34,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.RuleIndicatorSet
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplate
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateData
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateIndicatorMap
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdateData
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_DESC_KEY
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_NAME_KEY
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
@@ -105,8 +108,14 @@ class QualityTemplateService @Autowired constructor(
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleIndicatorSet(
                 hashId = HashUtil.encodeLongId(record.id),
-                name = record.name,
-                desc = record.desc,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
+                    defaultMessage = record.name
+                ),
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
+                    defaultMessage = record.desc
+                ),
                 indicators = indicators
             )
         } ?: listOf()
@@ -126,8 +135,14 @@ class QualityTemplateService @Autowired constructor(
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
                 hashId = HashUtil.encodeLongId(record.id),
-                name = record.name,
-                desc = record.desc,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
+                    defaultMessage = record.name
+                ),
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
+                    defaultMessage = record.desc
+                ),
                 indicators = indicators,
                 stage = record.stage,
                 controlPoint = record.controlPoint,
@@ -162,9 +177,15 @@ class QualityTemplateService @Autowired constructor(
             }
             TemplateData(
                 id = record.id,
-                name = record.name,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
+                    defaultMessage = record.name
+                ),
                 type = record.type,
-                desc = record.desc,
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
+                    defaultMessage = record.desc
+                ),
                 stage = record.stage,
                 elementType = record.controlPoint,
                 elementName = controlPointMap[record.controlPoint]?.name,

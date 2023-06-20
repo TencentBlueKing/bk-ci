@@ -27,6 +27,8 @@
 
 package com.tencent.devops.quality.constant
 
+const val QUALITY_RULE_TEMPLATE_NAME_KEY = "quality.ruleTemplate.%s.name"
+const val QUALITY_RULE_TEMPLATE_DESC_KEY = "quality.ruleTemplate.%S.desc"
 const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup" // 项目下无Quality用户组
 const val BK_PASSED = "bkPassed" // 已通过：
 const val BK_BLOCKED = "bkBlocked" // 已拦截：
