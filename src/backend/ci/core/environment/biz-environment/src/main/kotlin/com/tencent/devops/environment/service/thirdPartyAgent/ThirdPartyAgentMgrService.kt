@@ -177,7 +177,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
             } else {
-                agentMetricService.queryHostInfo(agentRecord.projectId, agentHashId)
+                agentMetricService.queryHostInfo(agentHashId)
             }
         } catch (e: Throwable) {
             logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
