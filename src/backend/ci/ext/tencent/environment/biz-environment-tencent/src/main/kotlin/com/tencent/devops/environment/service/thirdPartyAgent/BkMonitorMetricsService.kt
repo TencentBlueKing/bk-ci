@@ -40,6 +40,7 @@ import com.tencent.devops.environment.pojo.BkMonitorRequestBody
 import com.tencent.devops.environment.pojo.BkMonitorRequestBodyQueryConfigs
 import com.tencent.devops.environment.pojo.BkMonitorResp
 import com.tencent.devops.environment.pojo.BkMonitorRespDataSeries
+import com.tencent.devops.environment.utils.NumberUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -95,7 +96,10 @@ class BkMonitorMetricsService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
         val agentId = HashUtil.encodeLongId(agentRecord.id)
 
-        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\"})"
+        // TODO: mem和disk会混合，在监控解决前先这样看数据
+        val promql =
+            "avg($dataTableName:mem:pct_used{agentId=\"$agentId\"," +
+                "projectId=\"$projectId\",result_table_id=~\".*mem.*\"})"
 
         val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -261,10 +265,18 @@ class BkMonitorMetricsService @Autowired constructor(
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
         val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.get(0)?.lastOrNull()
 
+        // TODO: mem和disk会混合，在监控解决前先这样看数据
+        val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\",result_table_id=~\".*mem.*\"}"
+        val nMem = searchMetrics(memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.get(0)?.lastOrNull()
+        val memTotal = if (nMem != null) {
+            NumberUtils.byteToString(nMem)
+        } else {
+            "0"
+        }
+
         return AgentHostInfo(
             nCpus = nCpu?.toString() ?: "0",
-            // TODO: 监控有问题
-            memTotal = "0",
+            memTotal = memTotal,
             diskTotal = "0"
         )
     }
