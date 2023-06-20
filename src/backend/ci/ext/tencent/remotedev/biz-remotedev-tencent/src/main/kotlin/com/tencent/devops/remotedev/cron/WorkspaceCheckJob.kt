@@ -5,7 +5,9 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -13,7 +15,6 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -24,8 +25,6 @@ class WorkspaceCheckJob @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val bkTag: BkTag
 ) {
-    @Value("\${workspace.recycleNotify:false}")
-    val recycleNotify: Boolean = false
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
         private const val stopJobLockKey = "dispatch_devcloud_cron_workspace_clear_job"
@@ -106,7 +105,7 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0 10 * * ?")
     fun sendIdleWorkspaceNotify() {
         logger.info("=========>> send idle workspace notify <<=========")
-        if (!recycleNotify) {
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
             return
         }
         val redisLock = RedisLock(redisOperation, nofityJobLockKey, 60L)
