@@ -272,8 +272,7 @@ class WorkspaceService @Autowired constructor(
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
-                mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
-                    ?: devfile.checkWorkspaceMountType()
+                mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
             )
         )
 
@@ -293,6 +292,20 @@ class WorkspaceService @Autowired constructor(
             status = WorkspaceAction.PREPARING,
             systemType = devfile.checkWorkspaceSystemType()
         )
+    }
+
+    fun checkMountType(userId: String, devfileMountType: WorkspaceMountType): WorkspaceMountType {
+        logger.info("checkMountType|userId|$userId|devfileMountType|$devfileMountType")
+        if (devfileMountType == WorkspaceMountType.START) {
+            return devfileMountType
+        }
+        val mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
+        return when {
+            devfileMountType == WorkspaceMountType.DEVCLOUD && mountType == WorkspaceMountType.BCS
+            -> WorkspaceMountType.BCS
+            devfileMountType == WorkspaceMountType.DEVCLOUD || mountType == null -> WorkspaceMountType.DEVCLOUD
+            else -> WorkspaceMountType.DEVCLOUD
+        }
     }
 
     // k8s创建workspace后回调的方法
