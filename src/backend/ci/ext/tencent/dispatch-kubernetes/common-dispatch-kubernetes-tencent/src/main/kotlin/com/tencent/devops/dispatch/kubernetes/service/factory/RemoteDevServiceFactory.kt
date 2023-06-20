@@ -77,6 +77,7 @@ class RemoteDevServiceFactory @Autowired constructor(
     fun loadContainerService(mountType: WorkspaceMountType): ContainerService {
         val dockerRoutingType = when (mountType) {
             WorkspaceMountType.START -> DockerRoutingType.valueOf(START_CLOUD)
+            WorkspaceMountType.BCS -> DockerRoutingType.BCS
             else -> DockerRoutingType.DEVCLOUD
         }
         return SpringContextUtil.getBean(
