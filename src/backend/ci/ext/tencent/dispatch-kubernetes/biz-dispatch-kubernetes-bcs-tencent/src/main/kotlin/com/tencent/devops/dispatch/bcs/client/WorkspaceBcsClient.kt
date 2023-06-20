@@ -10,21 +10,20 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.bcs.pojo.Environment
-
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentStatus
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentOpRspData
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentOpRsp
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentStatusRsp
-import com.tencent.devops.dispatch.bcs.pojo.UidReq
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentDetailRsp
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentListReq
-import com.tencent.devops.dispatch.bcs.pojo.EnvironmentListRsp
-import com.tencent.devops.dispatch.bcs.pojo.TaskStatusRsp
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_ENV_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.Environment
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentDetailRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentListReq
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentListRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpRspData
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import java.net.SocketTimeoutException
@@ -41,12 +40,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class WorkspaceDevCloudClient @Autowired constructor(
+class WorkspaceBcsClient @Autowired constructor(
     private val dslContext: DSLContext,
     private val commonService: CommonService,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
-    private val logger = LoggerFactory.getLogger(WorkspaceDevCloudClient::class.java)
+    private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
 
     @Value("\${bcsCloud.appId}")
     val bcsCloudAppId: String = ""

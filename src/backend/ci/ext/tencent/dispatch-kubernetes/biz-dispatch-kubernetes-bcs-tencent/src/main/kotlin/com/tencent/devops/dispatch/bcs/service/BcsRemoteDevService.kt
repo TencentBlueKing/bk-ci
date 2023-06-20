@@ -27,21 +27,167 @@
 
 package com.tencent.devops.dispatch.bcs.service
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.dispatch.bcs.client.WorkspaceBcsClient
+import com.tencent.devops.dispatch.devcloud.service.DevCloudRemoteDevService
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.Container
+import com.tencent.devops.dispatch.kubernetes.pojo.DataDiskSource
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvVar
+import com.tencent.devops.dispatch.kubernetes.pojo.Environment
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentSpec
+import com.tencent.devops.dispatch.kubernetes.pojo.HTTPGetAction
+import com.tencent.devops.dispatch.kubernetes.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.kubernetes.pojo.Probe
+import com.tencent.devops.dispatch.kubernetes.pojo.ProbeHandler
+import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
+import com.tencent.devops.dispatch.kubernetes.pojo.Volume
+import com.tencent.devops.dispatch.kubernetes.pojo.VolumeMount
+import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
+    private val dslContext: DSLContext,
+    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val workspaceBcsClient: WorkspaceBcsClient,
+    private val profile: Profile
 ) : RemoteDevInterface {
+
+    @Value("\${bcsCloud.workspace.environment.cpu:8000}")
+    var workspaceCpu: Int = 8000
+
+    @Value("\${bcsCloud.workspace.environment.memory:16096}")
+    var workspaceMemory: Int = 16096 // 单位: MB
+
+    @Value("\${bcsCloud.workspace.environment.disk:100}")
+    var workspaceDisk: Int = 100 // 单位: G
+
+    @Value("\${bcsCloud.workspace.preCIGateWayUrl:}")
+    val preCIGateWayUrl: String = ""
+
+    @Value("\${bcsCloud.workspace.preCIDownUrl:}")
+    val preCIDownUrl: String = ""
+
+    @Value("\${bcsCloud.workspace.backendHost:}")
+    val backendHost: String = ""
+
+    @Value("\${bcsCloud.workspace.turboInstallUrl:}")
+    val turboInstallUrl: String = ""
+
+    @Value("\${bcsCloud.appId}")
+    val bcsCloudAppId: String = ""
+
+    @Value("\${remotedev.idePort}")
+    val idePort: String = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DevCloudRemoteDevService::class.java)
+
+        private const val WORKSPACE_PATH = "/data/landun/workspace"
+        private const val VOLUME_MOUNT_NAME = "workspace"
+
+        private const val DEVOPS_REMOTING_IDE_PORT = "DEVOPS_REMOTING_IDE_PORT"
+        private const val DEVOPS_REMOTING_WORKSPACE_ROOT_PATH = "DEVOPS_REMOTING_WORKSPACE_ROOT_PATH"
+        private const val DEVOPS_REMOTING_GIT_REPO_ROOT_PATH = "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH"
+        private const val DEVOPS_REMOTING_GIT_USERNAME = "DEVOPS_REMOTING_GIT_USERNAME"
+        private const val DEVOPS_REMOTING_GIT_EMAIL = "DEVOPS_REMOTING_GIT_EMAIL"
+        private const val DEVOPS_REMOTING_YAML_NAME = "DEVOPS_REMOTING_YAML_NAME"
+        private const val DEVOPS_REMOTING_DEBUG_ENABLE = "DEVOPS_REMOTING_DEBUG_ENABLE"
+        private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
+        private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
+        private const val DEVOPS_REMOTING_PRECI_DOWN_URL = "DEVOPS_REMOTING_PRECI_DOWN_URL"
+        private const val DEVOPS_REMOTING_TURBO_DOWN_URL = "DEVOPS_REMOTING_TURBO_DOWN_URL"
+        private const val DEVOPS_REMOTING_PRECI_GATEWAY_URL = "DEVOPS_REMOTING_PRECI_GATEWAY_URL"
+        private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
+        private const val BK_PRE_BUILD_GATEWAY = "BK_PRE_BUILD_GATEWAY"
+        private const val DEVOPS_REMOTING_GIT_REMOTE_REPO_URL = "DEVOPS_REMOTING_GIT_REMOTE_REPO_URL"
+        private const val DEVOPS_REMOTING_GIT_REMOTE_REPO_BRANCH = "DEVOPS_REMOTING_GIT_REMOTE_REPO_BRANCH"
+        private const val DEVOPS_REMOTING_DOTFILE_REPO = "DEVOPS_REMOTING_DOTFILE_REPO"
+        private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
+        private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
+        private const val INIT_CONTAINER_GIT_BRANCH = "GIT_BRANCH"
+    }
+
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
-        TODO("Not yet implemented")
+        logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
+        val imagePullCertificateList = if (event.devFile.runsOn?.container?.credentials != null) {
+            listOf(
+                ImagePullCertificate(
+                    host = event.devFile.runsOn?.container?.host,
+                    username = event.devFile.runsOn?.container?.credentials?.username,
+                    password = event.devFile.runsOn?.container?.credentials?.password
+                )
+            )
+        } else {
+            emptyList()
+        }
+
+        val gitRepoRootPath = WORKSPACE_PATH + "/" +
+            GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
+
+        val environmentOpRsp = workspaceBcsClient.createWorkspace(
+            userId,
+            Environment(
+                kind = "evn/v1",
+                APIVersion = "",
+                spec = EnvironmentSpec(
+                    containers = listOf(
+                        Container(
+                            name = event.workspaceName,
+                            image = event.devFile.runsOn?.container?.image ?: "",
+                            resource = ResourceRequirements(workspaceCpu, workspaceMemory),
+                            workingDir = gitRepoRootPath,
+                            volumeMounts = listOf(
+                                VolumeMount(
+                                    name = VOLUME_MOUNT_NAME,
+                                    mountPath = WORKSPACE_PATH
+                                )
+                            ),
+                            readinessProbe = Probe(
+                                handler = ProbeHandler(
+                                    httpGet = HTTPGetAction(
+                                        path = "/_remoting/api/remoting/status",
+                                        port = 22999,
+                                        host = "",
+                                        httpHeaders = emptyList()
+                                    )
+                                )
+                            ),
+                            command = listOf("/.devopsRemoting/devopsRemoting", "init"),
+                            env = generateContainerEnvVar(userId, gitRepoRootPath, event)
+                        )
+                    ),
+                    initContainers = emptyList(),
+                    imagePullCertificate = imagePullCertificateList,
+                    volumes = listOf(
+                        Volume(
+                            name = VOLUME_MOUNT_NAME,
+                            volumeSource = VolumeSource(
+                                dataDisk = DataDiskSource(
+                                    type = "local",
+                                    sizeLimit = workspaceDisk
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -66,5 +212,42 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         TODO("Not yet implemented")
+    }
+    private fun generateContainerEnvVar(
+        userId: String,
+        gitRepoRootPath: String,
+        event: WorkspaceCreateEvent
+    ): List<EnvVar> {
+        val envVarList = mutableListOf<EnvVar>()
+        envVarList.addAll(
+            listOf(
+                // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
+                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
+                EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
+                EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
+                EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
+                EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
+                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
+                EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
+                EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
+                EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
+                EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
+                EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
+                EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_URL, event.repositoryUrl),
+                EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_BRANCH, event.branch)
+
+            )
+        )
+
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
+        }
+
+        return envVarList
     }
 }
