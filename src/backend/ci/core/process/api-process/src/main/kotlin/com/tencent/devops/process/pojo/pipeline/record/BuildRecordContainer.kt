@@ -28,7 +28,6 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -39,7 +38,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordContainer(
     @ApiModelProperty("构建ID", required = true)
@@ -79,11 +78,11 @@ data class BuildRecordContainer(
 
         @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
-            stage: Stage,
+            stageId: String,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
-            taskBuildRecords: MutableList<BuildRecordTask>
+            taskBuildRecords: MutableList<BuildRecordTask>?
         ) {
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = container.name
@@ -109,7 +108,7 @@ data class BuildRecordContainer(
                     pipelineId = context.pipelineId,
                     resourceVersion = context.resourceVersion,
                     buildId = context.buildId,
-                    stageId = stage.id!!,
+                    stageId = stageId,
                     containerId = container.containerId!!,
                     containerType = container.getClassType(),
                     executeCount = context.executeCount,
@@ -119,13 +118,14 @@ data class BuildRecordContainer(
                     timestamps = mapOf()
                 )
             )
+            if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
-                        stageId = stage.id!!,
+                        stageId = stageId,
                         containerId = container.containerId!!,
                         taskId = element.id!!,
                         classType = element.getClassType(),

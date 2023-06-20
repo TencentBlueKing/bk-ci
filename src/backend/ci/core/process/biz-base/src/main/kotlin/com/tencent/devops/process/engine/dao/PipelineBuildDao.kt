@@ -436,7 +436,7 @@ class PipelineBuildDao {
     /**
      * 取最近一次失败的构建
      */
-    fun getLatestSuccessedBuild(
+    fun getLatestSucceedBuild(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
@@ -475,6 +475,18 @@ class PipelineBuildDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute() == 1
+        }
+    }
+
+    fun updateExecuteCount(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(EXECUTE_COUNT, executeCount).execute() == 1
         }
     }
 
