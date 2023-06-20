@@ -199,10 +199,11 @@ open class BaseBuildRecordService(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
+        } catch (ignore: Throwable) {
             logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
         } finally {
