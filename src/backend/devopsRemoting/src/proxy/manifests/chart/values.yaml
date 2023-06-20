@@ -3,6 +3,8 @@ backendImage:
   pullPolicy: IfNotPresent
 
 proxy:
+  # 网关类型：master 为主网关，域名绑定网关,child 为子网关，接受主网关流量
+  type: master
   # 远程开发泛域名
   domain: 
   https:
