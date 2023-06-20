@@ -40,6 +40,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Environment
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.kubernetes.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.kubernetes.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.kubernetes.pojo.ObjectMeta
 import com.tencent.devops.dispatch.kubernetes.pojo.Probe
 import com.tencent.devops.dispatch.kubernetes.pojo.ProbeHandler
 import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
@@ -141,8 +142,15 @@ class BcsRemoteDevService @Autowired constructor(
         val environmentOpRsp = workspaceBcsClient.createWorkspace(
             userId,
             Environment(
-                kind = "evn/v1",
-                APIVersion = "",
+                kind = "StatefulSet",
+                APIVersion = "apps/v1",
+                metadata = ObjectMeta(
+                    labels = mapOf(),
+                    annotations = mapOf(
+                        "bkbcs.tencent.com/advanced-container-type" to "advanced",
+                        "bkbcs.tencent.com/advanced-disk-size-bytes" to (workspaceDisk * 1024* 1024 * 1024).toString()
+                    )
+                ),
                 spec = EnvironmentSpec(
                     containers = listOf(
                         Container(
