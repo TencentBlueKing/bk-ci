@@ -298,7 +298,7 @@ class ServiceItemService @Autowired constructor(
                     id = serviceRecord!!.id.toString(),
                     name = I18nUtil.getCodeLanMessage(
                         messageCode = T_SERVICE_PREFIX + serviceRecord.englishName,
-                        language = language ?: commonConfig.devopsDefaultLocaleLanguage
+                        language = language
                     ),
                     code = serviceRecord.englishName
                 )
