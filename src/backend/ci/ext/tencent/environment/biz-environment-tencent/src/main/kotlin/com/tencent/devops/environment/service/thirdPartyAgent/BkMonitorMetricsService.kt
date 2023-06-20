@@ -263,11 +263,11 @@ class BkMonitorMetricsService @Autowired constructor(
 
     private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
-        val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.get(0)?.lastOrNull()
+        val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
 
         // TODO: mem和disk会混合，在监控解决前先这样看数据
         val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\",result_table_id=~\".*mem.*\"}"
-        val nMem = searchMetrics(memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.get(0)?.lastOrNull()
+        val nMem = searchMetrics(memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
         val memTotal = if (nMem != null) {
             NumberUtils.byteToString(nMem)
         } else {
