@@ -45,6 +45,7 @@ class WorkspaceBcsClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
         private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+        const val OK = 0
     }
     @Value("\${bcsCloud.appId}")
     val bcsCloudAppId: String = ""
@@ -84,7 +85,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 }
 
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentOpRsp.code) {
+                if (OK == environmentOpRsp.code) {
                     return environmentOpRsp.data
                 } else {
                     val message = ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
@@ -140,7 +141,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value != environmentOpRsp.code) {
+                if (OK != environmentOpRsp.code) {
                     throw BuildFailureException(
                         ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -216,7 +217,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 }
 
                 val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentStatusRsp.code) {
+                if (OK == environmentStatusRsp.code) {
                     return environmentStatusRsp.data
                 } else {
                     val message = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
@@ -290,7 +291,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 }
 
                 val environmentDetailRsp: EnvironmentDetailRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentDetailRsp.code) {
+                if (OK == environmentDetailRsp.code) {
                     return environmentDetailRsp.data
                 } else {
                     throw BuildFailureException(
@@ -360,7 +361,7 @@ class WorkspaceBcsClient @Autowired constructor(
                     )
                 }
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentListRsp.code) {
+                if (OK == environmentListRsp.code) {
                     return environmentListRsp.data
                 } else {
                     throw BuildFailureException(
@@ -479,7 +480,7 @@ class WorkspaceBcsClient @Autowired constructor(
         try {
             val taskResponse = getTasks(userId, taskId)
             val actionCode = taskResponse.code
-            return if (HttpStatus.OK.value != actionCode) {
+            return if (OK != actionCode) {
                 // 创建失败
                 val msg = taskResponse.message
                 logger.error("Execute task: $taskId failed, actionCode is $actionCode, msg: $msg")
