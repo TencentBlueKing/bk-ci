@@ -504,7 +504,7 @@ class QualityHistoryService @Autowired constructor(
                 val ruleInterceptRecords = rule.indicators.map {
                     QualityRuleInterceptRecord(
                         indicatorId = it.hashId,
-                        indicatorName = it.cnName,
+                        indicatorName = it.name,
                         indicatorType = null,
                         operation = it.operation,
                         value = it.threshold,

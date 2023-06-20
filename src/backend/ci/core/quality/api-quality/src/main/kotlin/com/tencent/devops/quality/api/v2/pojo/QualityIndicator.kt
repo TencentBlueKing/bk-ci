@@ -29,16 +29,16 @@ package com.tencent.devops.quality.api.v2.pojo
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.pojo.enum.RunElementType
 
 data class QualityIndicator(
     val hashId: String,
     val elementType: String,
     val elementDetail: String,
-    val enName: String,
-    val cnName: String,
+    val indicatorCode: String,
+    val name: String,
     val stage: String,
     var operation: QualityOperation,
     val operationList: List<QualityOperation>,
@@ -77,8 +77,8 @@ data class QualityIndicator(
             hashId = this.hashId,
             elementType = this.elementType,
             elementDetail = this.elementDetail,
-            enName = this.enName,
-            cnName = this.cnName,
+            indicatorCode = this.indicatorCode,
+            name = this.name,
             stage = this.stage,
             operation = this.operation,
             operationList = this.operationList,

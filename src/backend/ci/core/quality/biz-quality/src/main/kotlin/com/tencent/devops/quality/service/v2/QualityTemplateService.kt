@@ -164,7 +164,7 @@ class QualityTemplateService @Autowired constructor(
             val templateIndicatorMaps = templateIndicatorMap.map { it1 ->
                 val indicatorInst = indicatorList?.filter { it2 -> it2.id == it1.indicatorId }?.getOrNull(0)
                 val indicatorName = if (indicatorInst != null) {
-                    "${indicatorInst.elementName}-${indicatorInst.elementDetail}-${indicatorInst.cnName}"
+                    "${indicatorInst.elementName}-${indicatorInst.elementDetail}-${indicatorInst.name}"
                 } else null
                 TemplateIndicatorMap(
                     id = it1.id,
