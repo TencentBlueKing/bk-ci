@@ -40,7 +40,6 @@ import org.springframework.stereotype.Component
 @Component
 class WorkspaceBcsClient @Autowired constructor(
     private val dslContext: DSLContext,
-    private val commonService: CommonService,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
     companion object {
@@ -61,7 +60,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(environment)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     bcsCloudToken
@@ -122,7 +121,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val body = JsonUtil.toJson(UidReq(uid = environmentUid, patch = envPatchStr))
 
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(makeHeaders(bcsCloudToken).toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
@@ -183,7 +182,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val url = bcsCloudUrl + "/api/v1/remotedevenv/status"
         logger.info("User $userId get environment status: $url")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     bcsCloudToken
@@ -257,7 +256,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val url = bcsCloudUrl + "/api/v1/remotedevenv/status"
         logger.info("User $userId get environment detail: $url")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     bcsCloudToken
@@ -333,7 +332,7 @@ class WorkspaceBcsClient @Autowired constructor(
         logger.info("User $userId get environment list: $url")
         val body = ObjectMapper().writeValueAsString(EnvironmentListReq(userId, 0, 0))
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     bcsCloudToken
@@ -399,7 +398,7 @@ class WorkspaceBcsClient @Autowired constructor(
     ): TaskStatusRsp {
         val url = "$bcsCloudUrl/api/v1/devops/task/status?uid=$taskUid"
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     bcsCloudToken
