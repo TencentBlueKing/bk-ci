@@ -191,8 +191,8 @@ class BkMonitorMetricsService @Autowired constructor(
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (name)",
-                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (name)"
+                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)",
+                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)"
             )
 
             else -> return emptyMap()
@@ -235,8 +235,8 @@ class BkMonitorMetricsService @Autowired constructor(
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by (interface)",
-                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by (interface)"
+                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)",
+                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)"
             )
 
             else -> return emptyMap()
@@ -275,7 +275,7 @@ class BkMonitorMetricsService @Autowired constructor(
         }
 
         return AgentHostInfo(
-            nCpus = nCpu?.toString() ?: "0",
+            nCpus = nCpu?.toInt()?.toString() ?: "0",
             memTotal = memTotal,
             diskTotal = "0"
         )
