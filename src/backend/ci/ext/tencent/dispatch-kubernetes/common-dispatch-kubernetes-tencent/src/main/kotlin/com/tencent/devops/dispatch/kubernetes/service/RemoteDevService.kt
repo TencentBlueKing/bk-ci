@@ -62,7 +62,7 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
-        val mountType = event.devFile.checkWorkspaceMountType()
+        val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
         val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
 

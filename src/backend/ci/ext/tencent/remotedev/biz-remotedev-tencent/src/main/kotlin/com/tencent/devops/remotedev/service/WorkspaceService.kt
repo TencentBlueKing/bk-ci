@@ -300,6 +300,7 @@ class WorkspaceService @Autowired constructor(
             return devfileMountType
         }
         val mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
+        logger.info("checkMountType|userId|$userId|devfileMountType|$devfileMountType|mountType|$mountType")
         return when {
             devfileMountType == WorkspaceMountType.DEVCLOUD && mountType == WorkspaceMountType.BCS
             -> WorkspaceMountType.BCS
