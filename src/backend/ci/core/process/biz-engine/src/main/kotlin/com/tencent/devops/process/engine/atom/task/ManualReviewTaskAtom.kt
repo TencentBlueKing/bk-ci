@@ -94,6 +94,7 @@ class ManualReviewTaskAtom(
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
 
+    @Suppress("ComplexMethod")
     override fun execute(
         task: PipelineBuildTask,
         param: ManualReviewUserTaskElement,
