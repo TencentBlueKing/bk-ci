@@ -1118,29 +1118,6 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-    private fun saveTaskRecords(
-        buildTaskList: MutableList<PipelineBuildTask>,
-        taskBuildRecords: MutableList<BuildRecordTask>,
-        resourceVersion: Int
-    ) {
-        buildTaskList.forEach {
-            // 自动填充的构建机控制插件，不需要存入Record
-            if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
-            taskBuildRecords.add(
-                BuildRecordTask(
-                    projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
-                    stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
-                    taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
-                    executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
-                    taskVar = mutableMapOf(), timestamps = mapOf(),
-                    elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
-                        info.parentElementId != it.taskId
-                    }
-                )
-            )
-        }
-    }
-
     private fun saveContainerRecords(
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
