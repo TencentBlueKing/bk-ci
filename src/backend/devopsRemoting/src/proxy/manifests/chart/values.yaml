@@ -35,6 +35,7 @@ apisix:
 
   gateway:
     type: LoadBalancer
+    annotations: {}
     externalTrafficPolicy: Cluster
     http:
       enabled: true
