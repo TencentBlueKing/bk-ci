@@ -287,7 +287,10 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getProjectService(serviceId: String, language: String? = null): ExtServiceEntity? {
+    fun getProjectService(
+        serviceId: String,
+        language: String? = commonConfig.devopsDefaultLocaleLanguage
+    ): ExtServiceEntity? {
         return if (!projectServiceMap.containsKey(serviceId)) {
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             if (serviceRecord == null) {
