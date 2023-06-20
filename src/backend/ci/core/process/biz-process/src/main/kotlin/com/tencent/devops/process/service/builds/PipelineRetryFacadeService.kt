@@ -209,7 +209,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             containerVar.remove(Container::startEpoch.name)
             containerVar.remove(BuildRecordTimeLine::class.java.simpleName)
             lastContainerRecord.copy(
-                status = BuildStatus.QUEUE.name, containerVar = containerVar, timestamps = mapOf()
+                status = BuildStatus.QUEUE.name, containerVar = containerVar,
+                executeCount = executeCount, timestamps = mapOf()
             )
         } else {
             BuildRecordContainer(
