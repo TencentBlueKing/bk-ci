@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class DevcloudWorkspaceRedisUtils @Autowired constructor(
+class WorkspaceRedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
@@ -86,6 +86,6 @@ class DevcloudWorkspaceRedisUtils @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DevcloudWorkspaceRedisUtils::class.java)
+        private val logger = LoggerFactory.getLogger(WorkspaceRedisUtils::class.java)
     }
 }

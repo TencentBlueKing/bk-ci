@@ -54,7 +54,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.kubernetes.utils.DevcloudWorkspaceRedisUtils
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -66,7 +66,7 @@ import org.springframework.util.Base64Utils
 @Service
 class BcsRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
+    private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val profile: Profile
@@ -262,7 +262,7 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        devcloudWorkspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
         return true
     }
 
@@ -281,7 +281,7 @@ class BcsRemoteDevService @Autowired constructor(
         )
     }
     private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
-        return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId, "")}"
+        return "$workspaceName.${workspaceRedisUtils.getDevcloudClusterIdHost(clusterId, "")}"
     }
     private fun generateContainerEnvVar(
         userId: String,
