@@ -9,6 +9,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.pojo.BuildStageStatus
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -84,42 +85,54 @@ class OpPipelineBuildResourceImpl @Autowired constructor(
         val oldStatus = BuildStatus.values()[statusFrom]
         val newStatus = BuildStatus.values()[statusTo]
         buildIds?.forEach { buildId ->
-            val buildStages = pipelineBuildStageDao.getByBuildId(dslContext, projectId, buildId)
-            if (pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    buildId = buildId,
-                    stageStatus = buildStages.map {
-                        BuildStageStatus(
-                            stageId = it.stageId,
-                            name = it.stageId,
-                            status = it.status.name
-                        )
-                    },
-                    oldBuildStatus = oldStatus,
-                    newBuildStatus = newStatus
-                ) == 1
-            ) {
-                okCount += 1
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                val buildStages = pipelineBuildStageDao.getByBuildId(transactionContext, projectId, buildId)
+                if (pipelineBuildDao.updateBuildStageStatus(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        buildId = buildId,
+                        stageStatus = buildStages.map {
+                            BuildStageStatus(
+                                stageId = it.stageId,
+                                name = it.stageId,
+                                status = it.status.name
+                            )
+                        },
+                        oldBuildStatus = oldStatus,
+                        newBuildStatus = newStatus
+                    ) == 1
+                ) {
+                    okCount += 1
+                }
             }
         }
-        if (oldStatus.isRunning() && newStatus.isFinish()) {
-            this.fixPipelineSummaryCount(
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            val runningCount = pipelineBuildDao.getBuildCount(
+                dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                finishCount = okCount,
-                runningCount = -okCount,
-                queueCount = null
+                buildStatus = setOf(BuildStatus.RUNNING)
             )
-        }
-
-        if (oldStatus.isReadyToRun() && newStatus.isFinish()) {
-            this.fixPipelineSummaryCount(
+            val queueCount = pipelineBuildDao.getBuildCount(
+                dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                finishCount = okCount,
-                runningCount = null,
-                queueCount = -okCount
+                buildStatus = setOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
+            )
+            val finishCount = pipelineBuildDao.getBuildCount(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildStatus = BuildStatus.values().filter { it.isFinish() }.toSet()
+            )
+            fixPipelineSummaryCount(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                finishCount = finishCount,
+                runningCount = runningCount,
+                queueCount = queueCount
             )
         }
         return Result(okCount)
