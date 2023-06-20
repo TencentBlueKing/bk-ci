@@ -217,6 +217,7 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
+        val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
         val bizId = MDC.get(TraceTag.BIZID)
         val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
@@ -236,7 +237,7 @@ class WorkspaceService @Autowired constructor(
                 workPath = Constansts.prefixWorkPath.plus(projectName),
                 workspaceFolder = devfile.workspaceFolder ?: "",
                 hostName = "",
-                workspaceMountType = devfile.checkWorkspaceMountType(),
+                workspaceMountType = mountType,
                 workspaceSystemType = devfile.checkWorkspaceSystemType()
             )
         }
@@ -272,7 +273,7 @@ class WorkspaceService @Autowired constructor(
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
-                mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
+                mountType = mountType
             )
         )
 
