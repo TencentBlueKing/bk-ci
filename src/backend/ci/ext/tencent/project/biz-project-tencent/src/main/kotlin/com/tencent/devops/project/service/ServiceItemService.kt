@@ -287,7 +287,10 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getProjectService(serviceId: String, language: String? = null): ExtServiceEntity? {
+    fun getProjectService(
+        serviceId: String,
+        language: String? = commonConfig.devopsDefaultLocaleLanguage
+    ): ExtServiceEntity? {
         return if (!projectServiceMap.containsKey(serviceId)) {
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             if (serviceRecord == null) {
@@ -298,7 +301,8 @@ class ServiceItemService @Autowired constructor(
                     id = serviceRecord!!.id.toString(),
                     name = I18nUtil.getCodeLanMessage(
                         messageCode = T_SERVICE_PREFIX + serviceRecord.englishName,
-                        language = language ?: commonConfig.devopsDefaultLocaleLanguage
+                        language = language,
+                        defaultMessage = serviceRecord.name.substringBefore("(")
                     ),
                     code = serviceRecord.englishName
                 )
@@ -307,7 +311,15 @@ class ServiceItemService @Autowired constructor(
                 serviceEntity
             }
         } else {
-            projectServiceMap[serviceId]!!
+            val extServiceEntity = projectServiceMap[serviceId]!!
+            ExtServiceEntity(
+                id = extServiceEntity.id,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = T_SERVICE_PREFIX + extServiceEntity.code,
+                    language = language
+                ),
+                code = extServiceEntity.code
+            )
         }
     }
 
@@ -367,7 +379,7 @@ class ServiceItemService @Autowired constructor(
         )
         val itemId = serviceItemDao.add(dslContext, userId, createInfo)
         if (projectServiceMap[itemInfo.pid] == null) {
-            getProjectService(itemInfo.pid, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+            getProjectService(itemInfo.pid)
         }
         refreshBkRedisData(itemId, itemInfo.pid)
         return Result(true)
