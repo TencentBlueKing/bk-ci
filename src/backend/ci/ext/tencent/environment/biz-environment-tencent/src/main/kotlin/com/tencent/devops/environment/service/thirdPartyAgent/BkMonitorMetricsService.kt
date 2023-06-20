@@ -182,17 +182,21 @@ class BkMonitorMetricsService @Autowired constructor(
             TIME_RANGE_DAY -> "2m"
             else -> "10s"
         }
+        val tag = when (OS.valueOf(agentRecord.os)) {
+            OS.MACOS, OS.LINUX -> "name"
+            OS.WINDOWS -> "instance"
+        }
         val (readPromql, writePromql) = when (OS.valueOf(agentRecord.os)) {
             OS.MACOS, OS.LINUX -> Pair(
                 "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (name))",
+                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))",
                 "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (name))"
+                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)",
-                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)"
+                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)",
+                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)"
             )
 
             else -> return emptyMap()
@@ -202,8 +206,8 @@ class BkMonitorMetricsService @Autowired constructor(
         val writeData = searchMetrics(writePromql, timeRange)
 
         val result = mutableMapOf<String, List<Map<String, Any>>>()
-        result.putAll(formatData("name", "read", readData))
-        result.putAll(formatData("name", "write", writeData))
+        result.putAll(formatData(tag, "read", readData))
+        result.putAll(formatData(tag, "write", writeData))
         return result
     }
 
@@ -226,17 +230,21 @@ class BkMonitorMetricsService @Autowired constructor(
             TIME_RANGE_DAY -> "2m"
             else -> "10s"
         }
+        val tag = when (OS.valueOf(agentRecord.os)) {
+            OS.MACOS, OS.LINUX -> "interface"
+            OS.WINDOWS -> "instance"
+        }
         val (readPromql, sendPromql) = when (OS.valueOf(agentRecord.os)) {
             OS.MACOS, OS.LINUX -> Pair(
                 "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (interface))",
+                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))",
                 "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (interface))"
+                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)",
-                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by (instance)"
+                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)",
+                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)"
             )
 
             else -> return emptyMap()
@@ -246,8 +254,8 @@ class BkMonitorMetricsService @Autowired constructor(
         val sendData = searchMetrics(sendPromql, timeRange)
 
         val result = mutableMapOf<String, List<Map<String, Any>>>()
-        result.putAll(formatData("interface", "IN", readData))
-        result.putAll(formatData("interface", "OUT", sendData))
+        result.putAll(formatData(tag, "IN", readData))
+        result.putAll(formatData(tag, "OUT", sendData))
         return result
     }
 
