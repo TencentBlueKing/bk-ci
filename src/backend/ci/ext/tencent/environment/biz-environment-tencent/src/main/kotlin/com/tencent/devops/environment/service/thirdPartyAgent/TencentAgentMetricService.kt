@@ -30,7 +30,9 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.pojo.AgentTelegrafData
 import com.tencent.devops.environment.pojo.TelegrafMulData
 import com.tencent.devops.environment.pojo.TelegrafStandData
@@ -46,12 +48,14 @@ import org.springframework.stereotype.Service
 class TencentAgentMetricService @Autowired constructor(
     val dslContext: DSLContext,
     val thirdPartyAgentDao: ThirdPartyAgentDao,
+    val influxdbClient: InfluxdbClient,
     private val objectMapper: ObjectMapper,
     private val kafkaClient: KafkaClient,
     private val bkMonitorMetricsService: BkMonitorMetricsService
 ) : AgentMetricService(
     dslContext,
-    thirdPartyAgentDao
+    thirdPartyAgentDao,
+    influxdbClient
 ) {
 
     companion object {
@@ -237,5 +241,9 @@ class TencentAgentMetricService @Autowired constructor(
             nodeHashId = nodeHashId,
             timeRange = timeRange
         )
+    }
+
+    override fun queryHostInfo(agentHashId: String): AgentHostInfo {
+        return bkMonitorMetricsService.queryHostInfo(agentHashId)
     }
 }

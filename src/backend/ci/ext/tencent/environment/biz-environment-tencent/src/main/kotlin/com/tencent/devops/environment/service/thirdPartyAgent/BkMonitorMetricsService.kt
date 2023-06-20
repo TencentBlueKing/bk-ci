@@ -29,11 +29,13 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.pojo.BkMonitorRequestBody
 import com.tencent.devops.environment.pojo.BkMonitorRequestBodyQueryConfigs
 import com.tencent.devops.environment.pojo.BkMonitorResp
@@ -48,6 +50,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -70,9 +73,12 @@ class BkMonitorMetricsService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AgentMetricService::class.java)
         private const val dataTableName = "agentmetric"
 
-        //        const val TIME_RANGE_HOUR = "HOUR"
+        const val TIME_RANGE_HOUR = "HOUR"
         const val TIME_RANGE_DAY = "DAY"
         const val TIME_RANGE_WEEK = "WEEK"
+
+        private const val MAX_CACHE = 1000L
+        private val emptyInfo = AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
     }
 
     fun queryMemoryUsageMetrics(
@@ -81,7 +87,15 @@ class BkMonitorMetricsService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$nodeHashId\",projectId=\"$projectId\"})"
+        val id = HashUtil.decodeIdToLong(nodeHashId)
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
+            dslContext = dslContext,
+            nodeId = id,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        val agentId = HashUtil.encodeLongId(agentRecord.id)
+
+        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\"})"
 
         val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -112,7 +126,15 @@ class BkMonitorMetricsService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val promql = "avg($dataTableName:cpu_detail:user{agentId=\"$nodeHashId\",projectId=\"$projectId\"})"
+        val id = HashUtil.decodeIdToLong(nodeHashId)
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
+            dslContext = dslContext,
+            nodeId = id,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        val agentId = HashUtil.encodeLongId(agentRecord.id)
+
+        val promql = "avg($dataTableName:cpu_detail:user{agentId=\"$agentId\",projectId=\"$projectId\"})"
 
         val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -149,6 +171,7 @@ class BkMonitorMetricsService @Autowired constructor(
             nodeId = id,
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
+        val agentId = HashUtil.encodeLongId(agentRecord.id)
 
         val groupByTime: String = when (timeRange) {
             TIME_RANGE_WEEK -> "10m"
@@ -157,15 +180,15 @@ class BkMonitorMetricsService @Autowired constructor(
         }
         val (readPromql, writePromql) = when (OS.valueOf(agentRecord.os)) {
             OS.MACOS, OS.LINUX -> Pair(
-                "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$nodeHashId\"," +
+                "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
                     "projectId=\"$projectId\"}[$groupByTime])) by (name))",
-                "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$nodeHashId\"," +
+                "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
                     "projectId=\"$projectId\"}[$groupByTime])) by (name))"
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:io:rkb_s{agentId=\"$nodeHashId\",projectId=\"$projectId\"}) by (name)",
-                "avg($dataTableName:io:wkb_s{agentId=\"$nodeHashId\",projectId=\"$projectId\"}) by (name)"
+                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (name)",
+                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by (name)"
             )
 
             else -> return emptyMap()
@@ -192,6 +215,7 @@ class BkMonitorMetricsService @Autowired constructor(
             nodeId = id,
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
+        val agentId = HashUtil.encodeLongId(agentRecord.id)
 
         val groupByTime: String = when (timeRange) {
             TIME_RANGE_WEEK -> "10m"
@@ -200,15 +224,15 @@ class BkMonitorMetricsService @Autowired constructor(
         }
         val (readPromql, sendPromql) = when (OS.valueOf(agentRecord.os)) {
             OS.MACOS, OS.LINUX -> Pair(
-                "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$nodeHashId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (name))",
-                "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$nodeHashId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by (name))"
+                "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentId\"," +
+                    "projectId=\"$projectId\"}[$groupByTime])) by (interface))",
+                "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
+                    "projectId=\"$projectId\"}[$groupByTime])) by (interface))"
             )
 
             OS.WINDOWS -> Pair(
-                "avg($dataTableName:net:speed_recv{agentId=\"$nodeHashId\",projectId=\"$projectId\"}) by (name)",
-                "avg($dataTableName:net:speed_sent{agentId=\"$nodeHashId\",projectId=\"$projectId\"}) by (name)"
+                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by (interface)",
+                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by (interface)"
             )
 
             else -> return emptyMap()
@@ -221,6 +245,28 @@ class BkMonitorMetricsService @Autowired constructor(
         result.putAll(formatData("interface", "IN", readData))
         result.putAll(formatData("interface", "OUT", sendData))
         return result
+    }
+
+    fun queryHostInfo(agentHashId: String): AgentHostInfo {
+        return hostCache.get(agentHashId) ?: emptyInfo
+    }
+
+    // #7479 主机的信息变化不会经常变化，除非更换机器，所以不需要经常进行直接查询，更新缓存即可。
+    private val hostCache = Caffeine.newBuilder()
+        .maximumSize(MAX_CACHE)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String, AgentHostInfo> { agentHashId -> queryHostInfoImpl(agentHashId) }
+
+    private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
+        val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
+        val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.get(0)?.lastOrNull()
+
+        return AgentHostInfo(
+            nCpus = nCpu?.toString() ?: "0",
+            // TODO: 监控有问题
+            memTotal = "0",
+            diskTotal = "0"
+        )
     }
 
     private fun formatData(
@@ -257,6 +303,7 @@ class BkMonitorMetricsService @Autowired constructor(
     }
 
     private fun searchMetrics(promql: String, timeRange: String): List<BkMonitorRespDataSeries>? {
+        val startTime = System.currentTimeMillis()
         val body = BkMonitorRequestBody(
             // TODO: 未来看如何获取
             bkBizId = -4220817,
@@ -278,12 +325,16 @@ class BkMonitorMetricsService @Autowired constructor(
                 TIME_RANGE_DAY -> Instant.now().minusSeconds(86400).epochSecond
                 else -> Instant.now().minusSeconds(3600).epochSecond
             },
-            endTime = Instant.now().epochSecond,
+            endTime = Instant.now().minusSeconds(30).epochSecond,
             slimit = 500,
             downSampleRange = "2s"
         )
 
-        return requestBkMonitor(body).data?.series
+        val data = requestBkMonitor(body).data?.series
+
+        logger.info("searchMetrics $promql cost ${System.currentTimeMillis() - startTime}ms")
+
+        return data
     }
 
     private fun requestBkMonitor(body: Any): BkMonitorResp {
@@ -297,7 +348,7 @@ class BkMonitorMetricsService @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
-            .addHeader("x-bkapi-authorization", headerStr)
+            .addHeader("X-Bkapi-Authorization", headerStr)
             .build()
 
         OkhttpUtils.doHttp(request).use {
@@ -307,7 +358,7 @@ class BkMonitorMetricsService @Autowired constructor(
             }
             val responseStr = it.body!!.string()
             val resp = objectMapper.readValue<BkMonitorResp>(responseStr)
-            if (resp.code != 0L || !resp.result) {
+            if (resp.code != 200L || !resp.result) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
                 throw RemoteServiceException("request failed, response:(${resp.message})")
