@@ -59,6 +59,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
         return Result(remoteDevSettingService.getUserSetting4Op(userId))
     }
+
+    override fun listUserSettings(): Result<List<RemoteDevUserSettings>> {
+        TODO("Not yet implemented")
+    }
+
     override fun refreshUserInfo(userId: String): Result<Boolean> {
         return Result(userRefreshService.refreshAllUser())
     }

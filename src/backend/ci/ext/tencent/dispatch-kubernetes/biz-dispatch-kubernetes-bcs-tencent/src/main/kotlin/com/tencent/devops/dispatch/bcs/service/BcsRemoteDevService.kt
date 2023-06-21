@@ -169,10 +169,10 @@ class BcsRemoteDevService @Autowired constructor(
                             resource = ResourceRequirements(workspaceCpu, workspaceMemory),
                             workingDir = gitRepoRootPath,
                             volumeMounts = listOf(
-                                VolumeMount(
+                                /*VolumeMount(
                                     name = VOLUME_MOUNT_NAME,
                                     mountPath = WORKSPACE_PATH
-                                )
+                                )*/
                             ),
                             readinessProbe = Probe(
                                 handler = ProbeHandler(
