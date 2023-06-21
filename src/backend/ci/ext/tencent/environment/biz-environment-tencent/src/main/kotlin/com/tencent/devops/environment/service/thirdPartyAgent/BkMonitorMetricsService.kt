@@ -96,10 +96,7 @@ class BkMonitorMetricsService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
         val agentId = HashUtil.encodeLongId(agentRecord.id)
 
-        // TODO: mem和disk会混合，在监控解决前先这样看数据
-        val promql =
-            "avg($dataTableName:mem:pct_used{agentId=\"$agentId\"," +
-                "projectId=\"$projectId\",result_table_id=~\".*mem.*\"})"
+        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\")"
 
         val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -234,21 +231,10 @@ class BkMonitorMetricsService @Autowired constructor(
             OS.MACOS, OS.LINUX -> "interface"
             OS.WINDOWS -> "instance"
         }
-        val (readPromql, sendPromql) = when (OS.valueOf(agentRecord.os)) {
-            OS.MACOS, OS.LINUX -> Pair(
-                "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))",
-                "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
-            )
-
-            OS.WINDOWS -> Pair(
-                "avg($dataTableName:net:speed_recv{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)",
-                "avg($dataTableName:net:speed_sent{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)"
-            )
-
-            else -> return emptyMap()
-        }
+        val readPromql = "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentId\"," +
+            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+        val sendPromql = "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
+            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(readPromql, timeRange)
         val sendData = searchMetrics(sendPromql, timeRange)
@@ -273,8 +259,7 @@ class BkMonitorMetricsService @Autowired constructor(
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
         val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
 
-        // TODO: mem和disk会混合，在监控解决前先这样看数据
-        val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\",result_table_id=~\".*mem.*\"}"
+        val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\"}"
         val nMem = searchMetrics(memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
         val memTotal = if (nMem != null) {
             NumberUtils.byteToString(nMem)
