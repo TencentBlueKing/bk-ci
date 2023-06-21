@@ -96,7 +96,7 @@ class BkMonitorMetricsService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
         val agentId = HashUtil.encodeLongId(agentRecord.id)
 
-        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\")"
+        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\"})"
 
         val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
 
