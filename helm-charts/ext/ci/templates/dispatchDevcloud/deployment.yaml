@@ -27,6 +27,7 @@ spec:
         app.kubernetes.io/component: microservice
         app.kubernetes.io/name: dispatch-devcloud
     spec:
+      terminationGracePeriodSeconds: 80
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.dispatchDevcloud.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.hostAliases "context" $) | nindent 8 }}
@@ -78,7 +79,7 @@ spec:
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
             - name: JAVA_TOOL_OPTIONS
-              value: {{ .Values.java.options }}
+              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.dispatchDevcloud.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.dispatchDevcloud.jvm.heapPct }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -89,7 +90,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: {{ .Values.dispatchDevcloud.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -98,7 +99,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: {{ .Values.dispatchDevcloud.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20

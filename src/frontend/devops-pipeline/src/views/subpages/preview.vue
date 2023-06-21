@@ -29,7 +29,14 @@
                         </section>
                     </p>
                     <div class="pipeline-detail">
-                        <pipeline :show-header="false" :pipeline="pipeline" :editable="false" :is-preview="true" :can-skip-element="curPipelineInfo.canElementSkip"></pipeline>
+                        <pipeline
+                            is-preview
+                            :show-header="false"
+                            :pipeline="previewPipeline"
+                            :editable="false"
+                            :can-skip-element="curPipelineInfo.canElementSkip"
+                        >
+                        </pipeline>
                     </div>
                 </div>
             </div>
@@ -40,7 +47,6 @@
 <script>
     import { mapGetters, mapActions } from 'vuex'
     import Pipeline from '@/components/Pipeline'
-    import Vue from 'vue'
     import { bus } from '@/utils/bus'
     import { getParamsValuesMap } from '@/utils/util'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
@@ -57,6 +63,7 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
+                previewPipeline: null,
                 isLoading: false,
                 isVisibleVersion: false,
                 isDropdownShowParam: true,
@@ -97,47 +104,20 @@
                     }
                 })
             },
-            checkTotal (val) {
-                this.pipeline.stages.forEach(stage => {
-                    const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
-                    if (!stageDisabled) {
-                        stage.runStage = val
+            pipeline: {
+                immediate: true,
+                handler (newVal, oldVal) {
+                    if (oldVal === null && newVal) {
+                        this.setPipelineSkipProp(newVal.stages, this.checkTotal)
+                        this.previewPipeline = {
+                            ...newVal,
+                            stages: newVal.stages.slice(1)
+                        }
                     }
-
-                    stage.containers.forEach(container => {
-                        if (container['@type'] !== 'trigger') {
-                            const containerDisabled = stageDisabled || (container.jobControlOption && container.jobControlOption.enable === false)
-                            if (!containerDisabled) {
-                                container.runContainer = val
-                            }
-                        }
-                    })
-                })
-            },
-            'pipeline.stages' (val, old) {
-                if (val) {
-                    val.forEach(stage => {
-                        const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
-                        if (!Object.prototype.hasOwnProperty.call(stage, 'runStage')) {
-                            Vue.set(stage, 'runStage', !stageDisabled)
-                        }
-                        stage.containers.forEach(container => {
-                            if (container['@type'] !== 'trigger') {
-                                const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
-                                if (!Object.prototype.hasOwnProperty.call(container, 'runContainer')) {
-                                    Vue.set(container, 'runContainer', !containerDisabled)
-                                }
-
-                                container.elements.forEach(element => {
-                                    const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
-                                    if (!Object.prototype.hasOwnProperty.call(element, 'canElementSkip')) {
-                                        Vue.set(element, 'canElementSkip', !isSkipEle)
-                                    }
-                                })
-                            }
-                        })
-                    })
                 }
+            },
+            checkTotal (checkedTotal) {
+                this.setPipelineSkipProp(this.previewPipeline.stages, checkedTotal)
             }
         },
         async created () {
@@ -151,8 +131,8 @@
                 isShow: false
             })
             this.$store.commit('pipelines/updateCurAtomPrams', null)
-            this.setPipeline()
             this.setPipelineEditing(false)
+            this.setPipeline(null)
         },
         destroyed () {
             bus.$off('start-execute')
@@ -164,6 +144,20 @@
                 'setPipeline',
                 'setPipelineEditing'
             ]),
+            setPipelineSkipProp (stages, checkedTotal) {
+                stages.forEach(stage => {
+                    const stageDisabled = stage.stageControlOption?.enable === false
+                    this.$set(stage, 'runStage', !stageDisabled && checkedTotal)
+                    stage.containers.forEach(container => {
+                        const containerDisabled = container.jobControlOption?.enable === false
+                        this.$set(container, 'runContainer', !containerDisabled && checkedTotal)
+                        container.elements.forEach(element => {
+                            const isSkipEle = element.additionalOptions?.enable === false || containerDisabled
+                            this.$set(element, 'canElementSkip', !isSkipEle && checkedTotal)
+                        })
+                    })
+                })
+            },
             async init () {
                 this.isLoading = true
                 try {
@@ -209,7 +203,7 @@
             },
             async getExecuteParams () {
                 if (this.executeStatus) return
-                const allElements = this.getAllElements(this.pipeline.stages.slice(1))
+                const allElements = this.getAllElements(this.previewPipeline.stages)
                 const skipAtoms = allElements.filter(element => !element.canElementSkip).map(element => `devops_container_condition_skip_atoms_${element.id}`)
                 const versionValid = this.$refs.versionForm ? await this.$refs.versionForm.$validator.validateAll() : true
 

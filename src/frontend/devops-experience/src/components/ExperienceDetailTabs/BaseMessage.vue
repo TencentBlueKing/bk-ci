@@ -30,16 +30,8 @@
                             v-bind="panel"
                             :key="index"
                         >
-                            <div class="bk-tab2-pane" v-if="curTab === 'experienceGroups'">
-                                <div class="release-list-textarea">{{ curReleaseDetail.experienceGroups.join('; ') }}</div>
-                            </div>
-                            <div class="bk-tab2-pane" v-else-if="curTab === 'internal'">
-                                <div class="release-list-textarea">
-                                    {{ curReleaseDetail.internal_list.join(';') }}
-                                </div>
-                            </div>
-                            <div class="bk-tab2-pane" v-else-if="curTab === 'external'">
-                                <div class="release-list-textarea">{{ curReleaseDetail.external_list.join(',') }}</div>
+                            <div class="bk-tab2-pane">
+                                <div class="release-list-textarea">{{ curReleaseDetail[curTab].join('; ') }}</div>
                             </div>
                         </bk-tab-panel>
                     </bk-tab>
@@ -105,11 +97,11 @@
                         label: '体验组'
                     },
                     {
-                        name: 'internal',
+                        name: 'internal_list',
                         label: '附加内部人员'
                     },
                     {
-                        name: 'external',
+                        name: 'external_list',
                         label: '附加外部人员'
                     }
                 ]
@@ -170,6 +162,7 @@
             margin-right: 14px;
             width: 100px;
             text-align: right;
+            flex-shrink: 0;
         }
 
         .installation-package,

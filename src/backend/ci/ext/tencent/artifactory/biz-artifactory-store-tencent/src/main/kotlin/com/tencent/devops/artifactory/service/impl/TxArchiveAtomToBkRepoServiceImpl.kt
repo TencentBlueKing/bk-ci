@@ -25,19 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.artifactory.service.impl
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 
-@ApiModel("版本体验-体验组信息")
-data class GroupCreate(
-    @ApiModelProperty("体验组名称", required = true)
-    val name: String,
-    @ApiModelProperty("内部人员")
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
-    val outerUsers: Set<String> = setOf(),
-    @ApiModelProperty("描述")
-    val remark: String?
-)
+@Service
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
+class TxArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
+
+    @Autowired
+    private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+
+    override fun getBkRepoProjectId(): String {
+        return bkRepoStoreConfig.bkrepoStoreProjectName
+    }
+
+    override fun getBkRepoName(): String {
+        return BkRepoEnum.PLUGIN.repoName
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(
+            userId = bkRepoStoreConfig.bkrepoStoreUserName,
+            projectId = bkRepoStoreConfig.bkrepoStoreProjectName,
+            repoName = BkRepoEnum.PLUGIN.repoName,
+            path = atomCode
+        )
+    }
+}

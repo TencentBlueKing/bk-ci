@@ -30,6 +30,7 @@ package com.tencent.devops.log.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.PageQueryLogs
@@ -40,6 +41,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
@@ -924,7 +926,7 @@ class LogServiceESImpl constructor(
         subTag: String?,
         executeCount: Int?
     ): Pair<QueryLogs, String?> {
-        val logStatus = logStatusService.isFinish(
+        val finished = logStatusService.isFinish(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -932,14 +934,23 @@ class LogServiceESImpl constructor(
             executeCount = executeCount
         )
         val indexName = indexService.getBuildIndexName(buildId)
-        val cleaned = if (!indexName.isNullOrBlank()) {
-            !isExistIndex(buildId, indexName)
+        val (status, msg) = if (indexName.isNullOrBlank() || !isExistIndex(buildId, indexName)) {
+            Pair(
+                LogStatus.CLEAN,
+                I18nUtil.getCodeLanMessage(LOG_INDEX_HAS_BEEN_CLEANED)
+            )
         } else {
-            true
+            Pair(LogStatus.SUCCEED, null)
         }
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
         return Pair(
-            QueryLogs(buildId = buildId, finished = logStatus, cleaned = cleaned, subTags = subTags),
+            QueryLogs(
+                buildId = buildId,
+                finished = finished,
+                status = status.status,
+                subTags = subTags,
+                message = msg
+            ),
             indexName
         )
     }

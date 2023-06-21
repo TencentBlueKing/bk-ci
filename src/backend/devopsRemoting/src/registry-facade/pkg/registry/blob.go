@@ -108,8 +108,7 @@ var bufPool = sync.Pool{
 
 func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 	// v2.ErrorCodeBlobUnknown.WithDetail(bh.Digest)
-	//nolint:staticcheck,ineffassign
-	// span, ctx := opentracing.StartSpanFromContext(r.Context(), "getBlob")
+	start := time.Now()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -198,7 +197,8 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 		logs.Error("cannot get blob", logs.Err(err))
 		respondWithError(w, err)
 	}
-	// tracing.FinishSpan(span, &err)
+
+	logs.Info("get blob time consuming", logs.String("workspaceId", bh.Name), logs.Any("spec", bh.Spec), logs.String("cost", time.Since(start).String()))
 }
 
 func (bh *blobHandler) retrieveFromSource(ctx context.Context, src BlobSource, w http.ResponseWriter, r *http.Request) (handled, dontCache bool, err error) {

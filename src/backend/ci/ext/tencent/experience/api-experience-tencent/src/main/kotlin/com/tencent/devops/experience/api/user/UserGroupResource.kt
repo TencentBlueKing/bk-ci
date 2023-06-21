@@ -31,13 +31,17 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.pojo.Group
-import com.tencent.devops.experience.pojo.GroupCreate
-import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
-import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
+import com.tencent.devops.experience.pojo.group.Group
+import com.tencent.devops.experience.pojo.group.GroupBatchName
+import com.tencent.devops.experience.pojo.group.GroupCommit
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupDeptFullName
+import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
+import com.tencent.devops.experience.pojo.group.GroupV2
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -123,6 +127,11 @@ interface UserGroupResource {
     @ApiOperation("获取体验组")
     @Path("/{projectId}/{groupHashId}")
     @GET
+    @Deprecated(
+        message = "该方法已废弃",
+        replaceWith = ReplaceWith("getV2"),
+        level = DeprecationLevel.WARNING
+    )
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -134,6 +143,42 @@ interface UserGroupResource {
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Group>
+
+    @ApiOperation("获取体验组v2")
+    @Path("/project/{projectId}/group/{groupHashId}")
+    @GET
+    fun getV2(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("体验组HashID", required = true)
+        @PathParam("groupHashId")
+        groupHashId: String
+    ): Result<GroupV2>
+
+    @ApiOperation("根据名字查询组织全称")
+    @Path("batchDeptFullName")
+    @POST
+    fun batchDeptFullName(
+        groupBatchName: GroupBatchName
+    ): Result<List<GroupDeptFullName>>
+
+    @ApiOperation("体验组数据提交")
+    @Path("/projects/{projectId}/commit")
+    @POST
+    fun commit(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("提交内容", required = true)
+        groupCommit: GroupCommit
+    ): Result<Boolean>
 
     @ApiOperation("获取体验组用户")
     @Path("/{projectId}/{groupHashId}/users")

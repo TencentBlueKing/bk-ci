@@ -27,6 +27,7 @@ class WhitelistApiFilter constructor(
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
         USER("/api/user/", true),
+        DESKTOP("/api/desktop/", true),
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),
@@ -77,7 +78,6 @@ class WhitelistApiFilter constructor(
                             messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
                             params = null,
                             data = null,
-                            defaultMessage = ErrorCodeEnum.DENIAL_OF_SERVICE.formatErrorMessage,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                     )

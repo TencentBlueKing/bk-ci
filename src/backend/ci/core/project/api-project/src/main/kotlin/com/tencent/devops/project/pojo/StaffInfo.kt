@@ -25,19 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.project.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本体验-体验组信息")
-data class GroupUpdate(
-    @ApiModelProperty("体验组名称", required = true)
-    val name: String,
-    @ApiModelProperty("内部人员")
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
-    val outerUsers: Set<String> = setOf(),
-    @ApiModelProperty("描述")
-    val remark: String?
+@ApiModel("用户信息")
+data class StaffInfo(
+    @ApiModelProperty("登录名")
+    @JsonProperty("LoginName")
+    val loginName: String,
+    @ApiModelProperty("部门名称")
+    @JsonProperty("DepartmentName")
+    val departmentName: String,
+    @ApiModelProperty("英文全名")
+    @JsonProperty("FullName")
+    val fullName: String,
+    @ApiModelProperty("中文名")
+    @JsonProperty("ChineseName")
+    val chineseName: String,
+    @ApiModelProperty("组ID")
+    @JsonProperty("GroupId")
+    val groupId: String,
+    @ApiModelProperty("组名称")
+    @JsonProperty("GroupName")
+    val groupName: String,
+    @ApiModelProperty("当前状态")
+    @JsonProperty("StatusId")
+    val statusId: String
 )

@@ -25,29 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.process.api.op
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("版本体验-体验组摘要信息")
-data class GroupSummaryWithPermission(
-    @ApiModelProperty("体验组HashID", required = true)
-    val groupHashId: String,
-    @ApiModelProperty("体验组名称", required = true)
-    val name: String,
-    @ApiModelProperty("内部人员", required = true)
-    val innerUsersCount: Int,
-    @ApiModelProperty("外部人员", required = true)
-    val outerUsersCount: Int,
-    @ApiModelProperty("内部人员")
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
-    val outerUsers: Set<String>,
-    @ApiModelProperty("创建者", required = true)
-    val creator: String,
-    @ApiModelProperty("描述", required = true)
-    val remark: String,
-    @ApiModelProperty("权限", required = true)
-    val permissions: GroupPermission
-)
+@Api(tags = ["OP_PIPELINE"], description = "OP-流水线")
+@Path("/op/pipelines/settings")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpTxPipelineSettingResource {
+
+    @ApiOperation("更新蓝盾国际化需求发布时间段至今时间段内的流水线配置中CONTENT字段数据")
+    @PUT
+    @Path("/update/content")
+    fun updatePipelineSettingContent(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
+}

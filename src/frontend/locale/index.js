@@ -19,12 +19,14 @@ const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
     'en-us': 'en-US',
     en: 'en-US',
     us: 'en-US',
-    en_US: 'en-US'
+    en_US: 'en-US',
+    en_us: 'en-US'
 }
 
 const backendLocalEnum = {
@@ -59,8 +61,8 @@ function getLsLocale () {
     try {
         const cookieLocale = cookies.get(LS_KEY) || DEFAULT_LOCALE
         
-        console.log(cookieLocale, cookies.get(LS_KEY), window.INIT_LOCALE)
-        return localeAliasMap[cookieLocale.toLowerCase()] ?? DEFAULT_LOCALE
+        console.log(cookieLocale, cookies.get(LS_KEY), window.INIT_LOCALE, localeAliasMap[cookieLocale.toLowerCase()])
+        return localeAliasMap[cookieLocale.toLowerCase()]
     } catch (error) {
         return DEFAULT_LOCALE
     }
@@ -134,9 +136,11 @@ export default (r, initSetLocale = false) => {
     async function syncLocaleBackend (localeLang) {
         try {
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
-            await axios.put('/ms/project/api/user/locales/update', {
-                language: backendLocalEnum[localeLang]
-            })
+            if (backendLocalEnum[localeLang]) {
+                await axios.put('/ms/project/api/user/locales/update', {
+                    language: backendLocalEnum[localeLang]
+                })
+            }
         } catch (error) {
             console.error('sync locale to backend error', error)
         }

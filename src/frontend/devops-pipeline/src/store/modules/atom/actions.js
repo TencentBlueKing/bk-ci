@@ -46,7 +46,6 @@ import {
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
     SET_AUTH_EDITING,
-    SET_BUILD_PARAM,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_SETTING,
@@ -55,6 +54,7 @@ import {
     SET_EDIT_FROM,
     SET_EXECUTE_STATUS,
     SET_GLOBAL_ENVS,
+    SET_HIDE_SKIP_EXEC_TASK,
     SET_IMPORTED_JSON,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
@@ -193,11 +193,8 @@ export default {
 
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
-            commit(SET_BUILD_PARAM, {
-                buildParams: response.data,
-                buildId
-            })
+            const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
+            return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         }
@@ -260,7 +257,7 @@ export default {
             let pageSize = requestAtomData.pageSize || 50
             let queryFitAgentBuildLessAtomFlag
             const curOs = os
-            
+
             if (keyword) {
                 // 关键字查询 => 搜索研发商店插件数据 (全局搜索 => 无操作系统、无编译环境限制)
                 pageSize = 100
@@ -324,7 +321,7 @@ export default {
                     commit(SET_COMMEND_ATOM_COUNT, count)
                     commit(SET_COMMEND_ATOM_PAGE_OVER, atomCodeList.length === count)
                 }
-                
+
                 let isAtomPageOver = false
                 if (category === 'TRIGGER') {
                     isAtomPageOver = atomList.length === count
@@ -485,9 +482,11 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
-    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId }) => {
+    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
         try {
-            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildNo}/detail`)
+            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
+                params: query
+            })
             dispatch('setPipelineDetail', response.data)
         } catch (e) {
             if (e.code === 403) {
@@ -498,7 +497,7 @@ export default {
     },
     requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/detail/${buildNum}`)
+            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -507,6 +506,7 @@ export default {
         }
     },
     setPipelineDetail: actionCreator(SET_PIPELINE_EXEC_DETAIL),
+    setHideSkipExecTask: actionCreator(SET_HIDE_SKIP_EXEC_TASK),
     getRemoteTriggerToken: async ({ commit }, { projectId, pipelineId, element, preToken }) => {
         try {
             const { data: { token } } = await request.put(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/remoteToken`)

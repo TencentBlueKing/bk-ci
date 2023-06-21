@@ -25,15 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.common.web.utils
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-@ApiModel("版本体验-体验组权限")
-data class GroupPermission(
-    @ApiModelProperty("是否可编辑", required = true)
-    val canEdit: Boolean,
-    @ApiModelProperty("是否可删除", required = true)
-    val canDelete: Boolean
-)
+/**
+ * 国际化语言信息缓存
+ *
+ * @since: 2023-06-13
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object BkI18nLanguageCacheUtil {
+
+    private val i18nLanguageCache = Caffeine.newBuilder()
+        .maximumSize(20000)
+        .expireAfterWrite(6, TimeUnit.SECONDS)
+        .build<String, String>()
+
+    /**
+     * 保存国际化语言信息缓存
+     * @param userId 用户Id
+     * @param language 国际化语言信息
+     */
+    fun put(userId: String, language: String) {
+        i18nLanguageCache.put(userId, language)
+    }
+
+    /**
+     * 从缓存中获取国际化语言信息
+     * @param userId 用户Id
+     * @return 国际化语言信息
+     */
+    fun getIfPresent(userId: String): String? {
+        return i18nLanguageCache.getIfPresent(userId)
+    }
+}

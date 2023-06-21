@@ -103,8 +103,7 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                     )
                 }
 
@@ -121,8 +120,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                 )
             }
         }
@@ -134,7 +132,7 @@ class BkTicketService @Autowired constructor(
         if (ticket.isBlank()) {
             return false
         }
-        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
+        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_token=$ticket")
                     else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
         val request = Request.Builder()
             .url(url)
@@ -152,15 +150,14 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                     )
                 }
                 val contentMap = JsonUtil.toMap(content)
                 val dataMap = contentMap["data"] as Map<*, *>
                 logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
-                val status = contentMap["ret"]
-                return (status == 0) && (dataMap["username"].toString() == userId)
+                val result = if (isOffshore) (contentMap["result"] is Boolean) else (contentMap["ret"] == 0)
+                return result && (dataMap["username"].toString() == userId)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
@@ -171,8 +168,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("check user $userId ticket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                 )
             }
         }

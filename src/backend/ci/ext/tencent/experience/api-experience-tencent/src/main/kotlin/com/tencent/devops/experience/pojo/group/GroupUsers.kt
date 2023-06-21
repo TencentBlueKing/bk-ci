@@ -25,14 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.tof
+package com.tencent.devops.experience.pojo.group
 
-data class StaffInfoResponse(
-    val LoginName: String,
-    val DepartmentName: String,
-    val FullName: String,
-    val ChineseName: String,
-    val GroupId: String,
-    val GroupName: String,
-    val StatusId: String
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("版本体验-体验组用户")
+data class GroupUsers(
+    @ApiModelProperty("内部人员")
+    val innerUsers: Set<String>,
+    @ApiModelProperty("外部人员")
+    val outerUsers: Set<String>
 )

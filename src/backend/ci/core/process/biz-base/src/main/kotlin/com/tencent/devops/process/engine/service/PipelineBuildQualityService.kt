@@ -427,8 +427,10 @@ class PipelineBuildQualityService(
                 )
                 taskBuildRecordService.updateTaskRecord(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                    taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+                    taskId = taskId, executeCount = task.executeCount ?: 1,
+                    buildStatus = null,
                     taskVar = mapOf(QualityGateInElement::reviewUsers.name to auditUsers),
+                    operation = "handleQualityResult#$taskId",
                     timestamps = mapOf(
                         BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                             BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
@@ -457,7 +459,7 @@ class PipelineBuildQualityService(
                     pipelineId = task.pipelineId,
                     userId = task.starter,
                     buildId = task.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary
+                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
                 )
             )
             return AtomResponse(BuildStatus.RUNNING)

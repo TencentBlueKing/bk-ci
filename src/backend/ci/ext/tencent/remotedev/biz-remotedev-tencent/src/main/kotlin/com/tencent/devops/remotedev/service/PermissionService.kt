@@ -66,8 +66,6 @@ class PermissionService @Autowired constructor(
         if (!projectUserCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                defaultMessage = ErrorCodeEnum.FORBIDDEN.formatErrorMessage
-                    .format("You need permission to access workspace $workspaceName"),
                 params = arrayOf("You need permission to access workspace $workspaceName")
             )
         }
@@ -91,7 +89,6 @@ class PermissionService @Autowired constructor(
             if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode,
-                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
                     params = arrayOf(userId)
                 )
             }

@@ -22,6 +22,7 @@
         align-items: center;
         height: 100%;
         padding: 0 10px;
+        font-size: 14px;
         &-separator {
             display: inline-block;
             align-self: center;

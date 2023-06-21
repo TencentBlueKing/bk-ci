@@ -39,10 +39,15 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_INVITES_YOU_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_MOBILE_EXPERIENCE_ADDRESS
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_PC_EXPERIENCE_ADDRESS
 
 object WechatGroupUtil {
-    fun makeRichtextMessage(projectName: String, name: String, version: String, innerUrl: String, outerUrl: String, groupId: String): RichtextMessage {
+    fun makeRichtextMessage(
+        projectName: String,
+        name: String,
+        version: String,
+        outerUrl: String,
+        groupId: String
+    ): RichtextMessage {
         val receiver = Receiver(ReceiverType.group, groupId)
         val richtextContentList = mutableListOf<RichtextContent>()
 
@@ -54,25 +59,18 @@ object WechatGroupUtil {
                         messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
                         params = arrayOf(projectName)
                     ) + "\n\n"
-        )
+                )
             )
         )
         // body
-        richtextContentList.add(RichtextText(RichtextTextText(
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
-                params = arrayOf(projectName, name, version)
-            )
-        )))
         richtextContentList.add(
-            RichtextView(
-                RichtextViewLink(
+            RichtextText(
+                RichtextTextText(
                     I18nUtil.getCodeLanMessage(
-                    messageCode = BK_PC_EXPERIENCE_ADDRESS
-                ),
-                innerUrl,
-                1
-        )
+                        messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+                        params = arrayOf(projectName, name, version)
+                    )
+                )
             )
         )
         richtextContentList.add(

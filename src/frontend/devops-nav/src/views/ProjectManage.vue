@@ -110,13 +110,13 @@
                             <!-- 状态为待审批 -->
                             <template v-if="props.row.approvalStatus === 1">
                                 <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
+                                    v-bk-tooltips="{ content: $t('waitforReview'), allowHTML: false }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t('editLabel') }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
+                                    v-bk-tooltips="{ content: $t('waitforReview'), allowHTML: false }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
@@ -140,7 +140,7 @@
                                     @click.stop.prevent="togglePMDialog(true, props.row)"
                                 >{{ $t('editLabel') }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
+                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip'), allowHTML: false }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
@@ -241,7 +241,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import logoDialog from '../components/logoDialog/index.vue'
     import {
         handleProjectNoPermission,
