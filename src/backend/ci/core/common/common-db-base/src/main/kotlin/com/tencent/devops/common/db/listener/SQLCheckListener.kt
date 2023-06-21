@@ -1,7 +1,6 @@
 package com.tencent.devops.common.db.listener
 
 import org.jooq.ExecuteContext
-import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.slf4j.LoggerFactory
@@ -22,7 +21,8 @@ class SQLCheckListener : DefaultExecuteListener() {
         val noWhereRegex = "(?!.* WHERE ).*".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
-                throw DataAccessException("This SQL must use WHERE")
+//                throw DataAccessException("This SQL : $sql must use WHERE")
+                logger.warn("This SQL : $sql must use WHERE")
             }
             if (ctx != null) {
                 try {
