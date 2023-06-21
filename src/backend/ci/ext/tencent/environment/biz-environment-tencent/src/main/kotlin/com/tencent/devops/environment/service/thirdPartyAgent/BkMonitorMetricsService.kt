@@ -183,21 +183,25 @@ class BkMonitorMetricsService @Autowired constructor(
             OS.MACOS, OS.LINUX -> "name"
             OS.WINDOWS -> "instance"
         }
-        val (readPromql, writePromql) = when (OS.valueOf(agentRecord.os)) {
-            OS.MACOS, OS.LINUX -> Pair(
-                "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))",
-                "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
-                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
-            )
-
-            OS.WINDOWS -> Pair(
-                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)",
-                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)"
-            )
-
-            else -> return emptyMap()
-        }
+//        val (readPromql, writePromql) = when (OS.valueOf(agentRecord.os)) {
+//            OS.MACOS, OS.LINUX -> Pair(
+//                "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
+//                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))",
+//                "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
+//                    "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+//            )
+//
+//            OS.WINDOWS -> Pair(
+//                "avg($dataTableName:io:rkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)",
+//                "avg($dataTableName:io:wkb_s{agentId=\"$agentId\",projectId=\"$projectId\"}) by ($tag)"
+//            )
+//
+//            else -> return emptyMap()
+//        }
+        val readPromql = "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
+            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+        val writePromql = "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
+            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(readPromql, timeRange)
         val writeData = searchMetrics(writePromql, timeRange)
@@ -297,8 +301,14 @@ class BkMonitorMetricsService @Autowired constructor(
     }
 
     private fun parseDatapointItem(label: String, item: List<Double>): Map<String, Any> {
+        // 前端计算需要数据*10与开源版influxdb相同
+        val data = if (item.getOrNull(0) == null) {
+            0
+        } else {
+            item[0] * 10
+        }
         return mapOf(
-            label to (item.getOrNull(0) ?: 0),
+            label to data,
             "time" to if (item.getOrNull(1) == null) {
                 ""
             } else {
