@@ -46,7 +46,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.kubernetes.pojo.Volume
 import com.tencent.devops.dispatch.kubernetes.pojo.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
-import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
@@ -65,12 +64,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
+    private val devcloudWorkspaceRedisUtils: WorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient,
     private val profile: Profile
