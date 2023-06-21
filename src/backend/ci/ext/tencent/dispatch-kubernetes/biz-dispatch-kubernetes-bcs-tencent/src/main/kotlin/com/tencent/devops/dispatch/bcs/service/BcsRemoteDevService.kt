@@ -158,7 +158,7 @@ class BcsRemoteDevService @Autowired constructor(
                     labels = mapOf(),
                     annotations = mapOf(
                         "bkbcs.tencent.com/advanced-container-type" to "advanced",
-                        "bkbcs.tencent.com/advanced-disk-size-bytes" to (workspaceDisk * 1024* 1024 * 1024).toString()
+                        "bkbcs.tencent.com/advanced-disk-size-bytes" to "${workspaceDisk * 1024 * 1024 * 1024}"
                     )
                 ),
                 spec = EnvironmentSpec(
@@ -168,12 +168,12 @@ class BcsRemoteDevService @Autowired constructor(
                             image = event.devFile.runsOn?.container?.image ?: "",
                             resource = ResourceRequirements(workspaceCpu, workspaceMemory),
                             workingDir = gitRepoRootPath,
-                            volumeMounts = listOf(
-                                /*VolumeMount(
+                            /*volumeMounts = listOf(
+                                VolumeMount(
                                     name = VOLUME_MOUNT_NAME,
                                     mountPath = WORKSPACE_PATH
-                                )*/
-                            ),
+                                )
+                            ),*/
                             readinessProbe = Probe(
                                 handler = ProbeHandler(
                                     httpGet = HTTPGetAction(
