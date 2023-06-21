@@ -218,6 +218,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
+        logger.info("createWorkspace|mountType|$mountType")
         val bizId = MDC.get(TraceTag.BIZID)
         val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
