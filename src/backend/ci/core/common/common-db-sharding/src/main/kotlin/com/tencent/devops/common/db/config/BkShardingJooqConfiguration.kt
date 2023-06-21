@@ -28,11 +28,12 @@
 package com.tencent.devops.common.db.config
 
 import org.jooq.DSLContext
+import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.jooq.impl.DefaultExecuteListenerProvider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -47,16 +48,19 @@ class BkShardingJooqConfiguration {
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
         val configuration: org.jooq.Configuration = DefaultConfiguration()
             .set(shardingDataSource)
-            .set(Settings().withRenderSchema(false)
-                .withExecuteLogging(true)
-                .withRenderFormatted(false))
+            .set(
+                Settings().withRenderSchema(false)
+                    .withExecuteLogging(true)
+                    .withRenderFormatted(false)
+            )
             .set(SQLDialect.MYSQL)
-            .set(bkJooqExecuteListenerProvider)
+        for (provider in executeListenerProviders) {
+            configuration.set(provider)
+        }
         return DSL.using(configuration)
     }
 }
