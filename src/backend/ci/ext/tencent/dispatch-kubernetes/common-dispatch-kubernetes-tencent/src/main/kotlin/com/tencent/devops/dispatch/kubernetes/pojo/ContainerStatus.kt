@@ -3,7 +3,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 data class ContainerStatus(
     val name: String,
     val state: ContainerState?,
-    val status: ContainerState?,
+    val status: String?,
     val lastState: ContainerState?,
     val ready: Boolean?,
     val restartCount: Int?,
