@@ -37,7 +37,6 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.Container
-import com.tencent.devops.dispatch.kubernetes.pojo.DataDiskSource
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvVar
 import com.tencent.devops.dispatch.kubernetes.pojo.Environment
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
@@ -48,9 +47,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.ObjectMeta
 import com.tencent.devops.dispatch.kubernetes.pojo.Probe
 import com.tencent.devops.dispatch.kubernetes.pojo.ProbeHandler
 import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
-import com.tencent.devops.dispatch.kubernetes.pojo.Volume
-import com.tencent.devops.dispatch.kubernetes.pojo.VolumeMount
-import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
@@ -106,7 +102,7 @@ class BcsRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BcsRemoteDevService::class.java)
-
+        private const val BYTES_IN_GIGABYTE = 1024L * 1024 * 1024
         private const val WORKSPACE_PATH = "/data/landun/workspace"
         private const val VOLUME_MOUNT_NAME = "workspace"
 
@@ -158,7 +154,7 @@ class BcsRemoteDevService @Autowired constructor(
                     labels = mapOf(),
                     annotations = mapOf(
                         "bkbcs.tencent.com/advanced-container-type" to "advanced",
-                        "bkbcs.tencent.com/advanced-disk-size-bytes" to "${workspaceDisk * 1024 * 1024 * 1024}"
+                        "bkbcs.tencent.com/advanced-disk-size-bytes" to "${workspaceDisk.toLong() * BYTES_IN_GIGABYTE}"
                     )
                 ),
                 spec = EnvironmentSpec(
@@ -168,12 +164,6 @@ class BcsRemoteDevService @Autowired constructor(
                             image = event.devFile.runsOn?.container?.image ?: "",
                             resource = ResourceRequirements(workspaceCpu, workspaceMemory),
                             workingDir = gitRepoRootPath,
-                            /*volumeMounts = listOf(
-                                VolumeMount(
-                                    name = VOLUME_MOUNT_NAME,
-                                    mountPath = WORKSPACE_PATH
-                                )
-                            ),*/
                             readinessProbe = Probe(
                                 handler = ProbeHandler(
                                     httpGet = HTTPGetAction(
@@ -189,18 +179,7 @@ class BcsRemoteDevService @Autowired constructor(
                         )
                     ),
                     initContainers = emptyList(),
-                    imagePullCertificate = imagePullCertificateList,
-                    volumes = listOf(
-                        Volume(
-                            name = VOLUME_MOUNT_NAME,
-                            volumeSource = VolumeSource(
-                                dataDisk = DataDiskSource(
-                                    type = "local",
-                                    sizeLimit = workspaceDisk
-                                )
-                            )
-                        )
-                    )
+                    imagePullCertificate = imagePullCertificateList
                 )
             )
         )
