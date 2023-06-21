@@ -46,14 +46,6 @@ class RemoteDevServiceFactory @Autowired constructor(
         const val START_CLOUD = "STARTCLOUD"
     }
 
-    fun loadRemoteDevService(projectId: String): RemoteDevInterface {
-        val dockerRoutingType = DockerRoutingType.DEVCLOUD
-        return SpringContextUtil.getBean(
-            RemoteDevInterface::class.java,
-            dockerRoutingType.name.toLowerCase() + "RemoteDevService"
-        )
-    }
-
     fun loadRemoteDevService(mountType: WorkspaceMountType): RemoteDevInterface {
         val dockerRoutingType = when (mountType) {
             WorkspaceMountType.START -> DockerRoutingType.valueOf(START_CLOUD)
@@ -63,26 +55,6 @@ class RemoteDevServiceFactory @Autowired constructor(
         return SpringContextUtil.getBean(
             RemoteDevInterface::class.java,
             dockerRoutingType.name.toLowerCase() + "RemoteDevService"
-        )
-    }
-
-    fun loadContainerService(projectId: String): ContainerService {
-        val dockerRoutingType = DockerRoutingType.DEVCLOUD
-        return SpringContextUtil.getBean(
-            ContainerService::class.java,
-            dockerRoutingType.name.toLowerCase() + "ContainerService"
-        )
-    }
-
-    fun loadContainerService(mountType: WorkspaceMountType): ContainerService {
-        val dockerRoutingType = when (mountType) {
-            WorkspaceMountType.START -> DockerRoutingType.valueOf(START_CLOUD)
-            WorkspaceMountType.BCS -> DockerRoutingType.BCS
-            else -> DockerRoutingType.DEVCLOUD
-        }
-        return SpringContextUtil.getBean(
-            ContainerService::class.java,
-            dockerRoutingType.name.toLowerCase() + "ContainerService"
         )
     }
 }

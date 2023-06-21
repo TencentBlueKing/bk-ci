@@ -29,10 +29,15 @@ package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
@@ -151,7 +156,9 @@ class StartCloudRemoteDevService @Autowired constructor(
             curLaunchId = curLaunchId
         )
     }
-
+    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+        return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""

@@ -75,7 +75,7 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(mountType)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -146,7 +146,7 @@ class RemoteDevService @Autowired constructor(
     fun startWorkspace(event: WorkspaceOperateEvent): WorkspaceResponse {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .startWorkspace(event.userId, event.workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -187,7 +187,7 @@ class RemoteDevService @Autowired constructor(
     fun stopWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .stopWorkspace(event.userId, event.workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -212,7 +212,7 @@ class RemoteDevService @Autowired constructor(
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .deleteWorkspace(event.userId, event)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {

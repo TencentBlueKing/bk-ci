@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.pojo.Container
 import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
@@ -48,9 +49,13 @@ import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -264,6 +269,36 @@ class DevCloudRemoteDevService @Autowired constructor(
             ready = podInfo?.ready,
             started = podInfo?.started
         )
+    }
+    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+        // 将task放入缓存，等待回调
+        devcloudWorkspaceRedisUtils.refreshTaskStatus(
+            userId = userId,
+            taskUid = taskId,
+            taskStatus = TaskStatus(taskId)
+        )
+
+        // 轮训十分钟
+        val startTime = System.currentTimeMillis()
+        loop@ while (true) {
+            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+                logger.error("Wait task: $taskId finish timeout(10min)")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
+                )
+            }
+            Thread.sleep(1 * 1000)
+            val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
+            if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                return if (taskStatus.status == TaskStatusEnum.successed) {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+                } else {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
+                }
+            }
+        }
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

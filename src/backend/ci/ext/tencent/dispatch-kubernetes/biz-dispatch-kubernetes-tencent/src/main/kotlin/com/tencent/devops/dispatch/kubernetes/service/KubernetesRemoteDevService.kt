@@ -31,6 +31,7 @@ import com.tencent.devops.dispatch.kubernetes.client.KubernetesRemoteDevClient
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.GitRepo
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
@@ -83,6 +84,10 @@ class KubernetesRemoteDevService @Autowired constructor(
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
+        TODO("Not yet implemented")
+    }
+
+    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         TODO("Not yet implemented")
     }
 
