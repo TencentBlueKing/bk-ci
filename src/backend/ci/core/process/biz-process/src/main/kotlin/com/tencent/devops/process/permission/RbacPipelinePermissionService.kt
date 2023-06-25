@@ -122,15 +122,14 @@ class RbacPipelinePermissionService constructor(
             projectId = projectId,
             pipelineIds = pipelineIds
         )
-        return listViewIdsMap.map { (pipelineId, viewIds) ->
+        return pipelineIds.map { pipelineId ->
             val parents = mutableListOf<AuthResourceInstance>()
             val projectInstance = AuthResourceInstance(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectId
             )
             parents.add(projectInstance)
-            // 拼接所有的流水线组
-            viewIds.forEach { viewId ->
+            listViewIdsMap[pipelineId]?.forEach { viewId ->
                 val pipelineGroupInstance = AuthResourceInstance(
                     resourceType = AuthResourceType.PIPELINE_GROUP.value,
                     resourceCode = HashUtil.encodeLongId(viewId),
