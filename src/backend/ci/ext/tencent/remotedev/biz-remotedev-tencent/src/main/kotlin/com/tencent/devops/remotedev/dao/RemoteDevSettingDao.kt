@@ -31,10 +31,15 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecord
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
+import org.jooq.DatePart
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -113,18 +118,14 @@ class RemoteDevSettingDao {
 
     fun fetchAllUserSettings(
         dslContext: DSLContext
-    ): List<RemoteDevUserSettings> {
-        val remoteDevUserSettingsList = mutableListOf<RemoteDevUserSettings>()
+    ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(USER_SETTING).from(this).where(USER_SETTING.isNotNull).fetch().let {
-                remoteDevUserSettingsList.add(
-                    JsonUtil.toOrNull(
-                        it.toString(), RemoteDevUserSettings::class.java
-                    ) ?: RemoteDevUserSettings()
+            return dslContext.selectFrom(this)
+                .where(
+                    USER_SETTING.isNotNull
                 )
-            }
+                .fetch()
         }
-        return remoteDevUserSettingsList
     }
 
     fun updateProjectId(
