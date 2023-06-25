@@ -85,7 +85,10 @@ class RbacPermissionMigrateService constructor(
     @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
+    override fun v3ToRbacAuth(
+        projectCodes: List<String>,
+        migrateResourceType: String?
+    ): Boolean {
         logger.info("migrate $projectCodes auth from v3 to rbac")
         if (projectCodes.isEmpty()) return true
         val projectVos =
@@ -107,14 +110,18 @@ class RbacPermissionMigrateService constructor(
                 migrateToRbacAuth(
                     projectCode = projectCode,
                     migrateTaskId = 0,
-                    authType = AuthSystemType.V3_AUTH_TYPE
+                    authType = AuthSystemType.V3_AUTH_TYPE,
+                    migrateResourceType = migrateResourceType
                 )
             }
         }
         return true
     }
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
+    override fun v0ToRbacAuth(
+        projectCodes: List<String>,
+        migrateResourceType: String?
+    ): Boolean {
         logger.info("migrate $projectCodes auth from v0 to rbac")
         if (projectCodes.isEmpty()) return true
         // 1. 启动迁移任务
@@ -128,7 +135,8 @@ class RbacPermissionMigrateService constructor(
                 migrateToRbacAuth(
                     projectCode = projectCode,
                     migrateTaskId = migrateTaskId,
-                    authType = AuthSystemType.V0_AUTH_TYPE
+                    authType = AuthSystemType.V0_AUTH_TYPE,
+                    migrateResourceType = migrateResourceType
                 )
             }
         }
@@ -167,8 +175,14 @@ class RbacPermissionMigrateService constructor(
                         .map { it.englishName }
                 logger.info("migrate project to rbac|v0MigrateProjects:$v0MigrateProjectCodes")
                 // 2.迁移项目
-                v3ToRbacAuth(projectCodes = v3MigrateProjectCodes)
-                v0ToRbacAuth(projectCodes = v0MigrateProjectCodes)
+                v3ToRbacAuth(
+                    projectCodes = v3MigrateProjectCodes,
+                    migrateResourceType = migrateProjectConditionDTO.migrateResourceType
+                )
+                v0ToRbacAuth(
+                    projectCodes = v0MigrateProjectCodes,
+                    migrateResourceType = migrateProjectConditionDTO.migrateResourceType
+                )
                 offset += limit
             } while (migrateProjects.size == limit)
         }
@@ -179,7 +193,8 @@ class RbacPermissionMigrateService constructor(
     private fun migrateToRbacAuth(
         projectCode: String,
         migrateTaskId: Int,
-        authType: AuthSystemType
+        authType: AuthSystemType,
+        migrateResourceType: String?
     ): Boolean {
         logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
@@ -246,7 +261,8 @@ class RbacPermissionMigrateService constructor(
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
                 projectCode = projectCode,
-                projectCreator = projectCreator
+                projectCreator = projectCreator,
+                migrateResourceType = migrateResourceType
             )
 
             when (authType) {

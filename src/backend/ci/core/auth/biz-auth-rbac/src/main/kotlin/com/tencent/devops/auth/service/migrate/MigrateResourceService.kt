@@ -79,15 +79,18 @@ class MigrateResourceService @Autowired constructor(
     @Suppress("SpreadOperator")
     fun migrateResource(
         projectCode: String,
-        projectCreator: String
+        projectCreator: String,
+        migrateResourceType: String?
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes()
-                .map { it.resourceType }
-                .filterNot { noNeedToMigrateResourceType.contains(it) }
-
+            // 根据传递的资源类型是否为空，决定迁移什么资源
+            val resourceTypes =
+                migrateResourceType?.let { listOf(it) }
+                    ?: rbacCacheService.listResourceTypes()
+                        .map { it.resourceType }
+                        .filterNot { noNeedToMigrateResourceType.contains(it) }
             logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
             // 迁移各个资源类型下的资源
             val traceId = MDC.get(TraceTag.BIZID)
@@ -95,7 +98,7 @@ class MigrateResourceService @Autowired constructor(
                 CompletableFuture.supplyAsync(
                     {
                         MDC.put(TraceTag.BIZID, traceId)
-                        migrateResource(
+                        migrateResourceByResourceType(
                             projectCode = projectCode,
                             resourceType = resourceType,
                             projectCreator = projectCreator
@@ -120,7 +123,7 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun migrateResource(
+    private fun migrateResourceByResourceType(
         projectCode: String,
         resourceType: String,
         projectCreator: String

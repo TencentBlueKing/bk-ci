@@ -32,11 +32,17 @@ import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(migrateProjects: List<String>): Boolean {
+    override fun v3ToRbacAuth(
+        migrateProjects: List<String>,
+        migrateResourceType: String?
+    ): Boolean {
         return true
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<String>): Boolean {
+    override fun v0ToRbacAuth(
+        migrateProjects: List<String>,
+        migrateResourceType: String?
+    ): Boolean {
         return true
     }
 

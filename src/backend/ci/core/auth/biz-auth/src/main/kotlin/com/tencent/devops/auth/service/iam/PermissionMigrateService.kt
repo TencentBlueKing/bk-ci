@@ -38,12 +38,18 @@ interface PermissionMigrateService {
     /**
      * v3批量迁移到rbac
      */
-    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
+    fun v3ToRbacAuth(
+        projectCodes: List<String>,
+        migrateResourceType: String? = null
+    ): Boolean
 
     /**
      * v0批量迁移到rbac
      */
-    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
+    fun v0ToRbacAuth(
+        projectCodes: List<String>,
+        migrateResourceType: String? = null
+    ): Boolean
 
     /**
      * 全部迁移到rbac
