@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import io.swagger.annotations.Api
@@ -44,7 +45,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpAuthMigrateResource {
-
     @POST
     @Path("/v3ToRbac")
     @ApiOperation("v3权限批量升级到rbac权限")
@@ -77,5 +77,13 @@ interface OpAuthMigrateResource {
     fun toRbacAuthByCondition(
         @ApiParam("按条件迁移项目实体", required = true)
         migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/fixMigrateCompareResult")
+    @ApiOperation("修正迁移鉴权结果")
+    fun fixMigrateCompareResult(
+        @ApiParam("鉴权记录实体", required = true)
+        verifyRecordDTO: VerifyRecordDTO
     ): Result<Boolean>
 }

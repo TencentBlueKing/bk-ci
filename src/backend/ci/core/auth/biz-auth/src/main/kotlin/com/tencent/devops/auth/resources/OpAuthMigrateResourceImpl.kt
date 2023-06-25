@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
@@ -58,5 +59,9 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
                 migrateProjectConditionDTO = migrateProjectConditionDTO
             )
         )
+    }
+
+    override fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Result<Boolean> {
+        return Result(permissionMigrateService.fixMigrateCompareResult(verifyRecordDTO = verifyRecordDTO))
     }
 }
