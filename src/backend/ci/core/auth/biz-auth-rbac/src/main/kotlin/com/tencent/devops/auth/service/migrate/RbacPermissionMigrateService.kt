@@ -196,8 +196,7 @@ class RbacPermissionMigrateService constructor(
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = verifyRecordDTO.projectId,
-                authType = "rbac"
+                projectCode = verifyRecordDTO.projectId
             )
             return false
         }
@@ -331,8 +330,7 @@ class RbacPermissionMigrateService constructor(
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = projectCode,
-                authType = authType.value
+                projectCode = projectCode
             )
             return false
         } finally {
@@ -423,11 +421,7 @@ class RbacPermissionMigrateService constructor(
         )?.relationId?.toInt()
     }
 
-    private fun handleException(
-        exception: Exception,
-        projectCode: String,
-        authType: String
-    ) {
+    private fun handleException(exception: Exception, projectCode: String) {
         val errorMessage = when (exception) {
             is IamException -> {
                 exception.errorMsg
@@ -442,7 +436,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
+        logger.error("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,
