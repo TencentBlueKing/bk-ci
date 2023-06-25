@@ -422,7 +422,8 @@
             .part {
                 width: 50%;
                 float: left;
-                height: 250px;
+                min-height: 250px;
+                margin-bottom: 20px;
                 &.top-left {
                     border-right: 1px solid $borderWeightColor;
                     border-bottom: 1px solid $borderWeightColor;

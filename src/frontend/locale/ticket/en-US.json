@@ -71,7 +71,7 @@
         "sshKeyDesc": "SSH contains public and private keys, which are used to link SVN-typed code repo. For SSH configuration instructions, please refer to Blue Shield Documentation Center.",
         "sshKeyTokenDesc": "Used for linking Git-typed code repo through ssh",
         "passwordTokenDesc": "Used for linking Git-typed code repo through http",
-        "usernamePassword": "User name + password",
+        "usernamePassword": "User Name + password",
         "sshKeyToken": "SSH private key + private Token",
         "passwordToken": "User password + private token",
         "oauthTokenRequired": "Oauth Token cannot be empty",
