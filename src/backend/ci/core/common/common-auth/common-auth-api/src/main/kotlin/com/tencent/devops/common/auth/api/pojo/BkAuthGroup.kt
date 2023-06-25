@@ -41,7 +41,8 @@ enum class BkAuthGroup(
     TESTER("tester", "测试人员"), // 测试人员
     PM("pm", "产品人员"), // 产品人员
     QC("qc", "质量管理员"), // 质量管理员
-    CI_MANAGER("ci_manager", "CI管理员,流水线组使用"); // CI 管理员
+    CI_MANAGER("ci_manager", "CI管理员,流水线组使用"), // CI 管理员
+    GRADE_ADMIN("gradeAdmin", "分级管理员"); // 分级管理员
 
     companion object {
         fun get(value: String): BkAuthGroup {

@@ -78,7 +78,8 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        async: Boolean
+        async: Boolean,
+        registerMonitorPermission: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
@@ -93,7 +94,8 @@ class RbacPermissionResourceService(
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                registerMonitorPermission = registerMonitorPermission
             )
         } else {
             // 获取分级管理员信息
@@ -135,7 +137,8 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 iamResourceCode = iamResourceCode,
                 async = async,
-                managerId = managerId
+                managerId = managerId,
+                registerMonitorPermission = registerMonitorPermission
             )
         }
         return true
@@ -185,7 +188,8 @@ class RbacPermissionResourceService(
         resourceCode: String,
         iamResourceCode: String,
         async: Boolean,
-        managerId: Int
+        managerId: Int,
+        registerMonitorPermission: Boolean
     ) {
         if (async) {
             traceEventDispatcher.dispatch(
@@ -197,7 +201,8 @@ class RbacPermissionResourceService(
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     resourceName = resourceName,
-                    iamResourceCode = iamResourceCode
+                    iamResourceCode = iamResourceCode,
+                    registerMonitorPermission = registerMonitorPermission
                 )
             )
         } else {
@@ -207,7 +212,8 @@ class RbacPermissionResourceService(
                     gradeManagerId = managerId,
                     userId = userId,
                     projectCode = projectCode,
-                    projectName = projectName
+                    projectName = projectName,
+                    registerMonitorPermission = registerMonitorPermission
                 )
             } else {
                 permissionSubsetManagerService.createSubsetManagerDefaultGroup(

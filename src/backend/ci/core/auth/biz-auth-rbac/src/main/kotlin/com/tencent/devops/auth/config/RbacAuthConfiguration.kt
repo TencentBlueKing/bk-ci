@@ -28,10 +28,12 @@
 
 package com.tencent.devops.auth.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.HttpClientService
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.bk.sdk.iam.service.TokenService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
@@ -55,6 +57,7 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionApplyService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
+import com.tencent.devops.auth.service.RbacPermissionMonitorService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
@@ -415,4 +418,15 @@ class RbacAuthConfiguration {
 
     @Bean
     fun migrateCreatorFixService() = MigrateCreatorFixServiceImpl()
+
+    @Bean
+    fun rbacPermissionMonitorService(
+        systemService: SystemService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        objectMapper: ObjectMapper
+    ) = RbacPermissionMonitorService(
+        systemService = systemService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        objectMapper = objectMapper
+    )
 }

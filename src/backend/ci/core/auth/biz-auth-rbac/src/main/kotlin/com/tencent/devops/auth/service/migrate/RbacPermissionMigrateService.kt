@@ -383,7 +383,9 @@ class RbacPermissionMigrateService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectInfo.projectName,
-            async = false
+            async = false,
+            // todo 仅仅对一年内有构建量的项目注册监控权限资源
+            registerMonitorPermission = true
         )
         return authResourceService.getOrNull(
             projectCode = projectCode,

@@ -40,6 +40,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -53,7 +54,8 @@ class PermissionGroupPoliciesService(
     private val authActionDao: AuthActionDao,
     private val dslContext: DSLContext,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val authMonitorService: AuthMonitorService
 ) {
 
     companion object {
@@ -90,17 +92,29 @@ class PermissionGroupPoliciesService(
         authorizationScopesStr: String,
         projectCode: String,
         projectName: String,
+        resourceType: String,
+        groupCode: String,
         iamResourceCode: String,
         resourceName: String,
-        iamGroupId: Int
+        iamGroupId: Int,
+        registerMonitorPermission: Boolean = true
     ) {
-        val authorizationScopes = buildAuthorizationScopes(
+        var authorizationScopes = buildAuthorizationScopes(
             authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
+        if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
+            // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
+            val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = groupCode
+            )
+            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+        }
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }

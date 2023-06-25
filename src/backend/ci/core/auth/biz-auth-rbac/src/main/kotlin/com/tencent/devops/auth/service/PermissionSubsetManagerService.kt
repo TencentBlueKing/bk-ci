@@ -255,6 +255,8 @@ class PermissionSubsetManagerService @Autowired constructor(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,
+                resourceType = groupConfig.resourceType,
+                groupCode = groupConfig.groupCode,
                 iamResourceCode = iamResourceCode,
                 resourceName = resourceName,
                 iamGroupId = iamGroupId

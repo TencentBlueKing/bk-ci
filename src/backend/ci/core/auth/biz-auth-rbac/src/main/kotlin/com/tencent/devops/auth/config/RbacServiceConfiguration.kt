@@ -38,6 +38,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.service.AuthMonitorService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
@@ -103,7 +104,8 @@ class RbacServiceConfiguration {
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         traceEventDispatcher: TraceEventDispatcher,
-        itsmService: ItsmService
+        itsmService: ItsmService,
+        authMonitorService: AuthMonitorService
     ) = PermissionGradeManagerService(
         client = client,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
@@ -115,7 +117,8 @@ class RbacServiceConfiguration {
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         traceEventDispatcher = traceEventDispatcher,
-        itsmService = itsmService
+        itsmService = itsmService,
+        authMonitorService = authMonitorService
     )
 
     @Bean
@@ -125,14 +128,16 @@ class RbacServiceConfiguration {
         authActionDao: AuthActionDao,
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupDao: AuthResourceGroupDao
+        authResourceGroupDao: AuthResourceGroupDao,
+        authMonitorService: AuthMonitorService
     ) = PermissionGroupPoliciesService(
         iamConfiguration = iamConfiguration,
         iamV2ManagerService = iamV2ManagerService,
         authActionDao = authActionDao,
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupDao = authResourceGroupDao
+        authResourceGroupDao = authResourceGroupDao,
+        authMonitorService = authMonitorService
     )
 
     @Bean

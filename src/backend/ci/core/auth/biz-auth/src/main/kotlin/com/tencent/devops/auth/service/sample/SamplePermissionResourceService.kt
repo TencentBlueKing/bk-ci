@@ -39,7 +39,8 @@ class SamplePermissionResourceService : PermissionResourceService {
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        async: Boolean
+        async: Boolean,
+        registerMonitorPermission: Boolean
     ) = true
 
     override fun resourceModifyRelation(

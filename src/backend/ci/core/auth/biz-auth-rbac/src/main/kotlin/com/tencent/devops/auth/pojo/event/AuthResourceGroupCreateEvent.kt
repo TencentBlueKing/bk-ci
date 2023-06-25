@@ -49,5 +49,7 @@ data class AuthResourceGroupCreateEvent(
     @ApiModelProperty("iam资源ID")
     val iamResourceCode: String,
     @ApiModelProperty("资源名")
-    val resourceName: String
+    val resourceName: String,
+    @ApiModelProperty("是否注册监控相关资源")
+    val registerMonitorPermission: Boolean = true
 ) : ITraceEvent()

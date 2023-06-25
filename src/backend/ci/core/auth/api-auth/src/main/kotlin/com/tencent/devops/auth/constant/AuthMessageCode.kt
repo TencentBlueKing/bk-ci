@@ -110,4 +110,8 @@ object AuthMessageCode {
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121061" // 迁移项目{0}失败,权限策略对比失败
     const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人离职
     const val ERROR_RESOURCE_CREATE_FAIL = "2121063" // 资源创建失败
+
+    const val ERROR_MONITOR_SPACE_NOT_EXIST = "2121064" // 监控空间不存在
+    const val ERROR_MONITOR_READ_ONLY_ACTIONS_NOT_EXIST = "2121065" // 业务只读组不存在
+    const val ERROR_MONITOR_OPS_ACTIONS_NOT_EXIST = "2121066" // 业务运维组不存在
 }
