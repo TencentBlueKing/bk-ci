@@ -484,13 +484,16 @@ class PipelineContainerService @Autowired constructor(
                 }
 
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
+                val skipWhenFailed = context.inSkipStage(stage, atomElement)
+                val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
+                val recordStatus = if (skipWhenFailed) BuildStatus.FAILED.name else null
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
                     retryStartTaskId = atomElement.id!!,
                     executeCount = context.executeCount,
                     atomElement = atomElement, // #4245 将失败跳过的插件置为跳过
-                    initialStatus = if (context.inSkipStage(stage, atomElement)) BuildStatus.SKIP else null
+                    initialStatus = buildStatus
                 )
 
                 if (taskRecord != null) {
@@ -510,6 +513,21 @@ class PipelineContainerService @Autowired constructor(
                             updateExistsTask.add(pair.first)
                         }
                     }
+                    // #8955 针对被跳过或重试插件单独保留原状态
+                    taskBuildRecords.add(
+                        BuildRecordTask(
+                            projectId = context.projectId, pipelineId = context.pipelineId,
+                            buildId = context.buildId, stageId = taskRecord.stageId,
+                            containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
+                            taskId = taskRecord.taskId, classType = taskRecord.taskType,
+                            atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
+                            executeCount = taskRecord.executeCount ?: 1, taskVar = mutableMapOf(),
+                            status = recordStatus, resourceVersion = context.resourceVersion,
+                            elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
+                                info.parentElementId != taskRecord.taskId
+                            }
+                        )
+                    )
                     needUpdateContainer = true
                 } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
