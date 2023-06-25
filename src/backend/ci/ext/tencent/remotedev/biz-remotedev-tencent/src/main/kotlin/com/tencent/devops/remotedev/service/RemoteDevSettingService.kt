@@ -113,6 +113,7 @@ class RemoteDevSettingService @Autowired constructor(
         return setting.userSetting
     }
     fun getAllUserSetting4Op(): List<RemoteDevUserSettings> {
+        logger.info("Start to getAllUserSetting4Op")
         return remoteDevSettingDao.fetchAllUserSettings(dslContext)
     }
 }

@@ -116,8 +116,7 @@ class RemoteDevSettingDao {
     ): List<RemoteDevUserSettings> {
         val remoteDevUserSettingsList = mutableListOf<RemoteDevUserSettings>()
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(USER_SETTING).from(this).fetch().let {
-
+            dslContext.select(USER_SETTING).from(this).where(USER_SETTING.isNotNull).fetch().let {
                 remoteDevUserSettingsList.add(
                     JsonUtil.toOrNull(
                         it.toString(), RemoteDevUserSettings::class.java
