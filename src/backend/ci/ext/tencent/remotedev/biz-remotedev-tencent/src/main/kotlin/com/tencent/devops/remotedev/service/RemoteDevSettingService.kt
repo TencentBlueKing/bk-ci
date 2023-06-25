@@ -29,9 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
@@ -42,7 +40,6 @@ import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -122,7 +119,7 @@ class RemoteDevSettingService @Autowired constructor(
         remoteDevSettingDao.fetchAllUserSettings(
             dslContext
         ).parallelStream().forEach {
-            val setting =  JsonUtil.toOrNull(
+            val setting = JsonUtil.toOrNull(
                 it.userSetting, RemoteDevUserSettings::class.java
             ) ?: RemoteDevUserSettings()
             setting.userId = it.userId
