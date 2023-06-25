@@ -1,10 +1,13 @@
 package com.tencent.devops.remotedev.filter.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
 import org.slf4j.LoggerFactory
@@ -18,7 +21,8 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 class WhitelistApiFilter constructor(
-    private val cacheService: RedisCacheService
+    private val cacheService: RedisCacheService,
+    private val client: Client
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(WhitelistApiFilter::class.java)
@@ -62,7 +66,14 @@ class WhitelistApiFilter constructor(
             )
             return true
         }
-        if (cacheService.getSetMembers(REDIS_WHITE_LIST_KEY)?.contains(userId) != true) {
+        // 获取用户的信息，根据 bg 名称加白
+        val userInfo = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(userId)
+        }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
+
+        if (!listOf(userId, userInfo?.bgName).any {
+                cacheService.getSetMembers(REDIS_WHITE_LIST_KEY)?.contains(it) == true
+            }) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }
