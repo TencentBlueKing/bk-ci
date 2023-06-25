@@ -82,7 +82,7 @@ class RbacPipelinePermissionService constructor(
             )
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
                     "$userId|$projectId|$pipelineId|$permission"
             )
         }
@@ -208,7 +208,7 @@ class RbacPipelinePermissionService constructor(
             }
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get resource by permission" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to get resource by permission|" +
                     "$userId|$projectId|$permission"
             )
         }
@@ -234,7 +234,7 @@ class RbacPipelinePermissionService constructor(
             )
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to filter pipeline" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to filter pipeline|" +
                     "$userId|$projectId|$authPermissions"
             )
         }

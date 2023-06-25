@@ -203,6 +203,21 @@ class AuthResourceDao {
         }
     }
 
+    fun count(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceName: String?,
+        resourceType: String
+    ): Long {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectCount()
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun getResourceCodeByIamCodes(
         dslContext: DSLContext,
         projectCode: String,
