@@ -99,7 +99,7 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val itsmService: ItsmService,
-    private val authMonitorService: AuthMonitorService,
+    private val authMonitorService: AuthMonitorService
 ) {
 
     companion object {
@@ -172,6 +172,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 )
                 authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
             }
+            logger.info("PermissionGradeManagerService|createGradeManager|$authorizationScopes")
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -280,6 +281,7 @@ class PermissionGradeManagerService @Autowired constructor(
             creator = projectApprovalInfo.creator!!,
             bkciManagerGroupConfig = groupConfig.authorizationScopes
         )
+        logger.info("PermissionGradeManagerService|modifyGradeManager|$authorizationScopes")
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)

@@ -566,7 +566,7 @@ abstract class AbMigratePolicyService(
             iamResourceCode = projectCode,
             resourceName = projectName,
             iamGroupId = iamGroupId,
-            //todo 只对近一年有构建历史的项目注册监控信息
+            // todo 只对近一年有构建历史的项目注册监控信息
             registerMonitorPermission = true
         )
         return iamGroupId

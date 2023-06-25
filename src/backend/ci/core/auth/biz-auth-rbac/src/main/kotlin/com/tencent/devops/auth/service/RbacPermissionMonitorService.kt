@@ -51,8 +51,14 @@ class RbacPermissionMonitorService constructor(
         groupCode: String,
         userId: String?
     ): List<AuthorizationScopes> {
-        val monitorSpaceDetailVO = getOrCreateMonitorSpace(projectName, projectCode, groupCode, userId)
+        val monitorSpaceDetailVO = getOrCreateMonitorSpace(
+            projectName = projectName,
+            projectCode = projectCode,
+            groupCode = groupCode,
+            userId = userId
+        )
         val spaceBizId = monitorSpaceDetailVO.id
+        logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$monitorSpaceDetailVO")
         return permissionGroupPoliciesService.buildAuthorizationScopes(
             authorizationScopesStr = getMonitorGroupConfig(groupCode)!!,
             projectCode = "-$spaceBizId",
@@ -68,6 +74,7 @@ class RbacPermissionMonitorService constructor(
         groupCode: String,
         userId: String?
     ): MonitorSpaceDetailVO {
+        logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
         val spaceUid = "${appCode}__$projectCode"
         val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
         if (monitorSpaceDetailVO != null) {
@@ -110,15 +117,16 @@ class RbacPermissionMonitorService constructor(
         if (monitorSpaceDetailData == null)
             return null
         val monitorSpaceDetailMap = monitorSpaceDetailData as Map<*, *>
-        val monitorSpaceDetailVO = MonitorSpaceDetailVO(
-            id = monitorSpaceDetailMap["id"]?.toString()?.toLong(),
-            spaceName = monitorSpaceDetailMap["space_name"] as String?,
-            spaceTypeId = monitorSpaceDetailMap["space_type_id"] as String?,
-            spaceId = monitorSpaceDetailMap["space_id"] as String?,
-            spaceUid = monitorSpaceDetailMap["space_uid"] as String?,
-            status = monitorSpaceDetailMap["status"] as String?,
-            creator = monitorSpaceDetailMap["creator"] as String?,
-        )
+        val monitorSpaceDetailVO =
+            MonitorSpaceDetailVO(
+                id = monitorSpaceDetailMap["id"]?.toString()?.toLong(),
+                spaceName = monitorSpaceDetailMap["space_name"] as String?,
+                spaceTypeId = monitorSpaceDetailMap["space_type_id"] as String?,
+                spaceId = monitorSpaceDetailMap["space_id"] as String?,
+                spaceUid = monitorSpaceDetailMap["space_uid"] as String?,
+                status = monitorSpaceDetailMap["status"] as String?,
+                creator = monitorSpaceDetailMap["creator"] as String?,
+            )
         logger.info("generateMonitorSpaceDetail:monitorSpaceDetailVO($monitorSpaceDetailVO)")
         return monitorSpaceDetailVO
     }
