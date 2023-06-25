@@ -131,10 +131,14 @@ interface OpRemoteDevResource {
         userId: String
     ): Result<RemoteDevUserSettings>
 
-    @ApiOperation("获取用户设置列表")
+    @ApiOperation("获取所有用户设置列表")
     @GET
-    @Path("/list_user_settings")
-    fun listUserSettings(): Result<List<RemoteDevUserSettings>>
+    @Path("/get_all_user_settings")
+    fun getAllUserSettings(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<RemoteDevUserSettings>>
 
     @ApiOperation("更新用户组织架构")
     @POST
