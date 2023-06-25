@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("远程开发用户配置")
 data class RemoteDevUserSettings(
+    @ApiModelProperty("用户信息，用于OP页面操作")
+    var userId: String? = null,
     @ApiModelProperty("设置是否仅使用云端IDE")
     var onlyCloudIDE: Boolean = false,
     @ApiModelProperty("最大运行数")

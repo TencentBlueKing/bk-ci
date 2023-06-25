@@ -111,6 +111,23 @@ class RemoteDevSettingDao {
         }
     }
 
+    fun fetchAllUserSettings(
+        dslContext: DSLContext
+    ): List<RemoteDevUserSettings> {
+        val remoteDevUserSettingsList = mutableListOf<RemoteDevUserSettings>()
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.select(USER_SETTING).from(this).fetch().let {
+
+                remoteDevUserSettingsList.add(
+                    JsonUtil.toOrNull(
+                        it.toString(), RemoteDevUserSettings::class.java
+                    ) ?: RemoteDevUserSettings()
+                )
+            }
+        }
+        return remoteDevUserSettingsList
+    }
+
     fun updateProjectId(
         dslContext: DSLContext,
         userId: String,

@@ -112,4 +112,7 @@ class RemoteDevSettingService @Autowired constructor(
         val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
         return setting.userSetting
     }
+    fun getAllUserSetting4Op(): List<RemoteDevUserSettings> {
+        return remoteDevSettingDao.fetchAllUserSettings(dslContext)
+    }
 }
