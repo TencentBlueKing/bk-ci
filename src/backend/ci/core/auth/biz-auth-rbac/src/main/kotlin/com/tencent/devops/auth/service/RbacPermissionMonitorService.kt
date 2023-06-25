@@ -125,7 +125,7 @@ class RbacPermissionMonitorService constructor(
                 spaceId = monitorSpaceDetailMap["space_id"] as String?,
                 spaceUid = monitorSpaceDetailMap["space_uid"] as String?,
                 status = monitorSpaceDetailMap["status"] as String?,
-                creator = monitorSpaceDetailMap["creator"] as String?,
+                creator = monitorSpaceDetailMap["creator"] as String?
             )
         logger.info("generateMonitorSpaceDetail:monitorSpaceDetailVO($monitorSpaceDetailVO)")
         return monitorSpaceDetailVO

@@ -290,8 +290,8 @@ class PermissionGradeManagerService @Autowired constructor(
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
         // 当创建项目时，注册监控权限，修改分级管理员，不走审批流程
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status
-            || registerMonitorPermissionWhenCreate) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status ||
+            registerMonitorPermissionWhenCreate) {
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
