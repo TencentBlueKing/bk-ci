@@ -115,17 +115,13 @@ class RemoteDevSettingService @Autowired constructor(
     }
     fun getAllUserSetting4Op(): List<RemoteDevUserSettings> {
         logger.info("Start to getAllUserSetting4Op")
-        val result = mutableListOf<RemoteDevUserSettings>()
-        remoteDevSettingDao.fetchAllUserSettings(
-            dslContext
-        ).parallelStream().forEach {
-            val setting = JsonUtil.toOrNull(
-                it.userSetting, RemoteDevUserSettings::class.java
-            ) ?: RemoteDevUserSettings()
-            setting.userId = it.userId
-            result.add(setting)
-        }
-        logger.info("getAllUserSetting4Op|result|$result")
-        return result
+        val settings = remoteDevSettingDao.fetchAllUserSettings(dslContext)
+            .mapNotNull {
+                JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.apply {
+                    userId = it.userId
+                }
+            }
+        logger.info("getAllUserSetting4Op|result|$settings")
+        return settings
     }
 }
