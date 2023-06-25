@@ -263,6 +263,9 @@
   },
   "atomManage": {
     "installedAtom": "已安装插件",
+    "initAtomTips": "该插件在此项目中初始化，无法卸载",
+    "testAtomTips": "协作开发插件期间，无法卸载",
+    "commonAtomTips": "非项目所有者、非插件安装者，无法卸载",
     "moreAtom": "发现更多插件",
     "relatedNumTips": "关联{0}条流水线",
     "noPermToUninstall": "无权限卸载",
@@ -332,7 +335,7 @@
     "additionUserPlaceholder": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
     "noticeContent": "通知内容",
     "pipelineLink": "通知内容附加流水线链接",
-    "pipelineLinkDesc": "若勾选，则会在企业微信、微信、短信通知的末尾加上相应构建详情的流水线链接",
+    "pipelineLinkDesc": "若勾选，则会在企业微信消息通知的末尾加上相应构建详情的流水线链接",
     "enableGroup": "启用企业微信群通知",
     "groupIdTips": "请输入群ID,多个群ID以分号隔开",
     "groupIdDesc": "可发通知至企业微信群。群ID获取方法：将'DevOpsRobot(蓝盾机器人)' 拉进群，手动@DevOpsRobot(蓝盾机器人)并输入关键字'会话ID',发送后即可获取群ID ",

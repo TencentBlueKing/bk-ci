@@ -49,12 +49,12 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('status')" :render-header="statusHeader" prop="status">
                         <template slot-scope="props">
-                            <div class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
+                            <div v-bk-overflow-tips class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
                                 {{ statusMap[props.row.status] && statusMap[props.row.status].label }}
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('lastModify')" prop="updateTime">
+                    <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
                         <template slot-scope="props">
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
@@ -453,7 +453,7 @@
                 cursor: pointer;
             }
             .status-card {
-                width: 68px;
+                max-width: 120px;
                 font-size: 12px;
                 text-align: center;
                 color: #fff;
