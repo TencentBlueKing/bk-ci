@@ -211,6 +211,7 @@ class AuthResourceDao {
     ): Long {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectCount()
+                .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
