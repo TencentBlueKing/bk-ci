@@ -37,14 +37,18 @@ class AuthVerifyRecordService @Autowired constructor(
     fun deleteVerifyRecord(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        userId: String? = null,
+        action: String? = null
     ) {
         logger.info("delete verify record!|$projectCode|$resourceType|$resourceCode")
         authVerifyRecordDao.delete(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
-            resourceCode = resourceCode
+            resourceCode = resourceCode,
+            userId = userId,
+            action = action
         )
     }
 

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 /**
@@ -60,4 +61,9 @@ interface PermissionMigrateService {
      * 按条件升级到rbac权限
      */
     fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+
+    /**
+     * 修正迁移鉴权结果
+     */
+    fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean
 }

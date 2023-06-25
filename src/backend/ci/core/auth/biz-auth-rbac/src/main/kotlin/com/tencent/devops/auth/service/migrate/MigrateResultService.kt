@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.migrate
 
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -131,6 +132,18 @@ class MigrateResultService constructor(
             hasMore = limit == verifyRecordList.size
             offset += limit
         }
+        return true
+    }
+
+    fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean {
+        authVerifyRecordService.deleteVerifyRecord(
+            projectCode = verifyRecordDTO.projectId,
+            resourceType = verifyRecordDTO.resourceType,
+            resourceCode = verifyRecordDTO.resourceCode,
+            userId = verifyRecordDTO.userId,
+            action = verifyRecordDTO.action
+        )
+        compare(verifyRecordDTO.projectId)
         return true
     }
 }
