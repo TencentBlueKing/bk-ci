@@ -44,7 +44,7 @@
                             <div class="bk-form-item item-notice">
                                 <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
                                 <div class="bk-form-content">
-                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
+                                    <bk-checkbox-group class="checkbox-group" :value="pipelineSubscription.types" @change="handleCheckNoticeType">
                                         <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value">
                                             {{ item.name }}
                                         </bk-checkbox>
@@ -139,7 +139,7 @@
                 curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
                 noticeList: [
                     { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ],
@@ -559,5 +559,10 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
+    }
+    .checkbox-group {
+        .bk-form-checkbox {
+            width: 250px !important;
+        }
     }
 </style>
