@@ -1,4 +1,4 @@
-package com.tencent.devops.project.pojo
+package com.tencent.devops.auth.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel

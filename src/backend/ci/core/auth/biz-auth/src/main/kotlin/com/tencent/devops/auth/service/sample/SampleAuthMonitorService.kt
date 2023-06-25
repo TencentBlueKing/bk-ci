@@ -1,9 +1,9 @@
 package com.tencent.devops.auth.service.sample
 
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
 import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
 import com.tencent.devops.auth.service.AuthMonitorService
-import com.tencent.devops.project.pojo.MonitorSpaceCreateInfo
 
 class SampleAuthMonitorService : AuthMonitorService {
     override fun generateMonitorAuthorizationScopes(
@@ -14,8 +14,7 @@ class SampleAuthMonitorService : AuthMonitorService {
     ): List<AuthorizationScopes> = emptyList()
 
     override fun createMonitorSpace(
-        monitorSpaceCreateInfo:
-        MonitorSpaceCreateInfo
+        monitorSpaceCreateInfo: MonitorSpaceCreateInfo
     ): MonitorSpaceDetailVO = MonitorSpaceDetailVO(0L, "", "", "", "", "", "")
 
     override fun getMonitorSpaceDetail(spaceUid: String)

@@ -1,8 +1,8 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
 import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
-import com.tencent.devops.project.pojo.MonitorSpaceCreateInfo
 
 /**
  * 蓝盾权限对接监控平台配置类
