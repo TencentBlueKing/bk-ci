@@ -429,7 +429,7 @@ class RbacAuthConfiguration {
     @Bean
     fun rbacPermissionMonitorService(
         systemService: SystemService,
-        objectMapper: ObjectMapper,
+        objectMapper: ObjectMapper
     ) = RbacPermissionMonitorService(
         systemService = systemService,
         objectMapper = objectMapper
