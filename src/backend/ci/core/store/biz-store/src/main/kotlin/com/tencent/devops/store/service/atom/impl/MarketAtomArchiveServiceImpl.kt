@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -39,12 +40,16 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.atom.AtomConfigInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
+import com.tencent.devops.store.pojo.atom.ReleaseInfo
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
+import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -105,14 +110,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
-        // 校验用户是否是该插件的开发成员
-        val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        if (!flag) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(atomCode)
-            )
-        }
+        logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
             return I18nUtil.generateResponseDataObject(
@@ -122,15 +120,30 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             )
         }
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        if (atomRecord.classType != atomCode) {
+            // 校验用户是否是该插件的开发成员
+            val flag = storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+            if (!flag) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PERMISSION_DENIED,
+                    params = arrayOf(atomCode)
+                )
+            }
+        }
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
             val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(
-                    atomRecord = atomRecord,
-                    releaseType = releaseType,
-                    osList = osList,
-                    version = version
-                )
+                atomRecord = atomRecord,
+                releaseType = releaseType,
+                osList = osList,
+                version = version
+            )
             logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
             if (validateAtomVersionResult.isNotOk()) {
                 return validateAtomVersionResult
@@ -210,17 +223,27 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean> {
         val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
+        val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
         val propsMap = mutableMapOf<String, Any?>()
-        propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
-        propsMap[KEY_INPUT] = taskDataMap[KEY_INPUT]
-        propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
-        propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
+        val releaseInfoMap = taskDataMap[KEY_RELEASE_INFO] as? Map<String, Any>
+        val configInfoMap = releaseInfoMap?.get(ReleaseInfo::configInfo.name) as? Map<String, Any>
+        val frontendType = configInfoMap?.get(AtomConfigInfo::frontendType.name) as? String
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (frontendType == FrontendTypeEnum.HISTORY.name) {
+            inputDataMap?.let { propsMap.putAll(inputDataMap) }
+        } else {
+            propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
+            propsMap[KEY_INPUT] = inputDataMap
+            propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
+            propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)

@@ -143,7 +143,7 @@
 </template>
 
 <script>
-    import { mapGetters, mapState } from 'vuex'
+    import { mapGetters } from 'vuex'
     import { deepCopy } from '@/utils/util'
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -240,9 +240,6 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'buildParamsMap'
-            ]),
             ...mapGetters('atom', [
                 'osList',
                 'getBuildResourceTypeList'
@@ -301,14 +298,6 @@
                     animation: 200,
                     disabled: this.disabled
                 }
-            },
-            buildParams () {
-                const { buildNo } = this.$route.params
-                return this.buildParamsMap[buildNo]
-            },
-            isExecDetail () {
-                const { buildNo } = this.$route.params
-                return !!buildNo
             }
         },
 
@@ -539,7 +528,6 @@
                     return []
                 }
             },
-
             // 全局参数添加遍历的key值
             getParams (params) {
                 const result = params.map(item => {

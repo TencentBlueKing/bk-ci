@@ -34,5 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("插件配置信息")
 data class AtomConfigInfo(
     @ApiModelProperty(value = "前端UI渲染方式", required = true)
-    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
+    @ApiModelProperty(value = "是否为默认插件", required = true)
+    val defaultFlag: Boolean = false
 )

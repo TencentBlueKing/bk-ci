@@ -141,7 +141,6 @@ object WorkerMessageCode {
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
-    const val BK_ARCHIVE_PLUGIN_FILE = "bkArchivePluginFile" // 归档插件文件
     const val BK_NO_FILES_TO_ARCHIVE = "bkNoFilesToArchive" // 脚本执行失败之后没有匹配到任何待归档文件
     // 每行命令运行返回值非零时，继续执行脚本
     const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero"

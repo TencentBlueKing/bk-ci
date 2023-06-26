@@ -101,4 +101,16 @@ class BuildLessConfig {
 
     @Value("\${gatewayHeaderTag:#{null}}")
     var gatewayHeaderTag: String? = null
+
+    /**
+     * 蓝盾网关配置
+     */
+    @Value("\${devopsGateway.idc:#{null}}")
+    var idcGateway: String? = null
+
+    /**
+     * bkrepo网关配置
+     */
+    @Value("\${devopsGateway.fileIdcGateway:#{null}}")
+    var fileIdcGateway: String? = null
 }

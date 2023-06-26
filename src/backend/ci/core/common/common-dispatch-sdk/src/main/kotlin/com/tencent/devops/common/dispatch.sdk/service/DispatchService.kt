@@ -40,15 +40,19 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_FILE_GATEWAY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_GATEWAY
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -68,7 +72,8 @@ class DispatchService constructor(
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val commonConfig: CommonConfig
 ) {
 
     fun log(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
@@ -100,6 +105,12 @@ class DispatchService constructor(
         customBuildEnv[ENV_KEY_PROJECT_ID] = event.projectId
         customBuildEnv[ENV_KEY_AGENT_ID] = secretInfo.hashId
         customBuildEnv[ENV_KEY_AGENT_SECRET_KEY] = secretInfo.secretKey
+        commonConfig.fileDevnetGateway?.let {
+            customBuildEnv[ENV_DEVOPS_FILE_GATEWAY] = it
+        }
+        commonConfig.devopsDevnetProxyGateway?.let {
+            customBuildEnv[ENV_DEVOPS_GATEWAY] = it
+        }
 
         return DispatchMessage(
             id = secretInfo.hashId,
@@ -185,7 +196,7 @@ class DispatchService constructor(
         }
     }
 
-    fun redispatch(event: PipelineAgentStartupEvent) {
+    fun redispatch(event: IPipelineEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }

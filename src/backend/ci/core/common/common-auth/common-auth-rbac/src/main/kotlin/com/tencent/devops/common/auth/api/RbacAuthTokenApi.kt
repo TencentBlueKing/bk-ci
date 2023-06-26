@@ -30,10 +30,10 @@ package com.tencent.devops.common.auth.api
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
-import java.nio.charset.Charset
-import java.util.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.nio.charset.Charset
+import java.util.Base64
 
 class RbacAuthTokenApi constructor(
     private val redisOperation: RedisOperation,

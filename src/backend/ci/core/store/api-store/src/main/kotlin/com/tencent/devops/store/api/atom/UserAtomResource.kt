@@ -68,9 +68,7 @@ interface UserAtomResource {
     @GET
     @Path("/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listAllPipelineAtoms(
         @ApiParam("token", required = true)
@@ -125,9 +123,7 @@ interface UserAtomResource {
     @GET
     @Path("/{projectCode}/{atomCode}/{version}")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getPipelineAtom(
         @ApiParam("项目代码", required = true)
@@ -160,9 +156,7 @@ interface UserAtomResource {
     @GET
     @Path("/projectCodes/{projectCode}/installedAtoms/list")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun getInstalledAtoms(
         @ApiParam("userId", required = true)

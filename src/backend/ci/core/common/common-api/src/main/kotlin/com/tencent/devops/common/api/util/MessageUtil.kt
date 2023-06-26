@@ -36,6 +36,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
+import java.net.URLDecoder
 
 object MessageUtil {
 
@@ -56,7 +57,8 @@ object MessageUtil {
         language: String,
         params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME,
-        defaultMessage: String? = null
+        defaultMessage: String? = null,
+        checkUrlDecoder: Boolean = false
     ): String {
         var message: String? = null
         try {
@@ -78,7 +80,8 @@ object MessageUtil {
             // 根据参数动态替换状态码描述里的占位符
             message = mf.format(params)
         }
-        return message ?: defaultMessage ?: ""
+        val res = message ?: defaultMessage ?: ""
+        return if (checkUrlDecoder) URLDecoder.decode(res, "UTF-8") else res
     }
 
     /**
@@ -339,5 +342,16 @@ object MessageUtil {
             }
             bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = itemEntity, fieldPath = newFieldPath))
         }
+    }
+
+    /**
+     * 获取前缀名称中的动态参数
+     * @param prefixName 前缀名称
+     * @return 动态参数
+     */
+    fun getPrefixNameVar(prefixName: String): String? {
+        val regex = Regex("\\{(.*)}")
+        val matchResult = regex.find(prefixName)
+        return matchResult?.groupValues?.get(1)
     }
 }

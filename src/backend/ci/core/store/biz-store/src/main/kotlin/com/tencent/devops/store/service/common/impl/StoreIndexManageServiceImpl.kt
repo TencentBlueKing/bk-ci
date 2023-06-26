@@ -152,14 +152,14 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
-                )!!
+                ) ?: ""
                 val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
                     initProjectCode,
                     listOf(pipelineId)
                 ).data?.get(storePipelineRelRecord.pipelineId)
                 pipelineBuildInfo?.let {
-                    if (it.status == BuildStatus.PREPARE_ENV.statusName ||
-                        it.status == BuildStatus.RUNNING.statusName) {
+                    if (it.status == BuildStatus.PREPARE_ENV.name ||
+                        it.status == BuildStatus.RUNNING.name) {
                         client.get(ServiceBuildResource::class).manualShutdown(
                             userId = userId,
                             projectId = initProjectCode,
