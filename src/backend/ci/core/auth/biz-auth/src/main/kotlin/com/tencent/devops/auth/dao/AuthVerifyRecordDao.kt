@@ -77,8 +77,7 @@ class AuthVerifyRecordDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .let { if (action == null) it else it.and(ACTION.eq(action)) }
-            logger.info(deleteSql.sql)
-            deleteSql.execute()
+                .execute()
         }
     }
 
