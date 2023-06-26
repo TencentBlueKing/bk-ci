@@ -493,6 +493,7 @@ class WorkspaceService @Autowired constructor(
             )
         )
     }
+
     private fun checkAndFixExceptionWS(
         status: WorkspaceStatus,
         userId: String,
