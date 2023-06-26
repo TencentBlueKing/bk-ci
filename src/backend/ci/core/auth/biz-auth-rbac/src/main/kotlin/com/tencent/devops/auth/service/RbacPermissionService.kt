@@ -323,7 +323,13 @@ class RbacPermissionService constructor(
                     resourceType = resourceType
                 )
             }
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+            val useAction = if (!action.contains("_")) {
+                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+            } else {
+                action
+            }
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
