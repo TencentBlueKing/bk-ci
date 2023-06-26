@@ -7,7 +7,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
 import org.slf4j.LoggerFactory
