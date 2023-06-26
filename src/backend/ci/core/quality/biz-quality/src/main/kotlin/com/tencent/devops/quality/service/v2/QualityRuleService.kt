@@ -610,7 +610,9 @@ class QualityRuleService @Autowired constructor(
                     indicators.add(indicatorsMap[it]!!)
                 }
             }
-            logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.indicatorCode }}")
+            logger.info(
+                "serviceList rule indicator ids for project($projectId): ${indicators.map { it.indicatorCode }}"
+            )
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
             val indicatorThresholds = ruleDetail?.indicatorThresholds?.split(",") ?: listOf()
             val ruleIndicatorMap = ruleIndicators.mapIndexed { index, id ->
