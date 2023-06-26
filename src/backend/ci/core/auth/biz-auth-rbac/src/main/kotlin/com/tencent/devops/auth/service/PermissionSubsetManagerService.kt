@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
@@ -42,6 +43,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +54,8 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceNameConverter: AuthResourceNameConverter
+    private val authResourceNameConverter: AuthResourceNameConverter,
+    private val iamConfiguration: IamConfiguration
 ) {
 
     companion object {
@@ -88,7 +91,8 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
         val description = managerGroupConfig.description
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        val authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -138,7 +142,8 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
 
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        val authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,

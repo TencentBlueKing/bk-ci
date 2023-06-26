@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -17,6 +18,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -27,7 +29,6 @@ import java.util.concurrent.TimeUnit
 @Suppress("LongParameterList")
 class RbacPermissionMonitorService constructor(
     private val systemService: SystemService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val objectMapper: ObjectMapper
 ) : AuthMonitorService {
     /*监控平台组配置*/
@@ -59,7 +60,8 @@ class RbacPermissionMonitorService constructor(
         )
         val spaceBizId = monitorSpaceDetailVO.id
         logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$monitorSpaceDetailVO")
-        return permissionGroupPoliciesService.buildAuthorizationScopes(
+        return RbacAuthUtils.buildAuthorizationScopes(
+            systemId = MONITOR_SYSTEM_ID,
             authorizationScopesStr = getMonitorGroupConfig(groupCode)!!,
             projectCode = "-$spaceBizId",
             projectName = projectName,

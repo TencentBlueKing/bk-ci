@@ -82,14 +82,16 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceNameConverter: AuthResourceNameConverter
+        authResourceNameConverter: AuthResourceNameConverter,
+        iamConfiguration: IamConfiguration
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         iamV2ManagerService = iamV2ManagerService,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceNameConverter = authResourceNameConverter
+        authResourceNameConverter = authResourceNameConverter,
+        iamConfiguration = iamConfiguration
     )
 
     @Bean
@@ -128,14 +130,16 @@ class RbacServiceConfiguration {
         authActionDao: AuthActionDao,
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupDao: AuthResourceGroupDao
+        authResourceGroupDao: AuthResourceGroupDao,
+        authMonitorService: AuthMonitorService
     ) = PermissionGroupPoliciesService(
         iamConfiguration = iamConfiguration,
         iamV2ManagerService = iamV2ManagerService,
         authActionDao = authActionDao,
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupDao = authResourceGroupDao
+        authResourceGroupDao = authResourceGroupDao,
+        authMonitorService = authMonitorService
     )
 
     @Bean

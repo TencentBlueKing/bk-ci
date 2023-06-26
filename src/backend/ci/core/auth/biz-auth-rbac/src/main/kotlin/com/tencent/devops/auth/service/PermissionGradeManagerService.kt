@@ -74,6 +74,7 @@ import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS_NAME
 import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -146,7 +147,8 @@ class PermissionGradeManagerService @Autowired constructor(
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
         val description = manageGroupConfig.description
-        var authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        var authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -371,7 +373,8 @@ class PermissionGradeManagerService @Autowired constructor(
         creator: String,
         bkciManagerGroupConfig: String
     ): List<AuthorizationScopes> {
-        val bkciAuthorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        val bkciAuthorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
             authorizationScopesStr = bkciManagerGroupConfig,
             projectCode = projectCode,
             projectName = projectName,

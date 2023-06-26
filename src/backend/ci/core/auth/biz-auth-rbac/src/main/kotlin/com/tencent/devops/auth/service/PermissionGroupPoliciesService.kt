@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST
@@ -40,8 +39,9 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 
 /**
  * 权限组策略
@@ -53,39 +53,9 @@ class PermissionGroupPoliciesService(
     private val authActionDao: AuthActionDao,
     private val dslContext: DSLContext,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val authMonitorService: AuthMonitorService
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PermissionGroupPoliciesService::class.java)
-        private const val SYSTEM_PLACEHOLDER = "#system#"
-        private const val PROJECT_ID_PLACEHOLDER = "#projectId#"
-        private const val PROJECT_NAME_PLACEHOLDER = "#projectName#"
-        private const val RESOURCE_CODE_PLACEHOLDER = "#resourceCode#"
-        private const val RESOURCE_NAME_PLACEHOLDER = "#resourceName#"
-    }
-
-    /**
-     * 构建分级管理员或分级管理员用户组授权范围
-     */
-    fun buildAuthorizationScopes(
-        authorizationScopesStr: String,
-        projectCode: String,
-        projectName: String,
-        iamResourceCode: String,
-        resourceName: String
-    ): List<AuthorizationScopes> {
-        val replaceAuthorizationScopesStr =
-            authorizationScopesStr.replace(SYSTEM_PLACEHOLDER, iamConfiguration.systemId)
-                .replace(PROJECT_ID_PLACEHOLDER, projectCode)
-                .replace(PROJECT_NAME_PLACEHOLDER, projectName)
-                .replace(RESOURCE_CODE_PLACEHOLDER, iamResourceCode)
-                // 如果资源名中有\,需要转义,不然json序列化时会报错
-                .replace(RESOURCE_NAME_PLACEHOLDER, resourceName.replace("\\", "\\\\"))
-        logger.info("$projectCode authorization scopes after replace $replaceAuthorizationScopesStr ")
-        return JsonUtil.to(replaceAuthorizationScopesStr, object : TypeReference<List<AuthorizationScopes>>() {})
-    }
-
     fun grantGroupPermission(
         authorizationScopesStr: String,
         projectCode: String,
@@ -97,14 +67,15 @@ class PermissionGroupPoliciesService(
         iamGroupId: Int,
         registerMonitorPermission: Boolean = true
     ) {
-        var authorizationScopes = buildAuthorizationScopes(
+        var authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
             authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
-        /*if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
+        if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
             val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
@@ -112,7 +83,7 @@ class PermissionGroupPoliciesService(
                 groupCode = groupCode
             )
             authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
-        }*/
+        }
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
