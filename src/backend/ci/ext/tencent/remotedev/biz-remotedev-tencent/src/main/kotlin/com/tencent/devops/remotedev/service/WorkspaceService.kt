@@ -399,7 +399,8 @@ class WorkspaceService @Autowired constructor(
                     logger.info("${workspace.name} is running.")
                     remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                     val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                        .getWorkspaceInfo(userId, workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
+                        .getWorkspaceInfo(userId, workspaceName,
+                            WorkspaceMountType.valueOf(workspace.workspaceMountType))
                     bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                     return WorkspaceResponse(
