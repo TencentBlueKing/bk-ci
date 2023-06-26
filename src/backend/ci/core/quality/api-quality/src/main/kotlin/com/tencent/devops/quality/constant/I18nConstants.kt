@@ -27,8 +27,13 @@
 
 package com.tencent.devops.quality.constant
 
-const val QUALITY_RULE_TEMPLATE_NAME_KEY = "quality.ruleTemplate.%s.name"
+const val QUALITY_RULE_TEMPLATE_NAME_KEY = "quality.ruleTemplate.%s.name" // $s == ID
 const val QUALITY_RULE_TEMPLATE_DESC_KEY = "quality.ruleTemplate.%S.desc"
+const val QUALITY_RULE_TEMPLATE_STAGE_KEY = "quality.ruleTemplate.%S.stage"
+const val QUALITY_CONTROL_POINT_NAME_KEY = "quality.controlPoint.%s.name"
+const val QUALITY_CONTROL_POINT_STAGE_KEY = "quality.controlPoint.%s.stage"
+const val BK_BEFORE_POSITION = "bkBeforePosition" // 准入-满足条件才能执行控制点
+const val BK_AFTER_POSITION = "bkAfterPosition" // 准出-满足条件才能执行后续插件
 const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup" // 项目下无Quality用户组
 const val BK_PASSED = "bkPassed" // 已通过：
 const val BK_BLOCKED = "bkBlocked" // 已拦截：

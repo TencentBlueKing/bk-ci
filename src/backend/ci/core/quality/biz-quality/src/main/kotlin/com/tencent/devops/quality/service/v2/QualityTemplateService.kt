@@ -41,8 +41,10 @@ import com.tencent.devops.quality.api.v2.pojo.RuleTemplate
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateData
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateIndicatorMap
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdateData
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_NAME_KEY
 import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_DESC_KEY
 import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_STAGE_KEY
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
@@ -144,9 +146,17 @@ class QualityTemplateService @Autowired constructor(
                     defaultMessage = record.desc
                 ),
                 indicators = indicators,
-                stage = record.stage,
+                stage = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_STAGE_KEY.format("${record.id}"),
+                    defaultMessage = record.stage
+                ),
                 controlPoint = record.controlPoint,
-                controlPointName = controlPoint?.name ?: "",
+                controlPointName = controlPoint?.let {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.id}"),
+                        defaultMessage = it.name
+                    )
+                } ?: "",
                 controlPointPosition = ControlPointPosition(record.controlPointPosition),
                 availablePosition = listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
             )
@@ -154,7 +164,14 @@ class QualityTemplateService @Autowired constructor(
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
-        val controlPointMap = controlPointService.listAllControlPoint().map { it.elementType to it }.toMap()
+        val controlPointMap = controlPointService.listAllControlPoint().map {
+            it.name = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.id}"),
+                defaultMessage = it.name,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+            it.elementType to it
+        }.toMap()
 
         val data = ruleTemplateDao.list(userId, page!!, pageSize!!, dslContext).map { record ->
             val templateIndicatorMap = ruleTemplateIndicatorDao.listByTemplateId(record.id, dslContext)
@@ -179,14 +196,20 @@ class QualityTemplateService @Autowired constructor(
                 id = record.id,
                 name = I18nUtil.getCodeLanMessage(
                     messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
-                    defaultMessage = record.name
+                    defaultMessage = record.name,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 type = record.type,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
-                    defaultMessage = record.desc
+                    defaultMessage = record.desc,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ),
-                stage = record.stage,
+                stage = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_STAGE_KEY.format("${record.id}"),
+                    defaultMessage = record.stage,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 elementType = record.controlPoint,
                 elementName = controlPointMap[record.controlPoint]?.name,
                 controlPointPostion = record.controlPointPosition,
