@@ -17,7 +17,7 @@ class SQLCheckListener : DefaultExecuteListener() {
 
     @SuppressWarnings("NestedBlockDepth", "TooGenericExceptionCaught")
     fun check(sql: String, ctx: ExecuteContext? = null) {
-        val checkRegex = "^(?i:(UPDATE|DELETE|SELECT)(?!.* WHERE ).*)$".toRegex()
+        val checkRegex = "^(?i:(UPDATE|DELETE|SELECT).*)$".toRegex()
         val noWhereRegex = "(?!.* WHERE ).*".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
