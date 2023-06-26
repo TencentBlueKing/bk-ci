@@ -460,7 +460,6 @@ class WorkspaceService @Autowired constructor(
                         workspaceHost = "",
                         status = WorkspaceAction.STARTING
                     )
-
                 }
             }
         }
