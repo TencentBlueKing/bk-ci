@@ -14,6 +14,9 @@ if bk_token == nil then
     bk_token = ngx.var.http_x_devops_bk_token
 end
 if bk_token == nil then
+    bk_token = urlUtil:parseUrl(ngx.var.request_uri)["x-devops-bk-token"]
+  end
+if bk_token == nil then
     ngx.log(ngx.STDERR, "failed to read user request bk_token ", err)
     ngx.exit(401)
     return
