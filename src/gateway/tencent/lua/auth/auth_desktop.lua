@@ -11,6 +11,9 @@
 --- 获取Cookie中bk_token
 local bk_token, err = cookieUtil:get_cookie("bk_token")
 if bk_token == nil then
+    bk_token = ngx.var.http_bk_token
+end
+if bk_token == nil then
     ngx.log(ngx.STDERR, "failed to read user request bk_token ", err)
     ngx.exit(401)
     return
