@@ -67,17 +67,11 @@ class WhitelistApiFilter constructor(
         }
         // 获取用户的信息，根据 bg 名称加白,先判断人名是否在白名单，不在的话再判断bg名称是否。
         val whiteList = cacheService.getSetMembers(REDIS_WHITE_LIST_KEY) ?: emptySet()
-        if (userId !in whiteList) {
-            val userInfo = runCatching {
-                client.get(ServiceTxUserResource::class).get(userId)
-            }.onFailure {
-                logger.warn("get $userId info error|${it.message}")
-            }.getOrElse { null }?.data
-
-            if (userInfo?.bgName !in whiteList) {
-                logger.info("user($userId)wants to access the resource($path), but is blocked.")
-                return false
-            }
+        if (userId !in whiteList && runCatching { client.get(ServiceTxUserResource::class).get(userId) }
+                .onFailure { logger.warn("get $userId info error|${it.message}") }
+                .getOrNull()?.data?.bgName !in whiteList) {
+            logger.info("user($userId)wants to access the resource($path), but is blocked.")
+            return false
         }
         return true
     }
