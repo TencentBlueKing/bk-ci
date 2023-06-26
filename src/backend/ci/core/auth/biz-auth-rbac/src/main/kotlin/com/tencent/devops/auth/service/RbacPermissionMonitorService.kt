@@ -250,17 +250,17 @@ class RbacPermissionMonitorService constructor(
             POST_METHOD -> requestBuilder.post(requestBody!!)
         }
         OkhttpUtils.doHttp(requestBuilder.build()).use {
-            if (!it.isSuccessful) {
+            /*if (!it.isSuccessful) {
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
-            }
+            }*/
             val responseStr = it.body!!.string()
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
-            if (responseDTO.code != 0L) {
+            /*if (responseDTO.code != 0L) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
-            }
+            }*/
             logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return responseDTO
         }
