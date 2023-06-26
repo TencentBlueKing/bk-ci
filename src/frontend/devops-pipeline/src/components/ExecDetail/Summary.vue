@@ -1,10 +1,10 @@
 <template>
     <header class="exec-detail-summary">
-        <div class="exec-detail-summary-info">
+        <div v-if="visible" class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
-                <span class="exec-detail-summary-info-block-title">{{
-                    $t("details.triggerRepo")
-                }}</span>
+                <span class="exec-detail-summary-info-block-title">
+                    {{ $t("details.triggerRepo") }}
+                </span>
                 <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
                     <material-item
                         class="visible-material-row"
@@ -84,15 +84,15 @@
 </template>
 
 <script>
+    import { convertMStoString } from '@/utils/util'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
-    import { convertMStoString } from '@/utils/util'
     export default {
         components: {
             MaterialItem
         },
         props: {
-            showInfoRow: {
+            visible: {
                 type: Boolean,
                 default: true
             },
@@ -188,7 +188,8 @@
 
 .exec-detail-summary {
   background: white;
-  padding: 0 24px 18px 24px;
+  position: relative;
+  padding: 0 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   &-info {
     display: grid;
@@ -196,6 +197,7 @@
     grid-template-columns: 8fr 8fr 3fr minmax(168px, 4fr);
     font-size: 12px;
     grid-gap: 100px;
+    padding-top: 18px;
 
     > div {
       display: flex;
@@ -221,7 +223,7 @@
           padding: 0 8px;
           .all-exec-material-list {
             position: absolute;
-            z-index: 6;
+            z-index: 11;
             width: 100%;
             border: 1px solid #dcdee5;
             border-radius: 2px;
@@ -283,7 +285,16 @@
                     @include ellipsis();
                 }
             }
-
+            .material-span-tooltip-box {
+                flex: 1;
+                overflow: hidden;
+                > .bk-tooltip-ref {
+                    width: 100%;
+                    .material-span {
+                        width: 100%;
+                    }
+                }
+            }
             .material-span {
               @include ellipsis();
               .bk-link-text {

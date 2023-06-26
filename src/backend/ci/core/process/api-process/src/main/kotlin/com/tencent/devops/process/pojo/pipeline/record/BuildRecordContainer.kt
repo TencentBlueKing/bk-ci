@@ -76,6 +76,7 @@ data class BuildRecordContainer(
 ) {
     companion object {
 
+        @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stageId: String,
             container: Container,
