@@ -11,7 +11,7 @@ class SQLCheckListenerTest {
     @Test
     @DisplayName("正常数据--SELECT")
     fun test_1() {
-        val sql = "SELECT * FROM db.table WHERE id=1"
+        val sql = "SELECT * FROM db.table where id=1"
         sqlCheckListener.check(sql)
     }
 
@@ -25,7 +25,7 @@ class SQLCheckListenerTest {
     @Test
     @DisplayName("正常数据--UPDATE")
     fun test_3() {
-        val sql = "UPDATE db.table SET column=1 WHERE id=1"
+        val sql = "UPDATE db.table SET column=1 where id=1"
         sqlCheckListener.check(sql)
     }
 
@@ -39,7 +39,7 @@ class SQLCheckListenerTest {
     @Test
     @DisplayName("正常数据--DELETE")
     fun test_5() {
-        val sql = "DELETE FROM db.table WHERE id=1"
+        val sql = "DELETE FROM db.table where id=1"
         sqlCheckListener.check(sql)
     }
 

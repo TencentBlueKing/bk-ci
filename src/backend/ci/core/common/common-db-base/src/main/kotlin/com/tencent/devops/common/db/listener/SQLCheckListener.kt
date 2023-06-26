@@ -1,6 +1,7 @@
 package com.tencent.devops.common.db.listener
 
 import org.jooq.ExecuteContext
+import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.slf4j.LoggerFactory
@@ -18,7 +19,8 @@ class SQLCheckListener : DefaultExecuteListener() {
     @SuppressWarnings("NestedBlockDepth", "TooGenericExceptionCaught")
     fun check(sql: String, ctx: ExecuteContext? = null) {
         val checkRegex = "^(?i:(UPDATE|DELETE|SELECT).*)$".toRegex()
-        val noWhereRegex = "(?!.* WHERE ).*".toRegex()
+//        val noWhereRegex = "(?!.* WHERE ).*".toRegex()
+        val noWhereRegex = "(?i:(?!.* WHERE ).*)".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
 //                throw DataAccessException("This SQL : $sql must use WHERE")
