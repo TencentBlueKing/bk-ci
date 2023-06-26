@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.bk.sdk.iam.service.TokenService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.SystemServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
@@ -418,6 +419,12 @@ class RbacAuthConfiguration {
 
     @Bean
     fun migrateCreatorFixService() = MigrateCreatorFixServiceImpl()
+
+    @Bean
+    fun systemService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = SystemServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
     fun rbacPermissionMonitorService(
