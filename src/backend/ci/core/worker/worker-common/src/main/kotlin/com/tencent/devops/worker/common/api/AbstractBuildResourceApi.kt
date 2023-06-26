@@ -285,11 +285,6 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private fun initBuildArgs(): Map<String, String> {
             val buildType = BuildEnv.getBuildType()
             val map = mutableMapOf<String, String>()
-
-            AgentEnv.getBkTag()?.let {
-                map[AUTH_HEADER_GATEWAY_TAG] = it
-            }
-
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
                 BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS, BuildType.MACOS_NEW -> {
