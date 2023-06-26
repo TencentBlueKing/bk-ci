@@ -246,8 +246,8 @@ class RbacPermissionMonitorService constructor(
             .addHeader("x-bkapi-authorization", headerStr)
 
         when (method) {
-            "GET" -> requestBuilder.get()
-            "POST" -> requestBuilder.post(requestBody!!)
+            GET_METHOD -> requestBuilder.get()
+            POST_METHOD -> requestBuilder.post(requestBody!!)
         }
         OkhttpUtils.doHttp(requestBuilder.build()).use {
             if (!it.isSuccessful) {
