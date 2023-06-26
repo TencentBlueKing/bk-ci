@@ -34,6 +34,14 @@ apisix:
       limits:
         cpu: 750m
         memory: 512Mi
+    waitEtcd:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 150m
+          memory: 256Mi    
 
   admin:
     credentials:
