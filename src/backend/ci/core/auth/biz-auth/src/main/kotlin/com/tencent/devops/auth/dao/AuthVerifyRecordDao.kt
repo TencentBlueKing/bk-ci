@@ -5,6 +5,7 @@ import com.tencent.devops.model.auth.tables.TAuthTemporaryVerifyRecord
 import com.tencent.devops.model.auth.tables.records.TAuthTemporaryVerifyRecordRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -69,14 +70,15 @@ class AuthVerifyRecordDao {
         action: String?
     ) {
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
-            dslContext.deleteFrom(this)
+            val deleteSql = dslContext.deleteFrom(this)
                 .where()
                 .let { if (userId == null) it else it.and(USER_ID.eq(userId)) }
                 .and(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .let { if (action == null) it else it.and(ACTION.eq(action)) }
-                .execute()
+            logger.info(deleteSql.sql)
+            deleteSql.execute()
         }
     }
 
@@ -91,5 +93,9 @@ class AuthVerifyRecordDao {
                 verifyResult = verifyResult
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthVerifyRecordDao::class.java)
     }
 }
