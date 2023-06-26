@@ -91,6 +91,13 @@ apisix:
       enabled: false
       size: 100Mi
     replicaCount: 3  
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi
 
   apisix-ingress-controller:
     image:
