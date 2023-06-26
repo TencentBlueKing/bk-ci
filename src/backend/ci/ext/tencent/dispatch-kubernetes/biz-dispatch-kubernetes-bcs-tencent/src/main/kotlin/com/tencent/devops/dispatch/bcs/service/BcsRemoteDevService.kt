@@ -285,6 +285,7 @@ class BcsRemoteDevService @Autowired constructor(
             }
             Thread.sleep(1 * 1000)
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
+            logger.info("BcsRemoteDevService|taskStatus|$taskStatus")
             if (taskStatus?.status != null) {
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
