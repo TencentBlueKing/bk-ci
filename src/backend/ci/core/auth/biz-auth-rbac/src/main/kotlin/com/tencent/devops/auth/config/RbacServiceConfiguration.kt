@@ -128,8 +128,7 @@ class RbacServiceConfiguration {
         authActionDao: AuthActionDao,
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupDao: AuthResourceGroupDao,
-        authMonitorService: AuthMonitorService
+        authResourceGroupDao: AuthResourceGroupDao
     ) = PermissionGroupPoliciesService(
         iamConfiguration = iamConfiguration,
         iamV2ManagerService = iamV2ManagerService,
