@@ -1426,27 +1426,23 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    // 提前2天邮件提醒，云环境即将自动回收
+    // 提前7天邮件提醒，云环境即将自动回收
     fun sendInactivityWorkspaceNotify() {
         logger.info("sendInactivityWorkspaceNotify")
-        val workspaceMap = mutableMapOf<String, MutableList<String>>()
-        workspaceDao.getTimeOutInactivityWorkspace(
+        val workspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
             Constansts.timeoutDays - Constansts.sendNotifyDays, dslContext
-        ).parallelStream().forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            workspaceMap.getOrPut(it.creator) { mutableListOf() }.add(it.name)
-        }
+        ).groupBy { it.creator }
         logger.info("sendInactivityWorkspaceNotify|workspaceMap|$workspaceMap")
         // 遍历workspaceMap，按 creator 分批发送邮件
-        workspaceMap.forEach {
+        workspaceMap.forEach { (creator, workspaces) ->
             val request = SendNotifyMessageTemplateRequest(
                 templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE.templateCode,
-                receivers = mutableSetOf(it.key),
-                cc = mutableSetOf(it.key),
+                receivers = mutableSetOf(creator),
+                cc = mutableSetOf(creator),
                 titleParams = null,
                 bodyParams = mapOf(
-                    "userId" to it.key,
-                    "workspaceName" to it.value.joinToString(separator = "\n")
+                    "userId" to creator,
+                    "workspaceName" to workspaces.joinToString(separator = "\n") { it.name }
                 ),
                 notifyType = mutableSetOf(NotifyType.EMAIL.name)
             )
