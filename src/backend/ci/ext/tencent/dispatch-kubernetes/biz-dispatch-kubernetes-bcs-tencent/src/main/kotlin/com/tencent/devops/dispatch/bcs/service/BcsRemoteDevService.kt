@@ -265,13 +265,14 @@ class BcsRemoteDevService @Autowired constructor(
         )
     }
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+
+        logger.info("BcsRemoteDevService|start to do waitTaskFinish")
         // 将task放入缓存，等待回调
         workspaceRedisUtils.refreshTaskStatus(
             userId = userId,
             taskUid = taskId,
             taskStatus = TaskStatus(taskId)
         )
-
         // 轮训十分钟
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
