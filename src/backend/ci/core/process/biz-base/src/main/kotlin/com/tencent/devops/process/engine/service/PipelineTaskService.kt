@@ -169,7 +169,7 @@ class PipelineTaskService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             containerId = null,
-            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING, BuildStatus.PAUSE)
         )
         val list = mutableListOf<Map<String, Any>>()
         listByStatus.forEach {
@@ -644,6 +644,7 @@ class PipelineTaskService @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
+        val executeCount = task.executeCount ?: 1
         logger.info(
             "${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode" +
                 "|opt_change=${task.additionalOptions?.change}"
@@ -655,6 +656,7 @@ class PipelineTaskService @Autowired constructor(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
+                executeCount = executeCount,
                 taskStatus = taskStatus,
                 errorType = errorType,
                 errorCode = errorCode,

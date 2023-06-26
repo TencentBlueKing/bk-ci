@@ -97,8 +97,8 @@ class PipelineSettingDao {
                     "",
                     successNotifyTypes,
                     failNotifyTypes,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
+                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
+                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
                     DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
@@ -252,6 +252,10 @@ class PipelineSettingDao {
         }
     }
 
+    fun batchUpdate(dslContext: DSLContext, tPipelineSettingRecords: List<TPipelineSettingRecord>) {
+        dslContext.batchUpdate(tPipelineSettingRecords).execute()
+    }
+
     /**
      * 获取简单的数据(避免select大字段)
      *
@@ -348,13 +352,15 @@ class PipelineSettingDao {
 
     fun updateMaxConRunningQueueSize(
         dslContext: DSLContext,
-        pipelineIdList: List<String>,
+        projectId: String,
+        pipelineId: String,
         maxConRunningQueueSize: Int
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.update(this)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, maxConRunningQueueSize)
-                .where(PIPELINE_ID.`in`(pipelineIdList))
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

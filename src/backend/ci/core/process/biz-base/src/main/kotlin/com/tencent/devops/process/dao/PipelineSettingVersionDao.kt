@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Suppress("LongParameterList")
@@ -77,8 +78,8 @@ class PipelineSettingVersionDao {
                     "",
                     successNotifyTypes,
                     failNotifyTypes,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
+                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
+                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
                     isTemplate,
                     version,
                     id
@@ -155,6 +156,21 @@ class PipelineSettingVersionDao {
                 .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
+    }
+
+    fun getSettingByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<TPipelineSettingVersionRecord> {
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+        }
+    }
+
+    fun batchUpdate(dslContext: DSLContext, tPipelineSettingVersionRecords: List<TPipelineSettingVersionRecord>) {
+        dslContext.batchUpdate(tPipelineSettingVersionRecords).execute()
     }
 
     fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Int {

@@ -28,7 +28,9 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
+import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -74,6 +76,12 @@ class WebAutoConfiguration {
 
     @Bean
     @Primary
+    fun jerseyTagsProvider(): JerseyTagsProvider {
+        return BkJerseyTagProvider()
+    }
+
+    @Bean
+    @Primary
     fun objectMapper() = JsonUtil.getObjectMapper()
 
     @Bean("jasyptStringEncryptor")
@@ -85,6 +93,9 @@ class WebAutoConfiguration {
 
     @Bean
     fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
+
+    @Bean
+    fun bkWriterInterceptor() = BkWriterInterceptor()
 
     @Bean
     @ConditionalOnProperty(

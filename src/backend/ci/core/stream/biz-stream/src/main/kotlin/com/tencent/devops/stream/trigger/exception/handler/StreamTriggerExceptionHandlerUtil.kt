@@ -98,7 +98,7 @@ object StreamTriggerExceptionHandlerUtil {
                     Pair(
                         error.name,
                         if (triggerE.errorMessage.isNullOrBlank()) {
-                            error.formatErrorMessage
+                            error.getErrorMessage()
                         } else {
                             try {
                                 triggerE.errorMessage.format(triggerE.messageParams)

@@ -136,6 +136,10 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(pipelineViewGroupService.pipelineCount(userId, projectId, viewId))
     }
 
+    override fun listViewIdsByPipelineId(userId: String, projectId: String, pipelineId: String): Result<Set<Long>> {
+        return Result(pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId))
+    }
+
     override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {
         return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
     }

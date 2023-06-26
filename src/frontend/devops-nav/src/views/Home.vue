@@ -66,7 +66,9 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >{{ item.label }}</span>
+                    >
+                        {{ item.label }}
+                    </span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"
@@ -82,7 +84,7 @@
                     </div>
                 </div>
 
-                <div class="devops-news">
+                <div class="devops-news" v-if="news.length > 0">
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -122,18 +124,7 @@
                         >{{ $t("learnMore") }}</a>
                     </p>
                 </article>
-                <article>
-                    <h2>{{ $t("bkdevopsTarget") }}</h2>
-                    <p>
-                        {{ $t("bkdevopsWay") }}
-                        <!-- <a
-                            :href="BKCI_DOCS.BKCI_DOC"
-                            target="_blank"
-                            class="more"
-                        >{{ $t("learnMore") }}</a> -->
-                    </p>
-                </article>
-                <article>
+                <article v-if="related.length > 0">
                     <h2>{{ $t("relatedLink") }}</h2>
                     <div>
                         <a
@@ -154,21 +145,20 @@
                 <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
                 <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
             </div>
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved v{{ BK_CI_VERSION.trim() }}</p>
+            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
         </section>
     </div>
 </template>
 
 <script lang="ts">
+    import { mapDocumnetTitle } from '@/utils/constants'
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
-    import NavBox from '../components/NavBox/index.vue'
-    import Logo from '../components/Logo/index.vue'
+    import { Action, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
-    
-    import { urlJoin, isAbsoluteUrl } from '@/utils/util'
-    import { mapDocumnetTitle } from '@/utils/constants'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
 
     @Component({
         components: {
@@ -253,7 +243,11 @@
 <style lang="scss">
     @import '../assets/scss/conf';
     .devops-home-page {
-        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        width: 100%;
     }
     .devops-home-content {
         display: flex;
@@ -261,7 +255,6 @@
         justify-content: center;
         width: 1280px;
         padding: 30px 0 100px 0;
-        overflow: auto;
 
         > section {
             width: 800px;

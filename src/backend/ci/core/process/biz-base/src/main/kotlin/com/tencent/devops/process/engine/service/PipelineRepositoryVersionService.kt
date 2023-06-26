@@ -97,13 +97,13 @@ class PipelineRepositoryVersionService(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
                 )
             }
+            dslContext.transaction { t ->
+                val transactionContext = DSL.using(t)
+                pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+                pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+            }
         } finally {
             pipelineVersionLock.unlock()
-        }
-        dslContext.transaction { t ->
-            val transactionContext = DSL.using(t)
-            pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
-            pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
         }
     }
 

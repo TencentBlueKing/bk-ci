@@ -138,7 +138,6 @@ jooq {
             }
         }
     }
-
 }
 
 tasks.getByName<AbstractCompile>("compileKotlin") {

@@ -27,16 +27,15 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceReportResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.process.report.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -54,10 +53,9 @@ class ServiceReportResourceImpl @Autowired constructor(
                     pipelineId = reportListDTO.pipelineId,
                     permission = AuthPermission.VIEW
                 )) {
-                throw PermissionForbiddenException(
+                throw ErrorCodeException(
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                    params = arrayOf(AuthPermission.VIEW.value),
-                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
+                    params = arrayOf(reportListDTO.userId)
                 )
             }
         }

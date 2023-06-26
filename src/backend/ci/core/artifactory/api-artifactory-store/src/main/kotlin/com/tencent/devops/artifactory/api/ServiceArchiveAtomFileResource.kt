@@ -61,9 +61,6 @@ interface ServiceArchiveAtomFileResource {
         @ApiParam("项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("插件ID", required = true)
-        @QueryParam("atomId")
-        atomId: String,
         @ApiParam("插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String,

@@ -1,0 +1,378 @@
+{
+  "system_id": "bk_ci_rbac",
+  "operations": [
+    {
+      "operation": "upsert_resource_creator_actions",
+      "data": {
+        "config": [
+          {
+            "id": "project",
+            "actions": [
+              {
+                "id": "project_view",
+                "required": true
+              },
+              {
+                "id": "project_visit",
+                "required": true
+              },
+              {
+                "id": "project_enable",
+                "required": false
+              },
+              {
+                "id": "project_edit",
+                "required": false
+              },
+              {
+                "id": "project_list",
+                "required": false
+              },
+              {
+                "id": "project_manage",
+                "required": false
+              },
+              {
+                "id": "codecc_task_create",
+                "required": false
+              },
+              {
+                "id": "codecc_rule_set_create",
+                "required": false
+              },
+              {
+                "id": "codecc_rule_set_list",
+                "required": false
+              },
+              {
+                "id": "codecc_ignore_type_manage",
+                "required": false
+              },
+              {
+                "id": "repertory_create",
+                "required": false
+              },
+              {
+                "id": "credential_create",
+                "required": false
+              },
+              {
+                "id": "environment_create",
+                "required": false
+              },
+              {
+                "id": "env_node_create",
+                "required": false
+              },
+              {
+                "id": "cert_create",
+                "required": false
+              },
+              {
+                "id": "rule_create",
+                "required": false
+              },
+              {
+                "id": "pipeline_create",
+                "required": false
+              },
+              {
+                "id": "quality_group_create",
+                "required": false
+              },
+              {
+                "id": "experience_task_create",
+                "required": false
+              },
+              {
+                "id": "experience_group_create",
+                "required": false
+              }
+            ],
+            "sub_resource_types": [
+              {
+                "id": "pipeline",
+                "actions": [
+                  {
+                    "id": "pipeline_view",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_download",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_share",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_execute",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_list",
+                    "required": false
+                  },
+                  {
+                    "id": "pipeline_manage",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "repertory",
+                "actions": [
+                  {
+                    "id": "repertory_list",
+                    "required": false
+                  },
+                  {
+                    "id": "repertory_view",
+                    "required": false
+                  },
+                  {
+                    "id": "repertory_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "repertory_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "repertory_use",
+                    "required": false
+                  },
+                  {
+                    "id": "repertory_list",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "credential",
+                "actions": [
+                  {
+                    "id": "credential_view",
+                    "required": false
+                  },
+                  {
+                    "id": "credential_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "credential_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "credential_use",
+                    "required": false
+                  },
+                  {
+                    "id": "credential_list",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "environment",
+                "actions": [
+                  {
+                    "id": "environment_view",
+                    "required": false
+                  },
+                  {
+                    "id": "environment_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "environment_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "environment_use",
+                    "required": false
+                  },
+                  {
+                    "id": "environment_list",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "env_node",
+                "actions": [
+                  {
+                    "id": "env_node_view",
+                    "required": false
+                  },
+                  {
+                    "id": "env_node_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "env_node_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "env_node_use",
+                    "required": false
+                  },
+                  {
+                    "id": "env_node_list",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "cert",
+                "actions": [
+                  {
+                    "id": "cert_view",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_use",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_list",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "quality_group",
+                "actions": [
+                  {
+                    "id": "quality_group_list",
+                    "required": false
+                  },
+                  {
+                    "id": "quality_group_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "quality_group_edit",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "rule",
+                "actions": [
+                  {
+                    "id": "rule_list",
+                    "required": false
+                  },
+                  {
+                    "id": "rule_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "rule_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "rule_enable",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "experience_group",
+                "actions": [
+                  {
+                    "id": "experience_group_list",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_group_view",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_group_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_group_edit",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "experience_task",
+                "actions": [
+                  {
+                    "id": "experience_task_list",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_task_view",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_task_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "experience_task_edit",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "codecc_task",
+                "actions": [
+                  {
+                    "id": "codecc_task_analyze",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_list",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_manage-defect",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_view-defect",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_view-report",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_setting",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_manage",
+                    "required": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -41,9 +41,9 @@ data class ElementAdditionalOptions(
     @ApiModelProperty("是否出现跳过按钮（手动继续）", required = false)
     val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
     @ApiModelProperty("是否失败时重试", required = false)
-    val retryWhenFailed: Boolean = false,
+    var retryWhenFailed: Boolean = false,
     @ApiModelProperty("重试计数", required = false)
-    val retryCount: Int = 0,
+    var retryCount: Int = 0,
     @ApiModelProperty("是否允许手动重试", required = false)
     val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
     @ApiModelProperty("超时分钟", required = false)
@@ -53,19 +53,19 @@ data class ElementAdditionalOptions(
     @JsonIgnore // 表示是否有修改，比如timeout. 注解 @JsonIgnore 表示本字段不会持久到数据库存储，只做临时的校验字段，不做任何保证
     var change: Boolean = false,
     @ApiModelProperty("执行条件", required = false)
-    val runCondition: RunCondition?,
+    var runCondition: RunCondition?,
     @ApiModelProperty("是否配置前置暂停", required = false)
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
     @ApiModelProperty("订阅暂停通知用户", required = false)
-    val subscriptionPauseUser: String? = "", // 订阅暂停通知用户
+    var subscriptionPauseUser: String? = "", // 订阅暂停通知用户
     @ApiModelProperty("", required = false)
-    val otherTask: String? = null,
+    var otherTask: String? = null,
     @ApiModelProperty("自定义变量", required = false)
     val customVariables: List<NameAndValue>? = null,
     @ApiModelProperty("自定义条件", required = false)
-    val customCondition: String? = "",
+    var customCondition: String? = "",
     @ApiModelProperty("插件post信息", required = false)
-    val elementPostInfo: ElementPostInfo? = null,
+    var elementPostInfo: ElementPostInfo? = null,
     @ApiModelProperty("是否设置自定义环境变量", required = false)
     val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
     @ApiModelProperty("自定义环境变量", required = false)

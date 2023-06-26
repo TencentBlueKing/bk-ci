@@ -27,8 +27,13 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
@@ -38,15 +43,19 @@ import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import com.tencent.devops.quality.pojo.po.ControlPointPO
 import com.tencent.devops.quality.util.ElementUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -54,8 +63,39 @@ class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
     private val controlPointDao: QualityControlPointDao,
     private val qualityRuleDao: QualityRuleDao,
-    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) {
+
+    @PostConstruct
+    fun init() {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_CONTROL_POINT_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
+        )
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
+                try {
+                    logger.info("start init quality control point")
+                    val classPathResource = ClassPathResource(
+                        "i18n${File.separator}controlPoint_${commonConfig.devopsDefaultLocaleLanguage}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
+                    controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
+                    logger.info("init quality control point end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality control point fail! error:${ignored.message}")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
+    }
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
     }
