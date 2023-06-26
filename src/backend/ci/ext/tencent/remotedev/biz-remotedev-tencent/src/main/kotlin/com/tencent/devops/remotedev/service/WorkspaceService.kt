@@ -303,12 +303,14 @@ class WorkspaceService @Autowired constructor(
         }
         val mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
         logger.info("checkMountType|userId|$userId|devfileMountType|$devfileMountType|mountType|$mountType")
-        return when {
-            devfileMountType == WorkspaceMountType.DEVCLOUD && mountType == WorkspaceMountType.BCS
-            -> WorkspaceMountType.BCS
-            devfileMountType == WorkspaceMountType.DEVCLOUD || mountType == null -> WorkspaceMountType.DEVCLOUD
-            else -> WorkspaceMountType.DEVCLOUD
+
+        // 简化判断逻辑，优先处理 WorkspaceMountType.BCS 的情况
+        if (devfileMountType == WorkspaceMountType.DEVCLOUD && mountType == WorkspaceMountType.BCS) {
+            return WorkspaceMountType.BCS
         }
+
+        // 处理其他情况时，均返回 WorkspaceMountType.DEVCLOUD
+        return WorkspaceMountType.DEVCLOUD
     }
 
     // k8s创建workspace后回调的方法
@@ -335,25 +337,22 @@ class WorkspaceService @Autowired constructor(
                     startUserId = event.userId,
                     lastSleepTimeCost = 0
                 )
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = event.workspaceName,
-                    operator = event.userId,
-                    action = WorkspaceAction.CREATE,
-                    actionMessage = String.format(
-                        getOpHistory(OpHistoryCopyWriting.CREATE),
-                        pathWithNamespace,
-                        ws.branch,
-                        ws.name
-                    )
-                )
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = event.workspaceName,
-                    operator = event.userId,
-                    action = WorkspaceAction.START,
-                    actionMessage = getOpHistory(OpHistoryCopyWriting.FIRST_START)
-                )
+                arrayOf(WorkspaceAction.CREATE to String.format(
+                    getOpHistory(OpHistoryCopyWriting.CREATE),
+                    pathWithNamespace,
+                    ws.branch,
+                    ws.name
+                ),
+                    WorkspaceAction.START to getOpHistory(OpHistoryCopyWriting.FIRST_START))
+                    .forEach { (action, actionMessage) ->
+                        workspaceOpHistoryDao.createWorkspaceHistory(
+                            dslContext = transactionContext,
+                            workspaceName = event.workspaceName,
+                            operator = event.userId,
+                            action = action,
+                            actionMessage = actionMessage
+                        )
+                    }
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
@@ -395,99 +394,105 @@ class WorkspaceService @Autowired constructor(
                 )
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
-            if (status.checkRunning()) {
-                logger.info("${workspace.name} is running.")
-                remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
-                val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
-                bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
+            when {
+                status.checkRunning() -> {
+                    logger.info("${workspace.name} is running.")
+                    remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
+                    val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                        .getWorkspaceInfo(userId, workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
+                    bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
-                return WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    workspaceHost = workspaceInfo.data?.environmentHost ?: "",
-                    status = WorkspaceAction.START
-                )
+                    return WorkspaceResponse(
+                        workspaceName = workspaceName,
+                        workspaceHost = workspaceInfo.data?.environmentHost ?: "",
+                        status = WorkspaceAction.START
+                    )
+                }
+                notOk2doNextAction(workspace) -> {
+                    logger.info("${workspace.name} is $status, return error.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                        params = arrayOf(workspace.name, "status is already $status, can't start now")
+                    )
+                }
+                else -> {
+                    checkUserCreate(userId, true)
+                    /*处理异常的情况*/
+                    checkAndFixExceptionWS(
+                        status,
+                        userId,
+                        workspaceName,
+                        WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    )
+                    createWorkspaceHistoryForStart(userId, workspaceName)
+                    updateWorkspaceStatus(workspace.name, status, userId)
+                    val bizId = MDC.get(TraceTag.BIZID)
+                    dispatcher.dispatch(
+                        WorkspaceOperateEvent(
+                            userId = userId,
+                            traceId = bizId,
+                            type = UpdateEventType.START,
+                            sshKeys = sshService.getSshPublicKeys4Ws(
+                                workspaceDao.fetchWorkspaceUser(
+                                    dslContext,
+                                    workspaceName
+                                ).toSet()
+                            ),
+                            workspaceName = workspace.name,
+                            settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                            bkTicket = bkTicket,
+                            mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        )
+                    )
+
+                    // 发送给用户
+                    dispatchWebsocketPushEvent(
+                        userId = userId,
+                        workspaceName = workspaceName,
+                        workspaceHost = null,
+                        errorMsg = null,
+                        type = WebSocketActionType.WORKSPACE_START,
+                        status = true,
+                        action = WorkspaceAction.STARTING
+                    )
+                    return WorkspaceResponse(
+                        workspaceName = workspace.name,
+                        workspaceHost = "",
+                        status = WorkspaceAction.STARTING
+                    )
+
+                }
             }
-
-            if (notOk2doNextAction(workspace)) {
-                logger.info("${workspace.name} is $status, return error.")
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                    params = arrayOf(workspace.name, "status is already $status, can't start now")
-                )
-            }
-            checkUserCreate(userId, true)
-            /*处理异常的情况*/
-            checkAndFixExceptionWS(
-                status,
-                userId,
-                workspaceName,
-                WorkspaceMountType.valueOf(workspace.workspaceMountType)
-            )
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.START,
-                actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
-            )
-
-            workspaceDao.updateWorkspaceStatus(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                status = WorkspaceStatus.STARTING
-            )
-
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.START,
-                actionMessage = String.format(
-                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.values()[workspace.status].name,
-                    WorkspaceStatus.STARTING.name
-                )
-            )
-
-            val bizId = MDC.get(TraceTag.BIZID)
-
-            dispatcher.dispatch(
-                WorkspaceOperateEvent(
-                    userId = userId,
-                    traceId = bizId,
-                    type = UpdateEventType.START,
-                    sshKeys = sshService.getSshPublicKeys4Ws(
-                        workspaceDao.fetchWorkspaceUser(
-                            dslContext,
-                            workspaceName
-                        ).toSet()
-                    ),
-                    workspaceName = workspace.name,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                    bkTicket = bkTicket,
-                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
-                )
-            )
-
-            // 发送给用户
-            dispatchWebsocketPushEvent(
-                userId = userId,
-                workspaceName = workspaceName,
-                workspaceHost = null,
-                errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_START,
-                status = true,
-                action = WorkspaceAction.STARTING
-            )
-            return WorkspaceResponse(
-                workspaceName = workspace.name,
-                workspaceHost = "",
-                status = WorkspaceAction.STARTING
-            )
         }
     }
+    private fun createWorkspaceHistoryForStart(userId: String, workspaceName: String) {
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.START,
+            actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
+        )
+    }
+    private fun updateWorkspaceStatus(workspaceName: String, status: WorkspaceStatus, userId: String) {
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.STARTING
+        )
 
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.START,
+            actionMessage = String.format(
+                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                status.name,
+                WorkspaceStatus.STARTING.name
+            )
+        )
+    }
     private fun checkAndFixExceptionWS(
         status: WorkspaceStatus,
         userId: String,
