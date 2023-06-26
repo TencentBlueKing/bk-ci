@@ -25,9 +25,9 @@ class SQLCheckListener : DefaultExecuteListener() {
 //                throw DataAccessException("This SQL : $sql must use WHERE")
                 logger.warn("This SQL : $sql must use WHERE")
             }
-            if (ctx != null) {
+            if (ctx?.query() != null) {
                 try {
-                    val explain = DSL.using(ctx.configuration()).fetch("EXPLAIN $sql")
+                    val explain = DSL.using(ctx.configuration()).fetch("EXPLAIN ${ctx.query()!!.sql}")
                     for (record in explain) {
                         val selectType: String = record.getValue("select_type", String::class.java)
                         val type: String = record.getValue("type", String::class.java)
