@@ -167,8 +167,8 @@ class RemoteDevSettingDao {
     ) {
         val setting = RemoteDevSettings()
         val userSetting = RemoteDevUserSettings().apply {
-            maxRunningCount = opSetting.wsMaxRunningCount ?: maxRunningCount
-            maxHavingCount = opSetting.wsMaxHavingCount ?: maxHavingCount
+            maxRunningCount = opSetting.maxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting.maxHavingCount ?: maxHavingCount
             onlyCloudIDE = opSetting.onlyCloudIDE ?: onlyCloudIDE
             allowedCopy = opSetting.allowedCopy ?: allowedCopy
             allowedDownload = opSetting.allowedDownload ?: allowedDownload
@@ -196,8 +196,8 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    opSetting.wsMaxRunningCount,
-                    opSetting.wsMaxHavingCount,
+                    opSetting.maxRunningCount,
+                    opSetting.maxHavingCount,
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())

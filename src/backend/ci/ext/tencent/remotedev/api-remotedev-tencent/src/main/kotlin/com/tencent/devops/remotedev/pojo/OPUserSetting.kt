@@ -2,8 +2,8 @@ package com.tencent.devops.remotedev.pojo
 
 data class OPUserSetting(
     val userId: String,
-    val wsMaxRunningCount: Int?,
-    val wsMaxHavingCount: Int?,
+    val maxRunningCount: Int?,
+    val maxHavingCount: Int?,
     val onlyCloudIDE: Boolean?,
     val grayFlag: Boolean?,
     val allowedCopy: Boolean?,
