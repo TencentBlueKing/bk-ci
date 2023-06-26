@@ -70,7 +70,7 @@ class AuthVerifyRecordDao {
         action: String?
     ) {
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
-            val deleteSql = dslContext.deleteFrom(this)
+            dslContext.deleteFrom(this)
                 .where()
                 .let { if (userId == null) it else it.and(USER_ID.eq(userId)) }
                 .and(PROJECT_CODE.eq(projectCode))
