@@ -37,6 +37,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -80,10 +81,11 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/fixMigrateCompareResult")
-    @ApiOperation("修正迁移鉴权结果")
-    fun fixMigrateCompareResult(
-        @ApiParam("鉴权记录实体", required = true)
-        verifyRecordDTO: VerifyRecordDTO
+    @Path("/compareResult/{projectCode}")
+    @ApiOperation("对比迁移结果")
+    fun compareResult(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String
     ): Result<Boolean>
 }

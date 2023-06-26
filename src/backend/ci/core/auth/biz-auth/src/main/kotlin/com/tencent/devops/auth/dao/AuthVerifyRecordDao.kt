@@ -65,18 +65,13 @@ class AuthVerifyRecordDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
-        resourceCode: String,
-        userId: String?,
-        action: String?
+        resourceCode: String
     ) {
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
             dslContext.deleteFrom(this)
-                .where()
-                .let { if (userId == null) it else it.and(USER_ID.eq(userId)) }
-                .and(PROJECT_CODE.eq(projectCode))
+                .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.eq(resourceCode))
-                .let { if (action == null) it else it.and(ACTION.eq(action)) }
                 .execute()
         }
     }

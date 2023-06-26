@@ -63,7 +63,7 @@ interface PermissionMigrateService {
     fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 
     /**
-     * 修正迁移鉴权结果
+     * 对比迁移鉴权结果
      */
-    fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean
+    fun compareResult(projectCode: String): Boolean
 }

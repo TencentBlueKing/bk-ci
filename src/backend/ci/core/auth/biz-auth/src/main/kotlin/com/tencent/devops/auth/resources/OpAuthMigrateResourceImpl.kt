@@ -61,7 +61,7 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         )
     }
 
-    override fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Result<Boolean> {
-        return Result(permissionMigrateService.fixMigrateCompareResult(verifyRecordDTO = verifyRecordDTO))
+    override fun compareResult(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.compareResult(projectCode = projectCode))
     }
 }

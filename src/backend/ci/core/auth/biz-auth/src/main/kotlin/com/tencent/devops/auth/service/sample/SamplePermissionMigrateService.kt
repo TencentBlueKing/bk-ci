@@ -55,7 +55,7 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean {
+    override fun compareResult(projectCode: String): Boolean {
         return true
     }
 }

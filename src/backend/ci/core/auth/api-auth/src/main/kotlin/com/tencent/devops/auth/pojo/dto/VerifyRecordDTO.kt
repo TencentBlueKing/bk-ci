@@ -16,5 +16,5 @@ data class VerifyRecordDTO(
     @ApiModelProperty("操作")
     val action: String,
     @ApiModelProperty("鉴权结果")
-    val verifyResult: Boolean?
+    val verifyResult: Boolean
 )

@@ -190,13 +190,13 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    override fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean {
+    override fun compareResult(projectCode: String): Boolean {
         try {
-            migrateResultService.fixMigrateCompareResult(verifyRecordDTO)
+            migrateResultService.compare(projectCode)
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = verifyRecordDTO.projectId
+                projectCode = projectCode
             )
             return false
         }

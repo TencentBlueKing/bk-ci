@@ -134,16 +134,4 @@ class MigrateResultService constructor(
         }
         return true
     }
-
-    fun fixMigrateCompareResult(verifyRecordDTO: VerifyRecordDTO): Boolean {
-        authVerifyRecordService.deleteVerifyRecord(
-            projectCode = verifyRecordDTO.projectId,
-            resourceType = verifyRecordDTO.resourceType,
-            resourceCode = verifyRecordDTO.resourceCode,
-            userId = verifyRecordDTO.userId,
-            action = verifyRecordDTO.action
-        )
-        compare(verifyRecordDTO.projectId)
-        return true
-    }
 }
