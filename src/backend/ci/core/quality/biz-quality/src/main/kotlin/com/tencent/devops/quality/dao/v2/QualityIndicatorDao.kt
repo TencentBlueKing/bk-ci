@@ -92,7 +92,7 @@ class QualityIndicatorDao {
                 conditions.add(TYPE.eq(type.name))
             }
             if (!enNameSet.isNullOrEmpty()) {
-                conditions.add(INDICATOR_CODE.`in`(enNameSet))
+                conditions.add(EN_NAME.`in`(enNameSet))
             }
             if (projectId != null) {
                 conditions.add(INDICATOR_RANGE.eq(projectId))
@@ -132,8 +132,8 @@ class QualityIndicatorDao {
                 ELEMENT_TYPE,
                 ELEMENT_NAME,
                 ELEMENT_DETAIL,
-                INDICATOR_CODE,
-                NAME,
+                EN_NAME,
+                CN_NAME,
                 METADATA_IDS,
                 DEFAULT_OPERATION,
                 OPERATION_AVAILABLE,
@@ -201,8 +201,8 @@ class QualityIndicatorDao {
                 if (!elementType.isNullOrBlank()) update.set(ELEMENT_TYPE, elementType)
                 if (!elementName.isNullOrBlank()) update.set(ELEMENT_NAME, elementName)
                 if (!elementDetail.isNullOrBlank()) update.set(ELEMENT_DETAIL, elementDetail)
-                if (!enName.isNullOrBlank()) update.set(INDICATOR_CODE, enName)
-                if (!cnName.isNullOrBlank()) update.set(NAME, cnName)
+                if (!enName.isNullOrBlank()) update.set(EN_NAME, enName)
+                if (!cnName.isNullOrBlank()) update.set(CN_NAME, cnName)
                 if (!metadataIds.isNullOrBlank()) update.set(METADATA_IDS, metadataIds)
                 if (!defaultOperation.isNullOrBlank()) update.set(DEFAULT_OPERATION, defaultOperation)
                 if (!operationAvailable.isNullOrBlank()) update.set(OPERATION_AVAILABLE, operationAvailable)

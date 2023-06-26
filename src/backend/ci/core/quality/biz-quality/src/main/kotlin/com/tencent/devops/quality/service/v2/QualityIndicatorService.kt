@@ -251,9 +251,9 @@ class QualityIndicatorService @Autowired constructor(
             projectId = tempProjectId
         )
         val prodIndicator = if (indicatorRecords?.associateBy { it.tag }?.containsKey("IN_READY_RUNNING") == true) {
-            indicatorRecords?.filter { it.tag == "IN_READY_RUNNING" }.associateBy { it.indicatorCode }
+            indicatorRecords?.filter { it.tag == "IN_READY_RUNNING" }.associateBy { it.enName }
         } else {
-            indicatorRecords?.associateBy { it.indicatorCode }
+            indicatorRecords?.associateBy { it.enName }
         }
         val allIndicatorRecords = enNameSet.map {
             prodIndicator?.get(it) ?: throw OperationException("indicator id $it is not exist")
@@ -316,8 +316,8 @@ class QualityIndicatorService @Autowired constructor(
                 elementType = it.elementType,
                 elementName = it.elementName,
                 elementDetail = it.elementDetail,
-                enName = it.indicatorCode,
-                cnName = it.name,
+                enName = it.enName,
+                cnName = it.cnName,
                 metadataIds = it.metadataIds,
                 metadataNames = metadataNames,
                 defaultOperation = it.defaultOperation,
@@ -427,7 +427,7 @@ class QualityIndicatorService @Autowired constructor(
         val codeccToolNameMap = getCodeccToolNameMap()
         listIndicatorByProject(projectId).filter {
             if (keyword.isNullOrBlank()) true
-            else it.name.contains(keyword!!)
+            else it.cnName.contains(keyword!!)
         }.groupBy { it.elementType }.forEach { (_, indicators) ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
@@ -449,8 +449,8 @@ class QualityIndicatorService @Autowired constructor(
 
                 val item = IndicatorListResponse.IndicatorListItem(
                     hashId = HashUtil.encodeLongId(indicator.id),
-                    name = indicator.indicatorCode,
-                    cnName = indicator.name,
+                    name = indicator.enName,
+                    cnName = indicator.cnName,
                     elementType = indicator.elementType,
                     elementName = indicator.elementName,
                     elementDetail = if (indicatorCnName.isNullOrBlank()) indicator.elementDetail else indicatorCnName,
@@ -502,8 +502,8 @@ class QualityIndicatorService @Autowired constructor(
         logger.info("QUALITY|setTestIndicator userId: $userId, elementType: $elementType")
         val testIndicatorList = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
             ?.filter { isTestIndicator(it) } ?: listOf()
-        val testIndicatorMap = testIndicatorList.map { it.indicatorCode to it }.toMap()
-        val lastIndicatorName = testIndicatorList.map { it.indicatorCode }
+        val testIndicatorMap = testIndicatorList.map { it.enName to it }.toMap()
+        val lastIndicatorName = testIndicatorList.map { it.enName }
         val newIndicatorName = indicatorUpdateList.map { it.enName }
 
         // 删除这次没有的指标
@@ -535,15 +535,15 @@ class QualityIndicatorService @Autowired constructor(
         val deleteItemId = mutableSetOf<Long>()
         prodData.forEach PROD@{ prodItem ->
             testData.forEach TEST@{ testItem ->
-                if (prodItem.indicatorCode == testItem.indicatorCode) {
+                if (prodItem.enName == testItem.enName) {
                     indicatorDao.update(userId, prodItem.id, IndicatorUpdate(
                         elementType = testItem.elementType,
                         elementName = testItem.elementName,
                         elementDetail = testItem.elementDetail,
                         elementVersion = null, // 刷新不需要更新插件版本
-                        enName = testItem.indicatorCode,
-                        cnName = testItem.name,
-                        metadataIds = metadataMap[testItem.indicatorCode], // 插件市场注册的指标enName跟基础数据的dataId是一样的
+                        enName = testItem.enName,
+                        cnName = testItem.cnName,
+                        metadataIds = metadataMap[testItem.enName], // 插件市场注册的指标enName跟基础数据的dataId是一样的
                         defaultOperation = testItem.defaultOperation,
                         operationAvailable = testItem.operationAvailable,
                         threshold = testItem.threshold,
@@ -570,16 +570,16 @@ class QualityIndicatorService @Autowired constructor(
         // 没也update
         testData.forEach TEST@{ testItem ->
             prodData.forEach PROD@{ prodItem ->
-                if (prodItem.indicatorCode == testItem.indicatorCode) return@TEST
+                if (prodItem.enName == testItem.enName) return@TEST
             }
             indicatorDao.update(userId, testItem.id, IndicatorUpdate(
                 elementType = testItem.elementType,
                 elementName = testItem.elementName,
                 elementDetail = testItem.elementDetail,
                 elementVersion = testItem.atomVersion,
-                enName = testItem.indicatorCode,
-                cnName = testItem.name,
-                metadataIds = metadataMap[testItem.indicatorCode], // 插件市场注册的指标enName跟基础数据的dataId是一样的
+                enName = testItem.enName,
+                cnName = testItem.cnName,
+                metadataIds = metadataMap[testItem.enName], // 插件市场注册的指标enName跟基础数据的dataId是一样的
                 defaultOperation = testItem.defaultOperation,
                 operationAvailable = testItem.operationAvailable,
                 threshold = testItem.threshold,
@@ -644,8 +644,8 @@ class QualityIndicatorService @Autowired constructor(
             hashId = HashUtil.encodeLongId(indicator.id),
             elementType = indicator.elementType,
             elementDetail = indicator.elementDetail ?: "",
-            indicatorCode = indicator.indicatorCode,
-            name = indicator.name,
+            indicatorCode = indicator.enName,
+            name = indicator.cnName,
             stage = indicator.stage ?: "",
             operation = QualityOperation.valueOf(indicator.defaultOperation),
             operationList = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
@@ -669,13 +669,13 @@ class QualityIndicatorService @Autowired constructor(
 
     private fun checkSystemIndicatorExist(enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
-        if (indicators.any { it.indicatorCode == enName }) throw OperationException(
+        if (indicators.any { it.enName == enName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
                 messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             )
         )
-        if (indicators.any { it.name == cnName }) throw OperationException(
+        if (indicators.any { it.cnName == cnName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
                 messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                 params = arrayOf(cnName)
@@ -687,13 +687,13 @@ class QualityIndicatorService @Autowired constructor(
     private fun checkSystemIndicatorExcludeExist(id: Long, enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
         val filterList = indicators.filter { it.id != id }
-        if (filterList.any { it.indicatorCode == enName }) throw OperationException(
+        if (filterList.any { it.enName == enName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
                 messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             )
         )
-        if (filterList.any { it.name == cnName }) throw OperationException(
+        if (filterList.any { it.cnName == cnName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
                 messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                 params = arrayOf(cnName)
@@ -706,13 +706,13 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.indicatorRange != projectId) return@forEach
-            if (indicator.indicatorCode == enName) throw OperationException(
+            if (indicator.enName == enName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                     params = arrayOf(enName)
                 )
             )
-            if (indicator.name == cnName) throw OperationException(
+            if (indicator.cnName == cnName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                     params = arrayOf(cnName)
@@ -726,11 +726,11 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.id == id || indicator.indicatorRange != projectId) return@forEach
-            if (indicator.indicatorCode == enName) throw OperationException(I18nUtil.getCodeLanMessage(
+            if (indicator.enName == enName) throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             ))
-            if (indicator.name == cnName) throw OperationException(
+            if (indicator.cnName == cnName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                     params = arrayOf(cnName)
@@ -743,7 +743,7 @@ class QualityIndicatorService @Autowired constructor(
     private fun checkCustomUpsertIndicator(projectId: String, enName: String): Long? {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return null
         indicators.forEach { indicator ->
-            if (indicator.indicatorCode == enName && indicator.indicatorRange == projectId) return indicator.id
+            if (indicator.enName == enName && indicator.indicatorRange == projectId) return indicator.id
         }
         return null
     }
