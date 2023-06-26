@@ -54,8 +54,7 @@ class PermissionGroupPoliciesService(
     private val authActionDao: AuthActionDao,
     private val dslContext: DSLContext,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authMonitorService: AuthMonitorService
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     companion object {
@@ -106,7 +105,7 @@ class PermissionGroupPoliciesService(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
-        if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
+        /*if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
             val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
@@ -114,7 +113,7 @@ class PermissionGroupPoliciesService(
                 groupCode = groupCode
             )
             authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
-        }
+        }*/
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }

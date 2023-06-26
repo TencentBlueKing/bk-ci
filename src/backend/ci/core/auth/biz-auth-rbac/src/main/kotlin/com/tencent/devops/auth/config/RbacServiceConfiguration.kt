@@ -136,8 +136,7 @@ class RbacServiceConfiguration {
         authActionDao = authActionDao,
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupDao = authResourceGroupDao,
-        authMonitorService = authMonitorService
+        authResourceGroupDao = authResourceGroupDao
     )
 
     @Bean
