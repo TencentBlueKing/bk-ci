@@ -25,42 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-object NotifyTemplateUtils {
+@Api(tags = ["OP_PIPELINE"], description = "OP-流水线")
+@Path("/op/pipelines/settings")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpTxPipelineSettingResource {
 
-    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "commonShutdownSuccessContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行成功，耗时${%s}, 触发人：${%s}。
-
-    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "commonShutdownFailureContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行失败，耗时${%s}, 触发人：${%s}。
-
-    fun getCommonShutdownSuccessContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_SUCCESS_CONTENT),
-            PROJECT_NAME_CHINESE,
-            PIPELINE_NAME,
-            PIPELINE_BUILD_NUM,
-            PIPELINE_TIME_DURATION,
-            PIPELINE_START_USER_NAME
-        )
-    }
-
-    fun getCommonShutdownFailureContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_FAILURE_CONTENT),
-            PROJECT_NAME_CHINESE,
-            PIPELINE_NAME,
-            PIPELINE_BUILD_NUM,
-            PIPELINE_TIME_DURATION,
-            PIPELINE_START_USER_NAME
-        )
-    }
+    @ApiOperation("更新蓝盾国际化需求发布时间段至今时间段内的流水线配置中CONTENT字段数据")
+    @PUT
+    @Path("/update/content")
+    fun updatePipelineSettingContent(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }

@@ -27,6 +27,7 @@ class WhitelistApiFilter constructor(
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
         USER("/api/user/", true),
+        DESKTOP("/api/desktop/", true),
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),

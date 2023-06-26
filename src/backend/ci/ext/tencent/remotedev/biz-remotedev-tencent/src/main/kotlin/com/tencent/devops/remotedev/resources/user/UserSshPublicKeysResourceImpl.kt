@@ -32,12 +32,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserSshPublicKeysResource
 import com.tencent.devops.remotedev.pojo.SshPublicKey
 import com.tencent.devops.remotedev.service.SshPublicKeysService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class UserSshPublicKeysResourceImpl @Autowired constructor(
-    private val sshPublicKeysService: SshPublicKeysService
+    private val sshPublicKeysService: SshPublicKeysService,
+    private val workspaceService: WorkspaceService
 
 ) : UserSshPublicKeysResource {
     override fun getUserPublicKeysList(userId: String): Result<List<SshPublicKey>> {
@@ -45,6 +47,12 @@ class UserSshPublicKeysResourceImpl @Autowired constructor(
     }
 
     override fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Result<Boolean> {
-        return Result(sshPublicKeysService.createPublicKey(userId, sshPublicKey))
+        val res = sshPublicKeysService.createPublicKey(userId, sshPublicKey)
+        // 有新的ssh上报，需刷新所有当前在运行中的空间的detail缓存信息。
+
+        if (res) {
+            workspaceService.updateUserWorkspaceDetailCache(userId)
+        }
+        return Result(res)
     }
 }

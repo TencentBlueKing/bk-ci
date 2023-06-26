@@ -127,6 +127,7 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val bkTicketServie: BkTicketService,
+    private val whiteListService: WhiteListService,
     private val profile: Profile,
     private val commonConfig: RemoteDevCommonConfig
 ) {
@@ -202,6 +203,20 @@ class WorkspaceService @Autowired constructor(
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
         }
 
+        if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
+            whiteListService.numberLimit(
+                key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
+                id = userId,
+                value = workspaceDao.countUserWorkspace(
+                    dslContext = dslContext,
+                    userId = userId,
+                    unionShared = false,
+                    status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING),
+                    systemType = WorkspaceSystemType.WINDOWS_GPU
+                )
+            )
+        }
+
         val bizId = MDC.get(TraceTag.BIZID)
         val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
@@ -235,8 +250,11 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 替换部分devfile内容，兼容使用老remoting的情况
-        if (!isImageInDefaultList(devfile.runsOn?.container?.image,
-                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet())) {
+        if (!isImageInDefaultList(
+                devfile.runsOn?.container?.image,
+                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
+            )
+        ) {
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
@@ -321,7 +339,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            if (WorkspaceSystemType.valueOf(ws.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            }
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
 
@@ -556,7 +576,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
-            redisHeartBeat.refreshHeartbeat(workspaceName)
+            if (WorkspaceSystemType.valueOf(workspace.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(workspaceName)
+            }
         } else {
             // 启动失败,记录为EXCEPTION
             logger.warn("start workspace $workspaceName failed")
@@ -1201,7 +1223,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
+    fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
         return redisCache.getWorkspaceDetail(workspaceName) ?: run {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
@@ -1225,6 +1247,32 @@ class WorkspaceService @Autowired constructor(
                 cache
             )
             return cache
+        }
+    }
+
+    // 更新用户运行中的空间的detail缓存信息
+    fun updateUserWorkspaceDetailCache(userId: String) {
+        workspaceDao.fetchWorkspace(
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userId, it.name, WorkspaceMountType.valueOf(it.workspaceMountType)).data!!
+            val cache = WorkSpaceCacheInfo(
+                sshKey,
+                workspaceInfo.environmentHost,
+                workspaceInfo.hostIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.namespace,
+                workspaceInfo.curLaunchId
+            )
+            redisCache.saveWorkspaceDetail(
+                it.name,
+                cache
+            )
         }
     }
 
@@ -1363,6 +1411,7 @@ class WorkspaceService @Autowired constructor(
             heartBeatDeleteWS(it)
         }
     }
+
     // 提前2天邮件提醒，云环境即将自动回收
     fun sendInactivityWorkspaceNotify() {
         logger.info("sendInactivityWorkspaceNotify")
@@ -1390,6 +1439,7 @@ class WorkspaceService @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }
     }
+
     private fun getSystemOperator(workspaceOwner: String, mountType: String): String =
         when (mountType) {
             WorkspaceMountType.START.name -> workspaceOwner

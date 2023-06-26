@@ -109,7 +109,7 @@ class WorkspaceCheckJob @Autowired constructor(
         if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
             return
         }
-        val redisLock = RedisLock(redisOperation, nofityJobLockKey + bkTag.getLocalTag(), 3600L)
+        val redisLock = RedisLock(redisOperation, nofityJobLockKey, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -118,8 +118,6 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("send idle workspace notify failed", e)
-        } finally {
-            redisLock.unlock()
         }
     }
     /**
@@ -128,7 +126,7 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0 4 1 * ?")
     fun initBilling() {
         logger.info("=========>> time to initBilling <<=========")
-        val redisLock = RedisLock(redisOperation, billJobLockKey, 3600L)
+        val redisLock = RedisLock(redisOperation, billJobLockKey, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -137,8 +135,6 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("failed to init bill", e)
-        } finally {
-            redisLock.unlock()
         }
     }
 }

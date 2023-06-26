@@ -60,7 +60,7 @@ export default {
         insertStageIndex: null,
         insertStageIsFinally: false,
         execDetail: null,
-        hideSkipExecTask: true,
+        hideSkipExecTask: false,
         globalEnvs: null,
         executeStatus: false,
         saveStatus: false,

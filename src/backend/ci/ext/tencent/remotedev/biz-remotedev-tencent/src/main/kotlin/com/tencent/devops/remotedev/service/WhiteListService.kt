@@ -1,14 +1,18 @@
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 @Service
 class WhiteListService @Autowired constructor(
+    @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation,
     private val cacheService: RedisCacheService
 ) {
@@ -30,5 +34,39 @@ class WhiteListService @Autowired constructor(
             }
         }
         return true
+    }
+
+    fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        whiteListUser.apply {
+            val whiteListUserArray = this.split(";")
+            for (user in whiteListUserArray) {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user) ?: run {
+                    logger.info("whiteListUser($user) not in the GPU whiteList")
+                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
+                }
+            }
+        }
+
+        return true
+    }
+
+    /* 有关数量的限制:
+        如果value大于指定key中id规定的数量，则抛出异常
+        如果没有白名单，则抛出异常
+        如果白名单中没有对应id，则抛出异常
+        */
+    fun numberLimit(key: String, id: String, value: Long) {
+        val limit = cacheService.hentries(key)?.get(id)?.toLong()
+        logger.info("numberLimit|$key|$id|$value|$limit")
+        if (limit != null && value < limit) {
+            // 没有达到限制，直接return
+            return
+        }
+        throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+            params = arrayOf("User($id) not in the whiteList or exceeding the limit")
+        )
     }
 }

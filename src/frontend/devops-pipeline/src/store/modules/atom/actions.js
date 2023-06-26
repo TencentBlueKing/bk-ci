@@ -497,7 +497,7 @@ export default {
     },
     requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/detail/${buildNum}`)
+            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
