@@ -27,6 +27,13 @@ apisix:
       tag: 3.2.0-debian
     replicaCount: 1
     timezone: "Asia/Shanghai"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi
 
   admin:
     credentials:
@@ -74,6 +81,13 @@ apisix:
           endpoints:
             # 修改releasename时要在这里同步更改，因为是引用的chart无法从values中插入 {{ .Release.Name }}
             - proxy-etcd:2379
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi        
 
   etcd:
     image:
