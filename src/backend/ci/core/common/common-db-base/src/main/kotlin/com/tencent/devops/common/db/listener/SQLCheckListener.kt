@@ -1,7 +1,6 @@
 package com.tencent.devops.common.db.listener
 
 import org.jooq.ExecuteContext
-import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.slf4j.LoggerFactory
@@ -13,7 +12,7 @@ class SQLCheckListener : DefaultExecuteListener() {
         if (sql.contains("EXPLAIN")) {
             return
         }
-        check(sql)
+        check(sql, ctx)
     }
 
     @SuppressWarnings("NestedBlockDepth", "TooGenericExceptionCaught")
