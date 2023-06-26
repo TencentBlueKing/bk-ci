@@ -66,16 +66,19 @@ class WhitelistApiFilter constructor(
             )
             return true
         }
-        // 获取用户的信息，根据 bg 名称加白
-        val userInfo = kotlin.runCatching {
-            client.get(ServiceTxUserResource::class).get(userId)
-        }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
+        // 获取用户的信息，根据 bg 名称加白,先判断人名是否在白名单，不在的话再判断bg名称是否。
+        val whiteList = cacheService.getSetMembers(REDIS_WHITE_LIST_KEY) ?: emptySet()
+        if (userId !in whiteList) {
+            val userInfo = runCatching {
+                client.get(ServiceTxUserResource::class).get(userId)
+            }.onFailure {
+                logger.warn("get $userId info error|${it.message}")
+            }.getOrElse { null }?.data
 
-        if (!listOf(userId, userInfo?.bgName).any {
-                cacheService.getSetMembers(REDIS_WHITE_LIST_KEY)?.contains(it) == true
-            }) {
-            logger.info("user($userId)wants to access the resource($path), but is blocked.")
-            return false
+            if (userInfo?.bgName !in whiteList) {
+                logger.info("user($userId)wants to access the resource($path), but is blocked.")
+                return false
+            }
         }
         return true
     }
