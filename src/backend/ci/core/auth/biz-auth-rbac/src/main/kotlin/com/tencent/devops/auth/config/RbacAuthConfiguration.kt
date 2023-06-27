@@ -43,6 +43,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
@@ -429,9 +430,13 @@ class RbacAuthConfiguration {
     @Bean
     fun rbacPermissionMonitorService(
         systemService: SystemService,
+        authMonitorSpaceDao: AuthMonitorSpaceDao,
+        dslContext: DSLContext,
         objectMapper: ObjectMapper
     ) = RbacPermissionMonitorService(
         systemService = systemService,
+        authMonitorSpaceDao = authMonitorSpaceDao,
+        dslContext = dslContext,
         objectMapper = objectMapper
     )
 }
