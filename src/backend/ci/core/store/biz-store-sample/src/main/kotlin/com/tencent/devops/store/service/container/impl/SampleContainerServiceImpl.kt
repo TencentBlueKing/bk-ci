@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.store.pojo.app.ContainerResourceItem
 import com.tencent.devops.store.pojo.container.ContainerResource
@@ -103,7 +104,7 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                     AgentResponse(
                         it.agentId,
                         it.displayName,
-                        "/${it.ip}（${it.status}）"
+                        "/${it.ip}（${NodeStatus.getStatusName(it.status)}）"
                     )
                 }
             }
