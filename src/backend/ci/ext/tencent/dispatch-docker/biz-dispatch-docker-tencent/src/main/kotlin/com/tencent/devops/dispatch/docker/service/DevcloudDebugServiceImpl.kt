@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("PUBLIC_DEVCLOUD_BUILD_CLUSTER_RESULT")
 class DevcloudDebugServiceImpl @Autowired constructor(
     private val client: Client
 ) : ExtDebugService {
