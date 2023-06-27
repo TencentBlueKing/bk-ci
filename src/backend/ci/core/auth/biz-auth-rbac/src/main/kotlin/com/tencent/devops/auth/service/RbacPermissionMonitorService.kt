@@ -223,7 +223,6 @@ class RbacPermissionMonitorService constructor(
         return monitorGroupConfigCache.getIfPresent(configName)
     }
 
-
     private fun generateGroupAuthorizationScopes(
         action: ActionDTO,
         groupConfig: MutableList<AuthorizationScopes>
