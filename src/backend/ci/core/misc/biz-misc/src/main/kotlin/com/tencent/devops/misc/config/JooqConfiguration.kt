@@ -170,9 +170,9 @@ class JooqConfiguration {
         configuration.set(SQLDialect.MYSQL)
         configuration.set(dataSource)
         configuration.settings().isRenderSchema = false
-        for (provider in executeListenerProviders) {
-            configuration.set(provider)
-        }
+        configuration.set(*executeListenerProviders.stream().toArray { size ->
+            arrayOfNulls<ExecuteListenerProvider>(size)
+        })
         return configuration
     }
 }

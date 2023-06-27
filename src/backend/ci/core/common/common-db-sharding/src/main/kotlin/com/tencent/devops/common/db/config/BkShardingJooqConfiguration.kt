@@ -53,7 +53,6 @@ class BkShardingJooqConfiguration {
         shardingDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
-        logger.info("executeListenerProviders size: {}", executeListenerProviders.stream().count())
         val configuration = DefaultConfiguration()
             .set(shardingDataSource)
             .set(
@@ -64,8 +63,10 @@ class BkShardingJooqConfiguration {
             .set(SQLDialect.MYSQL)
         for (provider in executeListenerProviders) {
             logger.info("provider class: {}", provider.provide().javaClass)
-            configuration.set(provider)
         }
+        configuration.set(*executeListenerProviders.stream().toArray { size ->
+            arrayOfNulls<ExecuteListenerProvider>(size)
+        })
         return DSL.using(configuration)
     }
 
