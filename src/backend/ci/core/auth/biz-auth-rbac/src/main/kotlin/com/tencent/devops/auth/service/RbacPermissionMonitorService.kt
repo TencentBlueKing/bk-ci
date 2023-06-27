@@ -76,6 +76,7 @@ class RbacPermissionMonitorService constructor(
         userId: String?
     ): MonitorSpaceDetailVO {
         logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
+        // 每次根据项目id，查询空间id是否存在，若存在
         val spaceUid = "${appCode}__$projectCode"
         // 假设项目不是不存在，只是网络中断了，此时是否也要
         /*val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
@@ -105,6 +106,7 @@ class RbacPermissionMonitorService constructor(
             method = POST_METHOD,
             body = monitorSpaceCreateInfo
         ).data
+        // 创建完后，直接存储到数据库中
         return generateMonitorSpaceDetail(monitorSpaceDetailData)!!
     }
 
@@ -259,7 +261,9 @@ class RbacPermissionMonitorService constructor(
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
+            logger.info("executeHttpRequest:${it.body!!}")
             val responseStr = it.body!!.string()
+            logger.info("executeHttpRequest:$responseStr")
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
             if (responseDTO.code != 0L) {
                 // 请求错误
