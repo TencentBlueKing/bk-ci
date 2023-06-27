@@ -32,7 +32,7 @@ import com.tencent.devops.quality.constant.BK_AFTER_POSITION
 import com.tencent.devops.quality.constant.BK_BEFORE_POSITION
 
 class ControlPointPosition(
-    val name: String,
+    val name: String
 ) {
     val i18nName: String = POSITION_NAME_MAP[name] ?: ""
     companion object {
