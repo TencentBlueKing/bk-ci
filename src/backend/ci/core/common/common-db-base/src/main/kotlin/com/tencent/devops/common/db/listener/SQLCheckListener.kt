@@ -33,6 +33,9 @@ class SQLCheckListener : DefaultExecuteListener() {
                         val rows = record.get("rows")?.toString()
                         val type = record.get("type")?.toString()
                         val key = record.get("key")?.toString()
+                        if (type == null && key == null && rows == null) {
+                            continue
+                        }
                         if (type == null || type.uppercase() == "ALL") {
                             logger.error("SQL: $realSQL , type: $type is not allowed")
                         }
