@@ -138,7 +138,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                     AgentResponse(
                         it.agentId,
                         it.displayName,
-                        "/${it.ip}（${it.status}）"
+                        "/${it.ip}（${NodeStatus.getStatusName(it.status)}）"
                     )
                 }
             }
