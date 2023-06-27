@@ -165,42 +165,36 @@ class RbacPermissionMonitorService constructor(
         val opGroupConfig = mutableListOf<AuthorizationScopes>()
         val readOnlyGroupConfig = mutableListOf<AuthorizationScopes>()
 
-        // 1、通过system接口获取监控平台action组。
-        val actionList = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID).actions
-        logger.info("putAndGetMonitorGroupConfigCache|actionList:$actionList")
-        // 2、获取监控平台常用配置组动作组
-        val commonActions = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID).commonActions
-        // 3、分别获取业务只读动作组和业务运维动作组
+        val systemFieldsInfo = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID)
+        val actionList = systemFieldsInfo.actions
+        val commonActions = systemFieldsInfo.commonActions
+
         val readOnlyActions = commonActions.find { it.englishName == READ_ONLY_ACTIONS }?.actions?.map { it.id }
             ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_MONITOR_READ_ONLY_ACTIONS_NOT_EXIST,
                 defaultMessage = "monitor read only actions does not exist"
             )
-        logger.info("putAndGetMonitorGroupConfigCache|readOnlyActions:$readOnlyActions")
+
         val opsActions = commonActions.find { it.englishName == OPS_ACTIONS }?.actions?.map { it.id }
             ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_MONITOR_OPS_ACTIONS_NOT_EXIST,
                 defaultMessage = "monitor ops actions does not exist"
             )
-        logger.info("putAndGetMonitorGroupConfigCache|opsActions:$opsActions")
-        // 4、遍历action组。获取该action的关联类型。
-        actionList.forEach foreach@{ action ->
-            // 监控平台测试环境有些动作，已经被废除，但并没有删除，正确的动作都包含”v2“标识
-            logger.info("putAndGetMonitorGroupConfigCache:action|$action|${action.englishName}|${action.relatedResourceTypes}")
-            if (!action.id.contains("v2"))
-                return@foreach
-            // 过滤掉监控平台全局动作
-            if (action.relatedResourceTypes.isEmpty())
-                return@foreach
+
+        actionList.filter { it.id.contains("v2") && it.relatedResourceTypes.isNotEmpty() }.forEach { action ->
+            logger.info(
+                "putAndGetMonitorGroupConfigCache:action|$action|${action.englishName}" +
+                    "|${action.relatedResourceTypes}"
+            )
+            if (readOnlyActions.contains(action.id)) generateGroupAuthorizationScopes(action, readOnlyGroupConfig)
+            if (opsActions.contains(action.id)) generateGroupAuthorizationScopes(action, opGroupConfig)
             generateGroupAuthorizationScopes(action, managerGroupConfig)
-            if (readOnlyActions.contains(action.id))
-                generateGroupAuthorizationScopes(action, readOnlyGroupConfig)
-            if (opsActions.contains(action.id))
-                generateGroupAuthorizationScopes(action, opGroupConfig)
         }
+
         monitorGroupConfigCache.put(MANAGER_GROUP_CONFIG_NAME, objectMapper.writeValueAsString(managerGroupConfig))
         monitorGroupConfigCache.put(OP_GROUP_CONFIG_NAME, objectMapper.writeValueAsString(opGroupConfig))
         monitorGroupConfigCache.put(READ_ONLY_GROUP_CONFIG_NAME, objectMapper.writeValueAsString(readOnlyGroupConfig))
+
         logger.info(
             "putAndGetMonitorGroupConfigCache|MANAGER_GROUP_CONFIG:" +
                 "${monitorGroupConfigCache.getIfPresent(MANAGER_GROUP_CONFIG_NAME)}"
@@ -213,24 +207,25 @@ class RbacPermissionMonitorService constructor(
             "putAndGetMonitorGroupConfigCache|READ_ONLY:" +
                 "${monitorGroupConfigCache.getIfPresent(READ_ONLY_GROUP_CONFIG_NAME)}"
         )
+
         return monitorGroupConfigCache.getIfPresent(configName)
     }
 
     private fun generateGroupAuthorizationScopes(
         action: ActionDTO,
-        managerGroupConfig: MutableList<AuthorizationScopes>
+        groupConfig: MutableList<AuthorizationScopes>
     ) {
         val actionRelatedResourceType = action.relatedResourceTypes.firstOrNull()?.id
-        val isExistResourceType = managerGroupConfig.find {
+        val isExistResourceType = groupConfig.find {
             it.resources.firstOrNull()?.type == actionRelatedResourceType
         } != null
         logger.info("generateGroupAuthorizationScopes:$actionRelatedResourceType|$action|$isExistResourceType")
         if (isExistResourceType) {
-            managerGroupConfig.forEach { authorizationScopes ->
+            groupConfig.forEach { authorizationScopes ->
                 if (authorizationScopes.resources.firstOrNull()?.type == actionRelatedResourceType) {
                     authorizationScopes.actions.add(Action(action.id))
                 }
-                logger.info("generateGroupAuthorizationScopes:old|$managerGroupConfig")
+                logger.info("generateGroupAuthorizationScopes:old|$groupConfig")
             }
         } else {
             val managerPath = ManagerPath().apply {
@@ -249,8 +244,8 @@ class RbacPermissionMonitorService constructor(
                 actions = listOf(Action(action.id))
                 resources = listOf(managerResources)
             }
-            managerGroupConfig.add(authorizationScopes)
-            logger.info("generateGroupAuthorizationScopes:new|$managerGroupConfig")
+            groupConfig.add(authorizationScopes)
+            logger.info("generateGroupAuthorizationScopes:new|$groupConfig")
         }
     }
 
