@@ -22,18 +22,26 @@ class SQLCheckListener : DefaultExecuteListener() {
         val noWhereRegex = "(?i:(?!.* WHERE ).*)".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
-//                throw DataAccessException("This SQL : $sql must use WHERE")
-                logger.warn("This SQL : $sql must use WHERE")
+                logger.error("This SQL : $sql must use WHERE")
             }
             if (ctx?.query() != null) {
                 try {
+                    val realSQL = ctx.query()!!.getSQL(ParamType.INLINED)
                     val explain =
-                        DSL.using(ctx.configuration()).fetch("EXPLAIN ${ctx.query()!!.getSQL(ParamType.INLINED)}")
+                        DSL.using(ctx.configuration()).fetch("EXPLAIN $realSQL")
                     for (record in explain) {
-                        val selectType: String = record.getValue("select_type", String::class.java)
+                        val rows: String = record.getValue("rows", String::class.java)
                         val type: String = record.getValue("type", String::class.java)
                         val key: String = record.getValue("key", String::class.java)
-                        logger.info("SQL: $sql , selectType: $selectType, type: $type, key: $key")
+                        if (type.uppercase() == "ALL") {
+                            logger.error("SQL: $realSQL , type: $type is not allowed")
+                        }
+                        if (key.isBlank()) {
+                            logger.error("SQL: $realSQL , key can not be blank. Please add table index")
+                        }
+                        if (rows.toInt() > 1000000) {
+                            logger.error("SQL: $realSQL , too many rows. Please optimization table index")
+                        }
                     }
                 } catch (e: Exception) {
                     logger.warn("explain error", e)
