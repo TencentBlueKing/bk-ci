@@ -1,6 +1,7 @@
 package com.tencent.devops.common.db.listener
 
 import org.jooq.ExecuteContext
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.slf4j.LoggerFactory
@@ -18,7 +19,6 @@ class SQLCheckListener : DefaultExecuteListener() {
     @SuppressWarnings("NestedBlockDepth", "TooGenericExceptionCaught")
     fun check(sql: String, ctx: ExecuteContext? = null) {
         val checkRegex = "^(?i:(UPDATE|DELETE|SELECT).*)$".toRegex()
-//        val noWhereRegex = "(?!.* WHERE ).*".toRegex()
         val noWhereRegex = "(?i:(?!.* WHERE ).*)".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
@@ -27,7 +27,8 @@ class SQLCheckListener : DefaultExecuteListener() {
             }
             if (ctx?.query() != null) {
                 try {
-                    val explain = DSL.using(ctx.configuration()).fetch("EXPLAIN ${ctx.query()!!.sql}")
+                    val explain =
+                        DSL.using(ctx.configuration()).fetch("EXPLAIN ${ctx.query()!!.getSQL(ParamType.INLINED)}")
                     for (record in explain) {
                         val selectType: String = record.getValue("select_type", String::class.java)
                         val type: String = record.getValue("type", String::class.java)
