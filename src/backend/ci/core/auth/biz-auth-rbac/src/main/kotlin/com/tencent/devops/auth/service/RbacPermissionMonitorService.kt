@@ -78,10 +78,10 @@ class RbacPermissionMonitorService constructor(
         logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
         val spaceUid = "${appCode}__$projectCode"
         // 假设项目不是不存在，只是网络中断了，此时是否也要
-        val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
+        /*val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
         if (monitorSpaceDetailVO != null) {
             return monitorSpaceDetailVO
-        }
+        }*/
         if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
             // 创建完之后，把id存储数据库，每次校验的时候，查询数据库是否有该字段为空，若为空 则不存在，走创建流程，若存在则直接返回。那么的话， 这个字段存储
             return createMonitorSpace(
