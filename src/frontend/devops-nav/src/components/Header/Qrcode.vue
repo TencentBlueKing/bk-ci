@@ -1,16 +1,15 @@
 <template>
     <div
         v-clickoutside="hideOrcode"
-        :class="{ &quot;devops-qrcode&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-qrcode': true, 'active': show }"
     >
         <div
             class="qrcode-tips"
             @click="toggleOrcode(show)"
         >
-            <div class="qrcode-icon">
+            <div class="flag-box">
                 <i class="devops-icon icon-phone" />
             </div>
-            <div><span>{{ $t("DevopsMobile") }}</span></div>
         </div>
         <div
             v-if="show"

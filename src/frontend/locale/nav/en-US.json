@@ -235,6 +235,6 @@
         "list": "List",
         "execute": "Execute",
         "enable/disable": "Enable/Disable",
-        "manage": "Manage"
-    }
+        "manage": "Manage",
+        "documentation": "Documentation"
 }

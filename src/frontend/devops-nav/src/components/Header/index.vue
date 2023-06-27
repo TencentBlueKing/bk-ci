@@ -93,14 +93,42 @@
             </h3>
         </div>
         <div class="header-right-bar">
-            <locale-switcher v-if="!isInIframe"></locale-switcher>
+            <bk-popover
+                v-if="!isInIframe"
+                theme="light navigation-message"
+                placement="bottom"
+                :arrow="false"
+                trigger="click"
+                ref="popoverRef"
+            >
+                <div class="flag-box">
+                    <Icon :name="curLang.icon" />
+                </div>
+                <template slot="content">
+                    <li
+                        v-for="(item, index) in langs"
+                        :key="index"
+                        :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
+                        @click="handleChangeLang(item)">
+                        <Icon class="mr5" :name="item.icon" />
+                        {{item.name}}
+                    </li>
+                </template>
+            </bk-popover>
             <qrcode class="feed-back-icon" />
-            <span class="seperate-line">|</span>
-            
-            <i
-                class="devops-icon icon-helper"
-                @click.stop="goToDocs"
-            />
+            <bk-popover
+                theme="light navigation-message"
+                placement="bottom"
+                :arrow="false"
+                trigger="click"
+                ref="popoverRef">
+                <div class="flag-box">
+                    <Icon name="help-fill" />
+                </div>
+                <template slot="content">
+                    <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
+                </template>
+            </bk-popover>
             <User
                 class="user-info"
                 v-bind="user"
@@ -158,6 +186,19 @@
         isShowTooltip: boolean = true
         isAbsoluteUrl = isAbsoluteUrl
 
+        langs: Array<any> = [
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
+            },
+            {
+                icon: 'chinese',
+                name: '中文',
+                id: 'zh-CN'
+            }
+        ]
+ 
         get headerLogoName (): string {
             const logoArr = ['devops-logo']
             const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
@@ -199,6 +240,10 @@
 
         get isInIframe () {
             return top !== window
+        }
+
+        get curLang () {
+            return this.langs.find(item => item.id === this.$i18n.locale) || { id: 'zh-CN', icon: 'chinese' }
         }
 
         $refs: {
@@ -321,6 +366,12 @@
         closeTooltip (): void {
             this.isShowTooltip = false
         }
+
+        handleChangeLang (item) {
+            this.$setLocale(item.id).then(() => {
+                location.reload()
+            })
+        }
     }
 </script>
 
@@ -424,7 +475,7 @@
             >.feed-back-icon.active,
             >.user-info.active {
                 color: white;
-                background-color: black;
+                cursor: pointer;
             }
 
             > .seperate-line {
@@ -511,5 +562,50 @@
         height: 16px;
         margin: 0 10px;
         background: #DCDEE5;
+    }
+    .navigation-message-theme {
+        position: relative;
+        top: -5px;
+        padding: 0 !important;
+    }
+    .bkci-dropdown-item {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      line-height: 33px;
+      padding: 0 16px;
+      color: #63656e;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      &:hover {
+          background-color: #eaf3ff;
+          color: #3a84ff;
+      }
+      &.disabled {
+          color: #dcdee5;
+          cursor: not-allowed;
+      }
+      &.active {
+        background-color: #eaf3ff;
+        color: #3a84ff;
+      }
+    }
+    .flag-box {
+        align-items: center;
+        border-radius: 50%;
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 16px;
+        height: 32px;
+        justify-content: center;
+        position: relative;
+        width: 32px;
+        margin-right: 8px;
+        &:hover {
+            background: linear-gradient(270deg,#253047,#263247);
+            color: #d3d9e4;
+        }
     }
 </style>
