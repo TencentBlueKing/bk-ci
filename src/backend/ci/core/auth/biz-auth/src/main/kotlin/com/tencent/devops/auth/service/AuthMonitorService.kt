@@ -21,7 +21,7 @@ interface AuthMonitorService {
     /**
      * 创建监控平台空间
      */
-    fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): MonitorSpaceDetailVO
+    fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String
 
     /**
      * 查询监控平台空间详情

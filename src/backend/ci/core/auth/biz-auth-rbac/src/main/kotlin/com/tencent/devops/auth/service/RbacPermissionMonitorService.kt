@@ -10,6 +10,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
 import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
 import com.tencent.devops.auth.pojo.ResponseDTO
@@ -21,6 +22,7 @@ import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
@@ -28,6 +30,8 @@ import java.util.concurrent.TimeUnit
 @Suppress("LongParameterList")
 class RbacPermissionMonitorService constructor(
     private val systemService: SystemService,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
+    private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper
 ) : AuthMonitorService {
     /*监控平台组配置*/
@@ -51,14 +55,13 @@ class RbacPermissionMonitorService constructor(
         groupCode: String,
         userId: String?
     ): List<AuthorizationScopes> {
-        val monitorSpaceDetailVO = getOrCreateMonitorSpace(
+        val spaceBizId = getOrCreateMonitorSpaceBizId(
             projectName = projectName,
             projectCode = projectCode,
             groupCode = groupCode,
             userId = userId
         )
-        val spaceBizId = monitorSpaceDetailVO.id
-        logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$monitorSpaceDetailVO")
+        logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$spaceBizId")
         return RbacAuthUtils.buildAuthorizationScopes(
             systemId = MONITOR_SYSTEM_ID,
             authorizationScopesStr = getMonitorGroupConfig(groupCode)!!,
@@ -69,28 +72,23 @@ class RbacPermissionMonitorService constructor(
         )
     }
 
-    private fun getOrCreateMonitorSpace(
+    private fun getOrCreateMonitorSpaceBizId(
         projectName: String,
         projectCode: String,
         groupCode: String,
         userId: String?
-    ): MonitorSpaceDetailVO {
+    ): String {
         logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
-        // 每次根据项目id，查询空间id是否存在，若存在
-        val spaceUid = "${appCode}__$projectCode"
-        // 假设项目不是不存在，只是网络中断了，此时是否也要
-        /*val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
-        if (monitorSpaceDetailVO != null) {
-            return monitorSpaceDetailVO
-        }*/
+        authMonitorSpaceDao.get(dslContext, projectCode)?.let {
+            return it.spaceBizId.toString()
+        }
         if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
-            // 创建完之后，把id存储数据库，每次校验的时候，查询数据库是否有该字段为空，若为空 则不存在，走创建流程，若存在则直接返回。那么的话， 这个字段存储
             return createMonitorSpace(
                 MonitorSpaceCreateInfo(
                     spaceName = projectName,
                     spaceTypeId = appCode,
                     spaceId = projectCode,
-                    creator = userId!!
+                    creator = requireNotNull(userId)
                 )
             )
         }
@@ -100,14 +98,30 @@ class RbacPermissionMonitorService constructor(
         )
     }
 
-    override fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): MonitorSpaceDetailVO {
-        val monitorSpaceDetailData = executeHttpRequest(
+    override fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String {
+        executeHttpRequest(
             urlSuffix = MONITOR_SPACE_CREATE_SUFFIX,
             method = POST_METHOD,
             body = monitorSpaceCreateInfo
-        ).data
-        // 创建完后，直接存储到数据库中
-        return generateMonitorSpaceDetail(monitorSpaceDetailData)!!
+        ).data?.let { monitorSpaceDetailData ->
+            val monitorSpaceDetail = generateMonitorSpaceDetail(monitorSpaceDetailData)
+                ?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
+                    defaultMessage = "The monitoring space(${monitorSpaceCreateInfo.spaceId}) does not exist "
+                )
+            authMonitorSpaceDao.create(
+                dslContext = dslContext,
+                projectCode = monitorSpaceDetail.spaceId!!,
+                spaceBizId = monitorSpaceDetail.id!!,
+                spaceUid = monitorSpaceDetail.spaceUid!!,
+                creator = monitorSpaceCreateInfo.creator
+            )
+            return monitorSpaceDetail.id.toString()
+        }
+        throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
+            defaultMessage = "Failed to create the monitoring space(${monitorSpaceCreateInfo.spaceId})"
+        )
     }
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? {

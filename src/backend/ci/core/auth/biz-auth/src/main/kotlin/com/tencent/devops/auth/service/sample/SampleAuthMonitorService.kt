@@ -15,7 +15,7 @@ class SampleAuthMonitorService : AuthMonitorService {
 
     override fun createMonitorSpace(
         monitorSpaceCreateInfo: MonitorSpaceCreateInfo
-    ): MonitorSpaceDetailVO = MonitorSpaceDetailVO(0L, "", "", "", "", "", "")
+    ): String = ""
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? =
         MonitorSpaceDetailVO(0L, "", "", "", "", "", "")
