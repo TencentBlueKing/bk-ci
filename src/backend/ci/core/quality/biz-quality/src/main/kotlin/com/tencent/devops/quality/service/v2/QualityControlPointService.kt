@@ -139,8 +139,14 @@ class QualityControlPointService @Autowired constructor(
         return QualityControlPoint(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
-            name = record.name ?: "",
-            stage = record.stage ?: "",
+            name = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.id),
+                defaultMessage = record.name ?: ""
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.id),
+                defaultMessage = record.stage ?: ""
+            ),
             availablePos = if (record.availablePosition.isNullOrBlank()) {
                 listOf()
             } else {

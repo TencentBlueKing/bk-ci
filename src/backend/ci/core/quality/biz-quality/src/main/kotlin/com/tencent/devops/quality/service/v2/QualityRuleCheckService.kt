@@ -489,7 +489,7 @@ class QualityRuleCheckService @Autowired constructor(
         // 借助临时list,把红线指标添加的控制点前缀塞进要判断的指标taskName
         if (!ruleTaskStepsCopy.isNullOrEmpty()) {
             indicators.forEach { indicator ->
-                val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.indicatorCode }
+                val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.enName }
                 indicator.taskName = taskStep?.taskName
                 if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
             }
@@ -509,7 +509,7 @@ class QualityRuleCheckService @Autowired constructor(
             val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
                 if (indicator.isScriptElementIndicator()) {
                     listOf(metadataListCopy
-                        .find { indicator.indicatorCode == it.enName &&
+                        .find { indicator.enName == it.enName &&
                                 it.elementType in QualityIndicator.SCRIPT_ELEMENT })
                 } else {
                     indicator.metadataList.map { metadata ->
@@ -523,7 +523,7 @@ class QualityRuleCheckService @Autowired constructor(
                     listOf(
                         metadataListCopy.filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
                         .find {
-                            indicator.indicatorCode == it.enName &&
+                            indicator.enName == it.enName &&
                                     it.taskName.startsWith(indicator.taskName ?: "")
                         }
                     )
@@ -639,9 +639,9 @@ class QualityRuleCheckService @Autowired constructor(
                     QualityRuleInterceptRecord(
                         indicatorId = hashId,
                         indicatorName = if (indicator.taskName.isNullOrEmpty()) {
-                            name
+                            cnName
                         } else {
-                            "[${indicator.taskName!!.substringBeforeLast("+")}]$name"
+                            "[${indicator.taskName!!.substringBeforeLast("+")}]$cnName"
                         },
                         indicatorType = elementType,
                         controlPoint = controlPointName,
@@ -978,10 +978,10 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 } else {
                     // 脚本及三方插件可直接用指标英文名判断，并对结果元数据和指标taskName添加标识后缀
-                    if (metadataListCopy.count { it.enName == indicator.indicatorCode } > 1) {
+                    if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
                         indicatorsCopy.remove(indicator)
                         metadataListCopy.filter {
-                            it.enName == indicator.indicatorCode
+                            it.enName == indicator.enName
                         }.forEachIndexed { index, metadata ->
                             handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
                         }
@@ -998,7 +998,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 } else {
                     // 脚本及三方插件设置了taskName，将匹配到的结果元数据和指标taskName均加上标识后缀
-                    metadataListCopy.filter { it.enName == indicator.indicatorCode &&
+                    metadataListCopy.filter { it.enName == indicator.enName &&
                             it.taskName.startsWith(indicator.taskName ?: "")
                     }.forEachIndexed { index, metadata ->
                         indicatorsCopy.remove(indicator)

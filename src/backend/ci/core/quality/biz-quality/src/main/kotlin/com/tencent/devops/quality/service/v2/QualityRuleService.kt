@@ -371,8 +371,8 @@ class QualityRuleService @Autowired constructor(
                     hashId = it.hashId,
                     elementType = it.elementType,
                     elementDetail = it.elementDetail,
-                    indicatorCode = it.indicatorCode,
-                    name = it.name,
+                    enName = it.enName,
+                    cnName = it.cnName,
                     stage = it.stage,
                     operation = QualityOperation.valueOf(pair.first),
                     operationList = it.operationList,
@@ -468,8 +468,8 @@ class QualityRuleService @Autowired constructor(
                 hashId = it.hashId,
                 elementType = it.elementType,
                 elementDetail = it.elementDetail,
-                indicatorCode = it.indicatorCode,
-                name = it.name,
+                enName = it.enName,
+                cnName = it.cnName,
                 stage = it.stage,
                 operation = QualityOperation.valueOf(pair.first),
                 operationList = it.operationList,
@@ -611,7 +611,7 @@ class QualityRuleService @Autowired constructor(
                 }
             }
             logger.info(
-                "serviceList rule indicator ids for project($projectId): ${indicators.map { it.indicatorCode }}"
+                "serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}"
             )
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
             val indicatorThresholds = ruleDetail?.indicatorThresholds?.split(",") ?: listOf()
@@ -685,8 +685,8 @@ class QualityRuleService @Autowired constructor(
             val pair = ruleIndicatorMap[HashUtil.decodeIdToLong(it.hashId)]
             QualityRuleSummaryWithPermission.RuleSummaryIndicator(
                 it.hashId,
-                it.indicatorCode,
-                it.name,
+                it.enName,
+                it.cnName,
                 pair?.first ?: "",
                 pair?.second ?: ""
             )
@@ -825,7 +825,7 @@ class QualityRuleService @Autowired constructor(
                     taskThresholdList.addAll(rule.indicators.map { indicator ->
                         QualityRuleMatchTask.RuleThreshold(
                             indicator.hashId,
-                            indicator.name,
+                            indicator.cnName,
                             indicator.metadataList.map { it.name },
                             indicator.operation,
                             indicator.threshold

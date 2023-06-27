@@ -119,8 +119,8 @@ class QualityRuleBuildHisService constructor(
                 indicatorService.serviceList(atomCode, indicators.map { it.enName }, projectId)
                     .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
-                    val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.indicatorCode }
-                        ?: throw OperationException("${ruleRequest.name} indicator ${it.indicatorCode} is not exist")
+                    val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
+                        ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
                     logger.info("QUALITY|requestIndicator is: ${requestIndicator.enName}")
 
                         // 使用上下文变量表示阈值时不检查类型
