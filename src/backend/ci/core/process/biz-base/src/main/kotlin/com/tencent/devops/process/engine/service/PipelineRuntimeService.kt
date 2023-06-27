@@ -1142,7 +1142,9 @@ class PipelineRuntimeService @Autowired constructor(
                 }
             }
             if (detail.matrixGroupFlag == true) {
-                containerVar[Container::elements.name] = detail.elements
+                containerVar[Container::elements.name] = detail.elements.map {
+                    JsonUtil.toMutableMap(it)
+                }
             }
             containerBuildRecords.add(
                 BuildRecordContainer(
