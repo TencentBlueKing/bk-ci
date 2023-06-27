@@ -115,7 +115,8 @@
                 },
                 emptyInfo: {
                     title: this.$t('quality.暂无通知组'),
-                    desc: this.$t('quality.您可以新增一个通知组')
+                    desc: this.$t('quality.您可以新增一个通知组'),
+                    btnText: this.$t('quality.新增通知组')
                 },
                 urlParams: getQueryString('groupId') || ''
             }
