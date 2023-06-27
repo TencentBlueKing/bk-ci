@@ -33,6 +33,7 @@ import org.jooq.SQLDialect
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
@@ -50,7 +51,8 @@ class BkShardingJooqConfiguration {
         shardingDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
-        val configuration: org.jooq.Configuration = DefaultConfiguration()
+        logger.info("executeListenerProviders size: {}", executeListenerProviders.stream().count())
+        val configuration = DefaultConfiguration()
             .set(shardingDataSource)
             .set(
                 Settings().withRenderSchema(false)
@@ -62,5 +64,9 @@ class BkShardingJooqConfiguration {
             configuration.set(provider)
         }
         return DSL.using(configuration)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkShardingJooqConfiguration::class.java)
     }
 }
