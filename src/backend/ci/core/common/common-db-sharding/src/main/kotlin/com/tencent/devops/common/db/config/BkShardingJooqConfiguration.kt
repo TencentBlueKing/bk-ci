@@ -63,7 +63,7 @@ class BkShardingJooqConfiguration {
             )
             .set(SQLDialect.MYSQL)
         for (provider in executeListenerProviders) {
-            logger.info("provider class: {}", provider.javaClass)
+            logger.info("provider class: {}", provider.provide().javaClass)
             configuration.set(provider)
         }
         return DSL.using(configuration)
