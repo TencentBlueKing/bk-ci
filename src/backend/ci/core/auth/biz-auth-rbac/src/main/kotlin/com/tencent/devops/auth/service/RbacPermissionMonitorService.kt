@@ -24,6 +24,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 @Suppress("LongParameterList")
 class RbacPermissionMonitorService constructor(
@@ -207,11 +208,14 @@ class RbacPermissionMonitorService constructor(
         val isExistResourceType = managerGroupConfig.find {
             it.resources.firstOrNull()?.type == actionRelatedResourceType
         } != null
+        logger.info("generateGroupAuthorizationScopes:$actionRelatedResourceType|$action|$isExistResourceType")
         if (isExistResourceType) {
             managerGroupConfig.forEach { authorizationScopes ->
                 if (authorizationScopes.resources.firstOrNull()?.type == actionRelatedResourceType) {
                     authorizationScopes.actions.add(Action(action.id))
+
                 }
+                logger.info("generateGroupAuthorizationScopes:old|$managerGroupConfig")
             }
         } else {
             val managerPath = ManagerPath().apply {
@@ -231,6 +235,7 @@ class RbacPermissionMonitorService constructor(
                 resources = listOf(managerResources)
             }
             managerGroupConfig.add(authorizationScopes)
+            logger.info("generateGroupAuthorizationScopes:new|$managerGroupConfig")
         }
     }
 
