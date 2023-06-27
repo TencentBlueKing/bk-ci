@@ -197,5 +197,6 @@
         "execute": "Execute",
         "enable/disable": "Enable/Disable",
         "manage": "Manage"
-    }
+    },
+    "documentation": "Documentation"
 }

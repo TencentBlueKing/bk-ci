@@ -197,5 +197,6 @@
         "execute": "执行",
         "enable/disable": "停用/启用",
         "manage": "管理"
-    }
+    },
+    "documentation": "产品文档"
 }
