@@ -35,7 +35,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val OK = 0
         const val USER_ALREADY_EXISTED = 32001
         const val HAS_BEEN_DELETED = 32006
-        const val APP_NOT_FOUND_CGS = 32005
+        const val APP_NOT_FOUND_CGS = 32004
     }
 
     @Value("\${startCloud.appId}")
