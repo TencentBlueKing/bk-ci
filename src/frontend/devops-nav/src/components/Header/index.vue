@@ -102,7 +102,7 @@
                 ref="popoverRef"
             >
                 <div class="flag-box">
-                    <Icon :name="curLang.icon" />
+                    <Icon :name="curLang.icon" size="20" />
                 </div>
                 <template slot="content">
                     <li
@@ -110,7 +110,7 @@
                         :key="index"
                         :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
                         @click="handleChangeLang(item)">
-                        <Icon class="mr5" :name="item.icon" />
+                        <Icon class="mr5" :name="item.icon" size="20" />
                         {{item.name}}
                     </li>
                 </template>
@@ -123,7 +123,7 @@
                 trigger="click"
                 ref="popoverRef">
                 <div class="flag-box">
-                    <Icon name="help-fill" />
+                    <Icon name="help-fill" size="20" />
                 </div>
                 <template slot="content">
                     <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
@@ -375,7 +375,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
