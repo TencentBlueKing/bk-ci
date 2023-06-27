@@ -208,7 +208,7 @@ class TencentAgentMetricService @Autowired constructor(
         return bkMonitorMetricsService.queryCpuUsageMetrics(
             userId = userId,
             projectId = projectId,
-            agentId = agentRecord.id,
+            agentHashId = HashUtil.encodeLongId(agentRecord.id),
             timeRange = timeRange
         )
     }
@@ -229,7 +229,7 @@ class TencentAgentMetricService @Autowired constructor(
         return bkMonitorMetricsService.queryMemoryUsageMetrics(
             userId = userId,
             projectId = projectId,
-            agentId = agentRecord.id,
+            agentHashId = HashUtil.encodeLongId(agentRecord.id),
             timeRange = timeRange
         )
     }
@@ -250,7 +250,7 @@ class TencentAgentMetricService @Autowired constructor(
         return bkMonitorMetricsService.queryDiskioMetrics(
             userId = userId,
             projectId = projectId,
-            agentId = agentRecord.id,
+            agentHashId = HashUtil.encodeLongId(agentRecord.id),
             os = agentRecord.os,
             timeRange = timeRange
         )
@@ -272,7 +272,7 @@ class TencentAgentMetricService @Autowired constructor(
         return bkMonitorMetricsService.queryNetMetrics(
             userId = userId,
             projectId = projectId,
-            agentId = agentRecord.id,
+            agentHashId = HashUtil.encodeLongId(agentRecord.id),
             os = agentRecord.os,
             timeRange = timeRange
         )

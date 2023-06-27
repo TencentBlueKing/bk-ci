@@ -87,10 +87,10 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryMemoryUsageMetrics(
         userId: String,
         projectId: String,
-        agentId: Long,
+        agentHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\"})"
+        val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentHashId\",projectId=\"$projectId\"})"
 
         val data = searchMetrics(projectId, promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -106,7 +106,7 @@ class BkMonitorMetricsService @Autowired constructor(
             )
         }
         resultData["used_percent"] = if (res.isNullOrEmpty()) {
-            logger.warn("$userId|$projectId|$agentId|$timeRange mem metrics is empty")
+            logger.warn("$userId|$projectId|$agentHashId|$timeRange mem metrics is empty")
             listOf()
         } else {
             res
@@ -118,10 +118,10 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryCpuUsageMetrics(
         userId: String,
         projectId: String,
-        agentId: Long,
+        agentHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val promql = "avg($dataTableName:cpu_detail:user{agentId=\"$agentId\",projectId=\"$projectId\"})"
+        val promql = "avg($dataTableName:cpu_detail:user{agentId=\"$agentHashId\",projectId=\"$projectId\"})"
 
         val data = searchMetrics(projectId, promql, timeRange)?.firstOrNull()?.datapoints
 
@@ -137,7 +137,7 @@ class BkMonitorMetricsService @Autowired constructor(
             )
         }
         resultData["usage_user"] = if (res.isNullOrEmpty()) {
-            logger.warn("$userId|$projectId|$agentId|$timeRange cpu metrics is empty")
+            logger.warn("$userId|$projectId|$agentHashId|$timeRange cpu metrics is empty")
             listOf()
         } else {
             res
@@ -149,7 +149,7 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryDiskioMetrics(
         userId: String,
         projectId: String,
-        agentId: Long,
+        agentHashId: String,
         os: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
@@ -177,9 +177,9 @@ class BkMonitorMetricsService @Autowired constructor(
 //
 //            else -> return emptyMap()
 //        }
-        val readPromql = "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentId\"," +
+        val readPromql = "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentHashId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
-        val writePromql = "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
+        val writePromql = "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentHashId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(projectId, readPromql, timeRange)
@@ -194,7 +194,7 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryNetMetrics(
         userId: String,
         projectId: String,
-        agentId: Long,
+        agentHashId: String,
         os: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
@@ -207,9 +207,9 @@ class BkMonitorMetricsService @Autowired constructor(
             OS.MACOS, OS.LINUX -> "interface"
             OS.WINDOWS -> "instance"
         }
-        val readPromql = "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentId\"," +
+        val readPromql = "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentHashId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
-        val sendPromql = "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
+        val sendPromql = "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentHashId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(projectId, readPromql, timeRange)
@@ -230,7 +230,7 @@ class BkMonitorMetricsService @Autowired constructor(
         .maximumSize(MAX_CACHE)
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String, AgentHostInfo> { agentAndProjectId ->
-            val (agentId, projectId) = agentAndProjectId.split(":")
+            val (projectId, agentId) = agentAndProjectId.split(":")
             queryHostInfoImpl(projectId, agentId)
         }
 
