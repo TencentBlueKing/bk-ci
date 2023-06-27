@@ -28,7 +28,6 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.model.environment.tables.TBkbizProject
-import com.tencent.devops.model.environment.tables.records.TBkbizProjectRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
