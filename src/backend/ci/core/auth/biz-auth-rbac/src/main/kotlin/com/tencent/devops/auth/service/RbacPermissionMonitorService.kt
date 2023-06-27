@@ -14,6 +14,7 @@ import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
 import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -76,11 +77,13 @@ class RbacPermissionMonitorService constructor(
     ): MonitorSpaceDetailVO {
         logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
         val spaceUid = "${appCode}__$projectCode"
+        // 假设项目不是不存在，只是网络中断了，此时是否也要
         val monitorSpaceDetailVO = getMonitorSpaceDetail(spaceUid)
         if (monitorSpaceDetailVO != null) {
             return monitorSpaceDetailVO
         }
         if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
+            // 创建完之后，把id存储数据库，每次校验的时候，查询数据库是否有该字段为空，若为空 则不存在，走创建流程，若存在则直接返回。那么的话， 这个字段存储
             return createMonitorSpace(
                 MonitorSpaceCreateInfo(
                     spaceName = projectName,
@@ -249,17 +252,17 @@ class RbacPermissionMonitorService constructor(
             POST_METHOD -> requestBuilder.post(requestBody!!)
         }
         OkhttpUtils.doHttp(requestBuilder.build()).use {
-            /*if (!it.isSuccessful) {
+            if (!it.isSuccessful) {
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
-            }*/
+            }
             val responseStr = it.body!!.string()
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
-            /*if (responseDTO.code != 0L) {
+            if (responseDTO.code != 0L) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
-            }*/
+            }
             logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return responseDTO
         }
