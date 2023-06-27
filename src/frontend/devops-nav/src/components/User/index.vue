@@ -1,49 +1,39 @@
 <template>
-    <div
-        v-clickoutside="hideUserInfo"
-        :class="{ &quot;devops-user-info&quot;: true, &quot;active&quot;: show }"
-    >
+
+    <bk-popover
+        theme="light navigation-message"
+        placement="bottom"
+        :arrow="false"
+        trigger="click"
+        ref="popoverRef">
         <div
             class="user-entry"
-            @click.stop="toggleUserInfo"
         >
             {{ username }}
-            <i class="devops-icon icon-down-shape" />
+            <i class="devops-icon icon-down-shape ml5" />
         </div>
-        <div
-            v-if="show"
-            class="user-info-dropmenu"
-        >
-            <p class="user-avatar">
-                <!-- <img
-                    :src="avatarUrl"
-                    alt="userAvatar"
-                > -->
-                <span>{{ chineseName }}</span>
-            </p>
-            <slot name="menu">
-                <ul>
-                    <li
-                        v-for="(item, index) in menu"
-                        :key="index"
-                        @click="hideUserInfo(item)"
-                    >
-                        <a
-                            v-if="item.to"
-                            class="user-menu-item"
-                        >
-                            {{ item.label }}
-                        </a>
-                        <span
-                            v-else-if="item.cb"
-                            class="user-menu-item"
-                            @click.stop="item.cb"
-                        >{{ item.label }}</span>
-                    </li>
-                </ul>
-            </slot>
-        </div>
-    </div>
+        <template slot="content">
+            <li
+                v-for="(item, index) in menu"
+                :key="index"
+                class="bkci-dropdown-item"
+            >
+                <router-link
+                    v-if="item.to"
+                    class="user-menu-item"
+                    :to="item.to"
+                    @click.native="hideUserInfo"
+                >
+                    {{ item.label }}
+                </router-link>
+                <span
+                    v-else-if="item.cb"
+                    class="user-menu-item"
+                    @click.stop="item.cb"
+                >{{ item.label }}</span>
+            </li>
+        </template>
+    </bk-popover>
 </template>
 
 <script lang="ts">
