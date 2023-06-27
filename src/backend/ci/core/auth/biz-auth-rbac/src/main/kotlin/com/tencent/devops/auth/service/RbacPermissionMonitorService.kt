@@ -267,7 +267,7 @@ class RbacPermissionMonitorService constructor(
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
             if (responseDTO.code != 200L) {
                 // 请求错误
-                logger.warn("request failed, url:($url)|response:($it)")
+                logger.warn("request failed, url:($url)|response :($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
             }
             logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
