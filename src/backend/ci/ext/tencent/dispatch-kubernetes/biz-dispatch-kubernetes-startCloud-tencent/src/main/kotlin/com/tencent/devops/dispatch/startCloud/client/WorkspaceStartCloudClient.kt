@@ -35,7 +35,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val OK = 0
         const val USER_ALREADY_EXISTED = 32001
         const val HAS_BEEN_DELETED = 32006
-        const val APP_NOT_FOUND_CGS = 32004
+        const val APP_NOT_BIND_CGS = 32004
+        const val NO_CGS_CHOOSE = 32005
     }
 
     @Value("\${startCloud.appId}")
@@ -79,11 +80,12 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data.cgsIp
-                    APP_NOT_FOUND_CGS == environmentRsp.code -> throw BuildFailureException(
+                    APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
+                    -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，云桌面资源不足($APP_NOT_FOUND_CGS)"
+                        "第三方服务-START-CLOUD 异常，云桌面资源不足($APP_NOT_BIND_CGS)"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
