@@ -170,7 +170,8 @@
                         resourceType: QUALITY_GROUP_RESOURCE_TYPE,
                         resourceCode: projectId,
                         action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
-                    }
+                    },
+                    btnText: this.$t('quality.新增通知组')
                 },
                 urlParams: getQueryString('groupId') || ''
             }
