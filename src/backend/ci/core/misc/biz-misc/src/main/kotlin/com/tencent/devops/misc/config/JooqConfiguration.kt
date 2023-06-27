@@ -39,9 +39,9 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Scope
 import java.lang.reflect.AnnotatedElement
@@ -53,7 +53,7 @@ import javax.sql.DataSource
  * Powered By Tencent
  */
 @Configuration
-@Import(DataSourceConfig::class, DBBaseConfiguration::class)
+@AutoConfigureAfter(DataSourceConfig::class, DBBaseConfiguration::class)
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
