@@ -9,7 +9,7 @@
     "暂无通知组": "No notification group",
     "未搜索到任何的结果": "No results were found.",
     "默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1": "It's left empty by default, and it will take effect on all control points if it's empty. Only English and numbers are supported, such as gate1.",
-    "红线记录": "Red-Line Records",
+    "红线记录": "Intercept Records",
     "总览": "Overview",
     "仅填写项目组内的人员有效": "It is valid to enter the members in the project team.",
     "选择关注的指标并设置范围，不满足的流水线将会在控制点位置停住": "Select the indicators of concern and set the range, and the unsatisfied pipeline will stop at the control point.",
