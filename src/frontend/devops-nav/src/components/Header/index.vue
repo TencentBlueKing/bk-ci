@@ -601,4 +601,5 @@
             background: linear-gradient(270deg,#253047,#263247);
             color: #d3d9e4;
         }
+    }
 </style>
