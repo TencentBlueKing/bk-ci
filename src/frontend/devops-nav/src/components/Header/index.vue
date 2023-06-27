@@ -572,6 +572,7 @@
       font-size: 12px;
       text-decoration: none;
       white-space: nowrap;
+      background-color: #fff;
       cursor: pointer;
       &:hover {
           background-color: #eaf3ff;
