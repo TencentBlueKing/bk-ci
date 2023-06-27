@@ -29,6 +29,7 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -36,12 +37,15 @@ import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.pojo.AgentTelegrafData
 import com.tencent.devops.environment.pojo.TelegrafMulData
 import com.tencent.devops.environment.pojo.TelegrafStandData
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Primary
 @Service
@@ -51,7 +55,8 @@ class TencentAgentMetricService @Autowired constructor(
     val influxdbClient: InfluxdbClient,
     private val objectMapper: ObjectMapper,
     private val kafkaClient: KafkaClient,
-    private val bkMonitorMetricsService: BkMonitorMetricsService
+    private val bkMonitorMetricsService: BkMonitorMetricsService,
+    private val agentPropsScope: AgentPropsScope
 ) : AgentMetricService(
     dslContext,
     thirdPartyAgentDao,
@@ -193,10 +198,17 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
+        val agentRecord = getAgentRecord(
+            nodeHashId = nodeHashId,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        if (!checkAgentVersion(agentRecord.masterVersion)) {
+            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
+        }
         return bkMonitorMetricsService.queryCpuUsageMetrics(
             userId = userId,
             projectId = projectId,
-            nodeHashId = nodeHashId,
+            agentId = agentRecord.id,
             timeRange = timeRange
         )
     }
@@ -207,10 +219,17 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
+        val agentRecord = getAgentRecord(
+            nodeHashId = nodeHashId,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        if (!checkAgentVersion(agentRecord.masterVersion)) {
+            return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
+        }
         return bkMonitorMetricsService.queryMemoryUsageMetrics(
             userId = userId,
             projectId = projectId,
-            nodeHashId = nodeHashId,
+            agentId = agentRecord.id,
             timeRange = timeRange
         )
     }
@@ -221,10 +240,18 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
+        val agentRecord = getAgentRecord(
+            nodeHashId = nodeHashId,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        if (!checkAgentVersion(agentRecord.masterVersion)) {
+            return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
+        }
         return bkMonitorMetricsService.queryDiskioMetrics(
             userId = userId,
             projectId = projectId,
-            nodeHashId = nodeHashId,
+            agentId = agentRecord.id,
+            os = agentRecord.os,
             timeRange = timeRange
         )
     }
@@ -235,15 +262,40 @@ class TencentAgentMetricService @Autowired constructor(
         nodeHashId: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
+        val agentRecord = getAgentRecord(
+            nodeHashId = nodeHashId,
+            projectId = projectId
+        ) ?: throw NotFoundException("The agent is not exist")
+        if (!checkAgentVersion(agentRecord.masterVersion)) {
+            return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
+        }
         return bkMonitorMetricsService.queryNetMetrics(
             userId = userId,
             projectId = projectId,
-            nodeHashId = nodeHashId,
+            agentId = agentRecord.id,
+            os = agentRecord.os,
             timeRange = timeRange
         )
     }
 
-    override fun queryHostInfo(agentHashId: String): AgentHostInfo {
-        return bkMonitorMetricsService.queryHostInfo(agentHashId)
+    override fun queryHostInfo(projectId: String, agentHashId: String): AgentHostInfo {
+        return bkMonitorMetricsService.queryHostInfo("$projectId:$agentHashId")
+    }
+
+    private fun getAgentRecord(
+        nodeHashId: String,
+        projectId: String
+    ): TEnvironmentThirdpartyAgentRecord? {
+        val id = HashUtil.decodeIdToLong(nodeHashId)
+        return thirdPartyAgentDao.getAgentByNodeId(
+            dslContext = dslContext,
+            nodeId = id,
+            projectId = projectId
+        )
+    }
+
+    // agent升级是一批一批的，所以根据agent版本决定使用新的还是旧的环境查询监控数据
+    private fun checkAgentVersion(agentVersion: String): Boolean {
+        return agentVersion == agentPropsScope.getAgentVersion()
     }
 }

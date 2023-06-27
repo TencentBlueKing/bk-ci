@@ -32,10 +32,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.dao.BkBizProjectDao
 import com.tencent.devops.environment.model.AgentHostInfo
+import com.tencent.devops.environment.pojo.BkBizProjectLock
+import com.tencent.devops.environment.pojo.BkMetadataResp
 import com.tencent.devops.environment.pojo.BkMonitorRequestBody
 import com.tencent.devops.environment.pojo.BkMonitorRequestBodyQueryConfigs
 import com.tencent.devops.environment.pojo.BkMonitorResp
@@ -52,13 +54,13 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
 
 @Service
 class BkMonitorMetricsService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao
+    private val bkBizProjectDao: BkBizProjectDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${bkMonitor.gateway:#{null}}")
@@ -85,20 +87,12 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryMemoryUsageMetrics(
         userId: String,
         projectId: String,
-        nodeHashId: String,
+        agentId: Long,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        val agentId = HashUtil.encodeLongId(agentRecord.id)
-
         val promql = "avg($dataTableName:mem:pct_used{agentId=\"$agentId\",projectId=\"$projectId\"})"
 
-        val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
+        val data = searchMetrics(projectId, promql, timeRange)?.firstOrNull()?.datapoints
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
         val res = data?.map { d ->
@@ -112,7 +106,7 @@ class BkMonitorMetricsService @Autowired constructor(
             )
         }
         resultData["used_percent"] = if (res.isNullOrEmpty()) {
-            logger.warn("$userId|$projectId|$nodeHashId|$timeRange mem metrics is empty")
+            logger.warn("$userId|$projectId|$agentId|$timeRange mem metrics is empty")
             listOf()
         } else {
             res
@@ -124,20 +118,12 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryCpuUsageMetrics(
         userId: String,
         projectId: String,
-        nodeHashId: String,
+        agentId: Long,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        val agentId = HashUtil.encodeLongId(agentRecord.id)
-
         val promql = "avg($dataTableName:cpu_detail:user{agentId=\"$agentId\",projectId=\"$projectId\"})"
 
-        val data = searchMetrics(promql, timeRange)?.firstOrNull()?.datapoints
+        val data = searchMetrics(projectId, promql, timeRange)?.firstOrNull()?.datapoints
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
         val res = data?.map { d ->
@@ -151,7 +137,7 @@ class BkMonitorMetricsService @Autowired constructor(
             )
         }
         resultData["usage_user"] = if (res.isNullOrEmpty()) {
-            logger.warn("$userId|$projectId|$nodeHashId|$timeRange cpu metrics is empty")
+            logger.warn("$userId|$projectId|$agentId|$timeRange cpu metrics is empty")
             listOf()
         } else {
             res
@@ -163,23 +149,16 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryDiskioMetrics(
         userId: String,
         projectId: String,
-        nodeHashId: String,
+        agentId: Long,
+        os: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        val agentId = HashUtil.encodeLongId(agentRecord.id)
-
         val groupByTime: String = when (timeRange) {
             TIME_RANGE_WEEK -> "10m"
             TIME_RANGE_DAY -> "2m"
             else -> "10s"
         }
-        val tag = when (OS.valueOf(agentRecord.os)) {
+        val tag = when (OS.valueOf(os)) {
             OS.MACOS, OS.LINUX -> "name"
             OS.WINDOWS -> "instance"
         }
@@ -203,8 +182,8 @@ class BkMonitorMetricsService @Autowired constructor(
         val writePromql = "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
-        val readData = searchMetrics(readPromql, timeRange)
-        val writeData = searchMetrics(writePromql, timeRange)
+        val readData = searchMetrics(projectId, readPromql, timeRange)
+        val writeData = searchMetrics(projectId, writePromql, timeRange)
 
         val result = mutableMapOf<String, List<Map<String, Any>>>()
         result.putAll(formatData(tag, "read", readData))
@@ -215,23 +194,16 @@ class BkMonitorMetricsService @Autowired constructor(
     fun queryNetMetrics(
         userId: String,
         projectId: String,
-        nodeHashId: String,
+        agentId: Long,
+        os: String,
         timeRange: String
     ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        val agentId = HashUtil.encodeLongId(agentRecord.id)
-
         val groupByTime: String = when (timeRange) {
             TIME_RANGE_WEEK -> "10m"
             TIME_RANGE_DAY -> "2m"
             else -> "10s"
         }
-        val tag = when (OS.valueOf(agentRecord.os)) {
+        val tag = when (OS.valueOf(os)) {
             OS.MACOS, OS.LINUX -> "interface"
             OS.WINDOWS -> "instance"
         }
@@ -240,8 +212,8 @@ class BkMonitorMetricsService @Autowired constructor(
         val sendPromql = "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentId\"," +
             "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
-        val readData = searchMetrics(readPromql, timeRange)
-        val sendData = searchMetrics(sendPromql, timeRange)
+        val readData = searchMetrics(projectId, readPromql, timeRange)
+        val sendData = searchMetrics(projectId, sendPromql, timeRange)
 
         val result = mutableMapOf<String, List<Map<String, Any>>>()
         result.putAll(formatData(tag, "IN", readData))
@@ -249,22 +221,25 @@ class BkMonitorMetricsService @Autowired constructor(
         return result
     }
 
-    fun queryHostInfo(agentHashId: String): AgentHostInfo {
-        return hostCache.get(agentHashId) ?: emptyInfo
+    fun queryHostInfo(agentAndProjectId: String): AgentHostInfo {
+        return hostCache.get(agentAndProjectId) ?: emptyInfo
     }
 
     // #7479 主机的信息变化不会经常变化，除非更换机器，所以不需要经常进行直接查询，更新缓存即可。
     private val hostCache = Caffeine.newBuilder()
         .maximumSize(MAX_CACHE)
         .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<String, AgentHostInfo> { agentHashId -> queryHostInfoImpl(agentHashId) }
+        .build<String, AgentHostInfo> { agentAndProjectId ->
+            val (agentId, projectId) = agentAndProjectId.split(":")
+            queryHostInfoImpl(projectId, agentId)
+        }
 
-    private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
+    private fun queryHostInfoImpl(projectId: String, agentHashId: String): AgentHostInfo {
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
-        val nCpu = searchMetrics(nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
+        val nCpu = searchMetrics(projectId, nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
 
         val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\"}"
-        val nMem = searchMetrics(memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
+        val nMem = searchMetrics(projectId, memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
         val memTotal = if (nMem != null) {
             NumberUtils.byteToString(nMem)
         } else {
@@ -317,11 +292,11 @@ class BkMonitorMetricsService @Autowired constructor(
         )
     }
 
-    private fun searchMetrics(promql: String, timeRange: String): List<BkMonitorRespDataSeries>? {
+    private fun searchMetrics(projectId: String, promql: String, timeRange: String): List<BkMonitorRespDataSeries>? {
         val startTime = System.currentTimeMillis()
+        val bizId = getBizId(projectId) ?: return null
         val body = BkMonitorRequestBody(
-            // TODO: 未来看如何获取
-            bkBizId = -4220817,
+            bkBizId = bizId.inv() + 1,
             queryConfigs = listOf(
                 BkMonitorRequestBodyQueryConfigs(
                     alias = "a",
@@ -350,6 +325,65 @@ class BkMonitorMetricsService @Autowired constructor(
         logger.info("searchMetrics $promql cost ${System.currentTimeMillis() - startTime}ms")
 
         return data
+    }
+
+    private fun getBizId(projectId: String): Long? {
+        var bizId = bkBizProjectDao.fetchBizId(dslContext, projectId)
+        if (bizId != null) {
+            return bizId
+        }
+        // 因为同时会有四个方法进行查询，所以加锁写入
+        val bizLock = BkBizProjectLock(
+            redisOperation = redisOperation,
+            projectId = projectId
+        )
+        try {
+            bizLock.lock()
+            // 进来后再查询下，因为会有其他同时强锁的写入
+            bizId = bkBizProjectDao.fetchBizId(dslContext, projectId)
+            if (bizId != null) {
+                return bizId
+            }
+            // 没有就拿取新的
+            val url = "$bkMonitorGateway/metadata_get_space_detail?space_uid=bkci__$projectId"
+            val headerStr = objectMapper.writeValueAsString(
+                mapOf("bk_app_code" to bkMonitorAppCode, "bk_app_secret" to bkMonitorAppSecret)
+            ).replace("\\s".toRegex(), "")
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("X-Bkapi-Authorization", headerStr)
+                .build()
+
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    logger.warn("request failed, uri:($url)|response: ($it)")
+                    throw RemoteServiceException("request failed, response:($it)")
+                }
+                val responseStr = it.body!!.string()
+                val resp = objectMapper.readValue<BkMetadataResp>(responseStr)
+                if (resp.code != 200L || !resp.result) {
+                    // 请求错误
+                    logger.warn("request failed, url:($url)|response:($it)")
+                    throw RemoteServiceException("request failed, response:(${resp.message})")
+                }
+                logger.debug("request response：${objectMapper.writeValueAsString(resp.data)}")
+                bizId = resp.data?.id
+                if (bizId == null) {
+                    logger.error("request bk mate data is null")
+                    return null
+                }
+
+                bkBizProjectDao.add(dslContext, bizId!!, projectId)
+                return bizId
+            }
+        } catch (e: Exception) {
+            logger.error("get bizId error", e)
+            return null
+        } finally {
+            bizLock.unlock()
+        }
     }
 
     private fun requestBkMonitor(body: Any): BkMonitorResp {
