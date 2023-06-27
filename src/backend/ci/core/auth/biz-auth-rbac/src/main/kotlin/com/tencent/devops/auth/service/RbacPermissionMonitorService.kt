@@ -235,7 +235,8 @@ class RbacPermissionMonitorService constructor(
         if (isExistResourceType) {
             groupConfig.forEach { authorizationScopes ->
                 if (authorizationScopes.resources.firstOrNull()?.type == actionRelatedResourceType) {
-                    authorizationScopes.actions.toMutableList().add(Action(action.id))
+                    val newActions = authorizationScopes.actions.toMutableList().apply { add(Action(action.id)) }
+                    authorizationScopes.actions = newActions
                 }
                 logger.info("generateGroupAuthorizationScopes:old|$groupConfig")
             }
