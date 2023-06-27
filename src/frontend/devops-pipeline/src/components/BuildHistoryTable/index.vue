@@ -585,7 +585,7 @@
                 const { data, visibleIndex } = this
                 const row = data[visibleIndex]
                 if (row) {
-                    const url = this.getArchiveUrl(data[visibleIndex], 'partView')
+                    const url = this.getArchiveUrl(data[visibleIndex], 'outputs')
                     this.$router.push(url)
                 }
             },
