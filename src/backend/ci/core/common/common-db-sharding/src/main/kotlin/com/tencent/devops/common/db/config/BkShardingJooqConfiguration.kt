@@ -39,10 +39,12 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import javax.sql.DataSource
 
 @Configuration
-@AutoConfigureAfter(BkShardingDataSourceConfiguration::class, DBBaseConfiguration::class)
+@Import(BkShardingDataSourceConfiguration::class, DBBaseConfiguration::class)
+@AutoConfigureAfter(DBBaseConfiguration::class)
 class BkShardingJooqConfiguration {
 
     @Bean
@@ -61,6 +63,7 @@ class BkShardingJooqConfiguration {
             )
             .set(SQLDialect.MYSQL)
         for (provider in executeListenerProviders) {
+            logger.info("provider class: {}", provider.javaClass)
             configuration.set(provider)
         }
         return DSL.using(configuration)
