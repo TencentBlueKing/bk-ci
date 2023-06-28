@@ -267,7 +267,7 @@ class BcsRemoteDevService @Autowired constructor(
     }
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
 
-        logger.info("BcsRemoteDevService|start to do waitTaskFinish")
+        logger.info("BcsRemoteDevService|start to do waitTaskFinish|userId|$userId|taskId|$taskId")
         // 将task放入缓存，等待回调
         workspaceRedisUtils.refreshTaskStatus(
             userId = userId,
@@ -284,9 +284,8 @@ class BcsRemoteDevService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
                 )
             }
-            Thread.sleep(5 * 1000)
+            Thread.sleep(1 * 1000)
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
-            logger.info("BcsRemoteDevService|taskStatus|$taskStatus")
             if (taskStatus?.status != null) {
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
