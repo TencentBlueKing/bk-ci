@@ -233,16 +233,7 @@ class KubernetesContainerService @Autowired constructor(
                         limitDiskIO = "0",
                         limitMem = "${memory}Mi"
                     ),
-                    env = mapOf(
-                        ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
-                        "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
-                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
-                    ),
+                    env = generateEnvs(dispatchMessages),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
                     privateBuilder = if (privateBuilderTaint.isBlank()) null
@@ -281,16 +272,7 @@ class KubernetesContainerService @Autowired constructor(
                 userId = userId,
                 name = builderName,
                 param = StartBuilderParams(
-                    env = mapOf(
-                        ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
-                        "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
-                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
-                    ),
+                    env = generateEnvs(dispatchMessages),
                     command = listOf("/bin/sh", entrypoint)
                 )
             )
@@ -427,5 +409,26 @@ class KubernetesContainerService @Autowired constructor(
     private fun getBuilderName(): String {
         return "build${System.currentTimeMillis()}-" +
             RandomStringUtils.randomAlphabetic(8).lowercase(Locale.getDefault())
+    }
+
+    private fun generateEnvs(dispatchMessage: DispatchMessage): Map<String, String> {
+        // 拼接环境变量
+        with(dispatchMessage) {
+            val envs = mutableMapOf<String, String>()
+            if (customBuildEnv != null) {
+                envs.putAll(customBuildEnv!!)
+            }
+            envs.putAll(mapOf(
+                ENV_KEY_PROJECT_ID to projectId,
+                ENV_KEY_AGENT_ID to id,
+                ENV_KEY_AGENT_SECRET_KEY to secretKey,
+                ENV_KEY_GATEWAY to gateway,
+                SLAVE_ENVIRONMENT to "Kubernetes",
+                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+            ))
+
+            return envs
+        }
     }
 }
