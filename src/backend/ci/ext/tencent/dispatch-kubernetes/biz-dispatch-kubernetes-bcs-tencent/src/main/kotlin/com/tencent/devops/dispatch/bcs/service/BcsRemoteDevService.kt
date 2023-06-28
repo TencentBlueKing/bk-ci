@@ -283,7 +283,7 @@ class BcsRemoteDevService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
                 )
             }
-            Thread.sleep(1 * 1000)
+            Thread.sleep(5 * 1000)
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
             logger.info("BcsRemoteDevService|taskStatus|$taskStatus")
             if (taskStatus?.status != null) {
