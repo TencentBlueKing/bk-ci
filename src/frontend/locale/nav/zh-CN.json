@@ -1,7 +1,7 @@
 {   
     "okLabel": "确定",
     "cancelLabel": "取消",
-    "logout": "退出",
+    "logout": "退出登录",
     "close": "关闭",
     "accessCenter": "权限中心",
     "recentVisiteService": "最近访问服务",
