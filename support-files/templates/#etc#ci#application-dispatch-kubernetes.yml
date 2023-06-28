@@ -34,6 +34,7 @@ kubernetes:
       disk: 100
   gateway:
     webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
+  privateBuilderTaint: __BK_CI_KUBERNETES_BUILDER_TAINT__
 
 bcs:
   apiUrl: __BK_CI_BCS_HOST__
