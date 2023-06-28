@@ -39,7 +39,18 @@ class AuthMonitorSpaceDao {
         }
     }
 
-    fun update() {
-
+    fun update(
+        dslContext: DSLContext,
+        projectCode: String,
+        spaceUid: String,
+        updateUser: String
+    ) {
+        with(TAuthMonitorSpace.T_AUTH_MONITOR_SPACE) {
+            dslContext.update(this)
+                .set(SPACE_UID, spaceUid)
+                .set(UPDATE_USER, updateUser)
+                .where(PROJECT_CODE.eq(projectCode))
+                .execute()
+        }
     }
 }

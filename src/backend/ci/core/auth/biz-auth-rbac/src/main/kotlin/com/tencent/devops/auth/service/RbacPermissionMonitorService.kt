@@ -85,6 +85,7 @@ class RbacPermissionMonitorService constructor(
         if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
             return if (monitorSpaceRecord != null) {
                 updateMonitorSpace(
+                    projectCode = projectCode,
                     monitorSpaceUpdateInfo = MonitorSpaceUpdateInfo(
                         spaceName = projectName,
                         spaceTypeId = appCode,
@@ -92,7 +93,6 @@ class RbacPermissionMonitorService constructor(
                         updater = userId!!
                     )
                 )
-                monitorSpaceRecord.spaceBizId.toString()
             } else {
                 createMonitorSpace(
                     MonitorSpaceCreateInfo(
@@ -145,7 +145,10 @@ class RbacPermissionMonitorService constructor(
         return generateMonitorSpaceDetail(monitorSpaceDetailData)
     }
 
-    fun updateMonitorSpace(monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo): String {
+    private fun updateMonitorSpace(
+        projectCode: String,
+        monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo
+    ): String {
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
             method = POST_METHOD,
@@ -157,7 +160,12 @@ class RbacPermissionMonitorService constructor(
                     defaultMessage = "The monitoring space(${monitorSpaceUpdateInfo.spaceName}) does not exist "
                 )
             // 修改数据库
-            authMonitorSpaceDao.update()
+            authMonitorSpaceDao.update(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                spaceUid = monitorSpaceDetail.spaceUid!!,
+                updateUser = monitorSpaceUpdateInfo.updater
+            )
             return monitorSpaceDetail.id.toString()
         }
         throw ErrorCodeException(
