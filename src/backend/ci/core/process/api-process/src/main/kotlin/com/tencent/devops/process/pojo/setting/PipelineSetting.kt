@@ -48,7 +48,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("")
+@ApiModel("流水线配置")
 data class PipelineSetting(
     @ApiModelProperty("项目id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var projectId: String = "",
@@ -64,6 +64,10 @@ data class PipelineSetting(
     var successSubscription: Subscription = Subscription(),
     @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
+    @ApiModelProperty("订阅成功相关", required = false)
+    var successSubscriptionList: List<Subscription> = listOf(Subscription()),
+    @ApiModelProperty("订阅失败相关", required = false)
+    var failSubscriptionList: List<Subscription> = listOf(Subscription()),
     @ApiModelProperty("标签列表", required = false)
     var labels: List<String> = emptyList(),
     @ApiModelProperty("最大排队时长", required = false)
