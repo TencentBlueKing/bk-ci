@@ -69,7 +69,7 @@ class WebSocketConfig @Autowired constructor(
     }
 
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
-        registry.addEndpoint("/ws/user","/ws/desktop")
+        registry.addEndpoint("/ws/user", "/ws/desktop")
             .addInterceptors(bkHandshake)
             .setAllowedOriginPatterns("*")
             .withSockJS()
