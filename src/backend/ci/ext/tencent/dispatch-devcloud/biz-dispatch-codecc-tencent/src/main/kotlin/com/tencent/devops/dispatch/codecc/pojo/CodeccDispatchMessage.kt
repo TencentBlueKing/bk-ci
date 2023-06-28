@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.codecc.pojo
 
-data class CodeccDispatchMessage (
+data class CodeccDispatchMessage(
     val codeccTaskId: Long,
     val image: String?,
     val userName: String?,
