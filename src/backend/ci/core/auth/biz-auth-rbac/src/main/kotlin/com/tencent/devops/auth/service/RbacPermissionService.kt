@@ -85,14 +85,27 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        return validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = action,
-            projectCode = projectCode,
-            resourceType = resourceType!!,
-            resourceCode = "*",
-            relationResourceType = null
-        )
+        val actionInfo = rbacCacheService.getActionInfo(action)
+        // 如果action关联的资源是项目,则直接查询项目的权限
+        return if (actionInfo.relatedResourceType == AuthResourceType.PROJECT.value) {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                relationResourceType = null
+            )
+        } else {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType!!,
+                resourceCode = "*",
+                relationResourceType = null
+            )
+        }
     }
 
     override fun validateUserResourcePermissionByRelation(
