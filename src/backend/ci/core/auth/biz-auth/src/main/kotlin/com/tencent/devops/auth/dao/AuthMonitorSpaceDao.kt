@@ -4,6 +4,7 @@ import com.tencent.devops.model.auth.tables.TAuthMonitorSpace
 import com.tencent.devops.model.auth.tables.records.TAuthMonitorSpaceRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class AuthMonitorSpaceDao {
@@ -45,10 +46,12 @@ class AuthMonitorSpaceDao {
         spaceUid: String,
         updateUser: String
     ) {
+        val now = LocalDateTime.now()
         with(TAuthMonitorSpace.T_AUTH_MONITOR_SPACE) {
             dslContext.update(this)
                 .set(SPACE_UID, spaceUid)
                 .set(UPDATE_USER, updateUser)
+                .set(UPDATE_TIME, now)
                 .where(PROJECT_CODE.eq(projectCode))
                 .execute()
         }
