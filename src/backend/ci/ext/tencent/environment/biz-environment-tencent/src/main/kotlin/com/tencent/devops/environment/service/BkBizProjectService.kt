@@ -25,61 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.dao
+package com.tencent.devops.environment.service
 
+import com.tencent.devops.environment.dao.BkBizProjectDao
 import com.tencent.devops.environment.pojo.BizProjectItem
-import com.tencent.devops.model.environment.tables.TBkbizProject
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class BkBizProjectDao {
-    fun add(
-        dslContext: DSLContext,
-        bizId: Long,
-        projectId: String
+@Service
+class BkBizProjectService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val bizProjectDao: BkBizProjectDao
+) {
+    fun addBizProjects(
+        bizProjects: List<BizProjectItem>
     ): Boolean {
-        with(TBkbizProject.T_BKBIZ_PROJECT) {
-            return dslContext.insertInto(this).columns(BIZ_ID, PROJECT_ID).values(bizId, projectId).execute() > 0
+        return if (bizProjects.isEmpty()) {
+            false
+        } else if (bizProjects.size == 1) {
+            bizProjectDao.add(
+                dslContext = dslContext,
+                bizId = bizProjects.first().bkBizId,
+                projectId = bizProjects.first().projectId
+            )
+        } else {
+            bizProjectDao.batchAdd(
+                dslContext,
+                bizProjects
+            )
         }
     }
 
-    fun fetchBizId(
-        dslContext: DSLContext,
-        projectId: String
-    ): Long? {
-        with(TBkbizProject.T_BKBIZ_PROJECT) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetchAny()?.bizId
-        }
-    }
-
-    fun batchAdd(
-        dslContext: DSLContext,
-        bpList: List<BizProjectItem>
-    ): Boolean {
-        if (bpList.isEmpty()) {
-            return false
-        }
-        with(TBkbizProject.T_BKBIZ_PROJECT) {
-            val sql = dslContext.insertInto(this)
-                .set(PROJECT_ID, bpList.first().projectId)
-                .set(BIZ_ID, bpList.first().bkBizId)
-            if (bpList.size <= 1) {
-                return sql.execute() > 0
-            }
-            bpList.forEach {
-                sql.newRecord().set(PROJECT_ID, it.projectId).set(BIZ_ID, it.bkBizId)
-            }
-            return sql.execute() > 0
-        }
-    }
-
-    fun delete(
-        dslContext: DSLContext,
+    fun deleteBizProject(
         id: Long
     ): Boolean {
-        with(TBkbizProject.T_BKBIZ_PROJECT) {
-            return dslContext.deleteFrom(this).where(ID.eq(id)).execute() > 0
-        }
+        return bizProjectDao.delete(dslContext, id)
     }
 }
