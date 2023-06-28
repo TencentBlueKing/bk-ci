@@ -61,6 +61,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.experience.ExperienceNotificationReq
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
@@ -522,7 +523,10 @@ class ExperienceService @Autowired constructor(
             experienceId,
             "${experience.name}（$appVersion）"
         )
-        sendNotification(experienceId)
+
+        if (experience.sendNotification) {
+            sendNotification(experienceId)
+        }
 
         return experienceId
     }
@@ -780,7 +784,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experience.experienceName,
             versionTitle = experience.versionTitle,
             categoryId = experience.categoryId,
-            productOwner = experience.productOwner
+            productOwner = experience.productOwner,
+            sendNotification = experience.sendNotification
         )
 
         val experienceId = createExperience(
@@ -819,6 +824,10 @@ class ExperienceService @Autowired constructor(
                 params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
+    }
+
+    fun batchNotification(req: ExperienceNotificationReq) {
+
     }
 
     private fun sendNotification(experienceId: Long) {

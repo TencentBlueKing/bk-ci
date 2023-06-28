@@ -30,6 +30,7 @@ package com.tencent.devops.experience.resources.builds
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.experience.ExperienceNotificationReq
 import com.tencent.devops.experience.api.builds.BuildExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
@@ -48,6 +49,16 @@ class BuildExperienceResourceImpl @Autowired constructor(private val experienceS
     ): Result<ExperienceCreateResp> {
         checkParam(userId, projectId)
         return Result(experienceService.serviceCreate(userId, projectId, experience, Source.PIPELINE))
+    }
+
+    override fun batchNotification(req: ExperienceNotificationReq): Result<Boolean> {
+        try {
+            experienceService.batchNotification(req)
+            return Result(true)
+        } catch (e: Exception) {
+            return Result(false)
+        }
+
     }
 
     private fun checkParam(userId: String, projectId: String) {
