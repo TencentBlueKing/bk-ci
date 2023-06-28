@@ -157,8 +157,8 @@ class QualityTemplateService @Autowired constructor(
                         defaultMessage = it.name
                     )
                 } ?: "",
-                controlPointPosition = ControlPointPosition(record.controlPointPosition),
-                availablePosition = listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
+                controlPointPosition = ControlPointPosition.create(record.controlPointPosition),
+                availablePosition = listOf(ControlPointPosition.create("BEFORE"), ControlPointPosition.create("AFTER"))
             )
         } ?: listOf()
     }

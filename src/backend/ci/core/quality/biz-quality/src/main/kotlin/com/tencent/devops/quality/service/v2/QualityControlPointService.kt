@@ -150,9 +150,9 @@ class QualityControlPointService @Autowired constructor(
             availablePos = if (record.availablePosition.isNullOrBlank()) {
                 listOf()
             } else {
-                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+                record.availablePosition.split(",").map { name -> ControlPointPosition.create(name) }
             },
-            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            defaultPos = ControlPointPosition.create(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion
         )
@@ -179,8 +179,9 @@ class QualityControlPointService @Autowired constructor(
                         messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.id),
                         defaultMessage = it.stage
                     ),
-                    availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                    defaultPos = ControlPointPosition(it.defaultPosition),
+                    availablePos = it.availablePosition.split(",")
+                        .map { name -> ControlPointPosition.create(name) },
+                    defaultPos = ControlPointPosition.create(it.defaultPosition),
                     enable = it.enable,
                     atomVersion = it.atomVersion
                 )

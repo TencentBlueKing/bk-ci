@@ -31,16 +31,22 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.constant.BK_AFTER_POSITION
 import com.tencent.devops.quality.constant.BK_BEFORE_POSITION
 
-class ControlPointPosition(
-    val name: String
+class ControlPointPosition private constructor(
+    val name: String,
+    val cnName: String
 ) {
-    val i18nName: String = POSITION_NAME_MAP[name] ?: ""
     companion object {
         const val BEFORE_POSITION = "BEFORE"
         const val AFTER_POSITION = "AFTER"
-        val POSITION_NAME_MAP = mapOf(
-            BEFORE_POSITION to I18nUtil.getCodeLanMessage(BK_BEFORE_POSITION),
-            AFTER_POSITION to I18nUtil.getCodeLanMessage(BK_AFTER_POSITION)
+
+        fun create(name: String): ControlPointPosition {
+            val cnName = POSITION_NAME_MAP[name]?.let { I18nUtil.getCodeLanMessage(it) } ?: name
+            return ControlPointPosition(name, cnName)
+        }
+
+        private val POSITION_NAME_MAP = mapOf(
+            BEFORE_POSITION to BK_BEFORE_POSITION,
+            AFTER_POSITION to BK_AFTER_POSITION
         )
     }
 }
