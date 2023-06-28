@@ -173,7 +173,7 @@
                                 <bk-option v-for="(option, index) in createRuleForm.availablePosition"
                                     :key="index"
                                     :id="option.name"
-                                    :name="option.cnName">
+                                    :name="option.i18nName">
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
@@ -312,8 +312,8 @@
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
+                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入审核人，支持输入流水线变量')" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
                                             <bk-input type="number"

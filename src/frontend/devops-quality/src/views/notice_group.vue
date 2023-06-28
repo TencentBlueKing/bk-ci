@@ -26,7 +26,7 @@
                     v-if="showContent && noticeGroupList.length"
                     @click="toCreateGroup"
                 >
-                    {{$t('quality.新增')}}
+                    {{$t('quality.新增通知组')}}
                 </bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
