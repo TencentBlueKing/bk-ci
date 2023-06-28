@@ -38,4 +38,8 @@ class AuthMonitorSpaceDao {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode)).fetchAny()
         }
     }
+
+    fun update() {
+
+    }
 }
