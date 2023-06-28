@@ -14,6 +14,14 @@ proxy:
   wsproxyName: wsproxy 
   # registry-facade service名称 
   registryFacadeName: registry-facade
+  initjob:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 150m
+        memory: 256Mi  
 
 apisix:
   initContainer:

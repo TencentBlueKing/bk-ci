@@ -19,6 +19,7 @@ spec:
         - name: wait-for-apisix
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
@@ -30,9 +31,10 @@ spec:
               done
               echo "Apisix admin is available";
       containers:
-        - name: init-sql
+        - name: init-router
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
