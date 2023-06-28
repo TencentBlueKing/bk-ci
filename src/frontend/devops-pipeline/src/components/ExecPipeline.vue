@@ -240,9 +240,9 @@
     import Logo from '@/components/Logo'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -462,13 +462,13 @@
         },
         updated () {
             if (this.showErrorPopup) {
-                const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                this.setScrollBarPostion()
             }
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
+                this.setScrollBarPostion()
                 setTimeout(() => {
                     this.setAtomLocate(this.errorList[0])
                 }, 600)
@@ -524,6 +524,10 @@
                     ]
 
                 )
+            },
+            setScrollBarPostion () {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId

@@ -53,7 +53,8 @@
             getTooltips (item) {
                 return {
                     content: item?.tooltips,
-                    disabled: !item?.tooltips
+                    disabled: !item?.tooltips,
+                    allowHTML: false
                 }
             },
             clickMenuItem (item) {
