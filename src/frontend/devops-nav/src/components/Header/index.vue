@@ -370,7 +370,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
@@ -563,29 +563,27 @@
         padding: 0 !important;
     }
     .bkci-dropdown-item {
-      display: flex;
-      align-items: center;
-      height: 32px;
-      line-height: 33px;
-      padding: 0 16px;
-      color: #63656e;
-      font-size: 12px;
-      text-decoration: none;
-      white-space: nowrap;
-      background-color: #fff;
-      cursor: pointer;
-      &:hover {
-          background-color: #eaf3ff;
-          color: #3a84ff;
-      }
-      &.disabled {
-          color: #dcdee5;
-          cursor: not-allowed;
-      }
-      &.active {
-        background-color: #eaf3ff;
-        color: #3a84ff;
-      }
+        display: flex;
+        align-items: center;
+        height: 32px;
+        line-height: 33px;
+        padding: 0 16px;
+        color: #63656e;
+        font-size: 12px;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: #fff;
+        cursor: pointer;
+        &:hover {
+            background-color: #f5f7fb;
+        }
+        &.disabled {
+            color: #dcdee5;
+            cursor: not-allowed;
+        }
+        &.active {
+            background-color: #f5f7fb;
+        }
     }
     .flag-box {
         align-items: center;
