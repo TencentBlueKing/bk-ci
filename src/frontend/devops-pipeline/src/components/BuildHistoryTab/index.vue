@@ -90,11 +90,11 @@
             filterData () {
                 return [
                     {
-                        value: 'commitid',
+                        value: 'Commit ID',
                         id: 'materialCommitId'
                     },
                     {
-                        value: 'commitMessage',
+                        value: 'Commit Message',
                         id: 'materialCommitMessage'
                     },
                     {
