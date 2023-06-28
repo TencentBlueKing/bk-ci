@@ -174,9 +174,8 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        // val environment = workspaceDevCloudClient.getWorkspaceDetail(userId, environmentUid)
-        // val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
-        val envPatchStr = ""
+        val environment = workspaceDevCloudClient.getWorkspaceDetail(userId, environmentUid)
+        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
         val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,

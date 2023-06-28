@@ -189,8 +189,9 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        val environment = workspaceBcsClient.getWorkspaceDetail(userId, environmentUid)
-        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
+        // val environment = workspaceBcsClient.getWorkspaceDetail(userId, environmentUid)
+        // val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
+        val envPatchStr = ""
         val resp = workspaceBcsClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
