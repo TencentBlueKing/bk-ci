@@ -1,25 +1,23 @@
 package com.tencent.devops.dispatch.docker.service.debug.impl
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.dispatch.docker.service.debug.DebugInterface
+import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("THIRD_PARTY_AGENT_DOCKER_BUILD_CLUSTER_RESULT")
 class ThirdPartyAgentDebugServiceImpl @Autowired constructor(
     private val client: Client,
     private val commonConfig: CommonConfig
-) : DebugInterface {
+) : ExtDebugService {
     override fun startDebug(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String?,
-        vmSeqId: String,
-        dockerRoutingType: DockerRoutingType
+        vmSeqId: String
     ): String {
         var url = client.get(ServiceAgentResource::class).getDockerDebugUrl(
             userId = userId,
@@ -43,10 +41,20 @@ class ThirdPartyAgentDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String,
-        dockerRoutingType: DockerRoutingType
+        containerName: String
     ): Boolean {
         // 目前GoAgent客户端只要断开链接就会删掉容器，所以不用实现具体的stop
         return true
+    }
+
+    override fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String? {
+        return null
     }
 }

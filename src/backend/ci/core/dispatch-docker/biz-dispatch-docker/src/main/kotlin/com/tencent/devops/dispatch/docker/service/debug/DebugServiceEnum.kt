@@ -34,14 +34,12 @@ import com.tencent.devops.dispatch.docker.service.debug.impl.ThirdPartyAgentDebu
 
 enum class DebugServiceEnum {
     DOCKER,
-    KUBERNETES,
-    THIRD_PARTY_AGENT_DOCKER;
+    KUBERNETES;
 
     open fun instance(): DebugInterface {
         return when (this) {
             DOCKER -> SpringContextUtil.getBean(DockerHostDebugServiceImpl::class.java)
             KUBERNETES -> SpringContextUtil.getBean(KubernetesDebugServiceImpl::class.java)
-            THIRD_PARTY_AGENT_DOCKER -> SpringContextUtil.getBean(ThirdPartyAgentDebugServiceImpl::class.java)
         }
     }
 }
