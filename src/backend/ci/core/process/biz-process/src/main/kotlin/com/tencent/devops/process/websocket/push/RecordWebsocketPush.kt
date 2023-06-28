@@ -46,7 +46,7 @@ data class RecordWebsocketPush(
     val buildId: String?,
     val pipelineId: String,
     val projectId: String,
-    val executeCount: Int,
+    val executeCount: Int?,
     override val userId: String,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,

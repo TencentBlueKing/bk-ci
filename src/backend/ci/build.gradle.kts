@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
+    id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
 }
 
@@ -14,9 +14,12 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
-    // Docker镜像构建
-    if (name.startsWith("boot-") && System.getProperty("devops.assemblyMode") == "KUBERNETES") {
-        pluginManager.apply("task-docker-build")
+    // 加载boot的插件
+    if (name.startsWith("boot-")) {
+        pluginManager.apply("task-i18n-load") // i18n插件
+        if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+            pluginManager.apply("task-docker-build") // Docker镜像构建
+        }
     }
 
     // 版本管理
@@ -55,6 +58,7 @@ allprojects {
             dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("com.github.xingePush:xinge:${Versions.Xinge}")
             dependency("org.reflections:reflections:${Versions.reflections}")
             dependency("org.dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.commons:commons-compress:${Versions.Compress}")
@@ -119,6 +123,7 @@ allprojects {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 

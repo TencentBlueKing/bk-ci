@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -121,6 +122,22 @@ class EventCacheService @Autowired constructor(
             ).data?.map { it.depotPathString } ?: emptyList()
             eventCache?.p4ChangeFiles = changeFiles
             changeFiles
+        }
+    }
+
+    fun getP4ServerInfo(
+        repo: Repository,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): P4ServerInfo? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.serverInfo ?: run {
+            client.get(ServiceP4Resource::class).getServerInfo(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType
+            ).data
         }
     }
 }

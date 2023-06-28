@@ -40,6 +40,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
@@ -54,10 +55,19 @@ class SDKConfiguration {
         @Autowired objectMapper: ObjectMapper,
         @Autowired client: Client,
         @Autowired channelUtils: ChannelUtils,
-        @Autowired buildLogPrinter: BuildLogPrinter
+        @Autowired buildLogPrinter: BuildLogPrinter,
+        @Autowired commonConfig: CommonConfig
     ) =
-        DispatchService(redisOperation, objectMapper, pipelineEventDispatcher, gateway,
-            client, channelUtils, buildLogPrinter)
+        DispatchService(
+            redisOperation = redisOperation,
+            objectMapper = objectMapper,
+            pipelineEventDispatcher = pipelineEventDispatcher,
+            gateway = gateway,
+            client = client,
+            channelUtils = channelUtils,
+            buildLogPrinter = buildLogPrinter,
+            commonConfig = commonConfig
+        )
 
     @Bean
     fun jobQuotaService(

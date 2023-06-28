@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -42,6 +43,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -79,6 +81,13 @@ interface OPProjectResource {
         @ApiParam(value = "项目信息请求实体", required = true)
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
+
+    @POST
+    @Path("/updateProjectCreator")
+    @ApiOperation("修改项目创建人")
+    fun updateProjectCreator(
+        projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>
+    ): Result<Boolean>
 
     @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
     @GET

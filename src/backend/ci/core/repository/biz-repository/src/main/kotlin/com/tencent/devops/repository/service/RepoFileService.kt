@@ -37,6 +37,8 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -382,7 +384,7 @@ class RepoFileService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = I18nUtil.getCodeLanMessage(NOT_AUTHORIZED_BY_OAUTH)
         )
     }
 

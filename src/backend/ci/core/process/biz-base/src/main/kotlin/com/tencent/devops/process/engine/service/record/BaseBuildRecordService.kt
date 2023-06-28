@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
@@ -127,7 +127,7 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
                 errorInfoList = null,
@@ -159,6 +159,8 @@ open class BaseBuildRecordService(
         buildRecordModel: BuildRecordModel,
         executeCount: Int?
     ): Model? {
+        val watcher = Watcher(id = "getRecordModel#$buildId")
+        watcher.start("getVersionModelString")
         val resourceStr = pipelineResVersionDao.getVersionModelString(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
         ) ?: pipelineResDao.getVersionModelString(
@@ -172,9 +174,15 @@ open class BaseBuildRecordService(
         )
         var recordMap: Map<String, Any>? = null
         return try {
+            watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+            // 为model填充质量红线element
+            pipelineElementService.fillElementWhenNewBuild(
+                model = fullModel,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                handlePostFlag = false
+            )
             val baseModelMap = JsonUtil.toMutableMap(fullModel)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
@@ -184,17 +192,23 @@ open class BaseBuildRecordService(
                 recordModelMap = buildRecordModel.modelVar,
                 pipelineBaseModelMap = baseModelMap
             )
+            watcher.start("generateFieldRecordModelMap")
             recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            watcher.start("generatePipelineBuildModel")
             ModelUtils.generatePipelineBuildModel(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+        } catch (ignore: Throwable) {
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
@@ -270,7 +284,7 @@ open class BaseBuildRecordService(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.stageId == StageBuildRecordService.TRIGGER_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }

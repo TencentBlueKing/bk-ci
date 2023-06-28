@@ -1,21 +1,23 @@
 <template>
     <span class="container-type">
         <span v-if="!containerType.showIcon" v-bk-tooltips="containerType.tooltip">
-            {{containerType.content}}
+            {{ containerType.content }}
         </span>
-        <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{containerType.content}}</Logo>
+        <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{
+            containerType.content
+        }}</Logo>
     </span>
 </template>
 <script>
+    import { bkTooltips } from 'bk-magic-vue'
+    import Logo from './Logo'
+    import { localeMixins } from './locale'
     import {
         convertMStoString,
-        isVmContainer,
+        isNormalContainer,
         isTriggerContainer,
-        isNormalContainer
+        isVmContainer
     } from './util'
-    import Logo from './Logo'
-    import { bkTooltips } from 'bk-magic-vue'
-    import { localeMixins } from './locale'
 
     export default {
         name: 'container-type',
@@ -31,7 +33,7 @@
         },
         computed: {
             containerType () {
-                const { container, convertElapsed } = this
+                const { container } = this
                 const { vmNames = [], baseOS = '', elements = [] } = container
                 let iconProps = {}
                 let content = ''
@@ -40,15 +42,16 @@
                 }
                 let showIcon = true
                 switch (true) {
-                    case container.systemElapsed !== undefined || container.elementElapsed !== undefined: {
-                        const systemElapsed = convertElapsed(container.systemElapsed)
-                        const elementElapsed = convertElapsed(container.elementElapsed)
-                        const elapsedSum = systemElapsed + elementElapsed
-                        const lt1Hour = elapsedSum < 36e5
+                    case container.timeCost !== undefined: {
+                        const { totalCost, executeCost, systemCost } = container.timeCost
+                        const lt1Hour = totalCost < 36e5
                         tooltip = {
-                            content: `${this.t('userTime')}：${convertMStoString(elementElapsed)} + ${this.t('systemTime')}： ${convertMStoString(systemElapsed)}`
+                            delay: [300, 0],
+                            content: `${this.t('userTime')}：${convertMStoString(executeCost)} + ${this.t(
+                                'systemTime'
+                            )}： ${convertMStoString(systemCost)}`
                         }
-                        content = lt1Hour ? convertMStoString(elapsedSum) : '>1h'
+                        content = lt1Hour ? convertMStoString(totalCost) : '>1h'
                         showIcon = false
                         break
                     }
@@ -81,13 +84,6 @@
                     showIcon
                 }
             }
-        },
-        methods: {
-            convertElapsed (val) {
-                const numVal = parseInt(val, 10)
-                return Number.isInteger(numVal) ? numVal : 0
-            }
         }
     }
-
 </script>

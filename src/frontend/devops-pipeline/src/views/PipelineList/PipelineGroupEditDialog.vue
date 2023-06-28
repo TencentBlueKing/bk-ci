@@ -603,10 +603,8 @@
             updatePipelineIds (id, checked) {
                 console.log(this.model.pipelineIds.length, id, checked, this.model.pipelineIds.has(id))
                 if (this.model.pipelineIds.has(id) && !checked) {
-                    console.log('delete')
                     this.model.pipelineIds.delete(id)
                 } else if (!this.model.pipelineIds.has(id)) {
-                    console.log('add')
                     this.model.pipelineIds.add(id)
                 }
                 this.model.pipelineIds = new Set(this.model.pipelineIds)
@@ -689,7 +687,6 @@
                 } else {
                     this.model.filters.splice($index, 1)
                 }
-                console.log(this.model.filters)
             },
             async handleSubmit () {
                 if (this.isSubmiting) return

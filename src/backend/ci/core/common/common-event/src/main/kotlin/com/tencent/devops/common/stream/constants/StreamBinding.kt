@@ -72,6 +72,8 @@ object StreamBinding {
     // 构建状态Websocket推送解耦
     const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "engine.pipeline.build.websocket"
 
+    const val QUEUE_PIPELINE_BUILD_REVIEW_REMINDER = "engine.pipeline.build.review.reminder.notify"
+
     // 构建排队广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT = "engine.pipeline.build.queue.fanout"
 
@@ -186,4 +188,19 @@ object StreamBinding {
     const val EXCHANGE_METRICS_STATISTIC_CODE_CHECK_DAILY = "metrics.statistic.code.check.daily"
 
     const val QUEUE_PIPELINE_STREAM_ENABLED = "engine.pipeline.stream.enabled"
+
+    // 权限rbac交换机
+    const val EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE = "e.auth.rbac.listener"
+
+    // 权限itsm回调事件
+    const val ROUTE_AUTH_ITSM_CALLBACK = "r.auth.itsm.callback"
+    const val QUEUE_AUTH_ITSM_CALLBACK = "q.auth.itsm.callback"
+
+    // 权限资源关联用户组创建事件
+    const val ROUTE_AUTH_RESOURCE_GROUP_CREATE = "r.auth.resource.group.create"
+    const val QUEUE_AUTH_RESOURCE_GROUP_CREATE = "q.auth.resource.group.create"
+
+    // 权限资源关联用户组修改事件
+    const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
+    const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.service.config
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -119,4 +120,28 @@ class CommonConfig {
      */
     @Value("\${sharding.routing.cacheSize:50000}")
     val shardingRoutingCacheSize: Long = 50000
+
+    /**
+     * bkrepo DevNet区域网关配置
+     */
+    @Value("\${devopsGateway.fileDevnetGateway:#{null}}")
+    val fileDevnetGateway: String? = null
+
+    /**
+     * bkrepo Idc区域网关配置
+     */
+    @Value("\${devopsGateway.fileIdcGateway:#{null}}")
+    val fileIdcGateway: String? = null
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.defaultLocale:$DEFAULT_LOCALE_LANGUAGE}")
+    val devopsDefaultLocaleLanguage: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.supportLanguages:$DEFAULT_LOCALE_LANGUAGE}")
+    val devopsSupportLanguages: String = DEFAULT_LOCALE_LANGUAGE
 }

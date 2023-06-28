@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -45,6 +46,9 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -114,7 +118,10 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
-            atomResponse.errorMsg = "后台服务任务执行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -125,7 +132,10 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
-            atomResponse.errorMsg = "后台服务运行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {
             taskAfter(atomResponse, task, startTime)
@@ -222,6 +232,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,
+                            executeCount = task.executeCount ?: 1,
                             taskId = updateTaskStatusInfo.taskId,
                             taskStatus = updateTaskStatusInfo.buildStatus
                         )
@@ -270,8 +281,12 @@ class TaskAtomService @Autowired(required = false) constructor(
      */
     fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
         val startTime = System.currentTimeMillis()
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-
+        // #8879 被动终止的插件应该设为取消状态
+        var atomResponse = if (actionType.isTerminate()) {
+            AtomResponse(BuildStatus.CANCELED)
+        } else {
+            AtomResponse(BuildStatus.FAILED)
+        }
         try {
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑

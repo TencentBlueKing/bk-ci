@@ -27,28 +27,69 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicatorMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.quality.dao.v2.QualityMetadataDao
+import com.tencent.devops.quality.pojo.po.QualityMetadataPO
+import java.io.File
+import java.util.concurrent.Executors
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
 
 @Service@Suppress("ALL")
 class QualityMetadataService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val metadataDao: QualityMetadataDao
+    private val metadataDao: QualityMetadataDao,
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
+    }
+
+    @PostConstruct
+    fun init() {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_METADATA_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
+        )
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
+                try {
+                    logger.info("start init quality metadata")
+                    val classPathResource = ClassPathResource(
+                        "i18n${File.separator}metadata_${commonConfig.devopsDefaultLocaleLanguage}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val qualityMetadataPOs = JsonUtil.to(json, object : TypeReference<List<QualityMetadataPO>>() {})
+                    metadataDao.batchCrateQualityMetadata(dslContext, qualityMetadataPOs)
+                    logger.info("init quality metadata end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality metadata fail! error:${ignored.message}")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
     }
 
     fun serviceListMetadata(metadataIds: Collection<Long>): List<QualityIndicatorMetadata> {

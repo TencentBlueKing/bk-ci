@@ -33,18 +33,18 @@ import com.tencent.devops.store.service.atom.AtomBusHandleService
 class GolangAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
     override fun handleOsName(osName: String): String {
-        return if (osName.toUpperCase() == OSType.MAC_OS.name) {
+        return if (osName.uppercase() == OSType.MAC_OS.name) {
             "darwin"
         } else {
-            osName.toLowerCase()
+            osName.lowercase()
         }
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
-        val osType = if (osName.toLowerCase() == "darwin") {
+        val osType = if (osName.lowercase() == "darwin") {
             OSType.MAC_OS
         } else {
-            OSType.valueOf(osName.toUpperCase())
+            OSType.valueOf(osName.uppercase())
         }
         return when (osType) {
             OSType.LINUX, OSType.MAC_OS -> {

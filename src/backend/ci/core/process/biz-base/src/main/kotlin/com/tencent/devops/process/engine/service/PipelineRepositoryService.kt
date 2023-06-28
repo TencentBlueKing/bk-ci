@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -50,7 +51,9 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -269,17 +272,15 @@ class PipelineRepositoryService constructor(
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
-                defaultMessage = "非法的流水线编排"
+                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
             )
         }
         val c = (
-                stage.containers.getOrNull(0)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                        defaultMessage = "第一阶段的环境不能为空"
-                    )
-                ) as TriggerContainer
+            stage.containers.getOrNull(0)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+                )
+            ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -341,7 +342,9 @@ class PipelineRepositoryService constructor(
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                defaultMessage = "阶段的环境不能为空"
+                params = arrayOf(
+                    MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
+                )
             )
         }
         stage.containers.forEach { c ->
@@ -382,9 +385,8 @@ class PipelineRepositoryService constructor(
                 }
             } catch (ignore: Exception) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
-                    params = arrayOf(c.name, ignore.message ?: ""),
-                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误: ${ignore.message}"
+                    errorCode = ProcessMessageCode.ERROR_JOB_MATRIX_YAML_CONFIG_ERROR,
+                    params = arrayOf(c.name, ignore.message ?: "")
                 )
             }
 
@@ -447,9 +449,10 @@ class PipelineRepositoryService constructor(
         if (option == null) throw DependNotFoundException("matrix option not found")
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                        "matrix maxConcurrency(${option.maxConcurrency}) " +
-                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                "matrix maxConcurrency number(${option.maxConcurrency}) " +
+                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -820,8 +823,7 @@ class PipelineRepositoryService constructor(
 
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "要删除的流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
@@ -953,7 +955,6 @@ class PipelineRepositoryService constructor(
         if (existPipelines.contains(pipelineId)) {
             logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
             throw ErrorCodeException(
-                defaultMessage = "子流水线不允许循环调用",
                 errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
             )
         }
@@ -1070,8 +1071,7 @@ class PipelineRepositoryService constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                defaultMessage = "流水线名称已被使用"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
             )
         }
 
@@ -1175,8 +1175,7 @@ class PipelineRepositoryService constructor(
     ): Model {
         val existModel = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1190,8 +1189,7 @@ class PipelineRepositoryService constructor(
                 days = days
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
-                defaultMessage = "要还原的流水线不存在，可能已经被删除或还原了"
+                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
 
             existModel.name = pipeline.pipelineName
@@ -1200,7 +1198,6 @@ class PipelineRepositoryService constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channel}不符合$channelCode",
                     params = arrayOf(pipeline.channel)
                 )
             }
@@ -1282,10 +1279,16 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Int {
+    fun updateMaxConRunningQueueSize(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        maxConRunningQueueSize: Int
+    ): Int {
         return pipelineSettingDao.updateMaxConRunningQueueSize(
             dslContext = dslContext,
-            pipelineIdList = listOf(pipelineId),
+            projectId = projectId,
+            pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
         )
     }

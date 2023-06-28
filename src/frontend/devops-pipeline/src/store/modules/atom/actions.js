@@ -16,68 +16,68 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import request from '@/utils/request'
 import {
     FETCH_ERROR,
-    PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX
+    MACOS_API_URL_PREFIX,
+    PROCESS_API_URL_PREFIX,
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
+import request from '@/utils/request'
+import { hashID, randomString } from '@/utils/util'
+import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
-    SET_STAGE_TAG_LIST,
-    SET_PIPELINE_STAGE,
-    SET_COMMON_SETTING,
-    SET_PIPELINE_CONTAINER,
-    SET_TEMPLATE,
-    SET_CONTAINER_DETAIL,
-    SET_ATOMS,
-    SET_ATOM_MODAL,
-    SET_ATOM_MODAL_FETCHING,
-    UPDATE_ATOM_TYPE,
-    UPDATE_ATOM,
-    INSERT_ATOM,
-    PROPERTY_PANEL_VISIBLE,
-    SET_PIPELINE_EDITING,
+    ADD_CONTAINER,
+    ADD_STAGE,
+    CLEAR_ATOM_DATA,
+    DELETE_ATOM,
+    DELETE_ATOM_PROP,
     DELETE_CONTAINER,
     DELETE_STAGE,
-    ADD_CONTAINER,
-    DELETE_ATOM,
-    UPDATE_CONTAINER,
-    ADD_STAGE,
-    UPDATE_STAGE,
+    FETCHING_ATOM_LIST,
+    FETCHING_ATOM_MORE_LOADING,
+    FETCHING_ATOM_VERSION,
+    INSERT_ATOM,
+    PROPERTY_PANEL_VISIBLE,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
+    SET_ATOM_MODAL,
+    SET_ATOM_MODAL_FETCHING,
+    SET_ATOM_PAGE_OVER,
+    SET_ATOM_VERSION_LIST,
+    SET_COMMEND_ATOM_COUNT,
+    SET_COMMEND_ATOM_PAGE_OVER,
+    SET_COMMON_SETTING,
+    SET_CONTAINER_DETAIL,
+    SET_DEFAULT_STAGE_TAG,
+    SET_EDIT_FROM,
+    SET_EXECUTE_STATUS,
+    SET_GLOBAL_ENVS,
+    SET_HIDE_SKIP_EXEC_TASK,
+    SET_IMPORTED_JSON,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_BUILD_PARAM,
-    DELETE_ATOM_PROP,
+    SET_PIPELINE_CONTAINER,
+    SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
+    SET_PIPELINE_STAGE,
     SET_REMOTE_TRIGGER_TOKEN,
-    SET_GLOBAL_ENVS,
+    SET_REQUEST_ATOM_DATA,
+    SET_SAVE_STATUS,
+    SET_STAGE_TAG_LIST,
+    SET_STORE_SEARCH,
+    SET_TEMPLATE,
     TOGGLE_ATOM_SELECTOR_POPUP,
+    TOGGLE_STAGE_REVIEW_PANEL,
+    UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
-    UPDATE_WHOLE_ATOM_INPUT,
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
-    FETCHING_ATOM_LIST,
-    SET_STORE_SEARCH,
-    FETCHING_ATOM_VERSION,
-    SET_ATOM_VERSION_LIST,
-    SET_EXECUTE_STATUS,
-    SET_SAVE_STATUS,
-    SET_DEFAULT_STAGE_TAG,
-    TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON,
-    SET_EDIT_FROM,
-    SET_COMMEND_ATOM_COUNT,
-    SET_REQUEST_ATOM_DATA,
-    FETCHING_ATOM_MORE_LOADING,
-    SET_ATOMS_CLASSIFY,
-    SET_ATOM_PAGE_OVER,
-    CLEAR_ATOM_DATA,
-    SET_COMMEND_ATOM_PAGE_OVER
+    UPDATE_ATOM_TYPE,
+    UPDATE_CONTAINER,
+    UPDATE_STAGE,
+    UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
-import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -186,14 +186,11 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    
+
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
-            commit(SET_BUILD_PARAM, {
-                buildParams: response.data,
-                buildId
-            })
+            const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
+            return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         }
@@ -256,7 +253,7 @@ export default {
             let pageSize = requestAtomData.pageSize || 50
             let queryFitAgentBuildLessAtomFlag
             const curOs = os
-            
+
             if (keyword) {
                 // 关键字查询 => 搜索研发商店插件数据 (全局搜索 => 无操作系统、无编译环境限制)
                 pageSize = 100
@@ -320,7 +317,7 @@ export default {
                     commit(SET_COMMEND_ATOM_COUNT, count)
                     commit(SET_COMMEND_ATOM_PAGE_OVER, atomCodeList.length === count)
                 }
-                
+
                 let isAtomPageOver = false
                 if (category === 'TRIGGER') {
                     isAtomPageOver = atomList.length === count
@@ -418,6 +415,17 @@ export default {
                         recommendFlag: defaultBuildResource.recommendFlag,
                         imageType: 'BKSTORE'
                     },
+                    jobControlOption: { // 作业控制选项默认值
+                        enable: true,
+                        dependOnType: 'ID',
+                        dependOnId: [],
+                        dependOnName: '',
+                        timeoutVar: '900',
+                        prepareTimeout: '10',
+                        runCondition: 'STAGE_RUNNING',
+                        customVariables: [{ key: 'param1', value: '' }],
+                        customCondition: ''
+                    },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
                     jobId: `job_${randomString(3)}`,
@@ -470,9 +478,11 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
-    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId }) => {
+    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
         try {
-            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildNo}/detail`)
+            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
+                params: query
+            })
             dispatch('setPipelineDetail', response.data)
         } catch (e) {
             if (e.code === 403) {
@@ -483,7 +493,7 @@ export default {
     },
     requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/detail/${buildNum}`)
+            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -492,6 +502,7 @@ export default {
         }
     },
     setPipelineDetail: actionCreator(SET_PIPELINE_EXEC_DETAIL),
+    setHideSkipExecTask: actionCreator(SET_HIDE_SKIP_EXEC_TASK),
     getRemoteTriggerToken: async ({ commit }, { projectId, pipelineId, element, preToken }) => {
         try {
             const { data: { token } } = await request.put(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/remoteToken`)

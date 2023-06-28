@@ -127,7 +127,7 @@ class DockerVMListener @Autowired constructor(
                     kubernetesBuildVersion = "",
                     imageType = ImageType.THIRD,
                     performanceConfigId = 0
-                ),
+                )
             ))
         }
     }

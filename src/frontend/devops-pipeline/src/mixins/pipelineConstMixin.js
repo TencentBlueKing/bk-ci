@@ -47,7 +47,7 @@ const pipelineConstMixin = {
                 executeTime: {
                     index: 7,
                     prop: 'executeTime',
-                    label: this.$t('history.tableMap.totalTime')
+                    label: this.$t('duration')
                 },
                 artifactList: {
                     index: 8,
@@ -109,11 +109,6 @@ const pipelineConstMixin = {
     computed: {
         customColumn () {
             return ['material', 'stageStatus', 'errorCode']
-        }
-    },
-    methods: {
-        getStatusLabel (STATUS) {
-            return this.$t(`details.statusMap.${STATUS}`)
         }
     }
 }

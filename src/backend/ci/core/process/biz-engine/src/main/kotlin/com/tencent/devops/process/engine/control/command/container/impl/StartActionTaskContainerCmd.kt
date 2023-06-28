@@ -37,9 +37,12 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONDITION_INVALID
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_UNEXECUTE_POSTACTION_TASK
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_UNEXECUTE_TASK
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -347,7 +350,12 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                message.append("终止构建，跳过(UnExecute Task)[$taskName] cause: ${containerContext.latestSummary}!")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_UNEXECUTE_TASK,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "[$taskName] cause: ${containerContext.latestSummary}!"
+                )
             }
 
             needSkip -> { // 检查条件跳过
@@ -395,7 +403,12 @@ class StartActionTaskContainerCmd(
                     errorMsg = parseException.message
                 )
                 // 打印构建日志
-                message.append("执行条件判断失败(Condition Invalid)[$taskName] cause: ${containerContext.latestSummary}!")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CONDITION_INVALID,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "[$taskName] cause: ${containerContext.latestSummary}!"
+                )
             }
 
             else -> {
@@ -522,7 +535,10 @@ class StartActionTaskContainerCmd(
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, BuildStatus.UNEXEC)
             buildLogPrinter.addYellowLine(
                 buildId = currentTask.buildId,
-                message = "[SystemLog]收到终止指令(UnExecute PostAction Task) [${currentTask.taskName}]",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_UNEXECUTE_POSTACTION_TASK,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " [${currentTask.taskName}]",
                 tag = currentTask.taskId,
                 jobId = currentTask.containerHashId,
                 executeCount = currentTask.executeCount ?: 1
@@ -579,10 +595,11 @@ class StartActionTaskContainerCmd(
     private fun ElementPostInfo.addPostTipLog(task: PipelineBuildTask) {
         buildLogPrinter.addLine(
             buildId = task.buildId,
-            message = MessageCodeUtil.getCodeMessage(
+            message = I18nUtil.getCodeLanMessage(
                 messageCode = ATOM_POST_EXECUTE_TIP,
-                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName)
-            ) ?: "",
+                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName),
+                language = I18nUtil.getLanguage()
+            ),
             tag = task.taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1

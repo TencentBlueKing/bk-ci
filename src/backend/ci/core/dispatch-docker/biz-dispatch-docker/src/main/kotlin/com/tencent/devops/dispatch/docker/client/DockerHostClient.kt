@@ -30,16 +30,12 @@ package com.tencent.devops.dispatch.docker.client
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.api.util.ApiUtil
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
@@ -57,9 +53,7 @@ import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -155,70 +149,6 @@ class DockerHostClient @Autowired constructor(
         )
 
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
-    }
-
-    fun startAgentLessBuild(
-        agentLessDockerIp: String,
-        agentLessDockerPort: Int,
-        event: PipelineBuildLessStartupEvent
-    ) {
-        val secretKey = ApiUtil.randomSecretKey()
-
-        val id = pipelineDockerBuildDao.saveBuildHistory(
-            dslContext = dslContext,
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId.toInt(),
-            secretKey = secretKey,
-            status = PipelineTaskStatus.RUNNING,
-            zone = Zone.SHENZHEN.name,
-            dockerIp = agentLessDockerIp,
-            poolNo = 0
-        )
-
-        val agentId = HashUtil.encodeLongId(id)
-        redisUtils.setDockerBuild(
-            id = id, secretKey = secretKey,
-            redisBuild = RedisBuild(
-                vmName = agentId,
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
-                channelCode = event.channelCode,
-                zone = event.zone,
-                atoms = event.atoms
-            )
-        )
-
-        LOG.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey")
-        LOG.info("[${event.buildId}]|BUILD_LESS| agentId: $agentId")
-        val dockerImage = defaultImageConfig.getAgentLessCompleteUri()
-        LOG.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
-
-        val requestBody = DockerHostBuildInfo(
-            projectId = event.projectId,
-            agentId = agentId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = Integer.valueOf(event.vmSeqId),
-            secretKey = secretKey,
-            status = PipelineTaskStatus.RUNNING.status,
-            imageName = dockerImage,
-            containerId = "",
-            poolNo = 0,
-            registryUser = defaultImageConfig.agentLessRegistryUserName ?: "",
-            registryPwd = defaultImageConfig.agentLessRegistryPassword ?: "",
-            imageType = ImageType.THIRD.type,
-            imagePublicFlag = false,
-            imageRDType = "",
-            containerHashId = event.containerHashId,
-            buildType = BuildType.AGENT_LESS,
-            customBuildEnv = event.customBuildEnv
-        )
-
-        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
     }
 
     fun endBuild(

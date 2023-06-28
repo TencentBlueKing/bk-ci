@@ -61,7 +61,7 @@ class BKHandshakeInterceptor @Autowired constructor(
             val userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
             if (userId != null && sessionId != null) {
                 WsRedisUtils.writeSessionIdByRedis(redisOperation, userId, sessionId)
-                logger.info("[WebSocket]-[$userId]-[$sessionId]-连接成功")
+                logger.info("[WebSocket]-[$userId]-[$sessionId]-connection was successful")
                 SpringContextUtil.getBean(WebsocketService::class.java)
                     .createTimeoutSession(sessionId, userId)
             }

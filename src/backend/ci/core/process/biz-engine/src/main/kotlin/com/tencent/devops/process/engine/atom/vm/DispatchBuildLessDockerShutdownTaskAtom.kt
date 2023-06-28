@@ -102,8 +102,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
-            tag = task.containerHashId ?: "",
-            jobId = task.containerHashId ?: "",
+            jobId = task.containerHashId,
             executeCount = task.executeCount
         )
 

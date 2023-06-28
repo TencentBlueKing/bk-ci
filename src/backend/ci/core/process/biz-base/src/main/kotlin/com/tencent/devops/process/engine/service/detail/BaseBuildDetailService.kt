@@ -44,7 +44,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
@@ -179,7 +179,7 @@ open class BaseBuildDetailService constructor(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (stage.id == TRIGGER_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }
@@ -253,7 +253,8 @@ open class BaseBuildDetailService constructor(
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary,
+                executeCount = pipelineBuildInfo.executeCount
             )
         )
     }

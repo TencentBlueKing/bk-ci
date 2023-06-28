@@ -28,15 +28,21 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -75,9 +81,32 @@ interface ProjectService {
     /**
      * 根据项目ID/英文ID获取项目信息对象
      * @param englishName projectCode 英文ID
+     * @param needTips 前端是否需要tips弹框,目前只有项目详情页需要
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO?
+    fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?
+    ): ProjectVO?
+
+    /**
+     * 根据项目ID/英文ID获取项目信息对象
+     * @param englishName projectCode 英文ID
+     * @return ProjectVO 如果没有则为null
+     */
+    fun show(
+        userId: String,
+        englishName: String,
+        accessToken: String?
+    ): ProjectVO?
+
+    /**
+     * 根据项目ID/英文ID获取项目审批中对比信息
+     * @param englishName projectCode 英文ID
+     * @return ProjectDiffVO 如果没有则为null
+     */
+    fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -94,7 +123,8 @@ interface ProjectService {
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        accessToken: String?,
+        needApproval: Boolean? = false
     ): Boolean
 
     /**
@@ -108,12 +138,35 @@ interface ProjectService {
         accessToken: String?
     ): Result<ProjectLogo>
 
+    /**
+     * 上传Logo
+     */
+    fun uploadLogo(
+        userId: String,
+        inputStream: InputStream,
+        accessToken: String?
+    ): Result<String>
+
     fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
 
     /**
      * 获取所有项目信息
      */
-    fun list(userId: String, accessToken: String?, enabled: Boolean? = null): List<ProjectVO>
+    fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean? = null,
+        unApproved: Boolean
+    ): List<ProjectVO>
+
+    fun listProjectsForApply(
+        userId: String,
+        accessToken: String?,
+        projectName: String?,
+        projectId: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<ProjectWithPermission>
 
     fun list(userId: String): List<ProjectVO>
 
@@ -128,6 +181,12 @@ interface ProjectService {
     fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
+
+    fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectWithPermission>
 
     /**
      * 获取用户已的可访问项目列表=
@@ -164,4 +223,17 @@ interface ProjectService {
     fun getProjectByName(projectName: String): ProjectVO?
 
     fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+
+    fun cancelCreateProject(userId: String, projectId: String): Boolean
+
+    fun cancelUpdateProject(userId: String, projectId: String): Boolean
+
+    fun isRbacPermission(projectId: String): Boolean
+
+    fun updateProjectSubjectScopes(
+        projectId: String,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Boolean
+
+    fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 }

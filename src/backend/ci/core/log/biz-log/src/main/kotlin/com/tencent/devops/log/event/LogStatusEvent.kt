@@ -35,9 +35,9 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 data class LogStatusEvent(
     override val buildId: String,
     val finished: Boolean,
-    val tag: String,
+    val tag: String?,
     val subTag: String?,
-    val jobId: String,
+    val jobId: String?,
     val executeCount: Int?,
     val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
     override var retryTime: Int = 2,

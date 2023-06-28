@@ -97,7 +97,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     Triple(isOauth, token, ScmType.CODE_TGIT)
                 }
                 else ->
-                    throw OperationException("不是Git 代码仓库")
+                    throw OperationException("Not Git Code Repository")
             }
             logger.info("Project($projectId) add git commit($commitId) commit check for targetBranch($targetBranch)")
             val request = CommitCheckRequest(
@@ -143,7 +143,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw OperationException("不是Github代码仓库")
+            ?: throw OperationException("Not GitHub Code Repository")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -180,7 +180,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw OperationException("不是Github代码仓库")
+            ?: throw OperationException("Not GitHub Code Repository")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,

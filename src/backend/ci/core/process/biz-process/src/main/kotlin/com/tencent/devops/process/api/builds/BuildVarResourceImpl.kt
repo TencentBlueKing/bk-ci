@@ -30,14 +30,17 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_INFO
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
-
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -100,7 +103,13 @@ class BuildVarResourceImpl @Autowired constructor(
                 permission = AuthPermission.EXECUTE
             )
         ) {
-            throw PermissionForbiddenException("用户${userId}无权获取此流水线构建信息")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_INFO))
+                )
+            )
         }
     }
 

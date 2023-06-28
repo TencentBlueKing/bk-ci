@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -45,7 +46,6 @@ import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Repository
@@ -447,7 +447,6 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
             }
@@ -709,7 +708,7 @@ class PipelineInfoDao {
 
     fun getPipelineByAutoId(
         dslContext: DSLContext,
-        ids: List<Int>,
+        ids: List<Long>,
         projectId: String? = null
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
@@ -733,6 +732,23 @@ class PipelineInfoDao {
                 .set(LATEST_START_TIME, startTime)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun getIdByCreateTimePeriod(
+        dslContext: DSLContext,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        with(T_PIPELINE_INFO) {
+            return dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(CREATE_TIME.between(startTime, endTime))
+                .orderBy(CREATE_TIME, PIPELINE_ID)
+                .limit((page - 1) * pageSize, pageSize)
+                .fetchInto(String::class.java)
         }
     }
 

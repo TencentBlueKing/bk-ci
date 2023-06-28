@@ -31,12 +31,14 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.auth.ServiceProcessAuthResource
+import com.tencent.devops.process.service.AuthPipelineGroupService
 import com.tencent.devops.process.service.AuthPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProcessAuthResourceImpl @Autowired constructor(
-    val authPipelineService: AuthPipelineService
+    val authPipelineService: AuthPipelineService,
+    val authPipelineGroupService: AuthPipelineGroupService
 ) : ServiceProcessAuthResource {
 
     override fun pipelineInfo(
@@ -47,6 +49,13 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
             callBackInfo = callBackInfo,
             token = token,
             returnPipelineId = true
+        )
+    }
+
+    override fun pipelineGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+        return authPipelineGroupService.pipelineGroupInfo(
+            callBackInfo = callBackInfo,
+            token = token
         )
     }
 

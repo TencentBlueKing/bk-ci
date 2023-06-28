@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
@@ -40,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -59,13 +61,13 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
+import java.util.UUID
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.UUID
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList", "ReturnCount")
@@ -230,7 +232,12 @@ class StreamTriggerRequestService @Autowired constructor(
         ) ?: throw StreamTriggerException(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf("ci开启人${action.data.setting.enableUser} 无当前项目执行权限, 请重新授权")
+            reasonParams = listOf(
+                I18nUtil.getCodeLanMessage(
+                messageCode = CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
+                params = arrayOf(action.data.setting.enableUser)
+                )
+            )
         )
 
         action.data.context.defaultBranch = projectInfo.defaultBranch
