@@ -257,7 +257,9 @@ class PipelineRecordModelService @Autowired constructor(
             }
             tasks.add(taskVarMap)
         }
-        // 将转换后的job变量数据放入stage中
-        containerVarMap[Container::elements.name] = tasks
+        if (tasks.isNotEmpty()) {
+            // 将转换后的job变量数据放入stage中
+            containerVarMap[Container::elements.name] = tasks
+        }
     }
 }
