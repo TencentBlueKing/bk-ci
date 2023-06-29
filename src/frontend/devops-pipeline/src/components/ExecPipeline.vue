@@ -821,7 +821,7 @@
                     })
                 })
             },
-            async debugDocker ({ container }) {
+            debugDocker ({ container }) {
                 const vmSeqId = container.id
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                 const buildResourceType = container.dispatchType?.buildType
