@@ -254,8 +254,8 @@ class PermissionGradeManagerService @Autowired constructor(
         gradeManagerId: String,
         projectCode: String,
         projectName: String,
-        /*该字段只要用当创建项目时，需要注册监控权限资源，此时修改分级管理员不走审批流程*/
-        registerMonitorPermissionWhenCreate: Boolean = false
+        /*该字段主要用于当创建项目时，需要注册监控权限资源，此时修改分级管理员不走审批流程*/
+        registerMonitorPermission: Boolean = false
     ): Boolean {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
             ?: throw ErrorCodeException(
@@ -291,7 +291,7 @@ class PermissionGradeManagerService @Autowired constructor(
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
         // 当创建项目时，注册监控权限，修改分级管理员，不走审批流程
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status ||
-            registerMonitorPermissionWhenCreate) {
+            registerMonitorPermission) {
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
@@ -584,7 +584,7 @@ class PermissionGradeManagerService @Autowired constructor(
             gradeManagerId = gradeManagerId.toString(),
             projectCode = projectCode,
             projectName = projectName,
-            registerMonitorPermissionWhenCreate = true
+            registerMonitorPermission = true
         )
 
         authResourceService.create(

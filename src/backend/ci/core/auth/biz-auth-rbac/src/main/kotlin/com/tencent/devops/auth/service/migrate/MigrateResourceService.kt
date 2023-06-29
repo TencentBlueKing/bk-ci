@@ -39,8 +39,11 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
@@ -68,12 +71,15 @@ class MigrateResourceService @Autowired constructor(
     private val rbacPermissionResourceService: RbacPermissionResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
     private val authResourceService: AuthResourceService,
+    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val tokenApi: AuthTokenApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     @Suppress("SpreadOperator")
@@ -273,6 +279,46 @@ class MigrateResourceService @Autowired constructor(
             count = count,
             groupCount = count * groupConfigCount
         )
+    }
+
+    fun migrateMonitorResource(projectCode: String) {
+        val projectInfo = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        // 注册分级管理员监控权限资源
+        permissionGradeManagerService.modifyGradeManager(
+            gradeManagerId = projectInfo.relationId,
+            projectCode = projectCode,
+            projectName = projectInfo.resourceName,
+            registerMonitorPermission = true
+        )
+        val defaultGroupConfigs = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = AuthResourceType.PROJECT.value,
+            createMode = false
+        )
+        defaultGroupConfigs.forEach { groupConfig ->
+            val resourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode
+            ) ?: return@forEach
+            // 项目下用户组注册监控权限资源
+            permissionGroupPoliciesService.grantGroupPermission(
+                authorizationScopesStr = groupConfig.authorizationScopes,
+                projectCode = projectCode,
+                projectName = projectInfo.resourceName,
+                resourceType = groupConfig.resourceType,
+                groupCode = groupConfig.groupCode,
+                iamResourceCode = projectCode,
+                resourceName = projectInfo.resourceName,
+                iamGroupId = resourceGroupInfo.relationId.toInt()
+            )
+        }
     }
 
     companion object {

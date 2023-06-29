@@ -175,6 +175,19 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
+        projectCodes.filter {
+            // 仅迁移 迁移成功的项目
+            authMigrationDao.get(
+                dslContext = dslContext,
+                projectCode = it
+            )?.status == AuthMigrateStatus.SUCCEED.value
+        }.map {
+            migrateResourceService.migrateMonitorResource(projectCode = it)
+        }
+        return true
+    }
+
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,

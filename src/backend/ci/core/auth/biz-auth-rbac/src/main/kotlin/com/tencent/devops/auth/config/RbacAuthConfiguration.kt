@@ -294,24 +294,30 @@ class RbacAuthConfiguration {
         rbacPermissionResourceService: RbacPermissionResourceService,
         migrateCreatorFixService: MigrateCreatorFixService,
         authResourceService: AuthResourceService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         tokenApi: AuthTokenApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authResourceGroupDao: AuthResourceGroupDao
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
         rbacPermissionResourceService = rbacPermissionResourceService,
         migrateCreatorFixService = migrateCreatorFixService,
         authResourceService = authResourceService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         tokenApi = tokenApi,
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceGroupDao = authResourceGroupDao
     )
 
     @Bean
