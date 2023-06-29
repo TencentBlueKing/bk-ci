@@ -336,7 +336,7 @@ class RbacPermissionMonitorService constructor(
             val responseStr = it.body!!.string()
             logger.info("executeHttpRequest:$responseStr")
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
-            if (responseDTO.code != 200L) {
+            if (responseDTO.code != REQUEST_SUCCESS_CODE) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response :($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
@@ -362,5 +362,6 @@ class RbacPermissionMonitorService constructor(
         private const val POST_METHOD = "POST"
         private const val GET_METHOD = "GET"
         private const val MONITOR_SYSTEM_ID = "bk_monitorv3"
+        private const val REQUEST_SUCCESS_CODE = 200L
     }
 }
