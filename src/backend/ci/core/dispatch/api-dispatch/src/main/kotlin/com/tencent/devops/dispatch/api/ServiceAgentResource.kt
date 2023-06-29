@@ -75,6 +75,6 @@ interface ServiceAgentResource {
         @QueryParam("buildId")
         buildId: String?,
         @QueryParam("vmSeqId")
-        vmSeqId: String,
+        vmSeqId: String
     ): Result<String>
 }
