@@ -118,10 +118,10 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 totalExecuteCount = totalExecuteCount ?: 0L,
                 failedExecuteCount = failExecuteCount ?: 0L,
                 totalAvgCostTime = toMinutes(
-                    (totalExecuteCount?.let{ totalAvgCostTime / totalExecuteCount }) ?: 0L
+                    (totalExecuteCount?.let { totalAvgCostTime / totalExecuteCount }) ?: 0L
                 ),
                 failAvgCostTime = toMinutes(
-                    (failExecuteCount?.let{ failAvgCostTime / failExecuteCount }) ?: 0L
+                    (failExecuteCount?.let { failAvgCostTime / failExecuteCount }) ?: 0L
                 )
             )
         }
