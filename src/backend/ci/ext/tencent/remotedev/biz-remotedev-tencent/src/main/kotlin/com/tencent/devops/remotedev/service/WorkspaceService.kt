@@ -292,7 +292,8 @@ class WorkspaceService @Autowired constructor(
         return WorkspaceResponse(
             workspaceName = workspaceName,
             status = WorkspaceAction.PREPARING,
-            systemType = devfile.checkWorkspaceSystemType()
+            systemType = devfile.checkWorkspaceSystemType(),
+            workspaceMountType = mountType
         )
     }
 
