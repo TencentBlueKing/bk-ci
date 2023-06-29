@@ -176,8 +176,13 @@ open class BaseBuildRecordService(
         return try {
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+            // 为model填充质量红线element
+            pipelineElementService.fillElementWhenNewBuild(
+                model = fullModel,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                handlePostFlag = false
+            )
             val baseModelMap = JsonUtil.toMutableMap(fullModel)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
@@ -194,10 +199,11 @@ open class BaseBuildRecordService(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+        } catch (ignore: Throwable) {
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
         } finally {

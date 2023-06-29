@@ -28,7 +28,11 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
 
-val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
+val i18nPath = joinPath(
+    rootDir.absolutePath.replace("${File.separator}src${File.separator}backend${File.separator}ci", ""),
+    "support-files",
+    "i18n"
+)
 println("rootDir is: $rootDir, i18nPath is: $i18nPath, projectName is: ${project.name}")
 if (File(i18nPath).isDirectory) {
     println("i18n load register , Path is $i18nPath")

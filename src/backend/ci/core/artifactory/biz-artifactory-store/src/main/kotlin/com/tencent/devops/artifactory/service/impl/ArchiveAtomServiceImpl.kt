@@ -93,10 +93,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        atomId: String,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
-        logger.info("archiveAtom userId:$userId,atomId:$atomId,archiveAtomRequest:$archiveAtomRequest")
+        logger.info("archiveAtom userId:$userId,archiveAtomRequest:$archiveAtomRequest")
         // 校验用户上传的插件包是否合法
         val projectCode = archiveAtomRequest.projectCode
         val atomCode = archiveAtomRequest.atomCode
@@ -135,6 +134,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
             atomEnvRequests.forEach { atomEnvRequest ->
+                if (atomEnvRequest.pkgLocalPath.isNullOrBlank()) {
+                    return@forEach
+                }
                 val packageFilePathPrefix = buildAtomArchivePath(projectCode, atomCode, version)
                 val packageFile = File("$packageFilePathPrefix/${atomEnvRequest.pkgLocalPath}")
                 val packageFileInfo = PackageFileInfo(
@@ -234,7 +236,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            atomId = atomId,
             archiveAtomRequest = archiveAtomRequest
         )
         if (archiveAtomResult.isNotOk()) {

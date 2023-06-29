@@ -9,15 +9,15 @@
     </span>
 </template>
 <script>
+    import { bkTooltips } from 'bk-magic-vue'
+    import Logo from './Logo'
+    import { localeMixins } from './locale'
     import {
         convertMStoString,
-        isVmContainer,
+        isNormalContainer,
         isTriggerContainer,
-        isNormalContainer
+        isVmContainer
     } from './util'
-    import Logo from './Logo'
-    import { bkTooltips } from 'bk-magic-vue'
-    import { localeMixins } from './locale'
 
     export default {
         name: 'container-type',
@@ -46,6 +46,7 @@
                         const { totalCost, executeCost, systemCost } = container.timeCost
                         const lt1Hour = totalCost < 36e5
                         tooltip = {
+                            delay: [300, 0],
                             content: `${this.t('userTime')}：${convertMStoString(executeCost)} + ${this.t(
                                 'systemTime'
                             )}： ${convertMStoString(systemCost)}`

@@ -1161,5 +1161,10 @@
   "context": "context",
   "access": "access",
   "outputNameSpaceDescTips": "It is used to solve the problem of output field conflicts when there are multiple instances of the same plugin under the pipeline. \nNo need to add namespace when there is no conflict. \nWhen the namespace is modified, the subsequent use of the corresponding field also needs to be modified synchronously",
-  "noReleatedPipeline": "No Related Pipeline"
+  "noReleatedPipeline": "No Related Pipeline",
+  "outputsFilterPlaceholder": "Artifact name / Report name",
+  "fullScreenView": "Full Screen",
+  "exitFullscreen": "Exit Full Screen",
+  "skipSuc": "Skipped the failed step and continued running",
+  "skipFail": "Skip failed"
 }

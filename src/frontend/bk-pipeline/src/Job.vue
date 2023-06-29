@@ -90,30 +90,30 @@
 </template>
 
 <script>
-    import {
-        hashID,
-        randomString,
-        eventBus,
-        isTriggerContainer,
-        getDependOnDesc,
-        isObject
-    } from './util'
     import { localeMixins } from './locale'
-
     import {
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
-        CLICK_EVENT_NAME,
-        DEBUG_CONTAINER,
-        STATUS_MAP,
-        DOCKER_BUILD_TYPE,
-        PUBLIC_DEVCLOUD_BUILD_TYPE,
-        PUBLIC_BCS_BUILD_TYPE
-    } from './constants'
-    import ContainerType from './ContainerType'
+        eventBus,
+        getDependOnDesc,
+        hashID,
+        isObject,
+        isTriggerContainer,
+        randomString
+    } from './util'
+
     import AtomList from './AtomList'
-    import StatusIcon from './StatusIcon'
+    import ContainerType from './ContainerType'
     import Logo from './Logo'
+    import StatusIcon from './StatusIcon'
+    import {
+        CLICK_EVENT_NAME,
+        COPY_EVENT_NAME,
+        DEBUG_CONTAINER,
+        DELETE_EVENT_NAME,
+        DOCKER_BUILD_TYPE,
+        PUBLIC_BCS_BUILD_TYPE,
+        PUBLIC_DEVCLOUD_BUILD_TYPE,
+        STATUS_MAP
+    } from './constants'
 
     export default {
         components: {
@@ -199,6 +199,13 @@
                 return !isTriggerContainer(this.container) && this.reactiveData.editable
             },
             containerSerialNum () {
+                if (this.reactiveData.isExecDetail) {
+                    let jobSerialNum = this.container.id - this.stage.containers[0].id + 1
+                    if (this.container.matrixGroupFlag) {
+                        jobSerialNum = parseInt(this.container.id, 10) % 1000
+                    }
+                    return `${this.stage.id.replace('stage-', '')}-${jobSerialNum}`
+                }
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
             },
             isOnlyOneContainer () {
