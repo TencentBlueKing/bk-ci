@@ -41,9 +41,9 @@ import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
-import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
@@ -54,9 +54,13 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // dispatchType不在枚举工厂类内时默认为ext debug服务
         if (!DebugServiceEnum
-                .values().toList()
-                .stream().map { it.name }.collect(Collectors.toList()).contains(debugStartParam.dispatchType)) {
-            logger.info("BuildId : ${debugStartParam.buildId} | pipelineId : ${debugStartParam.pipelineId}  Start debugging,and the cluster build type is ${debugStartParam.dispatchType} ")
+            .values().toList()
+            .stream().map { it.name }.collect(Collectors.toList()).contains(debugStartParam.dispatchType)
+        ) {
+            logger.info(
+                "BuildId : ${debugStartParam.buildId} | pipelineId : ${debugStartParam.pipelineId} " +
+                    "Start debugging,and the cluster build type is ${debugStartParam.dispatchType} "
+            )
             val buildClusterService = getBuildClusterService(debugStartParam.dispatchType)
             val debugUrl = buildClusterService.startDebug(
                 userId = userId,
@@ -108,8 +112,9 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         dispatchType: String?
     ): Result<Boolean>? {
         if (!DebugServiceEnum
-                .values().toList()
-                .stream().map { it.name }.collect(Collectors.toList()).contains(dispatchType)) {
+            .values().toList()
+            .stream().map { it.name }.collect(Collectors.toList()).contains(dispatchType)
+        ) {
             logger.info("PipelineId : $pipelineId  stop debugging,and the cluster build type is $dispatchType ")
             val buildClusterService = getBuildClusterService(dispatchType!!)
             val result = buildClusterService.stopDebug(
@@ -124,14 +129,16 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(projectId)
-        return Result(DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().stopDebug(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            containerName = containerName ?: "",
-            dockerRoutingType = formatDispatchType.second
-        ))
+        return Result(
+            DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().stopDebug(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                containerName = containerName ?: "",
+                dockerRoutingType = formatDispatchType.second
+            )
+        )
     }
 
     /**
