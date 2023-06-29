@@ -201,7 +201,7 @@ interface OpRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("休眠工作空间")
+    @ApiOperation("销毁工作空间")
     @GET
     @Path("/workspace_delete")
     fun deleteWorkspace(
