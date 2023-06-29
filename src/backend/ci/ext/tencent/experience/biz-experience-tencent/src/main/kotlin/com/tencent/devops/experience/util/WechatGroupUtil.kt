@@ -142,7 +142,8 @@ object WechatGroupUtil {
                 messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
                 params = arrayOf(projectName, name, version)
             )
-        }：[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)
+        }
+        [${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)
         """.trimIndent()
     }
 
@@ -154,7 +155,7 @@ object WechatGroupUtil {
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
                 params = arrayOf(projectName)
-            ) + "\n"
+            ) + "\n\n"
         )
         for (i in messages.indices) {
             val m = messages[i]
@@ -162,7 +163,7 @@ object WechatGroupUtil {
                 "${i + 1}. " + I18nUtil.getCodeLanMessage(
                     messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
                     params = arrayOf(projectName, m.name, m.version)
-                ) + "：[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}](${m.outerUrl})\n\n"
+                ) + "[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}](${m.outerUrl})\n\n\n"
             )
         }
         return batchContent.toString()
