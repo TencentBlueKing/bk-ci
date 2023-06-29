@@ -358,7 +358,9 @@ class WorkspaceService @Autowired constructor(
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
-            kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType) }
+            kotlin.runCatching {
+                bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
+            }
 
             // websocket 通知成功
         } else {
@@ -401,7 +403,12 @@ class WorkspaceService @Autowired constructor(
                     val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                         .getWorkspaceInfo(userId, workspaceName,
                             WorkspaceMountType.valueOf(workspace.workspaceMountType))
-                    bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost, WorkspaceMountType.valueOf(workspace.workspaceMountType))
+                    bkTicketServie.updateBkTicket(
+                        userId,
+                        bkTicket,
+                        workspaceInfo.data?.environmentHost,
+                        WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    )
 
                     return WorkspaceResponse(
                         workspaceName = workspaceName,
