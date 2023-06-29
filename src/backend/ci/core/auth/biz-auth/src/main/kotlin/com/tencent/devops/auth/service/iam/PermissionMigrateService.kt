@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 /**

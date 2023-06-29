@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service.migrate
 
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
