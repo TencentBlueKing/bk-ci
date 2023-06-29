@@ -872,8 +872,8 @@ class ExperienceService @Autowired constructor(
                     experienceId = experienceRecords[i].id,
                     userId = experienceRecords[i].creator
                 )
-                if (!innerReceivers.containsAll(compareInnerReceivers)
-                    || !compareInnerReceivers.containsAll(innerReceivers)
+                if (!innerReceivers.containsAll(compareInnerReceivers) ||
+                    !compareInnerReceivers.containsAll(innerReceivers)
                 ) {
                     logger.warn("batchNotification , experiences [$experienceIds] do not have same inner receivers")
                     return@submit
@@ -884,8 +884,8 @@ class ExperienceService @Autowired constructor(
             val enableWechatGroups = baseExperienceRecord.enableWechatGroups
             val wechatGroups = baseExperienceRecord.wechatGroups
             for (i in 1 until experienceRecords.size) {
-                if (enableWechatGroups != experienceRecords[i].enableWechatGroups
-                    || wechatGroups != experienceRecords[i].wechatGroups
+                if (enableWechatGroups != experienceRecords[i].enableWechatGroups ||
+                    wechatGroups != experienceRecords[i].wechatGroups
                 ) {
                     logger.warn("batchNotification , experiences [$experienceIds] do not have same wechatGroups")
                     return@submit
@@ -1008,8 +1008,8 @@ class ExperienceService @Autowired constructor(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
                         "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
-            if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()
-                && deptUsers.isEmpty()
+            if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
+                deptUsers.isEmpty()
             ) {
                 logger.info("empty Receivers , experienceId:$experienceId")
                 return@submit

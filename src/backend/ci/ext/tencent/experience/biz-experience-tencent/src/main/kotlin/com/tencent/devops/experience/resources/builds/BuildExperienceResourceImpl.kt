@@ -58,7 +58,6 @@ class BuildExperienceResourceImpl @Autowired constructor(private val experienceS
         } catch (e: Exception) {
             Result(false)
         }
-
     }
 
     private fun checkParam(userId: String, projectId: String) {
