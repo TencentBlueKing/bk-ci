@@ -821,8 +821,8 @@
                     })
                 })
             },
-            async debugDocker ({ stageIndex, containerIndex, container }) {
-                const vmSeqId = container.containerId || this.getRealSeqId(this.execDetail.model.stages, stageIndex, containerIndex)
+            async debugDocker ({ container }) {
+                const vmSeqId = container.id
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                 const buildResourceType = container.dispatchType?.buildType
                 const buildIdStr = buildId ? `&buildId=${buildId}` : ''
