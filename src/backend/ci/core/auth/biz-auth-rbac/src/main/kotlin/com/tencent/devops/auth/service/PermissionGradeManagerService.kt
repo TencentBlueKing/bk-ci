@@ -125,8 +125,7 @@ class PermissionGradeManagerService @Autowired constructor(
         projectName: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        registerMonitorPermission: Boolean
+        resourceName: String
     ): Int {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
             ?: throw ErrorCodeException(
@@ -164,16 +163,15 @@ class PermissionGradeManagerService @Autowired constructor(
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
 
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
-            // 若为不需要审批的项目，并且需要注册监控资源的，直接注册
-            if (registerMonitorPermission) {
-                val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
-                    projectName = projectName,
-                    projectCode = projectCode,
-                    groupCode = BkAuthGroup.GRADE_ADMIN.value,
-                    userId = userId
-                )
-                authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
-            }
+            // 若为不需要审批的项目，直接注册
+            val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = BkAuthGroup.GRADE_ADMIN.value,
+                userId = userId
+            )
+            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+
             logger.info("PermissionGradeManagerService|createGradeManager|$authorizationScopes")
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
@@ -397,8 +395,7 @@ class PermissionGradeManagerService @Autowired constructor(
         gradeManagerId: Int,
         userId: String,
         projectCode: String,
-        projectName: String,
-        registerMonitorPermission: Boolean
+        projectName: String
     ) {
         syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode, projectName = projectName)
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
@@ -442,8 +439,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
                 resourceName = projectName,
-                iamGroupId = iamGroupId,
-                registerMonitorPermission = registerMonitorPermission
+                iamGroupId = iamGroupId
             )
         }
     }

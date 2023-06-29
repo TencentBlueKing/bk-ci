@@ -50,8 +50,7 @@ class AuthResourceGroupCreateListener(
                     gradeManagerId = managerId,
                     userId = userId,
                     projectCode = projectCode,
-                    projectName = projectName,
-                    registerMonitorPermission = registerMonitorPermission
+                    projectName = projectName
                 )
             } else {
                 permissionSubsetManagerService.createSubsetManagerDefaultGroup(

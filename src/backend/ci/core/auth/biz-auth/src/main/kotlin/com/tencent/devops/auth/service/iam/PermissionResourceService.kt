@@ -46,8 +46,7 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        async: Boolean = true,
-        registerMonitorPermission: Boolean = true
+        async: Boolean = true
     ): Boolean
 
     /**

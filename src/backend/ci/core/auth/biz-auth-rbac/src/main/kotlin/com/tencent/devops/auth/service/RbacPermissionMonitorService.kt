@@ -38,7 +38,7 @@ class RbacPermissionMonitorService constructor(
     /*监控平台组配置*/
     private val monitorGroupConfigCache = Caffeine.newBuilder()
         .maximumSize(10)
-        .expireAfterWrite(12L, TimeUnit.HOURS)
+        .expireAfterWrite(7, TimeUnit.DAYS)
         .build<String/*配置名称*/, String/*配置*/>()
 
     @Value("\${auth.appCode:}")
@@ -47,8 +47,11 @@ class RbacPermissionMonitorService constructor(
     @Value("\${auth.appSecret:}")
     private val appSecret = ""
 
-    @Value("\${monitor.url:}")
+    @Value("\${monitor.url:#{null}}")
     private val monitorUrlPrefix = ""
+
+    @Value("\${monitor.register}")
+    private val registerMonitor: Boolean = false
 
     override fun generateMonitorAuthorizationScopes(
         projectName: String,
@@ -56,6 +59,8 @@ class RbacPermissionMonitorService constructor(
         groupCode: String,
         userId: String?
     ): List<AuthorizationScopes> {
+        if (!registerMonitor)
+            return listOf()
         val spaceBizId = getSpaceBizId(
             projectName = projectName,
             projectCode = projectCode,

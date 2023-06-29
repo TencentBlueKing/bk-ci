@@ -64,8 +64,7 @@ class PermissionGroupPoliciesService(
         groupCode: String,
         iamResourceCode: String,
         resourceName: String,
-        iamGroupId: Int,
-        registerMonitorPermission: Boolean = true
+        iamGroupId: Int
     ) {
         var authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
             systemId = iamConfiguration.systemId,
@@ -75,7 +74,7 @@ class PermissionGroupPoliciesService(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
-        if (registerMonitorPermission && resourceType == AuthResourceType.PROJECT.value) {
+        if (resourceType == AuthResourceType.PROJECT.value) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
             val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
