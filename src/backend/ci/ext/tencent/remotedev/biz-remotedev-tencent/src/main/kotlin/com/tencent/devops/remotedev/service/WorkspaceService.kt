@@ -613,10 +613,11 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+    fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
-
-        permissionService.checkPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -720,9 +721,11 @@ class WorkspaceService @Autowired constructor(
         doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+    fun deleteWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId delete workspace $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

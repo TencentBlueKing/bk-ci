@@ -192,4 +192,20 @@ interface OpRemoteDevResource {
     @GET
     @Path("/image/spec")
     fun listImageSpec(): Result<List<ImageSpec>?>
+
+    @ApiOperation("休眠工作空间")
+    @GET
+    @Path("/workspace_stop")
+    fun stopWorkspace(
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("休眠工作空间")
+    @GET
+    @Path("/workspace_delete")
+    fun deleteWorkspace(
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
