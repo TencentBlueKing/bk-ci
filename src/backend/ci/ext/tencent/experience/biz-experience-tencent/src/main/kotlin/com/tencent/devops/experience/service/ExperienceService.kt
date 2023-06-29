@@ -894,7 +894,7 @@ class ExperienceService @Autowired constructor(
             // 循环通知部分
             val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
             val messages = mutableListOf<WechatGroupUtil.Message>()
-            val batchContent = StringBuilder("【$projectName】发布了 ${experienceRecords.size} 个版本体验：")
+            val batchContent = StringBuilder("【$projectName】发布了 ${experienceRecords.size} 个版本体验：\n")
             for (i in experienceRecords.indices) {
                 val e = experienceRecords[i]
                 val pcUrl = getPcUrl(e.projectId, e.id)
@@ -907,7 +907,7 @@ class ExperienceService @Autowired constructor(
                         outerUrl = appUrl
                     )
                 )
-                batchContent.append("${i + 1}. 【[${e.name}_${e.version}]($appUrl)】诚邀您参与体验")
+                batchContent.append("${i + 1}. 【[${e.name}_${e.version}]($appUrl)】诚邀您参与体验\n")
                 // 内部用户发送邮件
                 if (notifyTypeList.contains(NotifyType.EMAIL)) {
                     val message = EmailUtil.makeMessage(
