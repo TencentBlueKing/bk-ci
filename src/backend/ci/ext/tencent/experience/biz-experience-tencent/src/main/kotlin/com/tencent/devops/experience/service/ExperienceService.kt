@@ -830,6 +830,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 批量发送通知, 业务侧必须保障体验人员和通知方式完全一致
      */
+    @SuppressWarnings("batchNotification")
     fun batchNotification(projectId: String, req: ExperienceNotificationReq) {
         threadPool.submit {
             val experienceIds = req.experienceIds.map { HashUtil.decodeIdToLong(it) }
@@ -970,6 +971,7 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("ComplexCondition")
     private fun sendNotification(experienceId: Long) {
         threadPool.submit {
             val experienceRecord = experienceDao.get(dslContext, experienceId)
