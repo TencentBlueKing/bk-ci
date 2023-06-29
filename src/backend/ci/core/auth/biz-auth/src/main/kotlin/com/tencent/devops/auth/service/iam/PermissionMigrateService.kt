@@ -38,18 +38,12 @@ interface PermissionMigrateService {
     /**
      * v3批量迁移到rbac
      */
-    fun v3ToRbacAuth(
-        projectCodes: List<String>,
-        migrateResourceType: String? = null
-    ): Boolean
+    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
 
     /**
      * v0批量迁移到rbac
      */
-    fun v0ToRbacAuth(
-        projectCodes: List<String>,
-        migrateResourceType: String? = null
-    ): Boolean
+    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
 
     /**
      * 全部迁移到rbac
@@ -65,4 +59,13 @@ interface PermissionMigrateService {
      * 对比迁移鉴权结果
      */
     fun compareResult(projectCode: String): Boolean
+
+    /**
+     * 迁移特定资源类型资源
+     */
+    fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean
 }

@@ -66,11 +66,6 @@ interface OpAuthMigrateResource {
     @ApiOperation("权限全部升级到rbac权限")
     fun allToRbacAuth(): Result<Boolean>
 
-    /**
-     * 按条件升级到rbac权限，该接口默认只用于迁移未升级的项目；
-     * 若需要使用该接口来重复迁移已升级的项目，可指定该接口的参数 migrateProjectCodes；
-     * 其他条件仅在迁移未升级的项目有效
-     */
     @POST
     @Path("/toRbacAuthByCondition")
     @ApiOperation("按条件升级到rbac权限")
@@ -86,5 +81,14 @@ interface OpAuthMigrateResource {
         @ApiParam("项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateResource/{projectCode}")
+    @ApiOperation("迁移特定资源类型资源")
+    fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
     ): Result<Boolean>
 }

@@ -129,21 +129,16 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         val centerId = migrateProjectConditionDTO.centerId
         val deptId = migrateProjectConditionDTO.deptId
-        val migrateProjectCodes = migrateProjectConditionDTO.migrateProjectCodes
         val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
         val creator = migrateProjectConditionDTO.projectCreator
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(CHANNEL.eq(ProjectChannelCode.BS.name))
-                //  如果传递的是项目列表，可以查询出已迁移的项目
-                .let {
-                    if (!migrateProjectCodes.isNullOrEmpty()) it else it.and(
-                        ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
-                            .or(ROUTER_TAG.isNull)
-                    )
-                }
-                .let { if (migrateProjectCodes.isNullOrEmpty()) it else it.and(ENGLISH_NAME.`in`(migrateProjectCodes)) }
+                .and(
+                    ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                        .or(ROUTER_TAG.isNull)
+                )
                 .let { if (centerId == null) it else it.and(CENTER_ID.eq(centerId)) }
                 .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
