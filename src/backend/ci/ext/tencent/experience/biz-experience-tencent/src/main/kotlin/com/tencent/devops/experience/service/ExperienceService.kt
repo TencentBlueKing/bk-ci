@@ -95,6 +95,7 @@ import com.tencent.devops.experience.pojo.group.Group
 import com.tencent.devops.experience.util.AppNotifyUtil
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
+import com.tencent.devops.experience.util.Message
 import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -893,21 +894,20 @@ class ExperienceService @Autowired constructor(
 
             // 循环通知部分
             val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-            val messages = mutableListOf<WechatGroupUtil.Message>()
-            val batchContent = StringBuilder("【$projectName】发布了 ${experienceRecords.size} 个版本体验：\n")
+            val messages = mutableListOf<Message>()
+
             for (i in experienceRecords.indices) {
                 val e = experienceRecords[i]
                 val pcUrl = getPcUrl(e.projectId, e.id)
                 val appUrl = getShortExternalUrl(e.id)
                 messages.add(
-                    WechatGroupUtil.Message(
-                        projectName = projectName,
+                    Message(
                         name = e.name,
                         version = e.version,
                         outerUrl = appUrl
                     )
                 )
-                batchContent.append("${i + 1}. 【[${e.name}_${e.version}]($appUrl)】诚邀您参与体验\n")
+
                 // 内部用户发送邮件
                 if (notifyTypeList.contains(NotifyType.EMAIL)) {
                     val message = EmailUtil.makeMessage(
@@ -919,6 +919,17 @@ class ExperienceService @Autowired constructor(
                         receivers = innerReceivers.toSet()
                     )
                     client.get(ServiceNotifyResource::class).sendEmailNotify(message)
+                }
+                // 内部 push
+                innerReceivers.forEach {
+                    val appMessage = AppNotifyUtil.makeMessage(
+                        experienceHashId = HashUtil.encodeLongId(e.id),
+                        experienceName = e.experienceName,
+                        appVersion = e.version,
+                        receiver = it,
+                        platform = e.platform
+                    )
+                    experiencePushService.pushMessage(appMessage)
                 }
                 // 外部用户
                 val outerReceivers = experienceBaseService.getOuterReceivers(experienceId = e.id, groupIds = groupIds)
@@ -942,12 +953,19 @@ class ExperienceService @Autowired constructor(
                 val wechatGroupList = regex.split(wechatGroups)
                 wechatGroupList.forEach {
                     if (it.startsWith("ww")) {
-                        val message = WechatGroupUtil.batchRichTextMessage(messages, it)
+                        val message = WechatGroupUtil.batchRichTextMessage(projectName, messages, it)
                         wechatWorkService.sendRichText(message)
                     } else {
-                        wechatWorkRobotService.sendByRobot(it, batchContent.toString(), true)
+                        val message = WechatGroupUtil.batchRobotMessage(projectName, messages)
+                        wechatWorkRobotService.sendByRobot(it, message, true)
                     }
                 }
+            }
+
+            // 企业微信
+            if (notifyTypeList.contains(NotifyType.RTX)) {
+                val message = RtxUtil.batchMessage(projectName, messages, innerReceivers)
+                client.get(ServiceNotifyResource::class).sendRtxNotify(message)
             }
         }
     }
@@ -1139,13 +1157,7 @@ class ExperienceService @Autowired constructor(
         appUrl: String,
         it: String
     ) {
-        val content = """
-                        【$projectName】最新体验版本分享
-    
-                        【$projectName】发布了最新体验版本，【${experienceRecord.name}_${experienceRecord.version}】诚邀您参与体验。
-                        [手机体验地址]($appUrl)
-                    """.trimIndent()
-
+        val content = WechatGroupUtil.robotMessage(projectName, experienceRecord.name, experienceRecord.version, appUrl)
         wechatWorkRobotService.sendByRobot(it, content, true)
     }
 

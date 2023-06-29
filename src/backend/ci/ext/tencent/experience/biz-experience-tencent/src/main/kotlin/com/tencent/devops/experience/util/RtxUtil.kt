@@ -48,9 +48,33 @@ object RtxUtil {
             params = arrayOf(projectName)
         )
         message.body = I18nUtil.getCodeLanMessage(
-                messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
-                params = arrayOf(projectName, name, version, appUrl)
-            )
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
+            params = arrayOf(projectName, name, version, appUrl)
+        )
         return message
+    }
+
+    fun batchMessage(
+        projectName: String,
+        messages: List<Message>,
+        receivers: Set<String>
+    ): RtxNotifyMessage {
+        val rtxNotifyMessage = RtxNotifyMessage()
+        rtxNotifyMessage.addAllReceivers(receivers)
+        rtxNotifyMessage.title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+            params = arrayOf(projectName)
+        )
+        val body = StringBuilder()
+        for (m in messages) {
+            body.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
+                    params = arrayOf(projectName, m.name, m.version, m.outerUrl)
+                ) + "\n"
+            )
+        }
+        rtxNotifyMessage.body = body.toString()
+        return rtxNotifyMessage
     }
 }
