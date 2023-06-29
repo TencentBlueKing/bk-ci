@@ -112,6 +112,23 @@ class PipelineOverviewDao {
         }
     }
 
+    fun queryPipelineTrendInfoCount(
+        dslContext: DSLContext,
+        queryPipelineOverview: QueryPipelineOverviewQO
+    ): Int {
+        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
+            val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
+            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
+            val step = dslContext.selectCount().from(this)
+            if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                step.join(tProjectPipelineLabelInfo)
+                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+            }
+            return step.where(conditions).fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     private fun TPipelineOverviewData.getConditions(
         queryCondition: QueryPipelineOverviewQO,
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,

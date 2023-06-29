@@ -100,6 +100,16 @@ class PipelineOverviewServiceImpl @Autowired constructor(
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
         val projectId = queryPipelineOverviewDTO.projectId
+        val count = pipelineOverviewDao.queryPipelineTrendInfoCount(
+            dslContext,
+            QueryPipelineOverviewQO(
+                projectId,
+                queryPipelineOverviewDTO.baseQueryReq
+            )
+        )
+        if (count == 0) {
+            return emptyList()
+        }
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(
@@ -117,12 +127,8 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 statisticsTime = it.get(BK_STATISTICS_TIME, LocalDateTime::class.java),
                 totalExecuteCount = totalExecuteCount ?: 0L,
                 failedExecuteCount = failExecuteCount ?: 0L,
-                totalAvgCostTime = toMinutes(
-                    (totalExecuteCount?.let { totalAvgCostTime / totalExecuteCount }) ?: 0L
-                ),
-                failAvgCostTime = toMinutes(
-                    (failExecuteCount?.let { failAvgCostTime / failExecuteCount }) ?: 0L
-                )
+                totalAvgCostTime = toMinutes(totalAvgCostTime / count),
+                failAvgCostTime = toMinutes(failAvgCostTime / count)
             )
         }
         return trendInfos ?: emptyList()
