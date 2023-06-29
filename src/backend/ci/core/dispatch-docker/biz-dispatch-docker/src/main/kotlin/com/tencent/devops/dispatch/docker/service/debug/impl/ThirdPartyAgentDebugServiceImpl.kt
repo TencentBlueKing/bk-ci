@@ -32,7 +32,9 @@ class ThirdPartyAgentDebugServiceImpl @Autowired constructor(
         val paramStart = url.indexOf("start_exec")
         val ipAndPort = url.substring(0, paramStart).removeSuffix("/").split(":")
         val suffix = url.substring(paramStart)
-        url = "wss://${commonConfig.devopsBuildGateway}/agent-console/$suffix&ip=${ipAndPort[0]}&port=${ipAndPort[1]}"
+        url = "wss://${
+            commonConfig.devopsBuildGateway?.removePrefix("https://")?.removePrefix("http://")
+        }/agent-console/$suffix&ip=${ipAndPort[0]}&port=${ipAndPort[1]}"
 
         return url
     }

@@ -51,7 +51,10 @@ func DoPullAndDebug() {
 		// 接受登录调试任务
 		debugInfo, err := getDebugTask()
 		if err != nil {
-			imageDebugLogs.WithError(err).Error("get image deubg failed, retry, err")
+			imageDebugLogs.WithError(err).Warn("get image deubg failed, retry, err")
+			continue
+		}
+		if debugInfo == nil {
 			continue
 		}
 
@@ -68,8 +71,8 @@ func getDebugTask() (*api.ImageDebug, error) {
 	}
 
 	if result.IsNotOk() {
-		logs.Error("get build info failed, message", result.Message)
-		return nil, errors.New("get build info failed")
+		logs.Error("get debug info failed, message", result.Message)
+		return nil, errors.New("get debug info failed")
 	}
 
 	if result.Data == nil {
@@ -436,11 +439,12 @@ func CreateExecServer(
 		return err
 	}
 
+	imageDebugLogs.WithField("port", port).Info("debug server start")
 	errChan := make(chan error)
-	// http server
 	server := InitRouter(ctx, backend, conf, errChan)
 	defer func() {
 		server.Shutdown(context.Background())
+		imageDebugLogs.WithField("port", port).Info("debug server stop")
 	}()
 
 	// 等待容器启动后创建登录调试链接

@@ -219,19 +219,19 @@ func parseWorkerVersion(output string) string {
 			}
 			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
 			if matchWorkerVersion(line) {
-				logs.Info("worker version: ", line)
+				logs.Info("match worker version: ", line)
 				return line
 			} else {
 				if versionRegexp != nil {
 					if versionRegexp.MatchString(line) {
-						logs.Info("worker version: ", line)
+						logs.Info("regexp worker version: ", line)
 						return line
 					} else {
 						continue
 					}
 				} else {
 					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-					logs.Info("worker version: ", line)
+					logs.Info("regexp nil worker version: ", line)
 					return line
 				}
 			}
