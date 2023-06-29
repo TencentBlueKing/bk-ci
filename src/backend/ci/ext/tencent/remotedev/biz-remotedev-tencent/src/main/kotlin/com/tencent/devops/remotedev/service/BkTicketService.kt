@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -85,7 +84,8 @@ class BkTicketService @Autowired constructor(
         bkTicket: String?,
         hostName: String?,
         mountType: WorkspaceMountType,
-        retryTime: Int = 3): Boolean {
+        retryTime: Int = 3
+    ): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName|mountType|$mountType")
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
             return false
@@ -127,7 +127,7 @@ class BkTicketService @Autowired constructor(
             // 接口超时失败，重试三次
             if (retryTime > 0) {
                 logger.info("User $userId updateBkTicket. retry: $retryTime")
-                return updateBkTicket(userId, bkTicket, hostName, mountType,retryTime - 1)
+                return updateBkTicket(userId, bkTicket, hostName, mountType, retryTime - 1)
             } else {
                 logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
