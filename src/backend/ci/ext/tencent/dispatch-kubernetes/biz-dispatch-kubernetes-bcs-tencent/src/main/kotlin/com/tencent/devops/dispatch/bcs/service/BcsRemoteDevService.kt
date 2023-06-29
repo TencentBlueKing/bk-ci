@@ -298,7 +298,7 @@ class BcsRemoteDevService @Autowired constructor(
     }
 
     private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
-        return "$workspaceName.${workspaceRedisUtils.getDevcloudClusterIdHost(clusterId, "")}"
+        return "$workspaceName.${workspaceRedisUtils.getDevcloudClusterIdHost(clusterId, bcsCloudAppId)}"
     }
     private fun generateContainerEnvVar(
         userId: String,
