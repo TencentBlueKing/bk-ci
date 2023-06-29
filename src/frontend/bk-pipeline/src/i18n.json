@@ -32,7 +32,8 @@
     "dependOn": "依赖于",
     "open": "展开",
     "openPOST": "展开后置操作",
-    "foldPOST": "收起后置操作"
+    "foldPOST": "收起后置操作",
+    "debugConsole": "登录调试"
   },
   "en-US": {
     "insertStage": "Add Stage",
@@ -67,6 +68,7 @@
     "dependOn": "Depend on",
     "open": "Open",
     "openPOST": "Expand post-actions",
-    "foldPOST": "Fold post-actions"
+    "foldPOST": "Fold post-actions",
+    "debugConsole": "Debug"
   }
 }
