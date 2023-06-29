@@ -75,13 +75,13 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 			// https://github.com/sirupsen/logrus/issues/137
 			//
 			// Print errors verbosely to get stack traces where available
-			b.WriteString(fmt.Sprintf("%s:%+v ", k, v))
+			b.WriteString(fmt.Sprintf(" %s:%+v", k, v))
 		default:
-			b.WriteString(fmt.Sprintf("%s:%v ", k, v))
+			b.WriteString(fmt.Sprintf(" %s:%v", k, v))
 		}
 	}
 
-	b.WriteString("/n")
+	b.WriteString("\n")
 
 	return b.Bytes(), nil
 }

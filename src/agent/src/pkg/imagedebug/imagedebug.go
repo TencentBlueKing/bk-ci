@@ -439,11 +439,12 @@ func CreateExecServer(
 		return err
 	}
 
+	imageDebugLogs.WithField("port", port).Info("debug server start")
 	errChan := make(chan error)
-	// http server
 	server := InitRouter(ctx, backend, conf, errChan)
 	defer func() {
 		server.Shutdown(context.Background())
+		imageDebugLogs.WithField("port", port).Info("debug server stop")
 	}()
 
 	// 等待容器启动后创建登录调试链接
