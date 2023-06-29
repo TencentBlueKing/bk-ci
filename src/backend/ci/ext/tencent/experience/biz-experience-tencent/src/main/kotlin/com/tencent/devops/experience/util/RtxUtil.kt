@@ -71,7 +71,7 @@ object RtxUtil {
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
                     params = arrayOf(projectName, m.name, m.version, m.outerUrl)
-                ) + "\n"
+                ) + "\n\n"
             )
         }
         rtxNotifyMessage.body = body.toString()

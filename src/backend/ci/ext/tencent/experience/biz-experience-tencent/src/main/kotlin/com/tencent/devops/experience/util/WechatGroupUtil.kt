@@ -155,7 +155,7 @@ object WechatGroupUtil {
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
                 params = arrayOf(projectName)
-            ) + "\n\n"
+            ) + "\n\n\n"
         )
         for (i in messages.indices) {
             val m = messages[i]
