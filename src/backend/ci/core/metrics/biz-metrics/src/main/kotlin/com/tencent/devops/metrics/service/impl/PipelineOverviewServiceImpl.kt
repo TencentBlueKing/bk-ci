@@ -38,18 +38,18 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Service
 class PipelineOverviewServiceImpl @Autowired constructor(
@@ -108,14 +108,21 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         )
         val trendInfos = result?.map {
-            val totalAvgCostTime = (it.get(BK_TOTAL_AVG_COST_TIME, BigDecimal::class.java))?.toLong()
-            val failAvgCostTime = (it.get(BK_FAIL_AVG_COST_TIME, BigDecimal::class.java))?.toLong()
+            val totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()
+            val failExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()
+            val totalAvgCostTime = (it.get(BK_TOTAL_AVG_COST_TIME, BigDecimal::class.java))?.toLong() ?: 0L
+            val failAvgCostTime = (it.get(BK_FAIL_AVG_COST_TIME, BigDecimal::class.java))?.toLong() ?: 0L
+
             PipelineTrendInfoDO(
                 statisticsTime = it.get(BK_STATISTICS_TIME, LocalDateTime::class.java),
-                totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong() ?: 0L,
-                failedExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong() ?: 0L,
-                totalAvgCostTime = toMinutes(totalAvgCostTime ?: 0L),
-                failAvgCostTime = toMinutes(failAvgCostTime ?: 0L)
+                totalExecuteCount = totalExecuteCount ?: 0L,
+                failedExecuteCount = failExecuteCount ?: 0L,
+                totalAvgCostTime = toMinutes(
+                    (totalExecuteCount?.let{ totalAvgCostTime / totalExecuteCount }) ?: 0L
+                ),
+                failAvgCostTime = toMinutes(
+                    (failExecuteCount?.let{ failAvgCostTime / failExecuteCount }) ?: 0L
+                )
             )
         }
         return trendInfos ?: emptyList()
