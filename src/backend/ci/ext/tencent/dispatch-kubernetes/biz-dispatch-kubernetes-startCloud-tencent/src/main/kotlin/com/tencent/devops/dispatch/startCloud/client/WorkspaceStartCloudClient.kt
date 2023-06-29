@@ -85,7 +85,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，云桌面资源不足($APP_NOT_BIND_CGS)"
+                        "第三方服务-START-CLOUD 异常，云桌面资源不足(${environmentRsp.code})"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
