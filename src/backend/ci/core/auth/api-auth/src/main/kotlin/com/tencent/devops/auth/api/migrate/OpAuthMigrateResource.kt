@@ -38,6 +38,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
@@ -87,8 +88,14 @@ interface OpAuthMigrateResource {
     @Path("/migrateResource/{projectCode}")
     @ApiOperation("迁移特定资源类型资源")
     fun migrateResource(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
         projectCode: String,
+        @ApiParam("资源类型", required = true)
+        @QueryParam("resourceType")
         resourceType: String,
+        @ApiParam("项目创建人", required = true)
+        @QueryParam("projectCreator")
         projectCreator: String
     ): Result<Boolean>
 }
