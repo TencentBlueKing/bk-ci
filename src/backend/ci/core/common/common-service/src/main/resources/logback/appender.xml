@@ -32,7 +32,7 @@
     <appender name="sync-error-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${service.log.dir}/service-error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
             <maxFileSize>1GB</maxFileSize>
             <totalSizeCap>10GB</totalSizeCap>
