@@ -84,4 +84,53 @@ object WechatGroupUtil {
         )
         return RichtextMessage(receiver, richtextContentList)
     }
+
+    fun batchRichTextMessage(
+        messages: List<Message>,
+        groupId: String
+    ): RichtextMessage {
+        val receiver = Receiver(ReceiverType.group, groupId)
+        val richtextContentList = mutableListOf<RichtextContent>()
+        for (m in messages) {
+            // title
+            richtextContentList.add(
+                RichtextText(
+                    RichtextTextText(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+                            params = arrayOf(m.projectName)
+                        ) + "\n\n"
+                    )
+                )
+            )
+            // body
+            richtextContentList.add(
+                RichtextText(
+                    RichtextTextText(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+                            params = arrayOf(m.projectName, m.name, m.version)
+                        )
+                    )
+                )
+            )
+            richtextContentList.add(
+                RichtextView(
+                    RichtextViewLink(
+                        I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS),
+                        m.outerUrl,
+                        1
+                    )
+                )
+            )
+        }
+        return RichtextMessage(receiver, richtextContentList)
+    }
+
+    data class Message(
+        val projectName: String,
+        val name: String,
+        val version: String,
+        val outerUrl: String
+    )
 }

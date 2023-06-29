@@ -61,9 +61,12 @@ interface BuildExperienceResource {
     ): Result<ExperienceCreateResp>
 
     @ApiOperation("发送通知")
-    @Path("/batchNotification")
+    @Path("/projects/{projectId}/batchNotification")
     @POST
     fun batchNotification(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("通知请求")
         req: ExperienceNotificationReq
     ): Result<Boolean>

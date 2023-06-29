@@ -51,12 +51,12 @@ class BuildExperienceResourceImpl @Autowired constructor(private val experienceS
         return Result(experienceService.serviceCreate(userId, projectId, experience, Source.PIPELINE))
     }
 
-    override fun batchNotification(req: ExperienceNotificationReq): Result<Boolean> {
-        try {
-            experienceService.batchNotification(req)
-            return Result(true)
+    override fun batchNotification(projectId: String, req: ExperienceNotificationReq): Result<Boolean> {
+        return try {
+            experienceService.batchNotification(projectId, req)
+            Result(true)
         } catch (e: Exception) {
-            return Result(false)
+            Result(false)
         }
 
     }
