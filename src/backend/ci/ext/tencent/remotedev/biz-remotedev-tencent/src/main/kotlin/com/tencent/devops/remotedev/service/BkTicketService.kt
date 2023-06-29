@@ -95,7 +95,7 @@ class BkTicketService @Autowired constructor(
         params["ticket"] = bkTicket
         params["user"] = userId
         val headers = mutableMapOf(
-            "Cookie" to "X-DEVOPS-BK-TICKET=$bkTicket;X-Remotedev-Gateway-Tag=${mountType.toString().lowercase()}"
+            "Cookie" to "X-DEVOPS-BK-TICKET=$bkTicket;X-REMOTEDEV-GATEWAY-TAG=${mountType.toString().lowercase()}"
         )
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
