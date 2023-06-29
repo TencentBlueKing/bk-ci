@@ -151,15 +151,18 @@ class WorkspaceService @Autowired constructor(
         val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
         val yaml = if (workspaceCreate.useOfficialDevfile != true) {
             kotlin.runCatching {
-                gitTransferService.getFileContent(
-                    userId = userId,
-                    pathWithNamespace = pathWithNamespace,
-                    filePath = workspaceCreate.devFilePath!!,
-                    ref = workspaceCreate.branch
-                )
+                permissionService.checkOauthIllegal(userId) {
+                    gitTransferService.getFileContent(
+                        userId = userId,
+                        pathWithNamespace = pathWithNamespace,
+                        filePath = workspaceCreate.devFilePath!!,
+                        ref = workspaceCreate.branch
+                    )
+                }
             }.getOrElse {
                 logger.warn("get yaml failed ${it.message}")
-                throw ErrorCodeException(
+                if (it is ErrorCodeException) throw it
+                else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
                     params = arrayOf("获取 devfile 异常 ${it.message}")
                 )
