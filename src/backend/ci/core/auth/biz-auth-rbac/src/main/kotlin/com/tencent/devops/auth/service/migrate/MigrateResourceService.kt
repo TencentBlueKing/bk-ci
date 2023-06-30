@@ -120,7 +120,7 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun migrateResource(
+    fun migrateResource(
         projectCode: String,
         resourceType: String,
         projectCreator: String
@@ -158,7 +158,10 @@ class MigrateResourceService @Autowired constructor(
                 resourceType = resourceType,
                 projectCode = projectCode
             )
-            logger.info("MigrateResourceService|projectCode:$projectCode|resourceData:$resourceData")
+            logger.info(
+                "MigrateResourceService|projectCode:$projectCode|resourceType:$resourceType" +
+                    "|resourceData:$resourceData"
+            )
             if (resourceData == null || resourceData.data.result.isNullOrEmpty()) {
                 return
             }

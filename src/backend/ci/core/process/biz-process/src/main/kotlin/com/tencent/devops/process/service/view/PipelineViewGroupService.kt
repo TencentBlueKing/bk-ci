@@ -763,6 +763,14 @@ class PipelineViewGroupService @Autowired constructor(
         return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
     }
 
+    fun listViewIdsMap(projectId: String, pipelineIds: List<String>): Map<String, List<Long>> {
+        return pipelineViewGroupDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).groupBy({ it.pipelineId }, { it.viewId })
+    }
+
     fun listViewIdsByProjectId(projectId: String): Set<Long> {
         return pipelineViewGroupDao.listByProjectId(
             dslContext = dslContext,

@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: init-turbo
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/turbo
           env:

@@ -36,7 +36,9 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
@@ -44,7 +46,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpAuthMigrateResource {
-
     @POST
     @Path("/v3ToRbac")
     @ApiOperation("v3权限批量升级到rbac权限")
@@ -72,5 +73,29 @@ interface OpAuthMigrateResource {
     fun toRbacAuthByCondition(
         @ApiParam("按条件迁移项目实体", required = true)
         migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/{projectCode}/compareResult")
+    @ApiOperation("对比迁移结果")
+    fun compareResult(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("/{projectCode}/migrateResource")
+    @ApiOperation("迁移特定资源类型资源")
+    fun migrateResource(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+        @ApiParam("项目创建人", required = true)
+        @QueryParam("projectCreator")
+        projectCreator: String
     ): Result<Boolean>
 }
