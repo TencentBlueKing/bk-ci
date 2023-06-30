@@ -28,22 +28,21 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.metrics.config.MetricsConfig
+import com.tencent.devops.metrics.constant.Constants
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
-import com.tencent.devops.metrics.pojo.`do`.PipelineBuildTimeStatisticsDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil
-import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -98,59 +97,24 @@ class PipelineOverviewServiceImpl @Autowired constructor(
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
         val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
         val projectId = queryPipelineOverviewDTO.projectId
-        val pageSize = PageUtil.MAX_PAGE_SIZE
-        var pageNum = 1
-        val pipelineBuildTimeStatisticsMap = mutableMapOf<String, PipelineBuildTimeStatisticsDO>()
-        val t = TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA
-        do {
-            val result = pipelineOverviewDao.queryPipelineTrendInfo(
-                dslContext,
-                QueryPipelineOverviewQO(projectId, baseQueryReq, pageNum, pageSize)
-            )
-
-            for (trendInfo in result) {
-                val statisticsTime = trendInfo.get(t.STATISTICS_TIME)
-                val totalExecuteCount = trendInfo.get(t.TOTAL_EXECUTE_COUNT)
-                val failExecuteCount = trendInfo.get(t.FAIL_EXECUTE_COUNT)
-                val totalAvgCostTime = trendInfo.get(t.TOTAL_AVG_COST_TIME)
-                val failAvgCostTime = trendInfo.get(t.FAIL_AVG_COST_TIME)
-                // 计算流水线总耗时和失败耗时
-                val totalTime = totalExecuteCount * totalAvgCostTime
-                val failTotalTime = failAvgCostTime?.let { failExecuteCount * failAvgCostTime } ?: 0L
-                val pipelineBuildTimeStatisticsDo = pipelineBuildTimeStatisticsMap.getOrDefault(
-                    "$statisticsTime",
-                    PipelineBuildTimeStatisticsDO(
-                        statisticsTime = statisticsTime,
-                        totalCostTime = 0L,
-                        failCostTime = 0L,
-                        totalExecuteCount = 0L,
-                        failedExecuteCount = 0L
-                    )
-                )
-                pipelineBuildTimeStatisticsDo.totalExecuteCount += totalExecuteCount
-                pipelineBuildTimeStatisticsDo.totalCostTime += totalTime
-                pipelineBuildTimeStatisticsDo.failedExecuteCount += failExecuteCount
-                pipelineBuildTimeStatisticsDo.failCostTime += failTotalTime
-                if (!pipelineBuildTimeStatisticsMap.containsKey("$statisticsTime")) {
-                    pipelineBuildTimeStatisticsMap["$statisticsTime"] = pipelineBuildTimeStatisticsDo
-                }
-            }
-            pageNum++
-        } while (result.size == pageSize)
-        return pipelineBuildTimeStatisticsMap.map {
-            val buildTimeStatisticsDo = it.value
-            val totalAvgCostTime = buildTimeStatisticsDo.totalCostTime / buildTimeStatisticsDo.totalExecuteCount
-            val failAvgCostTime = if (buildTimeStatisticsDo.failedExecuteCount == 0L) {
-                0L
+        val result = pipelineOverviewDao.queryPipelineTrendInfo(
+            dslContext,
+            QueryPipelineOverviewQO(projectId, baseQueryReq)
+        )
+        return result.map {
+            val totalExecuteCount = (it.get(Constants.BK_TOTAL_EXECUTE_COUNT) as BigDecimal).toLong()
+            val failedExecuteCount = (it.get(Constants.BK_FAIL_EXECUTE_COUNT) as BigDecimal).toLong()
+            val failAvgCostTime = if (failedExecuteCount == 0L) {
+                0.0
             } else {
-                buildTimeStatisticsDo.failCostTime / buildTimeStatisticsDo.failedExecuteCount
+                (it.get(BK_FAIL_COST_TIME_SUM) as BigDecimal).toDouble() / failedExecuteCount
             }
             PipelineTrendInfoDO(
-                statisticsTime = buildTimeStatisticsDo.statisticsTime,
-                totalExecuteCount = buildTimeStatisticsDo.totalExecuteCount,
-                failedExecuteCount = buildTimeStatisticsDo.failedExecuteCount,
-                totalAvgCostTime = QueryParamCheckUtil.toMinutes(totalAvgCostTime),
-                failAvgCostTime = QueryParamCheckUtil.toMinutes(failAvgCostTime)
+                statisticsTime = it.get(Constants.BK_STATISTICS_TIME) as LocalDateTime,
+                totalExecuteCount = totalExecuteCount,
+                failedExecuteCount = failedExecuteCount,
+                totalAvgCostTime = (it.get(BK_TOTAL_COST_TIME_SUM) as BigDecimal).toDouble() / totalExecuteCount,
+                failAvgCostTime = failAvgCostTime
             )
         }
     }

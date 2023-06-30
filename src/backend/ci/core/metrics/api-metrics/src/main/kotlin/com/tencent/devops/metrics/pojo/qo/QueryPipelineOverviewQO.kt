@@ -36,9 +36,5 @@ data class QueryPipelineOverviewQO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("查询条件信息")
-    val baseQueryReq: BaseQueryReqVO,
-    @ApiModelProperty("分页码")
-    val page: Int? = null,
-    @ApiModelProperty("分页数")
-    val pageSize: Int? = null
+    val baseQueryReq: BaseQueryReqVO
 )
