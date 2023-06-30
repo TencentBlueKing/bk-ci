@@ -76,7 +76,7 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/compareResult/{projectCode}")
+    @Path("/{projectCode}/compareResult")
     @ApiOperation("对比迁移结果")
     fun compareResult(
         @ApiParam("项目Code", required = true)
@@ -85,7 +85,7 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/migrateResource/{projectCode}")
+    @Path("/{projectCode}/migrateResource")
     @ApiOperation("迁移特定资源类型资源")
     fun migrateResource(
         @ApiParam("项目Code", required = true)
