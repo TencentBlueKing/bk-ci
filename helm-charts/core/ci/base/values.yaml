@@ -1,3 +1,9 @@
+# 镜像源公共配置
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
 # RBAC配置
 rbac:
   enabled: true
