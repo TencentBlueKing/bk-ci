@@ -54,7 +54,7 @@ spec:
       {{- end }}        
       containers:
         - name: websocket
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.websocket.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.websocket.containerSecurityContext "enabled" | toYaml | nindent 12 }}

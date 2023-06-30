@@ -26,46 +26,31 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.permission.PipelinePermissionService
 
-/**
- * 权限中心迁移服务
- */
-interface PermissionMigrateService {
+@RestResource
+class ServicePipelinePermissionResourceImpl(
+    private val pipelinePermissionService: PipelinePermissionService
+) : ServicePipelinePermissionResource {
 
-    /**
-     * v3批量迁移到rbac
-     */
-    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
-
-    /**
-     * v0批量迁移到rbac
-     */
-    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
-
-    /**
-     * 全部迁移到rbac
-     */
-    fun allToRbacAuth(): Boolean
-
-    /**
-     * 按条件升级到rbac权限
-     */
-    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
-
-    /**
-     * 对比迁移鉴权结果
-     */
-    fun compareResult(projectCode: String): Boolean
-
-    /**
-     * 迁移特定资源类型资源
-     */
-    fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission
+            )
+        )
+    }
 }
