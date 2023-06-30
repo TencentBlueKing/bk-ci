@@ -134,7 +134,7 @@ Vue.mixin({
             if (e.code === 403) { // 没有权限编辑
                 this.handleNoPermission(data)
             } else {
-                this.$showTips({
+                this.$bkMessage({
                     message: e.message || e,
                     theme: 'error'
                 })
