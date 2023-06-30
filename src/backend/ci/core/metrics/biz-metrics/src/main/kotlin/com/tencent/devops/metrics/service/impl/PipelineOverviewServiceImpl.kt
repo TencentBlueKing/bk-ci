@@ -41,6 +41,7 @@ import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -105,16 +106,18 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             val totalExecuteCount = (it.get(Constants.BK_TOTAL_EXECUTE_COUNT) as BigDecimal).toLong()
             val failedExecuteCount = (it.get(Constants.BK_FAIL_EXECUTE_COUNT) as BigDecimal).toLong()
             val failAvgCostTime = if (failedExecuteCount == 0L) {
-                0.0
+                0L
             } else {
-                (it.get(BK_FAIL_COST_TIME_SUM) as BigDecimal).toDouble() / failedExecuteCount
+                (it.get(BK_FAIL_COST_TIME_SUM) as BigDecimal).toLong() / failedExecuteCount
             }
             PipelineTrendInfoDO(
                 statisticsTime = it.get(Constants.BK_STATISTICS_TIME) as LocalDateTime,
                 totalExecuteCount = totalExecuteCount,
                 failedExecuteCount = failedExecuteCount,
-                totalAvgCostTime = (it.get(BK_TOTAL_COST_TIME_SUM) as BigDecimal).toDouble() / totalExecuteCount,
-                failAvgCostTime = failAvgCostTime
+                totalAvgCostTime = toMinutes(
+                    (it.get(BK_TOTAL_COST_TIME_SUM) as BigDecimal).toLong() / totalExecuteCount
+                ),
+                failAvgCostTime = toMinutes(failAvgCostTime)
             )
         }
     }
