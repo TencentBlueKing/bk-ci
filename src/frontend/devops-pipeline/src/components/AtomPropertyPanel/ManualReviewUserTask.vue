@@ -14,6 +14,31 @@
         </template>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">
+                <span>{{ reminderTimeCom.label }}</span>
+                <i class="devops-icon icon-angle-down" style="display: block" />
+            </header>
+            <div slot="content">
+                <form-field class="review-remind" :label="reminderTimeCom.label" :desc="reminderTimeCom.desc">
+                    <div>
+                        {{ $t('editPage.every') }}
+                        <bk-input
+                            v-model="element.reminderTime"
+                            class="remind-number-input"
+                            name="reminderTime"
+                            type="number"
+                            :min="1"
+                            :max="168"
+                            :placeholder="' '"
+                            :disabled="disabled"
+                            @change="handleChangeReminderTime"
+                        ></bk-input>
+                        {{ $t('editPage.remindTime') }}
+                    </div>
+                </form-field>
+            </div>
+        </accordion>
+        <accordion show-content show-checkbox>
+            <header class="var-header" slot="header">
                 <span>{{ $t('editPage.atomOutput') }}</span>
                 <i class="devops-icon icon-angle-down" style="display: block" />
             </header>
@@ -61,6 +86,9 @@
         computed: {
             namespace () {
                 return this.element.namespace
+            },
+            reminderTimeCom () {
+                return this.atomPropsModel.reminderTime
             }
         },
         watch: {
@@ -86,7 +114,20 @@
                 } else {
                     this.handleUpdateElement(name, value)
                 }
+            },
+
+            handleChangeReminderTime (val) {
+                this.handleUpdateElement('reminderTime', val)
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .remind-number-input {
+        width: 60px;
+        .input-number-option {
+            display: none;
+        }
+    }
+</style>
