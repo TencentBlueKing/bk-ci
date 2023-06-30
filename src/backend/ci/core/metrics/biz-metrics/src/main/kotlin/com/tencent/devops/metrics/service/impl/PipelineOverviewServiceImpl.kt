@@ -95,7 +95,9 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         return null
     }
 
-    override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
+    override fun queryPipelineTrendInfo(
+        queryPipelineOverviewDTO: QueryPipelineOverviewDTO
+    ): List<PipelineTrendInfoDO> {
         val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
         val projectId = queryPipelineOverviewDTO.projectId
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
