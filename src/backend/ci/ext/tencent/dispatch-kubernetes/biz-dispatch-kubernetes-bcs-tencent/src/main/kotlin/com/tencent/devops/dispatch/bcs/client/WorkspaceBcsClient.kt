@@ -115,10 +115,9 @@ class WorkspaceBcsClient @Autowired constructor(
         envPatchStr: String = ""
     ): EnvironmentOpRspData {
         val url = bcsCloudUrl + "/api/v1/remotedevenv/${environmentAction.getValue()}"
-
-        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, patchStr: $envPatchStr")
         val body = JsonUtil.toJson(UidReq(uid = environmentUid, env = envPatchStr, deleteCbs = true))
-
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, " +
+            "patchStr: $envPatchStr, body:$body")
         val request = Request.Builder()
             .url(url)
             .headers(makeHeaders(bcsCloudToken).toHeaders())
