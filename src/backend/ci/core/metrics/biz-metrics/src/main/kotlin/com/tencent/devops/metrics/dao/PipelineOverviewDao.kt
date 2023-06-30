@@ -100,8 +100,8 @@ class PipelineOverviewDao {
                 STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT),
                 sum<Long>(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
-                sum<Long>(TOTAL_AVG_COST_TIME * TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM),
-                sum<Long>(FAIL_AVG_COST_TIME * FAIL_EXECUTE_COUNT).`as`(BK_FAIL_COST_TIME_SUM)
+                sum<Long>((TOTAL_AVG_COST_TIME * TOTAL_EXECUTE_COUNT)).`as`(BK_TOTAL_COST_TIME_SUM),
+                sum<Long>((FAIL_AVG_COST_TIME * FAIL_EXECUTE_COUNT).`as`(BK_FAIL_COST_TIME_SUM))
             ).from(this)
             if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
