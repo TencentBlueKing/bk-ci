@@ -100,8 +100,7 @@ class MigrateResultService constructor(
             )
             verifyRecordList.forEach {
                 with(it) {
-                    if (resourceCode == "*" ||
-                        action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
+                    if (isSkipCompare(resourceCode = resourceCode, action = action)) return@forEach
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                         projectCode = projectCode,
                         resourceType = resourceType,
@@ -132,5 +131,14 @@ class MigrateResultService constructor(
             offset += limit
         }
         return true
+    }
+
+    private fun isSkipCompare(
+        resourceCode: String,
+        action: String
+    ): Boolean {
+        return resourceCode == "*" ||
+            action.substringAfterLast("_") == AuthPermission.DELETE.value ||
+            action == "all_action"
     }
 }
