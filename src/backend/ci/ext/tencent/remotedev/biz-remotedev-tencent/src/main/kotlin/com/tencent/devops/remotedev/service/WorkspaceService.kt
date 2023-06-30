@@ -143,7 +143,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑
-    fun createWorkspace(userId: String, bkTicket: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
+    fun createWorkspace(userId: String, bkTicket: String, projectId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
         val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
@@ -226,6 +226,7 @@ class WorkspaceService @Autowired constructor(
             Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
+                projectId = projectId,
                 displayName = null,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
@@ -274,7 +275,8 @@ class WorkspaceService @Autowired constructor(
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                bkTicket = bkTicket
+                bkTicket = bkTicket,
+                projectId = projectId
             )
         )
 
@@ -986,6 +988,7 @@ class WorkspaceService @Autowired constructor(
                 Workspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
+                    projectId = it.projectId,
                     displayName = it.displayName,
                     repositoryUrl = it.url,
                     branch = it.branch,
