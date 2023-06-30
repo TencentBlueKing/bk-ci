@@ -134,15 +134,17 @@ object WechatGroupUtil {
         version: String,
         outerUrl: String
     ): String {
+        val title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+            params = arrayOf(projectName)
+        )
+        val body = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+            params = arrayOf(projectName, name, version)
+        )
         return """
-        ${I18nUtil.getCodeLanMessage(messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING, params = arrayOf(projectName))}
-    
-        ${
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
-                params = arrayOf(projectName, name, version)
-            )
-        }
+        $title
+        $body
         [${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)
         """.trimIndent()
     }
