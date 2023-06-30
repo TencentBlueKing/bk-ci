@@ -78,14 +78,14 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress(
     "LongParameterList",
@@ -236,6 +236,7 @@ class PipelineBuildRecordService @Autowired constructor(
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
             stage.resetBuildOption()
+            stage.transformCompatibility()
             // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
