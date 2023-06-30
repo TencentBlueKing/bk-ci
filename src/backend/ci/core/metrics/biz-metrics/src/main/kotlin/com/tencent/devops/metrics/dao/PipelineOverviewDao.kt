@@ -30,13 +30,8 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.db.utils.JooqUtils.productSum
 import com.tencent.devops.common.db.utils.JooqUtils.sum
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
-import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
-import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
@@ -46,7 +41,7 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
-import org.jooq.Record5
+import org.jooq.Record6
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -92,40 +87,27 @@ class PipelineOverviewDao {
     fun queryPipelineTrendInfo(
         dslContext: DSLContext,
         queryPipelineOverview: QueryPipelineOverviewQO
-    ): Result<Record5<LocalDateTime, BigDecimal, BigDecimal, BigDecimal, BigDecimal>>? {
+    ): Result<Record6<LocalDateTime, Long, Long, Long, Long, String>> {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
-                STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
-                sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT),
-                sum<Long>(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
-                sum<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME),
-                sum<Long>(FAIL_AVG_COST_TIME).`as`(BK_FAIL_AVG_COST_TIME)
+                STATISTICS_TIME,
+                TOTAL_EXECUTE_COUNT,
+                FAIL_EXECUTE_COUNT,
+                TOTAL_AVG_COST_TIME,
+                FAIL_AVG_COST_TIME,
+                PIPELINE_ID
             ).from(this)
             if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+                    .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
-            return step.where(conditions).groupBy(this.STATISTICS_TIME).fetch()
-        }
-    }
-
-    fun queryPipelineTrendInfoPipelineIds(
-        dslContext: DSLContext,
-        queryPipelineOverview: QueryPipelineOverviewQO
-    ): List<String> {
-        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
-            val step = dslContext.select(PIPELINE_ID).from(this)
-            if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.join(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            }
-            return step.where(conditions).groupBy(PIPELINE_ID).fetchInto(String::class.java)
+            return step.where(conditions)
+                .groupBy(STATISTICS_TIME, PIPELINE_ID)
+                .orderBy(STATISTICS_TIME, PIPELINE_ID)
+                .fetch()
         }
     }
 

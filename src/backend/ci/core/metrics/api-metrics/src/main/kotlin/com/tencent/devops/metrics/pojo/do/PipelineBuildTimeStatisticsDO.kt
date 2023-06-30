@@ -25,20 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.qo
+package com.tencent.devops.metrics.pojo.`do`
 
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("查询流水线概览数据查询条件信息对象")
-data class QueryPipelineOverviewQO(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("查询条件信息")
-    val baseQueryReq: BaseQueryReqVO,
-    @ApiModelProperty("分页码")
-    val page: Int? = null,
-    @ApiModelProperty("分页数")
-    val pageSize: Int? = null
+@ApiModel("流水线趋势信息")
+data class PipelineBuildTimeStatisticsDO(
+    @ApiModelProperty("统计时间")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    val statisticsTime: LocalDateTime,
+    @ApiModelProperty("流水线总执行次数")
+    var totalExecuteCount: Long,
+    @ApiModelProperty("流水线总执行失败数")
+    var failedExecuteCount: Long,
+    @ApiModelProperty("总耗时，单位：ms")
+    var totalCostTime: Long,
+    @ApiModelProperty("总失败耗时，单位：ms")
+    var failCostTime: Long
 )
