@@ -143,14 +143,14 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             val failAvgCostTime = if (buildTimeStatisticsDo.failedExecuteCount == 0L) {
                 0L
             } else {
-                buildTimeStatisticsDo.failCostTime /   buildTimeStatisticsDo.failedExecuteCount
+                buildTimeStatisticsDo.failCostTime / buildTimeStatisticsDo.failedExecuteCount
             }
             PipelineTrendInfoDO(
                 statisticsTime = buildTimeStatisticsDo.statisticsTime,
                 totalExecuteCount = buildTimeStatisticsDo.totalExecuteCount,
                 failedExecuteCount = buildTimeStatisticsDo.failedExecuteCount,
                 totalAvgCostTime = QueryParamCheckUtil.toMinutes(totalAvgCostTime),
-                failAvgCostTime =QueryParamCheckUtil.toMinutes(failAvgCostTime)
+                failAvgCostTime = QueryParamCheckUtil.toMinutes(failAvgCostTime)
             )
         }
     }
