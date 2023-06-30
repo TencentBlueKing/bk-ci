@@ -1,15 +1,13 @@
 package com.tencent.devops.artifactory.service.permission
 
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServicePipelinePermissionResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 
 class RbacArtPipelineServiceImpl(
@@ -41,16 +39,11 @@ class RbacArtPipelineServiceImpl(
                 projectCode = projectId
             ).data ?: false
         } else {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            client.get(ServicePipelinePermissionResource::class).checkPipelinePermission(
                 userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
-                action = TActionUtils.buildAction(
-                    authPermission = permission ?: AuthPermission.VIEW,
-                    authResourceType = AuthResourceType.PIPELINE_DEFAULT),
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                relationResourceType = null
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission ?: AuthPermission.VIEW
             ).data ?: false
         }
     }

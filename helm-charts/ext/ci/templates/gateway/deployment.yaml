@@ -56,7 +56,7 @@ spec:
       {{- end }}        
       containers:
         - name: gateway
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
+          image: {{ include "bkci-gateway.image" . }}
           imagePullPolicy: {{ .Values.gatewayImage.pullPolicy }}
           {{- if .Values.gateway.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
