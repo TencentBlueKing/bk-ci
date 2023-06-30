@@ -112,7 +112,7 @@ class WorkspaceBcsClient @Autowired constructor(
         environmentUid: String,
         workspaceName: String,
         environmentAction: EnvironmentAction,
-        envPatchStr: String = ""
+        envPatchStr: Map<String,String>? = mutableMapOf()
     ): EnvironmentOpRspData {
         val url = bcsCloudUrl + "/api/v1/remotedevenv/${environmentAction.getValue()}"
         val body = JsonUtil.toJson(UidReq(uid = environmentUid, env = envPatchStr, deleteCbs = true))

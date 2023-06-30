@@ -189,13 +189,12 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false")
         val resp = workspaceBcsClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
             environmentAction = EnvironmentAction.START,
-            envPatchStr = envPatchStr
+            envPatchStr = mutableMapOf(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE to "false")
         )
 
         return resp.taskUid
