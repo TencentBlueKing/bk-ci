@@ -116,7 +116,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 val failAvgCostTime = trendInfo.get(t.FAIL_AVG_COST_TIME)
                 // 计算流水线总耗时和失败耗时
                 val totalTime = totalExecuteCount * totalAvgCostTime
-                val failTotalTime = failExecuteCount * failAvgCostTime
+                val failTotalTime = failAvgCostTime?.let { failExecuteCount * failAvgCostTime } ?: 0L
                 val pipelineBuildTimeStatisticsDo = pipelineBuildTimeStatisticsMap.getOrDefault(
                     "$statisticsTime",
                     PipelineBuildTimeStatisticsDO(
