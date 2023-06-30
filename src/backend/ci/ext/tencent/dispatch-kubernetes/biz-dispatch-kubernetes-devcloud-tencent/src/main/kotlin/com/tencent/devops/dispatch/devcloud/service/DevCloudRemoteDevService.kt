@@ -28,14 +28,17 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.pojo.Container
 import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
 import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpPatch
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.devcloud.pojo.PatchOp
 import com.tencent.devops.dispatch.devcloud.pojo.Probe
 import com.tencent.devops.dispatch.devcloud.pojo.ProbeHandler
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
@@ -56,7 +59,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import com.tencent.devops.common.service.Profile
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
 class DevCloudRemoteDevService @Autowired constructor(
@@ -165,14 +169,38 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
+        val environment = workspaceDevCloudClient.getWorkspaceDetail(userId, environmentUid)
+        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
         val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
-            environmentAction = EnvironmentAction.START
+            environmentAction = EnvironmentAction.START,
+            envPatchStr = envPatchStr
         )
 
         return resp.taskUid
+    }
+
+    private fun getWorkspaceEnvPatchStr(
+        envName: String,
+        patchValue: String,
+        environment: Environment
+    ): String {
+        val envList = environment.spec.containers[0].env
+        if (envList.isEmpty()) return ""
+
+        val envNameIndex = envList.indexOfFirst { it.name == envName }
+        if (envNameIndex < 0) return ""
+
+        val environmentPatch = EnvironmentOpPatch(
+            op = PatchOp.ADD.value,
+            path = "/spec/containers/0/env/$envNameIndex/value",
+            value = patchValue
+        )
+
+        val patchJson = JsonUtil.toJson(listOf(environmentPatch)).toByteArray()
+        return Base64Utils.encodeToString(patchJson)
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
@@ -194,18 +222,18 @@ class DevCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): String {
-        val environmentUid = getEnvironmentUid(workspaceName)
+    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+        val environmentUid = getEnvironmentUid(event.workspaceName)
         val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             environmentAction = EnvironmentAction.DELETE
         )
 
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             status = EnvStatusEnum.deleted,
             dslContext = dslContext
         )
@@ -253,13 +281,10 @@ class DevCloudRemoteDevService @Autowired constructor(
         event: WorkspaceCreateEvent
     ): List<EnvVar> {
         val envVarList = mutableListOf<EnvVar>()
-        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
-        allCustomizedEnvs.forEach { (t, u) ->
-            envVarList.add(EnvVar(t, u))
-        }
-
         envVarList.addAll(
             listOf(
+                // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
@@ -268,7 +293,6 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
-                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
                 EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
@@ -280,6 +304,11 @@ class DevCloudRemoteDevService @Autowired constructor(
 
             )
         )
+
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
+        }
 
         return envVarList
     }

@@ -84,8 +84,8 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
 object WebhookUtils {
 

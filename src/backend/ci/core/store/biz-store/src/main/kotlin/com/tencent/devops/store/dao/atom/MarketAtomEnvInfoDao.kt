@@ -312,4 +312,15 @@ class MarketAtomEnvInfoDao {
                 .execute()
         }
     }
+
+    fun getAtomLanguage(dslContext: DSLContext, atomCode: String, version: String): String? {
+        val tAtom = TAtom.T_ATOM
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
+        return dslContext.select(tAtomEnvInfo.LANGUAGE)
+            .from(tAtomEnvInfo)
+            .join(tAtom)
+            .on(tAtomEnvInfo.ATOM_ID.eq(tAtom.ID))
+            .where(tAtom.ATOM_CODE.eq(atomCode).and(tAtom.VERSION.eq(version)))
+            .fetchOne(0, String::class.java)
+    }
 }

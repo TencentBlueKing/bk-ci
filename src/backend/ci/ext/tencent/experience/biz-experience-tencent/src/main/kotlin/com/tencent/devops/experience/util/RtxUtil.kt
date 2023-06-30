@@ -27,6 +27,9 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_INFO
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 
 @SuppressWarnings("LongParameterList")
@@ -35,14 +38,19 @@ object RtxUtil {
         projectName: String,
         name: String,
         version: String,
-        pcUrl: String,
         appUrl: String,
         receivers: Set<String>
     ): RtxNotifyMessage {
         val message = RtxNotifyMessage()
         message.addAllReceivers(receivers)
-        message.title = "【$projectName】最新体验版本分享"
-        message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。\nPC体验地址：$pcUrl\n手机体验地址：$appUrl"
+        message.title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+            params = arrayOf(projectName)
+        )
+        message.body = I18nUtil.getCodeLanMessage(
+                messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
+                params = arrayOf(projectName, name, version, appUrl)
+            )
         return message
     }
 }

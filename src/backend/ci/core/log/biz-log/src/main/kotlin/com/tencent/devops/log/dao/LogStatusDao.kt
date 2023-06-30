@@ -45,7 +45,7 @@ class LogStatusDao {
         tag: String?,
         subTags: String?,
         jobId: String?,
-        executeCount: Int?,
+        executeCount: Int,
         logStorageMode: LogStorageMode,
         finish: Boolean
     ) {
@@ -61,6 +61,7 @@ class LogStatusDao {
                 .onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
                 .set(MODE, logStorageMode.name)
+                .execute()
         }
     }
 
@@ -102,17 +103,24 @@ class LogStatusDao {
     fun isFinish(
         dslContext: DSLContext,
         buildId: String,
+        jobId: String?,
         tag: String?,
         subTags: String?,
         executeCount: Int?
     ): Boolean {
         with(TLogStatus.T_LOG_STATUS) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(SUB_TAG.eq(subTags ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()?.finished ?: false
+                .and(EXECUTE_COUNT.eq(executeCount))
+            if (!jobId.isNullOrBlank()) {
+                select.and(JOB_ID.eq(jobId))
+                    .and(TAG.eq(""))
+                    .and(SUB_TAG.eq(""))
+            } else {
+                select.and(TAG.eq(tag))
+                    .and(SUB_TAG.eq(subTags))
+            }
+            return select.fetchOne()?.finished == true
         }
     }
 

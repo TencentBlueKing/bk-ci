@@ -33,7 +33,24 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
+@Suppress("TooManyFunctions")
 interface AuthProjectApi {
+
+    /**
+     * 校验用户是否有项目的指定权限
+     * @param user 用户ID
+     * @param serviceCode 服务模块代码
+     * @param projectCode projectCode英文id
+     * @param permission 权限类型
+     * @return Boolean 有权限则true
+     */
+    fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean
+
     /**
      * 获取项目成员 (需要对接的权限中心支持该功能才可以）
      * @param serviceCode 调用者的服务编码
@@ -59,6 +76,20 @@ interface AuthProjectApi {
     fun getUserProjects(
         serviceCode: AuthServiceCode,
         userId: String,
+        supplier: (() -> List<String>)?
+    ): List<String>
+
+    /**
+     * 获取用户有某种项目资源类型权限的项目Code
+     * @param serviceCode 调用者的服务编码
+     * @param userId 用户ID
+     * @param permission 项目资源类型权限
+     * @param supplier supplier函数，用于可能需要从外部加载资源的场景,可以不传
+     */
+    fun getUserProjectsByPermission(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String>
 
@@ -92,6 +123,7 @@ interface AuthProjectApi {
      * @param group 项目组角色
      */
     fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean
+
     /**
      * 判断是否某个项目的管理员
      * @param userId 用户id

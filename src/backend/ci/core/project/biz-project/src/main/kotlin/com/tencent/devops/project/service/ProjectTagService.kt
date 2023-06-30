@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODEC
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
@@ -82,6 +83,9 @@ class ProjectTagService @Autowired constructor(
     @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
 
+    @Value("\${system.inContainer:#{null}}")
+    private val inContainerTags: String? = null
+
     private val projectRouterCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(2, TimeUnit.MINUTES)
@@ -110,6 +114,7 @@ class ProjectTagService @Autowired constructor(
                 )
                 updateTagByProject(projectTagUpdateDTO)
             }
+
             SystemEnums.CODECC, SystemEnums.REPO -> {
                 val projectTagUpdateDTO = ProjectExtSystemTagDTO(routerTag, projectCodeList, system = system.name)
                 updateExtSystemRouterTag(projectTagUpdateDTO)
@@ -121,7 +126,7 @@ class ProjectTagService @Autowired constructor(
     fun updateTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByProject: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
-        checkProject(projectTagUpdateDTO.projectCodeList)
+        // checkProject(projectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
             englishNames = projectTagUpdateDTO.projectCodeList!!,
@@ -329,14 +334,21 @@ class ProjectTagService @Autowired constructor(
         return projectClusterCheck(projectInfo.routerTag)
     }
 
-    private fun projectClusterCheck(routerTag: String?): Boolean {
-        val tag = bkTag.getLocalTag()
-        // 默认集群是不会有routerTag的信息
-        if (routerTag.isNullOrBlank()) {
-            // 只有默认集群在routerTag为空的时候才返回true
-            return tag == prodTag
+    @SuppressWarnings("ReturnCount")
+    private fun projectClusterCheck(projectTag: String?): Boolean {
+        val isContainerProject = inContainerTags?.split(",")?.contains(projectTag) == true
+        if (isContainerProject && KubernetesUtils.notInContainer()) { // 容器化项目需要在容器化环境下执行
+            return false
         }
-        return tag == routerTag
+        // 容器化项目需要将本地tag中的kubernetes-去掉来比较
+        val localTag = bkTag.getLocalTag()
+        val clusterTag = if (isContainerProject) localTag.replace("kubernetes-", "") else localTag
+        // 默认集群是不会有routerTag的信息
+        if (projectTag.isNullOrBlank()) {
+            // 只有默认集群在routerTag为空的时候才返回true
+            return clusterTag == prodTag
+        }
+        return clusterTag == projectTag
     }
 
     private fun checkRouteTag(routerTag: String) {

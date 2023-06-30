@@ -55,8 +55,10 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_CONCURRENCY
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_SINGLE
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -90,10 +92,10 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import kotlin.math.max
 
 /**
@@ -257,6 +259,12 @@ class BuildStartControl @Autowired constructor(
                     executeCount = executeCount
                 )
                 broadcastStartEvent(buildInfo)
+            } else {
+                pipelineRuntimeService.updateExecuteCount(
+                    projectId = projectId,
+                    buildId = buildId,
+                    executeCount = executeCount
+                )
             }
         } finally {
             pipelineBuildLock.unlock()
@@ -307,7 +315,7 @@ class BuildStartControl @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     oldStatus = BuildStatus.QUEUE_CACHE,
-                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                    showMsg = I18nUtil.getCodeLanMessage(
                         messageCode = BUILD_QUEUE_FOR_CONCURRENCY,
                         defaultMessage = "QUEUE: concurrency for group($concurrencyGroup)",
                         params = arrayOf(concurrencyGroup)
@@ -351,7 +359,7 @@ class BuildStartControl @Autowired constructor(
                 // 需要重新入队等待
                 pipelineRuntimeService.updateBuildInfoStatus2Queue(
                     projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
-                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                    showMsg = I18nUtil.getCodeLanMessage(
                         messageCode = BUILD_QUEUE_FOR_SINGLE,
                         defaultMessage = "QUEUE: The current build is queued"
                     )
@@ -529,7 +537,14 @@ class BuildStartControl @Autowired constructor(
 
         buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
-            message = "触发人(trigger user): ${buildInfo.triggerUser}, 执行人(start user): ${buildInfo.startUser}",
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = BK_TRIGGER_USER,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + ": ${buildInfo.triggerUser}, " +
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_START_USER,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + ": ${buildInfo.startUser}",
             buildId = buildInfo.buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
     }

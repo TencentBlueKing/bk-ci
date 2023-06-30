@@ -51,22 +51,24 @@
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
                         <div class="source-type-radio">
-                            <bk-radio-group v-model="createEnvForm.source">
+                            <!-- <bk-radio-group v-model="createEnvForm.source">
                                 <bk-radio :value="'EXISTING'" v-if="createEnvForm.envType !== 'BUILD'">{{ $t('environment.envInfo.existingNode') }}</bk-radio>
                                 <bk-radio :value="'EXISTING'" v-else>{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
-                            </bk-radio-group>
+                            </bk-radio-group> -->
                             <span class="preview-node-btn"
-                                v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}
+                                v-if="previewNodeList.length > 0"
+                                @click="toShowNodeList"
+                            >
+                                {{ $t('environment.nodeInfo.selectNode') }}
                             </span>
                         </div>
-                        <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
+                        <div class="empty-node-selected" v-if="previewNodeList.length === 0">
                             <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
                                 <span class="show-node-dialog" @click="toShowNodeList">{{ $t('environment.nodeInfo.clickSelectNode') }}</span>
                             </p>
                             <div v-if="errorHandler.nodeHashIds" class="error-tips">{{ $t('environment.nodeInfo.haveToNeedNode') }}</div>
                         </div>
-                        <div class="selected-node-Preview" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0">
+                        <div class="selected-node-Preview" v-else>
                             <div class="node-table-message">
                                 <div class="table-node-head">
                                     <div class="table-node-item node-item-ip">IP</div>
@@ -116,13 +118,13 @@
 </template>
 
 <script>
-    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
 
+    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     export default {
         components: {
-            'empty-tips': emptyTips,
-            nodeSelect
+            nodeSelect,
+            'empty-tips': emptyTips
         },
         data () {
             return {
@@ -246,18 +248,12 @@
             },
             'createEnvForm.envType' (val) {
                 if (val === 'BUILD') {
-                    this.createEnvForm.source = 'EXISTING'
                     this.previewNodeList = this.buildNodeList
                 } else {
                     this.previewNodeList = this.devNodeList
-                    this.createEnvForm.source = this.cacheNodeSource
-                }
-            },
-            'createEnvForm.source' (val) {
-                if (this.createEnvForm.envType !== 'BUILD') {
-                    this.cacheNodeSource = val
                 }
             }
+            
         },
         async created () {
             await this.requestPermission()
@@ -468,70 +464,60 @@
              * 提交表单
              */
             submit () {
-                if (this.createEnvForm.source === 'CREATE') {
-                    const message = this.$t('environment.nodeInfo.selectNodeSource')
-                    const theme = 'warning'
+                const isValid = this.validate()
 
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } else {
-                    const isValid = this.validate()
+                this.$validator.validateAll().then(async (result) => {
+                    if (isValid && result) {
+                        let message, theme
+                        const createEnv = {
+                            name: this.createEnvForm.name.trim(),
+                            desc: this.createEnvForm.desc,
+                            envType: this.createEnvForm.envType,
+                            source: this.createEnvForm.source,
+                            envVars: []
+                        }
 
-                    this.$validator.validateAll().then(async (result) => {
-                        if (isValid && result) {
-                            let message, theme
-                            const createEnv = {
-                                name: this.createEnvForm.name.trim(),
-                                desc: this.createEnvForm.desc,
-                                envType: this.createEnvForm.envType,
-                                source: this.createEnvForm.source,
-                                envVars: []
-                            }
+                        if (this.createEnvForm.source === 'CREATE') {
+                            createEnv.bcsVmParam = this.createEnvForm.bcsVmParam
+                        } else {
+                            const nodeHashIds = []
 
-                            if (this.createEnvForm.source === 'CREATE') {
-                                createEnv.bcsVmParam = this.createEnvForm.bcsVmParam
-                            } else {
-                                const nodeHashIds = []
+                            this.previewNodeList.forEach(item => {
+                                nodeHashIds.push(item.nodeHashId)
+                            })
 
-                                this.previewNodeList.forEach(item => {
-                                    nodeHashIds.push(item.nodeHashId)
+                            createEnv.nodeHashIds = nodeHashIds
+                        }
+
+                        this.loading.isLoading = true
+
+                        try {
+                            await this.$store.dispatch('environment/createNewEnv', {
+                                projectId: this.projectId,
+                                params: createEnv
+                            })
+
+                            message = this.$t('environment.successfullyAdded')
+                            theme = 'success'
+                        } catch (err) {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+
+                            this.loading.isLoading = false
+
+                            if (theme === 'success') {
+                                this.$router.push({
+                                    name: 'envList'
                                 })
-
-                                createEnv.nodeHashIds = nodeHashIds
-                            }
-
-                            this.loading.isLoading = true
-
-                            try {
-                                await this.$store.dispatch('environment/createNewEnv', {
-                                    projectId: this.projectId,
-                                    params: createEnv
-                                })
-
-                                message = this.$t('environment.successfullyAdded')
-                                theme = 'success'
-                            } catch (err) {
-                                message = err.message ? err.message : err
-                                theme = 'error'
-                            } finally {
-                                this.$bkMessage({
-                                    message,
-                                    theme
-                                })
-
-                                this.loading.isLoading = false
-
-                                if (theme === 'success') {
-                                    this.$router.push({
-                                        name: 'envList'
-                                    })
-                                }
                             }
                         }
-                    })
-                }
+                    }
+                })
             },
             /**
              * 是否拥有创建环境权限

@@ -29,7 +29,11 @@
     "SKIP": "跳过",
     "skiped": "已跳过",
     "retry": "重试",
-    "dependOn": "依赖于"
+    "dependOn": "依赖于",
+    "open": "展开",
+    "openPOST": "展开后置操作",
+    "foldPOST": "收起后置操作",
+    "debugConsole": "登录调试"
   },
   "en-US": {
     "insertStage": "Add Stage",
@@ -61,6 +65,10 @@
     "SKIP": "Skip",
     "skiped": "Skipped",
     "retry": "Retry",
-    "dependOn": "Depend on"
+    "dependOn": "Depend on",
+    "open": "Open",
+    "openPOST": "Expand post-actions",
+    "foldPOST": "Fold post-actions",
+    "debugConsole": "Debug"
   }
 }

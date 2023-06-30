@@ -35,8 +35,10 @@ import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
@@ -45,15 +47,14 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import io.jsonwebtoken.io.IOException
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.ClassPathResource
-import org.springframework.stereotype.Component
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentHashMap
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Component
 
 @Component
 class YamlSchemaCheck @Autowired constructor() {
@@ -87,7 +88,7 @@ class YamlSchemaCheck @Autowired constructor() {
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
-            YamlUtil.toYaml(Yaml().load(originYaml))
+            YamlUtil.loadYamlRetryOnAccident(originYaml)
         } catch (ignored: Throwable) {
             logger.warn("YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
@@ -226,7 +227,9 @@ private fun JsonNode.checkVariablesFormat() {
     val keyRegex = Regex("^[0-9a-zA-Z_]+$")
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
-            throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
+            throw YamlFormatException(
+                I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL)
+            )
         }
     }
 }

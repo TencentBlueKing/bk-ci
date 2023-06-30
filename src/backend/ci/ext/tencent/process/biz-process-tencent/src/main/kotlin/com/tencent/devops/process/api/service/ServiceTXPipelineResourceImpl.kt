@@ -30,8 +30,10 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.service.PipelineBuildExtTencentService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceTXPipelineResourceImpl @Autowired constructor(
     private val pipelineExportService: TXPipelineExportService,
-    val pipelineListFacadeService: PipelineListFacadeService
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineBuildExtTencentService: PipelineBuildExtTencentService
 ) : ServiceTXPipelineResource {
     override fun exportPipelineGitCI(
         userId: String,
@@ -51,8 +54,24 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
         return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
     }
 
-    override fun getPipelineInfobyId(id: Int): Result<SimplePipeline> {
+    override fun getPipelineInfobyId(id: Long): Result<SimplePipeline> {
         return Result(pipelineListFacadeService.getByAutoIds(listOf(id))[0])
+    }
+
+    override fun runPipelineWithTemplate(
+        userId: String,
+        projectId: String,
+        templateVersionId: Long,
+        parameters: Map<String, String>
+    ): Result<BuildId> {
+        return Result(
+            pipelineBuildExtTencentService.runPipelineWithTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateVersionId = templateVersionId,
+                parameters = parameters
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

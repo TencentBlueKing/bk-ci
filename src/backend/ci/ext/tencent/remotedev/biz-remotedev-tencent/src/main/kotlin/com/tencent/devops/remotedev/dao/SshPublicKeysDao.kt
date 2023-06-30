@@ -16,17 +16,16 @@ class SshPublicKeysDao {
         sshPublicKey: SshPublicKey
     ): Long {
         // 先查询该用户SshPublicKey是否已存在，存在则返回已有ID，否则新增
-        return getSshKeysRecord(dslContext, sshPublicKey)
-            ?: with(TSshPublicKeys.T_SSH_PUBLIC_KEYS) {
-                dslContext.insertInto(
-                    this,
-                    USER,
-                    PUBLIC_KEY
-                ).values(
-                    sshPublicKey.user,
-                    Base64Util.encode(sshPublicKey.publicKey.toByteArray())
-                ).returning(ID).fetchOne()!!.id
-            }
+        return with(TSshPublicKeys.T_SSH_PUBLIC_KEYS) {
+            dslContext.insertInto(
+                this,
+                USER,
+                PUBLIC_KEY
+            ).values(
+                sshPublicKey.user,
+                Base64Util.encode(sshPublicKey.publicKey.toByteArray())
+            ).returning(ID).fetchOne()!!.id
+        }
     }
 
     // 获取当前用户的所有 ssh keys

@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,7 +52,7 @@ class BcsRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
         TODO("Not yet implemented")
     }
 

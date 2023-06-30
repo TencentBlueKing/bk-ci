@@ -29,6 +29,7 @@ package com.tencent.devops.experience.pojo
 
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
+import com.tencent.devops.experience.pojo.group.Group
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

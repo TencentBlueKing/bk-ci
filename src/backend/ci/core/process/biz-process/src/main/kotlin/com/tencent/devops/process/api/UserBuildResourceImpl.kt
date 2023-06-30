@@ -105,7 +105,7 @@ class UserBuildResourceImpl @Autowired constructor(
             triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(BuildId(manualStartup))
+        return Result(manualStartup)
     }
 
     override fun retry(
@@ -122,16 +122,14 @@ class UserBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask
             )
         )
     }
@@ -308,6 +306,27 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNo = buildNo,
+                channelCode = ChannelCode.BS
+            )
+        )
+    }
+
+    override fun getBuildRecordByBuildNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNum: Int
+    ): Result<ModelRecord> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildNum <= 0) {
+            throw ParamBlankException("Invalid buildNo")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecordByBuildNum(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNum,
                 channelCode = ChannelCode.BS
             )
         )

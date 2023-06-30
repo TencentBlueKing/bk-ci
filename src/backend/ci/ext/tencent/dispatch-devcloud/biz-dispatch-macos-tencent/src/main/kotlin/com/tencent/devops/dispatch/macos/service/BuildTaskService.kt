@@ -40,14 +40,7 @@ class BuildTaskService @Autowired constructor(
         vmSeqId: String?,
         executeCount: Int?
     ): Result<TBuildTaskRecord> {
-        var buildRecord = buildTaskDao.listByBuildIdAndVmSeqId(dslContext, buildId, vmSeqId, executeCount)
-        // 如果构建记录为空，可能是因为取消时分配构建IP接口还未完成，等待30s
-        if (buildRecord.isEmpty()) {
-            Thread.sleep(30000)
-            buildRecord = buildTaskDao.listByBuildIdAndVmSeqId(dslContext, buildId, vmSeqId, executeCount)
-        }
-
-        return buildRecord
+        return buildTaskDao.listByBuildIdAndVmSeqId(dslContext, buildId, vmSeqId, executeCount)
     }
 
     fun getPassword(

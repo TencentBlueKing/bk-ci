@@ -13,9 +13,12 @@ object RedisKeys {
     const val REDIS_REMOTEDEV_PROD_VERSION = "remotedev:prod:version"
     const val REDIS_REMOTEDEV_INACTIVE_TIME = "remotedev:inactiveTime"
     const val REDIS_WHITELIST_PERIOD = "remotedev:whitelistPeriod"
+    const val REDIS_WHITE_LIST_GPU_KEY = "remotedev:whiteListGPU" // 云桌面创建限制
 
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
+    const val REDIS_CHECKOUT_TEMPLATE_ID = "remotedev:checkoutTID" // 拉代码流水线模板id
     const val REDIS_WHITE_LIST_KEY = "remotedev:whiteList"
     const val REDIS_IP_LIST_KEY = "remotedev:ipSubnets"
+    const val REDIS_DEFAULT_IMAGES_KEY = "remotedev:defaultImages"
 }

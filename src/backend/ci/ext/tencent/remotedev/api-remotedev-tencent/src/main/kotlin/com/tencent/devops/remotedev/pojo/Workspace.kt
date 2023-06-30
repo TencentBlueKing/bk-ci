@@ -36,6 +36,8 @@ data class Workspace(
     val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
+    @ApiModelProperty("工作空间备注名称")
+    val displayName: String?,
     @ApiModelProperty("远程开发仓库地址")
     val repositoryUrl: String,
     @ApiModelProperty("仓库分支")
@@ -59,5 +61,9 @@ data class Workspace(
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
     val workspaceFolder: String?,
     @ApiModelProperty("工作空间对应的IP")
-    val hostName: String?
+    val hostName: String?,
+    @ApiModelProperty("挂载平台类型")
+    val workspaceMountType: WorkspaceMountType,
+    @ApiModelProperty("操作系统类型")
+    val workspaceSystemType: WorkspaceSystemType
 )

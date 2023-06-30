@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileCommands
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfilePorts
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileVscode
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.JobRunsOnType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -28,8 +28,9 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.remotedev.MQ
+import com.tencent.devops.common.remotedev.WorkspaceEvent
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,6 +44,7 @@ data class WorkspaceOperateEvent(
     @ApiModelProperty("包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
     val bkTicket: String? = null,
+    val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

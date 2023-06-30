@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Watermark
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -47,8 +48,8 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user/remotedev")
+@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
+@Path("/{apiType:user|desktop}/remotedev")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserRemoteDevResource {
@@ -87,6 +88,15 @@ interface UserRemoteDevResource {
         headers: HttpHeaders,
         data: BKGPT
     ): ChunkedOutput<String>
+    @ApiOperation("watermark")
+    @POST
+    @Path("/watermark")
+    fun getWatermark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: Watermark
+    ): Result<String>
 
     @ApiOperation("上报preci agent id")
     @POST
@@ -102,4 +112,26 @@ interface UserRemoteDevResource {
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
+
+    @ApiOperation("云桌面专用。容器初始化完成后调此接口进行后台初始化")
+    @POST
+    @Path("/after_start_cloud_init")
+    fun afterStartCloudInit(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @ApiParam(value = "agentId", required = true)
+        @QueryParam("agentId")
+        agentId: String
+    ): Result<Boolean>
+    @ApiOperation("根据bi_ticket或bk_token获取用户名称")
+    @GET
+    @Path("/get_user")
+    fun getUser(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
 }

@@ -84,7 +84,7 @@ import java.time.LocalDateTime
 /**
  * 启动流水线上下文类，属于非线程安全类
  */
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongParameterList")
 data class StartBuildContext(
     val now: LocalDateTime = LocalDateTime.now(),
     val projectId: String,
@@ -225,6 +225,7 @@ data class StartBuildContext(
             pipelineSetting: PipelineSetting? = null,
             realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
+            webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
@@ -273,8 +274,11 @@ data class StartBuildContext(
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
                 // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                    ?.concurrencyGroup.let {
-                        val tConcurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(params))
+                    ?.concurrencyGroup?.let {
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        val tConcurrencyGroup = EnvUtils.parseEnv(
+                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
                     },

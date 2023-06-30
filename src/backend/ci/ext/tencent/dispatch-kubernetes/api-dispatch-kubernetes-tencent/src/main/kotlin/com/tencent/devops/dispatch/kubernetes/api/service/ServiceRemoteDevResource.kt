@@ -32,15 +32,18 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "远程开发接口模块")
@@ -59,7 +62,11 @@ interface ServiceRemoteDevResource {
         userId: String,
         @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @ApiParam("挂载模式", required = false)
+        @QueryParam("mountType")
+        @DefaultValue("DEVCLOUD")
+        mountType: WorkspaceMountType
     ): Result<String?>
 
     @ApiOperation("获取远程工作空间连接")
@@ -71,6 +78,10 @@ interface ServiceRemoteDevResource {
         userId: String,
         @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @ApiParam("挂载模式", required = false)
+        @QueryParam("mountType")
+        @DefaultValue("DEVCLOUD")
+        mountType: WorkspaceMountType
     ): Result<WorkspaceInfo>
 }

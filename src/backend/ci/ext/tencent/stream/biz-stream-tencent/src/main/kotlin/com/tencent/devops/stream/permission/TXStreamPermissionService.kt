@@ -56,7 +56,7 @@ class TXStreamPermissionService @Autowired constructor(
         if (userResult.isNotOk()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+                params = arrayOf(userId)
             )
         }
     }

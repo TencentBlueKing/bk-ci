@@ -162,7 +162,7 @@
 
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.标识：') }} </label>
+                        <label class="bk-label"> {{ $t('store.标识') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%;">
                                 <bk-input class="atom-id-input" :placeholder="$t('store.请输入英文名称，不超过30个字符')"
@@ -186,19 +186,12 @@
                                 </template>
                             </bk-popover>
                         </div>
-                        <bk-popover placement="right">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
-                            </template>
-                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.调试项目：') }} </label>
+                        <label class="bk-label"> {{ $t('store.调试项目') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%">
-                                <bk-select
-                                    v-model="createAtomForm.projectCode"
+                                <bk-select v-model="createAtomForm.projectCode"
                                     @selected="selectedProject"
                                     @change="handleChangeForm"
                                     @toggle="toggleProjectList"
@@ -234,9 +227,11 @@
                                     class="error-tips"
                                 > {{ $t('store.项目不能为空') }} </div>
                             </div>
+                            
                             <bk-popover
                                 class="info-circle-icon"
                                 placement="right"
+                                class="info-circle-icon"
                                 width="400"
                             >
                                 <i class="devops-icon icon-info-circle"></i>

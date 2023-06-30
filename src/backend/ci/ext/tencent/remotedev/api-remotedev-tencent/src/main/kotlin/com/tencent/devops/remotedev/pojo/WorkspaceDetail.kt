@@ -36,6 +36,8 @@ data class WorkspaceDetail(
     val workspaceId: Long,
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
+    @ApiModelProperty("工作空间备注名称")
+    val displayName: String?,
     @ApiModelProperty("工作空间状态")
     val status: WorkspaceStatus,
     @ApiModelProperty("最近状态修改时间")

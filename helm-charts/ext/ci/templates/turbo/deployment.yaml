@@ -56,7 +56,7 @@ spec:
       {{- end }}
       containers:
         - name: turbo-new
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.turbo.image "global" .Values.global) }}
+          image: {{ include "bkci-turbo.image" . }}
           imagePullPolicy: {{ .Values.turbo.image.pullPolicy }}
           {{- if .Values.turbo.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.turbo.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -91,4 +91,11 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - sleep 10
 {{- end }}

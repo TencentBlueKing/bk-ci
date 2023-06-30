@@ -65,6 +65,13 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String
+    ): List<String> {
+        return emptyList()
+    }
+
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         return authProjectApi.isProjectUser(
             user = userId,

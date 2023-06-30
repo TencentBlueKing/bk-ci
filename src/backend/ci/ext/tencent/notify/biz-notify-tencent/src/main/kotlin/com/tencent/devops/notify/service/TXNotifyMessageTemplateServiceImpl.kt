@@ -35,10 +35,15 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DESIGNATED_APPROVER_APPROVAL
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
+import com.tencent.devops.notify.dao.MessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
@@ -54,12 +59,12 @@ import com.tencent.devops.support.model.approval.MoaWorkItemCreateKeyAndValue
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateUiType
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import com.tencent.devops.support.model.approval.MoaWorkitemCreateCategoryType
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Primary
 @Service
@@ -75,7 +80,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatService: WechatService,
     private val weworkService: WeworkService,
     private val wechatWorkService: WechatWorkService,
-    private val wechatWorkRobotService: WechatWorkRobotService
+    private val wechatWorkRobotService: WechatWorkRobotService,
+    private val redisOperation: RedisOperation,
+    private val messageTemplateDao: MessageTemplateDao,
+    private val commonConfig: CommonConfig
 ) : NotifyMessageTemplateServiceImpl(
     dslContext = dslContext,
     notifyMessageTemplateDao = notifyMessageTemplateDao,
@@ -85,7 +93,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     wechatService = wechatService,
     weworkService = weworkService,
     wechatWorkService = wechatWorkService,
-    wechatWorkRobotService = wechatWorkRobotService
+    wechatWorkRobotService = wechatWorkRobotService,
+    messageTemplateDao = messageTemplateDao,
+    redisOperation = redisOperation,
+    commonConfig = commonConfig
 ) {
 
     companion object {
@@ -142,7 +153,9 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         }
                     ).apply {
                         if (param.valueType == ManualReviewParamType.STRING) {
-                            description += "(注意: 换行会被转义为\\n)"
+                            description += I18nUtil.getCodeLanMessage(
+                                messageCode = BK_LINE_BREAKS_WILL_ESCAPED
+                            )
                         }
                     }
                 }
@@ -170,7 +183,9 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                     )
                 ),
                 detailView = detailView,
-                activity = "指定审批人审批",
+                activity = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DESIGNATED_APPROVER_APPROVAL
+                ),
                 category = MoaWorkitemCreateCategoryType.IT.id,
                 callbackUrl = moaTplRecord.callbackUrl,
                 form = moaForm,
@@ -193,10 +208,11 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(templateCode),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
         // 暂时仅支持moa
         val moaTplRecord = tNotifyMessageTemplateDao.getMoaNotifyMessageTemplate(
@@ -208,7 +224,9 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         request.receivers.map { receiver ->
             client.get(ServiceMessageApproveResource::class).createMoaWorkItemMessageComplete(
                 CompleteMoaWorkItemRequest(
-                    activity = "指定审批人审批",
+                    activity = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DESIGNATED_APPROVER_APPROVAL
+                    ),
                     category = MoaWorkitemCreateCategoryType.IT.id,
                     handler = receiver,
                     processInstId = processInstId,

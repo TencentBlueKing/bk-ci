@@ -37,6 +37,8 @@ import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -127,6 +129,17 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
             return managerPermissionMap
         }
         return iamInstancesMap
+    }
+
+    override fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
     }
 
     override fun checkEnvPermission(
@@ -273,12 +286,23 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return iamPermissionMap
     }
 
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
+        return nodeRecordList
+    }
+
     override fun checkNodePermission(
         userId: String,
         projectId: String,
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,

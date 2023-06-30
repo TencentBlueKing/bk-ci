@@ -17,5 +17,7 @@ export const BkciDocs = {
     SPAWN_NODES_DOC: `${IWIKI_DOCS_URL}/p/1083624634` // 跨项目调用文档
 }
 export const pipelineDocs = {
-    ALIAS_BUILD_NO_DOC: 'https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno' // 构建号别名文档
+    ALIAS_BUILD_NO_DOC: 'https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno', // 构建号别名文档
+    NAMESPACE_DOC: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=691153587#Stream表达式、上下文、函数-jobs`, // 命名空间文档
+    PIPELINE_ERROR_GUIDE_DOC: `${IWIKI_DOCS_URL}/p/914465577` // 流水线编辑指引文档
 }

@@ -1,9 +1,9 @@
 <template>
     <article class="agent-pools" @scroll.passive="mainScroll" v-bkloading="{ isLoading: isLoadingSysPools }">
-        <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 60 && scrollTop < 370 }">{{$t('setting.agent.defaultPool')}}</h3>
+        <!-- <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 60 && scrollTop < 370 }">{{$t('setting.agent.defaultPool')}}</h3>
         <section class="agent-pools-container">
             <agent-pool-card class="agent-pool" :editable="false" v-for="pool in systemPools" :key="pool.envHashId" :pool="pool"></agent-pool-card>
-        </section>
+        </section> -->
 
         <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 370 }">
             {{$t('setting.agent.selfPool')}}

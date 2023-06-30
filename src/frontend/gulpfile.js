@@ -38,14 +38,23 @@ const svgSpriteConfig = {
     }
 }
 const isGray = env === 'gray'
-const envPrefix = isGray || env === 'master' ? '' : `${env}.`
+const isRBAC = env === 'rbac'
+const envPrefix = isGray || isRBAC || (env === 'master') ? '' : `${env}.`
 const BUNDLE_NAME = 'assets_bundle.json'
 const ASSETS_JSON_URL = `http://${envPrefix}devnet.devops.oa.com/${BUNDLE_NAME}`
+const pidMap = {
+    gray: 'grayproject',
+    rbac: 'rbac-project'
+}
 
 async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
-            headers: isGray ? { 'X-DEVOPS-PROJECT-ID': 'grayproject' } : {}
+            headers: (isGray || isRBAC)
+                ? {
+                    'X-DEVOPS-PROJECT-ID': pidMap[env] || ''
+                }
+                : {}
         })
         const assets = await res.json()
 
@@ -171,6 +180,7 @@ async function execAsync (cmd) {
             }
         }, (err, res) => {
             if (err) {
+                console.error(err)
                 reject(err)
                 process.exit(1)
             }

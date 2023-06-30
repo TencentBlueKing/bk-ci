@@ -85,10 +85,7 @@ config = {
         password = "__BKREPO_PASSWORD__",
         static_domain = "__BKREPO_STATIC_HOST__"
     },
-    prebuild = {
-        domain = "__BKCI_PREBUILD_FQDN__",
-        port = "__BKCI_PREBUILD_PORT__"
-    },
+    prebuild = {domain = "__BKCI_PREBUILD_FQDN__", port = "__BKCI_PREBUILD_PORT__"},
     dayuHost = "__BKCI_DAYU_URL__",
     externalHost = "__BKCI_EXTERNAL_HOST__",
     logoHost = "__BKCI_LOGO_HOST__",
@@ -105,14 +102,18 @@ config = {
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
+        useForceHeader = __BK_CI_KUBERNETES_USE_FORCE_HEADER__,
+        tags = {"rbac", "gray", "prod-v3", "stream-gray"},
+        codeccTags = {},
         codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
         api = {
             host = "__BK_CI_KUBERNETES_API_HOST__",
-            port = __BK_CI_KUBERNETES_API_PORT__ ,
+            port = __BK_CI_KUBERNETES_API_PORT__,
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         }
     },
-    openHttps = "__BKCI_OPEN_HTTPS__"
+    openHttps = "__BKCI_OPEN_HTTPS__",
+    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__"
 }
 
 require("init_common")

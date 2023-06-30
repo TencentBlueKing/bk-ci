@@ -1,8 +1,8 @@
-import VueI18n from 'vue-i18n'
-import Vue from 'vue'
 import { lang, locale } from '@tencent/bk-magic-vue'
 import axios from 'axios'
 import cookies from 'js-cookie'
+import Vue from 'vue'
+import VueI18n from 'vue-i18n'
 const DEFAULT_LOCALE = window.INIT_LOCALE ?? 'zh-CN'
 const LS_KEY = 'blueking_language'
 const loadedModule = {}
@@ -18,11 +18,26 @@ const localeLabelMap = {
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
+    zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
     'en-us': 'en-US',
     en: 'en-US',
-    us: 'en-US'
+    us: 'en-US',
+    en_US: 'en-US',
+    en_us: 'en-US'
+}
+
+const backendLocalEnum = {
+    'zh-CN': 'zh_CN', // 简体中文
+    'en-US': 'en_US', // 英文
+    'zh-TW': 'zh_TW', // 繁体中文
+    'ja-JP': 'ja_JP', // 日文
+    'ko-KR': 'ko_KR', // 韩文
+    'it-IT': 'it_IT', // 意大利文
+    'de-DE': 'de_DE', // 德文
+    'fr-FR': 'fr_FR' // 法文
 }
 
 function getSubDoamin () {
@@ -44,8 +59,10 @@ function getSubDoamin () {
 
 function getLsLocale () {
     try {
-        const cookieLcale = cookies.get(LS_KEY) || DEFAULT_LOCALE
-        return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
+        const cookieLocale = cookies.get(LS_KEY) || DEFAULT_LOCALE
+        
+        console.log(cookieLocale, cookies.get(LS_KEY), window.INIT_LOCALE, localeAliasMap[cookieLocale.toLowerCase()])
+        return localeAliasMap[cookieLocale.toLowerCase()]
     } catch (error) {
         return DEFAULT_LOCALE
     }
@@ -97,13 +114,16 @@ export default (r, initSetLocale = false) => {
         })
     }
 
-    function setLocale (localeLang) {
+    async function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
             const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
             }
         })
+        if (localeLang !== localeAliasMap[window.INIT_LOCALE]) {
+            await syncLocaleBackend(localeLang)
+        }
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
@@ -111,6 +131,19 @@ export default (r, initSetLocale = false) => {
         document.querySelector('html').setAttribute('lang', localeLang)
         
         return localeLang
+    }
+
+    async function syncLocaleBackend (localeLang) {
+        try {
+            console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
+            if (backendLocalEnum[localeLang]) {
+                await axios.put('/ms/project/api/user/locales/update', {
+                    language: backendLocalEnum[localeLang]
+                })
+            }
+        } catch (error) {
+            console.error('sync locale to backend error', error)
+        }
     }
      
     return {

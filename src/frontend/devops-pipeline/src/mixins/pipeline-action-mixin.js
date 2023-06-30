@@ -17,18 +17,18 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapMutations, mapGetters } from 'vuex'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
-import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
+import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
+import { mapActions, mapGetters, mapMutations } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
-    MY_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID,
-    RECENT_USED_VIEW_ID
+    MY_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID,
+    UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -120,6 +120,7 @@ export default {
                         latestBuildRoute: {
                             name: 'pipelinesDetail',
                             params: {
+                                type: 'executeDetail',
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
                                 buildNo: item.latestBuildId
@@ -151,7 +152,7 @@ export default {
         calcDuration ({ latestBuildEndTime, latestBuildStartTime, latestBuildNum }) {
             if (latestBuildNum) {
                 const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
-                return `${this.$t('history.tableMap.totalTime')}${duration}`
+                return this.$t('history.tableMap.totalTime', [duration])
             }
             return '--'
         },
@@ -219,7 +220,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
-                
+
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
@@ -431,7 +432,6 @@ export default {
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
-                console.log(this.pipelineMap, pipelineId)
                 if (this.pipelineMap[pipelineId]) {
                     // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                     Object.assign(this.pipelineMap[pipelineId], {

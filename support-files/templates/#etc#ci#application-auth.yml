@@ -15,3 +15,17 @@ login:
     url: __BK_CI_LOGIN_THIRD_CALLBACK_URL__
     # 第三方登陆重定向cookie作用域
     domain: __BK_CI_LOGIN_THIRD_COOKIE_DOMAIN__
+
+itsm:
+  # ITSM API地址
+  url:  __BK_CI_ITSM_APIGW_URL__
+  callback:
+    create:
+      # 项目创建ITSM回调URL
+      url: __BK_CI_PUBLIC_URL__/ms/auth/api/external/auth/itsm/create_callback
+    update:
+      # 项目更新ITSM回调URL
+      url: __BK_CI_PUBLIC_URL__/ms/auth/api/external/auth/itsm/update_callback
+codecc:
+  openapi:
+    token: __BK_CI_CODECC_OPENAPI_TOKEN__

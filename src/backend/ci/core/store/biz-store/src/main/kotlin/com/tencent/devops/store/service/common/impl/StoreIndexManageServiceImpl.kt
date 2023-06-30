@@ -27,16 +27,16 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
 import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
 import com.tencent.devops.model.store.tables.TStoreIndexResult
@@ -60,12 +60,12 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreIndexPipelineService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class StoreIndexManageServiceImpl @Autowired constructor(
@@ -152,14 +152,14 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
-                )!!
+                ) ?: ""
                 val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
                     initProjectCode,
                     listOf(pipelineId)
                 ).data?.get(storePipelineRelRecord.pipelineId)
                 pipelineBuildInfo?.let {
-                    if (it.status == BuildStatus.PREPARE_ENV.statusName ||
-                        it.status == BuildStatus.RUNNING.statusName) {
+                    if (it.status == BuildStatus.PREPARE_ENV.name ||
+                        it.status == BuildStatus.RUNNING.name) {
                         client.get(ServiceBuildResource::class).manualShutdown(
                             userId = userId,
                             projectId = initProjectCode,
@@ -339,7 +339,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         )
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(indexCode)
             )
@@ -353,7 +353,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         )
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(indexName)
             )

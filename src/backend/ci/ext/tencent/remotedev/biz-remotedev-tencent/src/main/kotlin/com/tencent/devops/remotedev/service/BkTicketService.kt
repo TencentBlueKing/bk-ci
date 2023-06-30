@@ -30,11 +30,16 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -44,7 +49,9 @@ import javax.ws.rs.core.Response
 @Service
 @Suppress("LongMethod")
 class BkTicketService @Autowired constructor(
-    private val commonService: CommonService
+    private val commonService: CommonService,
+    private val workspaceDao: WorkspaceDao,
+    private val dslContext: DSLContext
 ) {
     @Value("\${remoteDev.bkTicketCheckUrl:}")
     private val bkTicketCheckUrl: String = ""
@@ -56,7 +63,20 @@ class BkTicketService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BkTicketService::class.java)
     }
 
-    // 更新容器内的bkticket
+    // 更新指定用户的所有运行中的容器的bkticket
+    fun updateAllBkTicket(userId: String, bkTicket: String): Boolean {
+        logger.info("updateAllBkTicket|userId|$userId|bkTicket|$bkTicket")
+        if (bkTicket.isBlank()) return false
+        // 获取user的所有运行中的容器
+        workspaceDao.fetchWorkspace(
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            updateBkTicket(userId, bkTicket, it.hostName)
+        }
+        return true
+    }
+    // 更新指定容器内的bkticket
     fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
@@ -83,8 +103,7 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                     )
                 }
 
@@ -101,8 +120,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
                 )
             }
         }
@@ -114,7 +132,7 @@ class BkTicketService @Autowired constructor(
         if (ticket.isBlank()) {
             return false
         }
-        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
+        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_token=$ticket")
                     else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
         val request = Request.Builder()
             .url(url)
@@ -132,15 +150,14 @@ class BkTicketService @Autowired constructor(
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                     )
                 }
                 val contentMap = JsonUtil.toMap(content)
                 val dataMap = contentMap["data"] as Map<*, *>
                 logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
-                val status = contentMap["ret"]
-                return (status == 0) && (dataMap["username"].toString() == userId)
+                val result = if (isOffshore) (contentMap["result"] is Boolean) else (contentMap["ret"] == 0)
+                return result && (dataMap["username"].toString() == userId)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
@@ -151,8 +168,7 @@ class BkTicketService @Autowired constructor(
                 logger.error("check user $userId ticket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
                 )
             }
         }

@@ -33,10 +33,10 @@ import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
-import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
-import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
-import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
+import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
 import com.tencent.devops.common.auth.code.BluekingV3ArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3BcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3CodeAuthServiceCode
@@ -70,7 +70,7 @@ class BluekingV3AuthAutoConfiguration {
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
 
-    @Value("\${auth.appCode:}")
+    @Value("\${auth.iamSystem:}")
     val systemId = ""
 
     @Value("\${auth.appCode:}")

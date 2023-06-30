@@ -28,5 +28,7 @@
 dependencies {
     api(project(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-tencent"))
     api(project(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-devcloud-tencent"))
+    api(project(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-startCloud-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }
