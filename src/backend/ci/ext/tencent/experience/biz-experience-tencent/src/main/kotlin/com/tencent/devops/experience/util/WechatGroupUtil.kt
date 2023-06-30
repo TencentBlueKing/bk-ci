@@ -142,11 +142,7 @@ object WechatGroupUtil {
             messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
             params = arrayOf(projectName, name, version)
         )
-        return """
-        $title
-        $body
-        [${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)
-        """.trimIndent()
+        return "$title\n$body\n[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)"
     }
 
     fun batchRobotMessage(
