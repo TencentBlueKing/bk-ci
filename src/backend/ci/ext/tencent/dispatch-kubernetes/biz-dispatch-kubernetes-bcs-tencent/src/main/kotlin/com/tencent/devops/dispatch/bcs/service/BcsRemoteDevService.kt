@@ -189,9 +189,7 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        // val environment = workspaceBcsClient.getWorkspaceDetail(userId, environmentUid)
-        // val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
-        val envPatchStr = ""
+        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false")
         val resp = workspaceBcsClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
@@ -343,22 +341,9 @@ class BcsRemoteDevService @Autowired constructor(
     }
     private fun getWorkspaceEnvPatchStr(
         envName: String,
-        patchValue: String,
-        environment: Environment
+        patchValue: String
     ): String {
-        val envList = environment.spec.containers[0].env
-        if (envList.isEmpty()) return ""
-
-        val envNameIndex = envList.indexOfFirst { it.name == envName }
-        if (envNameIndex < 0) return ""
-
-        val environmentPatch = EnvironmentOpPatch(
-            op = PatchOp.ADD.value,
-            path = "/spec/containers/0/env/$envNameIndex/value",
-            value = patchValue
-        )
-
-        val patchJson = JsonUtil.toJson(listOf(environmentPatch)).toByteArray()
-        return Base64Utils.encodeToString(patchJson)
+        val  patchMap = mutableMapOf(envName to patchValue)
+        return JsonUtil.toJson(patchMap)
     }
 }
