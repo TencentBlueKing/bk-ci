@@ -52,7 +52,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
-                        v-bk-tooltips="{ content: viewName, delay: [300, 0] }"
+                        v-bk-tooltips="{ content: viewName, delay: [300, 0], allowHTML: false }"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -73,7 +73,7 @@
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
                                 ext-cls="pipeline-group-name-tag"
                                 :key="hiddenGroup"
-                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0] }"
+                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0], allowHTML: false }"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
@@ -210,23 +210,23 @@
 </template>
 
 <script>
-    import { mapGetters, mapState } from 'vuex'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
+    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
+        ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID,
-        RECENT_USED_VIEW_ID,
-        ALL_PIPELINE_VIEW_ID
+        RECENT_USED_VIEW_ID
     } from '@/store/constants'
-    import { convertTime, isShallowEqual } from '@/utils/util'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { convertTime, isShallowEqual } from '@/utils/util'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
