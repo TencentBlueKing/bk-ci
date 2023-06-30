@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.WorkspaceBcsClient
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpPatch
-import com.tencent.devops.dispatch.kubernetes.pojo.PatchOp
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
@@ -62,7 +60,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.Base64Utils
 
 @Service
 class BcsRemoteDevService @Autowired constructor(
@@ -342,7 +339,7 @@ class BcsRemoteDevService @Autowired constructor(
         envName: String,
         patchValue: String
     ): String {
-        val  patchMap = mutableMapOf(envName to patchValue)
+        val patchMap = mutableMapOf(envName to patchValue)
         return JsonUtil.toJson(patchMap)
     }
 }

@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_ENV_TIMEOUT
@@ -23,7 +24,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusRsp
-import com.tencent.devops.dispatch.kubernetes.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import java.net.SocketTimeoutException

@@ -20,8 +20,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusRsp
-import com.tencent.devops.dispatch.kubernetes.pojo.UidReq
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.bcs.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
@@ -112,7 +112,7 @@ class WorkspaceBcsClient @Autowired constructor(
         environmentUid: String,
         workspaceName: String,
         environmentAction: EnvironmentAction,
-        envPatchStr: Map<String,String>? = mutableMapOf()
+        envPatchStr: Map<String, String> = mutableMapOf()
     ): EnvironmentOpRspData {
         val url = bcsCloudUrl + "/api/v1/remotedevenv/${environmentAction.getValue()}"
         val body = JsonUtil.toJson(UidReq(uid = environmentUid, env = envPatchStr, deleteCbs = true))
