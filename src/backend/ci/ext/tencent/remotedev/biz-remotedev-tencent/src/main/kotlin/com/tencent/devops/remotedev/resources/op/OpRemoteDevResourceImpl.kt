@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
@@ -56,6 +57,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         }
         return Result(true)
     }
+
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
         return Result(remoteDevSettingService.getUserSetting4Op(userId))
     }
@@ -72,6 +74,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(whiteListService.addWhiteListUser(userId, whiteListUser))
     }
 
+    override fun addGPUWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
+        return Result(whiteListService.addGPUWhiteListUser(userId, whiteListUser))
+    }
+
     override fun addImageSpec(spec: ImageSpec): Result<Boolean> {
         return Result(workspaceImageService.addImageSpecConfig(spec))
     }
@@ -86,5 +92,21 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun listImageSpec(): Result<List<ImageSpec>?> {
         return Result(workspaceImageService.listImageSpecConfig())
+    }
+
+    override fun deleteWorkspace(workspaceName: String): Result<Boolean> {
+        return Result(
+            workspaceService.deleteWorkspace(
+                userId = ADMIN_NAME, workspaceName = workspaceName, needPermission = false
+            )
+        )
+    }
+
+    override fun stopWorkspace(workspaceName: String): Result<Boolean> {
+        return Result(
+            workspaceService.stopWorkspace(
+                userId = ADMIN_NAME, workspaceName = workspaceName, needPermission = false
+            )
+        )
     }
 }

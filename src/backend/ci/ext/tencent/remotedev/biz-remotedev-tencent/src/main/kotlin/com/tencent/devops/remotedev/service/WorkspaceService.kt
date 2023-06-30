@@ -151,15 +151,18 @@ class WorkspaceService @Autowired constructor(
         val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
         val yaml = if (workspaceCreate.useOfficialDevfile != true) {
             kotlin.runCatching {
-                gitTransferService.getFileContent(
-                    userId = userId,
-                    pathWithNamespace = pathWithNamespace,
-                    filePath = workspaceCreate.devFilePath!!,
-                    ref = workspaceCreate.branch
-                )
+                permissionService.checkOauthIllegal(userId) {
+                    gitTransferService.getFileContent(
+                        userId = userId,
+                        pathWithNamespace = pathWithNamespace,
+                        filePath = workspaceCreate.devFilePath!!,
+                        ref = workspaceCreate.branch
+                    )
+                }
             }.getOrElse {
                 logger.warn("get yaml failed ${it.message}")
-                throw ErrorCodeException(
+                if (it is ErrorCodeException) throw it
+                else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
                     params = arrayOf("获取 devfile 异常 ${it.message}")
                 )
@@ -357,7 +360,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            if (WorkspaceSystemType.valueOf(ws.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            }
 
             kotlin.runCatching {
                 bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
@@ -606,7 +611,9 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
-            redisHeartBeat.refreshHeartbeat(workspaceName)
+            if (WorkspaceSystemType.valueOf(workspace.systemType).needHeartbeat()) {
+                redisHeartBeat.refreshHeartbeat(workspaceName)
+            }
         } else {
             // 启动失败,记录为EXCEPTION
             logger.warn("start workspace $workspaceName failed")
@@ -641,12 +648,11 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+    fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
-
-        // 校验用户对工作区的权限
-        permissionService.checkPermission(userId, workspaceName)
-
+        if (needPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -768,12 +774,11 @@ class WorkspaceService @Autowired constructor(
         doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+    fun deleteWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId delete workspace $workspaceName")
-
-        // 校验用户对工作区的权限
-        permissionService.checkPermission(userId, workspaceName)
-
+        if (needPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

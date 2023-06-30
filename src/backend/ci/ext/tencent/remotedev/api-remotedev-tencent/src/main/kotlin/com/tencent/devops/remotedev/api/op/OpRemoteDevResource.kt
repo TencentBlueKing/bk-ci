@@ -161,6 +161,18 @@ interface OpRemoteDevResource {
         whiteListUser: String
     ): Result<Boolean>
 
+    @ApiOperation("添加云桌面白名单用户")
+    @POST
+    @Path("/GPUWhiteList/add")
+    fun addGPUWhiteListUser(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @QueryParam("whiteListUser")
+        whiteListUser: String
+    ): Result<Boolean>
+
     @ApiOperation("新增镜像配置")
     @POST
     @Path("/image/spec")
@@ -189,4 +201,20 @@ interface OpRemoteDevResource {
     @GET
     @Path("/image/spec")
     fun listImageSpec(): Result<List<ImageSpec>?>
+
+    @ApiOperation("休眠工作空间")
+    @GET
+    @Path("/workspace_stop")
+    fun stopWorkspace(
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("销毁工作空间")
+    @GET
+    @Path("/workspace_delete")
+    fun deleteWorkspace(
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
