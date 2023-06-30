@@ -43,6 +43,7 @@ import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import java.math.BigDecimal
@@ -99,22 +100,28 @@ class PipelineOverviewServiceImpl @Autowired constructor(
     }
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
+        val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
         val projectId = queryPipelineOverviewDTO.projectId
-        val count = pipelineOverviewDao.queryPipelineTrendInfoCount(
+        val pipelineIds = pipelineOverviewDao.queryPipelineTrendInfoPipelineIds(
             dslContext,
             QueryPipelineOverviewQO(
                 projectId,
-                queryPipelineOverviewDTO.baseQueryReq
+                baseQueryReq
             )
         )
-        if (count == 0) {
+        if (pipelineIds.isEmpty()) {
             return emptyList()
         }
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(
                 projectId,
-                queryPipelineOverviewDTO.baseQueryReq
+                BaseQueryReqVO(
+                    pipelineIds = pipelineIds,
+                    pipelineLabelIds = baseQueryReq.pipelineLabelIds,
+                    startTime = baseQueryReq.startTime,
+                    endTime = baseQueryReq.endTime
+                )
             )
         )
         val trendInfos = result?.map {
@@ -127,8 +134,8 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 statisticsTime = it.get(BK_STATISTICS_TIME, LocalDateTime::class.java),
                 totalExecuteCount = totalExecuteCount ?: 0L,
                 failedExecuteCount = failExecuteCount ?: 0L,
-                totalAvgCostTime = toMinutes(totalAvgCostTime / count),
-                failAvgCostTime = toMinutes(failAvgCostTime / count)
+                totalAvgCostTime = toMinutes(totalAvgCostTime / pipelineIds.size),
+                failAvgCostTime = toMinutes(failAvgCostTime / pipelineIds.size)
             )
         }
         return trendInfos ?: emptyList()
