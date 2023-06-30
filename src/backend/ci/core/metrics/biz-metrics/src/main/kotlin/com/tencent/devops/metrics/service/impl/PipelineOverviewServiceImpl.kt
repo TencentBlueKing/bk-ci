@@ -41,6 +41,7 @@ import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import java.math.BigDecimal
 import org.jooq.DSLContext
@@ -138,14 +139,18 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         } while (result.size == pageSize)
         return pipelineBuildTimeStatisticsMap.map {
             val buildTimeStatisticsDo = it.value
+            val totalAvgCostTime = buildTimeStatisticsDo.totalCostTime / buildTimeStatisticsDo.totalExecuteCount
+            val failAvgCostTime = if (buildTimeStatisticsDo.failedExecuteCount == 0L) {
+                0L
+            } else {
+                buildTimeStatisticsDo.failCostTime /   buildTimeStatisticsDo.failedExecuteCount
+            }
             PipelineTrendInfoDO(
                 statisticsTime = buildTimeStatisticsDo.statisticsTime,
                 totalExecuteCount = buildTimeStatisticsDo.totalExecuteCount,
                 failedExecuteCount = buildTimeStatisticsDo.failedExecuteCount,
-                totalAvgCostTime =
-                buildTimeStatisticsDo.totalCostTime.toDouble() / buildTimeStatisticsDo.totalExecuteCount,
-                failAvgCostTime =
-                buildTimeStatisticsDo.failCostTime.toDouble() / buildTimeStatisticsDo.failedExecuteCount
+                totalAvgCostTime = QueryParamCheckUtil.toMinutes(totalAvgCostTime),
+                failAvgCostTime =QueryParamCheckUtil.toMinutes(failAvgCostTime)
             )
         }
     }
