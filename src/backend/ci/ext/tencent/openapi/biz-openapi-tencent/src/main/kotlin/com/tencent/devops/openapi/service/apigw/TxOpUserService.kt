@@ -1,9 +1,9 @@
 package com.tencent.devops.openapi.service.apigw
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.service.op.OpAppUserService
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -25,8 +25,7 @@ class TxOpUserService @Autowired constructor(
             return false
         }
         return try {
-            client.get(ServiceTxUserResource::class).get(userId)
-            true
+            client.get(ServiceDeptResource::class).getUserInfo(userId = "admin", name = userId).data != null
         } catch (e: Exception) {
             logger.warn("checkUser $userId is not rtx user")
             errorUserId.put(userId, true)
