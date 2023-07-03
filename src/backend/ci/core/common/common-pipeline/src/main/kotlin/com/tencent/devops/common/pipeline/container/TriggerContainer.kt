@@ -100,7 +100,7 @@ data class TriggerContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? = null
 
-    override fun getI18nName(language: String? ): String {
+    override fun getI18nName(language: String?): String {
         return language?.let {
             MessageUtil.getMessageByLocale(
                 messageCode = CommonMessageCode.BK_BUILD_ENV_TYPE_BUILD_TRIGGERS,

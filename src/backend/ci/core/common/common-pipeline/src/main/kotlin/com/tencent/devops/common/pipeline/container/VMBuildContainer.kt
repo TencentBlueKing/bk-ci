@@ -158,7 +158,7 @@ data class VMBuildContainer(
         return matrixContext
     }
 
-    override fun getI18nName(language: String? ): String {
+    override fun getI18nName(language: String?): String {
         return language?.let {
             MessageUtil.getMessageByLocale(
                 messageCode = BK_BUILD_ENV_TYPE + baseOS.name,
