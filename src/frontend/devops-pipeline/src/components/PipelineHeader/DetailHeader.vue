@@ -23,6 +23,7 @@
                 :icon="loading ? 'loading' : ''"
                 outline
                 theme="default"
+                key="reBuild"
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -37,6 +38,7 @@
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <bk-button
+                key="edit"
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -51,6 +53,7 @@
             </bk-button>
 
             <bk-button
+                key="exec"
                 theme="primary"
                 v-perm="{
                     permissionData: {
