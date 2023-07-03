@@ -90,6 +90,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
@@ -1465,8 +1466,20 @@ class WorkspaceService @Autowired constructor(
                     it.updateTime
                 } ready to delete"
             )
-            heartBeatDeleteWS(it)
+            kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
+                logger.warn("deleteInactivityWorkspace fail|${i.message}", i)
+            }
         }
+        val now = LocalDateTime.now()
+        workspaceDao.fetchWorkspace(dslContext, status = WorkspaceStatus.SLEEP, mountType = WorkspaceMountType.START)
+            ?.parallelStream()?.forEach {
+                val retentionTime = redisCache.get(REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
+                if (Duration.between(it.lastStatusUpdateTime, now).toDays() >= retentionTime) {
+                    kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
+                        logger.warn("deleteInactivityWorkspace fail|${i.message}", i)
+                    }
+                }
+            }
     }
 
     // 提前2天邮件提醒，云环境即将自动回收
