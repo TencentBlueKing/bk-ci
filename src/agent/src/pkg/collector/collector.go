@@ -28,12 +28,15 @@
 package collector
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"text/template"
 	"time"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/pkg/errors"
 
 	"github.com/influxdata/telegraf/logger"
 
@@ -75,7 +78,10 @@ func DoAgentCollect() {
 		return
 	}
 
-	writeTelegrafConfig()
+	if err := writeTelegrafConfig(); err != nil {
+		logs.Error("writeTelegrafConfig error")
+		return
+	}
 
 	// 每次重启agent要清理掉无意义的telegraf.log日志，重新记录
 	logFile := fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir())
@@ -117,8 +123,23 @@ func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
 	return agent.NewAgent(c)
 }
 
-func writeTelegrafConfig() {
-	configContent := strings.Replace(telegrafconf.TelegrafConf, templateKeyAgentId, config.GAgentConfig.AgentId, 2)
+func writeTelegrafConfig() error {
+	// 区分 stream 项目使用模板分割，PAC 上线后删除
+	projectType := "ci"
+	if strings.HasPrefix(config.GAgentConfig.ProjectId, "git_") {
+		projectType = "stream"
+	}
+	var content bytes.Buffer
+	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
+	if err != nil {
+		return errors.Wrap(err, "parse telegraf config template err")
+	}
+	err = tmpl.Execute(&content, projectType)
+	if err != nil {
+		return errors.Wrap(err, "execute telegraf config template err")
+	}
+
+	configContent := strings.Replace(content.String(), templateKeyAgentId, config.GAgentConfig.AgentId, 2)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 2)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
 	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 2)
@@ -132,11 +153,12 @@ func writeTelegrafConfig() {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
 	}
 
-	err := ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
+	err = ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
 	if err != nil {
-		logs.Error("write telegraf config err: ", err)
-		return
+		return errors.Wrap(err, "write telegraf config err")
 	}
+
+	return nil
 }
 
 func buildGateway(gateway string) string {

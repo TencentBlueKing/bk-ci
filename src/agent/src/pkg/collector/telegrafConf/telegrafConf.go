@@ -51,6 +51,13 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
+{{- if eq . "stream" -}}
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetric"
+  skip_database_creation = true
+  ###{tls_ca}###
+{{- else -}}
 [[outputs.http]]
   url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
   # timeout = "5s"
@@ -62,6 +69,7 @@ const TelegrafConf = `
     X-DEVOPS-PROJECT-ID = "###{projectId}###"
     X-DEVOPS-AGENT-ID = "###{agentId}###"
     X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
+{{- end -}}
 [[inputs.cpu]]
   percpu = true
   totalcpu = true
