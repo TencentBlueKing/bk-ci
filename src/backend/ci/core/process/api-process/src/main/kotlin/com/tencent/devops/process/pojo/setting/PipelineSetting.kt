@@ -65,9 +65,9 @@ data class PipelineSetting(
     @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
     @ApiModelProperty("订阅成功相关", required = false)
-    var successSubscriptionList: List<Subscription> = listOf(Subscription()),
+    var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
     @ApiModelProperty("订阅失败相关", required = false)
-    var failSubscriptionList: List<Subscription> = listOf(Subscription()),
+    var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
     @ApiModelProperty("标签列表", required = false)
     var labels: List<String> = emptyList(),
     @ApiModelProperty("最大排队时长", required = false)

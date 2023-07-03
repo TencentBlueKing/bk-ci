@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -1093,32 +1094,42 @@ class PipelineRepositoryService constructor(
                 ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
             val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
                 ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+            val oldSuccessSubscription = Subscription(
+                types = successType,
+                groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
+                users = t.successReceiver ?: "",
+                wechatGroupFlag = t.successWechatGroupFlag ?: false,
+                wechatGroup = t.successWechatGroup ?: "",
+                wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
+                detailFlag = t.successDetailFlag,
+                content = t.successContent ?: ""
+            )
+            val oldFailSubscription = Subscription(
+                types = failType,
+                groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
+                users = t.failReceiver ?: "",
+                wechatGroupFlag = t.failWechatGroupFlag ?: false,
+                wechatGroup = t.failWechatGroup ?: "",
+                wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
+                detailFlag = t.failDetailFlag,
+                content = t.failContent ?: ""
+            )
+            val successSubscriptionList = t.successSubscription?.let {
+                JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+            } ?: listOf(oldSuccessSubscription)
+            val failSubscriptionList = t.failureSubscription?.let {
+                JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+            } ?: listOf(oldFailSubscription)
             PipelineSetting(
                 projectId = t.projectId,
                 pipelineId = t.pipelineId,
                 pipelineName = t.name,
                 desc = t.desc,
                 runLockType = PipelineRunLockType.valueOf(t.runLockType),
-                successSubscription = Subscription(
-                    types = successType,
-                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.successReceiver ?: "",
-                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
-                    wechatGroup = t.successWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                    detailFlag = t.successDetailFlag,
-                    content = t.successContent ?: ""
-                ),
-                failSubscription = Subscription(
-                    types = failType,
-                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.failReceiver ?: "",
-                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
-                    wechatGroup = t.failWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                    detailFlag = t.failDetailFlag,
-                    content = t.failContent ?: ""
-                ),
+                successSubscription = oldSuccessSubscription,
+                failSubscription = oldFailSubscription,
+                successSubscriptionList = successSubscriptionList,
+                failSubscriptionList = failSubscriptionList,
                 labels = emptyList(),
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                 maxQueueSize = t.maxQueueSize,

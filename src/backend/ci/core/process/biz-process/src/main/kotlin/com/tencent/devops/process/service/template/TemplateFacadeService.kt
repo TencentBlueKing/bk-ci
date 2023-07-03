@@ -1627,6 +1627,8 @@ class TemplateFacadeService @Autowired constructor(
                 runLockType = runLockType,
                 successSubscription = successSubscription,
                 failSubscription = failSubscription,
+                successSubscriptionList = successSubscriptionList,
+                failSubscriptionList = failSubscriptionList,
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
@@ -2115,7 +2117,7 @@ class TemplateFacadeService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             projectCodeList.forEach {
-                // 判断模板名称是否已经关联过
+                // TODO #8161 判断模板名称是否已经关联过，通过setting判断考虑下可否优化
                 val pipelineSettingRecord = pipelineSettingDao.getSetting(
                     dslContext = context,
                     projectId = it,

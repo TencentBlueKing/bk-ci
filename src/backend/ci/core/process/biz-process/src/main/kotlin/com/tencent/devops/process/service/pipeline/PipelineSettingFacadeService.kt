@@ -321,6 +321,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             desc = oldSetting.desc,
             successSubscription = oldSetting.successSubscription,
             failSubscription = oldSetting.failSubscription,
+            successSubscriptionList = oldSetting.successSubscriptionList,
+            failSubscriptionList = oldSetting.failSubscriptionList,
             maxPipelineResNum = oldSetting.maxPipelineResNum,
             maxQueueSize = oldSetting.maxQueueSize,
             hasPermission = oldSetting.hasPermission,
