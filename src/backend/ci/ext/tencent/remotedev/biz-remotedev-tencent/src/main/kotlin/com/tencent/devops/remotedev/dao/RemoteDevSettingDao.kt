@@ -64,8 +64,7 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    setting.userSetting.let { JsonUtil.toJson(it, false) }
-
+                    JsonUtil.toJson(RemoteDevUserSettings(), false)
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -73,7 +72,6 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(USER_SETTING, JsonUtil.toJson(setting.userSetting, false))
                 .execute()
         }
     }
@@ -143,6 +141,20 @@ class RemoteDevSettingDao {
             dslContext.select(WORKSPACE_MAX_RUNNING_COUNT, WORKSPACE_MAX_HAVING_COUNT).from(this)
                 .where(USER_ID.eq(userId))
                 .fetchAny()?.let { it.value1() to it.value2() } ?: (null to null)
+        }
+    }
+
+    fun fetchAnyUserSetting(
+        dslContext: DSLContext,
+        userId: String
+    ): RemoteDevUserSettings {
+        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.select(USER_SETTING).from(this)
+                .where(USER_ID.eq(userId))
+                .fetchAny()?.let { JsonUtil.to(it.value1(), RemoteDevUserSettings::class.java) } ?: run {
+                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
+                return RemoteDevUserSettings()
+            }
         }
     }
 

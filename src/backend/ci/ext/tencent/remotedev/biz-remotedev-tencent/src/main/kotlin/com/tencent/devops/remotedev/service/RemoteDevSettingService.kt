@@ -107,9 +107,9 @@ class RemoteDevSettingService @Autowired constructor(
         logger.info("updateSettingByOp $data")
         remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data)
     }
-    fun getUserSetting4Op(userId: String): RemoteDevUserSettings {
+
+    fun getUserSetting(userId: String): RemoteDevUserSettings {
         logger.info("$userId get user setting")
-        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
-        return setting.userSetting
+        return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
     }
 }

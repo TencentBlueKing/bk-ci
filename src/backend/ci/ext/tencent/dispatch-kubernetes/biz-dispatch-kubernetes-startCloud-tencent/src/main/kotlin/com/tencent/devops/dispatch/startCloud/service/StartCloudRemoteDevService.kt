@@ -85,21 +85,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
-        throw BuildFailureException(
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
-            "第三方服务-START-CLOUD 异常，异常信息 - 用户操作异常 - 不支持START操作"
-        )
+        return EMPTY
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
-        throw BuildFailureException(
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
-            "第三方服务-START-CLOUD 异常，异常信息 - 用户操作异常 - 不支持STOP操作"
-        )
+        return EMPTY
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {

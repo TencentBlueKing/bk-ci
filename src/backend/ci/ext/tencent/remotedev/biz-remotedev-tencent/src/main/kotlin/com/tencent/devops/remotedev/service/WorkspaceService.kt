@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.event.RemoteDevReminderEvent
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -192,12 +193,15 @@ class WorkspaceService @Autowired constructor(
 
         val devfile = DevfileUtil.parseDevfile(yaml).apply {
             gitEmail = kotlin.runCatching {
-                gitTransferService.getUserEmail(
-                    userId = userId
-                )
+                permissionService.checkOauthIllegal(userId) {
+                    gitTransferService.getUserEmail(
+                        userId = userId
+                    )
+                }
             }.getOrElse {
                 logger.warn("get user $userId info failed ${it.message}")
-                throw ErrorCodeException(
+                if (it is ErrorCodeException) throw it
+                else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
                     params = arrayOf("get user($userId) info from git failed")
                 )
@@ -342,8 +346,22 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            if (WorkspaceSystemType.valueOf(ws.systemType).needHeartbeat()) {
+            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
+            if (systemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            }
+
+            if (systemType.needReminderUser()) {
+                val duration =
+                    remoteDevSettingDao.fetchAnyUserSetting(dslContext, event.userId).startCloudExperienceDuration
+                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
+                dispatcher.dispatch(
+                    RemoteDevReminderEvent(
+                        userId = event.userId,
+                        workspaceName = event.workspaceName,
+                        delayMills = (duration - limit * 60).toInt().coerceAtLeast(60) * 1000
+                    )
+                )
             }
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
@@ -411,6 +429,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName,
                 WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
+            checkWorkspaceAvailability(userId, workspace)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -472,6 +491,25 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = "",
                 status = WorkspaceAction.STARTING
             )
+        }
+    }
+
+    private fun checkWorkspaceAvailability(
+        userId: String,
+        workspace: TWorkspaceRecord
+    ) {
+        when (workspace.workspaceMountType) {
+            WorkspaceMountType.START.name -> {
+                val duration = remoteDevSettingDao.fetchAnyUserSetting(
+                    dslContext, userId
+                ).startCloudExperienceDuration
+                if (duration * 60 * 60 > workspace.usageTime) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
+                        params = arrayOf(workspace.name, duration.toString())
+                    )
+                }
+            }
         }
     }
 
@@ -1400,6 +1438,19 @@ class WorkspaceService @Autowired constructor(
                 mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
             )
         }
+    }
+
+    fun getUnavailableWorkspace(): List<String> {
+        val now = LocalDateTime.now()
+        return workspaceDao.fetchWorkspace(
+            dslContext, status = WorkspaceStatus.RUNNING, mountType = WorkspaceMountType.START
+        )?.asSequence()
+            ?.filter {
+                val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
+                remoteDevSettingDao.fetchAnyUserSetting(
+                    dslContext, it.creator
+                ).startCloudExperienceDuration * 60 * 60 > usageTime
+            }?.map { it.name }?.toList() ?: emptyList()
     }
 
     // 获取已休眠(status:3)且过期14天的工作空间

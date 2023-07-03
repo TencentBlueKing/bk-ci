@@ -59,7 +59,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
-        return Result(remoteDevSettingService.getUserSetting4Op(userId))
+        return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {

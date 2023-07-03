@@ -28,7 +28,10 @@ class WorkspaceCheckJob @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
-        private const val stopJobLockKey = "dispatch_devcloud_cron_workspace_clear_job"
+        // 根据心跳操作工作空间
+        private const val stopJobLockKeyH = "dispatch_devcloud_cron_workspace_clear_job_heartbeats"
+        // 根据用户使用时长操作工作空间
+        private const val stopJobLockKeyD = "dispatch_devcloud_cron_workspace_clear_job_duration"
         private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
         private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
@@ -40,7 +43,37 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0/5 * * * ?")
     fun stopInactiveWorkspace() {
         logger.info("=========>> Stop inactive workspace <<=========")
-        val redisLock = RedisLock(redisOperation, stopJobLockKey + bkTag.getLocalTag(), 3600L)
+        checkInactiveWorkspace()
+    }
+
+    private fun checkUnavailableWorkspace() {
+        val redisLock = RedisLock(redisOperation, stopJobLockKeyD + bkTag.getLocalTag(), 3600L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("Stop Unavailable workspace get lock.")
+                val sleepWorkspaceList = workspaceService.getUnavailableWorkspace()
+                sleepWorkspaceList.parallelStream().forEach { workspaceName ->
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                    logger.info(
+                        "workspace $workspaceName usage time exceeds limit, ready to sleep"
+                    )
+                    kotlin.runCatching {
+                        workspaceService.heartBeatStopWS(workspaceName)
+                    }.onFailure {
+                        logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("Stop inactive workspace failed", e)
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    private fun checkInactiveWorkspace() {
+        val redisLock = RedisLock(redisOperation, stopJobLockKeyH + bkTag.getLocalTag(), 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
