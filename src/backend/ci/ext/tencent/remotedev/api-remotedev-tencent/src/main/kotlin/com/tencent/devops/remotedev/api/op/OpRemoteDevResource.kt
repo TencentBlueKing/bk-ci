@@ -197,6 +197,9 @@ interface OpRemoteDevResource {
     @GET
     @Path("/workspace_stop")
     fun stopWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -205,6 +208,9 @@ interface OpRemoteDevResource {
     @GET
     @Path("/workspace_delete")
     fun deleteWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
