@@ -99,7 +99,6 @@ import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import io.swagger.annotations.ApiModelProperty
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
