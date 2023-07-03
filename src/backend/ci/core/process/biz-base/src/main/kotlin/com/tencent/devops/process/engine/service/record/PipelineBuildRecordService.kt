@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -240,6 +241,9 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
+                container.name = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.BK_BUILD_ENV_TYPE_BUILDLESS
+                )
                 var elementElapsed = 0L
                 container.elements.forEach { element ->
                     element.timeCost?.executeCost?.let {

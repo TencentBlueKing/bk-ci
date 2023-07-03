@@ -94,6 +94,8 @@ interface Container {
         return configParams
     }
 
+    fun getI18nName(language: String?): String
+
     fun getClassType(): String
 
     fun getContainerById(vmSeqId: String): Container?

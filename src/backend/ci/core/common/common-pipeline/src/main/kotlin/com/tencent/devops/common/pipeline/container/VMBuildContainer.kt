@@ -158,6 +158,15 @@ data class VMBuildContainer(
         return matrixContext
     }
 
+    override fun getI18nName(language: String? ): String {
+        return language?.let {
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_ENV_TYPE + baseOS.name,
+                language = it
+            )
+        } ?: this.name
+    }
+
     override fun transformCompatibility(language: String?) {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
@@ -166,10 +175,7 @@ data class VMBuildContainer(
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
         language?.let {
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_ENV_TYPE + baseOS.name,
-                language = language
-            )
+            name = getI18nName(language)
         }
         super.transformCompatibility(language)
     }
