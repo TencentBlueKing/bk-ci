@@ -247,7 +247,7 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = taskStatus,
-                    startTime = LocalDateTime.now(),
+                    startTime = recordTask.startTime ?: LocalDateTime.now(),
                     endTime = null,
                     timestamps = null
                 )
@@ -473,7 +473,7 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = buildStatus,
-                    startTime = startTime,
+                    startTime = recordTask.startTime ?: startTime,
                     endTime = endTime,
                     timestamps = timestamps?.let { mergeTimestamps(timestamps, recordTask.timestamps) }
                 )
