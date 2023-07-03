@@ -202,7 +202,6 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-
     override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
         projectCodes.filter {
             // 仅迁移"迁移成功"的项目
@@ -212,7 +211,7 @@ class RbacPermissionMigrateService constructor(
             )?.status == AuthMigrateStatus.SUCCEED.value
         }.map {
             val traceId = MDC.get(TraceTag.BIZID)
-            migrateMonitorExecutorService.submit{
+            migrateMonitorExecutorService.submit {
                 MDC.put(TraceTag.BIZID, traceId)
                 migrateResourceService.migrateMonitorResource(projectCode = it)
             }
