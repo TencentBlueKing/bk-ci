@@ -50,7 +50,7 @@ class RbacPermissionMonitorService constructor(
     @Value("\${monitor.url:#{null}}")
     private val monitorUrlPrefix = ""
 
-    @Value("\${monitor.register}")
+    @Value("\${monitor.register:false}")
     private val registerMonitor: Boolean = false
 
     override fun generateMonitorAuthorizationScopes(
