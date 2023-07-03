@@ -128,7 +128,7 @@ function _M:get_staff_info_new(credentialKey)
 
     local timestamp = ngx.time()
 
-    local res, err = httpc:request_uri("https://moa4-dev.woa.com/itlogin/mobile_gate/validate", {
+    local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
         method = "POST",
         body = "key=" .. credentialKey,
         headers = {
