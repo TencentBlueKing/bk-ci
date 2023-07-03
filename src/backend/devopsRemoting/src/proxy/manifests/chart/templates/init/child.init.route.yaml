@@ -112,6 +112,15 @@ spec:
                 }
               }'
 
+              # 创建https sni
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/ssls/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "id": "1",           
+                  "cert": "{{ .Values.proxy.https.crt }}",
+                  "key": "{{ .Values.proxy.https.key }}",       
+                  "snis": ["*.{{ .Values.proxy.domain }}","{{ .Values.proxy.domain }}","apisix.{{ .Values.proxy.domain }}"]
+              }'
+
               # 创建 wsproxy https route
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/3  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {

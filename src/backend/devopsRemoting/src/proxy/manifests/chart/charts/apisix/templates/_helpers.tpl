@@ -52,6 +52,7 @@ Selector labels
 {{- else }}
 app.kubernetes.io/name: {{ include "apisix.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
