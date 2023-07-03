@@ -10,7 +10,7 @@ import org.slf4j.MDC
 @Event(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, ROUTE_WORKSPACE_REMINDER)
 data class RemoteDevReminderEvent(
     override val userId: String,
-    override val traceId: String = MDC.get(TraceTag.BIZID),
+    override val traceId: String = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
