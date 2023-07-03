@@ -20,12 +20,18 @@ if nil == x_ckey then
     x_ckey = urlUtil:parseUrl(ngx.var.request_uri)["cKey"]
 end
 
+local x_credentialKey = ngx.var.http_x_credentialKey -- 内部用户,新版接口
+if nil == x_credentialKey then
+    x_credentialKey = urlUtil:parseUrl(ngx.var.request_uri)["credentialKey"]
+end
+
 local x_otoken = ngx.var.http_x_otoken -- 外部用户
 if nil == x_otoken then
     x_otoken = urlUtil:parseUrl(ngx.var.request_uri)["oToken"]
 end
 
-if x_ckey == nil and x_otoken == nil then
+
+if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
     ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
     ngx.exit(401)
     return
@@ -34,6 +40,9 @@ end
 if x_ckey ~= nil then
     local staff_info = itloginUtil:get_staff_info(x_ckey)
     ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
+elseif x_credentialKey ~= nil then
+    local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
+    ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName
 else
     local outer_profile = outerloginUtil:getProfile(x_otoken)
     ngx.header["X-DEVOPS-UID"] = outer_profile.data.username

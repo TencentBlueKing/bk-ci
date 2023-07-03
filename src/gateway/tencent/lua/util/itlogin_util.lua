@@ -112,4 +112,63 @@ function _M:get_staff_info(ckey)
     end
 end
 
+function _M:get_staff_info_new(credentialKey)
+    if credentialKey == nil then
+        ngx.log(ngx.ERR, "credentialKey is null")
+        ngx.exit(400)
+        return
+    end
+
+    local httpc = http.new()
+    if not httpc then
+        ngx.log(ngx.ERR, "failed to create httpc")
+        ngx.exit(500)
+        return
+    end
+
+    local timestamp = ngx.time()
+
+    local res, err = httpc:request_uri("https://moa4-dev.woa.com/itlogin/mobile_gate/validate", {
+        method = "POST",
+        body = "key=" .. credentialKey,
+        headers = {
+            ["Timestamp"] = tostring(timestamp),
+            ["x-rio-seq"] = "",
+            ["Accept"] = "application/json",
+            ["Content-Type"] = "application/x-www-form-urlencoded",
+            ["X-Protocol-Version"] = "ITLoginV1.1",
+            ["X-System-Key"] = "d4699d2782a6edb09a1837cfdc2df110"
+        },
+    })
+
+    if not res then
+        ngx.log(ngx.ERR, "failed to request credentialKey info: ", err)
+        ngx.exit(500)
+        return
+    end
+
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request credentialKey info, status: ", res.status)
+        ngx.exit(res.status)
+        return
+    end
+
+    local responseBody = res.body
+    local success, result = pcall(json.decode, responseBody)
+
+    if not success then
+        ngx.log(ngx.ERR, "failed to parse credentialKey info response: ", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    if result.ReturnFlag ~= 0 then
+        ngx.log(ngx.STDERR, "invalid credentialKey info: ", responseBody)
+        ngx.exit(401)
+        return
+    end
+
+    return result
+end
+
 return _M
