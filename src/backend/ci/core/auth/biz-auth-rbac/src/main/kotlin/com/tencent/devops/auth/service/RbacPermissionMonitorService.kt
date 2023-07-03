@@ -200,8 +200,8 @@ class RbacPermissionMonitorService constructor(
     private fun getMonitorGroupConfig(groupCode: String): String? {
         val configName = when (groupCode) {
             BkAuthGroup.GRADE_ADMIN.value -> MANAGER_GROUP_CONFIG_NAME
-            BkAuthGroup.MANAGER.value, BkAuthGroup.MAINTAINER.value -> READ_ONLY_GROUP_CONFIG_NAME
-            else -> OP_GROUP_CONFIG_NAME
+            BkAuthGroup.MANAGER.value, BkAuthGroup.MAINTAINER.value -> OP_GROUP_CONFIG_NAME
+            else -> READ_ONLY_GROUP_CONFIG_NAME
         }
         return monitorGroupConfigCache.getIfPresent(configName) ?: putAndGetMonitorGroupConfigCache(configName)
     }
@@ -233,19 +233,11 @@ class RbacPermissionMonitorService constructor(
         // 4、遍历action组。获取该action的关联类型。
         actionList.forEach foreach@{ action ->
             // 监控平台测试环境有些动作，已经被废除，但并没有删除，正确的动作都包含”v2“标识
-            logger.info(
-                "putAndGetMonitorGroupConfigCache:action|$action|" +
-                    "${action.englishName}|${action.relatedResourceTypes}"
-            )
             if (!action.id.contains("v2"))
                 return@foreach
             // 过滤掉监控平台全局动作
             if (action.relatedResourceTypes.isEmpty())
                 return@foreach
-            logger.info(
-                "putAndGetMonitorGroupConfigCache:greysonfangaction|$action|" +
-                    "${action.englishName}|${action.relatedResourceTypes}"
-            )
             generateGroupAuthorizationScopes(action, managerGroupConfig)
             if (readOnlyActions.contains(action.id))
                 generateGroupAuthorizationScopes(action, readOnlyGroupConfig)
@@ -286,7 +278,6 @@ class RbacPermissionMonitorService constructor(
                     val newActions = authorizationScopes.actions.toMutableList().apply { add(Action(action.id)) }
                     authorizationScopes.actions = newActions
                 }
-                logger.info("generateGroupAuthorizationScopes:old|$groupConfig")
             }
         } else {
             val managerPath = ManagerPath().apply {
@@ -306,7 +297,6 @@ class RbacPermissionMonitorService constructor(
                 resources = listOf(managerResources)
             }
             groupConfig.add(authorizationScopes)
-            logger.info("generateGroupAuthorizationScopes:new|$groupConfig")
         }
     }
 
