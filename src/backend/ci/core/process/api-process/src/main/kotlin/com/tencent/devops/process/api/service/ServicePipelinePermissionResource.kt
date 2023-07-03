@@ -26,46 +26,44 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * 权限中心迁移服务
- */
-interface PermissionMigrateService {
+@Api(tags = ["SERVICE_PIPELINE_PERMISSION"], description = "服务-流水线-鉴权")
+@Path("/service/pipeline/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelinePermissionResource {
 
-    /**
-     * v3批量迁移到rbac
-     */
-    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
-
-    /**
-     * v0批量迁移到rbac
-     */
-    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
-
-    /**
-     * 全部迁移到rbac
-     */
-    fun allToRbacAuth(): Boolean
-
-    /**
-     * 按条件升级到rbac权限
-     */
-    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
-
-    /**
-     * 对比迁移鉴权结果
-     */
-    fun compareResult(projectCode: String): Boolean
-
-    /**
-     * 迁移特定资源类型资源
-     */
-    fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/validate")
+    @ApiOperation("校验用户是否有具体操作的权限")
+    fun checkPipelinePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("permission")
+        @ApiParam("操作权限", required = false)
+        permission: AuthPermission
+    ): Result<Boolean>
 }

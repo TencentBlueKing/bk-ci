@@ -53,7 +53,7 @@ spec:
       {{- end }}        
       containers:
         - name: plugin
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.plugin.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.plugin.containerSecurityContext "enabled" | toYaml | nindent 12 }}

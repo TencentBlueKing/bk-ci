@@ -27,7 +27,7 @@ spec:
             - "-c"
             - |
               until getent hosts {{ include "bkci.mysql.fullname" . }}
-              do 
+              do
                 echo waiting for {{ include "bkci.mysql.fullname" . }};
                 sleep 2;
               done
@@ -35,7 +35,7 @@ spec:
       {{- end }}
       containers:
         - name: init-iam
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/bkiam-rbac
           {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
@@ -62,6 +62,9 @@ spec:
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/project/api/open/project/callback/", "project", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (12,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/process/api/open/pipeline/callback/pipelineGroupInfo", "pipeline_group", "ci");
+              {{- if ne .Values.config.bkCodeccPrivateUrl "" }}
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (13,"{{ .Values.config.bkCodeccPrivateUrl }}", "/ms/openapi/api/open/v2/callback/instances/list", "codecc_task", "codecc");
+              {{- end }}
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
       restartPolicy: OnFailure
