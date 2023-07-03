@@ -93,6 +93,8 @@ abstract class AbMigratePolicyService(
 
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
+
+        const val RBAC_QC_GROUP_NAME = "质管人员"
     }
 
     fun migrateGroupPolicy(

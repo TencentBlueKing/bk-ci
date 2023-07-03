@@ -56,6 +56,20 @@ interface PermissionMigrateService {
     fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 
     /**
+     * 对比迁移鉴权结果
+     */
+    fun compareResult(projectCode: String): Boolean
+
+    /**
+     * 迁移特定资源类型资源
+     */
+    fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean
+
+    /**
      * 迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目
      */
     fun migrateMonitorResource(projectCodes: List<String>): Boolean

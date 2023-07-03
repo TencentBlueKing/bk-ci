@@ -26,6 +26,9 @@ itsm:
     update:
       # 项目更新ITSM回调URL
       url: __BK_CI_PUBLIC_URL__/ms/auth/api/external/auth/itsm/update_callback
+codecc:
+  openapi:
+    token: __BK_CI_CODECC_OPENAPI_TOKEN__
 
 # 是否开启创建蓝盾项目同步注册监控空间，并注册监控权限资源
 monitor:

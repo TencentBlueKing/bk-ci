@@ -231,6 +231,7 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
+                            isLatestBuild: this.isLatestBuild,
                             matchRules: this.curMatchRules
                         }
                     },
@@ -341,6 +342,9 @@
             },
             statusLabel () {
                 return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
+            },
+            isLatestBuild () {
+                return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
             }
         },
 
