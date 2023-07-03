@@ -1475,7 +1475,7 @@ class WorkspaceService @Autowired constructor(
                 val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
                 remoteDevSettingDao.fetchAnyUserSetting(
                     dslContext, it.creator
-                ).startCloudExperienceDuration * 60 * 60 > usageTime
+                ).startCloudExperienceDuration * 60 * 60 < usageTime
             }?.map { it.name }?.toList() ?: emptyList()
     }
 
