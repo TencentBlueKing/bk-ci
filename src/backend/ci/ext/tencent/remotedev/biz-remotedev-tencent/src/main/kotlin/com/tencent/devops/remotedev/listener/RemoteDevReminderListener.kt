@@ -71,7 +71,8 @@ class RemoteDevReminderListener @Autowired constructor(
                         workspaceName = workspaceName,
                         workspaceHost = null,
                         errorMsg = null, type = WebSocketActionType.WORKSPACE_NEED_RENEWAL,
-                        status = true, action = WorkspaceAction.NEED_RENEWAL
+                        status = true, action = WorkspaceAction.NEED_RENEWAL,
+                        systemType = workspace.systemType, workspaceMountType = workspace.workspaceMountType
                     )
                     val request = SendNotifyMessageTemplateRequest(
                         templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE.templateCode,

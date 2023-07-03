@@ -99,6 +99,7 @@ import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import io.swagger.annotations.ApiModelProperty
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -291,24 +292,25 @@ class WorkspaceService @Autowired constructor(
             errorMsg = null,
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = true,
-            action = WorkspaceAction.PREPARING
+            action = WorkspaceAction.PREPARING,
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
         )
 
         return WorkspaceResponse(
             workspaceName = workspaceName,
             status = WorkspaceAction.PREPARING,
-            systemType = devfile.checkWorkspaceSystemType()
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
         )
     }
 
     // k8s创建workspace后回调的方法
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(event.workspaceName)
+            )
         if (event.status) {
-            val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(event.workspaceName)
-                )
             val pathWithNamespace = GitUtils.getDomainAndRepoName(ws.url).second
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -382,7 +384,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = event.errorMsg,
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = event.status,
-            action = WorkspaceAction.START
+            action = WorkspaceAction.START,
+            systemType = WorkspaceSystemType.valueOf(ws.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType)
         )
     }
 
@@ -411,7 +415,9 @@ class WorkspaceService @Autowired constructor(
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
                     workspaceHost = workspaceInfo.data?.environmentHost ?: "",
-                    status = WorkspaceAction.START
+                    status = WorkspaceAction.START,
+                    systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                    workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             }
 
@@ -485,12 +491,16 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_START,
                 status = true,
-                action = WorkspaceAction.STARTING
+                action = WorkspaceAction.STARTING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return WorkspaceResponse(
                 workspaceName = workspace.name,
                 workspaceHost = "",
-                status = WorkspaceAction.STARTING
+                status = WorkspaceAction.STARTING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
         }
     }
@@ -651,7 +661,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_START,
             status = status,
-            action = WorkspaceAction.START
+            action = WorkspaceAction.START,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 
@@ -741,7 +753,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
-                action = WorkspaceAction.SLEEPING
+                action = WorkspaceAction.SLEEPING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -862,7 +876,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
                 status = true,
-                action = WorkspaceAction.DELETING
+                action = WorkspaceAction.DELETING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -876,7 +892,9 @@ class WorkspaceService @Autowired constructor(
         errorMsg: String?,
         type: WebSocketActionType,
         status: Boolean?,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        systemType: WorkspaceSystemType,
+        workspaceMountType: WorkspaceMountType
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -886,7 +904,9 @@ class WorkspaceService @Autowired constructor(
                     workspaceHost = workspaceHost ?: "",
                     workspaceName = workspaceName,
                     status = action,
-                    errorMsg = errorMsg
+                    errorMsg = errorMsg,
+                    systemType = systemType,
+                    workspaceMountType = workspaceMountType
                 ),
                 projectId = "",
                 userIds = getWebSocketUsers(userId, workspaceName),
@@ -1160,9 +1180,11 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun getWorkspaceDetail(userId: String, workspaceName: String): WorkspaceDetail? {
+    fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        if (checkPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         val now = LocalDateTime.now()
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
 
@@ -1201,7 +1223,9 @@ class WorkspaceService @Autowired constructor(
                 cpu = cpu,
                 memory = memory,
                 disk = disk,
-                yaml = yaml
+                yaml = yaml,
+                systemType = WorkspaceSystemType.valueOf(systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType)
             )
         }
     }
@@ -1396,7 +1420,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
-                action = WorkspaceAction.SLEEPING
+                action = WorkspaceAction.SLEEPING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -1559,7 +1585,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
                 status = true,
-                action = WorkspaceAction.DELETING
+                action = WorkspaceAction.DELETING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -1644,7 +1672,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_DELETE,
             status = status,
-            action = WorkspaceAction.DELETE
+            action = WorkspaceAction.DELETE,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 
@@ -1713,7 +1743,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_SLEEP,
             status = status,
-            action = WorkspaceAction.SLEEP
+            action = WorkspaceAction.SLEEP,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 
