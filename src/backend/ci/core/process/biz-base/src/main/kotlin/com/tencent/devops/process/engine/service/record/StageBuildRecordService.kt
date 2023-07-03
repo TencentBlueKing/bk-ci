@@ -439,7 +439,7 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = recordStage.stageVar.plus(stageVar),
                 buildStatus = buildStatus,
-                startTime = startTime,
+                startTime = recordStage.startTime ?: startTime,
                 endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordStage.timestamps) }
             )
