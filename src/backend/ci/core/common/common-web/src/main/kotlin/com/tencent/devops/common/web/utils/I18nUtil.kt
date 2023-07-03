@@ -135,6 +135,10 @@ object I18nUtil {
         }
     }
 
+    /**
+     * 获取用户语言信息
+     * @return 用户语言信息
+     */
     fun getRequestUserLanguage() = getLanguage(getRequestUserId())
 
     /**
