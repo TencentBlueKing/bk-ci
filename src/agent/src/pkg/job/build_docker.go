@@ -200,8 +200,15 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo, api.LogtypeLog)
 		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo, api.LogtypeLog)
+
+		auth, err := generateDockerAuth(dockerBuildInfo.Credential)
+		if err != nil {
+			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName), err)
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
+			return
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
@@ -492,9 +499,9 @@ func mkDir(dir string) error {
 }
 
 // generateDockerAuth 创建拉取docker凭据
-func generateDockerAuth(cred *api.Credential) string {
+func generateDockerAuth(cred *api.Credential) (string, error) {
 	if cred == nil || cred.User == "" || cred.Password == "" {
-		return ""
+		return "", nil
 	}
 
 	authConfig := types.AuthConfig{
@@ -503,10 +510,10 @@ func generateDockerAuth(cred *api.Credential) string {
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(encodedJSON)
+	return base64.URLEncoding.EncodeToString(encodedJSON), nil
 }
 
 // parseContainerMounts 解析生成容器挂载内容
