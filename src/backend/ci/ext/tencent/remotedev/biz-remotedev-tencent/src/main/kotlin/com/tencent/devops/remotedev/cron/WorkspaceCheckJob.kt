@@ -44,6 +44,7 @@ class WorkspaceCheckJob @Autowired constructor(
     fun stopInactiveWorkspace() {
         logger.info("=========>> Stop inactive workspace <<=========")
         checkInactiveWorkspace()
+        checkUnavailableWorkspace()
     }
 
     private fun checkUnavailableWorkspace() {
