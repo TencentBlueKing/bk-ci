@@ -200,7 +200,7 @@ class PipelineRetryFacadeService @Autowired constructor(
             pipelineId = containerInfo.pipelineId,
             buildId = containerInfo.buildId,
             containerId = containerInfo.containerId,
-            executeCount = executeCount - 1
+            executeCount = (executeCount - 1).coerceAtLeast(1) // 至少取第一次执行结果
         )
         val containerRecord = if (lastContainerRecord != null) {
             val containerVar = lastContainerRecord.containerVar
