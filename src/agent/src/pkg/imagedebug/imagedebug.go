@@ -122,7 +122,7 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 	group.Go(func() error { return CreateExecServer(ctx, debugInfo, containerReady, debugDone) })
 
 	// 轮训任务状态
-	group.Go(func() error { return checkDebugStatus(ctx, debugInfo, debugDone) })
+	group.Go(func() error { return checkDebugStatus(ctx, debugInfo.DebugId, debugDone) })
 
 	// 上报结束并附带错误信息
 	if err := group.Wait(); err != nil {
@@ -139,13 +139,13 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 
 func checkDebugStatus(
 	ctx context.Context,
-	debugInfo *api.ImageDebug,
+	debugId int64,
 	debugDone *OnceChan[struct{}],
 ) error {
 	go func() {
 		for {
 			time.Sleep(5 * time.Minute)
-			result, err := api.FetchDockerDebugStatus(debugInfo)
+			result, err := api.FetchDockerDebugStatus(debugId)
 			if err != nil {
 				imageDebugLogs.WithError(err).Error("request FetchDockerDebugStatus error")
 				continue
