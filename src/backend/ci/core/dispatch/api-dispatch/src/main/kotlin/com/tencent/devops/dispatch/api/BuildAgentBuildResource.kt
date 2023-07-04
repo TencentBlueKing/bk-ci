@@ -38,7 +38,6 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugStatusInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
