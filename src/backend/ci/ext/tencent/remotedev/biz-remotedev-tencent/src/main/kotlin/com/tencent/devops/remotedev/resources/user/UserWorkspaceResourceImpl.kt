@@ -65,9 +65,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
+        projectId: String,
         workspace: WorkspaceCreate
     ): Result<WorkspaceResponse> {
-        return Result(workspaceService.createWorkspace(userId, bkTicket, workspace))
+        return Result(workspaceService.createWorkspace(userId, bkTicket, projectId, workspace))
     }
 
     override fun startWorkspace(
