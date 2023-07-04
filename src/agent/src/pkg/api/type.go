@@ -210,6 +210,7 @@ type ImageDebug struct {
 	Workspace   string        `json:"workspace"`
 	PipelineId  string        `json:"pipelineId"`
 	DebugUserId string        `json:"debugUserId"`
+	DebugId     int64         `json:"debugId"`
 	Image       string        `json:"image"`
 	Credential  Credential    `json:"credential"`
 	Options     DockerOptions `json:"options"`
@@ -217,18 +218,9 @@ type ImageDebug struct {
 
 type ImageDebugFinish struct {
 	ProjectId  string `json:"projectId"`
-	BuildId    string `json:"buildId"`
-	VmSeqId    string `json:"vmSeqId"`
+	DebugId    int64  `json:"debugId"`
 	PipelineId string `json:"pipelineId"`
 	DebugUrl   string `json:"debugUrl"`
 	Success    bool   `json:"success"`
 	Error      *Error `json:"error"`
-}
-
-type ImageDebugStatus struct {
-	ProjectId   string `json:"projectId"`
-	BuildId     string `json:"buildId"`
-	VmSeqId     string `json:"vmSeqId"`
-	PipelineId  string `json:"pipelineId"`
-	DebugUserId string `json:"debugUserId"`
 }
