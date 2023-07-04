@@ -715,14 +715,17 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
 
-        // 先查找是否有任务防止重复创建，如果有可以直接返回
+        // 先查找是否有正在运行的任务防止重复创建，如果有可以直接返回
         val debug = thirdPartyAgentDockerDebugDao.getDebug(
             dslContext = dslContext,
             buildId = his.buildId,
             vmSeqId = vmSeqId,
-            userId = userId
+            userId = userId,
+            last = true
         )
-        if (debug != null) {
+        if (debug != null &&
+            (debug.status == PipelineTaskStatus.QUEUE.status || debug.status == PipelineTaskStatus.RUNNING.status)
+        ) {
             return loopWait(debug.id)
         }
 
@@ -734,9 +737,12 @@ class ThirdPartyAgentService @Autowired constructor(
                 dslContext = dslContext,
                 buildId = his.buildId,
                 vmSeqId = vmSeqId,
-                userId = userId
+                userId = userId,
+                last = true
             )
-            if (record != null) {
+            if (record != null &&
+                (record.status == PipelineTaskStatus.QUEUE.status || record.status == PipelineTaskStatus.RUNNING.status)
+            ) {
                 record.id
             } else {
                 // 为空则重新下发登录调试任务
@@ -808,7 +814,8 @@ class ThirdPartyAgentService @Autowired constructor(
             dslContext = dslContext,
             buildId = buildId,
             vmSeqId = vmSeqId,
-            userId = userId
+            userId = userId,
+            last = true
         )?.status ?: return null
         return PipelineTaskStatus.toStatus(statusInt).name
     }

@@ -122,7 +122,8 @@ class ThirdPartyAgentDockerDebugDao {
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String,
-        userId: String?
+        userId: String?,
+        last: Boolean
     ): TDispatchThirdpartyAgentDockerDebugRecord? {
         with(TDispatchThirdpartyAgentDockerDebug.T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG) {
             val sql = dslContext.selectFrom(this)
@@ -130,6 +131,9 @@ class ThirdPartyAgentDockerDebugDao {
                 .and(VM_SEQ_ID.eq(vmSeqId))
             if (!userId.isNullOrBlank()) {
                 sql.and(USER_ID.eq(userId))
+            }
+            if (last) {
+                sql.orderBy(ID.desc())
             }
             return sql.fetchAny()
         }
