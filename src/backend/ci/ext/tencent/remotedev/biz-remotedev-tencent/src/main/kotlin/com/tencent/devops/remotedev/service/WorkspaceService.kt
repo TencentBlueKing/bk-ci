@@ -1189,18 +1189,18 @@ class WorkspaceService @Autowired constructor(
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
 
-        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName) ?: return null
+        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
-            Duration.between(lastHistory.startTime ?: now, now).seconds
+            Duration.between(lastHistory?.startTime ?: now, now).seconds
         } else 0
 
         val sleepingTime = workspace.sleepingTime + if (workspaceStatus.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
-            Duration.between(lastHistory.endTime ?: now, now).seconds
+            Duration.between(lastHistory?.endTime ?: now, now).seconds
         } else 0
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
