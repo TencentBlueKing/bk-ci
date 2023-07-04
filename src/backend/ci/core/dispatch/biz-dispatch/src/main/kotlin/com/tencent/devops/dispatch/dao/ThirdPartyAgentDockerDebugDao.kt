@@ -18,6 +18,7 @@ class ThirdPartyAgentDockerDebugDao {
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        userId: String,
         thirdPartyAgentWorkspace: String,
         dockerInfo: JSON
     ): Long {
@@ -30,6 +31,7 @@ class ThirdPartyAgentDockerDebugDao {
                 PIPELINE_ID,
                 BUILD_ID,
                 VM_SEQ_ID,
+                USER_ID,
                 STATUS,
                 CREATED_TIME,
                 UPDATED_TIME,
@@ -41,6 +43,7 @@ class ThirdPartyAgentDockerDebugDao {
                 pipelineId,
                 buildId,
                 vmSeqId,
+                userId,
                 PipelineTaskStatus.QUEUE.status,
                 now,
                 now,
@@ -62,6 +65,24 @@ class ThirdPartyAgentDockerDebugDao {
                 .orderBy(UPDATED_TIME.asc())
                 .limit(1)
                 .fetchAny()
+        }
+    }
+
+    fun updateStatusById(
+        dslContext: DSLContext,
+        id: Long,
+        status: PipelineTaskStatus,
+        errMsg: String?
+    ) {
+        with(TDispatchThirdpartyAgentDockerDebug.T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG) {
+            val sql = dslContext.update(this)
+            if (!errMsg.isNullOrBlank()) {
+                sql.set(ERR_MSG, errMsg)
+            }
+            sql.set(STATUS, status.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -94,6 +115,23 @@ class ThirdPartyAgentDockerDebugDao {
                 .where(ID.eq(id))
                 .and(STATUS.`in`(PipelineTaskStatus.DONE.status, PipelineTaskStatus.FAILURE.status))
                 .fetchAny()
+        }
+    }
+
+    fun getDebug(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String,
+        userId: String?
+    ): TDispatchThirdpartyAgentDockerDebugRecord? {
+        with(TDispatchThirdpartyAgentDockerDebug.T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG) {
+            val sql = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+            if (!userId.isNullOrBlank()) {
+                sql.and(USER_ID.eq(userId))
+            }
+            return sql.fetchAny()
         }
     }
 }
