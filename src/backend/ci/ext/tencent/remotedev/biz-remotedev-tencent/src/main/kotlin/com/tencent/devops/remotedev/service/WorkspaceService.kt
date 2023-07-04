@@ -1367,7 +1367,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun heartBeatStopWS(workspaceName: String): Boolean {
+    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -1396,7 +1396,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspace.name,
                 operator = ADMIN_NAME,
                 action = WorkspaceAction.SLEEP,
-                actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                actionMessage = getOpHistory(opHistory)
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -1498,6 +1498,7 @@ class WorkspaceService @Autowired constructor(
         val now = LocalDateTime.now()
         workspaceDao.fetchWorkspace(dslContext, status = WorkspaceStatus.SLEEP, mountType = WorkspaceMountType.START)
             ?.parallelStream()?.forEach {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 val retentionTime = redisCache.get(REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
                 if (Duration.between(it.lastStatusUpdateTime, now).toDays() >= retentionTime) {
                     kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->

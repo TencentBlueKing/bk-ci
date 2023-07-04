@@ -10,6 +10,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
@@ -60,7 +61,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         "workspace $workspaceName usage time exceeds limit, ready to sleep"
                     )
                     kotlin.runCatching {
-                        workspaceService.heartBeatStopWS(workspaceName)
+                        workspaceService.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.EXPERIENCE_TIMEOUT_SLEEP)
                     }.onFailure {
                         logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
                     }
@@ -92,7 +93,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         } ready to sleep"
                     )
                     kotlin.runCatching {
-                        workspaceService.heartBeatStopWS(workspaceName)
+                        workspaceService.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP)
                     }.onFailure {
                         logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
