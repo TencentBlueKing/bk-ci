@@ -106,22 +106,3 @@ func parseLevel(l logrus.Level) (string, error) {
 
 	return "U", fmt.Errorf("not a valid logrus Level: %q", l)
 }
-
-type jsonFormatter struct {
-	log.JSONFormatter
-}
-
-func (f *jsonFormatter) Format(entry *log.Entry) ([]byte, error) {
-	for k, v := range entry.Data {
-		switch v := v.(type) {
-		case error:
-			// Otherwise errors are ignored by `encoding/json`
-			// https://github.com/sirupsen/logrus/issues/137
-			//
-			// Print errors verbosely to get stack traces where available
-			entry.Data[k] = fmt.Sprintf("%+v", v)
-		}
-	}
-
-	return f.JSONFormatter.Format(entry)
-}

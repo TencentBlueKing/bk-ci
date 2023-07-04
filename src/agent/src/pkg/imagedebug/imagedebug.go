@@ -245,8 +245,13 @@ func CreateDebugContainer(
 	}
 
 	if job_docker.IfPullImage(localExist, isLatest, api.ImagePullPolicyIfNotPresent.String()) {
+		auth, err := job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password)
+		if err != nil {
+			imageDebugLogs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			imageDebugLogs.Errorf("pull new image %s error %s", imageName, err.Error())
