@@ -6,9 +6,6 @@
             @on-pipeline-delegate="onPipelineDelegate"
             @on-pipeline-update="onPipelineUpdate"
         >
-            <template #versionSelect="">
-                <VersionSideSlider />
-            </template>
             <component
                 :is="bkComponent"
                 ref="pipeline"
@@ -180,82 +177,3 @@
         }
     }
 </script>
-<style lang="scss">
-.zy-bk-container {
-    position: relative;
-
-    .inner-header {
-        height: 52px;
-        line-height: 32px;
-        padding: 8px 24px 8px 14px;
-        border-bottom: none;
-        box-shadow: none;
-
-        .history-bread-crumb {
-            .bread-crumb-name {
-                font-size: 14px;
-                color: rgba(0, 10, 41, 0.4);
-            }
-
-            .bread-crumb-comp {
-                flex: 1;
-            }
-
-            .bread-crumb-item {
-                .devops-icon.icon-angle-right:before {
-                    content: '/';
-                    color: rgba(0, 10, 41, 0.4);
-                }
-            }
-        }
-
-        .inner-header-right {
-            margin-right: -10px;
-        }
-
-        .more-operation-entry {
-            padding-top: 0;
-
-            &:before {
-                top: 0;
-            }
-
-            .entry-btn {
-                z-index: 1;
-            }
-
-            .more-operation-dropmenu {
-                top: 38px;
-                right: 3px;
-
-                & > ul:nth-child(1) li:nth-child(2) {
-                    display: none;
-                }
-            }
-        }
-
-    }
-
-    .biz-content {
-        padding: 8px 16px;
-    }
-
-    .bkdevops-pipeline-edit-wrapper {
-        .bk-tab-header,
-        .bk-tab-section
-        {
-            padding: 0;
-        }
-    }
-
-    .pipeline-execute-preview .execute-preview-content {
-        padding: 0;
-    }
-
-    .pipeline-execute-preview {
-        .execute-detail-option .scroll-wraper {
-            padding: 0;
-        }
-    }
-}
-</style>
