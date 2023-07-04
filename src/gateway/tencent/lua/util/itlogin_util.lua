@@ -126,18 +126,15 @@ function _M:get_staff_info_new(credentialKey)
         return
     end
 
-    local timestamp = ngx.time()
 
     local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
         method = "POST",
         body = "key=" .. credentialKey,
+        ssl_verify = false,
         headers = {
-            ["Timestamp"] = tostring(timestamp),
-            ["x-rio-seq"] = "",
-            ["Accept"] = "application/json",
+            ["X-System-Key"]="d4699d2782a6edb09a1837cfdc2df110",
             ["Content-Type"] = "application/x-www-form-urlencoded",
-            ["X-Protocol-Version"] = "ITLoginV1.1",
-            ["X-System-Key"] = "d4699d2782a6edb09a1837cfdc2df110"
+            ["Accept"] = "application/json"
         }
     })
 
@@ -167,7 +164,7 @@ function _M:get_staff_info_new(credentialKey)
         ngx.exit(401)
         return
     end
-
+    ngx.log(ngx.ERR, " request credentialKey info result: ", result)
     return result
 end
 
