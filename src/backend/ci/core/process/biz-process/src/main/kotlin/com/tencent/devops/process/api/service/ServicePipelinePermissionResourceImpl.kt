@@ -23,25 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.process.api.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.permission.PipelinePermissionService
 
-@ApiModel("工作空间信息-创建")
-data class WorkspaceCreate(
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    var devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("是否使用官方devfile")
-    val useOfficialDevfile: Boolean?,
-    @ApiModelProperty("当前运行客户端的OS")
-    val currentOS: String?
-)
+@RestResource
+class ServicePipelinePermissionResourceImpl(
+    private val pipelinePermissionService: PipelinePermissionService
+) : ServicePipelinePermissionResource {
+
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission
+            )
+        )
+    }
+}

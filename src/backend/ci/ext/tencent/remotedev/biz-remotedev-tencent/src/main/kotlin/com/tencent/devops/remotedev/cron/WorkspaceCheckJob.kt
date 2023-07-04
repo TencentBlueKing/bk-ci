@@ -26,7 +26,6 @@ class WorkspaceCheckJob @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val bkTag: BkTag
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
         // 根据心跳操作工作空间

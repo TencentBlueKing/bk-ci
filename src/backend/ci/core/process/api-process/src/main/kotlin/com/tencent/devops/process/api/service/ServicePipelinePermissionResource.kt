@@ -23,25 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.process.api.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("工作空间信息-创建")
-data class WorkspaceCreate(
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    var devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("是否使用官方devfile")
-    val useOfficialDevfile: Boolean?,
-    @ApiModelProperty("当前运行客户端的OS")
-    val currentOS: String?
-)
+@Api(tags = ["SERVICE_PIPELINE_PERMISSION"], description = "服务-流水线-鉴权")
+@Path("/service/pipeline/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelinePermissionResource {
+
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/validate")
+    @ApiOperation("校验用户是否有具体操作的权限")
+    fun checkPipelinePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("permission")
+        @ApiParam("操作权限", required = false)
+        permission: AuthPermission
+    ): Result<Boolean>
+}

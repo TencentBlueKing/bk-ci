@@ -188,7 +188,6 @@ class AuthResourceService @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("LongParameterList")
     fun list(
         projectCode: String,
         resourceType: String,
@@ -204,6 +203,19 @@ class AuthResourceService @Autowired constructor(
             limit = limit,
             offset = offset
         ).map { authResourceDao.convert(it) }
+    }
+
+    fun count(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String?
+    ): Long {
+        return authResourceDao.count(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceName = resourceName,
+            resourceType = resourceType
+        )
     }
 
     fun listByProjectAndType(

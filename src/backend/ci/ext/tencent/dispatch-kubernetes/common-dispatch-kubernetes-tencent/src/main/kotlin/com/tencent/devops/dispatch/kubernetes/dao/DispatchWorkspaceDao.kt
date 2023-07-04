@@ -62,7 +62,7 @@ class DispatchWorkspaceDao {
                 STATUS
             )
                 .values(
-                    "",
+                    event.projectId,
                     event.workspaceName,
                     environmentUid,
                     event.repositoryUrl,

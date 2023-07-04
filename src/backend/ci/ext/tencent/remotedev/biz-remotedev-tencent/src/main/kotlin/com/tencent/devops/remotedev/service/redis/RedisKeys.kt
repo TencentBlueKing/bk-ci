@@ -14,6 +14,7 @@ object RedisKeys {
     const val REDIS_REMOTEDEV_INACTIVE_TIME = "remotedev:inactiveTime"
     const val REDIS_WHITELIST_PERIOD = "remotedev:whitelistPeriod"
     const val REDIS_WHITE_LIST_GPU_KEY = "remotedev:whiteListGPU" // 云桌面创建限制
+    const val REDIS_RUNS_ON_OS_KEY = "remotedev:runsOnOS" // 云桌面创建限制
     const val REDIS_NOTICE_AHEAD_OF_TIME = "remotedev:noticeAheadOfTime" // 云桌面过期通知提前时间 默认60分钟
     const val REDIS_DESTRUCTION_RETENTION_TIME = "remotedev:destructionRetentionTime" // 云桌面销毁保留时间 默认3天
 

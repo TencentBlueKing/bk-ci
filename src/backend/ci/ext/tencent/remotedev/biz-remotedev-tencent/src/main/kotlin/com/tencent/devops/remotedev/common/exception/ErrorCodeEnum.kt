@@ -101,6 +101,11 @@ enum class ErrorCodeEnum(
         errorCode = "2132018",
         formatErrorMessage = "get watermark fail."
     ),
+    NOT_ALLOWED_ENVIRONMENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132019",
+        formatErrorMessage = "Not allowed to create in the current environment."
+    ),
     WORKSPACE_UNAVAILABLE(
         errorType = ErrorType.USER,
         errorCode = "2132020",
