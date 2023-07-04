@@ -1466,6 +1466,7 @@ class WorkspaceService @Autowired constructor(
             logger.info(
                 "workspace ${it.name} is EXCEPTION, try to fix."
             )
+            if (!checkProjectRouter(it.creator, it.name)) return@forEach
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
                 workspaceName = it.name,
