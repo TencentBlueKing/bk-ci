@@ -88,8 +88,7 @@ class ThirdPartyAgentDockerDebugDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: String,
+        id: Long,
         status: PipelineTaskStatus,
         debugUrl: String,
         errMsg: String?
@@ -100,8 +99,7 @@ class ThirdPartyAgentDockerDebugDao {
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .set(DEBUG_URL, debugUrl)
                 .set(ERR_MSG, errMsg)
-                .where(BUILD_ID.eq(buildId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
+                .where(ID.eq(id))
                 .execute()
         }
     }
@@ -122,7 +120,8 @@ class ThirdPartyAgentDockerDebugDao {
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String,
-        userId: String?
+        userId: String?,
+        last: Boolean
     ): TDispatchThirdpartyAgentDockerDebugRecord? {
         with(TDispatchThirdpartyAgentDockerDebug.T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG) {
             val sql = dslContext.selectFrom(this)
@@ -131,7 +130,21 @@ class ThirdPartyAgentDockerDebugDao {
             if (!userId.isNullOrBlank()) {
                 sql.and(USER_ID.eq(userId))
             }
+            if (last) {
+                sql.orderBy(ID.desc())
+            }
             return sql.fetchAny()
+        }
+    }
+
+    fun getDebugById(
+        dslContext: DSLContext,
+        id: Long
+    ): TDispatchThirdpartyAgentDockerDebugRecord? {
+        with(TDispatchThirdpartyAgentDockerDebug.T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchAny()
         }
     }
 }

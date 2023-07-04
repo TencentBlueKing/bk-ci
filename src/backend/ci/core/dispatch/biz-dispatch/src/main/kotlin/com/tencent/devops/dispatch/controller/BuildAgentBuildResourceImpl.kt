@@ -42,7 +42,6 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugStatusInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 
@@ -139,16 +138,10 @@ class BuildAgentBuildResourceImpl constructor(
         projectId: String,
         agentId: String,
         secretKey: String,
-        debugInfo: ThirdPartyDockerDebugStatusInfo
+        debugId: Long
     ): Result<String?> {
         checkParam(projectId, agentId, secretKey)
-        return Result(
-            thirdPartyAgentBuildService.fetchDebugStatus(
-                buildId = debugInfo.buildId,
-                vmSeqId = debugInfo.vmSeqId,
-                userId = debugInfo.debugUserId
-            )
-        )
+        return Result(thirdPartyAgentBuildService.fetchDebugStatus(debugId))
     }
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
