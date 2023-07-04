@@ -121,9 +121,9 @@ func IfPullImage(localExist, islatest bool, policy string) bool {
 }
 
 // GenerateDockerAuth 创建拉取docker凭据
-func GenerateDockerAuth(user, pass string) string {
+func GenerateDockerAuth(user, pass string) (string, error) {
 	if user == "" || pass == "" {
-		return ""
+		return "", nil
 	}
 
 	authConfig := types.AuthConfig{
@@ -132,8 +132,8 @@ func GenerateDockerAuth(user, pass string) string {
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(encodedJSON)
+	return base64.URLEncoding.EncodeToString(encodedJSON), nil
 }

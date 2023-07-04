@@ -34,11 +34,13 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 
 @RestResource
 @Suppress("ALL")
 class ServiceAgentResourceImpl @Autowired constructor(
-    val thirdPartyAgentService: ThirdPartyAgentService
+    val thirdPartyAgentService: ThirdPartyAgentService,
+    val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) : ServiceAgentResource {
     override fun listAgentBuild(
         agentId: String,
@@ -56,7 +58,7 @@ class ServiceAgentResourceImpl @Autowired constructor(
         vmSeqId: String
     ): Result<String> {
         return Result(
-            thirdPartyAgentService.createThirdDockerDebugUrl(
+            thirdPartyAgentDockerService.createThirdDockerDebugUrl(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

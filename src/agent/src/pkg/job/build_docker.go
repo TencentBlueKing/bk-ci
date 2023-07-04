@@ -194,8 +194,15 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo, api.LogtypeLog)
 		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo, api.LogtypeLog)
+
+		auth, err := job_docker.GenerateDockerAuth(dockerBuildInfo.Credential.User, dockerBuildInfo.Credential.Password)
+		if err != nil {
+			logs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
+			return
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: job_docker.GenerateDockerAuth(dockerBuildInfo.Credential.User, dockerBuildInfo.Credential.Password),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
