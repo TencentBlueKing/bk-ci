@@ -28,9 +28,8 @@
 package com.tencent.devops.dispatch.docker.service.debug
 
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.service.debug.impl.KubernetesDebugServiceImpl
-import com.tencent.devops.dispatch.docker.service.debug.impl.ThirdPartyAgentDebugServiceImpl
+import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 
 enum class DebugServiceEnum {
     DOCKER,

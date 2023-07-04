@@ -161,14 +161,18 @@ func FinishDockerDebug(imageDebug *ImageDebug, success bool, debugUrl string, er
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/startupDebug")
 	body := &ImageDebugFinish{
 		ProjectId:  imageDebug.ProjectId,
-		BuildId:    imageDebug.BuildId,
-		VmSeqId:    imageDebug.VmSeqId,
+		DebugId:    imageDebug.DebugId,
 		PipelineId: imageDebug.PipelineId,
 		DebugUrl:   debugUrl,
 		Success:    success,
 		Error:      error,
 	}
 	return httputil.NewHttpClient().Post(url).Body(body).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+}
+
+func FetchDockerDebugStatus(debugId int64) (*httputil.DevopsResult, error) {
+	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/debug/status?debugId=%d", debugId))
+	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
 // AuthHeaderDevopsBuildId log需要的buildId的header

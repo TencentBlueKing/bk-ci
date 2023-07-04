@@ -134,6 +134,16 @@ class BuildAgentBuildResourceImpl constructor(
         return Result(true)
     }
 
+    override fun dockerDebugStatus(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        debugId: Long
+    ): Result<String?> {
+        checkParam(projectId, agentId, secretKey)
+        return Result(thirdPartyAgentBuildService.fetchDebugStatus(debugId))
+    }
+
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException(

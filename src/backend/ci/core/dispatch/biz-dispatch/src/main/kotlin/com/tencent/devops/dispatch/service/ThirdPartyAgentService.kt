@@ -58,6 +58,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDon
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
 import com.tencent.devops.dispatch.utils.CommonUtils
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugDoLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
@@ -595,8 +596,13 @@ class ThirdPartyAgentService @Autowired constructor(
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
 
-                logger.info("Start the build(${debug.buildId}) of agent($agentId) and seq(${debug.vmSeqId})")
-                thirdPartyAgentBuildDao.updateStatus(dslContext, debug.id, PipelineTaskStatus.RUNNING)
+                logger.info("Start the docker debug id(${debug.id}) of agent($agentId)")
+                thirdPartyAgentDockerDebugDao.updateStatusById(
+                    dslContext = dslContext,
+                    id = debug.id,
+                    status = PipelineTaskStatus.RUNNING,
+                    errMsg = null
+                )
 
                 // 第三方构建机docker启动获取镜像凭据
                 val dockerInfo = if (debug.dockerInfo == null) {
@@ -637,6 +643,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         vmSeqId = debug.vmSeqId,
                         workspace = debug.workspace,
                         pipelineId = debug.pipelineId,
+                        debugUserId = debug.userId,
+                        debugId = debug.id,
                         image = buildDockerInfo.image,
                         credential = buildDockerInfo.credential,
                         options = buildDockerInfo.options
@@ -673,8 +681,7 @@ class ThirdPartyAgentService @Autowired constructor(
 
         thirdPartyAgentDockerDebugDao.updateStatus(
             dslContext = dslContext,
-            buildId = debugInfo.buildId,
-            vmSeqId = debugInfo.vmSeqId,
+            id = debugInfo.debugId,
             debugUrl = debugInfo.debugUrl,
             errMsg = debugInfo.error?.errorMessage,
             status = if (!debugInfo.success) {
@@ -708,25 +715,83 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
 
-        // 下发登录调试任务
-        val id = thirdPartyAgentDockerDebugDao.add(
+        // 先查找是否有正在运行的任务防止重复创建，如果有可以直接返回
+        val debug = thirdPartyAgentDockerDebugDao.getDebug(
             dslContext = dslContext,
-            projectId = projectId,
-            agentId = his.agentId,
-            pipelineId = pipelineId,
             buildId = his.buildId,
             vmSeqId = vmSeqId,
-            thirdPartyAgentWorkspace = his.workspace,
-            dockerInfo = his.dockerInfo
+            userId = userId,
+            last = true
         )
+        if (debug != null &&
+            (debug.status == PipelineTaskStatus.QUEUE.status || debug.status == PipelineTaskStatus.RUNNING.status)
+        ) {
+            return loopWait(debug.id)
+        }
 
-        // 轮训等待调试任务完成
+        val redisLock = ThirdPartyAgentDockerDebugDoLock(redisOperation, his.buildId, vmSeqId, userId)
+        val id = try {
+            redisLock.lock()
+            // 锁进来再次查询防止重复入
+            val record = thirdPartyAgentDockerDebugDao.getDebug(
+                dslContext = dslContext,
+                buildId = his.buildId,
+                vmSeqId = vmSeqId,
+                userId = userId,
+                last = true
+            )
+            if (record != null &&
+                (record.status == PipelineTaskStatus.QUEUE.status || record.status == PipelineTaskStatus.RUNNING.status)
+            ) {
+                record.id
+            } else {
+                // 为空则重新下发登录调试任务
+                thirdPartyAgentDockerDebugDao.add(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    agentId = his.agentId,
+                    pipelineId = pipelineId,
+                    buildId = his.buildId,
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    thirdPartyAgentWorkspace = his.workspace,
+                    dockerInfo = his.dockerInfo
+                )
+            }
+        } finally {
+            redisLock.unlock()
+        }
+
+        // 轮训等待调试任务完成，倒计时 5 分钟如果任务还没结束就返回失败，防止阻塞后台线程
+        return loopWait(id)
+    }
+
+    private fun loopWait(id: Long): String {
+        // 轮训等待调试任务完成，倒计时 5 分钟如果任务还没结束就返回失败，防止阻塞后台线程
+        var shutdownFlag = 150
         while (true) {
+            shutdownFlag--
             try {
                 Thread.sleep(THIRD_DOCKER_TASK_INTERVAL)
             } catch (e: InterruptedException) {
                 logger.error("third agent docker wait error", e)
             }
+            if (shutdownFlag <= 0) {
+                logger.error("get debug container url timeout 5m")
+                // 超时时将任务标记失败
+                thirdPartyAgentDockerDebugDao.updateStatusById(
+                    dslContext = dslContext,
+                    id = id,
+                    status = PipelineTaskStatus.FAILURE,
+                    errMsg = "get debug container url timeout 5m"
+                )
+                throw ErrorCodeException(
+                    errorCode = "${ErrorCodeEnum.DEBUG_CONTAINER_URL_ERROR.errorCode}",
+                    defaultMessage = "Get debug container url error.",
+                    params = arrayOf("timeout 5m")
+                )
+            }
+
             val record = thirdPartyAgentDockerDebugDao.getDoneDebugById(dslContext, id) ?: continue
             if (record.status == PipelineTaskStatus.FAILURE.status) {
                 logger.error("get debug container url error id $id error ${record.errMsg}")
@@ -740,11 +805,21 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
+    fun fetchDebugStatus(
+        debugId: Long,
+    ): String? {
+        val statusInt = thirdPartyAgentDockerDebugDao.getDebugById(
+            dslContext = dslContext,
+            id = debugId
+        )?.status ?: return null
+        return PipelineTaskStatus.toStatus(statusInt).name
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
 
         private const val QUEUE_RETRY_COUNT = 3
 
-        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000; // 轮询间隔时间，单位为毫秒
+        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000 // 轮询间隔时间，单位为毫秒
     }
 }
