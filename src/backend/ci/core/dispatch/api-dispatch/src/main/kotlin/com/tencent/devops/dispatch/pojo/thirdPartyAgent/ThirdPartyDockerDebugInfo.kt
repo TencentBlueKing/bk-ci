@@ -18,6 +18,8 @@ data class ThirdPartyDockerDebugInfo(
     val pipelineId: String,
     @ApiModelProperty("调试用户")
     val debugUserId: String,
+    @ApiModelProperty("debugId")
+    val debugId: Long,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,
     val options: DockerOptions?

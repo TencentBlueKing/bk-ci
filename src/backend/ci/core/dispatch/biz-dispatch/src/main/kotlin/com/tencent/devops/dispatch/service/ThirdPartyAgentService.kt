@@ -644,6 +644,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         workspace = debug.workspace,
                         pipelineId = debug.pipelineId,
                         debugUserId = debug.userId,
+                        debugId = debug.id,
                         image = buildDockerInfo.image,
                         credential = buildDockerInfo.credential,
                         options = buildDockerInfo.options
@@ -680,8 +681,7 @@ class ThirdPartyAgentService @Autowired constructor(
 
         thirdPartyAgentDockerDebugDao.updateStatus(
             dslContext = dslContext,
-            buildId = debugInfo.buildId,
-            vmSeqId = debugInfo.vmSeqId,
+            id = debugInfo.debugId,
             debugUrl = debugInfo.debugUrl,
             errMsg = debugInfo.error?.errorMessage,
             status = if (!debugInfo.success) {
@@ -806,16 +806,11 @@ class ThirdPartyAgentService @Autowired constructor(
     }
 
     fun fetchDebugStatus(
-        buildId: String,
-        vmSeqId: String,
-        userId: String
+        debugId: Long,
     ): String? {
-        val statusInt = thirdPartyAgentDockerDebugDao.getDebug(
+        val statusInt = thirdPartyAgentDockerDebugDao.getDebugById(
             dslContext = dslContext,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            userId = userId,
-            last = true
+            id = debugId
         )?.status ?: return null
         return PipelineTaskStatus.toStatus(statusInt).name
     }

@@ -185,7 +185,7 @@ interface BuildAgentBuildResource {
     ): Result<Boolean>
 
     @ApiOperation("获取登录调试任务状态")
-    @POST
+    @GET
     @Path("/docker/debug/status")
     fun dockerDebugStatus(
         @ApiParam("项目ID", required = true)
@@ -197,7 +197,8 @@ interface BuildAgentBuildResource {
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("构建信息", required = true)
-        debugInfo: ThirdPartyDockerDebugStatusInfo
+        @ApiParam("debugId", required = true)
+        @QueryParam("debugId")
+        debugId: Long
     ): Result<String?>
 }
