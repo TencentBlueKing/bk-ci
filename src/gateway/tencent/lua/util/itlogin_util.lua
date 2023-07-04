@@ -152,19 +152,20 @@ function _M:get_staff_info_new(credentialKey)
 
     local responseBody = res.body
     local success, result = pcall(json.decode, responseBody)
-
+    ngx.log(ngx.ERR, " request credentialKey info result: ", success)
+    ngx.log(ngx.ERR, " request credentialKey info result: 156", result)
     if not success then
         ngx.log(ngx.ERR, "failed to parse credentialKey info response: ", responseBody)
         ngx.exit(500)
         return
     end
-
+    ngx.log(ngx.ERR, " request credentialKey info result: 162", result)
     if result.ReturnFlag ~= 0 then
         ngx.log(ngx.STDERR, "invalid credentialKey info: ", responseBody)
         ngx.exit(401)
         return
     end
-    ngx.log(ngx.ERR, " request credentialKey info result: ", result)
+    ngx.log(ngx.ERR, " request credentialKey info result: 168", result)
     return result
 end
 
