@@ -806,7 +806,7 @@ class ThirdPartyAgentService @Autowired constructor(
     }
 
     fun fetchDebugStatus(
-        debugId: Long,
+        debugId: Long
     ): String? {
         val statusInt = thirdPartyAgentDockerDebugDao.getDebugById(
             dslContext = dslContext,
