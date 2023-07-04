@@ -138,7 +138,7 @@ function _M:get_staff_info_new(credentialKey)
             ["Content-Type"] = "application/x-www-form-urlencoded",
             ["X-Protocol-Version"] = "ITLoginV1.1",
             ["X-System-Key"] = "d4699d2782a6edb09a1837cfdc2df110"
-        },
+        }
     })
 
     if not res then
