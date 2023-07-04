@@ -42,11 +42,11 @@ type manager struct {
 	dockerClient        *dockerclient.Client
 	connectedContainers map[string]bool
 	// 因为目前是一个链接启动一个server，所以直接给每个实例绑定一个管道做为ws关闭的通知
-	doneChan chan struct{}
+	doneChan *OnceChan[struct{}]
 }
 
 // NewManager create a Manager object
-func NewManager(conf *ConsoleProxyConfig, doneChan chan struct{}) Manager {
+func NewManager(conf *ConsoleProxyConfig, doneChan *OnceChan[struct{}]) Manager {
 	return &manager{
 		conf:                conf,
 		connectedContainers: make(map[string]bool),

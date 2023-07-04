@@ -204,14 +204,15 @@ type LogMessage struct {
 }
 
 type ImageDebug struct {
-	ProjectId  string        `json:"projectId"`
-	BuildId    string        `json:"buildId"`
-	VmSeqId    string        `json:"vmSeqId"`
-	Workspace  string        `json:"workspace"`
-	PipelineId string        `json:"pipelineId"`
-	Image      string        `json:"image"`
-	Credential Credential    `json:"credential"`
-	Options    DockerOptions `json:"options"`
+	ProjectId   string        `json:"projectId"`
+	BuildId     string        `json:"buildId"`
+	VmSeqId     string        `json:"vmSeqId"`
+	Workspace   string        `json:"workspace"`
+	PipelineId  string        `json:"pipelineId"`
+	DebugUserId string        `json:"debugUserId"`
+	Image       string        `json:"image"`
+	Credential  Credential    `json:"credential"`
+	Options     DockerOptions `json:"options"`
 }
 
 type ImageDebugFinish struct {
@@ -222,4 +223,12 @@ type ImageDebugFinish struct {
 	DebugUrl   string `json:"debugUrl"`
 	Success    bool   `json:"success"`
 	Error      *Error `json:"error"`
+}
+
+type ImageDebugStatus struct {
+	ProjectId   string `json:"projectId"`
+	BuildId     string `json:"buildId"`
+	VmSeqId     string `json:"vmSeqId"`
+	PipelineId  string `json:"pipelineId"`
+	DebugUserId string `json:"debugUserId"`
 }

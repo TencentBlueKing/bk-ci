@@ -96,7 +96,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSoc
 
 	defer func() {
 		ws.Close()
-		close(m.doneChan)
+		m.doneChan.SafeClose()
 	}()
 
 	if m.conf.IsOneSeesion {
