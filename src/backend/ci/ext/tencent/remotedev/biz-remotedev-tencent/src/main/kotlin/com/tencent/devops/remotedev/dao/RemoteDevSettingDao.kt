@@ -151,8 +151,8 @@ class RemoteDevSettingDao {
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.select(USER_SETTING).from(this)
                 .where(USER_ID.eq(userId))
-                .fetchAny()?.let { JsonUtil.to(it.value1(), RemoteDevUserSettings::class.java) } ?: run {
-                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
+                .fetchAny()?.let { JsonUtil.toOrNull(it.value1(), RemoteDevUserSettings::class.java) } ?: run {
+                createOrUpdateSetting4OP(dslContext, userId, null)
                 return RemoteDevUserSettings()
             }
         }
@@ -161,17 +161,18 @@ class RemoteDevSettingDao {
     @Suppress("ComplexMethod")
     fun createOrUpdateSetting4OP(
         dslContext: DSLContext,
-        opSetting: OPUserSetting
+        userId: String,
+        opSetting: OPUserSetting?
     ) {
         val setting = RemoteDevSettings()
         val userSetting = RemoteDevUserSettings().apply {
-            maxRunningCount = opSetting.wsMaxRunningCount ?: maxRunningCount
-            maxHavingCount = opSetting.wsMaxHavingCount ?: maxHavingCount
-            onlyCloudIDE = opSetting.onlyCloudIDE ?: onlyCloudIDE
-            allowedCopy = opSetting.allowedCopy ?: allowedCopy
-            allowedDownload = opSetting.allowedDownload ?: allowedDownload
-            needWatermark = opSetting.needWatermark ?: needWatermark
-            autoDeletedDays = opSetting.autoDeletedDays ?: autoDeletedDays
+            maxRunningCount = opSetting?.wsMaxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting?.wsMaxHavingCount ?: maxHavingCount
+            onlyCloudIDE = opSetting?.onlyCloudIDE ?: onlyCloudIDE
+            allowedCopy = opSetting?.allowedCopy ?: allowedCopy
+            allowedDownload = opSetting?.allowedDownload ?: allowedDownload
+            needWatermark = opSetting?.needWatermark ?: needWatermark
+            autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
         }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
@@ -187,14 +188,14 @@ class RemoteDevSettingDao {
                 USER_SETTING
             )
                 .values(
-                    opSetting.userId,
+                    userId,
                     setting.defaultShell,
                     JsonUtil.toJson(setting.basicSetting, false),
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    opSetting.wsMaxRunningCount,
-                    opSetting.wsMaxHavingCount,
+                    userSetting.maxRunningCount,
+                    userSetting.maxHavingCount,
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
