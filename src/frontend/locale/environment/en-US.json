@@ -238,7 +238,7 @@
         "CC": "CC",
         "CMDB": "CMDB",
         "BCSVM": "BCS virtual machine",
-        "THIRDPARTY": "Self-hosted Agent",
+        "THIRDPARTY": "third-party build machine",
         "DEVCLOUD": "tecent development cloud（cloud devnet resource）",
         "TSTACK": "TStack virtual machine",
         "OTHER": "other",
