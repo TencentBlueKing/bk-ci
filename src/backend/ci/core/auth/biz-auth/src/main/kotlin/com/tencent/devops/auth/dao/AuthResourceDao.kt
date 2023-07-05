@@ -203,6 +203,27 @@ class AuthResourceDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        resourceType: String,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+        offset: Int,
+        limit: Int
+    ): Result<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (startTime != null && endTime != null)
+                        it.and(UPDATE_TIME.between(startTime, endTime)) else it
+                }
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
     fun count(
         dslContext: DSLContext,
         projectCode: String,
@@ -300,6 +321,24 @@ class AuthResourceDao {
         }
     }
 
+    fun countResourceByUpdateTime(
+        dslContext: DSLContext,
+        resourceType: String,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+    ): Long {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (startTime != null && endTime != null)
+                        it.and(UPDATE_TIME.between(startTime, endTime)) else it
+                }
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun convert(recode: TAuthResourceRecord): AuthResourceInfo {
         with(recode) {
             return AuthResourceInfo(
@@ -310,7 +349,11 @@ class AuthResourceDao {
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
                 enable = enable,
-                relationId = relationId
+                relationId = relationId,
+                createUser = createUser,
+                updateUser = updateUser,
+                createTime = createTime,
+                updateTime = updateTime
             )
         }
     }

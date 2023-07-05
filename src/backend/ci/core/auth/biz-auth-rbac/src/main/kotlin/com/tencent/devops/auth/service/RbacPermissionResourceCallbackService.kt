@@ -28,15 +28,28 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.constants.DataTypeEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceListDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchResourceTypeSchemaDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceListDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.SchemaData
+import com.tencent.bk.sdk.iam.dto.callback.response.SchemaProperties
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.FetchInstanceListData
+import com.tencent.devops.common.auth.callback.FetchInstanceListInfo
+import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaInfo
+import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaProperties
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import org.slf4j.LoggerFactory
+import java.time.ZoneId
 
 class RbacPermissionResourceCallbackService constructor(
     private val authResourceService: AuthResourceService,
@@ -78,6 +91,18 @@ class RbacPermissionResourceCallbackService constructor(
                     offset = page.offset.toInt(),
                     limit = page.limit.toInt()
                 )
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_LIST -> {
+                fetchInstanceList(
+                    resourceType = callBackInfo.type ?: "",
+                    startTime = callBackInfo.filter.startTime,
+                    endTime = callBackInfo.filter.endTime,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt()
+                )
+            }
+            CallbackMethodEnum.FETCH_RESOURCE_TYPE_SCHEMA -> {
+                fetchResourceTypeSchema(resourceType = callBackInfo.type ?: "")
             }
             else ->
                 null
@@ -167,5 +192,93 @@ class RbacPermissionResourceCallbackService constructor(
         } else {
             result.buildSearchInstanceResult(instanceInfoList, count)
         }
+    }
+
+    private fun fetchResourceTypeSchema(resourceType: String): FetchResourceTypeSchemaDTO<FetchResourceTypeSchemaProperties> {
+        val result = FetchResourceTypeSchemaInfo()
+        if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value)
+            return result.buildFetchResourceTypeSchemaFailResult()
+        val schemaData = SchemaData<FetchResourceTypeSchemaProperties>()
+        val projectIdProperties = SchemaProperties().apply {
+            type = DataTypeEnum.STRING
+            description = PROJECT_ID_CHINESE_DESCRIPTION
+        }
+        val projectNameProperties = SchemaProperties().apply {
+            type = DataTypeEnum.STRING
+            description = PROJECT_NAME_CHINESE_DESCRIPTION
+        }
+        val pipelineIdProperties = SchemaProperties().apply {
+            type = DataTypeEnum.STRING
+            description = PIPELINE_ID_CHINESE_DESCRIPTION
+        }
+        val pipelineNameProperties = SchemaProperties().apply {
+            type = DataTypeEnum.STRING
+            description = PIPELINE_NAME_CHINESE_DESCRIPTION
+        }
+        schemaData.apply {
+            type = OBJECT_TYPE
+            schemaProperties = FetchResourceTypeSchemaProperties(
+                projectId = projectIdProperties,
+                projectName = projectNameProperties,
+                pipelineId = pipelineIdProperties,
+                pipelineName = pipelineNameProperties
+            )
+        }
+        return result.buildFetchResourceTypeSchemaResult(schemaData)
+    }
+
+    private fun fetchInstanceList(
+        resourceType: String,
+        startTime: Long?,
+        endTime: Long?,
+        offset: Int,
+        limit: Int
+    ): FetchInstanceListDTO<FetchInstanceListData> {
+        val result = FetchInstanceListInfo()
+        if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value)
+            return result.buildFetchInstanceListFailResult()
+        val fetchInstanceListInfo = authResourceService.list(
+            resourceType = resourceType,
+            startTime = startTime,
+            endTime = endTime,
+            offset = offset,
+            limit = limit
+        ).map {
+            // 获取项目名称
+            val projectName = authResourceService.get(
+                projectCode = it.projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = it.projectCode
+            ).resourceName
+            val instanceListDTO = InstanceListDTO<FetchInstanceListData>()
+            instanceListDTO.id = it.resourceCode
+            instanceListDTO.displayName = it.resourceName
+            instanceListDTO.creator = it.createUser
+            // todo 变更人
+            instanceListDTO.createdAt = it.createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            instanceListDTO.updatedAt = it.updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            instanceListDTO.schemaProperties = FetchInstanceListData(
+                projectId = it.projectCode,
+                projectName = projectName,
+                pipelineId = it.resourceCode,
+                pipelineName = it.resourceName
+            )
+            instanceListDTO
+        }
+        val count = authResourceService.countResourceByUpdateTime(
+            resourceType = resourceType,
+            startTime = startTime,
+            endTime = endTime
+        )
+        return result.buildFetchInstanceListResult(fetchInstanceListInfo, count)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RbacPermissionResourceCallbackService::class.java)
+        private const val PROJECT_ID_CHINESE_DESCRIPTION = "项目ID"
+        private const val PROJECT_NAME_CHINESE_DESCRIPTION = "项目名称"
+        private const val PIPELINE_ID_CHINESE_DESCRIPTION = "流水线ID"
+        private const val PIPELINE_NAME_CHINESE_DESCRIPTION = "流水线名称"
+        private const val OBJECT_TYPE = "object"
     }
 }
