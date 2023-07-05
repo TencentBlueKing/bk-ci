@@ -64,6 +64,23 @@ data class GitCommit(
     val added: List<String>?,
     val removed: List<String>?
 )
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitDiffFile(
+    @JsonProperty("new_path")
+    val newPath: String,
+    @JsonProperty("old_path")
+    val oldPath: String,
+    @JsonProperty("a_mode")
+    val aMode: Long,
+    @JsonProperty("b_mode")
+    val bMode: Long,
+    @JsonProperty("new_file")
+    val newFile: Boolean,
+    @JsonProperty("renamed_file")
+    val renamedFile: Boolean,
+    @JsonProperty("deleted_file")
+    val deletedFile: Boolean
+)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommitAuthor(

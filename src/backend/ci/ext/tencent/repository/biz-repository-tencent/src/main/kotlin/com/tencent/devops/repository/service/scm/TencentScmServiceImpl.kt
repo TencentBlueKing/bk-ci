@@ -43,6 +43,7 @@ import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import javax.ws.rs.NotSupportedException
 
 @Primary
@@ -163,7 +164,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             projectName = projectName,
             url = url,
             type = type,
-            privateKey = privateKey,
+            privateKey = privateKey?.let { URLEncoder.encode(it, "UTF-8") },
             passPhrase = passPhrase,
             token = token,
             region = region,
