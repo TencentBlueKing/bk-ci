@@ -17,6 +17,7 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
 if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
+    ngx.header["X-DEVOPS-UID"] = ngx.var.http_x_devops_uid
     return
 end
 
