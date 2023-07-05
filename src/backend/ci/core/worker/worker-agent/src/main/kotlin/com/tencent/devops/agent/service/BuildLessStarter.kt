@@ -1,8 +1,6 @@
 package com.tencent.devops.agent.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -21,7 +19,7 @@ object BuildLessStarter {
 
         val podName = System.getenv("pod_name")
         val kubernetesManagerHost = System.getenv("kubernetes_manager_host")
-        val loopUrl = "$kubernetesManagerHost/api/buildless/build/claim?podName=$podName"
+        val loopUrl = "$kubernetesManagerHost/api/buildless/build/claim?podId=${strongPodName(podName)}"
 
         val request = Request.Builder()
             .url(loopUrl)
@@ -67,9 +65,6 @@ object BuildLessStarter {
             DockerEnv.setProjectId(result.data!!.projectId)
             DockerEnv.setBuildId(result.data!!.buildId)
 
-            // 设置pod启动标识
-            setStartupFlag()
-
             return true
         } else {
             logger.info("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
@@ -77,15 +72,9 @@ object BuildLessStarter {
         }
     }
 
-    private fun setStartupFlag() {
-        val startupCount = System.getenv("BUILDLESS_STARTUP_FLAG")
-        if (startupCount.isNullOrBlank()) {
-            logger.warn("K8s buildLess set 'BUILDLESS_STARTUP_FLAG'='NEW'")
-            System.setProperty("BUILDLESS_STARTUP_FLAG", "NEW")
-        } else {
-            logger.warn("K8s buildLess set 'BUILDLESS_STARTUP_FLAG'='RESTART'")
-            System.setProperty("BUILDLESS_STARTUP_FLAG", "RESTART")
-        }
+    private fun strongPodName(podName: String): String {
+        val strongPodName = System.getenv("random_str")
+        return "$podName-$strongPodName"
     }
 }
 
