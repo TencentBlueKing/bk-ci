@@ -1,3 +1,4 @@
+{{- if eq .Values.proxy.type "child"}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,6 +19,7 @@ spec:
         - name: wait-for-apisix
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
@@ -29,9 +31,10 @@ spec:
               done
               echo "Apisix admin is available";
       containers:
-        - name: init-sql
+        - name: init-router
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
@@ -40,7 +43,6 @@ spec:
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {
                   "uri": "/*",
-                  "host": "apisix.{{ .Values.proxy.domain }}",
                   "name": "apisix-proxy-dashboard",
                   "vars": [
                       [
@@ -185,7 +187,7 @@ spec:
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/4  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {
                   "uri": "/*",
-                  "host": "reg.{{ .Values.proxy.domain }}",
+                  "host": "regbcs.{{ .Values.proxy.domain }}",
                   "name": "registry-facade",
                   "enable_websocket": false,
                   "vars": [
@@ -205,4 +207,4 @@ spec:
               }'
 
       restartPolicy: OnFailure
-   
+{{- end }}
