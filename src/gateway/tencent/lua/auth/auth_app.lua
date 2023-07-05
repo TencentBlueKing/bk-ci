@@ -15,6 +15,11 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
+if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
+    return
+end
+
 local x_ckey = ngx.var.http_x_ckey -- 内部用户
 if nil == x_ckey then
     x_ckey = urlUtil:parseUrl(ngx.var.request_uri)["cKey"]
@@ -29,7 +34,6 @@ local x_otoken = ngx.var.http_x_otoken -- 外部用户
 if nil == x_otoken then
     x_otoken = urlUtil:parseUrl(ngx.var.request_uri)["oToken"]
 end
-
 
 if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
     ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
