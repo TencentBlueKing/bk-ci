@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
 @Service
+@Suppress("ComplexMethod", "NestedBlockDepth")
 class ThirdPartyAgentDockerService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
