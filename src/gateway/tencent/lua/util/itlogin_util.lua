@@ -126,7 +126,6 @@ function _M:get_staff_info_new(credentialKey)
         return
     end
 
-
     local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
         method = "POST",
         body = "key=" .. credentialKey,
@@ -150,18 +149,10 @@ function _M:get_staff_info_new(credentialKey)
         return
     end
 
+    --- 获取所有回复
     local responseBody = res.body
-    local success, result = pcall(json.decode, responseBody)
-    if not success then
-        ngx.log(ngx.ERR, "failed to parse credentialKey info response: ", responseBody)
-        ngx.exit(500)
-        return
-    end
-    if result.ReturnFlag ~= 0 then
-        ngx.log(ngx.STDERR, "invalid credentialKey info: ", responseBody)
-        ngx.exit(401)
-        return
-    end
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
     return result
 end
 
