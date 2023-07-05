@@ -2076,7 +2076,8 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignore: Throwable) {
                 logger.warn("[$projectId]|Failed to sync project|templateId=$templateId", ignore)
                 null
-            }
+            },
+            settingVersion = 1
         )
     }
 

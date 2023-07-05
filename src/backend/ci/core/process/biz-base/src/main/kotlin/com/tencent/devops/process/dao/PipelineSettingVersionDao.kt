@@ -46,7 +46,7 @@ class PipelineSettingVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int = 1,
+        settingVersion: Int,
         isTemplate: Boolean = false,
         successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
@@ -81,7 +81,7 @@ class PipelineSettingVersionDao {
                     NotifyTemplateUtils.getCommonShutdownSuccessContent(),
                     NotifyTemplateUtils.getCommonShutdownFailureContent(),
                     isTemplate,
-                    version,
+                    settingVersion,
                     id
                 )
                 .execute()

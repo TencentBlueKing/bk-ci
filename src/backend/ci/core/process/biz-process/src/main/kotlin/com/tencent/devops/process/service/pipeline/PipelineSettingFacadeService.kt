@@ -81,6 +81,9 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
+    /**
+     * 修改配置时需要返回具体的版本号用于传递
+     */
     fun saveSetting(
         userId: String,
         setting: PipelineSetting,
@@ -90,7 +93,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         dispatchPipelineUpdateEvent: Boolean = true,
         updateLabels: Boolean = true,
         saveDraft: Boolean? = false
-    ): String {
+    ): Int {
         // TODO #8161 增加配置的版本管理
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
@@ -164,7 +167,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        return setting.pipelineId
+        return setting.version
     }
 
     fun userGetSetting(

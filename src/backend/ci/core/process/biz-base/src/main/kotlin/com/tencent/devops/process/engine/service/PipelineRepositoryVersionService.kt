@@ -146,7 +146,7 @@ class PipelineRepositoryVersionService(
                     templateId = pipelineInfo.templateId,
                     version = it.version,
                     versionName = it.versionName,
-                    modelVersion = it.modelVersion,
+                    pipelineVersion = it.pipelineVersion,
                     triggerVersion = it.triggerVersion,
                     settingVersion = it.settingVersion,
                     draftFlag = it.draftFlag,

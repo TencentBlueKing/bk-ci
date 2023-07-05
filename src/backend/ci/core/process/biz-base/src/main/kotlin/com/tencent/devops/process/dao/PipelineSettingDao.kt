@@ -63,7 +63,8 @@ class PipelineSettingDao {
         successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
         maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
-        pipelineAsCodeSettings: PipelineAsCodeSettings?
+        pipelineAsCodeSettings: PipelineAsCodeSettings?,
+        settingVersion: Int
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val successType = successNotifyTypes.split(",").filter { i -> i.isNotBlank() }
@@ -103,7 +104,8 @@ class PipelineSettingDao {
                 MAX_PIPELINE_RES_NUM,
                 PIPELINE_AS_CODE_SETTINGS,
                 SUCCESS_SUBSCRIPTION,
-                FAILURE_SUBSCRIPTION
+                FAILURE_SUBSCRIPTION,
+                VERSION
             )
                 .values(
                     projectId,
@@ -127,13 +129,18 @@ class PipelineSettingDao {
                         JsonUtil.toJson(self, false)
                     },
                     JsonUtil.toJson(listOf(successSubscription), false),
-                    JsonUtil.toJson(listOf(failSubscription), false)
+                    JsonUtil.toJson(listOf(failSubscription), false),
+                    settingVersion
                 )
                 .execute()
         }
     }
 
-    fun saveSetting(dslContext: DSLContext, setting: PipelineSetting, isTemplate: Boolean = false): Int {
+    fun saveSetting(
+        dslContext: DSLContext,
+        setting: PipelineSetting,
+        isTemplate: Boolean = false
+    ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             // #6090 先查询存在情况再做刷新或插入
             val origin = getSetting(dslContext, setting.projectId, setting.pipelineId)
@@ -176,7 +183,8 @@ class PipelineSettingDao {
                     CLEAN_VARIABLES_WHEN_RETRY,
                     PIPELINE_AS_CODE_SETTINGS,
                     SUCCESS_SUBSCRIPTION,
-                    FAILURE_SUBSCRIPTION
+                    FAILURE_SUBSCRIPTION,
+                    VERSION
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -212,7 +220,8 @@ class PipelineSettingDao {
                         JsonUtil.toJson(self, false)
                     },
                     JsonUtil.toJson(successSubscriptionList, false),
-                    JsonUtil.toJson(failSubscriptionList, false)
+                    JsonUtil.toJson(failSubscriptionList, false),
+                    setting.version
                 ).execute()
             } else {
                 val updateSetMoreStep = dslContext.update(this)
@@ -245,6 +254,7 @@ class PipelineSettingDao {
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                     .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                     .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                    .set(VERSION, setting.version)
                 // pipelineAsCodeSettings 默认传空不更新
                 setting.pipelineAsCodeSettings?.let { self ->
                     updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))

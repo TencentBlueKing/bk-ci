@@ -34,4 +34,5 @@ dependencies {
     api("com.squareup.okhttp3:okhttp")
     api("com.cronutils:cron-utils")
     api("com.networknt:json-schema-validator")
+    api("org.json:json")
 }

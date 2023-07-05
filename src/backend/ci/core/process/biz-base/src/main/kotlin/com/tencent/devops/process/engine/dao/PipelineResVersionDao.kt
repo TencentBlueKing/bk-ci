@@ -51,7 +51,7 @@ class PipelineResVersionDao {
         versionName: String,
         model: Model,
         trigger: TriggerContainer,
-        modelVersion: Int?,
+        pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         draftFlag: Boolean
@@ -65,7 +65,7 @@ class PipelineResVersionDao {
             versionName = versionName,
             modelString = JsonUtil.toJson(model, formatted = false),
             triggerString = JsonUtil.toJson(trigger, formatted = false),
-            modelVersion = modelVersion,
+            pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
             draftFlag = draftFlag
@@ -81,7 +81,7 @@ class PipelineResVersionDao {
         versionName: String = "init",
         modelString: String,
         triggerString: String?,
-        modelVersion: Int?,
+        pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         draftFlag: Boolean
@@ -96,7 +96,7 @@ class PipelineResVersionDao {
                 .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
-                .set(MODEL_VERSION, modelVersion)
+                .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(DRAFT_FLAG, draftFlag)
@@ -105,7 +105,7 @@ class PipelineResVersionDao {
                 .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
-                .set(MODEL_VERSION, modelVersion)
+                .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .execute()
@@ -187,7 +187,7 @@ class PipelineResVersionDao {
                         versionName = it.versionName ?: "init",
                         referFlag = it.referFlag,
                         referCount = it.referCount,
-                        modelVersion = it.modelVersion,
+                        pipelineVersion = it.pipelineVersion,
                         triggerVersion = it.triggerVersion,
                         settingVersion = it.settingVersion,
                         draftFlag = it.draftFlag,
