@@ -5,11 +5,11 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceListDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceListDTO
 
 class FetchInstanceListInfo : FetchInstanceListDTO<FetchInstanceListData>() {
-    fun buildFetchInstanceListFailResult(): FetchInstanceListDTO<FetchInstanceListData> {
+    fun buildFetchInstanceListFailResult(message: String): FetchInstanceListDTO<FetchInstanceListData> {
         val data = BaseDataResponseDTO<InstanceListDTO<FetchInstanceListData>>()
         val result = FetchInstanceListDTO<FetchInstanceListData>()
         result.code = 0
-        result.message = "empty data"
+        result.message = message
         result.data = data
         return result
     }

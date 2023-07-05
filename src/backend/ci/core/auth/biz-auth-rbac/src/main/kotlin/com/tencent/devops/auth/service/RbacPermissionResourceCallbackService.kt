@@ -95,8 +95,8 @@ class RbacPermissionResourceCallbackService constructor(
             CallbackMethodEnum.FETCH_INSTANCE_LIST -> {
                 fetchInstanceList(
                     resourceType = callBackInfo.type ?: "",
-                    startTime = callBackInfo.filter.startTime,
-                    endTime = callBackInfo.filter.endTime,
+                    startTime = callBackInfo.filter.startTime ?: null,
+                    endTime = callBackInfo.filter.endTime ?: null,
                     offset = page.offset.toInt(),
                     limit = page.limit.toInt()
                 )
@@ -235,8 +235,11 @@ class RbacPermissionResourceCallbackService constructor(
         limit: Int
     ): FetchInstanceListDTO<FetchInstanceListData> {
         val result = FetchInstanceListInfo()
+        if (limit > 1000) {
+            return result.buildFetchInstanceListFailResult("a maximum of 1000 data items can be obtained")
+        }
         if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value)
-            return result.buildFetchInstanceListFailResult()
+            return result.buildFetchInstanceListFailResult("empty data")
         val fetchInstanceListInfo = authResourceService.list(
             resourceType = resourceType,
             startTime = startTime,
@@ -254,7 +257,7 @@ class RbacPermissionResourceCallbackService constructor(
             instanceListDTO.id = it.resourceCode
             instanceListDTO.displayName = it.resourceName
             instanceListDTO.creator = it.createUser
-            // todo 变更人
+            instanceListDTO.updater = it.updateUser
             instanceListDTO.createdAt = it.createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             instanceListDTO.updatedAt = it.updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             instanceListDTO.schemaProperties = FetchInstanceListData(
@@ -274,7 +277,6 @@ class RbacPermissionResourceCallbackService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionResourceCallbackService::class.java)
         private const val PROJECT_ID_CHINESE_DESCRIPTION = "项目ID"
         private const val PROJECT_NAME_CHINESE_DESCRIPTION = "项目名称"
         private const val PIPELINE_ID_CHINESE_DESCRIPTION = "流水线ID"

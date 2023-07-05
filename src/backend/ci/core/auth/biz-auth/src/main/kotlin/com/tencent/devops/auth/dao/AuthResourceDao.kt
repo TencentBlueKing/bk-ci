@@ -218,6 +218,7 @@ class AuthResourceDao {
                     if (startTime != null && endTime != null)
                         it.and(UPDATE_TIME.between(startTime, endTime)) else it
                 }
+                .orderBy(UPDATE_TIME)
                 .limit(limit)
                 .offset(offset)
                 .fetch()
