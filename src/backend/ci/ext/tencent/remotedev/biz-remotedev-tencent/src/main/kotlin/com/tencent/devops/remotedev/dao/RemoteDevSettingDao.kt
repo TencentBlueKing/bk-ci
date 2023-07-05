@@ -170,6 +170,7 @@ class RemoteDevSettingDao {
             maxHavingCount = opSetting?.wsMaxHavingCount ?: maxHavingCount
             onlyCloudIDE = opSetting?.onlyCloudIDE ?: onlyCloudIDE
             allowedCopy = opSetting?.allowedCopy ?: allowedCopy
+            startCloudExperienceDuration = opSetting?.startCloudExperienceDuration ?: startCloudExperienceDuration
             allowedDownload = opSetting?.allowedDownload ?: allowedDownload
             needWatermark = opSetting?.needWatermark ?: needWatermark
             autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
