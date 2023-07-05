@@ -272,7 +272,7 @@
   "createTime" : "2019-04-09T22:29:33",
   "updateTime" : "2019-04-09T22:32:24",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1022,
   "elementType" : "CodeCCCheckAtom",
@@ -372,7 +372,7 @@
   "createTime" : "2019-04-10T11:10:59",
   "updateTime" : "2019-04-23T11:11:49",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24"
 }, {
   "id" : 1026,
   "elementType" : "CodeCCCheckAtom",
@@ -397,7 +397,7 @@
   "createTime" : "2019-11-20T15:17:00",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1027,
   "elementType" : "CodeCCCheckAtom",
@@ -422,7 +422,7 @@
   "createTime" : "2019-04-10T11:19:38",
   "updateTime" : "2019-04-15T12:15:53",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1028,
   "elementType" : "CodeCCCheckAtom",
@@ -447,7 +447,7 @@
   "createTime" : "2019-04-10T11:20:15",
   "updateTime" : "2019-04-23T11:11:44",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24"
 }, {
   "id" : 1029,
   "elementType" : "CodeCCCheckAtom",
@@ -472,7 +472,7 @@
   "createTime" : "2019-04-10T11:20:54",
   "updateTime" : "2019-04-15T12:15:12",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1030,
   "elementType" : "CodeCCCheckAtom",
@@ -497,7 +497,7 @@
   "createTime" : "2019-04-10T11:21:57",
   "updateTime" : "2019-05-28T10:48:34",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1031,
   "elementType" : "CodeCCCheckAtom",
@@ -522,7 +522,7 @@
   "createTime" : "2019-04-10T11:23:17",
   "updateTime" : "2019-05-28T10:48:20",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1032,
   "elementType" : "CodeCCCheckAtom",
@@ -547,7 +547,7 @@
   "createTime" : "2019-04-10T11:27:29",
   "updateTime" : "2019-04-23T10:56:08",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1033,
   "elementType" : "CodeCCCheckAtom",
@@ -572,7 +572,7 @@
   "createTime" : "2019-04-10T11:28:21",
   "updateTime" : "2019-04-15T12:14:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1034,
   "elementType" : "CodeCCCheckAtom",
@@ -597,7 +597,7 @@
   "createTime" : "2019-04-10T11:29:04",
   "updateTime" : "2019-04-15T12:14:40",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1035,
   "elementType" : "CodeCCCheckAtom",
@@ -622,7 +622,7 @@
   "createTime" : "2019-04-10T11:29:44",
   "updateTime" : "2019-05-28T10:33:48",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1036,
   "elementType" : "CodeCCCheckAtom",
@@ -647,7 +647,7 @@
   "createTime" : "2019-04-10T11:30:20",
   "updateTime" : "2019-05-28T10:33:31",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1037,
   "elementType" : "CodeCCCheckAtom",
@@ -672,7 +672,7 @@
   "createTime" : "2019-04-10T11:32:12",
   "updateTime" : "2019-04-23T10:55:34",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1038,
   "elementType" : "CodeCCCheckAtom",
@@ -697,7 +697,7 @@
   "createTime" : "2019-04-10T11:32:55",
   "updateTime" : "2019-04-15T12:14:17",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1039,
   "elementType" : "CodeCCCheckAtom",
@@ -722,7 +722,7 @@
   "createTime" : "2019-04-10T11:33:34",
   "updateTime" : "2019-04-15T12:13:59",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1040,
   "elementType" : "CodeCCCheckAtom",
@@ -747,7 +747,7 @@
   "createTime" : "2019-04-10T11:34:17",
   "updateTime" : "2019-05-28T10:33:17",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1041,
   "elementType" : "CodeCCCheckAtom",
@@ -772,7 +772,7 @@
   "createTime" : "2019-04-10T11:34:57",
   "updateTime" : "2019-05-28T10:33:02",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1042,
   "elementType" : "CodeCCCheckAtom",
@@ -797,7 +797,7 @@
   "createTime" : "2019-04-10T11:37:47",
   "updateTime" : "2019-04-23T10:55:08",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1044,
   "elementType" : "CodeCCCheckAtom",
@@ -822,7 +822,7 @@
   "createTime" : "2019-04-10T11:38:24",
   "updateTime" : "2019-04-15T12:13:35",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1045,
   "elementType" : "CodeCCCheckAtom",
@@ -847,7 +847,7 @@
   "createTime" : "2019-04-10T11:39:11",
   "updateTime" : "2019-04-15T12:13:30",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1046,
   "elementType" : "CodeCCCheckAtom",
@@ -872,7 +872,7 @@
   "createTime" : "2019-04-10T11:40:24",
   "updateTime" : "2019-05-28T10:31:49",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1047,
   "elementType" : "CodeCCCheckAtom",
@@ -897,7 +897,7 @@
   "createTime" : "2019-04-10T11:41:08",
   "updateTime" : "2019-05-28T10:31:36",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1"
 }, {
   "id" : 1048,
   "elementType" : "CodeCCCheckAtom",
@@ -947,7 +947,7 @@
   "createTime" : "2019-04-10T11:42:52",
   "updateTime" : "2019-04-23T10:54:24",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1050,
   "elementType" : "CodeCCCheckAtom",
@@ -972,7 +972,7 @@
   "createTime" : "2019-04-10T11:43:33",
   "updateTime" : "2019-04-15T12:12:52",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1051,
   "elementType" : "CodeCCCheckAtom",
@@ -997,7 +997,7 @@
   "createTime" : "2019-04-10T11:44:14",
   "updateTime" : "2019-04-15T12:12:47",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1052,
   "elementType" : "CodeCCCheckAtom",
@@ -1022,7 +1022,7 @@
   "createTime" : "2019-04-10T11:44:49",
   "updateTime" : "2019-05-28T10:31:20",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1053,
   "elementType" : "CodeCCCheckAtom",
@@ -1047,7 +1047,7 @@
   "createTime" : "2019-04-10T11:45:22",
   "updateTime" : "2019-05-28T10:31:08",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1059,
   "elementType" : "CodeCCCheckAtom",
@@ -1072,7 +1072,7 @@
   "createTime" : "2019-04-10T12:05:14",
   "updateTime" : "2019-04-15T12:11:53",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1060,
   "elementType" : "CodeCCCheckAtom",
@@ -1097,7 +1097,7 @@
   "createTime" : "2019-04-10T12:05:56",
   "updateTime" : "2019-04-15T12:11:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1061,
   "elementType" : "CodeCCCheckAtom",
@@ -1122,7 +1122,7 @@
   "createTime" : "2019-04-10T12:06:33",
   "updateTime" : "2019-04-15T12:11:40",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1062,
   "elementType" : "CodeCCCheckAtom",
@@ -1147,7 +1147,7 @@
   "createTime" : "2019-04-10T12:07:16",
   "updateTime" : "2019-05-28T10:30:07",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1063,
   "elementType" : "CodeCCCheckAtom",
@@ -1172,7 +1172,7 @@
   "createTime" : "2019-04-10T12:07:56",
   "updateTime" : "2019-05-28T10:29:51",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1064,
   "elementType" : "CodeCCCheckAtom",
@@ -1197,7 +1197,7 @@
   "createTime" : "2019-04-10T12:09:37",
   "updateTime" : "2019-04-23T10:53:53",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1065,
   "elementType" : "CodeCCCheckAtom",
@@ -1222,7 +1222,7 @@
   "createTime" : "2019-04-10T12:10:11",
   "updateTime" : "2019-04-15T12:11:15",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1066,
   "elementType" : "CodeCCCheckAtom",
@@ -1247,7 +1247,7 @@
   "createTime" : "2019-04-10T12:10:43",
   "updateTime" : "2019-04-15T12:11:07",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1067,
   "elementType" : "CodeCCCheckAtom",
@@ -1272,7 +1272,7 @@
   "createTime" : "2019-04-10T12:11:19",
   "updateTime" : "2019-05-28T10:29:26",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1068,
   "elementType" : "CodeCCCheckAtom",
@@ -1297,7 +1297,7 @@
   "createTime" : "2019-04-10T12:12:13",
   "updateTime" : "2019-05-28T10:29:03",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1357,
   "elementType" : "CodeCCCheckAtom",
@@ -1322,7 +1322,7 @@
   "createTime" : "2019-07-02T20:45:31",
   "updateTime" : "2019-07-03T11:59:17",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=1"
 }, {
   "id" : 1358,
   "elementType" : "CodeCCCheckAtom",
@@ -1347,7 +1347,7 @@
   "createTime" : "2019-07-02T20:47:34",
   "updateTime" : "2019-07-03T11:59:07",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=1"
 }, {
   "id" : 1547,
   "elementType" : "CodeCCCheckAtom",
@@ -1372,7 +1372,7 @@
   "createTime" : "2019-07-17T21:26:53",
   "updateTime" : "2019-07-17T21:32:35",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1548,
   "elementType" : "CodeCCCheckAtom",
@@ -1397,7 +1397,7 @@
   "createTime" : "2019-07-17T21:27:43",
   "updateTime" : "2019-07-17T21:32:24",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1549,
   "elementType" : "CodeCCCheckAtom",
@@ -1422,7 +1422,7 @@
   "createTime" : "2019-07-17T21:29:40",
   "updateTime" : "2019-07-17T21:32:14",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1550,
   "elementType" : "CodeCCCheckAtom",
@@ -1447,7 +1447,7 @@
   "createTime" : "2019-07-17T21:30:52",
   "updateTime" : "2019-08-21T20:12:49",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1551,
   "elementType" : "CodeCCCheckAtom",
@@ -1472,7 +1472,7 @@
   "createTime" : "2019-04-03T12:12:06",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24"
 }, {
   "id" : 1552,
   "elementType" : "CodeCCCheckAtom",
@@ -1497,7 +1497,7 @@
   "createTime" : "2019-10-25T17:19:12",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24"
 }, {
   "id" : 1553,
   "elementType" : "CodeCCCheckAtom",
@@ -1522,7 +1522,7 @@
   "createTime" : "2020-05-18T18:11:11",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=3"
 }, {
   "id" : 1554,
   "elementType" : "CodeCCCheckAtom",
@@ -1547,7 +1547,7 @@
   "createTime" : "2019-11-20T15:08:37",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=1"
 }, {
   "id" : 1555,
   "elementType" : "CodeCCCheckAtom",
@@ -1572,7 +1572,7 @@
   "createTime" : "2020-10-28T19:25:28",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=3"
 }, {
   "id" : 1556,
   "elementType" : "CodeCCCheckAtom",
@@ -1597,7 +1597,7 @@
   "createTime" : "2020-10-28T19:28:40",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=3"
 }, {
   "id" : 1557,
   "elementType" : "CodeCCCheckAtom",
@@ -1622,7 +1622,7 @@
   "createTime" : "2020-10-28T19:40:15",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=3"
 }, {
   "id" : 1558,
   "elementType" : "CodeCCCheckAtom",
@@ -1647,7 +1647,7 @@
   "createTime" : "2020-06-23T16:49:36",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=1"
 }, {
   "id" : 1559,
   "elementType" : "CodeCCCheckAtom",
@@ -1697,7 +1697,7 @@
   "createTime" : "2020-07-24T21:17:45",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1561,
   "elementType" : "CodeCCCheckAtom",
@@ -1722,7 +1722,7 @@
   "createTime" : "2020-07-24T22:51:06",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1562,
   "elementType" : "CodeCCCheckAtom",
@@ -1747,7 +1747,7 @@
   "createTime" : "2020-07-24T22:52:15",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1563,
   "elementType" : "CodeCCCheckAtom",
@@ -1772,7 +1772,7 @@
   "createTime" : "2020-07-24T22:53:42",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1564,
   "elementType" : "CodeCCCheckAtom",
@@ -1797,7 +1797,7 @@
   "createTime" : "2020-05-29T22:03:44",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 1565,
   "elementType" : "CodeCCCheckAtom",
@@ -1822,7 +1822,7 @@
   "createTime" : "2021-01-29T12:42:29",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=1"
 }, {
   "id" : 1566,
   "elementType" : "CodeCCCheckAtom",
@@ -1847,7 +1847,7 @@
   "createTime" : "2020-06-10T19:48:20",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=7"
 }, {
   "id" : 1567,
   "elementType" : "CodeCCCheckAtom",
@@ -1872,7 +1872,7 @@
   "createTime" : "2020-06-10T19:50:21",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=4&ignoreTypeId=24"
 }, {
   "id" : 1568,
   "elementType" : "CodeCCCheckAtom",
@@ -1897,7 +1897,7 @@
   "createTime" : "2020-06-10T19:52:18",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 }, {
   "id" : 1569,
   "elementType" : "CodeCCCheckAtom",
@@ -1922,7 +1922,7 @@
   "createTime" : "2020-06-10T19:53:47",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 1570,
   "elementType" : "CodeCCCheckAtom",
@@ -1947,7 +1947,7 @@
   "createTime" : "2020-10-29T16:29:48",
   "updateTime" : "2021-06-16T12:04:46",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=1&severity=3"
 }, {
   "id" : 2000,
   "elementType" : "CodeCCCheckAtom",
@@ -1972,7 +1972,7 @@
   "createTime" : "2019-04-10T11:47:00",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=7"
 }, {
   "id" : 2001,
   "elementType" : "CodeCCCheckAtom",
@@ -1997,7 +1997,7 @@
   "createTime" : "2019-04-10T11:47:55",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=3"
 }, {
   "id" : 2002,
   "elementType" : "CodeCCCheckAtom",
@@ -2022,5 +2022,5 @@
   "createTime" : "2019-04-10T11:57:11",
   "updateTime" : "2021-06-16T12:04:45",
   "atomVersion" : "1.0.0",
-  "logPrompt" : ""
+  "logPrompt" : "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list?buildId=##buildId##&status=5&ignoreTypeId=24&severity=1"
 } ]

@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_SERVICE
@@ -43,7 +43,7 @@ object BuildMsgUtils {
     private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
             StartType.MANUAL ->
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL)
+                I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER)
             StartType.TIME_TRIGGER ->
                 I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME)
             StartType.WEB_HOOK ->

@@ -77,6 +77,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -292,51 +293,42 @@ class PipelineBuildRecordService @Autowired constructor(
                     is CodeGitWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Git")
                         )
                     }
                     is CodeTGitWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Git")
                         )
                     }
                     is CodeGithubWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("GitHub")
                         )
                     }
                     is CodeGitlabWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Gitlab")
                         )
                     }
                     is CodeP4WebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("P4")
                         )
                     }
                     is CodeSVNWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("SVN")
                         )
                     }
                     else -> null
                 }
-            } ?: I18nUtil.getCodeLanMessage(
-                messageCode = BK_WAREHOUSE_EVENTS,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
+            } ?: I18nUtil.getCodeLanMessage(messageCode = BK_WAREHOUSE_EVENTS)
         } else {
             StartType.toReadableString(
                 buildInfo.trigger,
@@ -376,7 +368,11 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
-            buildMsg = buildInfo.buildMsg,
+            buildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = null,
+                startType = StartType.toStartType(buildInfo.trigger),
+                channelCode = buildInfo.channelCode
+            ),
             material = buildInfo.material,
             remark = buildInfo.remark,
             webhookInfo = buildInfo.webhookInfo
