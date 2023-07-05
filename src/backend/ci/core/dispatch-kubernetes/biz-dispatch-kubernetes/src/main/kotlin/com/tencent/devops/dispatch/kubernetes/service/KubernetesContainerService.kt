@@ -236,8 +236,11 @@ class KubernetesContainerService @Autowired constructor(
                     env = generateEnvs(dispatchMessages),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
-                    privateBuilder = if (privateBuilderTaint.isBlank()) null
-                    else SpecialBuilderConfig(privateBuilderTaint),
+                    privateBuilder = if (privateBuilderTaint.isBlank()) {
+                        null
+                    } else {
+                        SpecialBuilderConfig(privateBuilderTaint)
+                    },
                     specialBuilder = null
                 )
             )
