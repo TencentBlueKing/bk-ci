@@ -105,7 +105,7 @@ class PipelineSettingDao {
                 PIPELINE_AS_CODE_SETTINGS,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
-                VERSION
+                SETTING_VERSION
             )
                 .values(
                     projectId,
@@ -184,7 +184,7 @@ class PipelineSettingDao {
                     PIPELINE_AS_CODE_SETTINGS,
                     SUCCESS_SUBSCRIPTION,
                     FAILURE_SUBSCRIPTION,
-                    VERSION
+                    SETTING_VERSION
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -254,7 +254,7 @@ class PipelineSettingDao {
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                     .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                     .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
-                    .set(VERSION, setting.version)
+                    .set(SETTING_VERSION, setting.version)
                 // pipelineAsCodeSettings 默认传空不更新
                 setting.pipelineAsCodeSettings?.let { self ->
                     updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
