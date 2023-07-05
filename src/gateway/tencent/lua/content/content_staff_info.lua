@@ -31,8 +31,8 @@ if nil == x_otoken then
     x_otoken = ngx.var.arg_oToken
 end
 
-if x_ckey == nil and x_otoken == nil then
-    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
+if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
+    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken or header=x-credentialKey")
     ngx.exit(401)
     return
 end
@@ -53,7 +53,7 @@ if x_ckey ~= nil then
         }
     }
 elseif x_credentialKey ~= nil then
-    local staff_info_new = itloginUtil:get_staff_info_new(x_ckey)
+    local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
     result = {
         status = 0,
         data = {
