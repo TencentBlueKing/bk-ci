@@ -792,8 +792,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = atomCode,
                 name = atomName,
                 stage = stage,
-                availablePos = listOf(ControlPointPosition(BEFORE_POSITION), ControlPointPosition(AFTER_POSITION)),
-                defaultPos = ControlPointPosition(BEFORE_POSITION),
+                availablePos = listOf(
+                    ControlPointPosition.create(BEFORE_POSITION),
+                    ControlPointPosition.create(AFTER_POSITION)
+                ),
+                defaultPos = ControlPointPosition.create(BEFORE_POSITION),
                 enable = true,
                 atomVersion = atomVersion,
                 testProject = projectId

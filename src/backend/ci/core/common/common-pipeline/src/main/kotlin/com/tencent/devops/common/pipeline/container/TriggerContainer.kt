@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -97,4 +99,20 @@ data class TriggerContainer(
     override fun fetchGroupContainers(): List<Container>? = null
 
     override fun fetchMatrixContext(): Map<String, String>? = null
+
+    override fun getI18nName(language: String?): String {
+        return language?.let {
+            MessageUtil.getMessageByLocale(
+                messageCode = CommonMessageCode.BK_BUILD_ENV_TYPE_BUILD_TRIGGERS,
+                language = it
+            )
+        } ?: this.name
+    }
+
+    override fun transformCompatibility(language: String?) {
+        language?.let {
+            name = getI18nName(language)
+        }
+        super.transformCompatibility(language)
+    }
 }
