@@ -168,8 +168,8 @@ class MigrateResultService constructor(
     /**
      * 对比时可能存在以下情况导致校验失败
      * - 资源删除，但是校验表中记录没有删除
-     * - 用户已过期或者被剔除组
      * - 用户离职
+     * - 用户在旧版权限已失效
      * 需要再次校验
      */
     private fun reconfirm(
