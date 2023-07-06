@@ -25,7 +25,6 @@ class WorkspaceCheckJob @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val bkTag: BkTag
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
         private const val stopJobLockKey = "dispatch_devcloud_cron_workspace_clear_job"

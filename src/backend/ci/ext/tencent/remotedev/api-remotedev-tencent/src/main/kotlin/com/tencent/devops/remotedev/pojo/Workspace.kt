@@ -36,6 +36,8 @@ data class Workspace(
     val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String?,
     @ApiModelProperty("工作空间备注名称")
     val displayName: String?,
     @ApiModelProperty("远程开发仓库地址")

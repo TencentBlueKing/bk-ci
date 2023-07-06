@@ -85,7 +85,7 @@ class WorkspaceDao {
                 SYSTEM_TYPE
             )
                 .values(
-                    "",
+                    workspace.projectId,
                     workspace.workspaceName,
                     workspace.wsTemplateId,
                     workspace.repositoryUrl,
