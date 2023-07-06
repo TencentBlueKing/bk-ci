@@ -325,102 +325,102 @@
                                             <span class="time-unit">{{$t('quality.分钟')}}</span>
                                             <p class="prompt-tips">{{$t('quality.默认为15分钟，最长不超过60分钟')}}</p>
                                         </bk-form-item>
-                                    </bk-form></div></div></bk-form-item></bk-form>
+                                    </bk-form>
+                                </div>
+                            </div>
+                        </bk-form-item>
+                    </bk-form>
+                    <div>
+                        <bk-button theme="primary" class="submit-handle" @click="submit()">{{$t('quality.完成')}}</bk-button>
+                        <bk-button theme="default" class="submit-handle" @click="toRuleList()">{{$t('quality.取消')}}</bk-button>
+                    </div>
+                </div>
+                <div class="rule-preview">
+                    <p class="info-title">{{$t('quality.红线预览')}}</p>
+                    <hr>
+                    <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
+                        {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
+                    </p>
+                    <p class="priview-tips" v-else>
+                        {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
+                    </p>
+                    <div class="preview-image">
+                        <img v-if="createRuleForm.controlPointPosition"
+                            :src="createRuleForm.controlPointPosition === 'BEFORE' ? beforeSiteImg : afterSiteImg">
+                    </div>
                 </div>
             </div>
-            </bk-form-item>
-            </bk-form>
-            <div>
-                <bk-button theme="primary" class="submit-handle" @click="submit()">{{$t('quality.完成')}}</bk-button>
-                <bk-button theme="default" class="submit-handle" @click="toRuleList()">{{$t('quality.取消')}}</bk-button>
-            </div>
         </div>
-        <div class="rule-preview">
-            <p class="info-title">{{$t('quality.红线预览')}}</p>
-            <hr>
-            <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
-                {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
-            </p>
-            <p class="priview-tips" v-else>
-                {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
-            </p>
-            <div class="preview-image">
-                <img v-if="createRuleForm.controlPointPosition"
-                    :src="createRuleForm.controlPointPosition === 'BEFORE' ? beforeSiteImg : afterSiteImg">
-            </div>
-        </div>
-    </div>
-    </div>
 
-    <bk-sideslider
-        class="metadata-side-slider"
-        :is-show.sync="sideSliderConfig.show"
-        :quick-close="sideSliderConfig.quickClose"
-        :width="sideSliderConfig.width">
-        <header class="metadata-panel-header" slot="header">
-            <span>{{sideSliderConfig.title}}</span>
-            <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
-                <input class="bk-form-input" type="text"
-                    v-model="searchKey"
-                    @keyup.enter="handleSearch()">
-                <i class="bk-icon icon-search" @click="handleSearch()"></i>
-            </div>
-        </header>
-        <template slot="content">
-            <div style="width: 100%; height: 100%"
-                v-bkloading="{
-                    isLoading: sideSliderConfig.loading.isLoading,
-                    title: sideSliderConfig.loading.title
-                }">
-                <metadata-panel
-                    ref="metadataPanel"
-                    :is-panel-show="sideSliderConfig.show"
-                    :panel-type="panelType"
-                    :search-key="searchKey"
-                    :selected-atom="createRuleForm.controlPoint"
-                    :selected-meta="createRuleForm.indicators"
-                    @comfireHandle="handleMetadata"
-                >
-                </metadata-panel>
-            </div>
+        <bk-sideslider
+            class="metadata-side-slider"
+            :is-show.sync="sideSliderConfig.show"
+            :quick-close="sideSliderConfig.quickClose"
+            :width="sideSliderConfig.width">
+            <header class="metadata-panel-header" slot="header">
+                <span>{{sideSliderConfig.title}}</span>
+                <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
+                    <input class="bk-form-input" type="text"
+                        v-model="searchKey"
+                        @keyup.enter="handleSearch()">
+                    <i class="bk-icon icon-search" @click="handleSearch()"></i>
+                </div>
+            </header>
+            <template slot="content">
+                <div style="width: 100%; height: 100%"
+                    v-bkloading="{
+                        isLoading: sideSliderConfig.loading.isLoading,
+                        title: sideSliderConfig.loading.title
+                    }">
+                    <metadata-panel
+                        ref="metadataPanel"
+                        :is-panel-show="sideSliderConfig.show"
+                        :panel-type="panelType"
+                        :search-key="searchKey"
+                        :selected-atom="createRuleForm.controlPoint"
+                        :selected-meta="createRuleForm.indicators"
+                        @comfireHandle="handleMetadata"
+                    >
+                    </metadata-panel>
+                </div>
 
-        </template>
-    </bk-sideslider>
+            </template>
+        </bk-sideslider>
 
-    <empty-tips
-        v-if="!hasPermission && showContent"
-        :title="emptyTipsConfig.title"
-        :desc="emptyTipsConfig.desc"
-        :btns="emptyTipsConfig.btns"
-    >
-    </empty-tips>
+        <empty-tips
+            v-if="!hasPermission && showContent"
+            :title="emptyTipsConfig.title"
+            :desc="emptyTipsConfig.desc"
+            :btns="emptyTipsConfig.btns"
+        >
+        </empty-tips>
 
-    <pipeline-list
-        :is-show="showPipelineList"
-        :selected-pielines="selectedPipelines"
-        @comfire="comfirePipelineList"
-        @close="closePipelineList"
-    >
-    </pipeline-list>
+        <pipeline-list
+            :is-show="showPipelineList"
+            :selected-pielines="selectedPipelines"
+            @comfire="comfirePipelineList"
+            @close="closePipelineList"
+        >
+        </pipeline-list>
 
-    <TemplateList
-        :is-show="showTemplateList"
-        :selected-templates="selectedTemplates"
-        @comfire="comfireTemplateList"
-        @close="closeTemplateList"
-    >
-    </TemplateList>
+        <TemplateList
+            :is-show="showTemplateList"
+            :selected-templates="selectedTemplates"
+            @comfire="comfireTemplateList"
+            @close="closeTemplateList"
+        >
+        </TemplateList>
 
-    <createGroup
-        :node-select-conf="nodeSelectConf"
-        :create-group-form="createGroupForm"
-        :loading="dialogLoading"
-        :on-change="handleChange"
-        :error-handler="errorHandler"
-        @confirmFn="confirmFn"
-        :cancel-fn="cancelFn"
-    >
-    </createGroup>
+        <createGroup
+            :node-select-conf="nodeSelectConf"
+            :create-group-form="createGroupForm"
+            :loading="dialogLoading"
+            :on-change="handleChange"
+            :error-handler="errorHandler"
+            @confirmFn="confirmFn"
+            :cancel-fn="cancelFn"
+        >
+        </createGroup>
     </div>
 </template>
 
