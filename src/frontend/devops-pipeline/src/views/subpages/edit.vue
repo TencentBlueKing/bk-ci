@@ -207,11 +207,12 @@
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
-            init () {
+            async init () {
                 if (!this.isDraftEdit) {
                     this.isLoading = true
-                    this.requestPipeline(this.$route.params)
-                    this.requestPipelineSetting(this.$route.params)
+                    await this.requestPipeline(this.$route.params)
+                    await this.requestPipelineSetting(this.$route.params)
+                    this.isLoading = false
                 }
             },
             switchTab (tab) {
