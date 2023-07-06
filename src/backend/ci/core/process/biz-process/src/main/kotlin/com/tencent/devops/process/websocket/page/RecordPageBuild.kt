@@ -32,8 +32,13 @@ import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class RecordPageBuild : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
-            "/detail/${buildPageInfo.buildId}/executeDetail/${buildPageInfo.executeCount}"
+        val defaultPage = if (buildPageInfo.executeCount != null) {
+            "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
+                "/detail/${buildPageInfo.buildId}/executeDetail/${buildPageInfo.executeCount}"
+        } else {
+            "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
+                "/detail/${buildPageInfo.buildId}/executeDetail"
+        }
         if (!extRecordPage(buildPageInfo).isNullOrEmpty()) {
             return extRecordPage(buildPageInfo)!!
         }

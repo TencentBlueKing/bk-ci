@@ -115,6 +115,12 @@ object IamGroupUtils {
         "$SYSTEM_DEFAULT_NAME-${resourceType.uppercase()}-$resourceName"
 
     /**
+     * 构建二级管理员用户组名称
+     */
+    fun buildSubsetManagerGroupName(resourceType: String, resourceCode: String, resourceName: String) =
+        "$SYSTEM_DEFAULT_NAME-${resourceType.uppercase()}-$resourceName-$resourceCode"
+
+    /**
      * 获取二级管理员用户组展示名称
      */
     fun getGroupDisplayName(groupName: String) =

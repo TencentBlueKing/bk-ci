@@ -569,7 +569,7 @@ class ProjectLocalService @Autowired constructor(
             centerName = "",
             secrecy = false,
             kind = 0,
-            properties = ProjectProperties(PipelineAsCodeSettings(true))
+            properties = ProjectProperties(PipelineAsCodeSettings(false))
         )
 
         try {

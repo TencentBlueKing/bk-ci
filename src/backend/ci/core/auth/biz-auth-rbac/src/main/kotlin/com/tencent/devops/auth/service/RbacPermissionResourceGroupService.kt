@@ -336,7 +336,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
         val gradeManagerRoleGroupList =
             iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
-        if (gradeManagerRoleGroupList.results.isNotEmpty()) {
+        if (gradeManagerRoleGroupList.results.isNotEmpty() &&
+            gradeManagerRoleGroupList.results.map { it.name }.contains(groupName)
+        ) {
             throw ErrorCodeException(
                 errorCode = GROUP_EXIST,
                 defaultMessage = "group name already exists"

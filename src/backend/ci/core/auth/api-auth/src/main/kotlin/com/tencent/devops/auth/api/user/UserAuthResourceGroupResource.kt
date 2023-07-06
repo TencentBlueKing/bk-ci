@@ -31,6 +31,7 @@ package com.tencent.devops.auth.api.user
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -55,6 +56,7 @@ interface UserAuthResourceGroupResource {
     @GET
     @Path("{groupId}/groupPolicies")
     @ApiOperation("获取组策略详情")
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].action}"])
     fun getGroupPolicies(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

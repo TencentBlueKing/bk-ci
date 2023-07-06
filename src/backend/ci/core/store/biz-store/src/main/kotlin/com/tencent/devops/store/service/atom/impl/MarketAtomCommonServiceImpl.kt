@@ -415,7 +415,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     )
                 }
                 val target = osExecutionInfoMap[KEY_TARGET] as? String
-                if (target.isNullOrBlank()) {
+                if (target == null) {
                     // 执行入口为空则校验失败
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
@@ -438,7 +438,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     pkgRepoPath = getPkgRepoPath(pkgLocalPath, projectCode, atomCode, version),
                     language = language,
                     minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
-                    target = osExecutionInfoMap[KEY_TARGET] as String,
+                    target = target,
                     shaContent = null,
                     preCmd = JsonUtil.toJson(osExecutionInfoMap[KEY_DEMANDS] ?: ""),
                     atomPostInfo = atomPostInfo,
@@ -461,7 +461,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
         } else {
             val target = executionInfoMap[KEY_TARGET] as? String
-            if (target.isNullOrBlank()) {
+            if (target == null) {
                 // 执行入口为空则校验失败
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
@@ -475,7 +475,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 pkgRepoPath = getPkgRepoPath(pkgLocalPath, projectCode, atomCode, version),
                 language = language,
                 minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
-                target = executionInfoMap[KEY_TARGET] as String,
+                target = target,
                 shaContent = null,
                 preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
                 atomPostInfo = atomPostInfo,
@@ -555,12 +555,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             dslContext = dslContext,
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte()
-        )
+        ) ?: ""
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
             atomName = atom.name,
             version = atom.version,
-            initProjectCode = initProjectCode!!,
+            initProjectCode = initProjectCode,
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props)

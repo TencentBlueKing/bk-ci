@@ -1,9 +1,9 @@
 <template>
-    <div class="release-setting-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
+    <div class="release-setting-wrapper">
         <content-header>
             <div slot="left">{{ $route.meta.title }}</div>
         </content-header>
-        <section class="sub-view-port">
+        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <bk-tab :active.sync="curTab" type="unborder-card">
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
@@ -14,11 +14,17 @@
                         <div v-if="showContent && experienceList.length" class="table-operate-bar">
                             <bk-button theme="primary" @click="toCreateGroup">新增</bk-button>
                         </div>
-                        <bk-table v-if="showContent && experienceList.length" :data="experienceList">
-                            <bk-table-column label="名称" prop="name"></bk-table-column>
+                        <bk-table
+                            v-if="showContent && experienceList.length"
+                            :data="experienceList"
+                            :pagination="pagination"
+                            @page-change="requestList"
+                            @page-limit-change="handlePageLimitChange"
+                        >
+                            <bk-table-column label="名称" show-overflow-tooltip prop="name"></bk-table-column>
                             <bk-table-column label="内部人员" prop="innerUsersCount">
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :trigger="props.row.innerUsersCount ? 'mouseenter focus' : 'manual'">
+                                    <bk-popover placement="bottom" :disabled="props.row.innerUsersCount <= 0">
                                         <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -28,9 +34,21 @@
                                     </bk-popover>
                                 </template>
                             </bk-table-column>
+                            <bk-table-column label="内部组织" prop="deptsCount">
+                                <template slot-scope="props">
+                                    <bk-popover placement="bottom" :disabled="props.row.deptsCount <= 0">
+                                        <span class="handler-inner">{{ props.row.deptsCount }}</span>
+                                        <template slot="content">
+                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                                                {{ props.row.depts.join(",") }}
+                                            </p>
+                                        </template>
+                                    </bk-popover>
+                                </template>
+                            </bk-table-column>
                             <bk-table-column label="外部人员" prop="outerUsersCount">
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :trigger="props.row.outerUsersCount ? 'mouseenter focus' : 'manual'">
+                                    <bk-popover placement="bottom" :disabled="props.row.outerUsersCount <= 0">
                                         <span class="handler-outer">{{ props.row.outerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -41,7 +59,7 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column label="创建人" prop="creator"></bk-table-column>
-                            <bk-table-column label="描述" prop="remark"></bk-table-column>
+                            <bk-table-column label="描述" show-overflow-tooltip prop="remark"></bk-table-column>
                             <bk-table-column label="操作" prop="creator">
                                 <template slot-scope="props">
                                     <div class="handler-group">
@@ -60,11 +78,9 @@
             </bk-tab>
 
             <experience-group
-                :node-select-conf="nodeSelectConf"
+                v-bind="groupSideslider"
                 :create-group-form="createGroupForm"
-                :outers-list="outersList"
-                :loading="dialogLoading"
-                :on-change="onChange"
+                :handle-group-field-change="handleGroupFieldChange"
                 :error-handler="errorHandler"
                 @after-submit="afterCreateGroup"
                 :cancel-fn="cancelFn"
@@ -75,9 +91,9 @@
 </template>
 
 <script>
-    import emptyData from './empty-data'
-    import experienceGroup from './create_group'
     import { getQueryString } from '@/utils/util'
+    import experienceGroup from './create_group'
+    import emptyData from './empty-data'
 
     export default {
         components: {
@@ -89,28 +105,20 @@
                 curTab: 'experienceGroup',
                 experienceList: [],
                 showContent: false,
-                outersList: [],
                 loading: {
                     isLoading: false,
                     title: ''
                 },
-                dialogLoading: {
-                    isLoading: false,
-                    title: ''
-                },
-                nodeSelectConf: {
+                groupSideslider: {
                     title: '',
-                    isShow: false,
-                    closeIcon: false,
-                    hasHeader: false,
-                    quickClose: false
+                    visible: false,
+                    isLoading: false
                 },
                 createGroupForm: {
-                    idEdit: false,
+                    groupHashId: undefined,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 },
                 errorHandler: {
                     nameError: false
@@ -119,7 +127,12 @@
                     title: '暂无体验组',
                     desc: '您可以新增一个体验组'
                 },
-                urlParams: getQueryString('groupId') || ''
+                urlParams: getQueryString('groupId') || '',
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
         computed: {
@@ -146,102 +159,67 @@
             }
         },
         async mounted () {
-            await this.init()
-            this.fetchOutersList()
+            await this.requestList()
         },
         methods: {
-            async init () {
+            handlePageLimitChange (limit) {
+                this.pagination.limit = limit
+                this.requestList()
+            },
+            /**
+             * 获取列表
+             */
+            async requestList (page = 1) {
                 const {
                     loading
                 } = this
 
                 loading.isLoading = true
                 loading.title = '数据加载中，请稍候'
-
                 try {
-                    this.requestList()
+                    const res = await this.$store.dispatch('experience/requestGroupList', {
+                        projectId: this.projectId,
+                        page,
+                        pageSize: this.pagination.limit
+                    })
+                    this.pagination.count = res.count
+                    this.pagination.current = page
+                    this.experienceList = res.records.map(item => {
+                        if (this.urlParams === item.groupHashId) {
+                            setTimeout(() => {
+                                this.toEditGroup(item)
+                            }, 800)
+                        }
+                        return item
+                    })
                 } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
                     this.$bkMessage({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
+                        message,
+                        theme
                     })
                 } finally {
                     setTimeout(() => {
                         this.loading.isLoading = false
                     }, 1000)
                 }
-            },
-            /**
-             * 获取外部体验人员列表
-             */
-            async fetchOutersList () {
-                this.loading.isLoading = true
-                try {
-                    const res = await this.$store.dispatch('experience/fetchOutersList', {
-                        projectId: this.projectId
-                    })
-                    res.forEach(item => {
-                        this.outersList.push({
-                            id: item.username,
-                            name: item.username
-                        })
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.loading.isLoading = false
-                }
-            },
-            /**
-             * 获取列表
-             */
-            async requestList () {
-                try {
-                    const res = await this.$store.dispatch('experience/requestGroupList', {
-                        projectId: this.projectId
-                    })
-
-                    this.experienceList.splice(0, this.experienceList.length)
-                    res.records.forEach(item => {
-                        this.experienceList.push(item)
-                        if (this.urlParams === item.groupHashId) {
-                            setTimeout(() => {
-                                this.toEditGroup(item)
-                            }, 800)
-                        }
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
 
                 this.showContent = true
             },
             toCreateGroup () {
                 this.createGroupForm = {
-                    isEdit: false,
-                    groupHashId: '',
+                    groupHashId: undefined,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 }
-                this.nodeSelectConf.title = '新增体验组'
-                this.nodeSelectConf.isShow = true
+                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.visible = true
             },
-            onChange (tags) {
-                this.createGroupForm.internal_list = tags
+            handleGroupFieldChange (name, value) {
+                this.createGroupForm[name] = value
             },
             validate () {
                 let errorCount = 0
@@ -258,18 +236,18 @@
             },
             afterCreateGroup () {
                 this.requestList()
-                this.nodeSelectConf.isShow = false
+                this.groupSideslider.visible = false
             },
             cancelFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.nodeSelectConf.isShow = false
+                if (!this.groupSideslider.isLoading) {
+                    this.groupSideslider.visible = false
                 }
             },
             async toEditGroup (row) {
                 if (row.permissions.canEdit) {
-                    this.nodeSelectConf.title = '编辑体验组'
-                    this.nodeSelectConf.isShow = true
-                    this.dialogLoading.isLoading = true
+                    this.groupSideslider.title = row.name
+                    this.groupSideslider.visible = true
+                    this.groupSideslider.isLoading = true
 
                     try {
                         const res = await this.$store.dispatch('experience/toGetGroupDetail', {
@@ -277,12 +255,7 @@
                             groupHashId: row.groupHashId
                         })
 
-                        this.createGroupForm.isEdit = true
-                        this.createGroupForm.groupHashId = row.groupHashId
-                        this.createGroupForm.name = res.name
-                        this.createGroupForm.external_list = res.outerUsers
-                        this.createGroupForm.desc = res.remark
-                        this.createGroupForm.internal_list = res.innerUsers
+                        this.createGroupForm = res
                     } catch (err) {
                         const message = err.data ? err.data.message : err
                         const theme = 'error'
@@ -292,7 +265,7 @@
                             theme
                         })
                     } finally {
-                        this.dialogLoading.isLoading = false
+                        this.groupSideslider.isLoading = false
                     }
                 } else {
                     this.$showAskPermissionDialog({
@@ -385,8 +358,8 @@
                 margin: 0;
             }
         }
-        .bk-tab-label-item{
-            background-color: transparent !important;
+        .sub-view-port .bk-tab-label-item{
+            background-color: transparent;
         }
     }
 </style>

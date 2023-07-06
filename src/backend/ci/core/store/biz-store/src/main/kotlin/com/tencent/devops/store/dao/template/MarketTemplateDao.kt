@@ -38,6 +38,7 @@ import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
@@ -539,17 +540,17 @@ class MarketTemplateDao {
             .groupBy(tTemplate.TEMPLATE_CODE) // 查找每组templateCode最新的记录
         val conditions = generateGetMyTemplatesConditions(tTemplate, userId, tStoreMember, tStoreProjectRel, templateName)
         return dslContext.select(
-            tTemplate.ID.`as`("templateId"),
-            tTemplate.TEMPLATE_CODE.`as`("templateCode"),
-            tTemplate.TEMPLATE_NAME.`as`("templateName"),
-            tTemplate.LOGO_URL.`as`("logoUrl"),
-            tTemplate.VERSION.`as`("version"),
-            tTemplate.TEMPLATE_STATUS.`as`("templateStatus"),
-            tTemplate.CREATOR.`as`("creator"),
-            tTemplate.CREATE_TIME.`as`("createTime"),
-            tTemplate.MODIFIER.`as`("modifier"),
-            tTemplate.UPDATE_TIME.`as`("updateTime"),
-            tStoreProjectRel.PROJECT_CODE.`as`("projectCode")
+            tTemplate.ID,
+            tTemplate.TEMPLATE_CODE,
+            tTemplate.TEMPLATE_NAME,
+            tTemplate.LOGO_URL,
+            tTemplate.VERSION,
+            tTemplate.TEMPLATE_STATUS,
+            tTemplate.CREATOR,
+            tTemplate.CREATE_TIME,
+            tTemplate.MODIFIER,
+            tTemplate.UPDATE_TIME,
+            tStoreProjectRel.PROJECT_CODE.`as`(KEY_PROJECT_CODE)
         )
             .from(tTemplate)
             .join(t)

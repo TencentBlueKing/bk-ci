@@ -8,6 +8,10 @@ import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
+import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -31,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import java.util.concurrent.Executors
@@ -292,7 +297,9 @@ class RbacPermissionApplyService @Autowired constructor(
             buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
+                name = I18nUtil.getCodeLanMessage(
+                    relatedResourceTypesDTO.type + RESOURCE_TYPE_NAME_SUFFIX
+                ),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             GroupPermissionDetailVo(
@@ -329,7 +336,10 @@ class RbacPermissionApplyService @Autowired constructor(
         // 判断action是否为空
         val actionInfo = if (action != null) rbacCacheService.getActionInfo(action) else null
         val iamRelatedResourceType = actionInfo?.relatedResourceType ?: resourceType
-        val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
+        val resourceTypeName = I18nUtil.getCodeLanMessage(
+            messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
+            defaultMessage = rbacCacheService.getResourceTypeInfo(resourceType).name
+        )
 
         val projectInfo = authResourceService.get(
             projectCode = projectId,
@@ -372,7 +382,12 @@ class RbacPermissionApplyService @Autowired constructor(
             auth = isEnablePermission,
             resourceTypeName = resourceTypeName,
             resourceName = resourceName,
-            actionName = actionInfo?.actionName,
+            actionName = actionInfo?.let {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${it.action}$ACTION_NAME_SUFFIX",
+                    defaultMessage = it.actionName
+                )
+            },
             groupInfoList = groupInfoList
         )
     }
@@ -456,7 +471,11 @@ class RbacPermissionApplyService @Autowired constructor(
                         authApplyRedirectUrl, projectId, projectName, resourceType,
                         resourceName, iamResourceCode, action, resourceGroup.groupName, resourceGroup.relationId
                     ),
-                    groupName = resourceGroup.groupName
+                    groupName = I18nUtil.getCodeLanMessage(
+                        messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                                AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                        defaultMessage = resourceGroup.groupName
+                    )
                 )
             )
         }

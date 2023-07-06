@@ -25,6 +25,8 @@ object LogMessageCode {
     const val PRINT_QUEUE_LIMIT = "2108005" // log print queue exceeds the limit
     const val PRINT_IS_DISABLED = "2108006" // log print config is disabled
     const val FILE_NOT_FOUND_CHECK_PATH = "2108007" // 未找到 {0} 文件，请检查路径是否正确:
+    const val LOG_INDEX_HAS_BEEN_CLEANED = "2108008" // 日志索引已被清理无法查看
+    const val ERROR_PIPELINE_NOT_EXISTS = "2108009" // 流水线{0}不存在
 
     const val BK_FAILED_INSERT_DATA = "bkFailedInsertData" // 蓝盾ES集群插入数据失败
     const val BK_ES_CLUSTER_RECOVERY = "bkEsClusterRecovery" // 蓝盾ES集群恢复

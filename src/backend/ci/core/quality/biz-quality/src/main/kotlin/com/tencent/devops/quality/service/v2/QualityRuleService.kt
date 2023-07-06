@@ -199,7 +199,7 @@ class QualityRuleService @Autowired constructor(
 
     fun userUpdateEnable(userId: String, projectId: String, ruleHashId: String, enable: Boolean) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
-        val permission = AuthPermission.EXECUTE
+        val permission = AuthPermission.ENABLE
         logger.info("user($userId) update the rule($ruleId) in project($projectId) to $enable")
         qualityPermissionService.validateRulePermission(
             userId = userId,

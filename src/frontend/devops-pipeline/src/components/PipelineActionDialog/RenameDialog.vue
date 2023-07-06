@@ -12,7 +12,11 @@
     >
         <bk-form :model="renamePipelineModel" form-type="vertical">
             <bk-form-item :label="$t('pipelineName')" required property="name">
-                <bk-input v-model="renamePipelineModel.name" :placeholder="$t('pipelineNameInputTips')" :maxlength="40" />
+                <bk-input
+                    v-model="renamePipelineModel.name"
+                    :placeholder="$t('pipelineNameInputTips')"
+                    :maxlength="40"
+                />
             </bk-form-item>
         </bk-form>
     </bk-dialog>
@@ -50,9 +54,7 @@
             }
         },
         methods: {
-            ...mapActions('pipelines', [
-                'renamePipeline'
-            ]),
+            ...mapActions('pipelines', ['renamePipeline']),
             async submit () {
                 if (this.saving) return
                 let message = ''
@@ -72,20 +74,25 @@
                     this.$emit('done', this.renamePipelineModel.name)
                     this.handleClose()
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.edit,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineName
-                        }],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.pipelineId,
+                                    name: this.pipelineName
+                                }
+                            ],
+                            projectId: this.projectId
+                        }
+                    ])
                 } finally {
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
             handleClose () {

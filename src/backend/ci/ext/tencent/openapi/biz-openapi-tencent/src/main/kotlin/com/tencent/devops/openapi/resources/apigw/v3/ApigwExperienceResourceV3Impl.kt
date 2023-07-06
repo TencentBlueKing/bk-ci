@@ -9,9 +9,9 @@ import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceUpdate
-import com.tencent.devops.experience.pojo.GroupCreate
-import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.GroupUsers
+import com.tencent.devops.experience.pojo.group.GroupCreate
+import com.tencent.devops.experience.pojo.group.GroupUpdate
+import com.tencent.devops.experience.pojo.group.GroupUsers
 import com.tencent.devops.openapi.api.apigw.v3.ApigwExperienceResourceV3
 import org.springframework.beans.factory.annotation.Autowired
 

@@ -332,10 +332,14 @@ class PipelineSettingFacadeService @Autowired constructor(
     }
 
     fun updateMaxConRunningQueueSize(
+        userId: String,
+        projectId: String,
         pipelineId: String,
         maxConRunningQueueSize: Int
     ): Int {
         return pipelineRepositoryService.updateMaxConRunningQueueSize(
+            userId = userId,
+            projectId = projectId,
             pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
         )

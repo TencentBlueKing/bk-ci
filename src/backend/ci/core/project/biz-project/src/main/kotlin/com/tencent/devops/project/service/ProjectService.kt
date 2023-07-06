@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -38,6 +39,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -56,7 +58,7 @@ interface ProjectService {
     fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
 
     /**
-     * 创建 项目信息
+     * 创建项目信息
      */
     fun create(
         userId: String,
@@ -181,6 +183,7 @@ interface ProjectService {
     fun getAllProject(): List<ProjectVO>
 
     fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
         offset: Int
     ): List<ProjectWithPermission>
@@ -231,4 +234,6 @@ interface ProjectService {
         projectId: String,
         subjectScopes: List<SubjectScopeInfo>
     ): Boolean
+
+    fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 }

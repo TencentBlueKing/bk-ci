@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
+@Suppress("LongParameterList")
 data class BuildRecordStage(
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
@@ -89,7 +90,7 @@ data class BuildRecordStage(
             )
             stage.containers.forEach { container ->
                 containerBuildRecords.addRecords(
-                    stage = stage,
+                    stageId = stage.id!!,
                     container = container,
                     context = context,
                     buildStatus = buildStatus,

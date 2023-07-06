@@ -9,6 +9,14 @@ object RbacAuthUtils {
         return "${extResourceType(authResourceType)}_${authPermission.value}"
     }
 
+    fun getRelationResourceType(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
+        return if (authPermission == AuthPermission.CREATE) {
+            AuthResourceType.PROJECT.value
+        } else {
+            authResourceType.value
+        }
+    }
+
     fun extResourceType(authResourceType: AuthResourceType): String {
         return when (authResourceType) {
             AuthResourceType.QUALITY_GROUP -> "quality_group"
@@ -71,9 +79,5 @@ object RbacAuthUtils {
             resultMap[key] = instanceLongIds
         }
         return resultMap
-    }
-
-    fun addSuffixIfNeed(resourceName: String, suffix: Int): String {
-        return if (suffix == 0) resourceName else "$resourceName($suffix)"
     }
 }

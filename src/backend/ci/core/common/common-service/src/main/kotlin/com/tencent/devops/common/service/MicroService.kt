@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.service
 
+import org.springframework.boot.actuate.autoconfigure.metrics.redis.LettuceMetricsAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
+
 /**
  *
  * Powered By Tencent
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = [LettuceMetricsAutoConfiguration::class])
 annotation class MicroService

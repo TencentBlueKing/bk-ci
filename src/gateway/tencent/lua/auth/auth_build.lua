@@ -5,7 +5,7 @@ ngx.header["X-DEVOPS-ERROR-RETURN"] =
 if build_type == "AGENT" then
     buildUtil:auth_agent()
     return
-elseif build_type == "DOCKER" then
+elseif build_type == "DOCKER" or build_type == "MACOS_NEW" then
     buildUtil:auth_docker()
     return
 elseif build_type == "PLUGIN_AGENT" then

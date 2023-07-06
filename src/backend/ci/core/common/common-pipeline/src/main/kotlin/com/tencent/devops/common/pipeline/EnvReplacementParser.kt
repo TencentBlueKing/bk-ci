@@ -50,7 +50,8 @@ import java.io.InputStreamReader
     "ComplexCondition",
     "ComplexMethod",
     "NestedBlockDepth",
-    "ReturnCount"
+    "ReturnCount",
+    "LongParameterList"
 )
 object EnvReplacementParser {
 

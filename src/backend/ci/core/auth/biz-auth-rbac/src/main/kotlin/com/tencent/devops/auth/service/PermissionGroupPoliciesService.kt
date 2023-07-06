@@ -62,7 +62,7 @@ class PermissionGroupPoliciesService(
         private const val PROJECT_ID_PLACEHOLDER = "#projectId#"
         private const val PROJECT_NAME_PLACEHOLDER = "#projectName#"
         private const val RESOURCE_CODE_PLACEHOLDER = "#resourceCode#"
-        private const val RESOURCE_Name_PLACEHOLDER = "#resourceName#"
+        private const val RESOURCE_NAME_PLACEHOLDER = "#resourceName#"
     }
 
     /**
@@ -80,7 +80,8 @@ class PermissionGroupPoliciesService(
                 .replace(PROJECT_ID_PLACEHOLDER, projectCode)
                 .replace(PROJECT_NAME_PLACEHOLDER, projectName)
                 .replace(RESOURCE_CODE_PLACEHOLDER, iamResourceCode)
-                .replace(RESOURCE_Name_PLACEHOLDER, resourceName)
+                // 如果资源名中有\,需要转义,不然json序列化时会报错
+                .replace(RESOURCE_NAME_PLACEHOLDER, resourceName.replace("\\", "\\\\"))
         logger.info("$projectCode authorization scopes after replace $replaceAuthorizationScopesStr ")
         return JsonUtil.to(replaceAuthorizationScopesStr, object : TypeReference<List<AuthorizationScopes>>() {})
     }

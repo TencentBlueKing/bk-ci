@@ -1,8 +1,5 @@
 <template>
-    <detail-container @close="$emit('close')"
-        :title="stage.name"
-        :status="stage.status"
-    >
+    <detail-container @close="$emit('close')" :title="stage.name" :status="stage.status">
         <template v-slot:content>
             <stage-review-control
                 :stage="stage"
@@ -14,9 +11,9 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapGetters } from 'vuex'
     import detailContainer from './detailContainer'
-    import StageReviewControl from '@/components/StagePropertyPanel/StageReviewControl.vue'
+    import StageReviewControl from '@/components/StagePropertyPanel/StageReviewControl'
     export default {
         components: {
             detailContainer,
@@ -24,10 +21,10 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'editingElementPos'
-            ]),
+            ...mapState('atom', ['editingElementPos']),
+            ...mapGetters('atom', {
+                execDetail: 'getExecDetail'
+            }),
 
             stage () {
                 const { editingElementPos, execDetail } = this
@@ -44,7 +41,7 @@
 </script>
 
 <style lang="scss" scoped>
-    .pipeline-stage-review-control {
-        padding: 10px 50px;
-    }
+.pipeline-stage-review-control {
+  padding: 10px 50px;
+}
 </style>

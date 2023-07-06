@@ -56,7 +56,7 @@ spec:
       {{- end }}        
       containers:
         - name: gateway
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
+          image: {{ include "bkci-gateway.image" . }}
           imagePullPolicy: {{ .Values.gatewayImage.pullPolicy }}
           {{- if .Values.gateway.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -80,8 +80,6 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
-            - name: JAVA_TOOL_OPTIONS
-              value: {{ .Values.java.options }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:

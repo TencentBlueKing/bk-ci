@@ -62,6 +62,7 @@ class AuthMigrationDao {
                 now
             ).onDuplicateKeyUpdate()
                 .set(STATUS, status)
+                .set(ERROR_MESSAGE, "")
                 .set(START_TIME, now)
                 .set(UPDATE_TIME, now)
                 .execute()

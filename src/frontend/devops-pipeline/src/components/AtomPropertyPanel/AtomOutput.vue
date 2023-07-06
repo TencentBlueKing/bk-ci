@@ -112,6 +112,7 @@
         pointer-events: auto;
     }
     .atom-output-var-list {
+        pointer-events: auto;
         > h4,
         > p {
             margin: 0;

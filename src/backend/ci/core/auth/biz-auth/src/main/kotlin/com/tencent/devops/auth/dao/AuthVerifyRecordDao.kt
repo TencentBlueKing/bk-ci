@@ -5,6 +5,7 @@ import com.tencent.devops.model.auth.tables.TAuthTemporaryVerifyRecord
 import com.tencent.devops.model.auth.tables.records.TAuthTemporaryVerifyRecordRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -44,17 +45,34 @@ class AuthVerifyRecordDao {
     fun list(
         dslContext: DSLContext,
         projectCode: String,
+        resourceType: String,
         offset: Int,
         limit: Int
     ): Result<TAuthTemporaryVerifyRecordRecord> {
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
                 .and(VERIFY_RESULT.eq(true))
                 .orderBy(LAST_VERIFY_TIME.desc())
                 .offset(offset)
                 .limit(limit)
                 .fetch()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute()
         }
     }
 
@@ -69,5 +87,9 @@ class AuthVerifyRecordDao {
                 verifyResult = verifyResult
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthVerifyRecordDao::class.java)
     }
 }

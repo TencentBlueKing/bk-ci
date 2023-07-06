@@ -55,8 +55,14 @@ object I18nUtil {
      * @return 语言信息
      */
     fun getUserLocaleLanguageFromCache(userId: String): String? {
-        val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        return redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+        // 先从本地缓存中获取用户语言信息
+        var language = BkI18nLanguageCacheUtil.getIfPresent(userId)
+        if (language.isNullOrBlank()) {
+            // 本地缓存中获取不到语言信息再从redis中获取
+            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+            language = redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+        }
+        return language
     }
 
     /**
@@ -116,6 +122,7 @@ object I18nUtil {
                         client.get(ServiceLocaleResource::class).getUserLocale(userId).data?.language ?: defaultLanguage
                     val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
                     // 把查出来的用户语言放入缓存
+                    BkI18nLanguageCacheUtil.put(userId, language)
                     redisOperation.set(LocaleUtil.getUserLocaleLanguageKey(userId), language)
                 }
                 language

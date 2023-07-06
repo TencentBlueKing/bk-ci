@@ -58,7 +58,6 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            atomId = atomId,
             archiveAtomRequest = ArchiveAtomRequest(
                 projectCode = projectCode,
                 atomCode = atomCode,

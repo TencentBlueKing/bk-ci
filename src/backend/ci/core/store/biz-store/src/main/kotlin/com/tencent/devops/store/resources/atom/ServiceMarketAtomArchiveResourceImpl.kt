@@ -43,9 +43,9 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
 
     override fun verifyAtomPackageByUserId(
         userId: String,
-        projectCode: String,
         atomCode: String,
         version: String,
+        projectCode: String,
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
@@ -61,18 +61,23 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
 
     override fun verifyAtomTaskJson(
         userId: String,
-        projectCode: String,
         atomCode: String,
-        version: String
+        version: String,
+        projectCode: String
     ): Result<GetAtomConfigResult?> {
-        return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
+        return marketAtomArchiveService.verifyAtomTaskJson(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version
+        )
     }
 
     override fun validateReleaseType(
         userId: String,
-        projectCode: String,
         atomCode: String,
         version: String,
+        projectCode: String,
         fieldCheckConfirmFlag: Boolean?
     ): Result<Boolean> {
         return marketAtomArchiveService.validateReleaseType(

@@ -39,10 +39,15 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_INVITES_YOU_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_MOBILE_EXPERIENCE_ADDRESS
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_PC_EXPERIENCE_ADDRESS
 
 object WechatGroupUtil {
-    fun makeRichtextMessage(projectName: String, name: String, version: String, innerUrl: String, outerUrl: String, groupId: String): RichtextMessage {
+    fun makeRichtextMessage(
+        projectName: String,
+        name: String,
+        version: String,
+        outerUrl: String,
+        groupId: String
+    ): RichtextMessage {
         val receiver = Receiver(ReceiverType.group, groupId)
         val richtextContentList = mutableListOf<RichtextContent>()
 
@@ -54,25 +59,18 @@ object WechatGroupUtil {
                         messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
                         params = arrayOf(projectName)
                     ) + "\n\n"
-        )
+                )
             )
         )
         // body
-        richtextContentList.add(RichtextText(RichtextTextText(
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
-                params = arrayOf(projectName, name, version)
-            )
-        )))
         richtextContentList.add(
-            RichtextView(
-                RichtextViewLink(
+            RichtextText(
+                RichtextTextText(
                     I18nUtil.getCodeLanMessage(
-                    messageCode = BK_PC_EXPERIENCE_ADDRESS
-                ),
-                innerUrl,
-                1
-        )
+                        messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+                        params = arrayOf(projectName, name, version)
+                    )
+                )
             )
         )
         richtextContentList.add(
@@ -85,5 +83,87 @@ object WechatGroupUtil {
             )
         )
         return RichtextMessage(receiver, richtextContentList)
+    }
+
+    fun batchRichTextMessage(
+        projectName: String,
+        messages: List<Message>,
+        groupId: String
+    ): RichtextMessage {
+        val receiver = Receiver(ReceiverType.group, groupId)
+        val richtextContentList = mutableListOf<RichtextContent>()
+        for (m in messages) {
+            // title
+            richtextContentList.add(
+                RichtextText(
+                    RichtextTextText(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+                            params = arrayOf(projectName)
+                        ) + "\n\n"
+                    )
+                )
+            )
+            // body
+            richtextContentList.add(
+                RichtextText(
+                    RichtextTextText(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+                            params = arrayOf(projectName, m.name, m.version)
+                        )
+                    )
+                )
+            )
+            richtextContentList.add(
+                RichtextView(
+                    RichtextViewLink(
+                        I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS),
+                        m.outerUrl,
+                        1
+                    )
+                )
+            )
+        }
+        return RichtextMessage(receiver, richtextContentList)
+    }
+
+    fun robotMessage(
+        projectName: String,
+        name: String,
+        version: String,
+        outerUrl: String
+    ): String {
+        val title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+            params = arrayOf(projectName)
+        )
+        val body = I18nUtil.getCodeLanMessage(
+            messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+            params = arrayOf(projectName, name, version)
+        )
+        return "$title\n$body\n[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}]($outerUrl)"
+    }
+
+    fun batchRobotMessage(
+        projectName: String,
+        messages: List<Message>
+    ): String {
+        val batchContent = StringBuilder(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
+                params = arrayOf(projectName)
+            ) + "\n\n\n"
+        )
+        for (i in messages.indices) {
+            val m = messages[i]
+            batchContent.append(
+                "${i + 1}. " + I18nUtil.getCodeLanMessage(
+                    messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
+                    params = arrayOf(projectName, m.name, m.version)
+                ) + "[${I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS)}](${m.outerUrl})\n\n\n"
+            )
+        }
+        return batchContent.toString()
     }
 }

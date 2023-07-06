@@ -52,6 +52,8 @@ data class WorkspaceCreateEvent(
     val settingEnvs: Map<String, String>,
     @ApiModelProperty("bkTicket")
     val bkTicket: String? = null,
+    @ApiModelProperty("projectId")
+    val projectId: String? = null,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

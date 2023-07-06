@@ -73,10 +73,17 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Result<String> {
+    override fun updateMaxConRunningQueueSize(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        maxConRunningQueueSize: Int
+    ): Result<String> {
         checkMaxConRunningQueueSize(maxConRunningQueueSize)
         return Result(
             pipelineSettingFacadeService.updateMaxConRunningQueueSize(
+                userId = userId,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 maxConRunningQueueSize = maxConRunningQueueSize
             )

@@ -33,6 +33,8 @@
 @include scroller(#a5a5a5, 9px);
 html,
 body {
+    position: fixed;
+    inset: 0;
     height: 100%;
     color: $fontWeightColor;
     font-family: "pingFangSC-Regular", "Microsoft Yahei";

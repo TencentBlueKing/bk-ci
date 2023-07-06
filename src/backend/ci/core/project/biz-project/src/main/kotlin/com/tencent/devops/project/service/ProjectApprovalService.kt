@@ -68,13 +68,9 @@ class ProjectApprovalService @Autowired constructor(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        subjectScopes: List<SubjectScopeInfo>,
+        tipsStatus: Int
     ): Int {
-        val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
-            ProjectTipsStatus.SHOW_CREATE_PENDING.status
-        } else {
-            ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
-        }
         return projectApprovalDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -380,7 +376,8 @@ class ProjectApprovalService @Autowired constructor(
                     type = AuthConstants.ALL_MEMBERS,
                     name = AuthConstants.ALL_MEMBERS_NAME
                 )
-            )
+            ),
+            tipsStatus = ProjectTipsStatus.NOT_SHOW.status
         )
     }
 }

@@ -30,7 +30,7 @@ package com.tencent.devops.quality.constant
 const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup" // 项目下无Quality用户组
 const val BK_PASSED = "bkPassed" // 已通过：
 const val BK_BLOCKED = "bkBlocked" // 已拦截：
-const val BK_CURRENT_VALUE = "bkCurrentValue" // {0}当前值({1})，期望${2}\n
+const val BK_CURRENT_VALUE = "bkCurrentValue" // {0}当前值({1})，期望{2}
 const val BK_VALIDATION_PASSED = "bkValidationPassed" // {0}(#{1})在{2}验证通过
 const val BK_VALIDATION_INTERCEPTED = "bkValidationIntercepted" // {0}(#{1})在{2}验证被拦截
 const val BK_INTERCEPTION_RULES = "bkInterceptionRules" // 拦截规则

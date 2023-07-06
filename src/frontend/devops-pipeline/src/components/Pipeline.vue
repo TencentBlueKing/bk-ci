@@ -11,7 +11,8 @@
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
                 <bk-pipeline
-                    :key="pipeline.name"
+                    v-if="pipeline"
+
                     :pipeline="pipeline"
                     :user-name="userName"
                     :editable="pipelineEditable"
@@ -270,7 +271,7 @@
                     editingElementPos: args
                 })
             },
-            
+
             getStageByIndex (stageIndex) {
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)

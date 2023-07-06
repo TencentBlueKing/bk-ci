@@ -91,10 +91,10 @@ object ProjectMessageCode {
     const val FAILED_USER_INFORMATION = "2119043" // 获取用户{0} 信息失败
     const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
     const val RELATED_RESOURCE_EMPTY = "2119045" // 权限系统：绑定系统资源为空
-    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2119046" // iam回调方法${0}不支持
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2119046" // iam回调方法{0}不支持
     const val PROJECT_UPDATE_FAIL = "2119047" // 修改项目错误
     const val CANCEL_CREATION_PROJECT_FAIL = "2119048" // 取消创建中的项目失败
-    const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目不能修改
+    const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目{0}不能修改
     const val UNDER_APPROVAL_PROJECT = "2119050" // 项目{0}审批中，请耐心等待，或联系审批人处理
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务

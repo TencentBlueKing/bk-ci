@@ -32,6 +32,7 @@ $fontBoldColor: #333948;
 $fontLighterColor: #c4cdd6;
 
 
+$unexecColor: #c4cdd6;
 // 主体 icon 颜色
 $iconPrimaryColor: #3c96ff;
 $primaryColor: #3c96ff;
@@ -93,8 +94,6 @@ $addIconLeftMargin: $StageMargin * 0.5 - $reviewIconSize * 0.5;
 $addIconRightMargin: $reviewIconSize * 0.5 + $StageMargin * 0.5;
 $addIconLeft: -$addIconRightMargin;
 $appendIconRight: -$addIconLeftMargin - $addBtnSize;
-
-
 
 @mixin ellipsis ($max-width: auto) {
     display: inline-block;

@@ -22,8 +22,6 @@ object DevfileUtil {
             logger.warn("yaml parse error $fileContent|${it.message}")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
-                    .format("Please check the file content. Error message: ${it.message}"),
                 params = arrayOf("Please check the file content. Error message: ${it.message}")
             )
         }
@@ -49,8 +47,6 @@ object DevfileUtil {
                                         null -> null
                                         else -> throw ErrorCodeException(
                                             errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                                            defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
-                                                .format("devfile parse Credentials error"),
                                             params = arrayOf("devfile parse Credentials error")
                                         )
                                     }
@@ -66,8 +62,6 @@ object DevfileUtil {
                 }
                 else -> throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                    defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
-                        .format("devfile parse runs-on error"),
                     params = arrayOf("devfile parse runs-on error")
                 )
             }
@@ -75,11 +69,6 @@ object DevfileUtil {
             logger.warn("yaml parse image error ${preDevfile.runsOn}|${it.message}")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
-                    .format(
-                        "An error was reported when parsing the runs-on information, " +
-                            "please check the file content. Error message ${it.message}"
-                    ),
                 params = arrayOf(
                     "An error was reported when parsing the runs-on information, " +
                         "please check the file content. Error message ${it.message}"
