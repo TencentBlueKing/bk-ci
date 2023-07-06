@@ -50,7 +50,6 @@ import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaInfo
 import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaProperties
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import org.slf4j.LoggerFactory
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
@@ -61,7 +60,7 @@ class RbacPermissionResourceCallbackService constructor(
 
     /*获取项目名称*/
     private val projectNameCache = Caffeine.newBuilder()
-        .maximumSize(5000)
+        .maximumSize(10000)
         .expireAfterWrite(1, TimeUnit.DAYS)
         .build<String/*projectCode*/, String/*projectName*/>()
 
@@ -243,7 +242,7 @@ class RbacPermissionResourceCallbackService constructor(
         offset: Int,
         limit: Int
     ): FetchInstanceListDTO<FetchInstanceListData> {
-        if (limit > 1000) {
+        if (limit > MAX_LIMIT) {
             return FetchInstanceListInfo().buildFetchInstanceListFailResult(
                 "a maximum of 1000 data items can be obtained"
             )
@@ -251,25 +250,18 @@ class RbacPermissionResourceCallbackService constructor(
         if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value) {
             return FetchInstanceListInfo().buildFetchInstanceListFailResult("empty data")
         }
-        val startEpoch = System.currentTimeMillis()
-        val list = authResourceService.list(
+        val fetchInstanceListInfo = authResourceService.list(
             resourceType = resourceType,
             startTime = startTime,
             endTime = endTime,
             offset = offset,
             limit = limit
-        )
-        logger.info("authResourceService.list:${System.currentTimeMillis() - startEpoch}")
-        val fetchInstanceListInfoStartEpoch = System.currentTimeMillis()
-        val fetchInstanceListInfo =  list.map { it.toInstanceListDTO() }
-        logger.info("fetchInstanceListInfoStartEpoch:${System.currentTimeMillis() - fetchInstanceListInfoStartEpoch}")
-        val countStartEpoch = System.currentTimeMillis()
+        ).map { it.toInstanceListDTO() }
         val count = authResourceService.countResourceByUpdateTime(
             resourceType = resourceType,
             startTime = startTime,
             endTime = endTime
         )
-        logger.info("countStartEpoch:${System.currentTimeMillis() - countStartEpoch}")
         return FetchInstanceListInfo().buildFetchInstanceListResult(fetchInstanceListInfo, count)
     }
 
@@ -300,11 +292,11 @@ class RbacPermissionResourceCallbackService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionResourceCallbackService::class.java)
         private const val PROJECT_ID_CHINESE_DESCRIPTION = "项目ID"
         private const val PROJECT_NAME_CHINESE_DESCRIPTION = "项目名称"
         private const val PIPELINE_ID_CHINESE_DESCRIPTION = "流水线ID"
         private const val PIPELINE_NAME_CHINESE_DESCRIPTION = "流水线名称"
         private const val OBJECT_TYPE = "object"
+        private const val MAX_LIMIT = 1000
     }
 }
