@@ -38,6 +38,7 @@ function _M:isSafe()
     local header_clb = ngx.var.http_x_clb_lbid
     if string.find(host, "bkdevops.qq.com") ~= nil or header_clb ~= nil then -- bkdevops.qq.com 相关域名或者传了lb的ID
         if string.find(path, "/api/app/") == nil -- app 路径
+        and string.find(path, "/api/desktop/") == nil -- 离岸开发 路径
         and string.find(path, "/api/open/") == nil -- open路径
         and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
         and string.find(path, "/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
