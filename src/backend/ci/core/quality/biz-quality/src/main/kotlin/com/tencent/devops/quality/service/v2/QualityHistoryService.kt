@@ -243,6 +243,7 @@ class QualityHistoryService @Autowired constructor(
             ruleIds = ruleIdSet
         )?.map { it.id to it }?.toMap()
         return interceptHistory.distinctBy { it.ruleId }.map {
+            logger.info("QUALITY|get history: ${it.buildId}, check_time: ${it.checkTimes}")
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
