@@ -52,7 +52,7 @@ spec:
       {{- end }}
       initContainers:
         - name: frontend
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.frontendImage "global" $) }}
+          image: {{ include "bkci-frontend.image" . }}
           volumeMounts:
           - mountPath: /tmp/frontend
             name: frontend
@@ -63,7 +63,7 @@ spec:
               cp -r /data/workspace/frontend/* /tmp/frontend/
       containers:
         - name: gateway
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
+          image: {{ include "bkci-gateway.image" . }}
           imagePullPolicy: {{ .Values.gatewayImage.pullPolicy }}
           {{- if .Values.gateway.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}

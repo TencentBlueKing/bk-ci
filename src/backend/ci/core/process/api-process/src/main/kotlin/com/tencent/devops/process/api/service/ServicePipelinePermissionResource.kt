@@ -23,36 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.websocket.api
+package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
-@Path("/{apiType:user|desktop}/websocket/sessions")
+@Api(tags = ["SERVICE_PIPELINE_PERMISSION"], description = "服务-流水线-鉴权")
+@Path("/service/pipeline/permission")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.TEXT_PLAIN)
-interface UserWebsocketResource {
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelinePermissionResource {
 
-    @POST
-    @Path("/{sessionId}/userIds/{userId}/clear")
-    @ApiOperation("页面退出清理session")
-    fun clearSession(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/validate")
+    @ApiOperation("校验用户是否有具体操作的权限")
+    fun checkPipelinePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @ApiParam("SessionID", required = true)
-        @PathParam("sessionId")
-        sessionId: String
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("permission")
+        @ApiParam("操作权限", required = false)
+        permission: AuthPermission
     ): Result<Boolean>
 }
