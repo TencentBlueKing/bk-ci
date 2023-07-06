@@ -191,7 +191,9 @@ class MigrateResultService constructor(
             )?.data?.isNotEmpty() ?: false
         }
         if (!resourceExists) {
-            logger.info("resource does not exist or has been deleted, skip comparison")
+            logger.info(
+                "resource does not exist or has been deleted, skip comparison|$projectCode|$resourceCode|$userId"
+            )
             return
         }
         // 资源存在,校验资源是否迁移到rbac资源
@@ -209,7 +211,9 @@ class MigrateResultService constructor(
         // 校验用户是否离职
         val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
         if (!userExists) {
-            logger.info("user does not exist or has left the company, skip comparison.")
+            logger.info(
+                "user does not exist or has left the company, skip comparison|$projectCode|$resourceCode|$userId"
+            )
             return
         }
         // 用户存在,校验用户是否有资源权限
@@ -225,6 +229,7 @@ class MigrateResultService constructor(
                 relationResourceType = null
             )
         }.data!!
+        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId|$hasPermission")
         if (hasPermission) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
