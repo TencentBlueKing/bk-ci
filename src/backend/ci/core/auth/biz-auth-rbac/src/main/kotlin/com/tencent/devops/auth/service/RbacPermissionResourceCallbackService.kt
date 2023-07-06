@@ -60,7 +60,7 @@ class RbacPermissionResourceCallbackService constructor(
 
     /*获取项目名称*/
     private val projectNameCache = Caffeine.newBuilder()
-        .maximumSize(10000)
+        .maximumSize(5000)
         .expireAfterWrite(1, TimeUnit.DAYS)
         .build<String/*projectCode*/, String/*projectName*/>()
 
