@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.constants.DataTypeEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
@@ -39,6 +40,8 @@ import com.tencent.bk.sdk.iam.dto.callback.response.InstanceListDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SchemaData
 import com.tencent.bk.sdk.iam.dto.callback.response.SchemaProperties
+import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
@@ -50,11 +53,18 @@ import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import org.slf4j.LoggerFactory
 import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 
 class RbacPermissionResourceCallbackService constructor(
     private val authResourceService: AuthResourceService,
     private val resourceService: ResourceService
 ) : PermissionResourceCallbackService {
+
+    /*获取项目名称*/
+    private val projectNameCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.DAYS)
+        .build<String/*projectCode*/, String/*projectName*/>()
 
     override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
         return resourceService.getProject(callBackInfo, token)
@@ -234,46 +244,51 @@ class RbacPermissionResourceCallbackService constructor(
         offset: Int,
         limit: Int
     ): FetchInstanceListDTO<FetchInstanceListData> {
-        val result = FetchInstanceListInfo()
         if (limit > 1000) {
-            return result.buildFetchInstanceListFailResult("a maximum of 1000 data items can be obtained")
+            return FetchInstanceListInfo().buildFetchInstanceListFailResult("a maximum of 1000 data items can be obtained")
         }
-        if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value)
-            return result.buildFetchInstanceListFailResult("empty data")
+        if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value) {
+            return FetchInstanceListInfo().buildFetchInstanceListFailResult("empty data")
+        }
         val fetchInstanceListInfo = authResourceService.list(
             resourceType = resourceType,
             startTime = startTime,
             endTime = endTime,
             offset = offset,
             limit = limit
-        ).map {
-            // 获取项目名称
-            val projectName = authResourceService.get(
-                projectCode = it.projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = it.projectCode
-            ).resourceName
-            val instanceListDTO = InstanceListDTO<FetchInstanceListData>()
-            instanceListDTO.id = it.resourceCode
-            instanceListDTO.displayName = it.resourceName
-            instanceListDTO.creator = it.createUser
-            instanceListDTO.updater = it.updateUser
-            instanceListDTO.createdAt = it.createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            instanceListDTO.updatedAt = it.updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            instanceListDTO.schemaProperties = FetchInstanceListData(
-                projectId = it.projectCode,
-                projectName = projectName,
-                pipelineId = it.resourceCode,
-                pipelineName = it.resourceName
-            )
-            instanceListDTO
-        }
+        ).map { it.toInstanceListDTO() }
         val count = authResourceService.countResourceByUpdateTime(
             resourceType = resourceType,
             startTime = startTime,
             endTime = endTime
         )
-        return result.buildFetchInstanceListResult(fetchInstanceListInfo, count)
+        return FetchInstanceListInfo().buildFetchInstanceListResult(fetchInstanceListInfo, count)
+    }
+
+    private fun AuthResourceInfo.toInstanceListDTO(): InstanceListDTO<FetchInstanceListData> {
+        val projectName = projectNameCache.getIfPresent(projectCode) ?: run {
+            val resourceName = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            ).resourceName
+            projectNameCache.put(projectCode, resourceName)
+            resourceName
+        }
+        return InstanceListDTO<FetchInstanceListData>().apply {
+            id = resourceCode
+            displayName = resourceName
+            creator = createUser
+            updater = updateUser
+            createdAt = createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            updatedAt = updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            schemaProperties = FetchInstanceListData(
+                projectId = projectCode,
+                projectName = projectName,
+                pipelineId = resourceCode,
+                pipelineName = resourceName
+            )
+        }
     }
 
     companion object {
