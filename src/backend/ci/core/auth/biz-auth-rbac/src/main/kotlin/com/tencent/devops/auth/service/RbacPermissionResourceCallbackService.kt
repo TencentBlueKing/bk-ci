@@ -202,7 +202,9 @@ class RbacPermissionResourceCallbackService constructor(
         }
     }
 
-    private fun fetchResourceTypeSchema(resourceType: String): FetchResourceTypeSchemaDTO<FetchResourceTypeSchemaProperties> {
+    private fun fetchResourceTypeSchema(
+        resourceType: String
+    ): FetchResourceTypeSchemaDTO<FetchResourceTypeSchemaProperties> {
         val result = FetchResourceTypeSchemaInfo()
         if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value)
             return result.buildFetchResourceTypeSchemaFailResult()
