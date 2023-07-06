@@ -142,7 +142,7 @@ class PipelineSettingDao {
         dslContext: DSLContext,
         setting: PipelineSetting,
         isTemplate: Boolean = false
-    ) {
+    ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             // #6090 先查询存在情况再做刷新或插入
             val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
@@ -259,7 +259,7 @@ class PipelineSettingDao {
             if (setting.maxConRunningQueueSize != null) {
                 insert.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             }
-            insert.where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
+            return insert.where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
                 .execute()
         }
     }
