@@ -28,7 +28,7 @@ class RbacLogPermissionService @Autowired constructor(
                 errorCode = LogMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )*/
         // 兼容CodeCC场景，CodeCC创建的流水线未向权限中心注册，调鉴权接口会报错。
-        //pipelineInfo.channelCode != ChannelCode.BS ||
+        // pipelineInfo.channelCode != ChannelCode.BS ||
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
