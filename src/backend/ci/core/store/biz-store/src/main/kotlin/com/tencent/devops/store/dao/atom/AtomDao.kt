@@ -622,14 +622,14 @@ class AtomDao : AtomBaseDao() {
             .union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
-        if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+        /*if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
                     .join(tspr)
                     .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
                     .where(initTestAtomCondition)
             )
-        }
+        }*/
         val t = queryAtomStep.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (null != page && null != pageSize) {

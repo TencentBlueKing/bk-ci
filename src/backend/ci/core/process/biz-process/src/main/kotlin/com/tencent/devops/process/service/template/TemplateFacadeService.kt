@@ -68,6 +68,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -122,11 +123,10 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -137,6 +137,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -147,6 +151,7 @@ class TemplateFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val templateDao: TemplateDao,
+    private val atomDao: AtomDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineInfoDao: PipelineInfoDao,
@@ -1534,9 +1539,32 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+        val templateModel: Model = objectMapper.readValue(template.template)
+        templateModel.stages.forEach {  stage->
+            stage.containers.forEach { container->
+                container.elements.forEach nextElement@{ element->
+                    if (AtomUtils.isHisAtomElement(element)) return@nextElement
+                    logger.info("1234567890: ${element.id}: ${element.version} || ${element.status}")
+                    val version = element.version
+                    if (VersionUtils.isLatestVersion(version)) return@nextElement
+                    val atomCode = element.getAtomCode()
+                    val atom = atomDao.getPipelineAtom(dslContext, atomCode, version)
+                    val atomStatus = listOf(
+                        AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+                    )
+                    logger.info("atomStatus: ${AtomStatusEnum.getAtomStatus(atom!!.atomStatus.toInt())}")
+                    if (atom!!.atomStatus in atomStatus){
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
+                            params = arrayOf(AtomStatusEnum.getAtomStatus(atom.atomStatus.toInt()))
+                        )
+                    }
+                }
+            }
+        }
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
-            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
