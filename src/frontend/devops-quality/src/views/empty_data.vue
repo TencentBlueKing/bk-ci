@@ -46,10 +46,6 @@
         .create-node-row {
             margin-top: 28px;
 
-            .bk-button {
-                width: 120px;
-            }
-
             .create-node-btn {
                 margin-right: 4px;
             }
