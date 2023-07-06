@@ -337,10 +337,10 @@
                     <p class="info-title">{{$t('quality.红线预览')}}</p>
                     <hr>
                     <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之后需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将不会执行后续插件。')}}
+                        {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <p class="priview-tips" v-else>
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之前需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将会停在红线位置。')}}
+                        {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <div class="preview-image">
                         <img v-if="createRuleForm.controlPointPosition"
