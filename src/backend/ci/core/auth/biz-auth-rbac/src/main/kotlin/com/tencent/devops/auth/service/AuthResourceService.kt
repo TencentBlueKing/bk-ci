@@ -276,7 +276,7 @@ class AuthResourceService @Autowired constructor(
     fun countResourceByUpdateTime(
         resourceType: String,
         startTime: Long?,
-        endTime: Long?,
+        endTime: Long?
     ): Long {
         return authResourceDao.countResourceByUpdateTime(
             dslContext = dslContext,

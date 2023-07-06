@@ -326,7 +326,7 @@ class AuthResourceDao {
         dslContext: DSLContext,
         resourceType: String,
         startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null
     ): Long {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectCount()
