@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -69,7 +70,6 @@ class PipelineResDao {
                 .set(VERSION, version)
                 .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
-                .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -77,7 +77,6 @@ class PipelineResDao {
                 .set(SETTING_VERSION, settingVersion)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
-                .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -99,6 +98,37 @@ class PipelineResDao {
         }
     }
 
+    fun getLatestVersionResource(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        with(T_PIPELINE_RESOURCE) {
+            val record = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchAny() ?: return null
+            return PipelineResourceVersion(
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                version = record.version,
+                model = record.model?.let { str ->
+                    try {
+                        JsonUtil.to(str, Model::class.java)
+                    } catch (ignore: Exception) {
+                        logger.warn("get process($pipelineId) model fail", ignore)
+                        null
+                    }
+                } ?: return null,
+                creator = record.creator,
+                versionName = record.versionName,
+                createTime = record.createTime,
+                pipelineVersion = record.pipelineVersion,
+                triggerVersion = record.triggerVersion,
+                settingVersion = record.settingVersion
+            )
+        }
+    }
+
     fun getLatestVersionModelString(
         dslContext: DSLContext,
         projectId: String,
@@ -114,8 +144,7 @@ class PipelineResDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int?,
-        includeDraft: Boolean? = false
+        version: Int?
     ): String? {
 
         return with(T_PIPELINE_RESOURCE) {

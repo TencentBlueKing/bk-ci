@@ -85,6 +85,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -779,13 +780,6 @@ class PipelineRepositoryService constructor(
                         version = version - 1
                     )
                     if (!lastVersionModelStr.isNullOrEmpty()) {
-                        val triggerStr = try {
-                            val trigger = str2model(lastVersionModelStr, pipelineId)
-                                ?.stages?.get(0)?.containers?.get(0) as TriggerContainer
-                            JsonUtil.toJson(trigger, false)
-                        } catch (ignore: Throwable) {
-                            null
-                        }
                         pipelineResVersionDao.create(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -793,7 +787,6 @@ class PipelineRepositoryService constructor(
                             creator = userId,
                             version = version - 1,
                             modelString = lastVersionModelStr,
-                            triggerString = triggerStr,
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,
@@ -894,8 +887,7 @@ class PipelineRepositoryService constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = null,
-                includeDraft = includeDraft
+                version = null
             ) ?: return null
         } else {
             modelString = pipelineResVersionDao.getVersionModelString(
@@ -918,13 +910,36 @@ class PipelineRepositoryService constructor(
         return str2model(modelString, pipelineId)
     }
 
+    fun getPipelineResourceVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int? = null,
+        includeDraft: Boolean? = false
+    ): PipelineResourceVersion? {
+        return if (version == null) { // 取最新版，直接从旧版本表读
+            pipelineResDao.getLatestVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            ) ?: return null
+        } else {
+            pipelineResVersionDao.getVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                includeDraft = includeDraft
+            )
+        }
+    }
+
     private fun str2model(
         modelString: String,
         pipelineId: String
     ) = try {
         JsonUtil.to(modelString, Model::class.java)
-    } catch (exception: Exception) {
-        logger.warn("get process($pipelineId) model fail", exception)
+    } catch (ignore: Exception) {
+        logger.warn("get process($pipelineId) model fail", ignore)
         null
     }
 

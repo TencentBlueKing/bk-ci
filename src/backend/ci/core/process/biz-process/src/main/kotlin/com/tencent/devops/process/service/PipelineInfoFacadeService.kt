@@ -61,6 +61,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -70,6 +71,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.TemplateType
@@ -802,6 +804,62 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineResult
     }
 
+    fun getPipelineResourceVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        version: Int? = null,
+        checkPermission: Boolean = true,
+        includeDraft: Boolean? = false
+    ): PipelineResourceVersion {
+        if (checkPermission) {
+            val permission = AuthPermission.VIEW
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
+        }
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+
+        if (pipelineInfo.channelCode != channelCode) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
+                params = arrayOf(pipelineInfo.channelCode.name)
+            )
+        }
+
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = includeDraft
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
+        val fixedModel = getFixedModel(resource.model, projectId, pipelineId, userId, pipelineInfo)
+        return resource.copy(model = fixedModel)
+    }
+
     fun getPipeline(
         userId: String,
         projectId: String,
@@ -850,12 +908,21 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = version,
             includeDraft = includeDraft
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
 
+        return getFixedModel(model, projectId, pipelineId, userId, pipelineInfo)
+    }
+
+    private fun getFixedModel(
+        model: Model,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        pipelineInfo: PipelineInfo
+    ): Model {
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
