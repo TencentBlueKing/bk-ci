@@ -24,41 +24,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.pojo
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.api.annotation.InfluxTag
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.metrics.resources
 
-@ApiModel("dispatch状态上报")
-data class DispatchStatus(
-    @ApiModelProperty("蓝盾项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("vmSeqId", required = true)
-    val vmSeqId: String,
-    @ApiModelProperty("actionType", required = true)
-    val actionType: String,
-    @ApiModelProperty("retryCount", required = false)
-    val retryCount: Long? = 0,
-    @ApiModelProperty("channelCode", required = false)
-    val channelCode: ChannelCode?,
-    @ApiModelProperty("开机时间", required = true)
-    val startTime: Long,
-    @ApiModelProperty("关机时间", required = false)
-    val stopTime: Long?,
-    @ApiModelProperty("蓝盾错误码", required = true)
-    val errorCode: String,
-    @ApiModelProperty("失败原因", required = false)
-    val errorMsg: String?,
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: String? = ErrorType.SYSTEM.name,
-    @InfluxTag
-    @ApiModelProperty("BuildType", required = false)
-    val buildType: String
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceAtomMonitorDataResource
+import com.tencent.devops.metrics.pojo.vo.AtomMonitorInfoVO
+import com.tencent.devops.metrics.service.AtomMonitorDataManageService
+
+@RestResource
+class ServiceAtomMonitorDataResourceImpl constructor(
+    private val atomMonitorDataManageService: AtomMonitorDataManageService
+) : ServiceAtomMonitorDataResource {
+    override fun queryAtomMonitorStatisticData(
+        atomCode: String,
+        startTime: String,
+        endTime: String
+    ): Result<AtomMonitorInfoVO> {
+        return Result(
+            atomMonitorDataManageService.queryAtomMonitorStatisticData(
+                atomCode = atomCode,
+                startTime = DateTimeUtil.stringToLocalDateTime(startTime, YYYY_MM_DD),
+                endTime = DateTimeUtil.stringToLocalDateTime(endTime, YYYY_MM_DD),
+            )
+        )
+    }
+}
