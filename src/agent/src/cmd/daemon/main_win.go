@@ -74,7 +74,7 @@ func main() {
 
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)

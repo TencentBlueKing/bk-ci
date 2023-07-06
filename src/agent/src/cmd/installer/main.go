@@ -55,7 +55,7 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	defer func() {
 		if err := recover(); err != nil {

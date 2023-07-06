@@ -81,7 +81,7 @@ func main() {
 
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// 以agent安装目录为工作目录
 	workDir := systemutil.GetExecutableDir()
