@@ -527,7 +527,7 @@ class WorkspaceService @Autowired constructor(
                 val duration = remoteDevSettingDao.fetchAnyUserSetting(
                     dslContext, userId
                 ).startCloudExperienceDuration
-                if (duration * 60 * 60 > workspace.usageTime) {
+                if (duration * 60 * 60 < workspace.usageTime) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
                         params = arrayOf(workspace.name, duration.toString())
