@@ -312,8 +312,8 @@
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
+                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入审核人，支持输入流水线变量')" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
                                             <bk-input type="number"
@@ -337,10 +337,10 @@
                     <p class="info-title">{{$t('quality.红线预览')}}</p>
                     <hr>
                     <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之后需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将不会执行后续插件。')}}
+                        {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <p class="priview-tips" v-else>
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之前需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将会停在红线位置。')}}
+                        {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <div class="preview-image">
                         <img v-if="createRuleForm.controlPointPosition"

@@ -13,7 +13,7 @@
 
             <div class="group-content">
                 <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
-                    @click="toCreateGroup">{{$t('quality.新增')}}</bk-button>
+                    @click="toCreateGroup">{{$t('quality.新增通知组')}}</bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
                         size="small"
