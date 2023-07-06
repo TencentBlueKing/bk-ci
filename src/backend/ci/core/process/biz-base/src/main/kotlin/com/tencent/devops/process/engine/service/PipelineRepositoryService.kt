@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -53,6 +54,7 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
@@ -668,10 +670,12 @@ class PipelineRepositoryService constructor(
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
+        val watcher = Watcher(id = "updatePipeline#$pipelineId#$saveDraft")
         try {
             lock.lock()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                watcher.start("updatePipelineInfo")
                 version = if (updateLastModifyUser != null && updateLastModifyUser == false) {
                     pipelineInfoDao.update(
                         dslContext = transactionContext,
@@ -707,7 +711,7 @@ class PipelineRepositoryService constructor(
                 }
                 model.latestVersion = version
                 // 如果不是草稿保存，最新版本永远是新增逻辑
-                // TODO #8161 根据差异对比进行小版本号计算
+                watcher.start("getOriginModel")
                 val latestResRecord = pipelineResDao.getLatestVersionRecord(
                     transactionContext, projectId, pipelineId
                 )
@@ -721,14 +725,16 @@ class PipelineRepositoryService constructor(
                         logger.error("parse process($pipelineId) model fail", ignored)
                         null
                     } ?: return@let
+                    watcher.start("getModelJsonObject")
                     val originTriggerJson = JSONObject(originModel.stages.first())
                     val originPipelineJson = JSONObject(originModel.stages.slice(1 until originModel.stages.size))
                     val triggerJson = JSONObject(model.stages.first())
                     val pipelineJson = JSONObject(model.stages.slice(1 until model.stages.size))
+                    watcher.start("getSimilarResult")
                     if (!originTriggerJson.similar(triggerJson)) triggerVersion++
                     if (!originPipelineJson.similar(pipelineJson)) pipelineVersion++
                 }
-
+                watcher.start("updatePipelineResource")
                 if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -757,6 +763,7 @@ class PipelineRepositoryService constructor(
                     draftFlag = saveDraft == true
                 )
                 // 针对新增version表做的数据迁移
+                watcher.start("updatePipelineResourceVersion")
                 if (version > 1 && pipelineResVersionDao.getVersionModelString(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -794,6 +801,7 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
+                watcher.start("deleteEarlyVersion")
                 pipelineModelTaskDao.deletePipelineTasks(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -817,6 +825,8 @@ class PipelineRepositoryService constructor(
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
             }
         } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
             lock.unlock()
         }
 
