@@ -316,7 +316,13 @@ class UserPipelineResourceImpl @Autowired constructor(
         setting: PipelineSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting,
+            checkPermission = true
+        )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,

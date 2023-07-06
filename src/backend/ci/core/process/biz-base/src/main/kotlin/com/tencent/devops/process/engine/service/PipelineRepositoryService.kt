@@ -27,13 +27,10 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -86,11 +83,8 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -162,6 +156,7 @@ class PipelineRepositoryService constructor(
         useTemplateSettings: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
+        savedSetting: PipelineSetting? = null,
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
 
@@ -192,7 +187,8 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
-            val pipelineSetting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+            val pipelineSetting = savedSetting
+                ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
             update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -203,7 +199,7 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
+                setting = pipelineSetting,
                 updateLastModifyUser = updateLastModifyUser,
                 saveDraft = saveDraft
             )
@@ -663,7 +659,7 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Collection<PipelineModelTask>,
         channelCode: ChannelCode,
-        maxPipelineResNum: Int? = null,
+        setting: PipelineSetting? = null,
         updateLastModifyUser: Boolean? = true,
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
@@ -718,7 +714,7 @@ class PipelineRepositoryService constructor(
                 )
                 var pipelineVersion = latestResRecord?.pipelineVersion ?: version
                 var triggerVersion = latestResRecord?.triggerVersion ?: version
-                var settingVersion = latestResRecord?.settingVersion ?: version
+                val settingVersion = setting?.version ?: latestResRecord?.settingVersion ?: version
                 latestResRecord?.let {
                     val originModel = try {
                         objectMapper.readValue(it.model, Model::class.java)
@@ -806,13 +802,13 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     beforeVersion = version
                 )
-                if (maxPipelineResNum != null) {
+                setting?.maxPipelineResNum?.let {
                     pipelineResVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         currentVersion = version,
-                        maxPipelineResNum = maxPipelineResNum
+                        maxPipelineResNum = it
                     )
                 }
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
@@ -1135,64 +1131,8 @@ class PipelineRepositoryService constructor(
         return pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)?.buildNo
     }
 
-    @Suppress("ComplexMethod", "MagicNumber")
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {
-        val t = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-        return if (t != null) {
-            val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
-                ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-            val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
-                ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-            val oldSuccessSubscription = Subscription(
-                types = successType,
-                groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
-                users = t.successReceiver ?: "",
-                wechatGroupFlag = t.successWechatGroupFlag ?: false,
-                wechatGroup = t.successWechatGroup ?: "",
-                wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                detailFlag = t.successDetailFlag,
-                content = t.successContent ?: ""
-            )
-            val oldFailSubscription = Subscription(
-                types = failType,
-                groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
-                users = t.failReceiver ?: "",
-                wechatGroupFlag = t.failWechatGroupFlag ?: false,
-                wechatGroup = t.failWechatGroup ?: "",
-                wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                detailFlag = t.failDetailFlag,
-                content = t.failContent ?: ""
-            )
-            val successSubscriptionList = t.successSubscription?.let {
-                JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-            } ?: listOf(oldSuccessSubscription)
-            val failSubscriptionList = t.failureSubscription?.let {
-                JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-            } ?: listOf(oldFailSubscription)
-            PipelineSetting(
-                projectId = t.projectId,
-                pipelineId = t.pipelineId,
-                pipelineName = t.name,
-                desc = t.desc,
-                runLockType = PipelineRunLockType.valueOf(t.runLockType),
-                successSubscription = oldSuccessSubscription,
-                failSubscription = oldFailSubscription,
-                successSubscriptionList = successSubscriptionList,
-                failSubscriptionList = failSubscriptionList,
-                labels = emptyList(),
-                waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
-                maxQueueSize = t.maxQueueSize,
-                maxPipelineResNum = t.maxPipelineResNum,
-                maxConRunningQueueSize = t.maxConRunningQueueSize,
-                buildNumRule = t.buildNumRule,
-                concurrencyCancelInProgress = t.concurrencyCancelInProgress,
-                concurrencyGroup = t.concurrencyGroup,
-                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
-                pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
-                    JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                }
-            )
-        } else null
+        return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
     }
 
     fun saveSetting(
@@ -1223,8 +1163,8 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
-            if (old?.name != null) {
-                oldName = old.name
+            if (old?.pipelineName != null) {
+                oldName = old.pipelineName
             }
             pipelineInfoDao.update(
                 dslContext = context,

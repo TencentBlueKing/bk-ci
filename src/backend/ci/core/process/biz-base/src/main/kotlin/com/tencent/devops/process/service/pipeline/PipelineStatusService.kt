@@ -95,7 +95,7 @@ class PipelineStatusService(
             latestBuildStartTime = (pipelineBuildSummary.latestStartTime)?.timestampmilli() ?: 0,
             latestBuildStatus = pipelineBuildStatus,
             latestBuildTaskName = pipelineBuildSummary.latestTaskName,
-            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
+            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType.ordinal),
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
             lastBuildTotalCount = lastBuildTotalCount,

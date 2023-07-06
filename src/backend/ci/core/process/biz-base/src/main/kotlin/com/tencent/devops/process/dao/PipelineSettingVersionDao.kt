@@ -27,14 +27,19 @@
 
 package com.tencent.devops.process.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
+import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
-import org.jooq.Result
+import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
 
 @Suppress("LongParameterList")
@@ -95,6 +100,8 @@ class PipelineSettingVersionDao {
         isTemplate: Boolean = false,
         id: Long? = null
     ): Int {
+        val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
+        val failSubscriptionList = setting.failSubscriptionList ?: listOf(setting.failSubscription)
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.insertInto(
                 this,
@@ -116,56 +123,61 @@ class PipelineSettingVersionDao {
                 FAIL_CONTENT,
                 IS_TEMPLATE,
                 VERSION,
-                ID
-            )
-                .values(
-                    setting.projectId,
-                    setting.pipelineId,
-                    setting.successSubscription.users,
-                    setting.failSubscription.users,
-                    setting.successSubscription.groups.joinToString(","),
-                    setting.failSubscription.groups.joinToString(","),
-                    setting.successSubscription.types.joinToString(",") { it.name },
-                    setting.failSubscription.types.joinToString(",") { it.name },
-                    setting.failSubscription.wechatGroupFlag,
-                    setting.failSubscription.wechatGroup,
-                    setting.successSubscription.wechatGroupFlag,
-                    setting.successSubscription.wechatGroup,
-                    setting.successSubscription.detailFlag,
-                    setting.failSubscription.detailFlag,
-                    setting.successSubscription.content,
-                    setting.failSubscription.content,
-                    isTemplate,
-                    version,
-                    id
-                )
+                ID,
+                SUCCESS_SUBSCRIPTION,
+                FAILURE_SUBSCRIPTION
+            ).values(
+                setting.projectId,
+                setting.pipelineId,
+                setting.successSubscription.users,
+                setting.failSubscription.users,
+                setting.successSubscription.groups.joinToString(","),
+                setting.failSubscription.groups.joinToString(","),
+                setting.successSubscription.types.joinToString(",") { it.name },
+                setting.failSubscription.types.joinToString(",") { it.name },
+                setting.failSubscription.wechatGroupFlag,
+                setting.failSubscription.wechatGroup,
+                setting.successSubscription.wechatGroupFlag,
+                setting.successSubscription.wechatGroup,
+                setting.successSubscription.detailFlag,
+                setting.failSubscription.detailFlag,
+                setting.successSubscription.content,
+                setting.failSubscription.content,
+                isTemplate,
+                version,
+                id,
+                JsonUtil.toJson(successSubscriptionList, false),
+                JsonUtil.toJson(failSubscriptionList, false)
+            ).onDuplicateKeyUpdate()
+                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
+                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .execute()
         }
     }
 
-    fun getSetting(
+    fun getSettingVersion(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         version: Int
-    ): TPipelineSettingVersionRecord? {
+    ): PipelineSettingVersion? {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
+                .fetchOne(mapper)
         }
     }
 
     fun getSettingByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: List<String>
-    ): Result<TPipelineSettingVersionRecord> {
+    ): List<PipelineSettingVersion> {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -206,5 +218,54 @@ class PipelineSettingVersionDao {
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
+    }
+
+    class PipelineSettingVersionJooqMapper : RecordMapper<TPipelineSettingVersionRecord, PipelineSettingVersion> {
+        override fun map(record: TPipelineSettingVersionRecord?): PipelineSettingVersion? {
+            return record?.let { t ->
+                val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                val oldSuccessSubscription = Subscription(
+                    types = successType,
+                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.successReceiver ?: "",
+                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
+                    wechatGroup = t.successWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
+                    detailFlag = t.successDetailFlag,
+                    content = t.successContent ?: ""
+                )
+                val oldFailSubscription = Subscription(
+                    types = failType,
+                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.failReceiver ?: "",
+                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
+                    wechatGroup = t.failWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.failDetailFlag,
+                    content = t.failContent ?: ""
+                )
+                val successSubscriptionList = t.successSubscription?.let {
+                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                } ?: listOf(oldSuccessSubscription)
+                val failSubscriptionList = t.failureSubscription?.let {
+                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                } ?: listOf(oldFailSubscription)
+                PipelineSettingVersion(
+                    projectId = t.projectId,
+                    pipelineId = t.pipelineId,
+                    successSubscription = oldSuccessSubscription,
+                    failSubscription = oldFailSubscription,
+                    successSubscriptionList = successSubscriptionList,
+                    failSubscriptionList = failSubscriptionList
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val mapper = PipelineSettingVersionJooqMapper()
     }
 }

@@ -40,6 +40,10 @@ data class PipelineSettingVersion(
     var successSubscription: Subscription = Subscription(),
     @ApiModelProperty("订阅失败", required = false)
     var failSubscription: Subscription = Subscription(),
+    @ApiModelProperty("订阅成功相关", required = false)
+    var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
+    @ApiModelProperty("订阅失败相关", required = false)
+    var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
     @ApiModelProperty("版本", required = false)
     var version: Int = 0
 )

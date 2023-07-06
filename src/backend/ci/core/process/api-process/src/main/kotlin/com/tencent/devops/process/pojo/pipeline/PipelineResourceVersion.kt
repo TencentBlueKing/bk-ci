@@ -62,5 +62,5 @@ data class PipelineResourceVersion(
     @ApiModelProperty("草稿版本标识", required = false)
     val draftFlag: Boolean? = false,
     @ApiModelProperty("分支版本标识", required = false)
-    val refs: String? = null,
+    val refs: String? = null
 )

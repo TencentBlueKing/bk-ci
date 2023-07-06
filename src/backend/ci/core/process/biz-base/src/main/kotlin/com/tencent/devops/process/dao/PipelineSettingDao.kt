@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -46,6 +47,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record4
+import org.jooq.RecordMapper
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -105,7 +107,7 @@ class PipelineSettingDao {
                 PIPELINE_AS_CODE_SETTINGS,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
-                SETTING_VERSION
+                VERSION
             )
                 .values(
                     projectId,
@@ -184,7 +186,7 @@ class PipelineSettingDao {
                     PIPELINE_AS_CODE_SETTINGS,
                     SUCCESS_SUBSCRIPTION,
                     FAILURE_SUBSCRIPTION,
-                    SETTING_VERSION
+                    VERSION
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -254,7 +256,7 @@ class PipelineSettingDao {
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                     .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                     .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
-                    .set(SETTING_VERSION, setting.version)
+                    .set(VERSION, setting.version)
                 // pipelineAsCodeSettings 默认传空不更新
                 setting.pipelineAsCodeSettings?.let { self ->
                     updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
@@ -270,11 +272,30 @@ class PipelineSettingDao {
         }
     }
 
-    fun getSetting(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineSettingRecord? {
+    fun getSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchOne()
+                .fetchOne(mapper)
+        }
+    }
+
+    fun getPipelineAsCodeSettings(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineAsCodeSettings? {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            return dslContext.select(PIPELINE_AS_CODE_SETTINGS)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne()?.component1()?.let { self ->
+                    JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                }
         }
     }
 
@@ -282,7 +303,7 @@ class PipelineSettingDao {
         dslContext: DSLContext,
         pipelineIds: Set<String>,
         projectId: String? = null
-    ): Result<TPipelineSettingRecord> {
+    ): List<PipelineSetting> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
@@ -291,7 +312,7 @@ class PipelineSettingDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -327,18 +348,17 @@ class PipelineSettingDao {
         name: String,
         pipelineId: String? = null,
         isTemplate: Boolean = false
-    ): Result<TPipelineSettingRecord> {
+    ): List<PipelineSetting> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            val conditions =
-                mutableListOf<Condition>(
-                    PROJECT_ID.eq(projectId),
-                    NAME.eq(name),
-                    IS_TEMPLATE.eq(isTemplate)
-                )
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                NAME.eq(name),
+                IS_TEMPLATE.eq(isTemplate)
+            )
             if (!pipelineId.isNullOrBlank()) conditions.add(PIPELINE_ID.eq(pipelineId))
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -423,5 +443,69 @@ class PipelineSettingDao {
             }
             return update.execute()
         }
+    }
+
+    class PipelineSettingJooqMapper : RecordMapper<TPipelineSettingRecord, PipelineSetting> {
+        override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
+            return record?.let { t ->
+                val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                val oldSuccessSubscription = Subscription(
+                    types = successType,
+                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.successReceiver ?: "",
+                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
+                    wechatGroup = t.successWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
+                    detailFlag = t.successDetailFlag,
+                    content = t.successContent ?: ""
+                )
+                val oldFailSubscription = Subscription(
+                    types = failType,
+                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.failReceiver ?: "",
+                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
+                    wechatGroup = t.failWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.failDetailFlag,
+                    content = t.failContent ?: ""
+                )
+                val successSubscriptionList = t.successSubscription?.let {
+                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                } ?: listOf(oldSuccessSubscription)
+                val failSubscriptionList = t.failureSubscription?.let {
+                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                } ?: listOf(oldFailSubscription)
+                PipelineSetting(
+                    projectId = t.projectId,
+                    pipelineId = t.pipelineId,
+                    pipelineName = t.name,
+                    desc = t.desc,
+                    runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                    successSubscription = oldSuccessSubscription,
+                    failSubscription = oldFailSubscription,
+                    successSubscriptionList = successSubscriptionList,
+                    failSubscriptionList = failSubscriptionList,
+                    labels = emptyList(),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
+                    maxQueueSize = t.maxQueueSize,
+                    maxPipelineResNum = t.maxPipelineResNum,
+                    maxConRunningQueueSize = t.maxConRunningQueueSize,
+                    buildNumRule = t.buildNumRule,
+                    concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencyGroup = t.concurrencyGroup,
+                    cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
+                    pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                    }
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val mapper = PipelineSettingJooqMapper()
     }
 }

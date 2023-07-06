@@ -210,6 +210,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         // setting pipeline需替换成新流水线的
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
+            projectId = projectId,
+            pipelineId = newSetting.pipelineId,
             setting = newSetting,
             checkPermission = true,
             dispatchPipelineUpdateEvent = false
@@ -620,6 +622,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 复制setting到新流水线
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     setting = newSetting,
                     dispatchPipelineUpdateEvent = false,
                     updateLabels = false
@@ -657,6 +661,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true,
         updateLastModifyUser: Boolean? = true,
+        savedSetting: PipelineSetting? = null,
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
@@ -737,6 +742,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode,
                 create = false,
                 updateLastModifyUser = updateLastModifyUser,
+                savedSetting = savedSetting,
                 saveDraft = saveDraft
             )
             if (checkPermission) {
@@ -762,6 +768,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         setting.pipelineName = name
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
             setting = setting,
             checkPermission = true,
             dispatchPipelineUpdateEvent = true
@@ -779,6 +787,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting,
+            checkPermission = false,
+            dispatchPipelineUpdateEvent = false,
+            saveDraft = saveDraft
+        )
         val pipelineResult = editPipeline(
             userId = userId,
             projectId = projectId,
@@ -787,20 +804,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             channelCode = channelCode,
             checkPermission = checkPermission,
             checkTemplate = checkTemplate,
+            savedSetting = savedSetting,
             saveDraft = saveDraft
         )
         if (setting.projectId.isBlank()) {
             setting.projectId = projectId
         }
         setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
-        val settingVersion = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            setting = setting,
-            checkPermission = false,
-            version = pipelineResult.version,
-            dispatchPipelineUpdateEvent = false,
-            saveDraft = saveDraft
-        )
+
         return pipelineResult
     }
 
