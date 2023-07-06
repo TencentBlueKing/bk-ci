@@ -124,6 +124,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
@@ -367,8 +368,7 @@ class WorkspaceService @Autowired constructor(
             }
 
             if (systemType.needReminderUser()) {
-                val duration =
-                    remoteDevSettingDao.fetchAnyUserSetting(dslContext, event.userId).startCloudExperienceDuration
+                val duration = remoteDevSettingService.startCloudExperienceDuration(event.userId)
                 val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
                 dispatcher.dispatch(
                     RemoteDevReminderEvent(
@@ -524,9 +524,7 @@ class WorkspaceService @Autowired constructor(
     ) {
         when (workspace.workspaceMountType) {
             WorkspaceMountType.START.name -> {
-                val duration = remoteDevSettingDao.fetchAnyUserSetting(
-                    dslContext, userId
-                ).startCloudExperienceDuration
+                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
                 if (duration * 60 * 60 < workspace.usageTime) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
@@ -1489,9 +1487,7 @@ class WorkspaceService @Autowired constructor(
         )?.asSequence()
             ?.filter {
                 val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
-                remoteDevSettingDao.fetchAnyUserSetting(
-                    dslContext, it.creator
-                ).startCloudExperienceDuration * 60 * 60 < usageTime
+                remoteDevSettingService.startCloudExperienceDuration(it.creator) * 60 * 60 < usageTime
             }?.map { it.name }?.toList() ?: emptyList()
     }
 

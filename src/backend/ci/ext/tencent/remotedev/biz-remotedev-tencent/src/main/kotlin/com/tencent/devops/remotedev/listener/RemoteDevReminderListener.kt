@@ -36,6 +36,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.event.RemoteDevReminderEvent
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -60,7 +61,8 @@ class RemoteDevReminderListener @Autowired constructor(
         with(event) {
             kotlin.runCatching {
                 val workspace = workspaceService.getWorkspaceDetail(userId, workspaceName) ?: return
-                val duration = remoteDevSettingService.getUserSetting(userId).startCloudExperienceDuration
+                if (!workspace.status.checkRunning()) return
+                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
                 val limit = redisCacheService.get(REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
                 val timeLeft = duration * 60 * 60 - workspace.usageTime
                 // 给予5分钟的时间误差
@@ -86,7 +88,12 @@ class RemoteDevReminderListener @Autowired constructor(
                         notifyType = mutableSetOf(NotifyType.EMAIL.name)
                     )
                     client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                    // 延迟到预期休眠的时间窗口再进行一次判断
+                    dispatcher.dispatch(
+                        this.copy(delayMills = ((limit + 10) * 60).toInt() * 1000)
+                    )
                 } else {
+                    // 体验时长延期过，计算下一次时间窗口再进行判断
                     dispatcher.dispatch(
                         this.copy(delayMills = (timeLeft - limit * 60).coerceAtLeast(60).toInt() * 1000)
                     )
