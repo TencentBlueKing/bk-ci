@@ -278,13 +278,14 @@ class RbacPermissionResourceCallbackService constructor(
             resourceName
         }
         return InstanceListDTO<FetchInstanceListData>().apply {
-            id = resourceCode
+            id = iamResourceCode
             displayName = resourceName
             creator = createUser
             updater = updateUser
             createdAt = createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             updatedAt = updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            schemaProperties = FetchInstanceListData(
+            bkIamPath = listOf("/project,$projectCode/")
+                schemaProperties = FetchInstanceListData(
                 projectId = projectCode,
                 projectName = projectName,
                 pipelineId = resourceCode,
@@ -300,5 +301,6 @@ class RbacPermissionResourceCallbackService constructor(
         private const val PIPELINE_NAME_CHINESE_DESCRIPTION = "流水线名称"
         private const val OBJECT_TYPE = "object"
         private const val MAX_LIMIT = 1000
+        private const val BK_IAM_PATH =
     }
 }
