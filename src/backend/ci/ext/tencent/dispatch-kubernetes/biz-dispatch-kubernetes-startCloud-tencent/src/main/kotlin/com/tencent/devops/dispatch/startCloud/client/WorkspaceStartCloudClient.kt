@@ -47,7 +47,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.apiUrl}")
     val apiUrl: String = ""
 
-    fun createWorkspace(userId: String, environment: EnvironmentCreate): String {
+    fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
         val url = "$apiUrl/openapi/computer/create"
         val body = JsonUtil.toJson(environment, false)
         logger.info("User $userId request url: $url, body: $body")
@@ -78,7 +78,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
-                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data.cgsIp
+                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data
                     APP_NOT_FOUND_CGS == environmentRsp.code -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,

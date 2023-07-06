@@ -145,7 +145,12 @@ class WorkspaceService @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑
-    fun createWorkspace(userId: String, bkTicket: String, projectId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
+    fun createWorkspace(
+        userId: String,
+        bkTicket: String,
+        projectId: String,
+        workspaceCreate: WorkspaceCreate
+    ): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
         val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
@@ -369,7 +374,8 @@ class WorkspaceService @Autowired constructor(
                     RemoteDevReminderEvent(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
-                        delayMills = (duration - limit * 60).toInt().coerceAtLeast(60) * 1000
+                        delayMills = (duration * 60 - limit).times(60).toInt()
+                            .coerceAtLeast(60) * 1000
                     )
                 )
             }
