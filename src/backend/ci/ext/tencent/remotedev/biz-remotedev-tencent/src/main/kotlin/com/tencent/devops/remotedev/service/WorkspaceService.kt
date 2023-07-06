@@ -265,7 +265,8 @@ class WorkspaceService @Autowired constructor(
 //            }else{
 //                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
 //            }
-            "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+            devfile.runsOn?.container?.image =
+                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
 
         // 发送给k8s
