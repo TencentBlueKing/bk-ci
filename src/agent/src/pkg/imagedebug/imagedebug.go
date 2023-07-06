@@ -54,6 +54,12 @@ func DoPullAndDebug() {
 		return
 	}
 
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent imagedebug panic: ", err)
+		}
+	}()
+
 	// 区分模块初始化日志，方便查询
 	imageDebugLogs = logs.Logs.WithField("module", "ImageDebug")
 

@@ -74,8 +74,6 @@ func main() {
 
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	runtime.GOMAXPROCS(4)
-
 	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
