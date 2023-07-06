@@ -301,6 +301,5 @@ class RbacPermissionResourceCallbackService constructor(
         private const val PIPELINE_NAME_CHINESE_DESCRIPTION = "流水线名称"
         private const val OBJECT_TYPE = "object"
         private const val MAX_LIMIT = 1000
-        private const val BK_IAM_PATH =
     }
 }
