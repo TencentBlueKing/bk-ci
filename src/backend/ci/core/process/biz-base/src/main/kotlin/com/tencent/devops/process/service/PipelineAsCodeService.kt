@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import org.jooq.DSLContext
@@ -71,10 +70,6 @@ class PipelineAsCodeService @Autowired constructor(
         pipelineId: String
     ) = asCodeEnabledCache.get(getPipelineCacheKey(projectId, pipelineId))
 
-    fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? {
-        return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            ?.pipelineAsCodeSettings?.let { self ->
-                JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-            }
-    }
+    fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? =
+        pipelineSettingDao.getPipelineAsCodeSettings(dslContext, projectId, pipelineId)
 }

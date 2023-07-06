@@ -60,7 +60,14 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(OpPipelineSettingResourceImpl::class.java)
 
     override fun updateSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting))
+        return Result(
+            pipelineSettingFacadeService.saveSetting(
+                userId = userId,
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                setting = setting
+            ).pipelineId
+        )
     }
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {

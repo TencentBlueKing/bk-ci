@@ -40,7 +40,14 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : UserPipelineSettingResource {
     override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
+        return Result(
+            pipelineSettingFacadeService.saveSetting(
+                userId = userId,
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                setting = setting
+            ).pipelineId
+        )
     }
 
     override fun getSetting(

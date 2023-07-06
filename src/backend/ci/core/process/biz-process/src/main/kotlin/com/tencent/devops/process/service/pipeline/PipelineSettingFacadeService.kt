@@ -61,6 +61,7 @@ import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -81,41 +82,56 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
+    /**
+     * 修改配置时需要返回具体的版本号用于传递
+     */
     fun saveSetting(
         userId: String,
+        projectId: String,
+        pipelineId: String,
         setting: PipelineSetting,
         checkPermission: Boolean = true,
-        version: Int = 0,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
         updateLabels: Boolean = true,
         saveDraft: Boolean? = false
-    ): String {
-        // TODO #8161 增加配置的版本管理
+    ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EDIT
             checkEditPermission(
                 userId = userId,
-                projectId = setting.projectId,
-                pipelineId = setting.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
                     arrayOf(
                         userId,
-                        setting.projectId,
+                        projectId,
                         permission.getI18n(language),
-                        setting.pipelineId
+                        pipelineId
                     )
                 )
             )
         }
+        val settingVersion = pipelineRepositoryService.getSetting(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { origin ->
+            val originJson = JSONObject(origin)
+            val currentJson = JSONObject(setting)
+            if (currentJson.similar(originJson)) {
+                origin.version
+            } else {
+                origin.version + 1
+            }
+        } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,
             setting = setting,
-            version = version,
+            version = settingVersion,
             updateLastModifyUser = updateLastModifyUser
         )
 
@@ -159,12 +175,12 @@ class PipelineSettingFacadeService @Autowired constructor(
                     source = "update_pipeline",
                     projectId = setting.projectId,
                     pipelineId = setting.pipelineId,
-                    version = version,
+                    version = settingVersion,
                     userId = userId
                 )
             )
         }
-        return setting.pipelineId
+        return setting.copy(version = settingVersion)
     }
 
     fun userGetSetting(
@@ -321,6 +337,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             desc = oldSetting.desc,
             successSubscription = oldSetting.successSubscription,
             failSubscription = oldSetting.failSubscription,
+            successSubscriptionList = oldSetting.successSubscriptionList,
+            failSubscriptionList = oldSetting.failSubscriptionList,
             maxPipelineResNum = oldSetting.maxPipelineResNum,
             maxQueueSize = oldSetting.maxQueueSize,
             hasPermission = oldSetting.hasPermission,

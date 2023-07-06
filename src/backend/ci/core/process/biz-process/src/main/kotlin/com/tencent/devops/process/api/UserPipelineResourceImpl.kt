@@ -69,6 +69,7 @@ import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
@@ -315,7 +316,13 @@ class UserPipelineResourceImpl @Autowired constructor(
         setting: PipelineSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting,
+            checkPermission = true
+        )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -358,6 +365,30 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
+    }
+
+    override fun getPipelineResourceAndSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        includeDraft: Boolean?
+    ): Result<PipelineResourceAndSetting> {
+        checkParam(userId, projectId)
+        val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeDraft = includeDraft,
+            channelCode = ChannelCode.BS
+        )
+        val setting = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = resource.settingVersion ?: resource.version
+        )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(PipelineResourceAndSetting(resource, setting))
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {

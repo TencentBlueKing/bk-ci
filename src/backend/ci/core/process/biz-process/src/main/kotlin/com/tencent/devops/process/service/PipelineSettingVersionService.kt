@@ -28,11 +28,8 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import com.tencent.devops.process.pojo.setting.Subscription
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,42 +47,11 @@ class PipelineSettingVersionService @Autowired constructor(
         version: Int,
         channelCode: ChannelCode = ChannelCode.BS
     ): PipelineSettingVersion {
-        val it = pipelineSettingVersionDao.getSetting(
+        return pipelineSettingVersionDao.getSettingVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
-        )
-        val setting = PipelineSettingVersion(projectId = projectId, pipelineId = pipelineId, version = version)
-        if (it != null) {
-            with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-                val successType = it.get(SUCCESS_TYPE).split(",").filter { i -> i.isNotBlank() }
-                    .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
-                    .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-
-                setting.successSubscription = Subscription(
-                    types = successType,
-                    groups = it.get(SUCCESS_GROUP).split(",").toSet(),
-                    users = it.get(SUCCESS_RECEIVER),
-                    wechatGroupFlag = it.get(SUCCESS_WECHAT_GROUP_FLAG),
-                    wechatGroup = it.get(SUCCESS_WECHAT_GROUP),
-                    wechatGroupMarkdownFlag = it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
-                    detailFlag = it.get(SUCCESS_DETAIL_FLAG),
-                    content = it.get(SUCCESS_CONTENT) ?: ""
-                )
-                setting.failSubscription = Subscription(
-                    types = failType,
-                    groups = it.get(FAIL_GROUP).split(",").toSet(),
-                    users = it.get(FAIL_RECEIVER),
-                    wechatGroupFlag = it.get(FAIL_WECHAT_GROUP_FLAG),
-                    wechatGroup = it.get(FAIL_WECHAT_GROUP),
-                    wechatGroupMarkdownFlag = it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
-                    detailFlag = it.get(FAIL_DETAIL_FLAG),
-                    content = it.get(FAIL_CONTENT) ?: ""
-                )
-            }
-        }
-        return setting
+        ) ?: PipelineSettingVersion(projectId = projectId, pipelineId = pipelineId, version = version)
     }
 }

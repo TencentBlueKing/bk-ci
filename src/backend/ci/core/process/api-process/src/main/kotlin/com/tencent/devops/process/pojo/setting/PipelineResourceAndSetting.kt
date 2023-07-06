@@ -27,23 +27,14 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import io.swagger.annotations.ApiModelProperty
+import javax.validation.Valid
 
-@ApiModel("")
-data class PipelineSettingVersion(
-    @ApiModelProperty("项目id", required = false)
-    val projectId: String = "",
-    @ApiModelProperty("流水线id", required = false)
-    val pipelineId: String = "",
-    @ApiModelProperty("订阅成功", required = false)
-    var successSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅失败", required = false)
-    var failSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅成功相关", required = false)
-    var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("订阅失败相关", required = false)
-    var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("版本", required = false)
-    var version: Int = 0
+data class PipelineResourceAndSetting(
+    @ApiModelProperty("流水线模型", required = true)
+    val pipelineResource: PipelineResourceVersion,
+    @ApiModelProperty("流水线设置", required = false)
+    @field:Valid
+    val setting: PipelineSetting
 )

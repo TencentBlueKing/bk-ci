@@ -25,25 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.pipeline.Model
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("")
-data class PipelineSettingVersion(
-    @ApiModelProperty("项目id", required = false)
-    val projectId: String = "",
-    @ApiModelProperty("流水线id", required = false)
-    val pipelineId: String = "",
-    @ApiModelProperty("订阅成功", required = false)
-    var successSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅失败", required = false)
-    var failSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅成功相关", required = false)
-    var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("订阅失败相关", required = false)
-    var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("版本", required = false)
-    var version: Int = 0
+@Suppress("LongParameterList", "LongMethod")
+@ApiModel("流水线版本-详细内容")
+data class PipelineResourceVersion(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("记录版本号", required = true)
+    val version: Int,
+    @ApiModelProperty("编排内容", required = true)
+    val model: Model,
+    @ApiModelProperty("创建者", required = true)
+    val creator: String,
+    @ApiModelProperty("版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("创建者", required = true)
+    val createTime: LocalDateTime,
+    @ApiModelProperty("编排版本号", required = false)
+    val pipelineVersion: Int?,
+    @ApiModelProperty("触发器版本号", required = false)
+    val triggerVersion: Int?,
+    @ApiModelProperty("设置版本号", required = false)
+    val settingVersion: Int?,
+    @ApiModelProperty("是否还有构建记录引用该版本标识", required = false)
+    val referFlag: Boolean? = null,
+    @ApiModelProperty("关联构建记录总数", required = false)
+    val referCount: Int? = null,
+    @ApiModelProperty("草稿版本标识", required = false)
+    val draftFlag: Boolean? = false,
+    @ApiModelProperty("分支版本标识", required = false)
+    val refs: String? = null
 )

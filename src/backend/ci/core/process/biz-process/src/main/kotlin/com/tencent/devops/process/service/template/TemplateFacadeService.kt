@@ -62,7 +62,6 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
-import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -657,7 +656,7 @@ class TemplateFacadeService @Autowired constructor(
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
-                val templateName = setting?.name ?: model.name
+                val templateName = setting?.pipelineName ?: model.name
 
                 // 根据keywords搜索过滤
                 if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
@@ -889,7 +888,7 @@ class TemplateFacadeService @Autowired constructor(
                 val categoryStr = record[tTemplate.CATEGORY]
                 val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
                 result[key] = OptionalTemplate(
-                    name = setting?.name ?: model.name,
+                    name = setting?.pipelineName ?: model.name,
                     templateId = templateId,
                     projectId = templateRecord[tTemplate.PROJECT_ID],
                     version = version,
@@ -960,7 +959,7 @@ class TemplateFacadeService @Autowired constructor(
             template.creator
         )
         val model: Model = objectMapper.readValue(template.template)
-        model.name = setting.name
+        model.name = setting.pipelineName
         model.desc = setting.desc
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
         val labels = ArrayList<String>()
@@ -996,7 +995,7 @@ class TemplateFacadeService @Autowired constructor(
             versions = versions,
             currentVersion = currentVersion,
             latestVersion = latestVersion,
-            templateName = setting.name,
+            templateName = setting.pipelineName,
             description = setting.desc ?: "",
             creator = if (isConstrainedFlag) latestTemplate.creator else template.creator,
             template = templateResult,
@@ -1627,6 +1626,8 @@ class TemplateFacadeService @Autowired constructor(
                 runLockType = runLockType,
                 successSubscription = successSubscription,
                 failSubscription = failSubscription,
+                successSubscriptionList = successSubscriptionList,
+                failSubscriptionList = failSubscriptionList,
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
@@ -1861,7 +1862,7 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = it[KEY_VERSION_NAME] as String,
                 version = templatePipelineVersion,
                 pipelineId = pipelineId,
-                pipelineName = pipelineSetting[0].name,
+                pipelineName = pipelineSetting[0].pipelineName,
                 updateTime = (it[KEY_UPDATED_TIME] as LocalDateTime).timestampmilli(),
                 hasPermission = hasPermissionList.contains(pipelineId),
                 status = templatePipelineStatus
@@ -1994,10 +1995,10 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    private fun getPipelineName(records: Result<TPipelineSettingRecord>, pipelineId: String): String? {
+    private fun getPipelineName(records: List<PipelineSetting>, pipelineId: String): String? {
         records.forEach {
             if (it.pipelineId == pipelineId) {
-                return it.name
+                return it.pipelineName
             }
         }
         return null
@@ -2074,7 +2075,8 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignore: Throwable) {
                 logger.warn("[$projectId]|Failed to sync project|templateId=$templateId", ignore)
                 null
-            }
+            },
+            settingVersion = 1
         )
     }
 
@@ -2115,14 +2117,14 @@ class TemplateFacadeService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             projectCodeList.forEach {
-                // 判断模板名称是否已经关联过
+                // TODO #8161 判断模板名称是否已经关联过，通过setting判断考虑下可否优化
                 val pipelineSettingRecord = pipelineSettingDao.getSetting(
                     dslContext = context,
                     projectId = it,
                     name = templateName,
                     isTemplate = true
                 )
-                if (pipelineSettingRecord.size > 0) {
+                if (pipelineSettingRecord.isNotEmpty()) {
                     return@forEach
                 }
                 val templateId = UUIDUtil.generate()
