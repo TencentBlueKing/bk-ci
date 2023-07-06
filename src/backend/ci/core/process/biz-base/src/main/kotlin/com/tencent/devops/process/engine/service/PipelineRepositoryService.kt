@@ -605,7 +605,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     trigger = trigger,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
-                    modelVersion = modelVersion,
+                    pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
                 )
@@ -744,7 +744,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     trigger = triggerContainer,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
-                    modelVersion = pipelineVersion,
+                    pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
                 )

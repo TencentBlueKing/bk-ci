@@ -55,7 +55,7 @@ class PipelineResDao {
         versionName: String,
         model: Model,
         trigger: TriggerContainer,
-        modelVersion: Int,
+        pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
     ) {
@@ -72,7 +72,7 @@ class PipelineResDao {
                 .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
-                .set(PIPELINE_VERSION, version)
+                .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .onDuplicateKeyUpdate()
@@ -80,7 +80,7 @@ class PipelineResDao {
                 .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
-                .set(PIPELINE_VERSION, modelVersion)
+                .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .execute()
