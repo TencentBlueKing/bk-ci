@@ -47,6 +47,12 @@ class AppPipelineSettingResourceImpl @Autowired constructor(
         pipelineId: String,
         setting: PipelineSetting
     ): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting, false))
+        return Result(
+            pipelineSettingFacadeService.saveSetting(userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting,
+            checkPermission = false).pipelineId
+        )
     }
 }
