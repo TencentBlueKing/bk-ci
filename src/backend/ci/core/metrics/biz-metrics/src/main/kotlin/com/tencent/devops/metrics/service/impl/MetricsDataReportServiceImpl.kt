@@ -489,7 +489,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     .generateSegmentId("ATOM_MONITOR_DATA_DAILY").data ?: 0,
                 atomCode = taskMetricsData.atomCode,
                 executeCount = 1,
-                errorType =  taskMetricsData.errorType,
+                errorType = taskMetricsData.errorType,
                 statisticsTime = DateTimeUtil.stringToLocalDateTime(
                     dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
                     formatStr = YYYY_MM_DD

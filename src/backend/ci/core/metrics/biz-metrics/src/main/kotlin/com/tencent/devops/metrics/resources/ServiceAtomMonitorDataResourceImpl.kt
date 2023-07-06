@@ -48,7 +48,7 @@ class ServiceAtomMonitorDataResourceImpl constructor(
             atomMonitorDataManageService.queryAtomMonitorStatisticData(
                 atomCode = atomCode,
                 startTime = DateTimeUtil.stringToLocalDateTime(startTime, YYYY_MM_DD),
-                endTime = DateTimeUtil.stringToLocalDateTime(endTime, YYYY_MM_DD),
+                endTime = DateTimeUtil.stringToLocalDateTime(endTime, YYYY_MM_DD)
             )
         )
     }
