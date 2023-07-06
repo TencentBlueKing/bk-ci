@@ -245,7 +245,9 @@ class RbacPermissionResourceCallbackService constructor(
         limit: Int
     ): FetchInstanceListDTO<FetchInstanceListData> {
         if (limit > 1000) {
-            return FetchInstanceListInfo().buildFetchInstanceListFailResult("a maximum of 1000 data items can be obtained")
+            return FetchInstanceListInfo().buildFetchInstanceListFailResult(
+                "a maximum of 1000 data items can be obtained"
+            )
         }
         if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value) {
             return FetchInstanceListInfo().buildFetchInstanceListFailResult("empty data")
