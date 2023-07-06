@@ -260,11 +260,12 @@ class WorkspaceService @Autowired constructor(
                 redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
             )
         ) {
-            devfile.runsOn?.container?.image = if (mountType == WorkspaceMountType.BCS) {
-                "${commonConfig.bcsWorkspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-            }else{
-                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-            }
+//            devfile.runsOn?.container?.image = if (mountType == WorkspaceMountType.BCS) {
+//                "${commonConfig.bcsWorkspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+//            }else{
+//                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+//            }
+            "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
 
         // 发送给k8s
