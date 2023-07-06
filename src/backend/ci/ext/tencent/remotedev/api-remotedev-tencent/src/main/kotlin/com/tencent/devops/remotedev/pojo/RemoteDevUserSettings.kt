@@ -20,5 +20,5 @@ data class RemoteDevUserSettings(
     @ApiModelProperty("自动销毁连续空闲时间")
     var autoDeletedDays: Int = 14,
     @ApiModelProperty("START云桌面体验时长")
-    var startCloudExperienceDuration: Int?
+    var startCloudExperienceDuration: Int? = null
 )
