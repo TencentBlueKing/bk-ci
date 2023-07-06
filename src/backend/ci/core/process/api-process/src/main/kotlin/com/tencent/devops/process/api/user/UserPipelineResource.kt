@@ -269,7 +269,7 @@ interface UserPipelineResource {
 
     @ApiOperation("获取流水线编排和设置")
     @GET
-     @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/resource")
     fun getPipelineResourceAndSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
