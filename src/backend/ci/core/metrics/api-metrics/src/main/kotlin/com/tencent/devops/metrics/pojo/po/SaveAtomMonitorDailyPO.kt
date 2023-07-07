@@ -40,7 +40,7 @@ data class SaveAtomMonitorDailyPO(
     @ApiModelProperty("执行次数")
     var executeCount: Long,
     @ApiModelProperty("错误类型")
-    val errorType: Int? = null,
+    val errorType: Int,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建人")

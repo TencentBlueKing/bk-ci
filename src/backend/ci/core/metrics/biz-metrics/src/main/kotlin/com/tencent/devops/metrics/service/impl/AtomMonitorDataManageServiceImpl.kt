@@ -68,7 +68,7 @@ class AtomMonitorDataManageServiceImpl @Autowired constructor(
             val totalExecuteCount = atomMonitorData.totalExecuteCount
             allExecuteCount += totalExecuteCount
             when (errorType) {
-                null -> {
+                -1 -> {
                     atomMonitorInfoVO.totalSuccessNum = totalExecuteCount
                 }
 
