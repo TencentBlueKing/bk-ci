@@ -1,6 +1,6 @@
 package com.tencent.devops.openapi.utils.markdown
 
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_NO_SUCH_PARAMETER
 import com.tencent.devops.openapi.utils.markdown.MarkdownCharacter.FILL
 import com.tencent.devops.openapi.utils.markdown.MarkdownCharacter.MIN_FILL
@@ -20,7 +20,7 @@ class Table(
         val body = StringBuffer()
         if (rows.isEmpty()) {
             body.append(
-                Text(6, I18nUtil.getCodeLanMessage(BK_NO_SUCH_PARAMETER), "")
+                Text(6, MessageUtil.getMessageByLocale(BK_NO_SUCH_PARAMETER, "zh_CN"), "")
             )
             return body.toString()
         }

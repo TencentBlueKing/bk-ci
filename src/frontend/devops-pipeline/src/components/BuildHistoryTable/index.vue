@@ -66,7 +66,7 @@
                             class="material-item"
                         >
                             <p
-                                v-bk-tooltips="{ content: generateMaterial(material), delay: [300, 0] }"
+                                v-bk-tooltips="{ content: generateMaterial(material), delay: [300, 0], allowHTML: false }"
                                 :class="{ 'show-commit-times': material.commitTimes > 1 }"
                                 @click="handleRowClick(props.row)"
                             >
@@ -141,7 +141,7 @@
                     <div class="remark-cell">
                         <span
                             :class="{ 'remark-span': true, active: props.row.active }"
-                            v-bk-tooltips="{ content: props.row.remark, width: 500, disabled: !props.row.remark, delay: [300, 0] }"
+                            v-bk-tooltips="{ content: props.row.remark, width: 500, disabled: !props.row.remark, delay: [300, 0], allowHTML: false }"
                         >
                             {{ props.row.remark || "--" }}
                         </span>
@@ -202,7 +202,7 @@
                                 :name="item.icon"
                             />
                             <span
-                                v-bk-tooltips="{ content: item.title, maxWidth: 500, delay: [300, 0] }"
+                                v-bk-tooltips="{ content: item.title, maxWidth: 500, delay: [300, 0], allowHTML: false }"
                                 v-if="item.title"
                             >
                                 {{ item.title }}
@@ -285,14 +285,14 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import Logo from '@/components/Logo'
     import emptyTips from '@/components/devops/emptyTips'
-    import { convertFileSize, convertMiniTime, convertMStoString } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMiniTime, convertMStoString } from '@/utils/util'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'build-history-table',
@@ -588,7 +588,7 @@
                 const { data, visibleIndex } = this
                 const row = data[visibleIndex]
                 if (row) {
-                    const url = this.getArchiveUrl(data[visibleIndex], 'partView')
+                    const url = this.getArchiveUrl(data[visibleIndex], 'outputs')
                     this.$router.push(url)
                 }
             },

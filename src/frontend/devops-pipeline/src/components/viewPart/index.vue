@@ -125,8 +125,8 @@
 </template>
 
 <script>
-    import qrcode from '@/components/devops/qrcode'
     import Logo from '@/components/Logo'
+    import qrcode from '@/components/devops/qrcode'
     import { convertFileSize, convertTime } from '@/utils/util'
 
     export default {
@@ -253,7 +253,7 @@
                     if (key === 'url') {
                         const res = await this.$store.dispatch('common/requestExternalUrl', {
                             projectId: this.projectId,
-                            artifactoryType: row.artifactoryType,
+                            type: row.artifactoryType,
                             path: row.path
                         })
 

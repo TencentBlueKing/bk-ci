@@ -76,20 +76,36 @@ class RbacPermissionService constructor(
         }
     }
 
+    /**
+     * 如果没有具体资源,则校验是否有项目下任意资源权限
+     */
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        return validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = action,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            relationResourceType = null
-        )
+        val actionInfo = rbacCacheService.getActionInfo(action)
+        // 如果action关联的资源是项目,则直接查询项目的权限
+        return if (actionInfo.relatedResourceType == AuthResourceType.PROJECT.value) {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                relationResourceType = null
+            )
+        } else {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType!!,
+                resourceCode = "*",
+                relationResourceType = null
+            )
+        }
     }
 
     override fun validateUserResourcePermissionByRelation(
@@ -102,8 +118,8 @@ class RbacPermissionService constructor(
     ): Boolean {
         val resource = if (resourceType == AuthResourceType.PROJECT.value) {
             AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
             )
         } else {
             val projectResourceInstance = AuthResourceInstance(
@@ -124,7 +140,7 @@ class RbacPermissionService constructor(
         )
     }
 
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -152,11 +168,15 @@ class RbacPermissionService constructor(
             ) {
                 return true
             }
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resource.resourceType,
-                resourceCode = resource.resourceCode
-            ) ?: return false
+            val iamResourceCode = if (resource.resourceCode == "*") {
+                resource.resourceCode
+            } else {
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
+            } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
                 .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
@@ -316,7 +336,13 @@ class RbacPermissionService constructor(
                     resourceType = resourceType
                 )
             }
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+            val useAction = if (!action.contains("_")) {
+                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+            } else {
+                action
+            }
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
@@ -424,7 +450,7 @@ class RbacPermissionService constructor(
             if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associate {
                     val authPermission = it.substringAfterLast("_")
-                    AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+                    AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
             val instanceList = resources.map { resource ->
@@ -452,12 +478,23 @@ class RbacPermissionService constructor(
             actions.parallelStream().forEach { action ->
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    iamResourceCodes = iamResourceCodes
-                )
+                // 具有action管理员权限,那么有所有资源权限
+                if (permissionSuperManagerService.reviewManagerCheck(
+                        userId = userId,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        action = action
+                    )
+                ) {
+                    permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
+                } else {
+                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                    permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = iamResourceCodes
+                    )
+                }
             }
             return permissionMap
         } finally {

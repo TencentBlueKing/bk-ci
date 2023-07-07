@@ -295,7 +295,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultProjectId = projectCode,
             createExtInfo = projectCreateExtInfo
         )
-        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
+        updateProjectProperties(
+            userId = userId,
+            projectCode = projectCode,
+            properties = projectCreateInfo.properties
+                ?: ProjectProperties(PipelineAsCodeSettings(true))
+        )
         return getByEnglishName(projectCode)
     }
 
@@ -842,6 +847,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): Result<ProjectLogo> {
         logger.info("Update the logo of project : englishName = $englishName")
+        val verify = validatePermission(englishName, userId, AuthPermission.EDIT)
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+            throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
         val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
         if (projectRecord != null) {
             var logoFile: File? = null

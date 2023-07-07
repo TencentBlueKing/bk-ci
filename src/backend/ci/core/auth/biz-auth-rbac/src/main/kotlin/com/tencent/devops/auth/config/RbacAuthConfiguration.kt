@@ -317,12 +317,14 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
-        authVerifyRecordService: AuthVerifyRecordService
+        authVerifyRecordService: AuthVerifyRecordService,
+        migrateResourceService: MigrateResourceService
     ) = MigrateResultService(
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
-        authVerifyRecordService = authVerifyRecordService
+        authVerifyRecordService = authVerifyRecordService,
+        migrateResourceService = migrateResourceService
     )
 
     @Bean
@@ -338,7 +340,8 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
-        deptService: DeptService
+        deptService: DeptService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -351,7 +354,8 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
-        deptService = deptService
+        deptService = deptService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService
     )
 
     @Bean
@@ -367,7 +371,8 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
-        deptService: DeptService
+        deptService: DeptService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService
     ) = MigrateV0PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -380,7 +385,8 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
-        deptService = deptService
+        deptService = deptService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService
     )
 
     @Bean

@@ -54,6 +54,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
 
 /**
@@ -171,6 +172,32 @@ class RbacPermissionMigrateService constructor(
                 offset += limit
             } while (migrateProjects.size == limit)
         }
+        return true
+    }
+
+    override fun compareResult(projectCode: String): Boolean {
+        try {
+            migrateResultService.compare(projectCode)
+        } catch (ignored: Exception) {
+            handleException(
+                exception = ignored,
+                projectCode = projectCode
+            )
+            return false
+        }
+        return true
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean {
+        migrateResourceService.migrateResource(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            projectCreator = projectCreator
+        )
         return true
     }
 
@@ -299,8 +326,7 @@ class RbacPermissionMigrateService constructor(
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = projectCode,
-                authType = authType.value
+                projectCode = projectCode
             )
             return false
         } finally {
@@ -330,7 +356,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV3PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -359,7 +387,9 @@ class RbacPermissionMigrateService constructor(
         watcher.start("migrateUserCustomPolicy")
         migrateV0PolicyService.migrateUserCustomPolicy(
             projectCode = projectCode,
-            version = version
+            projectName = projectName,
+            version = version,
+            gradeManagerId = gradeManagerId
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
@@ -387,11 +417,7 @@ class RbacPermissionMigrateService constructor(
         )?.relationId?.toInt()
     }
 
-    private fun handleException(
-        exception: Exception,
-        projectCode: String,
-        authType: String
-    ) {
+    private fun handleException(exception: Exception, projectCode: String) {
         val errorMessage = when (exception) {
             is IamException -> {
                 exception.errorMsg
@@ -399,11 +425,14 @@ class RbacPermissionMigrateService constructor(
             is ErrorCodeException -> {
                 exception.defaultMessage
             }
+            is CompletionException -> {
+                exception.cause?.message ?: exception.message
+            }
             else -> {
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
+        logger.error("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,
