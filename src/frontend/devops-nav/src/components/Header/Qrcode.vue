@@ -8,7 +8,7 @@
             @click="toggleOrcode(show)"
         >
             <div class="flag-box">
-                <i class="devops-icon icon-phone" />
+                <Icon name="phone" size="20" />
             </div>
         </div>
         <div
