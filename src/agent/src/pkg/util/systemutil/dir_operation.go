@@ -72,9 +72,9 @@ func Chmod(file string, perm os.FileMode) error {
 		err = os.Chmod(file, perm) // 修改权限
 	}
 	if err == nil {
-		logs.Info("chmod %o %s ok!", perm, file)
+		logs.Infof("chmod %o %s ok!", perm, file)
 	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
+		logs.Warnf("chmod %o %s msg: %s", perm, file, err.Error())
 	}
 	return err
 }
