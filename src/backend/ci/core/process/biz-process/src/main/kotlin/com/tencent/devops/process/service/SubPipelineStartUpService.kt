@@ -215,8 +215,17 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
+                params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = parentProjectId,
+            pipelineId = parentPipelineId,
+            channelCode = channelCode
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
 
         val startEpoch = System.currentTimeMillis()
         try {
@@ -243,6 +252,8 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                     params[it.key] = BuildParameters(key = it.key, value = it.value)
                 }
             }
+            // 校验父流水线最后修改人是否有子流水线执行权限
+            checkPermission(parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
@@ -310,7 +321,6 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
         val existModel = pipelineRepositoryService.getModel(projectId, pipelineId, pipeline.version) ?: return
-        checkPermission(pipeline.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->

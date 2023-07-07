@@ -23,49 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
-import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val redisOperation: RedisOperation,
-    private val bkTag: BkTag,
-    private val client: Client
-) : UserSubPipelineInfoResource {
+@Api(tags = ["SERVICE_SUBPIPELINE"], description = "服务-流水线调用")
+@Path("/service/subpipeline")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceSubPipelineResource {
 
-    override fun subpipManualStartupInfo(
+    @ApiOperation("获取子流水线启动参数")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    fun subpipManualStartupInfo(
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("userId")
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = false, defaultValue = "")
+        @PathParam("pipelineId")
         pipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>> {
-        checkParam(userId)
-        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
-        // TODO 权限迁移完后应该删除掉
-        return bkTag.invokeByTag(projectConsulTag) {
-            client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        }
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
+    ): Result<List<SubPipelineStartUpInfo>>
 }

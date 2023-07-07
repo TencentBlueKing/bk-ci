@@ -23,49 +23,26 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
-import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.service.SubPipelineStartUpService
 
 @RestResource
-class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val redisOperation: RedisOperation,
-    private val bkTag: BkTag,
-    private val client: Client
-) : UserSubPipelineInfoResource {
+class ServiceSubPipelineResourceImpl constructor(
+    private val subPipeService: SubPipelineStartUpService
+) : ServiceSubPipelineResource{
 
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
-        checkParam(userId)
-        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
-        // TODO 权限迁移完后应该删除掉
-        return bkTag.invokeByTag(projectConsulTag) {
-            client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        }
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
+        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId)
     }
 }
