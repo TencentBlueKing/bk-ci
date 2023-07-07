@@ -54,6 +54,8 @@ data class WorkspaceCreateEvent(
     @ApiModelProperty("bkTicket")
     val bkTicket: String? = null,
     val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
+    @ApiModelProperty("projectId")
+    val projectId: String? = null,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

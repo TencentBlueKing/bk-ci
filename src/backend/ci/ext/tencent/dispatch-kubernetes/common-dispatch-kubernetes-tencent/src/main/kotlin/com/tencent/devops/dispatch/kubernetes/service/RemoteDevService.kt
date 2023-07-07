@@ -63,23 +63,23 @@ class RemoteDevService @Autowired constructor(
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
         val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
-        val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(mountType)
-            .createWorkspace(userId, event)
+        val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
 
         // 记录创建历史
         dispatchWorkspaceDao.createWorkspace(
             userId = userId,
             event = event,
-            environmentUid = enviromentUid,
+            environmentUid = result.enviromentUid,
+            regionId = result.regionId,
             status = EnvStatusEnum.running,
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(mountType)
-            .waitTaskFinish(userId, taskId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(mountType)
+            .waitTaskFinish(userId, result.taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            logger.info("$userId create workspace success. $enviromentUid")
+            logger.info("$userId create workspace success. ${result.enviromentUid}")
 
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
@@ -104,14 +104,14 @@ class RemoteDevService @Autowired constructor(
                 dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                     dslContext = context,
                     workspaceName = event.workspaceName,
-                    environmentUid = enviromentUid,
+                    environmentUid = result.enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE
                 )
             }
 
             return WorkspaceResponse(
-                environmentUid = enviromentUid,
+                environmentUid = result.enviromentUid,
                 environmentHost = workspaceInfo.environmentHost,
                 environmentIp = workspaceInfo.environmentIP
             )
@@ -127,7 +127,7 @@ class RemoteDevService @Autowired constructor(
                 dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                     dslContext = context,
                     workspaceName = event.workspaceName,
-                    environmentUid = enviromentUid,
+                    environmentUid = result.enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE,
                     actionMsg = failedMsg ?: ""

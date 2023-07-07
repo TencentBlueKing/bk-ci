@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
@@ -182,7 +183,6 @@ class BcsRemoteDevService @Autowired constructor(
         )
 
         return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
-    }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)

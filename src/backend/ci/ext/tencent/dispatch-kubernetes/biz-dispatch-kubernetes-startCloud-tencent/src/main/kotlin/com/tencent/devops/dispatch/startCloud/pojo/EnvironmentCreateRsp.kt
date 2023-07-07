@@ -10,6 +10,7 @@ data class EnvironmentCreateRsp(
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class EnvironmentCreateRspData(
-        val cgsIp: String
+        val cgsIp: String,
+        val cloudZoneId: String
     )
 }

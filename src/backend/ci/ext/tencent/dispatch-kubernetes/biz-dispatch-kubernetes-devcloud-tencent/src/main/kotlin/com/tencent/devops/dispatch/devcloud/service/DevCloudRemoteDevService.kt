@@ -49,6 +49,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
@@ -103,7 +104,7 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${remotedev.idePort}")
     val idePort: String = ""
 
-    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.runsOn?.container?.credentials != null) {
             listOf(
@@ -169,7 +170,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             )
         )
 
-        return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
+        return CreateWorkspaceRes(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {

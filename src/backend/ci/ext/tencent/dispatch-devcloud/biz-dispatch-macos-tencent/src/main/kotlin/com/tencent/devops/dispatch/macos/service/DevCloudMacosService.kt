@@ -115,7 +115,7 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
-        val (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let { macOSEnv ->
+        var (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let { macOSEnv ->
             when (macOSEnv.size) {
                 0 -> Pair(null, null)
                 1 -> Pair(macOSEnv[0], null)
@@ -124,6 +124,10 @@ class DevCloudMacosService @Autowired constructor(
         }
 
         val isGitProject = dispatchMessage.projectId.startsWith("git_")
+
+        if (isGitProject && xcodeVersion.isNullOrBlank()) {
+            xcodeVersion = "14.1"
+        }
 
         return with(dispatchMessage) {
             DevCloudMacosVmCreate(

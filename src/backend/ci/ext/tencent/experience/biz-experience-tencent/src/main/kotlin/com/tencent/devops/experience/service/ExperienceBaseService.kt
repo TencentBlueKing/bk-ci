@@ -276,8 +276,14 @@ class ExperienceBaseService @Autowired constructor(
                 for (depts in getGroupIdToDept(groupIds, false).values) {
                     for (dept in depts) {
                         val staffInfoList =
-                            client.get(ServiceProjectOrganizationResource::class).getDeptStaffsWithLevel(dept, 10).data
-                                ?: continue
+                            try {
+                                client.get(ServiceProjectOrganizationResource::class)
+                                    .getDeptStaffsWithLevel(dept, 10).data ?: continue
+                            } catch (e: Exception) {
+                                logger.warn("getDeptStaffsWithLevel failed", e)
+                                continue
+                            }
+
                         for (staffInfo in staffInfoList) {
                             if (staffInfo.loginName == userId) {
                                 return@lazy true
@@ -388,22 +394,18 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun getGroupIdToDept(groupIds: Set<Long>, useName: Boolean): MutableMap<Long, MutableSet<String>> {
-        val groupIdToDeptIds = mutableMapOf<Long, MutableSet<String>>()
-
-        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
-            groupIdToDeptIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
-        }
+        val groupIdToDepts = mutableMapOf<Long, MutableSet<String>>()
 
         experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds).forEach {
-            var userIds = groupIdToDeptIds[it.groupId]
-            if (null == userIds) {
-                userIds = mutableSetOf()
-                groupIdToDeptIds[it.groupId] = userIds
+            var depts = groupIdToDepts[it.groupId]
+            if (null == depts) {
+                depts = mutableSetOf()
+                groupIdToDepts[it.groupId] = depts
             }
-            userIds.add(if (useName) StringUtils.joinWith("/", it.deptFullName, it.deptName) else it.deptId)
+            depts.add(if (useName) StringUtils.joinWith("/", it.deptFullName, it.deptName) else it.deptId)
         }
 
-        return groupIdToDeptIds
+        return groupIdToDepts
     }
 
     /**

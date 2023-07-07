@@ -90,6 +90,11 @@ class RbacPermissionResourceCallbackService constructor(
         offset: Int,
         limit: Int
     ): ListInstanceResponseDTO {
+        val count = authResourceService.count(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceName = null
+        )
         val instanceInfoList = authResourceService.list(
             projectCode = projectId,
             resourceType = resourceType,
@@ -106,7 +111,7 @@ class RbacPermissionResourceCallbackService constructor(
         return if (instanceInfoList.isEmpty()) {
             result.buildListInstanceFailResult()
         } else {
-            result.buildListInstanceResult(instanceInfoList, instanceInfoList.size.toLong())
+            result.buildListInstanceResult(instanceInfoList, count)
         }
     }
 
@@ -139,6 +144,11 @@ class RbacPermissionResourceCallbackService constructor(
         offset: Int,
         limit: Int
     ): SearchInstanceInfo {
+        val count = authResourceService.count(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceName = keyword
+        )
         val instanceInfoList = authResourceService.list(
             projectCode = projectId,
             resourceType = resourceType,
@@ -155,7 +165,7 @@ class RbacPermissionResourceCallbackService constructor(
         return if (instanceInfoList.isEmpty()) {
             result.buildSearchInstanceFailResult()
         } else {
-            result.buildSearchInstanceResult(instanceInfoList, instanceInfoList.size.toLong())
+            result.buildSearchInstanceResult(instanceInfoList, count)
         }
     }
 }
