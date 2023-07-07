@@ -37,7 +37,7 @@ import com.tencent.devops.process.service.SubPipelineStartUpService
 @RestResource
 class ServiceSubPipelineResourceImpl constructor(
     private val subPipeService: SubPipelineStartUpService
-) : ServiceSubPipelineResource{
+) : ServiceSubPipelineResource {
 
     override fun subpipManualStartupInfo(
         userId: String,
