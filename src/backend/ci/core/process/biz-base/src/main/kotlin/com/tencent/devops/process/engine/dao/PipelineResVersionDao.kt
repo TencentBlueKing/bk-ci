@@ -39,7 +39,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("Unused", "LongParameterList", "ReturnCount")
+@Suppress("Unused", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Repository
 class PipelineResVersionDao {
 
@@ -51,7 +51,6 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String,
         model: Model,
-        trigger: TriggerContainer,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,

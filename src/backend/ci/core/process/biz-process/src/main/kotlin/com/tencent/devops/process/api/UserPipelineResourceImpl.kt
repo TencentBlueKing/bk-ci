@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
@@ -374,6 +375,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         includeDraft: Boolean?
     ): Result<PipelineResourceAndSetting> {
         checkParam(userId, projectId)
+        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
         val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
             userId = userId,
             projectId = projectId,
@@ -388,7 +390,21 @@ class UserPipelineResourceImpl @Autowired constructor(
             version = resource.settingVersion ?: resource.version
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(PipelineResourceAndSetting(resource, setting))
+        return Result(
+            PipelineResourceAndSetting(
+                pipelineInfo = detailInfo?.let {
+                    PipelineDetail(
+                        pipelineId = it.pipelineId,
+                        pipelineName = it.pipelineName,
+                        hasCollect = it.hasCollect,
+                        canManualStartup = it.canManualStartup,
+                        hasPermission = it.hasPermission
+                    )
+                },
+                pipelineResource = resource,
+                setting = setting
+            )
+        )
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {

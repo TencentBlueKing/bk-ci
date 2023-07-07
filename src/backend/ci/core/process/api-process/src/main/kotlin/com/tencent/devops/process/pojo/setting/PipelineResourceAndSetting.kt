@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import io.swagger.annotations.ApiModelProperty
 import javax.validation.Valid
 
 data class PipelineResourceAndSetting(
+    @ApiModelProperty("流水线模型", required = true)
+    val pipelineInfo: PipelineDetail?,
     @ApiModelProperty("流水线模型", required = true)
     val pipelineResource: PipelineResourceVersion,
     @ApiModelProperty("流水线设置", required = false)

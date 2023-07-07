@@ -216,7 +216,6 @@ class PipelineRepositoryService constructor(
                 modelTasks = modelTasks,
                 useTemplateSettings = useTemplateSettings,
                 templateId = templateId,
-                trigger = triggerContainer,
                 saveDraft = saveDraft
             )
         }
@@ -492,7 +491,6 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        trigger: TriggerContainer,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -600,7 +598,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    trigger = trigger,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
@@ -614,7 +611,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    trigger = trigger,
                     versionName = getVersionName(modelVersion, triggerVersion, settingVersion),
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
@@ -664,7 +660,6 @@ class PipelineRepositoryService constructor(
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$saveDraft")
@@ -739,7 +734,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = triggerContainer,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
@@ -752,7 +746,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = triggerContainer,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,

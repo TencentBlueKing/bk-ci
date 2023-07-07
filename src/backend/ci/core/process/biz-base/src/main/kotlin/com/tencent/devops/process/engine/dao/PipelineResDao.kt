@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
 @Repository
 class PipelineResDao {
 
@@ -55,7 +55,6 @@ class PipelineResDao {
         version: Int,
         versionName: String,
         model: Model,
-        trigger: TriggerContainer,
         pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
@@ -63,7 +62,6 @@ class PipelineResDao {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
             val modelString = JsonUtil.toJson(model, formatted = false)
-            val triggerString = JsonUtil.toJson(trigger, formatted = false)
             dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
