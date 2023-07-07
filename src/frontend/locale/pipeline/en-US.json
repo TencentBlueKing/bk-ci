@@ -127,7 +127,7 @@
   "stageReviewParams": "Custom parameters",
   "none": "none",
   "skipStageDesc": "SKIPED",
-  "pipelinesHistory": "Run Histories",
+  "pipelinesHistory": "Run History",
   "pipelinesEdit": "Edit",
   "pipelinesPreview": "Preview",
   "pipelinesDetail": "Details",
@@ -182,8 +182,8 @@
     "addFlow": "Create approval step",
     "approveBy": "Approved by {0}: ",
     "editVariable": "Edit variable: ",
-    "approveOpinion": "Approval opinion: ",
-    "approveTime": "Approval time: ",
+    "approveOpinion": "Approval Opinion: ",
+    "approveTime": "Approval Time: ",
     "approver": "Approver: "
   },
   "execDetail": {
@@ -192,7 +192,7 @@
     "execTime": "Number of retries",
     "showTime": "Show timestamp",
     "hideTime": "Hide timestamp",
-    "downLoadLog": "Download log",
+    "downLoadLog": "Download Log",
     "emptyLog": "The log content is empty",
     "report": "Report",
     "artifactory": "artifactory"
@@ -280,7 +280,7 @@
     "noRelatedPipeline": "No linked pipeline yet",
     "all": "All",
     "installedAt": "Installed at",
-    "createdAt": "Created on"
+    "createdAt": "Created at"
   },
   "settings": {
     "baseInfo": "Basic Information",
@@ -296,8 +296,8 @@
     "descPlaceholder": "Please add a description within 100 letters",
     "largestNum": "Maximum Number Of Queues",
     "lagestTime": "Maximum Queue Time",
-    "whenSuc": "When Build Succeed",
-    "whenFail": "When Build Failed",
+    "whenSuc": "When Run Succeed",
+    "whenFail": "When Run Failed",
     "item": "Items",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
@@ -540,7 +540,7 @@
     "noBuildRecords": " No build records",
     "noPermissionTips": " You don't have permission to view this pipeline. Please switch to another project or apply for permission",
     "buildEmptyDesc": " After defining the pipeline, you can manually trigger a build. A one and only ID will be assigned to each build and records of builds are shown here",
-    "startBuildTips": " Start Building",
+    "startBuildTips": "Run Now",
     "loadingErr": " An error occurred when loading",
     "filterTips": "Filter by keywords",
     "reset": "Reset",
