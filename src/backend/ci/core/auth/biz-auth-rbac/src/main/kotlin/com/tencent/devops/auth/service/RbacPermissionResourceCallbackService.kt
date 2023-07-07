@@ -285,12 +285,14 @@ class RbacPermissionResourceCallbackService constructor(
             createdAt = createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             updatedAt = updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
             bkIamPath = listOf("/project,$projectCode/")
-                schemaProperties = FetchInstanceListData(
+            schemaProperties = FetchInstanceListData(
                 projectId = projectCode,
                 projectName = projectName,
                 pipelineId = resourceCode,
                 pipelineName = resourceName
             )
+            operator = createUser
+            delete = false
         }
     }
 
