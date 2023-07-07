@@ -4,7 +4,6 @@
         :class="{ 'devops-qrcode': true, 'active': show }"
     >
         <div
-            class="qrcode-tips"
             @click="toggleOrcode(show)"
         >
             <div class="flag-box">
