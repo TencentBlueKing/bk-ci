@@ -52,7 +52,11 @@ class AtomMonitorDataDao {
             if (!errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(errorTypes))
             }
-            return dslContext.select(ATOM_CODE, ERROR_TYPE, sum<Long>(EXECUTE_COUNT))
+            return dslContext.select(
+                ATOM_CODE.`as`(AtomMonitorDataDO::atomCode.name),
+                ERROR_TYPE.`as`(AtomMonitorDataDO::errorType.name),
+                sum<Long>(EXECUTE_COUNT).`as`(AtomMonitorDataDO::totalExecuteCount.name)
+            )
                 .from(this)
                 .where(conditions)
                 .groupBy(ATOM_CODE, ERROR_TYPE)
