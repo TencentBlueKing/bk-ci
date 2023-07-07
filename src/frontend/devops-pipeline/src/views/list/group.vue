@@ -119,6 +119,7 @@
                     v-model="groupSetting.isShow"
                     :title="groupSetting.title"
                     :close-icon="false"
+                    :cancel-text="$t('cancel')"
                     header-position="left"
                     width="480"
                     @confirm="dialogCommit">

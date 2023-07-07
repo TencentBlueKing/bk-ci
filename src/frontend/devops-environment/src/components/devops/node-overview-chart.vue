@@ -423,7 +423,6 @@
                 width: 50%;
                 float: left;
                 min-height: 250px;
-                margin-bottom: 20px;
                 &.top-left {
                     border-right: 1px solid $borderWeightColor;
                     border-bottom: 1px solid $borderWeightColor;
@@ -476,6 +475,10 @@
             .echarts {
                 width: 100%;
                 height: 180px;
+            }
+
+            .exception-wrap-item {
+                padding-bottom: 20px;
             }
         }
     }

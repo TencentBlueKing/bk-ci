@@ -1,5 +1,5 @@
 <template>
-    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" @confirm="submitCodelib" @cancel="handleCancel">
+    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" :ok-text="$t('codelib.confirm')" :cancel-text="$t('codelib.cancel')" @confirm="submitCodelib" @cancel="handleCancel">
         <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
         <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
             <div class="bk-form-item is-required" v-if="isGit || isGitLab">
@@ -41,9 +41,9 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                         <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
-                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
-                            <span class="error-tips" v-if="errors.has('codelibAliasName')">
-                                {{ errors.first('codelibAliasName') }}
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
+                            <span class="error-tips" v-if="errors.has('alias')">
+                                {{ errors.first('alias') }}
                             </span>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
 
                 <!-- 服务器 start -->
                 <div class="bk-form-item is-required" v-if="isP4">
-                    <label class="bk-label">p4 port:</label>
+                    <label class="bk-label">P4 port:</label>
                     <div class="bk-form-content">
                         <div class="flex-content">
                             <input type="text" class="bk-form-input" :placeholder="portPlaceholder" name="codelibPort" v-model.trim="codelibPort" v-validate="'required'" :class="{ 'is-danger': errors.has('codelibPort') }">
@@ -101,9 +101,9 @@
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                     <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
-                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
-                        <span class="error-tips" v-if="errors.has('codelibAliasName')">
-                            {{ errors.first('codelibAliasName') }}
+                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
+                        <span class="error-tips" v-if="errors.has('alias')">
+                            {{ errors.first('alias') }}
                         </span>
                     </div>
                 </div>
@@ -321,7 +321,7 @@
                     this.updateCodelib(param)
                 }
             },
-            codelibAliasName: {
+            alias: {
                 get () {
                     return this.codelib.aliasName
                 },
