@@ -223,7 +223,7 @@ class MigrateResultService constructor(
             client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
-                action = action,
+                action = action.substringAfterLast("_"),
                 projectCode = projectCode,
                 resourceCode = resourceCode,
                 resourceType = resourceType,
