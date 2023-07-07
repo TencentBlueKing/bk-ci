@@ -52,6 +52,9 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
+        if (pipelineId.isBlank() || projectId.isBlank()) {
+            return Result(ArrayList())
+        }
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
         // TODO 权限迁移完后应该删除掉
         return bkTag.invokeByTag(projectConsulTag) {
