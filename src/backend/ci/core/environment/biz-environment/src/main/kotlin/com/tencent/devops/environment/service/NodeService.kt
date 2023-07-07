@@ -134,6 +134,109 @@ class NodeService @Autowired constructor(
         return formatNodeWithPermissions(userId, projectId, nodeRecordList)
     }
 
+    fun formatNodeWithPermissions(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>
+    ): List<NodeWithPermission> {
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
+        val permissionMap = environmentPermissionService.listNodeByPermissions(
+            userId = userId, projectId = projectId,
+            permissions = setOf(
+                AuthPermission.VIEW, AuthPermission.USE,
+                AuthPermission.EDIT, AuthPermission.DELETE
+            )
+        )
+
+        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+        val canViewNodeIds = if (permissionMap.containsKey(AuthPermission.VIEW)) {
+            permissionMap[AuthPermission.VIEW]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        val thirdPartyAgentMap =
+            thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
+                .associateBy { it.nodeId }
+
+        return nodeListResult.map {
+            val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
+            val gatewayShowName = if (thirdPartyAgent != null) {
+                slaveGatewayService.getShowName(thirdPartyAgent.gateway)
+            } else {
+                ""
+            }
+
+            // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
+            val nodeStatus =
+                if (it.nodeType == NodeType.THIRDPARTY.name ||
+                    it.nodeType == NodeType.DEVCLOUD.name
+                ) {
+                    it.nodeStatus
+                } else {
+                    if (getAgentStatus(it)) {
+                        NodeStatus.NORMAL.name
+                    } else {
+                        NodeStatus.ABNORMAL.name
+                    }
+                }
+            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
+            NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            NodeWithPermission(
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                canUse = canUseNodeIds.contains(it.nodeId),
+                canEdit = canEditNodeIds.contains(it.nodeId),
+                canDelete = canDeleteNodeIds.contains(it.nodeId),
+                canView = canViewNodeIds.contains(it.nodeId),
+                gateway = gatewayShowName,
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
+                lastModifyUser = it.lastModifyUser ?: "",
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
+            )
+        }
+    }
+
     fun listByHashIds(userId: String, projectId: String, hashIds: List<String>): List<NodeWithPermission> {
         val nodeIds = hashIds.map { HashUtil.decodeIdToLong(it) }
         val nodeRecordList = nodeDao.listAllByIds(dslContext, projectId, nodeIds)
@@ -267,108 +370,7 @@ class NodeService @Autowired constructor(
             )
         }
     }
-    fun formatNodeWithPermissions(
-        userId: String,
-        projectId: String,
-        nodeRecordList: List<TNodeRecord>
-    ): List<NodeWithPermission> {
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
-        val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId = userId, projectId = projectId,
-            permissions = setOf(
-                AuthPermission.VIEW, AuthPermission.USE,
-                AuthPermission.EDIT, AuthPermission.DELETE
-            )
-        )
 
-        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
-            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
-            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
-            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canViewNodeIds = if (permissionMap.containsKey(AuthPermission.VIEW)) {
-            permissionMap[AuthPermission.VIEW]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-
-        val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
-        val thirdPartyAgentMap =
-            thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
-                .associateBy { it.nodeId }
-
-        return nodeListResult.map {
-            val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
-            val gatewayShowName = if (thirdPartyAgent != null) {
-                slaveGatewayService.getShowName(thirdPartyAgent.gateway)
-            } else {
-                ""
-            }
-
-            // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
-            val nodeStatus =
-                if (it.nodeType == NodeType.THIRDPARTY.name ||
-                    it.nodeType == NodeType.DEVCLOUD.name
-                ) {
-                    it.nodeStatus
-                } else {
-                    if (getAgentStatus(it)) {
-                        NodeStatus.NORMAL.name
-                    } else {
-                        NodeStatus.ABNORMAL.name
-                    }
-                }
-            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
-            NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
-            NodeWithPermission(
-                nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = nodeStringId,
-                name = it.nodeName,
-                ip = it.nodeIp,
-                nodeStatus = nodeStatus,
-                agentStatus = getAgentStatus(it),
-                nodeType = it.nodeType,
-                osName = it.osName,
-                createdUser = it.createdUser,
-                operator = it.operator,
-                bakOperator = it.bakOperator,
-                canUse = canUseNodeIds.contains(it.nodeId),
-                canEdit = canEditNodeIds.contains(it.nodeId),
-                canDelete = canDeleteNodeIds.contains(it.nodeId),
-                canView = canViewNodeIds.contains(it.nodeId),
-                gateway = gatewayShowName,
-                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
-                },
-                lastModifyTime = if (null == it.lastModifyTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
-                },
-                lastModifyUser = it.lastModifyUser ?: "",
-                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
-            )
-        }
-    }
     fun listRawServerNodeByIds(userId: String, projectId: String, nodeHashIds: List<String>): List<NodeBaseInfo> {
         val nodeRecords =
             nodeDao.listServerNodesByIds(dslContext, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
