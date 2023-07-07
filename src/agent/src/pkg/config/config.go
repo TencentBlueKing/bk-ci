@@ -513,7 +513,7 @@ func SaveJdkDir(dir string) {
 	GAgentConfig.JdkDirPath = dir
 	err := GAgentConfig.SaveConfig()
 	if err != nil {
-		logs.Error("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
+		logs.Errorf("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
 		return
 	}
 }
@@ -556,14 +556,14 @@ func initCert() {
 	// Load client cert
 	caCert, err := os.ReadFile(AbsCertFilePath)
 	if err != nil {
-		logs.Warn("Reading server certificate: %s", err)
+		logs.Warnf("Reading server certificate: %s", err)
 		return
 	}
-	logs.Info("Cert content is: %s", string(caCert))
+	logs.Infof("Cert content is: %s", string(caCert))
 	caCertPool, err := x509.SystemCertPool()
 	// Windows 下 SystemCertPool 返回 nil
 	if err != nil || caCertPool == nil {
-		logs.Warn("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err)
+		logs.Warnf("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err.Error())
 		caCertPool = x509.NewCertPool()
 	}
 	caCertPool.AppendCertsFromPEM(caCert)
