@@ -47,7 +47,6 @@ dependencies {
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:auth:api-auth"))
-    api(project(":core:store:biz-store"))
 
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("javax.websocket:javax.websocket-api")
