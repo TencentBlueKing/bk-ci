@@ -489,37 +489,35 @@ class WorkspaceService @Autowired constructor(
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.name, status, userId)
                     val bizId = MDC.get(TraceTag.BIZID)
-                }
-
-                dispatcher.dispatch(
-                    WorkspaceOperateEvent(
-                        userId = userId,
-                        traceId = bizId,
-                        type = UpdateEventType.START,
-                        sshKeys = sshService.getSshPublicKeys4Ws(
-                            workspaceDao.fetchWorkspaceUser(
-                                dslContext,
-                                workspaceName
-                            ).toSet()
-                        ),
-                        workspaceName = workspace.name,
-                        settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                        bkTicket = bkTicket,
-                        mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    dispatcher.dispatch(
+                        WorkspaceOperateEvent(
+                            userId = userId,
+                            traceId = bizId,
+                            type = UpdateEventType.START,
+                            sshKeys = sshService.getSshPublicKeys4Ws(
+                                workspaceDao.fetchWorkspaceUser(
+                                    dslContext,
+                                    workspaceName
+                                ).toSet()
+                            ),
+                            workspaceName = workspace.name,
+                            settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                            bkTicket = bkTicket,
+                            mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        )
                     )
-                )
 
                     // 发送给用户
-                    dispatchWebsocketPushEvent (
-                    userId = userId,
-                workspaceName = workspaceName,
-                workspaceHost = null,
-                errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_START,
-                status = true,
-                action = WorkspaceAction.STARTING,
-                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    dispatchWebsocketPushEvent(
+                        userId = userId,
+                        workspaceName = workspaceName,
+                        workspaceHost = null,
+                        errorMsg = null,
+                        type = WebSocketActionType.WORKSPACE_START,
+                        status = true,
+                        action = WorkspaceAction.STARTING,
+                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                     )
                     return WorkspaceResponse(
                         workspaceName = workspace.name,
@@ -528,8 +526,8 @@ class WorkspaceService @Autowired constructor(
                         systemType = WorkspaceSystemType.valueOf(workspace.systemType),
                         workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                     )
+                }
             }
-        }
         }
     }
     private fun createWorkspaceHistoryForStart(userId: String, workspaceName: String) {
@@ -772,7 +770,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
-                action = WorkspaceAction.SLEEPING
+                action = WorkspaceAction.SLEEPING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -828,33 +828,6 @@ class WorkspaceService @Autowired constructor(
                 status.name,
                 WorkspaceStatus.SLEEPING.name
             )
-
-            val bizId = MDC.get(TraceTag.BIZID)
-
-            dispatcher.dispatch(
-                WorkspaceOperateEvent(
-                    userId = userId,
-                    traceId = bizId,
-                    type = UpdateEventType.STOP,
-                    workspaceName = workspace.name,
-                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
-                )
-            )
-
-            // 发送给用户
-            dispatchWebsocketPushEvent(
-                userId = userId,
-                workspaceName = workspaceName,
-                workspaceHost = null,
-                errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_SLEEP,
-                status = true,
-                action = WorkspaceAction.SLEEPING,
-                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
-            )
-            return true
-        }
         )
     }
 
@@ -923,7 +896,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
                 status = true,
-                action = WorkspaceAction.DELETING
+                action = WorkspaceAction.DELETING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -986,47 +961,17 @@ class WorkspaceService @Autowired constructor(
                 status = WorkspaceStatus.DELETING
             )
 
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = workspaceName,
-                    operator = userId,
-                    action = WorkspaceAction.DELETING,
-                    actionMessage = String.format(
-                        getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                        WorkspaceStatus.values()[workspace.status].name,
-                        WorkspaceStatus.DELETING.name
-                    )
-                )
-            }
-
-            if (deleteImmediately) {
-                doDeleteWS(true, userId, workspaceName, null)
-            }
-
-            val bizId = MDC.get(TraceTag.BIZID)
-            dispatcher.dispatch(
-                WorkspaceOperateEvent(
-                    userId = userId,
-                    traceId = bizId,
-                    type = UpdateEventType.DELETE,
-                    workspaceName = workspace.name,
-                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
-                )
-            )
-
-            // 发送给用户
-            dispatchWebsocketPushEvent(
-                userId = userId,
-                workspaceName = workspaceName,
-                workspaceHost = null,
-                errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_DELETE,
-                status = true,
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = transactionContext,
+                workspaceName = name,
+                operator = userId,
                 action = WorkspaceAction.DELETING,
-                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    status.name,
+                    WorkspaceStatus.DELETING.name
+                )
             )
-            return true
         }
     }
 

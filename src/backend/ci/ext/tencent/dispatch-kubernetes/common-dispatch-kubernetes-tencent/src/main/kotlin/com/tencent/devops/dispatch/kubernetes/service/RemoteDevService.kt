@@ -64,6 +64,7 @@ class RemoteDevService @Autowired constructor(
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
         val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
+            .createWorkspace(userId, event)
 
         // 记录创建历史
         dispatchWorkspaceDao.createWorkspace(
@@ -75,7 +76,7 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(mountType)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .waitTaskFinish(userId, result.taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {

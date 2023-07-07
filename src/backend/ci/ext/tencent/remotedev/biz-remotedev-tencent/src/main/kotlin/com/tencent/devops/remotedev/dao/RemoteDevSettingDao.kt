@@ -180,15 +180,15 @@ class RemoteDevSettingDao {
     ) {
         val setting = RemoteDevSettings()
         val userSetting = RemoteDevUserSettings().apply {
-            maxRunningCount = opSetting?.wsMaxRunningCount ?: maxRunningCount
-            maxHavingCount = opSetting?.wsMaxHavingCount ?: maxHavingCount
+            maxRunningCount = opSetting?.maxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting?.maxHavingCount ?: maxHavingCount
             onlyCloudIDE = opSetting?.onlyCloudIDE ?: onlyCloudIDE
             allowedCopy = opSetting?.allowedCopy ?: allowedCopy
             startCloudExperienceDuration = opSetting?.startCloudExperienceDuration ?: startCloudExperienceDuration
             allowedDownload = opSetting?.allowedDownload ?: allowedDownload
             needWatermark = opSetting?.needWatermark ?: needWatermark
             autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
-            mountType = opSetting.mountType ?: mountType
+            mountType = opSetting?.mountType ?: mountType
         }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
