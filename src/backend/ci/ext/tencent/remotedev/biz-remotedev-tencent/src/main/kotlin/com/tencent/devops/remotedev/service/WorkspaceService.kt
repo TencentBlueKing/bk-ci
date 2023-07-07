@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.event.RemoteDevReminderEvent
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -89,6 +90,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
@@ -122,6 +124,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
@@ -143,7 +146,12 @@ class WorkspaceService @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑
-    fun createWorkspace(userId: String, bkTicket: String, projectId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
+    fun createWorkspace(
+        userId: String,
+        bkTicket: String,
+        projectId: String,
+        workspaceCreate: WorkspaceCreate
+    ): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
         val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
@@ -192,12 +200,15 @@ class WorkspaceService @Autowired constructor(
 
         val devfile = DevfileUtil.parseDevfile(yaml).apply {
             gitEmail = kotlin.runCatching {
-                gitTransferService.getUserEmail(
-                    userId = userId
-                )
+                permissionService.checkOauthIllegal(userId) {
+                    gitTransferService.getUserEmail(
+                        userId = userId
+                    )
+                }
             }.getOrElse {
                 logger.warn("get user $userId info failed ${it.message}")
-                throw ErrorCodeException(
+                if (it is ErrorCodeException) throw it
+                else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
                     params = arrayOf("get user($userId) info from git failed")
                 )
@@ -294,24 +305,25 @@ class WorkspaceService @Autowired constructor(
             errorMsg = null,
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = true,
-            action = WorkspaceAction.PREPARING
+            action = WorkspaceAction.PREPARING,
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
         )
 
         return WorkspaceResponse(
             workspaceName = workspaceName,
             status = WorkspaceAction.PREPARING,
-            systemType = devfile.checkWorkspaceSystemType()
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
         )
     }
 
     // k8s创建workspace后回调的方法
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(event.workspaceName)
+            )
         if (event.status) {
-            val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(event.workspaceName)
-                )
             val pathWithNamespace = GitUtils.getDomainAndRepoName(ws.url).second
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -350,8 +362,22 @@ class WorkspaceService @Autowired constructor(
             }
 
             getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            if (WorkspaceSystemType.valueOf(ws.systemType).needHeartbeat()) {
+            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
+            if (systemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
+            }
+
+            if (systemType.needReminderUser()) {
+                val duration = remoteDevSettingService.startCloudExperienceDuration(event.userId)
+                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
+                dispatcher.dispatch(
+                    RemoteDevReminderEvent(
+                        userId = event.userId,
+                        workspaceName = event.workspaceName,
+                        delayMills = (duration * 60 - limit).times(60).toInt()
+                            .coerceAtLeast(60) * 1000
+                    )
+                )
             }
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
@@ -371,7 +397,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = event.errorMsg,
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = event.status,
-            action = WorkspaceAction.START
+            action = WorkspaceAction.START,
+            systemType = WorkspaceSystemType.valueOf(ws.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType)
         )
     }
 
@@ -400,7 +428,9 @@ class WorkspaceService @Autowired constructor(
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
                     workspaceHost = workspaceInfo.data?.environmentHost ?: "",
-                    status = WorkspaceAction.START
+                    status = WorkspaceAction.START,
+                    systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                    workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             }
 
@@ -419,6 +449,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName,
                 WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
+            checkWorkspaceAvailability(userId, workspace)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -473,13 +504,34 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_START,
                 status = true,
-                action = WorkspaceAction.STARTING
+                action = WorkspaceAction.STARTING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return WorkspaceResponse(
                 workspaceName = workspace.name,
                 workspaceHost = "",
-                status = WorkspaceAction.STARTING
+                status = WorkspaceAction.STARTING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
+        }
+    }
+
+    private fun checkWorkspaceAvailability(
+        userId: String,
+        workspace: TWorkspaceRecord
+    ) {
+        when (workspace.workspaceMountType) {
+            WorkspaceMountType.START.name -> {
+                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
+                if (duration * 60 * 60 < workspace.usageTime) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
+                        params = arrayOf(workspace.name, duration.toString())
+                    )
+                }
+            }
         }
     }
 
@@ -620,7 +672,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_START,
             status = status,
-            action = WorkspaceAction.START
+            action = WorkspaceAction.START,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 
@@ -710,7 +764,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
-                action = WorkspaceAction.SLEEPING
+                action = WorkspaceAction.SLEEPING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -831,7 +887,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
                 status = true,
-                action = WorkspaceAction.DELETING
+                action = WorkspaceAction.DELETING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -845,7 +903,9 @@ class WorkspaceService @Autowired constructor(
         errorMsg: String?,
         type: WebSocketActionType,
         status: Boolean?,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        systemType: WorkspaceSystemType,
+        workspaceMountType: WorkspaceMountType
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -855,7 +915,9 @@ class WorkspaceService @Autowired constructor(
                     workspaceHost = workspaceHost ?: "",
                     workspaceName = workspaceName,
                     status = action,
-                    errorMsg = errorMsg
+                    errorMsg = errorMsg,
+                    systemType = systemType,
+                    workspaceMountType = workspaceMountType
                 ),
                 projectId = "",
                 userIds = getWebSocketUsers(userId, workspaceName),
@@ -1130,26 +1192,28 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun getWorkspaceDetail(userId: String, workspaceName: String): WorkspaceDetail? {
+    fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        if (checkPermission) {
+            permissionService.checkPermission(userId, workspaceName)
+        }
         val now = LocalDateTime.now()
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
 
-        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName) ?: return null
+        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
-            Duration.between(lastHistory.startTime ?: now, now).seconds
+            Duration.between(lastHistory?.startTime ?: now, now).seconds
         } else 0
 
         val sleepingTime = workspace.sleepingTime + if (workspaceStatus.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
-            Duration.between(lastHistory.endTime ?: now, now).seconds
+            Duration.between(lastHistory?.endTime ?: now, now).seconds
         } else 0
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
@@ -1171,7 +1235,9 @@ class WorkspaceService @Autowired constructor(
                 cpu = cpu,
                 memory = memory,
                 disk = disk,
-                yaml = yaml
+                yaml = yaml,
+                systemType = WorkspaceSystemType.valueOf(systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType)
             )
         }
     }
@@ -1179,12 +1245,12 @@ class WorkspaceService @Autowired constructor(
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
         permissionService.checkPermission(userId, workspaceName)
-
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        checkWorkspaceAvailability(userId, workspace)
         val detail = redisCache.getWorkspaceDetail(workspaceName)
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
@@ -1314,7 +1380,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun heartBeatStopWS(workspaceName: String): Boolean {
+    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -1343,7 +1409,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspace.name,
                 operator = ADMIN_NAME,
                 action = WorkspaceAction.SLEEP,
-                actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                actionMessage = getOpHistory(opHistory)
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -1366,7 +1432,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
-                action = WorkspaceAction.SLEEPING
+                action = WorkspaceAction.SLEEPING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -1402,6 +1470,7 @@ class WorkspaceService @Autowired constructor(
             logger.info(
                 "workspace ${it.name} is EXCEPTION, try to fix."
             )
+            if (!checkProjectRouter(it.creator, it.name)) return@forEach
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
                 workspaceName = it.name,
@@ -1409,6 +1478,17 @@ class WorkspaceService @Autowired constructor(
                 mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
             )
         }
+    }
+
+    fun getUnavailableWorkspace(): List<String> {
+        val now = LocalDateTime.now()
+        return workspaceDao.fetchWorkspace(
+            dslContext, status = WorkspaceStatus.RUNNING, mountType = WorkspaceMountType.START
+        )?.asSequence()
+            ?.filter {
+                val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
+                remoteDevSettingService.startCloudExperienceDuration(it.creator) * 60 * 60 < usageTime
+            }?.map { it.name }?.toList() ?: emptyList()
     }
 
     // 获取已休眠(status:3)且过期14天的工作空间
@@ -1423,8 +1503,21 @@ class WorkspaceService @Autowired constructor(
                     it.updateTime
                 } ready to delete"
             )
-            heartBeatDeleteWS(it)
+            kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
+                logger.warn("deleteInactivityWorkspace fail|${i.message}", i)
+            }
         }
+        val now = LocalDateTime.now()
+        workspaceDao.fetchWorkspace(dslContext, status = WorkspaceStatus.SLEEP, mountType = WorkspaceMountType.START)
+            ?.parallelStream()?.forEach {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                val retentionTime = redisCache.get(REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
+                if (Duration.between(it.lastStatusUpdateTime, now).toDays() >= retentionTime) {
+                    kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
+                        logger.warn("deleteInactivityWorkspace fail|${i.message}", i)
+                    }
+                }
+            }
     }
 
     // 提前2天邮件提醒，云环境即将自动回收
@@ -1504,7 +1597,9 @@ class WorkspaceService @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
                 status = true,
-                action = WorkspaceAction.DELETING
+                action = WorkspaceAction.DELETING,
+                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )
             return true
         }
@@ -1589,7 +1684,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_DELETE,
             status = status,
-            action = WorkspaceAction.DELETE
+            action = WorkspaceAction.DELETE,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 
@@ -1658,7 +1755,9 @@ class WorkspaceService @Autowired constructor(
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_SLEEP,
             status = status,
-            action = WorkspaceAction.SLEEP
+            action = WorkspaceAction.SLEEP,
+            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
         )
     }
 

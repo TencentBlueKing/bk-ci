@@ -5,6 +5,9 @@ object MQ {
     const val ROUTE_WORKSPACE_UPDATE_FROM_K8S = "r.engine.remotedev.workspace.listener.update"
     const val QUEUE_WORKSPACE_UPDATE_FROM_K8S = "q.engine.remotedev.workspace.listener.update"
 
+    const val ROUTE_WORKSPACE_REMINDER = "r.engine.remotedev.workspace.listener.reminder"
+    const val QUEUE_WORKSPACE_REMINDER = "q.engine.remotedev.workspace.listener.reminder"
+
     // 远程开发工作空间 ====================================
     const val EXCHANGE_REMOTE_DEV_LISTENER_DIRECT = "e.engine.remotedev.workspace.listener"
     const val ROUTE_WORKSPACE_CREATE_STARTUP = "r.engine.remotedev.workspace.listener.create"
