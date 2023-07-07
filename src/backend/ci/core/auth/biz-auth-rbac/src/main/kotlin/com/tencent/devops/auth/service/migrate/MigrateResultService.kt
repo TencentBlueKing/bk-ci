@@ -219,6 +219,7 @@ class MigrateResultService constructor(
         // 用户存在,校验用户是否有资源权限
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
         val hasPermission = bkTag.invokeByTag(projectConsulTag) {
+            // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
             client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
