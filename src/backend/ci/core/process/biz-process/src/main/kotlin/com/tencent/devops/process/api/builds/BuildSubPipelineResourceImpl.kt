@@ -63,17 +63,35 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        return subPipeService.callPipelineStartup(
-            projectId = projectId,
-            parentPipelineId = parentPipelineId,
-            buildId = buildId,
-            callProjectId = callProjectId,
-            callPipelineId = callPipelineId,
-            atomCode = atomCode,
-            taskId = taskId,
-            runMode = runMode,
-            values = values
-        )
+        return if (projectId != callProjectId) {
+            val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, callProjectId)
+            // TODO 权限迁移完后应该删除掉
+            bkTag.invokeByTag(projectConsulTag) {
+                client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
+                    projectId = projectId,
+                    parentPipelineId = parentPipelineId,
+                    buildId = buildId,
+                    callProjectId = callProjectId,
+                    callPipelineId = callPipelineId,
+                    atomCode = atomCode,
+                    taskId = taskId,
+                    runMode = runMode,
+                    values = values
+                )
+            }
+        } else {
+            subPipeService.callPipelineStartup(
+                projectId = projectId,
+                parentPipelineId = parentPipelineId,
+                buildId = buildId,
+                callProjectId = callProjectId,
+                callPipelineId = callPipelineId,
+                atomCode = atomCode,
+                taskId = taskId,
+                runMode = runMode,
+                values = values
+            )
+        }
     }
 
     override fun callPipelineStartup(

@@ -28,13 +28,19 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -61,4 +67,36 @@ interface ServiceSubPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
+
+    @ApiOperation("从构建机启动指定项目的子流水线")
+    @POST
+    @Path("/projects/{callProjectId}/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
+    fun callOtherProjectPipelineStartup(
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("当前流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        parentPipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("要启动的流水线ID", required = true)
+        @PathParam("callProjectId")
+        callProjectId: String,
+        @ApiParam("要启动的流水线ID", required = true)
+        @PathParam("callPipelineId")
+        callPipelineId: String,
+        @ApiParam("插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("插件ID", required = true)
+        @QueryParam("taskId")
+        taskId: String,
+        @ApiParam("运行方式", required = true)
+        @QueryParam("runMode")
+        runMode: String,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>
+    ): Result<ProjectBuildId>
 }

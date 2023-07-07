@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.service.SubPipelineStartUpService
 
@@ -44,5 +45,29 @@ class ServiceSubPipelineResourceImpl constructor(
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId)
+    }
+
+    override fun callOtherProjectPipelineStartup(
+        projectId: String,
+        parentPipelineId: String,
+        buildId: String,
+        callProjectId: String,
+        callPipelineId: String,
+        atomCode: String,
+        taskId: String,
+        runMode: String,
+        values: Map<String, String>
+    ): Result<ProjectBuildId> {
+        return subPipeService.callPipelineStartup(
+            projectId = projectId,
+            parentPipelineId = parentPipelineId,
+            buildId = buildId,
+            callProjectId = callProjectId,
+            callPipelineId = callPipelineId,
+            atomCode = atomCode,
+            taskId = taskId,
+            runMode = runMode,
+            values = values
+        )
     }
 }
