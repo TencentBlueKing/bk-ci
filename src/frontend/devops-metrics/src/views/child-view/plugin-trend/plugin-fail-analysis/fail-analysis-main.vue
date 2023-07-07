@@ -49,7 +49,7 @@ const handleToPluginTrend = () => {
     <div class="header">
       <a class="plugin-trend-title" @click="handleToPluginTrend">{{ t('Plugin trend') }}</a>
       <span class="crumbs-icon"> > </span>
-      <span>{{ t('Plugin fail analtysis') }}: {{ route.query.atomCode }}</span>
+      <span>{{ t('Plugin fail analysis') }}: {{ route.query.atomCode }}</span>
     </div>
     <!-- <add-plugin></add-plugin> -->
   </metrics-header>

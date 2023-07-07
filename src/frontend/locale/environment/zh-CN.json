@@ -260,5 +260,6 @@
         "BUILD_IMAGE_SUCCESS": "制作镜像成功",
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知"
-    }
+    },
+    "newPool": "创建"
 }

@@ -29,7 +29,7 @@
                 <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-maxwidth" :title="`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`">
-                <span> {{ $t('store.镜像地址') }}： </span><span class="detail-image-address">{{detail.imageRepoUrl}}{{detail.imageRepoUrl ? '/' : ''}}{{detail.imageRepoName}}:{{detail.imageTag}}</span>
+                <span> {{ $t('store.镜像地址：') }} </span><span class="detail-image-address">{{detail.imageRepoUrl}}{{detail.imageRepoUrl ? '/' : ''}}{{detail.imageRepoName}}:{{detail.imageTag}}</span>
                 <i class="bk-icon icon-clipboard" :title="$t('store.复制')" @click="copyImagePath(`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`)"></i>
             </h5>
             <h5 class="detail-info detail-label">
@@ -37,7 +37,7 @@
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
-            <h5 class="detail-info detail-maxwidth" :title="detail.summary">
+            <h5 class="detail-info detail-desc" :title="detail.summary">
                 <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
@@ -216,7 +216,8 @@
             span:nth-child(1) {
                 color: $fontWeightColor;
                 display: inline-block;
-                width: 90px;
+                width: 110px;
+                flex-shrink: 0;
                 padding-right: 10px;
                 text-align: right;
             }
@@ -225,7 +226,7 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 display: inline-block;
-                width: calc(100% - 90px);
+                width: calc(100% - 110px);
             }
         }
         .not-recommend {
@@ -252,9 +253,10 @@
                 cursor: auto;
             }
         }
+        .detail-info.detail-desc,
         .detail-info.detail-label {
             width: 800px;
-            padding-left: 90px;
+            padding-left: 110px;
             padding-top: 0;
             display: inline-block;
             position: relative;
