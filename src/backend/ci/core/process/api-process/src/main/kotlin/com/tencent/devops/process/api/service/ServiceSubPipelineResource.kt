@@ -28,7 +28,7 @@
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -59,7 +59,7 @@ interface ServiceSubPipelineResource {
         @QueryParam("userId")
         userId: String,
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @ApiParam("流水线ID", required = false, defaultValue = "")
         @PathParam("pipelineId")
@@ -71,7 +71,7 @@ interface ServiceSubPipelineResource {
     @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
         @ApiParam("要启动的流水线ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         callProjectId: String,
         @ApiParam("要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
@@ -80,7 +80,7 @@ interface ServiceSubPipelineResource {
         @PathParam("atomCode")
         atomCode: String,
         @ApiParam(value = "父项目ID", required = true)
-        @QueryParam("parentPipelineId")
+        @QueryParam("parentProjectId")
         parentProjectId: String,
         @ApiParam("父流水线ID", required = true)
         @QueryParam("parentPipelineId")
