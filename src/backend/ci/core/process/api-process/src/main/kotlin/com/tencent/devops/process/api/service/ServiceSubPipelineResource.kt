@@ -28,8 +28,6 @@
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
@@ -55,13 +53,13 @@ interface ServiceSubPipelineResource {
 
     @ApiOperation("获取子流水线启动参数")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    @Path("/pipelines/{pipelineId}/manualStartupInfo")
     fun subpipManualStartupInfo(
         @ApiParam(value = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("流水线ID", required = false, defaultValue = "")
         @PathParam("pipelineId")
@@ -70,19 +68,10 @@ interface ServiceSubPipelineResource {
 
     @ApiOperation("从构建机启动指定项目的子流水线")
     @POST
-    @Path("/projects/{callProjectId}/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
+    @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
-        @ApiParam(value = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("当前流水线ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        parentPipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
         @ApiParam("要启动的流水线ID", required = true)
-        @PathParam("callProjectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         callProjectId: String,
         @ApiParam("要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
@@ -90,6 +79,15 @@ interface ServiceSubPipelineResource {
         @ApiParam("插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
+        @ApiParam(value = "父项目ID", required = true)
+        @QueryParam("parentPipelineId")
+        parentProjectId: String,
+        @ApiParam("父流水线ID", required = true)
+        @QueryParam("parentPipelineId")
+        parentPipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
         @ApiParam("插件ID", required = true)
         @QueryParam("taskId")
         taskId: String,

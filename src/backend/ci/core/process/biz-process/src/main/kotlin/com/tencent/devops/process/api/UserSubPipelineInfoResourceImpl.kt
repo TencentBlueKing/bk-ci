@@ -34,12 +34,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceSubPipelineResource
 import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import com.tencent.devops.process.service.PipelineRouterService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val pipelineRouterService: PipelineRouterService,
     private val client: Client
 ) : UserSubPipelineInfoResource {
 
@@ -53,13 +51,11 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             return Result(ArrayList())
         }
         // TODO 权限迁移完后应该删除掉
-        return pipelineRouterService.invokeByTag(projectId) {
-            client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        }
+        return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     private fun checkParam(userId: String) {

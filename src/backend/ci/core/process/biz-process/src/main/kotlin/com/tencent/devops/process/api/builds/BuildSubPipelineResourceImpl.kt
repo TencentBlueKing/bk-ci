@@ -39,14 +39,12 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
-import com.tencent.devops.process.service.PipelineRouterService
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildSubPipelineResourceImpl @Autowired constructor(
     private val subPipeService: SubPipelineStartUpService,
-    private val pipelineRouterService: PipelineRouterService,
     private val client: Client
 ) : BuildSubPipelineResource {
     override fun callOtherProjectPipelineStartup(
@@ -62,19 +60,17 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
     ): Result<ProjectBuildId> {
         return if (projectId != callProjectId) {
             // TODO 权限迁移完后应该删除掉
-            pipelineRouterService.invokeByTag(callProjectId) {
-                client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
-                    projectId = projectId,
-                    parentPipelineId = parentPipelineId,
-                    buildId = buildId,
-                    callProjectId = callProjectId,
-                    callPipelineId = callPipelineId,
-                    atomCode = atomCode,
-                    taskId = taskId,
-                    runMode = runMode,
-                    values = values
-                )
-            }
+            client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
+                callProjectId = callProjectId,
+                callPipelineId = callPipelineId,
+                atomCode = atomCode,
+                parentProjectId = projectId,
+                parentPipelineId = parentPipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                runMode = runMode,
+                values = values
+            )
         } else {
             subPipeService.callPipelineStartup(
                 projectId = projectId,
@@ -129,14 +125,11 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
-        // TODO 权限迁移完后应该删除掉
-        return pipelineRouterService.invokeByTag(projectId) {
-            client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        }
+        return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     override fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

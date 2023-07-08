@@ -75,13 +75,12 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
-import com.tencent.devops.process.service.PipelineRouterService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import io.micrometer.core.annotation.Timed
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
@@ -96,7 +95,6 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineRuleService: PipelineRuleService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineRouterService: PipelineRouterService,
     private val client: Client
 ) : UserPipelineResource {
 
@@ -130,16 +128,14 @@ class UserPipelineResourceImpl @Autowired constructor(
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
         // TODO 权限迁移完后应该删除掉
-        return pipelineRouterService.invokeByTag(projectId) {
-            client.getGateway(ServicePipelineResource::class).hasPermissionList(
-                userId = userId,
-                projectId = projectId,
-                permission = permission,
-                excludePipelineId = excludePipelineId,
-                page = page,
-                pageSize
-            )
-        }
+        return client.getGateway(ServicePipelineResource::class).hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            excludePipelineId = excludePipelineId,
+            page = page,
+            pageSize
+        )
     }
 
     @Timed

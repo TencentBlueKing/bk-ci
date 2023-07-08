@@ -48,18 +48,18 @@ class ServiceSubPipelineResourceImpl constructor(
     }
 
     override fun callOtherProjectPipelineStartup(
-        projectId: String,
-        parentPipelineId: String,
-        buildId: String,
         callProjectId: String,
         callPipelineId: String,
         atomCode: String,
+        parentProjectId: String,
+        parentPipelineId: String,
+        buildId: String,
         taskId: String,
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
-            projectId = projectId,
+            projectId = parentProjectId,
             parentPipelineId = parentPipelineId,
             buildId = buildId,
             callProjectId = callProjectId,
