@@ -30,10 +30,7 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BuildApiPermission
 import com.tencent.devops.common.web.constant.BuildApiHandleType
@@ -42,14 +39,14 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.service.PipelineRouterService
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildSubPipelineResourceImpl @Autowired constructor(
     private val subPipeService: SubPipelineStartUpService,
-    private val redisOperation: RedisOperation,
-    private val bkTag: BkTag,
+    private val pipelineRouterService: PipelineRouterService,
     private val client: Client
 ) : BuildSubPipelineResource {
     override fun callOtherProjectPipelineStartup(
@@ -64,9 +61,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         values: Map<String, String>
     ): Result<ProjectBuildId> {
         return if (projectId != callProjectId) {
-            val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, callProjectId)
             // TODO 权限迁移完后应该删除掉
-            bkTag.invokeByTag(projectConsulTag) {
+            pipelineRouterService.invokeByTag(callProjectId) {
                 client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
                     projectId = projectId,
                     parentPipelineId = parentPipelineId,
@@ -133,9 +129,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
-        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
         // TODO 权限迁移完后应该删除掉
-        return bkTag.invokeByTag(projectConsulTag) {
+        return pipelineRouterService.invokeByTag(projectId) {
             client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
                 userId = userId,
                 projectId = projectId,

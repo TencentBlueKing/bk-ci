@@ -23,48 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
-import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import com.tencent.devops.process.service.PipelineRouterService
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val pipelineRouterService: PipelineRouterService,
-    private val client: Client
-) : UserSubPipelineInfoResource {
+/**
+ * 子流水线存在跨项目调用,如果父子项目在不同的权限集群,调用就会报错,所以子流水线调用需要重新路由
+ */
+@Service
+class PipelineRouterService @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
+) {
 
-    override fun subpipManualStartupInfo(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>> {
-        checkParam(userId)
-        if (pipelineId.isBlank() || projectId.isBlank()) {
-            return Result(ArrayList())
-        }
-        // TODO 权限迁移完后应该删除掉
-        return pipelineRouterService.invokeByTag(projectId) {
-            client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        }
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
+    fun <T> invokeByTag(projectId: String, action: () -> T): T {
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+        return bkTag.invokeByTag(projectConsulTag) {
+            action()
         }
     }
 }
