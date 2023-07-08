@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -47,6 +48,7 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
@@ -68,34 +70,18 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
-abstract class SubPipelineStartUpService @Autowired constructor() {
-
-    @Autowired
-    lateinit var pipelineRepositoryService: PipelineRepositoryService
-
-    @Autowired
-    lateinit var pipelineListFacadeService: PipelineListFacadeService
-
-    @Autowired
-    lateinit var pipelineBuildFacadeService: PipelineBuildFacadeService
-
-    @Autowired
-    lateinit var buildVariableService: BuildVariableService
-
-    @Autowired
-    lateinit var pipelineBuildService: PipelineBuildService
-
-    @Autowired
-    lateinit var pipelineRuntimeService: PipelineRuntimeService
-
-    @Autowired
-    lateinit var subPipelineStatusService: SubPipelineStatusService
-
-    @Autowired
-    lateinit var pipelineTaskService: PipelineTaskService
-
-    @Autowired
-    lateinit var buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
+class SubPipelineStartUpService @Autowired constructor(
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val buildVariableService: BuildVariableService,
+    private val pipelineBuildService: PipelineBuildService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val subPipelineStatusService: SubPipelineStatusService,
+    private val pipelineTaskService: PipelineTaskService,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
+    private val pipelinePermissionService: PipelinePermissionService
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
@@ -371,7 +357,17 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         }
     }
 
-    abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
+    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE
+            )
+        ) {
+            logger.info("sub-pipeline calling has no execution permission|$userId|$projectId|$pipelineId")
+        }
+    }
 
     /**
      * 获取流水线的手动启动参数，返回至前端渲染界面。
