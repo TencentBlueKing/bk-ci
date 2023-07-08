@@ -68,8 +68,10 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
+@Service
 class SubPipelineStartUpService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineListFacadeService: PipelineListFacadeService,
