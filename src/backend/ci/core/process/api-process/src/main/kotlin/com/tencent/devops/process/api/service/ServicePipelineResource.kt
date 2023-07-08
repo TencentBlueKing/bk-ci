@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -561,14 +562,13 @@ interface ServicePipelineResource {
 
     @ApiOperation("拥有权限流水线列表")
     @GET
-    // @Path("/projects/{projectId}/hasPermissionList")
-    @Path("/{projectId}/hasPermissionList")
+    @Path("/hasPermissionList")
     fun hasPermissionList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @ApiParam("对应权限", required = true, defaultValue = "")
         @QueryParam("permission")
