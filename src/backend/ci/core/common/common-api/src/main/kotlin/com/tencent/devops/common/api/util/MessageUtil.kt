@@ -73,7 +73,7 @@ object MessageUtil {
             // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
         } catch (ignored: Throwable) {
-            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)
+            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]")
         }
         if (null != params && null != message) {
             val mf = MessageFormat(message)
@@ -81,7 +81,7 @@ object MessageUtil {
             message = mf.format(params)
         }
         val res = message ?: defaultMessage ?: ""
-        return if (checkUrlDecoder) URLDecoder.decode(res, "UTF-8") else res
+        return if (checkUrlDecoder) URLDecoder.decode(res, Charsets.UTF_8.name()) else res
     }
 
     /**

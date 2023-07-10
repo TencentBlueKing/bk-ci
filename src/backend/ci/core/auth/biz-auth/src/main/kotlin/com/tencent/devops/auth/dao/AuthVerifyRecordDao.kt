@@ -5,6 +5,7 @@ import com.tencent.devops.model.auth.tables.TAuthTemporaryVerifyRecord
 import com.tencent.devops.model.auth.tables.records.TAuthTemporaryVerifyRecordRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -86,5 +87,9 @@ class AuthVerifyRecordDao {
                 verifyResult = verifyResult
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthVerifyRecordDao::class.java)
     }
 }

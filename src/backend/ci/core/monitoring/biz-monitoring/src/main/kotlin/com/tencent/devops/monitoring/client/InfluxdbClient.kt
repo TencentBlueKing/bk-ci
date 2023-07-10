@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.monitoring.client
 
-import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+import com.tencent.devops.common.api.annotation.InfluxTag
 import org.apache.commons.lang3.reflect.FieldUtils
 import org.influxdb.BatchOptions
 import org.influxdb.InfluxDB
