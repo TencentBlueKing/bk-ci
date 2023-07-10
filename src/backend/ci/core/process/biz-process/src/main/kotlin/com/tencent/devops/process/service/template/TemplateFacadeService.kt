@@ -1964,7 +1964,7 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件
      */
-    fun checkTemplateAtoms(template: Model){
+    fun checkTemplateAtoms(template: Model) {
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach nextElement@{ element ->
@@ -1981,7 +1981,7 @@ class TemplateFacadeService @Autowired constructor(
                             AtomStatusEnum.TESTING.name,
                             AtomStatusEnum.UNDERCARRIAGED.name
                         )
-                        if (atomStatus in atomStatusList){
+                        if (atomStatus in atomStatusList) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
                                 defaultMessage = "The plugin ($atomName) in the template is not allowed to update",
