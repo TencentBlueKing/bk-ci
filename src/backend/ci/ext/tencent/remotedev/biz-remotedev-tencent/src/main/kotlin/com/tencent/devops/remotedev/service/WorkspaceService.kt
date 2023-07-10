@@ -488,7 +488,7 @@ class WorkspaceService @Autowired constructor(
                     checkWorkspaceAvailability(userId, workspace)
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.name, status, userId)
-                    val bizId = MDC.get(TraceTag.BIZID)
+                    val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     dispatcher.dispatch(
                         WorkspaceOperateEvent(
                             userId = userId,
@@ -749,7 +749,7 @@ class WorkspaceService @Autowired constructor(
                 status = WorkspaceStatus.SLEEPING
             )
 
-            val bizId = MDC.get(TraceTag.BIZID)
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -875,7 +875,7 @@ class WorkspaceService @Autowired constructor(
                 doDeleteWS(true, userId, workspaceName, null)
             }
 
-            val bizId = MDC.get(TraceTag.BIZID)
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -1492,7 +1492,7 @@ class WorkspaceService @Autowired constructor(
                 actionMessage = getOpHistory(opHistory)
             )
 
-            val bizId = MDC.get(TraceTag.BIZID)
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -1655,7 +1655,7 @@ class WorkspaceService @Autowired constructor(
                 action = WorkspaceAction.DELETE,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
             )
-            val bizId = MDC.get(TraceTag.BIZID)
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = getSystemOperator(workspace.creator, workspace.workspaceMountType),
