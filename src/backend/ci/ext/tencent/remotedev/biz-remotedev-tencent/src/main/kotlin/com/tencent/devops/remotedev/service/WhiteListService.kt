@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class WhiteListService @Autowired constructor(
@@ -68,5 +69,22 @@ class WhiteListService @Autowired constructor(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
             params = arrayOf("User($id) not in the whiteList or exceeding the limit")
         )
+    }
+
+    /**
+     * 校验云桌面白名单的运行OS只能是windows
+     */
+    fun checkRunsOnOs(key: String, runsOnKey: String, currentOs: String ? = null) {
+        val runsOnValue = cacheService.hentries(key)?.get(runsOnKey)
+        logger.info("checkRunsOnOS|key|$key|runsOnKey|$runsOnKey|currentOs|$currentOs|runsOnValue|$runsOnValue")
+        if (runsOnValue == null || currentOs == null) {
+            return
+        }
+        if (runsOnValue != currentOs) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ErrorCodeEnum.NOT_ALLOWED_ENVIRONMENT.errorCode
+            )
+        }
     }
 }

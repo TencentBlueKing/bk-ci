@@ -34,6 +34,8 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.apache.commons.codec.digest.DigestUtils
@@ -49,7 +51,8 @@ class RemoteDevSettingService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevFileDao: RemoteDevFileDao,
     private val tGitTransferService: TGitTransferService,
-    private val githubTransferService: GithubTransferService
+    private val githubTransferService: GithubTransferService,
+    private val redisCacheService: RedisCacheService
 ) {
 
     companion object {
@@ -105,11 +108,16 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
-        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data)
+        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
     }
-    fun getUserSetting4Op(userId: String): RemoteDevUserSettings {
+
+    fun getUserSetting(userId: String): RemoteDevUserSettings {
         logger.info("$userId get user setting")
-        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
-        return setting.userSetting
+        return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+    }
+
+    fun startCloudExperienceDuration(userId: String): Int {
+        return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId).startCloudExperienceDuration
+            ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
 }

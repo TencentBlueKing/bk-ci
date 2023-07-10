@@ -123,7 +123,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
 
     @ApiOperation("获取用户设置")
-    @POST
+    @GET
     @Path("/get_user_setting")
     fun getUserSetting(
         @ApiParam(value = "用户ID", required = true)

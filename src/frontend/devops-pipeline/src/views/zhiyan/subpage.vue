@@ -6,6 +6,7 @@
     >
         <component
             :is="bkComponent"
+            class="biz-content"
             ref="pipeline"
             v-bind="$attrs"
             v-on="$listeners"

@@ -25,19 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.metrics.resources
 
-import com.tencent.devops.process.service.perm.PermFixService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceAtomMonitorDataResource
+import com.tencent.devops.metrics.pojo.vo.AtomMonitorInfoVO
+import com.tencent.devops.metrics.service.AtomMonitorDataManageService
 
-@Service
-class TxPipelineStartUpService : SubPipelineStartUpService() {
-
-    @Autowired
-    private lateinit var permFixService: PermFixService
-
-    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        permFixService.checkPermission(userId, projectId, pipelineId)
+@RestResource
+class ServiceAtomMonitorDataResourceImpl constructor(
+    private val atomMonitorDataManageService: AtomMonitorDataManageService
+) : ServiceAtomMonitorDataResource {
+    override fun queryAtomMonitorStatisticData(
+        atomCode: String,
+        startTime: String,
+        endTime: String
+    ): Result<AtomMonitorInfoVO> {
+        return Result(
+            atomMonitorDataManageService.queryAtomMonitorStatisticData(
+                atomCode = atomCode,
+                startTime = DateTimeUtil.stringToLocalDateTime(startTime, YYYY_MM_DD),
+                endTime = DateTimeUtil.stringToLocalDateTime(endTime, YYYY_MM_DD)
+            )
+        )
     }
 }

@@ -25,14 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.monitoring.pojo.annotions;
+package com.tencent.devops.metrics.dao
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.tencent.devops.common.db.utils.JooqUtils.sum
+import com.tencent.devops.metrics.pojo.`do`.AtomMonitorDataDO
+import com.tencent.devops.model.metrics.tables.TAtomMonitorDataDaily
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface InfluxTag {
+@Repository
+class AtomMonitorDataDao {
+
+    fun getAtomMonitorDatas(
+        dslContext: DSLContext,
+        atomCode: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        errorTypes: List<Int?>? = null
+    ): List<AtomMonitorDataDO>? {
+        with(TAtomMonitorDataDaily.T_ATOM_MONITOR_DATA_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(STATISTICS_TIME.between(startTime, endTime))
+            if (!errorTypes.isNullOrEmpty()) {
+                conditions.add(ERROR_TYPE.`in`(errorTypes))
+            }
+            return dslContext.select(
+                ATOM_CODE.`as`(AtomMonitorDataDO::atomCode.name),
+                ERROR_TYPE.`as`(AtomMonitorDataDO::errorType.name),
+                sum<Long>(EXECUTE_COUNT).`as`(AtomMonitorDataDO::totalExecuteCount.name)
+            )
+                .from(this)
+                .where(conditions)
+                .groupBy(ATOM_CODE, ERROR_TYPE)
+                .fetchInto(AtomMonitorDataDO::class.java)
+        }
+    }
 }
