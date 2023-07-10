@@ -25,39 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.metrics.pojo.po
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("获取指定工作空间详情model")
-data class WorkspaceDetail(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
-    @ApiModelProperty("工作空间名称")
-    val workspaceName: String,
-    @ApiModelProperty("工作空间备注名称")
-    val displayName: String?,
-    @ApiModelProperty("工作空间状态")
-    val status: WorkspaceStatus,
-    @ApiModelProperty("最近状态修改时间")
-    val lastUpdateTime: Long,
-    @ApiModelProperty("计费时间（秒）")
-    val chargeableTime: Long,
-    @ApiModelProperty("使用时间（秒）")
-    val usageTime: Long,
-    @ApiModelProperty("休眠时间（秒）")
-    val sleepingTime: Long,
-    @ApiModelProperty("CPU 核心数")
-    val cpu: Int,
-    @ApiModelProperty("内存大小（MB）")
-    val memory: Int,
-    @ApiModelProperty("存储空间大小（GB）")
-    val disk: Int,
-    @ApiModelProperty("yaml 配置内容")
-    val yaml: String,
-    @ApiModelProperty("操作系统类型")
-    val systemType: WorkspaceSystemType,
-    @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
+@ApiModel("保存插件监控每日统计数据")
+data class SaveAtomMonitorDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
+    @ApiModelProperty("执行次数")
+    var executeCount: Long,
+    @ApiModelProperty("错误类型")
+    val errorType: Int,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
 )

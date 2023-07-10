@@ -24,15 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.metrics.pojo.vo
 
-package com.tencent.devops.monitoring.pojo.annotions;
+import com.tencent.devops.metrics.pojo.`do`.AtomMonitorFailDetailDO
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface InfluxTag {
-}
+@ApiModel("插件监控统计数据")
+data class AtomMonitorInfoVO(
+    @ApiModelProperty("插件标识", required = true)
+    val atomCode: String,
+    @ApiModelProperty("执行成功总数量", required = true)
+    var totalSuccessNum: Int = 0,
+    @ApiModelProperty("执行失败总数量", required = true)
+    var totalFailNum: Int = 0,
+    @ApiModelProperty("执行失败详情", required = true)
+    val totalFailDetail: AtomMonitorFailDetailDO
+)

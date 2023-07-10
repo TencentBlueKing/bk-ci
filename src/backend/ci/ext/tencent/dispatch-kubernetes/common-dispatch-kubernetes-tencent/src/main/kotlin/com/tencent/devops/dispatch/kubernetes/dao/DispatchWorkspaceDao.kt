@@ -47,6 +47,7 @@ class DispatchWorkspaceDao {
         userId: String,
         event: WorkspaceCreateEvent,
         environmentUid: String,
+        regionId: Int,
         status: EnvStatusEnum,
         dslContext: DSLContext
     ): Long {
@@ -59,7 +60,8 @@ class DispatchWorkspaceDao {
                 GIT_URL,
                 BRANCH,
                 IMAGE,
-                STATUS
+                STATUS,
+                REGION_ID
             )
                 .values(
                     event.projectId,
@@ -68,7 +70,8 @@ class DispatchWorkspaceDao {
                     event.repositoryUrl,
                     event.branch,
                     event.devFile.runsOn?.container?.image ?: "",
-                    status.ordinal
+                    status.ordinal,
+                    regionId
                 )
                 .returning(ID)
                 .fetchOne()!!.id

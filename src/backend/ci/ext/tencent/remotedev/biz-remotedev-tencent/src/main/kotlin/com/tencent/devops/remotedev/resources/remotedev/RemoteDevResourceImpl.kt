@@ -88,6 +88,9 @@ class RemoteDevResourceImpl @Autowired constructor(
         if (!checkSignature(signature, workspaceName, timestamp)) {
             return Result(403, "Forbidden request", false)
         }
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = Constansts.ADMIN_NAME, workspaceName = workspaceName, checkPermission = false
+        ) ?: return Result(false)
         workspaceService.dispatchWebsocketPushEvent(
             userId = Constansts.ADMIN_NAME,
             workspaceName = workspaceName,
@@ -95,7 +98,8 @@ class RemoteDevResourceImpl @Autowired constructor(
             errorMsg = null,
             type = type ?: WebSocketActionType.WORKSPACE_CREATE,
             status = true,
-            action = WorkspaceAction.COMPLETE_PULL_CODE
+            action = WorkspaceAction.COMPLETE_PULL_CODE,
+            systemType = ws.systemType, workspaceMountType = ws.workspaceMountType
         )
         return Result(true)
     }

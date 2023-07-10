@@ -61,6 +61,10 @@ object I18nUtil {
             // 本地缓存中获取不到语言信息再从redis中获取
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
             language = redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+            if (!language.isNullOrBlank()) {
+                // 如果redis中用户语言不为空，则把用户的语言缓存到本地
+                BkI18nLanguageCacheUtil.put(userId, language)
+            }
         }
         return language
     }

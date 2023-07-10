@@ -248,10 +248,15 @@ class WorkspaceDao {
     fun fetchWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId, status = status)
+            val condition = mixCondition(
+                userId = userId,
+                status = status,
+                mountType = mountType
+            )
 
             if (condition.isEmpty()) {
                 return null
@@ -322,7 +327,6 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
                 .execute()
         }
