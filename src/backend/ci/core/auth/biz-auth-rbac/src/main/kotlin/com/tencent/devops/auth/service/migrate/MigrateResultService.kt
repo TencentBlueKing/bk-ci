@@ -28,13 +28,22 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -47,7 +56,13 @@ class MigrateResultService constructor(
     private val rbacCacheService: RbacCacheService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authVerifyRecordService: AuthVerifyRecordService,
-    private val migrateResourceService: MigrateResourceService
+    private val migrateResourceService: MigrateResourceService,
+    private val authResourceService: AuthResourceService,
+    private val deptService: DeptService,
+    private val client: Client,
+    private val tokenService: ClientTokenService,
+    private val bkTag: BkTag,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -66,10 +81,7 @@ class MigrateResultService constructor(
                 CompletableFuture.supplyAsync(
                     {
                         MDC.put(TraceTag.BIZID, traceId)
-                        if (compare(
-                                projectCode = projectCode,
-                                resourceType = resourceType
-                            )) {
+                        if (compare(projectCode = projectCode, resourceType = resourceType)) {
                             logger.info("resourceType in project is successfully compared|$projectCode|$resourceType")
                         }
                     },
@@ -85,14 +97,10 @@ class MigrateResultService constructor(
         }
     }
 
-    private fun compare(
-        projectCode: String,
-        resourceType: String
-    ): Boolean {
+    private fun compare(projectCode: String, resourceType: String): Boolean {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
-        var hasMore = true
-        while (hasMore) {
+        do {
             val verifyRecordList = authVerifyRecordService.list(
                 projectCode = projectCode,
                 resourceType = resourceType,
@@ -100,47 +108,52 @@ class MigrateResultService constructor(
                 limit = limit
             )
             verifyRecordList.filter { it.verifyResult }.forEach {
-                with(it) {
-                    if (isSkipCompare(resourceCode = resourceCode, action = action)) return@forEach
-                    val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        migrateResourceCode = resourceCode
-                    )
-                    val rbacVerifyResult = rbacResourceCode?.let {
-                        permissionService.validateUserResourcePermissionByRelation(
-                            userId = userId,
-                            action = action,
-                            projectCode = projectId,
-                            resourceCode = rbacResourceCode,
-                            resourceType = resourceType,
-                            relationResourceType = null
-                        )
-                    } ?: false
-                    if (!rbacVerifyResult) {
-                        val checkResource = migrateResourceService.fetchInstanceInfo(
-                            resourceType = resourceType,
-                            projectCode = projectCode,
-                            ids = listOf(resourceCode)
-                        )?.data?.isEmpty() ?: true
-                        if (checkResource) {
-                            logger.info("compare policy,resource not found|$projectId|$resourceType|$resourceCode")
-                            return@forEach
-                        }
-                        logger.error("Failed to compare policy:$userId|$action|$projectId|$resourceType|$resourceCode")
-                        throw ErrorCodeException(
-                            errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
-                            params = arrayOf(projectCode),
-                            defaultMessage = "Failed to compare policy:" +
-                                "$userId|$action|$projectId|$resourceType|$resourceCode"
-                        )
-                    }
-                }
+                compareRecord(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = it.resourceCode,
+                    action = it.action,
+                    userId = it.userId
+                )
             }
-            hasMore = limit == verifyRecordList.size
             offset += limit
-        }
+        } while (limit == verifyRecordList.size)
         return true
+    }
+
+    private fun compareRecord(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String,
+        userId: String
+    ) {
+        if (isSkipCompare(resourceCode = resourceCode, action = action)) return
+        // v0或v3资源转换成rbac不存在,说明资源可能已经被删除或者不是这个项目的
+        val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            migrateResourceCode = resourceCode
+        ) ?: return
+        val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceCode = rbacResourceCode,
+            resourceType = resourceType,
+            relationResourceType = null
+        )
+        // 如果迁移后的权限不匹配,则需要再次确认资源、用户和权限
+        if (!rbacVerifyResult) {
+            reconfirm(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                rbacResourceCode = rbacResourceCode,
+                action = action,
+                userId = userId
+            )
+        }
     }
 
     private fun isSkipCompare(
@@ -150,5 +163,81 @@ class MigrateResultService constructor(
         return resourceCode == "*" ||
             action.substringAfterLast("_") == AuthPermission.DELETE.value ||
             action == "all_action"
+    }
+
+    /**
+     * 对比时可能存在以下情况导致校验失败
+     * - 资源删除，但是校验表中记录没有删除
+     * - 用户离职
+     * - 用户在旧版权限已失效
+     * 需要再次校验
+     */
+    private fun reconfirm(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        rbacResourceCode: String,
+        action: String,
+        userId: String
+    ) {
+        // 校验资源是否存在
+        val resourceExists = if (resourceType == AuthResourceType.PROJECT.value) {
+            true
+        } else {
+            migrateResourceService.fetchInstanceInfo(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                ids = listOf(resourceCode)
+            )?.data?.isNotEmpty() ?: false
+        }
+        if (!resourceExists) {
+            logger.info(
+                "resource does not exist or has been deleted, skip comparison|$projectCode|$resourceCode|$userId"
+            )
+            return
+        }
+        // 资源存在,校验资源是否迁移到rbac资源
+        authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = rbacResourceCode
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+            params = arrayOf(projectCode),
+            defaultMessage = "Failed to compare policy:resource not migrate" +
+                    "$userId|$projectCode|$resourceType|$resourceCode"
+        )
+
+        // 校验用户是否离职
+        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        if (!userExists) {
+            logger.info(
+                "user does not exist or has left the company, skip comparison|$projectCode|$resourceCode|$userId"
+            )
+            return
+        }
+        // 用户存在,校验用户是否有资源权限
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
+        val hasPermission = bkTag.invokeByTag(projectConsulTag) {
+            // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
+            client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                userId = userId,
+                token = tokenService.getSystemToken(null)!!,
+                action = action.substringAfterLast("_"),
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = null
+            )
+        }.data!!
+        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId|$hasPermission")
+        if (hasPermission) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+                params = arrayOf(projectCode),
+                defaultMessage = "Failed to compare policy:permission not migrate" +
+                        "$userId|$projectCode|$resourceType|$resourceCode|$action"
+            )
+        }
     }
 }

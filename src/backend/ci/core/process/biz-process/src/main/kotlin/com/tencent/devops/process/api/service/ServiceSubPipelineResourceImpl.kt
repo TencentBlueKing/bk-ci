@@ -23,44 +23,51 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
-import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
+import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.service.SubPipelineStartUpService
 
 @RestResource
-class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val client: Client
-) : UserSubPipelineInfoResource {
+class ServiceSubPipelineResourceImpl constructor(
+    private val subPipeService: SubPipelineStartUpService
+) : ServiceSubPipelineResource {
 
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
-        checkParam(userId)
-        if (pipelineId.isBlank() || projectId.isBlank()) {
-            return Result(ArrayList())
-        }
-        // TODO 权限迁移完后应该删除掉
-        return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId)
     }
 
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
+    override fun callOtherProjectPipelineStartup(
+        callProjectId: String,
+        callPipelineId: String,
+        atomCode: String,
+        parentProjectId: String,
+        parentPipelineId: String,
+        buildId: String,
+        taskId: String,
+        runMode: String,
+        values: Map<String, String>
+    ): Result<ProjectBuildId> {
+        return subPipeService.callPipelineStartup(
+            projectId = parentProjectId,
+            parentPipelineId = parentPipelineId,
+            buildId = buildId,
+            callProjectId = callProjectId,
+            callPipelineId = callPipelineId,
+            atomCode = atomCode,
+            taskId = taskId,
+            runMode = runMode,
+            values = values
+        )
     }
 }
