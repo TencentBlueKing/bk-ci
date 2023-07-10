@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
@@ -33,10 +34,31 @@ const (
 
 var imageDebugLogs *logrus.Entry
 
+type OnceChan[T any] struct {
+	C    chan T
+	once sync.Once
+}
+
+func NewOnceChan[T any]() *OnceChan[T] {
+	return &OnceChan[T]{C: make(chan T)}
+}
+
+func (c *OnceChan[T]) SafeClose() {
+	c.once.Do(func() {
+		close(c.C)
+	})
+}
+
 func DoPullAndDebug() {
 	if !systemutil.IsLinux() {
 		return
 	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent imagedebug panic: ", err)
+		}
+	}()
 
 	// 区分模块初始化日志，方便查询
 	imageDebugLogs = logs.Logs.WithField("module", "ImageDebug")
@@ -51,7 +73,10 @@ func DoPullAndDebug() {
 		// 接受登录调试任务
 		debugInfo, err := getDebugTask()
 		if err != nil {
-			imageDebugLogs.WithError(err).Error("get image deubg failed, retry, err")
+			imageDebugLogs.WithError(err).Warn("get image deubg failed, retry, err")
+			continue
+		}
+		if debugInfo == nil {
 			continue
 		}
 
@@ -68,8 +93,8 @@ func getDebugTask() (*api.ImageDebug, error) {
 	}
 
 	if result.IsNotOk() {
-		logs.Error("get build info failed, message", result.Message)
-		return nil, errors.New("get build info failed")
+		logs.Error("get debug info failed, message", result.Message)
+		return nil, errors.New("get debug info failed")
 	}
 
 	if result.Data == nil {
@@ -87,9 +112,9 @@ func getDebugTask() (*api.ImageDebug, error) {
 
 func doImageDebug(debugInfo *api.ImageDebug) {
 	// 容器已经准备就绪，会向其中写入containerid
-	containerReady := make(chan string)
+	containerReady := NewOnceChan[string]()
 	// 登录调试结束
-	debugDone := make(chan struct{})
+	debugDone := NewOnceChan[struct{}]()
 	// 登录调试最大等待结束时间
 	c, cancel := context.WithTimeout(context.Background(), imageDebugMaxHoldHour*time.Hour)
 	defer cancel()
@@ -101,6 +126,9 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 
 	// 启动登录调试
 	group.Go(func() error { return CreateExecServer(ctx, debugInfo, containerReady, debugDone) })
+
+	// 轮训任务状态
+	group.Go(func() error { return checkDebugStatus(ctx, debugInfo.DebugId, debugDone) })
 
 	// 上报结束并附带错误信息
 	if err := group.Wait(); err != nil {
@@ -115,11 +143,60 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 	}
 }
 
+func checkDebugStatus(
+	ctx context.Context,
+	debugId int64,
+	debugDone *OnceChan[struct{}],
+) error {
+	go func() {
+		for {
+			time.Sleep(5 * time.Minute)
+			result, err := api.FetchDockerDebugStatus(debugId)
+			if err != nil {
+				imageDebugLogs.WithError(err).Error("request FetchDockerDebugStatus error")
+				continue
+			}
+			if result.IsNotOk() {
+				imageDebugLogs.Error("FetchDockerDebugStatus info failed, message", result.Message)
+				continue
+			}
+
+			if result.Data == nil {
+				// 数据为空说明任务不存在直接结束
+				imageDebugLogs.Error("FetchDockerDebugStatus data nil")
+				debugDone.SafeClose()
+				return
+			}
+
+			status := new(string)
+			err = util.ParseJsonToData(result.Data, status)
+			if err != nil {
+				imageDebugLogs.WithError(err).Error("FetchDockerDebugStatus parse data error")
+				continue
+			}
+
+			if status != nil && *status == "FAILURE" {
+				// 任务失败则直接结束
+				imageDebugLogs.Error("FetchDockerDebugStatus FAILURE")
+				debugDone.SafeClose()
+				return
+			}
+		}
+	}()
+
+	select {
+	case <-debugDone.C:
+		return nil
+	case <-ctx.Done():
+		return nil
+	}
+}
+
 func CreateDebugContainer(
 	ctx context.Context,
 	debugInfo *api.ImageDebug,
-	containerReady chan string,
-	debugDone chan struct{},
+	containerReady *OnceChan[string],
+	debugDone *OnceChan[struct{}],
 ) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -134,8 +211,8 @@ func CreateDebugContainer(
 	}
 	if ok {
 		imageDebugLogs.Infof("use local exist container %s", containerId)
-		containerReady <- containerId
-		close(containerReady)
+		containerReady.C <- containerId
+		containerReady.SafeClose()
 		return nil
 	}
 
@@ -174,8 +251,13 @@ func CreateDebugContainer(
 	}
 
 	if job_docker.IfPullImage(localExist, isLatest, api.ImagePullPolicyIfNotPresent.String()) {
+		auth, err := job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password)
+		if err != nil {
+			imageDebugLogs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			imageDebugLogs.Errorf("pull new image %s error %s", imageName, err.Error())
@@ -259,7 +341,7 @@ func CreateDebugContainer(
 		if err = cli.ContainerRemove(context.Background(), creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
 			imageDebugLogs.Errorf("remove container %s error %s", creatResp.ID, err.Error())
 		}
-		close(containerReady)
+		containerReady.SafeClose()
 	}()
 
 	// 启动容器
@@ -272,7 +354,7 @@ func CreateDebugContainer(
 	statusCh, errCh := cli.ContainerWait(ctx, creatResp.ID, container.WaitConditionNotRunning)
 
 	// docker 容器已经准备就绪了
-	containerReady <- creatResp.ID
+	containerReady.C <- creatResp.ID
 
 	select {
 	case err := <-errCh:
@@ -313,7 +395,7 @@ func CreateDebugContainer(
 			}
 		}
 	// 登录调试结束或者登录调试错误都关闭容器，为了保证停止和删除不复用context
-	case <-debugDone:
+	case <-debugDone.C:
 		return nil
 	case <-ctx.Done():
 		return nil
@@ -406,8 +488,8 @@ func parseContainerEnv(_ *api.ImageDebug) []string {
 func CreateExecServer(
 	ctx context.Context,
 	debugInfo *api.ImageDebug,
-	containerReady chan string,
-	debugDone chan struct{},
+	containerReady *OnceChan[string],
+	debugDone *OnceChan[struct{}],
 ) error {
 	port, err := NewPortAllocator().AllocateNodePort()
 	if err != nil {
@@ -436,15 +518,16 @@ func CreateExecServer(
 		return err
 	}
 
+	imageDebugLogs.WithField("port", port).Info("debug server start")
 	errChan := make(chan error)
-	// http server
 	server := InitRouter(ctx, backend, conf, errChan)
 	defer func() {
 		server.Shutdown(context.Background())
+		imageDebugLogs.WithField("port", port).Info("debug server stop")
 	}()
 
 	// 等待容器启动后创建登录调试链接
-	containerId, ok := <-containerReady
+	containerId, ok := <-containerReady.C
 	if !ok {
 		imageDebugLogs.Warn("CreateExecServer containerReady chan is closed")
 		return nil
@@ -473,7 +556,7 @@ func CreateExecServer(
 	}
 
 	select {
-	case <-debugDone:
+	case <-debugDone.C:
 		return nil
 	case <-ctx.Done():
 		return nil

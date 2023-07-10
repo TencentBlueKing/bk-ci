@@ -76,9 +76,7 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
-
-	runtime.GOMAXPROCS(4)
+	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
 	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
@@ -119,7 +117,7 @@ func watch(isDebug bool) {
 		select {
 		case <-checkTimeTicker.C:
 			if err := totalLock.Lock(); err != nil {
-				logs.Error("failed to get agent lock: %v", err)
+				logs.Errorf("failed to get agent lock: %v", err)
 				continue
 			}
 
@@ -143,7 +141,7 @@ func doCheckAndLaunchAgent(isDebug bool) {
 		}()
 	}
 	if err != nil {
-		logs.Error("try to get agent.lock failed: %v", err)
+		logs.Errorf("try to get agent.lock failed: %v", err)
 		return
 	}
 	if !locked {
@@ -154,14 +152,14 @@ func doCheckAndLaunchAgent(isDebug bool) {
 
 	process, err := launch(workDir+"/"+config.AgentFileClientLinux, isDebug)
 	if err != nil {
-		logs.Error("launch agent failed: %v", err)
+		logs.Errorf("launch agent failed: %v", err)
 		return
 	}
 	if process == nil {
 		logs.Error("launch agent failed: got a nil process")
 		return
 	}
-	logs.Info("success to launch agent, pid: %d", process.Pid)
+	logs.Infof("success to launch agent, pid: %d", process.Pid)
 }
 
 func launch(agentPath string, isDebug bool) (*os.Process, error) {
@@ -174,7 +172,7 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 
 	cmd.Dir = systemutil.GetWorkDir()
 
-	logs.Info("start devops agent: %s", cmd.String())
+	logs.Infof("start devops agent: %s", cmd.String())
 	if !fileutil.Exists(agentPath) {
 		return nil, fmt.Errorf("agent file %s not exists", agentPath)
 	}

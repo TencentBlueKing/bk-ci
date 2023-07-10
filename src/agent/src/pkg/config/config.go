@@ -219,19 +219,19 @@ func parseWorkerVersion(output string) string {
 			}
 			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
 			if matchWorkerVersion(line) {
-				logs.Info("worker version: ", line)
+				logs.Info("match worker version: ", line)
 				return line
 			} else {
 				if versionRegexp != nil {
 					if versionRegexp.MatchString(line) {
-						logs.Info("worker version: ", line)
+						logs.Info("regexp worker version: ", line)
 						return line
 					} else {
 						continue
 					}
 				} else {
 					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-					logs.Info("worker version: ", line)
+					logs.Info("regexp nil worker version: ", line)
 					return line
 				}
 			}
@@ -513,7 +513,7 @@ func SaveJdkDir(dir string) {
 	GAgentConfig.JdkDirPath = dir
 	err := GAgentConfig.SaveConfig()
 	if err != nil {
-		logs.Error("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
+		logs.Errorf("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
 		return
 	}
 }
@@ -556,14 +556,14 @@ func initCert() {
 	// Load client cert
 	caCert, err := os.ReadFile(AbsCertFilePath)
 	if err != nil {
-		logs.Warn("Reading server certificate: %s", err)
+		logs.Warnf("Reading server certificate: %s", err)
 		return
 	}
-	logs.Info("Cert content is: %s", string(caCert))
+	logs.Infof("Cert content is: %s", string(caCert))
 	caCertPool, err := x509.SystemCertPool()
 	// Windows 下 SystemCertPool 返回 nil
 	if err != nil || caCertPool == nil {
-		logs.Warn("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err)
+		logs.Warnf("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err.Error())
 		caCertPool = x509.NewCertPool()
 	}
 	caCertPool.AppendCertsFromPEM(caCert)

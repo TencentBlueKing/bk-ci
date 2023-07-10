@@ -8,10 +8,8 @@ import io.swagger.annotations.ApiModelProperty
 data class ThirdPartyDockerDebugDoneInfo(
     @ApiModelProperty("项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
-    val buildId: String,
-    @ApiModelProperty("构建环境id")
-    val vmSeqId: String,
+    @ApiModelProperty("debugId")
+    val debugId: Long,
     @ApiModelProperty("流水线id")
     val pipelineId: String,
     @ApiModelProperty("debug链接")

@@ -43,17 +43,24 @@ import (
 // 需要设置最大权限，以便任何runUser能够使用, 不考虑用chown切换目录属主，会导致之前的运行中所产生的子目录/文件的清理权限问题。
 func MkBuildTmpDir() (string, error) {
 	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
-	err := MkDir(tmpDir)
+	err := os.MkdirAll(tmpDir, os.ModePerm)
+	err2 := Chmod(tmpDir, os.ModePerm)
+	if err == nil && err2 != nil {
+		err = err2
+	}
 	return tmpDir, err
 }
 
 func MkDir(dir string) error {
 	err := os.MkdirAll(dir, os.ModePerm)
-	err2 := Chmod(dir, os.ModePerm)
-	if err == nil && err2 != nil {
-		err = err2
+	if err != nil {
+		return err
 	}
-	return err
+	err = Chmod(dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Chmod 对指定file进行修改权限
@@ -65,9 +72,9 @@ func Chmod(file string, perm os.FileMode) error {
 		err = os.Chmod(file, perm) // 修改权限
 	}
 	if err == nil {
-		logs.Info("chmod %o %s ok!", perm, file)
+		logs.Infof("chmod %o %s ok!", perm, file)
 	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
+		logs.Warnf("chmod %o %s msg: %s", perm, file, err.Error())
 	}
 	return err
 }
