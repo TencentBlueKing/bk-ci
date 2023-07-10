@@ -36,7 +36,6 @@ import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
@@ -49,7 +48,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -120,7 +118,7 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun migrateResource(
+    fun migrateResource(
         projectCode: String,
         resourceType: String,
         projectCreator: String
@@ -158,7 +156,10 @@ class MigrateResourceService @Autowired constructor(
                 resourceType = resourceType,
                 projectCode = projectCode
             )
-            logger.info("MigrateResourceService|projectCode:$projectCode|resourceData:$resourceData")
+            logger.info(
+                "MigrateResourceService|projectCode:$projectCode|resourceType:$resourceType" +
+                    "|resourceData:$resourceData"
+            )
             if (resourceData == null || resourceData.data.result.isNullOrEmpty()) {
                 return
             }
@@ -183,26 +184,17 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    val resourceName = it.displayName
-                    for (suffix in 0..MAX_RETRY_TIMES) {
-                        try {
-                            rbacPermissionResourceService.resourceCreateRelation(
-                                userId = migrateCreatorFixService.getResourceCreator(
-                                    projectCreator = projectCreator,
-                                    resourceCreator = it.iamApprover.first()
-                                ),
-                                projectCode = projectCode,
-                                resourceType = resourceType,
-                                resourceCode = resourceCode,
-                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
-                                async = false
-                            )
-                            break
-                        } catch (iamException: IamException) {
-                            if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR) throw iamException
-                            if (suffix == MAX_RETRY_TIMES) throw iamException
-                        }
-                    }
+                    rbacPermissionResourceService.resourceCreateRelation(
+                        userId = migrateCreatorFixService.getResourceCreator(
+                            projectCreator = projectCreator,
+                            resourceCreator = it.iamApprover.first()
+                        ),
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = it.displayName,
+                        async = false
+                    )
                 }
             }
             offset += limit
@@ -281,7 +273,5 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.PROJECT.value
         )
         private val executorService = Executors.newFixedThreadPool(50)
-        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
-        private const val MAX_RETRY_TIMES = 3
     }
 }

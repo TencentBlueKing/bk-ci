@@ -106,6 +106,7 @@ class MigrateV0PolicyService constructor(
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private const val V0_QC_GROUP_NAME = "质量管理员"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -381,15 +382,15 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        val expiredDay = if (defaultGroup) {
-            // 默认用户组,2年或3年随机过期
-            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 3)]
-        } else {
-            // 自定义用户组,半年或者一年过期
-            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 1)]
-        }
-        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
         members?.forEach member@{ member ->
+            val expiredDay = if (defaultGroup) {
+                // 默认用户组,2年或3年随机过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
+            } else {
+                // 自定义用户组,半年或者一年过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
+            }
+            val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
@@ -400,6 +401,10 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
-        return result.subject.name!!
+        return if (result.subject.name == V0_QC_GROUP_NAME) {
+            RBAC_QC_GROUP_NAME
+        } else {
+            result.subject.name!!
+        }
     }
 }

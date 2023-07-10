@@ -56,9 +56,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         }
         return Result(true)
     }
+
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
-        return Result(remoteDevSettingService.getUserSetting4Op(userId))
+        return Result(remoteDevSettingService.getUserSetting(userId))
     }
+
     override fun refreshUserInfo(userId: String): Result<Boolean> {
         return Result(userRefreshService.refreshAllUser())
     }
@@ -85,5 +87,21 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun listImageSpec(): Result<List<ImageSpec>?> {
         return Result(workspaceImageService.listImageSpecConfig())
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(
+            workspaceService.deleteWorkspace(
+                userId = userId, workspaceName = workspaceName, needPermission = false
+            )
+        )
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(
+            workspaceService.stopWorkspace(
+                userId = userId, workspaceName = workspaceName, needPermission = false
+            )
+        )
     }
 }

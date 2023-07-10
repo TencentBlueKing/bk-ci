@@ -123,7 +123,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
 
     @ApiOperation("获取用户设置")
-    @POST
+    @GET
     @Path("/get_user_setting")
     fun getUserSetting(
         @ApiParam(value = "用户ID", required = true)
@@ -192,4 +192,26 @@ interface OpRemoteDevResource {
     @GET
     @Path("/image/spec")
     fun listImageSpec(): Result<List<ImageSpec>?>
+
+    @ApiOperation("休眠工作空间")
+    @GET
+    @Path("/workspace_stop")
+    fun stopWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("销毁工作空间")
+    @GET
+    @Path("/workspace_delete")
+    fun deleteWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

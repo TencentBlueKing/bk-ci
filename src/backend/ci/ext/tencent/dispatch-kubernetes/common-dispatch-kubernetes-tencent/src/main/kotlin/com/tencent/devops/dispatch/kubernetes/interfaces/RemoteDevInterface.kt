@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
@@ -42,7 +43,7 @@ interface RemoteDevInterface {
     /**
      * 创建远程工作空间
      */
-    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String>
+    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes
 
     /**
      * 启动远程工作空间

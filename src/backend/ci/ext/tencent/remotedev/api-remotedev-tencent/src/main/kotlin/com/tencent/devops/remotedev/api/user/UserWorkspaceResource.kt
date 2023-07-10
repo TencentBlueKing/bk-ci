@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -73,6 +74,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "bkTicket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bkTicket: String,
+        @ApiParam(value = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("工作空间描述", required = true)
         workspace: WorkspaceCreate
     ): Result<WorkspaceResponse>
