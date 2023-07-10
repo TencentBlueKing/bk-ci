@@ -46,6 +46,14 @@ class RbacProjectExtPermissionServiceImpl : ProjectExtPermissionService {
         roleName: String?,
         checkManager: Boolean
     ): Boolean {
+        // 校验项目是否存在
+        // 获取分级管理员id
+        // 获取操作用户
+        // 判断要加到那个组内
+        // 1.若roleId和roleName都为空，加到开发人员，若roleId不为空，查询对应的组code。若roleName不为空，查询对应的组code
+        // 若上一步找不到用户组，直接异常
+        // 校验用户是否为真实用户
+        // 添加用户到组   该接口字段：userId、projectId、roleCode、members、
         return true
     }
 

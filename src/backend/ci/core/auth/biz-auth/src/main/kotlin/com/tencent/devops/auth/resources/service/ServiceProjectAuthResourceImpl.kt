@@ -129,6 +129,10 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun batchCreateProjectUser(token: String, userId: String, projectCode: String, roleCode: String, members: List<String>): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
     override fun getProjectRoles(
         token: String,
         projectCode: String,
