@@ -67,7 +67,7 @@
                                         <span>{{props.row.elementDetail}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column :label="$t('quality.可选操作')" prop="availableOperation">
+                                <bk-table-column :label="$t('quality.已支持操作')" prop="availableOperation">
                                     <template slot-scope="props">
                                         <span>{{getOperation(props.row.availableOperation)}}</span>
                                     </template>
