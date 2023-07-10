@@ -66,9 +66,9 @@ class OpenAuthResourceCallBackResourceImpl @Autowired constructor(
             throw TokenForbiddenException("auth token check fail")
         }
         return permissionResourceCallbackService.getInstanceByResource(
-                callBackInfo = callBackInfo,
-                token = token
-            )
+            callBackInfo = callBackInfo,
+            token = token
+        )
     }
 
     companion object {
