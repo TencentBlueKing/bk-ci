@@ -3,9 +3,12 @@ package com.tencent.devops.remotedev.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_REMINDER
 import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_REMINDER
 import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.remotedev.listener.RemoteDevReminderListener
 import com.tencent.devops.remotedev.listener.RemoteDevUpdateListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -58,7 +61,7 @@ class MqConfiguration {
     }
 
     @Bean
-    fun pipelinePauseTaskExecuteListenerContainer(
+    fun remoteDevUpdateListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired remoteDevUpdateQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -81,4 +84,40 @@ class MqConfiguration {
 
     @Bean
     fun remoteDevDispatcher(rabbitTemplate: RabbitTemplate) = RemoteDevDispatcher(rabbitTemplate)
+    /**
+     * k8s -> remote dev 事件
+     */
+    @Bean
+    fun remoteDevReminderQueue() = Queue(QUEUE_WORKSPACE_REMINDER)
+
+    @Bean
+    fun remoteDevReminderQueueBind(
+        @Autowired remoteDevReminderQueue: Queue,
+        @Autowired remoteDevExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(remoteDevReminderQueue)
+            .to(remoteDevExchange).with(ROUTE_WORKSPACE_REMINDER)
+    }
+
+    @Bean
+    fun remoteDevReminderListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired remoteDevReminderQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired remoteDevReminderListener: RemoteDevReminderListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = remoteDevReminderQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = remoteDevReminderListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 50
+        )
+    }
 }

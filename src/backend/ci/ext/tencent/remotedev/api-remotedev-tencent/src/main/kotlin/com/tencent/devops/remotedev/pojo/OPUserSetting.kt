@@ -6,6 +6,7 @@ data class OPUserSetting(
     val wsMaxHavingCount: Int?,
     val onlyCloudIDE: Boolean?,
     val grayFlag: Boolean?,
+    val startCloudExperienceDuration: Int?,
     val allowedCopy: Boolean?,
     val allowedDownload: Boolean?,
     val needWatermark: Boolean?,

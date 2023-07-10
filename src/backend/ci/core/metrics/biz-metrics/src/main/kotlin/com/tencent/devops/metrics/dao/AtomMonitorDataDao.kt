@@ -25,39 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.metrics.dao
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.db.utils.JooqUtils.sum
+import com.tencent.devops.metrics.pojo.`do`.AtomMonitorDataDO
+import com.tencent.devops.model.metrics.tables.TAtomMonitorDataDaily
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@ApiModel("获取指定工作空间详情model")
-data class WorkspaceDetail(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
-    @ApiModelProperty("工作空间名称")
-    val workspaceName: String,
-    @ApiModelProperty("工作空间备注名称")
-    val displayName: String?,
-    @ApiModelProperty("工作空间状态")
-    val status: WorkspaceStatus,
-    @ApiModelProperty("最近状态修改时间")
-    val lastUpdateTime: Long,
-    @ApiModelProperty("计费时间（秒）")
-    val chargeableTime: Long,
-    @ApiModelProperty("使用时间（秒）")
-    val usageTime: Long,
-    @ApiModelProperty("休眠时间（秒）")
-    val sleepingTime: Long,
-    @ApiModelProperty("CPU 核心数")
-    val cpu: Int,
-    @ApiModelProperty("内存大小（MB）")
-    val memory: Int,
-    @ApiModelProperty("存储空间大小（GB）")
-    val disk: Int,
-    @ApiModelProperty("yaml 配置内容")
-    val yaml: String,
-    @ApiModelProperty("操作系统类型")
-    val systemType: WorkspaceSystemType,
-    @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
-)
+@Repository
+class AtomMonitorDataDao {
+
+    fun getAtomMonitorDatas(
+        dslContext: DSLContext,
+        atomCode: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        errorTypes: List<Int?>? = null
+    ): List<AtomMonitorDataDO>? {
+        with(TAtomMonitorDataDaily.T_ATOM_MONITOR_DATA_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(STATISTICS_TIME.between(startTime, endTime))
+            if (!errorTypes.isNullOrEmpty()) {
+                conditions.add(ERROR_TYPE.`in`(errorTypes))
+            }
+            return dslContext.select(
+                ATOM_CODE.`as`(AtomMonitorDataDO::atomCode.name),
+                ERROR_TYPE.`as`(AtomMonitorDataDO::errorType.name),
+                sum<Long>(EXECUTE_COUNT).`as`(AtomMonitorDataDO::totalExecuteCount.name)
+            )
+                .from(this)
+                .where(conditions)
+                .groupBy(ATOM_CODE, ERROR_TYPE)
+                .fetchInto(AtomMonitorDataDO::class.java)
+        }
+    }
+}

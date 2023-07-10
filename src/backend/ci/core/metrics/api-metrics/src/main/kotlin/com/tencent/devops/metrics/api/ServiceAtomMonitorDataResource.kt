@@ -25,39 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.metrics.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.metrics.pojo.vo.AtomMonitorInfoVO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("获取指定工作空间详情model")
-data class WorkspaceDetail(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
-    @ApiModelProperty("工作空间名称")
-    val workspaceName: String,
-    @ApiModelProperty("工作空间备注名称")
-    val displayName: String?,
-    @ApiModelProperty("工作空间状态")
-    val status: WorkspaceStatus,
-    @ApiModelProperty("最近状态修改时间")
-    val lastUpdateTime: Long,
-    @ApiModelProperty("计费时间（秒）")
-    val chargeableTime: Long,
-    @ApiModelProperty("使用时间（秒）")
-    val usageTime: Long,
-    @ApiModelProperty("休眠时间（秒）")
-    val sleepingTime: Long,
-    @ApiModelProperty("CPU 核心数")
-    val cpu: Int,
-    @ApiModelProperty("内存大小（MB）")
-    val memory: Int,
-    @ApiModelProperty("存储空间大小（GB）")
-    val disk: Int,
-    @ApiModelProperty("yaml 配置内容")
-    val yaml: String,
-    @ApiModelProperty("操作系统类型")
-    val systemType: WorkspaceSystemType,
-    @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
-)
+@Api(tags = ["SERVICE_METRICS_ATOM"], description = "插件监控")
+@Path("/service/monitor/atoms/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceAtomMonitorDataResource {
+
+    @ApiOperation("查询插件监控统计数据")
+    @GET
+    @Path("/{atomCode}/statistic")
+    fun queryAtomMonitorStatisticData(
+        @ApiParam(value = "插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam(value = "开始时间", required = true)
+        @QueryParam("startTime")
+        startTime: String,
+        @ApiParam(value = "结束时间", required = true)
+        @QueryParam("endTime")
+        endTime: String
+    ): Result<AtomMonitorInfoVO>
+}
