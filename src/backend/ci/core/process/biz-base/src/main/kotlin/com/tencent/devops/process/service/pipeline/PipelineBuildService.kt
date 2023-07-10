@@ -73,6 +73,7 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.project.pojo.ProjectVO
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
 
@@ -91,6 +92,7 @@ class PipelineBuildService(
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
         private const val CONTEXT_PREFIX = "variables."
+        private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
     }
 
     fun startPipeline(
@@ -219,6 +221,7 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         isMobile: Boolean
     ) {
+        logger.info("init pipeline paramMap|$pipelineParamMap")
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
             StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value
@@ -315,6 +318,7 @@ class PipelineBuildService(
             pipelineParamMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] =
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
+        logger.info("end init pipeline paramMap|$pipelineParamMap")
 //        return originStartParams
     }
 }
