@@ -137,6 +137,9 @@ function _M:get_staff_info_new(credentialKey)
         }
     })
 
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+
     if not res then
         ngx.log(ngx.ERR, "failed to request credentialKey info: ", err)
         ngx.exit(500)
