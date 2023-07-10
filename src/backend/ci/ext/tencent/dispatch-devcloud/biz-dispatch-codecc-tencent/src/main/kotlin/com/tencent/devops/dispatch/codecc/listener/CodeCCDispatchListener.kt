@@ -32,6 +32,8 @@ class CodeCCDispatchListener @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeCCDispatchListener::class.java)
+
+        private const val DEFAULT_IMAGE = "mirrors.tencent.com/ci/tlinux3_ci:2.3.0"
     }
 
     override fun getShutdownQueue(): String {
@@ -69,12 +71,12 @@ class CodeCCDispatchListener @Autowired constructor(
 
         val codeccDispatchMessage = JsonUtil.to(dispatchMessage.dispatchMessage, CodeccDispatchMessage::class.java)
 
-        // 判断是否为devcloud构建
+        // 判断是否为devcloud构建，-101(pcg开源扫描)，-3(闭源扫描)
         if (codeccDispatchMessage.codeccTaskId == -101L || codeccDispatchMessage.codeccTaskId == -3L) {
             printLogs(dispatchMessage, "Preparing container...")
 
             val containerPool = Pool(
-                container = "mirrors.tencent.com/ci/tlinux3_ci:2.3.0",
+                container = DEFAULT_IMAGE,
                 credential = Credential("", "")
             )
 
@@ -142,7 +144,7 @@ class CodeCCDispatchListener @Autowired constructor(
                     startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
                     dispatchType = DockerDispatchType(
-                        dockerBuildVersion = "mirrors.tencent.com/ci/tlinux3_ci:2.3.0",
+                        dockerBuildVersion = DEFAULT_IMAGE,
                         imageType = ImageType.THIRD
                     ),
                     atoms = atoms,
