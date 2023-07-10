@@ -278,8 +278,8 @@ class ContainerBuildRecordService(
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
-                    containerVar = recordContainer.containerVar.plus(containerVar),
-                    buildStatus = buildStatus, startTime = startTime, endTime = endTime,
+                    containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = buildStatus,
+                    startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
             }
@@ -440,8 +440,8 @@ class ContainerBuildRecordService(
             recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
-                containerVar = recordContainer.containerVar.plus(containerVar),
-                startTime = startTime, endTime = endTime, buildStatus = buildStatus,
+                containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = buildStatus,
+                startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordContainer.timestamps) }
             )
         }

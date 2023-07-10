@@ -136,9 +136,10 @@ const handleSubmit = () => {
 };
 
 const handleCancel = () => {
+  sessionStorage.removeItem('group-apply-query');
   router.push({
     name: 'my-permission'
-  })
+  });
 };
 
 const handleChangeGroup = (values) => {

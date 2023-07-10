@@ -46,7 +46,8 @@ class MigrateResultService constructor(
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
-    private val authVerifyRecordService: AuthVerifyRecordService
+    private val authVerifyRecordService: AuthVerifyRecordService,
+    private val migrateResourceService: MigrateResourceService
 ) {
 
     companion object {
@@ -98,10 +99,9 @@ class MigrateResultService constructor(
                 offset = offset,
                 limit = limit
             )
-            verifyRecordList.forEach {
+            verifyRecordList.filter { it.verifyResult }.forEach {
                 with(it) {
-                    if (resourceCode == "*" ||
-                        action.substringAfterLast("_") == AuthPermission.DELETE.value) return@forEach
+                    if (isSkipCompare(resourceCode = resourceCode, action = action)) return@forEach
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                         projectCode = projectCode,
                         resourceType = resourceType,
@@ -117,12 +117,21 @@ class MigrateResultService constructor(
                             relationResourceType = null
                         )
                     } ?: false
-                    if (verifyResult != rbacVerifyResult) {
-                        logger.error("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                    if (!rbacVerifyResult) {
+                        val checkResource = migrateResourceService.fetchInstanceInfo(
+                            resourceType = resourceType,
+                            projectCode = projectCode,
+                            ids = listOf(resourceCode)
+                        )?.data?.isEmpty() ?: true
+                        if (checkResource) {
+                            logger.info("compare policy,resource not found|$projectId|$resourceType|$resourceCode")
+                            return@forEach
+                        }
+                        logger.error("Failed to compare policy:$userId|$action|$projectId|$resourceType|$resourceCode")
                         throw ErrorCodeException(
                             errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
                             params = arrayOf(projectCode),
-                            defaultMessage = "compare policy failed:" +
+                            defaultMessage = "Failed to compare policy:" +
                                 "$userId|$action|$projectId|$resourceType|$resourceCode"
                         )
                     }
@@ -132,5 +141,14 @@ class MigrateResultService constructor(
             offset += limit
         }
         return true
+    }
+
+    private fun isSkipCompare(
+        resourceCode: String,
+        action: String
+    ): Boolean {
+        return resourceCode == "*" ||
+            action.substringAfterLast("_") == AuthPermission.DELETE.value ||
+            action == "all_action"
     }
 }

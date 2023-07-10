@@ -391,6 +391,8 @@ class PipelineBuildFacadeService(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
+                        executeCount = buildInfo.executeCount ?: 1,
+                        resourceVersion = buildInfo.version,
                         taskId = taskId,
                         skipFailedTask = skipFailedTask
                     )

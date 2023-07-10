@@ -53,7 +53,7 @@ spec:
       {{- end }}        
       containers:
         - name: misc
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.misc.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.misc.containerSecurityContext "enabled" | toYaml | nindent 12 }}

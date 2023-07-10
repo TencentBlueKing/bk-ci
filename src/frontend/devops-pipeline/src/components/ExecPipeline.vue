@@ -93,6 +93,7 @@
                         @atom-review="reviewAtom"
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
+                        @debug-container="debugDocker"
                     />
                 </div>
             </simplebar>
@@ -240,15 +241,14 @@
     import Logo from '@/components/Logo'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             simplebar,
             CheckAtomDialog,
             CompleteLog,
-
             Logo
         },
         props: {
@@ -462,13 +462,13 @@
         },
         updated () {
             if (this.showErrorPopup) {
-                const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                this.setScrollBarPostion()
             }
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
+                this.setScrollBarPostion()
                 setTimeout(() => {
                     this.setAtomLocate(this.errorList[0])
                 }, 600)
@@ -524,6 +524,10 @@
                     ]
 
                 )
+            },
+            setScrollBarPostion () {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
@@ -816,6 +820,16 @@
                         executeCount
                     })
                 })
+            },
+            debugDocker ({ container }) {
+                const vmSeqId = container.id
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             }
         }
     }
