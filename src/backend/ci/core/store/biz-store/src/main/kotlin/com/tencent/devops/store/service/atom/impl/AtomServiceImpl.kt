@@ -303,7 +303,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             page = page,
             pageSize = pageSize
         )
-        logger.info("pipelineAtoms: $pipelineAtoms")
         val atomIdSet = mutableSetOf<String>()
         val atomCodeSet = mutableSetOf<String>()
         pipelineAtoms?.forEach {
