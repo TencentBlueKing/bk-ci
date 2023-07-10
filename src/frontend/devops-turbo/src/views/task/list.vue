@@ -3,7 +3,7 @@
         <template v-if="hasPermission">
             <header class="task-head">
                 <bk-button theme="primary" @click="addTask"> {{ $t('turbo.新增方案') }} </bk-button>
-                <span class="g-turbo-gray-font task-head-title">{{ $t('turbo.共') }} {{ turboPlanCount }} {{ $t('turbo.个方案') }} </span>
+                <span class="g-turbo-gray-font task-head-title">{{ $t('turbo.共N个方案', [turboPlanCount]) }}</span>
             </header>
 
             <main v-bkloading="{ isLoading }">
