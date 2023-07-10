@@ -25,39 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.common.api.annotation
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("获取指定工作空间详情model")
-data class WorkspaceDetail(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
-    @ApiModelProperty("工作空间名称")
-    val workspaceName: String,
-    @ApiModelProperty("工作空间备注名称")
-    val displayName: String?,
-    @ApiModelProperty("工作空间状态")
-    val status: WorkspaceStatus,
-    @ApiModelProperty("最近状态修改时间")
-    val lastUpdateTime: Long,
-    @ApiModelProperty("计费时间（秒）")
-    val chargeableTime: Long,
-    @ApiModelProperty("使用时间（秒）")
-    val usageTime: Long,
-    @ApiModelProperty("休眠时间（秒）")
-    val sleepingTime: Long,
-    @ApiModelProperty("CPU 核心数")
-    val cpu: Int,
-    @ApiModelProperty("内存大小（MB）")
-    val memory: Int,
-    @ApiModelProperty("存储空间大小（GB）")
-    val disk: Int,
-    @ApiModelProperty("yaml 配置内容")
-    val yaml: String,
-    @ApiModelProperty("操作系统类型")
-    val systemType: WorkspaceSystemType,
-    @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
-)
+@Target(AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class InfluxTag

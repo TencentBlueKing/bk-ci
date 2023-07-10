@@ -41,5 +41,7 @@ data class WorkspaceResponse(
     @ApiModelProperty("错误信息")
     val errorMsg: String? = null,
     @ApiModelProperty("系统类型")
-    val systemType: WorkspaceSystemType? = null
+    val systemType: WorkspaceSystemType? = null,
+    @ApiModelProperty("挂载平台类型")
+    val workspaceMountType: WorkspaceMountType
 )
