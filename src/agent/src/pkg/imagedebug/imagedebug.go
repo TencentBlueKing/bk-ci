@@ -122,14 +122,28 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 
 	group, ctx := errgroup.WithContext(c)
 
+	filedLog := imageDebugLogs.WithField("buildId", debugInfo.BuildId).WithField("vmseqId", debugInfo.VmSeqId)
+
 	// 新建docker容器
-	group.Go(func() error { return CreateDebugContainer(ctx, debugInfo, containerReady, debugDone) })
+	group.Go(func() error {
+		err := CreateDebugContainer(ctx, debugInfo, containerReady, debugDone)
+		filedLog.Info("CreateDebugContainer done")
+		return err
+	})
 
 	// 启动登录调试
-	group.Go(func() error { return CreateExecServer(ctx, debugInfo, containerReady, debugDone) })
+	group.Go(func() error {
+		err := CreateExecServer(ctx, debugInfo, containerReady, debugDone)
+		filedLog.Info("CreateExecServer done")
+		return err
+	})
 
 	// 轮训任务状态
-	group.Go(func() error { return checkDebugStatus(ctx, debugInfo.DebugId, debugDone) })
+	group.Go(func() error {
+		err := checkDebugStatus(ctx, debugInfo.DebugId, debugDone)
+		filedLog.Info("checkDebugStatus done")
+		return err
+	})
 
 	// 上报结束并附带错误信息
 	if err := group.Wait(); err != nil {
@@ -139,7 +153,7 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 			ErrorCode:    api.DockerImageDebugErrorEnum.Code,
 		})
 		if err2 != nil {
-			imageDebugLogs.WithError(err).Error("post image debug url error")
+			filedLog.WithError(err).Error("post image debug url error")
 		}
 	}
 }
@@ -260,7 +274,7 @@ func CreateDebugContainer(
 	if job_docker.IfPullImage(localExist, isLatest, api.ImagePullPolicyIfNotPresent.String()) {
 		auth, err := job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password)
 		if err != nil {
-			imageDebugLogs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			imageDebugLogs.WithError(err).Errorf("pull new image generateDockerAuth %s error ", imageName)
 			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
 		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
