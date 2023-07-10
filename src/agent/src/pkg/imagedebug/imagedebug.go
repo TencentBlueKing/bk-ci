@@ -122,7 +122,7 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 
 	group, ctx := errgroup.WithContext(c)
 
-	filedLog := imageDebugLogs.WithField("buildId", debugInfo.BuildId).WithField("vmseqId", debugInfo.VmSeqId)
+	filedLog := imageDebugLogs.WithField("buildId", debugInfo.BuildId).WithField("vmseqId", debugInfo.VmSeqId).WithField("userId", debugInfo.DebugUserId)
 
 	// 新建docker容器
 	group.Go(func() error {
@@ -543,8 +543,10 @@ func CreateExecServer(
 	errChan := make(chan error)
 	server := InitRouter(ctx, backend, conf, errChan)
 	defer func() {
-		server.Shutdown(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		server.Shutdown(ctx)
 		imageDebugLogs.WithField("port", port).Info("debug server stop")
+		cancel()
 	}()
 
 	// 等待容器启动后创建登录调试链接
