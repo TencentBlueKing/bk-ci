@@ -711,6 +711,7 @@
                     this.$bkInfo({
                         title: infoTitle,
                         subHeader: content,
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.toSwitchRule(row)
                         }

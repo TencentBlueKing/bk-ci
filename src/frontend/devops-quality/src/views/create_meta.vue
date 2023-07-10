@@ -65,9 +65,9 @@
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <devops-form-item :label="$t('quality.可选操作')" :required="true" :property="'operation'"
+                    <devops-form-item :label="$t('quality.已支持操作')" :required="true" :property="'operation'"
                         :is-error="formErrors.operationError"
-                        :error-msg="$t('quality.可选操作不能为空')">
+                        :error-msg="$t('quality.已支持操作不能为空')">
                         <bk-select multiple v-model="createForm.operation" @selected="toggleOperation">
                             <bk-option v-for="(option, index) in createForm.dataType === 'BOOLEAN' ? boolConf : handleListConf"
                                 :key="index"
@@ -126,7 +126,7 @@
                         </div>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click.stop.prevent="submitHandle">{{$t('quality.完成')}}</bk-button>
+                        <bk-button theme="primary" @click.stop.prevent="submitHandle">{{$t('quality.提交')}}</bk-button>
                         <bk-button theme="default" @click="cancelHandle">{{metaId ? $t('quality.删除') : $t('quality.取消')}}</bk-button>
                     </bk-form-item>
                 </bk-form>
@@ -192,7 +192,7 @@
                     validate: value => /^[a-zA-Z0-9_]+$/.test(value)
                 },
                 floatTypeRule: {
-                    getMessage: field => this.$t('quality.请输入正确的非负浮点数'),
+                    getMessage: field => this.$t('quality.请输入0和正浮点数'),
                     validate: value => /^[0-9]+([.]{1}[0-9]+){0,1}$/.test(value)
                 }
             }

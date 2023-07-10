@@ -559,7 +559,7 @@
     
     .navigation-message-theme {
         position: relative;
-        top: -5px;
+        top: 5px;
         padding: 0 !important;
     }
     .bkci-dropdown-item {
