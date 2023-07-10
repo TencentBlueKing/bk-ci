@@ -273,7 +273,8 @@
                 errorRow: null,
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
-                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC
+                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
+                element: {}
             }
         },
         computed: {
@@ -577,7 +578,32 @@
                     }
                 })
             },
-            async qualityCheck ({ elementId, action }) {
+            getRelativeRuleHashId (rules) {
+                const result = []
+                rules.map(rule => {
+                    if (rule.taskId === this.element.atomCode && rule.ruleList.every(rule => !rule.gatewayId)) {
+                        result.push(rule)
+                    } else if (rule.taskId === this.element.atomCode
+                        && rule.ruleList.some(val => this.element.name.indexOf(val.gatewayId) > -1)) {
+                        const temp = {
+                            ...rule,
+                            ruleList: rule.ruleList.filter(item => this.element.name.indexOf(item.gatewayId) > -1)
+                        }
+                        return result.push(temp)
+                    }
+                    return false
+                })
+
+                const hashIds = []
+                result.forEach(item => {
+                    item.ruleList.forEach(rule => {
+                        hashIds.push(rule.ruleHashId)
+                    })
+                })
+
+                return hashIds
+            },
+            async qualityCheck ({ elementId, action, stageIndex, containerIndex, containerGroupIndex, atomIndex }) {
                 try {
                     const data = {
                         ...this.routerParams,
@@ -585,6 +611,18 @@
                         elementId,
                         action
                     }
+                    let elementIndex = 0
+                    if (containerGroupIndex !== undefined) {
+                        const curAtom = this.execDetail.model.stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex].elements[atomIndex]
+                        curAtom.atomCode === 'qualityGateInTask' ? elementIndex = atomIndex + 1 : elementIndex = atomIndex - 1
+                        this.element = this.execDetail.model.stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex].elements[elementIndex]
+                    } else {
+                        const curAtom = this.execDetail.model.stages[stageIndex].containers[containerIndex].elements[atomIndex]
+                        curAtom.atomCode === 'qualityGateInTask' ? elementIndex = atomIndex + 1 : elementIndex = atomIndex - 1
+                        this.element = this.execDetail.model.stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                    }
+
+                    data.ruleIds = this.getRelativeRuleHashId(this.curMatchRules)
                     const res = await this.reviewExcuteAtom(data)
                     if (res) {
                         this.$showTips({
