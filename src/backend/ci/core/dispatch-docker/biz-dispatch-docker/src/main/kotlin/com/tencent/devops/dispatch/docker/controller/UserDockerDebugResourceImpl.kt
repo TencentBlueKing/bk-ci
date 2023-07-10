@@ -78,7 +78,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 DebugResponse(
                     websocketUrl = debugUrl,
                     containerName = null,
-                    dispatchType = BuildType.PUBLIC_DEVCLOUD.name
+                    dispatchType = debugStartParam.dispatchType
                 )
             )
         }
