@@ -369,7 +369,7 @@ class PipelineBuildRecordService @Autowired constructor(
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
             buildMsg = BuildMsgUtils.getBuildMsg(
-                buildMsg = null,
+                buildMsg = buildInfo.buildMsg,
                 startType = StartType.toStartType(buildInfo.trigger),
                 channelCode = buildInfo.channelCode
             ),
