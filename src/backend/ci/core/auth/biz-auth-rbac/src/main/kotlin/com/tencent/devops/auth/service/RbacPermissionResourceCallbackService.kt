@@ -42,6 +42,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.SchemaData
 import com.tencent.bk.sdk.iam.dto.callback.response.SchemaProperties
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.FetchInstanceListData
@@ -50,7 +51,6 @@ import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaInfo
 import com.tencent.devops.common.auth.callback.FetchResourceTypeSchemaProperties
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 class RbacPermissionResourceCallbackService constructor(
@@ -282,9 +282,9 @@ class RbacPermissionResourceCallbackService constructor(
             displayName = resourceName
             creator = createUser
             updater = updateUser
-            createdAt = createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            updatedAt = updateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            bkIamPath = listOf("/project,$projectCode/")
+            createdAt = createTime.timestampmilli()
+            updatedAt = updateTime.timestampmilli()
+            bkIamPath = listOf("/${AuthResourceType.PROJECT.value},$projectCode/")
             schemaProperties = FetchInstanceListData(
                 projectId = projectCode,
                 projectName = projectName,
