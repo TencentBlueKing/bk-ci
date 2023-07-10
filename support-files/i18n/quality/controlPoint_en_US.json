@@ -1,6 +1,6 @@
 [ {
   "id" : 1,
-  "elementType" : "CodeCCCheckAtom",
+  "elementType" : "CodeccCheckAtomDebug",
   "name" : "Tencent code analysis",
   "stage" : "Development",
   "availablePosition" : "BEFORE,AFTER",

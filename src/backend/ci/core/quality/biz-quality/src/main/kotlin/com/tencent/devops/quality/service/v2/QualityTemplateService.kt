@@ -153,7 +153,7 @@ class QualityTemplateService @Autowired constructor(
                 controlPoint = record.controlPoint,
                 controlPointName = controlPoint?.let {
                     I18nUtil.getCodeLanMessage(
-                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.id}"),
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.elementType}"),
                         defaultMessage = it.name
                     )
                 } ?: "",
@@ -166,7 +166,7 @@ class QualityTemplateService @Autowired constructor(
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
         val controlPointMap = controlPointService.listAllControlPoint().map {
             it.name = I18nUtil.getCodeLanMessage(
-                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.id}"),
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.elementType}"),
                 defaultMessage = it.name,
                 language = I18nUtil.getDefaultLocaleLanguage()
             )

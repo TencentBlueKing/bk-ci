@@ -140,11 +140,11 @@ class QualityControlPointService @Autowired constructor(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
             name = I18nUtil.getCodeLanMessage(
-                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.id),
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.elementType),
                 defaultMessage = record.name ?: ""
             ),
             stage = I18nUtil.getCodeLanMessage(
-                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.id),
+                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.elementType),
                 defaultMessage = record.stage ?: ""
             ),
             availablePos = if (record.availablePosition.isNullOrBlank()) {
@@ -172,11 +172,11 @@ class QualityControlPointService @Autowired constructor(
                     hashId = HashUtil.encodeLongId(it.id),
                     type = it.elementType,
                     name = I18nUtil.getCodeLanMessage(
-                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(it.id),
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(it.elementType),
                         defaultMessage = it.name
                     ),
                     stage = I18nUtil.getCodeLanMessage(
-                        messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.id),
+                        messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.elementType),
                         defaultMessage = it.stage
                     ),
                     availablePos = it.availablePosition.split(",")

@@ -1,6 +1,6 @@
 [ {
   "id" : 1,
-  "elementType" : "CodeCCCheckAtom",
+  "elementType" : "CodeccCheckAtomDebug",
   "name" : "腾讯代码分析",
   "stage" : "开发",
   "availablePosition" : "BEFORE,AFTER",
