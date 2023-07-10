@@ -23,6 +23,7 @@ class RbacLogPermissionService @Autowired constructor(
         userId: String,
         permission: AuthPermission?
     ): Boolean {
+        // 获取流水线
         val pipelineInfo =
             client.get(ServicePipelineResource::class).getPipelineInfo(
                 projectId = projectCode,
