@@ -54,6 +54,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -299,7 +301,8 @@ class TemplateFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-
+        val templateModel: Model = objectMapper.readValue(template)
+        checkTemplateAtoms(templateModel)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -458,28 +461,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
-        template.stages.forEach { stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach nextElement@{ element ->
-                    logger.info("1234567890: ${element.id}: ${element.version} || ${element.status}")
-                    val version = element.version
-                    if (version.contains("*")) return@nextElement
-                    val atomCode = element.getAtomCode()
-                    val atomName = element.atomName!!
-                    val atomStatus = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version).data!!.atomStatus
-                    val atomStatusList = listOf(
-                        AtomStatusEnum.TESTING.status, AtomStatusEnum.UNDERCARRIAGED.status
-                    )
-                    logger.info("atomStatus: ${AtomStatusEnum.getAtomStatus(atomStatus.toInt())}}")
-                    if (atomStatus.toInt() in atomStatusList){
-                        throw ErrorCodeException(
-                            errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
-                            params = arrayOf(atomName, AtomStatusEnum.getAtomStatus(atomStatus.toInt()))
-                        )
-                    }
-                }
-            }
-        }
+        checkTemplateAtoms(template)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1977,6 +1959,39 @@ class TemplateFacadeService @Autowired constructor(
         }
         modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
         checkPipelineParam(template)
+    }
+
+    /**
+     * 检查模板中是否存在已下架、测试中插件
+     */
+    fun checkTemplateAtoms(template: Model){
+        template.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach nextElement@{ element ->
+                    if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+                        val version = element.version
+                        if (version.contains("*")) return@nextElement
+                        val atomCode = element.getAtomCode()
+                        val atomName = element.name
+                        val atomStatus = client.get(ServiceAtomResource::class)
+                            .getAtomVersionInfo(
+                                atomCode, version
+                            ).data!!.atomStatus
+                        val atomStatusList = listOf(
+                            AtomStatusEnum.TESTING.name,
+                            AtomStatusEnum.UNDERCARRIAGED.name
+                        )
+                        if (atomStatus in atomStatusList){
+                            throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
+                                defaultMessage = "The plugin ($atomName) in the template is not allowed to update",
+                                params = arrayOf(atomName, atomStatus)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
