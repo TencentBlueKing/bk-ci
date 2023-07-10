@@ -24,35 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.metrics.pojo.`do`
 
-package com.tencent.devops.websocket.api
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
-
-@Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
-@Path("/{apiType:user|desktop}/websocket/sessions")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.TEXT_PLAIN)
-interface UserWebsocketResource {
-
-    @POST
-    @Path("/{sessionId}/userIds/{userId}/clear")
-    @ApiOperation("页面退出清理session")
-    fun clearSession(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String,
-        @ApiParam("SessionID", required = true)
-        @PathParam("sessionId")
-        sessionId: String
-    ): Result<Boolean>
-}
+@ApiModel("插件监控数据")
+data class AtomMonitorDataDO(
+    @ApiModelProperty("插件标识", required = true)
+    val atomCode: String,
+    @ApiModelProperty("错误类型", required = false)
+    val errorType: Int? = null,
+    @ApiModelProperty("执行总次数", required = true)
+    val totalExecuteCount: Int = 0
+)

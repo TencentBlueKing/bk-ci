@@ -25,34 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.api
+package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.metrics.pojo.vo.AtomMonitorInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
-@Path("/{apiType:user|desktop}/websocket/sessions")
+@Api(tags = ["SERVICE_METRICS_ATOM"], description = "插件监控")
+@Path("/service/monitor/atoms/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.TEXT_PLAIN)
-interface UserWebsocketResource {
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceAtomMonitorDataResource {
 
-    @POST
-    @Path("/{sessionId}/userIds/{userId}/clear")
-    @ApiOperation("页面退出清理session")
-    fun clearSession(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String,
-        @ApiParam("SessionID", required = true)
-        @PathParam("sessionId")
-        sessionId: String
-    ): Result<Boolean>
+    @ApiOperation("查询插件监控统计数据")
+    @GET
+    @Path("/{atomCode}/statistic")
+    fun queryAtomMonitorStatisticData(
+        @ApiParam(value = "插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam(value = "开始时间", required = true)
+        @QueryParam("startTime")
+        startTime: String,
+        @ApiParam(value = "结束时间", required = true)
+        @QueryParam("endTime")
+        endTime: String
+    ): Result<AtomMonitorInfoVO>
 }

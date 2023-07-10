@@ -25,34 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.api
+package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.db.utils.JooqUtils.sum
+import com.tencent.devops.metrics.pojo.`do`.AtomMonitorDataDO
+import com.tencent.devops.model.metrics.tables.TAtomMonitorDataDaily
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
-@Path("/{apiType:user|desktop}/websocket/sessions")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.TEXT_PLAIN)
-interface UserWebsocketResource {
+@Repository
+class AtomMonitorDataDao {
 
-    @POST
-    @Path("/{sessionId}/userIds/{userId}/clear")
-    @ApiOperation("页面退出清理session")
-    fun clearSession(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String,
-        @ApiParam("SessionID", required = true)
-        @PathParam("sessionId")
-        sessionId: String
-    ): Result<Boolean>
+    fun getAtomMonitorDatas(
+        dslContext: DSLContext,
+        atomCode: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        errorTypes: List<Int?>? = null
+    ): List<AtomMonitorDataDO>? {
+        with(TAtomMonitorDataDaily.T_ATOM_MONITOR_DATA_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(STATISTICS_TIME.between(startTime, endTime))
+            if (!errorTypes.isNullOrEmpty()) {
+                conditions.add(ERROR_TYPE.`in`(errorTypes))
+            }
+            return dslContext.select(
+                ATOM_CODE.`as`(AtomMonitorDataDO::atomCode.name),
+                ERROR_TYPE.`as`(AtomMonitorDataDO::errorType.name),
+                sum<Long>(EXECUTE_COUNT).`as`(AtomMonitorDataDO::totalExecuteCount.name)
+            )
+                .from(this)
+                .where(conditions)
+                .groupBy(ATOM_CODE, ERROR_TYPE)
+                .fetchInto(AtomMonitorDataDO::class.java)
+        }
+    }
 }
