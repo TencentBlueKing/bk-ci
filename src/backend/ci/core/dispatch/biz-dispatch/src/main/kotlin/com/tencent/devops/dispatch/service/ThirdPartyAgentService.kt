@@ -40,7 +40,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -52,19 +51,16 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInf
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
-import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
-import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -177,7 +173,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                            "of project($projectId) and agent($agentId)"
+                        "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -216,7 +212,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                                " claim failed, cause: ${e.message} agent project($projectId)"
+                            " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
 
@@ -233,12 +229,18 @@ class ThirdPartyAgentService @Autowired constructor(
                 var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
-                    if ((dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()) &&
+                    if ((
+                        dockerInfo.credential?.user.isNullOrBlank() &&
+                            dockerInfo.credential?.password.isNullOrBlank()
+                        ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
-                            getTicket(projectId, dockerInfo.credential!!)
+                            ThirdPartyAgentUtils.getTicket(
+                                client = client,
+                                projectId = projectId,
+                                credInfo = dockerInfo.credential!!
+                            )
                         } catch (e: Exception) {
                             logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error", e)
                             errMsg = e.message
@@ -271,58 +273,6 @@ class ThirdPartyAgentService @Autowired constructor(
             logger.warn("Fail to start build for agent($agentId)", ignored)
             throw ignored
         }
-    }
-
-    // 获取凭据，同时存在stream中跨项目引用凭据的情况
-    // 先获取当前项目凭据，如果当前项目没有凭据则判断跨项目引用来获取跨项目凭据
-    private fun getTicket(projectId: String, credInfo: Credential): Pair<String?, String?> {
-        if (credInfo.credentialId.isNullOrBlank()) {
-            return Pair(null, null)
-        }
-
-        val tickets = try {
-            CommonUtils.getCredential(
-                client = client,
-                projectId = projectId,
-                credentialId = credInfo.credentialId!!,
-                type = CredentialType.USERNAME_PASSWORD
-            )
-        } catch (ignore: Exception) {
-            // 没有跨项目的模板引用就直接扔出错误
-            if (credInfo.acrossTemplateId.isNullOrBlank() || credInfo.jobId.isNullOrBlank()) {
-                throw ignore
-            } else {
-                emptyMap()
-            }
-        }
-
-        if (!tickets["v1"].isNullOrBlank() && !tickets["v2"].isNullOrBlank()) {
-            return Pair(tickets["v1"], tickets["v2"])
-        }
-
-        // 校验跨项目信息可能
-        if (credInfo.acrossTemplateId.isNullOrBlank() || credInfo.jobId.isNullOrBlank()) {
-            return Pair(null, null)
-        }
-        val result = client.get(ServiceTemplateAcrossResource::class).getBuildAcrossTemplateInfo(
-            projectId = projectId,
-            templateId = credInfo.acrossTemplateId!!
-        ).data ?: return Pair(null, null)
-
-        val across = result.firstOrNull {
-            it.templateType == TemplateAcrossInfoType.JOB &&
-                    it.templateInstancesIds.contains(credInfo.jobId)
-        } ?: return Pair(null, null)
-
-        // 校验成功后获取跨项目的凭据
-        val acrossTickets = CommonUtils.getCredential(
-            client = client,
-            projectId = across.targetProjectId,
-            credentialId = credInfo.credentialId!!,
-            type = CredentialType.USERNAME_PASSWORD,
-            acrossProject = true
-        )
-        return Pair(acrossTickets["v1"], acrossTickets["v2"])
     }
 
     fun checkIfCanUpgradeByVersion(
@@ -369,7 +319,8 @@ class ThirdPartyAgentService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to check if agent can upgrade", t)
             AgentResult(
-                AgentStatus.IMPORT_EXCEPTION, UpgradeItem(
+                AgentStatus.IMPORT_EXCEPTION,
+                UpgradeItem(
                     agent = false,
                     worker = false,
                     jdk = false,
@@ -466,7 +417,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                    "of seq(${record.vmSeqId}) and status(${record.status})"
+                "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentById(record.projectId, record.agentId)
@@ -509,8 +460,10 @@ class ThirdPartyAgentService @Autowired constructor(
 
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
-        if (buildRecord != null && (buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status)
+        if (buildRecord != null && (
+            buildRecord.status != PipelineTaskStatus.DONE.status ||
+                buildRecord.status != PipelineTaskStatus.FAILURE.status
+            )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -541,5 +494,7 @@ class ThirdPartyAgentService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
 
         private const val QUEUE_RETRY_COUNT = 3
+
+        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000 // 轮询间隔时间，单位为毫秒
     }
 }

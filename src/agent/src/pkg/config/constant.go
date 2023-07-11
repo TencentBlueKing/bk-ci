@@ -74,6 +74,9 @@ const (
 
 const DEFAULT_LANGUAGE_TYPE = "zh_CN"
 
+// DEFAULT_IMAGE_DEBUG_PORT_RANGE 默认的可以进行远程登录调试的范围，取自kubernetes nodeport
+const DEFAULT_IMAGE_DEBUG_PORT_RANGE = "30000-32767"
+
 // Auth Header
 
 const AuthHeaderBuildType = "X-DEVOPS-BUILD-TYPE"       // 构建类型

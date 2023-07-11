@@ -273,4 +273,31 @@ class ThirdPartyAgentBuildDao {
                 .fetchOne(0, Long::class.java)!!
         }
     }
+
+    fun getLastDockerBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .orderBy(CREATED_TIME.desc())
+                .fetchAny()
+        }
+    }
+
+    fun getDockerBuild(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .fetchAny()
+        }
+    }
 }

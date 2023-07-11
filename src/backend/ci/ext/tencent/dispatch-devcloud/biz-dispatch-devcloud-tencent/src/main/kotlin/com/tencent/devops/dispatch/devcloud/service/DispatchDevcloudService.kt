@@ -98,7 +98,7 @@ class DispatchDevcloudService @Autowired constructor(
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(userId, pipelineId, containerName, vmSeqId)
+            checkPermission(buildHistory.projectId, userId, pipelineId)
         }
 
         // 查看当前容器的状态
@@ -161,19 +161,12 @@ class DispatchDevcloudService @Autowired constructor(
         vmSeqId: String,
         needCheckPermission: Boolean = true
     ): Boolean {
-        val debugContainerName = if (containerName.isBlank()) {
+        val debugContainerName = containerName.ifBlank {
             redisUtils.getDebugContainerName(userId, pipelineId, vmSeqId) ?: ""
-        } else {
-            containerName
         }
 
         logger.info("$userId stop debug devcloud pipelineId: $pipelineId " +
                         "containName: $debugContainerName vmSeqId: $vmSeqId")
-
-        // 检验权限
-        if (needCheckPermission) {
-            checkPermission(userId, pipelineId, debugContainerName, vmSeqId)
-        }
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -357,9 +350,11 @@ class DispatchDevcloudService @Autowired constructor(
         return dispatchDevCloudClient.getTasks(projectId, pipelineId, userId, taskId).toString()
     }
 
-    private fun checkPermission(userId: String, pipelineId: String, containerName: String, vmSeqId: String) {
-        val containerInfo = devCloudBuildDao.getContainerStatus(dslContext, pipelineId, vmSeqId, containerName)
-        val projectId = containerInfo!!.projectId
+    private fun checkPermission(
+        projectId: String,
+        userId: String,
+        pipelineId: String
+    ) {
         // 检验权限
         if (!bkAuthPermissionApi.validateUserResourcePermission(
                 userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,

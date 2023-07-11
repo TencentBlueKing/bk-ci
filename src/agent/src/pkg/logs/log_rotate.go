@@ -14,14 +14,14 @@ func DoDailySplitLog(filepath string, log *lumberjack.Logger) {
 		_, ok := <-c
 		if !ok {
 			// 当管道关闭时，重新拉起
-			logs.Error("DoDailySplitLog| timer chan close")
+			Logs.Error("DoDailySplitLog| timer chan close")
 			continue
 		}
 
 		stat, err := os.Stat(filepath)
 		if err != nil {
 			// 不管是存在还是文件有问题，都继续第二天的定时
-			logs.Warn(fmt.Sprintf("DoDailySplitLog| %s stat error", filepath), err)
+			Logs.Warn(fmt.Sprintf("DoDailySplitLog| %s stat error", filepath), err)
 			continue
 		}
 
@@ -32,7 +32,7 @@ func DoDailySplitLog(filepath string, log *lumberjack.Logger) {
 		if fileModTime.After(lastDayTime) {
 			err = log.Rotate()
 			if err != nil {
-				logs.Error(next.Format("2006-01-02 15:04:05"), "rotate log error", err)
+				Logs.Error(next.Format("2006-01-02 15:04:05"), "rotate log error", err)
 			}
 		}
 	}
