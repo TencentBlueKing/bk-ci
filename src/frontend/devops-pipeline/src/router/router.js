@@ -212,6 +212,19 @@ const routes = [
                             header: 'pipeline',
                             icon: 'pipeline',
                             to: 'PipelineManageList'
+                        },
+                        beforeEnter: (to, from, next) => {
+                            if (['partView', 'output'].includes(to.params.type)) { // 重定向到outputs
+                                next({
+                                    ...to,
+                                    params: {
+                                        ...to.params,
+                                        type: 'outputs'
+                                    }
+                                })
+                            } else {
+                                next()
+                            }
                         }
                     },
                     {
