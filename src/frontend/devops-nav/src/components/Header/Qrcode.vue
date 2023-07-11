@@ -97,7 +97,6 @@
             top: 52px;
             left: 6px;
             width: 140px;
-            height: 160px;
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
             font-size: 12px;
             color: #7b7d8a;
