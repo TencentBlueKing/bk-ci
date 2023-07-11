@@ -110,7 +110,7 @@
                 <!-- 别名 end -->
 
                 <!-- 访问凭据 start -->
-                <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
+                <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'GitHub'">
                     <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
                     <div class="bk-form-content code-lib-credential" :class="{ 'is-danger': errors.has('credentialId') }">
                         <bk-select v-model="credentialId"
@@ -175,14 +175,14 @@
                         SVN: this.$t('codelib.svnUrlPlaceholder'),
                         Git: this.$t('codelib.gitUrlPlaceholder'),
                         TGit: this.$t('codelib.httpsUrlPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
+                        GitLab: this.$t('codelib.gitlabUrlPlaceholder'),
                         HTTP: this.$t('codelib.httpUrlPlaceholder'),
                         HTTPS: this.$t('codelib.httpsUrlPlaceholder')
                     },
                     cred: {
                         SVN: this.$t('codelib.svnCredPlaceholder'),
                         Git: this.$t('codelib.gitCredPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabCredPlaceholder')
+                        GitLab: this.$t('codelib.gitlabCredPlaceholder')
                     },
                     port: {
                         P4: 'localhost:1666'
