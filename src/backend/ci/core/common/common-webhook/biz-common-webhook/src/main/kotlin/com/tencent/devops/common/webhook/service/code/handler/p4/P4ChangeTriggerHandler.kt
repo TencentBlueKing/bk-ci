@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.repository.pojo.Repository
 
 @CodeWebhookHandler
@@ -125,13 +126,17 @@ class P4ChangeTriggerHandler(
                             p4ServerInfo?.run {
                                 caseSensitive = this.caseSensitive
                             }
-                            eventCacheService.getP4ChangelistFiles(
+                            eventCacheService.getP4Changelist(
                                 repo = repository,
                                 projectId = projectId,
                                 repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                                 repositoryType = repositoryConfig.repositoryType,
                                 change = event.change
-                            )
+                            )?.run {
+                                // 保存提交描述信息
+                                event.description = this.description
+                                this.fileList.map { it.depotPathString }
+                            } ?: emptyList()
                         }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
@@ -156,6 +161,7 @@ class P4ChangeTriggerHandler(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
+        startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ChangeEvent.DEFAULT_CHANGE_DESCRIPTION
         return startParams
     }
 }
