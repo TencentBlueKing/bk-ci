@@ -10,6 +10,8 @@ import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
+import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
+import bkuiEn from 'bkui-vue/dist/locale/en.esm';
 
 // 引入权限指令相关资源
 import { handleProjectManageNoPermission } from './utils/permission';
@@ -37,7 +39,9 @@ const app = createApp(App)
 app
   .use(router)
   .use(createPinia())
-  .use(bkui)
+  .use(bkui, {
+    locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? bkuiEn : bkuiZhCn
+  })
   .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
   .mount('.app');
