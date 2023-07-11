@@ -77,7 +77,7 @@ class RbacProjectExtPermissionServiceImpl constructor(
             val isProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
                 token = tokenService.getSystemToken(null)!!,
                 userId = createUser,
-                projectCode = projectCode,
+                projectCode = projectCode
             ).data
             if (!isProjectManager!!) {
                 logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
