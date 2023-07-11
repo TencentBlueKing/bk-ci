@@ -88,7 +88,7 @@ func Localize(messageId string, templateData map[string]interface{}) string {
 
 	nowLocalizer := localizer.getLocalizer()
 	if nowLocalizer == nil {
-		// TODO: 这里和翻译错误类似，可能是后台传入了一个错误的翻译类型，或者是初始化出现问题
+		logs.Error("Localize nowLocalizer is nil")
 		return ""
 	}
 
@@ -97,7 +97,7 @@ func Localize(messageId string, templateData map[string]interface{}) string {
 		TemplateData: templateData,
 	})
 	if err != nil {
-		// TODO: 翻译出现错误时看是打印错误，还是换成中文翻译再是一次
+		logs.WithError(err).Error("Localize error")
 		return ""
 	}
 
