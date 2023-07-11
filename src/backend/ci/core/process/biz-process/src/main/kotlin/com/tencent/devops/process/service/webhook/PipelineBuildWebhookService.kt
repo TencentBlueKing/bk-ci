@@ -434,7 +434,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         eventType = matcher.getEventType(),
                         codeType = matcher.getCodeType()
                     )
-                    logger.info("webhook trigger pipeline build by webhookCommit|$webhookCommit")
                     val buildId =
                         client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
                     PipelineWebhookBuildLogContext.addLogBuildInfo(
@@ -508,7 +507,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
-        logger.info("start build by webhook trigger commit|$pipelineParamMap")
         val startEpoch = System.currentTimeMillis()
         try {
             val buildId = pipelineBuildService.startPipeline(
