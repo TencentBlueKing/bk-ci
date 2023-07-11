@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4Api
-import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 
 @RestResource
@@ -42,12 +42,12 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         username: String,
         password: String,
         change: Int
-    ): Result<List<P4FileSpec>> {
+    ): Result<P4ChangeList> {
         val changeListFiles = P4Api(
             p4port = p4Port,
             username = username,
             password = password
-        ).getChangelistFiles(change)
+        ).getChangelist(change)
         return Result(changeListFiles)
     }
 
@@ -56,12 +56,12 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         username: String,
         password: String,
         change: Int
-    ): Result<List<P4FileSpec>> {
+    ): Result<P4ChangeList> {
         val shelvedFiles = P4Api(
             p4port = p4Port,
             username = username,
             password = password
-        ).getShelvedFiles(change)
+        ).getShelvedChangelist(change)
         return Result(shelvedFiles)
     }
 
