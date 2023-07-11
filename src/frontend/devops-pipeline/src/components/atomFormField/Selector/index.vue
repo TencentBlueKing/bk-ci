@@ -1,8 +1,8 @@
 <template>
     <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
-            v-for="item in listData"
-            :key="item[settingKey]"
+            v-for="(item, index) in listData"
+            :key="index"
             :id="item[settingKey]"
             :name="item[displayKey]"
             :disabled="item.disabled"
