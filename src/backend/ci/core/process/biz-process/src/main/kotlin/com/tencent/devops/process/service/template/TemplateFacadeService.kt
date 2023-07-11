@@ -302,7 +302,7 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         val templateModel: Model = objectMapper.readValue(template)
-        checkTemplateAtoms(templateModel)
+        checkTemplateAtoms(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -461,7 +461,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
-        checkTemplateAtoms(template)
+        checkTemplateAtoms(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1964,7 +1964,7 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件
      */
-    fun checkTemplateAtoms(template: Model) {
+    fun checkTemplateAtoms(template: Model, userId: String) {
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach nextElement@{ element ->
@@ -1984,8 +1984,10 @@ class TemplateFacadeService @Autowired constructor(
                         if (atomStatus in atomStatusList) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
-                                defaultMessage = "The plugin ($atomName) in the template is not allowed to update",
-                                params = arrayOf(atomName, atomStatus)
+                                params = arrayOf(
+                                    atomName,
+                                    AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
+                                )
                             )
                         }
                     }

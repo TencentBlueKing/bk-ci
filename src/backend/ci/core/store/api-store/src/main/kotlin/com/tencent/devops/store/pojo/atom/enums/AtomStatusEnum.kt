@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
+import com.tencent.devops.common.api.util.MessageUtil
+
 @Suppress("UNUSED")
 enum class AtomStatusEnum(val status: Int) {
     INIT(0), // 初始化
@@ -75,5 +77,12 @@ enum class AtomStatusEnum(val status: Int) {
                 CODECC_FAIL.status.toByte()
             )
         }
+    }
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "STORE_ATOM_STATUS_${this.name}",
+            language = language
+        )
     }
 }
