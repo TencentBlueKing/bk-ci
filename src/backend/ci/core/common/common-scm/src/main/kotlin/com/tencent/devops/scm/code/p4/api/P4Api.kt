@@ -298,7 +298,7 @@ class P4Api(
             p4Server.getServer().getChangelist(change).run {
                 P4ChangeList(
                     description = this.description,
-                    fileList = this.getFiles(true).map {iFileSpec ->
+                    fileList = this.getFiles(true).map { iFileSpec ->
                         P4FileSpec(
                             opStatus = iFileSpec.opStatus.name,
                             depotPathString = iFileSpec.depotPathString
@@ -318,7 +318,7 @@ class P4Api(
             p4Server.getServer().getShelvedFiles(change).run {
                 P4ChangeList(
                     description = description,
-                    fileList = this.map {iFileSpec ->
+                    fileList = this.map { iFileSpec ->
                         P4FileSpec(
                             opStatus = iFileSpec.opStatus.name,
                             depotPathString = iFileSpec.depotPathString
