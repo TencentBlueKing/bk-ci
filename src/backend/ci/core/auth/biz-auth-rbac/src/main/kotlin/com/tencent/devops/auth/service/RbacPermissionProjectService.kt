@@ -230,7 +230,8 @@ class RbacPermissionProjectService(
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode
                 ).relationId
-                val searchGroupDTO = SearchGroupDTO.builder().inherit(false).name(BkAuthGroup.CI_MANAGER.groupName).build()
+                val searchGroupDTO = SearchGroupDTO.builder().inherit(false)
+                    .name(BkAuthGroup.CI_MANAGER.groupName).build()
                 val ciMangerGroupId = permissionGradeManagerService.listGroup(
                     gradeManagerId = gradeManagerId,
                     searchGroupDTO = searchGroupDTO,
