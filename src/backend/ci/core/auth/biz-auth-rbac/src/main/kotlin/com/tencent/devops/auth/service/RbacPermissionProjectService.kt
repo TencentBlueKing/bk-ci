@@ -263,7 +263,7 @@ class RbacPermissionProjectService(
         val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
-        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId!!.toInt(), managerMemberGroup)
+        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
         return true
     }
 
