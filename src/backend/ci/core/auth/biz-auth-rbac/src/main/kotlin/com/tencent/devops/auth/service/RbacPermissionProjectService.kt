@@ -223,8 +223,9 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         // 由于v0迁移过来的ci管理员没有存储在用户组表中，需要去iam搜索
+        logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
-            projectCode2CiManagerGroupId.getIfPresent(projectCode)?.run {
+            projectCode2CiManagerGroupId.getIfPresent(projectCode) ?: run {
                 val gradeManagerId = authResourceService.get(
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
@@ -236,7 +237,7 @@ class RbacPermissionProjectService(
                     gradeManagerId = gradeManagerId,
                     searchGroupDTO = searchGroupDTO,
                     page = 1,
-                    pageSize = 1000
+                    pageSize = 10
                 ).firstOrNull { it.name == BkAuthGroup.CI_MANAGER.groupName }?.id?.toString()
                     ?: throw ErrorCodeException(
                         errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
