@@ -507,6 +507,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
+
         val startEpoch = System.currentTimeMillis()
         try {
             val buildId = pipelineBuildService.startPipeline(
