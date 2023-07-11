@@ -101,19 +101,6 @@
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
             font-size: 12px;
             color: #7b7d8a;
-            &:before {
-                position: absolute;
-                content: '';
-                width: 8px;
-                height: 8px;
-                border: 1px solid $borderWeightColor;
-                border-bottom: 0;
-                border-right: 0;
-                left: 9px;
-                top: -5px;
-                transform: rotate(45deg);
-                background: white;
-            }
             > .content {
                 margin: 10px;
                 > p {
