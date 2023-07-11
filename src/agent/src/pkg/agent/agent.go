@@ -65,6 +65,7 @@ func Run(isDebug bool) {
 
 	// 定期清理
 	go cron.CleanJob()
+	go cron.CleanDebugContainer()
 
 	// 登录调试任务
 	go imagedebug.DoPullAndDebug()

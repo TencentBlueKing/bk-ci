@@ -29,7 +29,8 @@ import (
 const (
 	imageDebugIntervalInSeconds = 5
 	entryPointCmd               = "while true; do sleep 5m; done"
-	imageDebugMaxHoldHour       = 24
+	ImageDebugMaxHoldHour       = 24
+	DebugContainerHeader        = "bkcidebug-"
 )
 
 var imageDebugLogs *logrus.Entry
@@ -116,19 +117,33 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 	// 登录调试结束
 	debugDone := NewOnceChan[struct{}]()
 	// 登录调试最大等待结束时间
-	c, cancel := context.WithTimeout(context.Background(), imageDebugMaxHoldHour*time.Hour)
+	c, cancel := context.WithTimeout(context.Background(), ImageDebugMaxHoldHour*time.Hour)
 	defer cancel()
 
 	group, ctx := errgroup.WithContext(c)
 
+	filedLog := imageDebugLogs.WithField("buildId", debugInfo.BuildId).WithField("vmseqId", debugInfo.VmSeqId).WithField("userId", debugInfo.DebugUserId)
+
 	// 新建docker容器
-	group.Go(func() error { return CreateDebugContainer(ctx, debugInfo, containerReady, debugDone) })
+	group.Go(func() error {
+		err := CreateDebugContainer(ctx, debugInfo, containerReady, debugDone)
+		filedLog.Info("CreateDebugContainer done")
+		return err
+	})
 
 	// 启动登录调试
-	group.Go(func() error { return CreateExecServer(ctx, debugInfo, containerReady, debugDone) })
+	group.Go(func() error {
+		err := CreateExecServer(ctx, debugInfo, containerReady, debugDone)
+		filedLog.Info("CreateExecServer done")
+		return err
+	})
 
 	// 轮训任务状态
-	group.Go(func() error { return checkDebugStatus(ctx, debugInfo.DebugId, debugDone) })
+	group.Go(func() error {
+		err := checkDebugStatus(ctx, debugInfo.DebugId, debugDone)
+		filedLog.Info("checkDebugStatus done")
+		return err
+	})
 
 	// 上报结束并附带错误信息
 	if err := group.Wait(); err != nil {
@@ -138,7 +153,7 @@ func doImageDebug(debugInfo *api.ImageDebug) {
 			ErrorCode:    api.DockerImageDebugErrorEnum.Code,
 		})
 		if err2 != nil {
-			imageDebugLogs.WithError(err).Error("post image debug url error")
+			filedLog.WithError(err).Error("post image debug url error")
 		}
 	}
 }
@@ -148,8 +163,13 @@ func checkDebugStatus(
 	debugId int64,
 	debugDone *OnceChan[struct{}],
 ) error {
-	go func() {
-		for {
+	for {
+		select {
+		case <-debugDone.C:
+			return nil
+		case <-ctx.Done():
+			return nil
+		default:
 			time.Sleep(5 * time.Minute)
 			result, err := api.FetchDockerDebugStatus(debugId)
 			if err != nil {
@@ -165,7 +185,7 @@ func checkDebugStatus(
 				// 数据为空说明任务不存在直接结束
 				imageDebugLogs.Error("FetchDockerDebugStatus data nil")
 				debugDone.SafeClose()
-				return
+				return nil
 			}
 
 			status := new(string)
@@ -175,20 +195,21 @@ func checkDebugStatus(
 				continue
 			}
 
-			if status != nil && *status == "FAILURE" {
+			if status == nil {
+				continue
+			}
+
+			if *status == "FAILURE" {
 				// 任务失败则直接结束
 				imageDebugLogs.Error("FetchDockerDebugStatus FAILURE")
 				debugDone.SafeClose()
-				return
+				return nil
+			}
+
+			if *status == "SUCCESS" {
+				return nil
 			}
 		}
-	}()
-
-	select {
-	case <-debugDone.C:
-		return nil
-	case <-ctx.Done():
-		return nil
 	}
 }
 
@@ -253,7 +274,7 @@ func CreateDebugContainer(
 	if job_docker.IfPullImage(localExist, isLatest, api.ImagePullPolicyIfNotPresent.String()) {
 		auth, err := job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password)
 		if err != nil {
-			imageDebugLogs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			imageDebugLogs.WithError(err).Errorf("pull new image generateDockerAuth %s error ", imageName)
 			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
 		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
@@ -285,7 +306,7 @@ func CreateDebugContainer(
 	}
 
 	// 创建容器
-	containerName := fmt.Sprintf("dispatch-%s-%s-%s", debugInfo.BuildId, debugInfo.VmSeqId, util.RandStringRunes(8))
+	containerName := fmt.Sprintf("%s%s-%s-%s", DebugContainerHeader, debugInfo.BuildId, debugInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(debugInfo)
 	if err != nil {
 		errMsg := i18n.Localize("ReadDockerMountsError", map[string]interface{}{"err": err.Error()})
@@ -522,8 +543,10 @@ func CreateExecServer(
 	errChan := make(chan error)
 	server := InitRouter(ctx, backend, conf, errChan)
 	defer func() {
-		server.Shutdown(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		server.Shutdown(ctx)
 		imageDebugLogs.WithField("port", port).Info("debug server stop")
+		cancel()
 	}()
 
 	// 等待容器启动后创建登录调试链接
