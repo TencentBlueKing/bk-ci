@@ -73,7 +73,7 @@ class P4Service(
             p4port = repository.url,
             username = username,
             password = password
-        ).getShelvedChangelist(change)
+        ).getChangelist(change)
     }
 
     override fun getFileContent(

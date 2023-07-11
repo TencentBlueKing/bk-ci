@@ -61,7 +61,7 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
             p4port = p4Port,
             username = username,
             password = password
-        ).getShelvedChangelist(change)
+        ).getChangelist(change)
         return Result(shelvedFiles)
     }
 
