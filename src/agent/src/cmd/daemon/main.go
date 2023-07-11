@@ -40,6 +40,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 
@@ -189,7 +190,14 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 	}
 
 	go func() {
-		_ = cmd.Wait()
+		if err := cmd.Wait(); err != nil {
+			if exiterr, ok := err.(*exec.ExitError); ok {
+				if exiterr.ExitCode() == upgrade.DAEMON_EXIT_CODE {
+					logs.Warnf("exit code %d daemon exit", upgrade.DAEMON_EXIT_CODE)
+					systemutil.ExitProcess(upgrade.DAEMON_EXIT_CODE)
+				}
+			}
+		}
 	}()
 
 	return cmd.Process, nil
