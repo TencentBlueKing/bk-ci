@@ -51,7 +51,7 @@ enum class BkAuthGroup(
             values().forEach {
                 if (value == it.value) return it
             }
-            throw IllegalArgumentException("No enum for constant $value")
+            throw IllegalArgumentException("roleName($value) does not exist!")
         }
 
         fun contains(value: String): Boolean {
@@ -65,7 +65,7 @@ enum class BkAuthGroup(
             values().forEach {
                 if (roleId == it.roleId) return it
             }
-            throw IllegalArgumentException("No enum for constant $roleId")
+            throw IllegalArgumentException("roleId($roleId) does not exist!")
         }
     }
 }
