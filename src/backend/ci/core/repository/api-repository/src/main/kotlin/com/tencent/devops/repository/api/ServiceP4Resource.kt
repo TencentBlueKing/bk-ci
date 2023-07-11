@@ -29,7 +29,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -65,7 +65,7 @@ interface ServiceP4Resource {
         @ApiParam("p4 版本号", required = true)
         @QueryParam("change")
         change: Int
-    ): Result<List<P4FileSpec>>
+    ): Result<P4ChangeList>
 
     @ApiOperation("获取p4 shelve文件变更列表")
     @GET
@@ -83,7 +83,7 @@ interface ServiceP4Resource {
         @ApiParam("p4 版本号", required = true)
         @QueryParam("change")
         change: Int
-    ): Result<List<P4FileSpec>>
+    ): Result<P4ChangeList>
 
     @ApiOperation("获取p4文件内容")
     @GET

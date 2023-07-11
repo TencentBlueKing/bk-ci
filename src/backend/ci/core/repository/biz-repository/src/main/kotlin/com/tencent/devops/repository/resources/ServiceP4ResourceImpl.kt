@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.service.scm.Ip4Service
-import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +46,7 @@ class ServiceP4ResourceImpl @Autowired constructor(
         repositoryId: String,
         repositoryType: RepositoryType?,
         change: Int
-    ): Result<List<P4FileSpec>> {
+    ): Result<P4ChangeList> {
 
         return Result(
             p4Service.getChangelistFiles(
@@ -63,7 +63,7 @@ class ServiceP4ResourceImpl @Autowired constructor(
         repositoryId: String,
         repositoryType: RepositoryType?,
         change: Int
-    ): Result<List<P4FileSpec>> {
+    ): Result<P4ChangeList> {
         return Result(
             p4Service.getShelvedFiles(
                 projectId = projectId,
