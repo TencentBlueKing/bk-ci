@@ -1,6 +1,6 @@
 <template>
     <section class="g-turbo-box task-param">
-        <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.加速参数') }} </h3>123
+        <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.加速参数') }} </h3>
         <bk-form class="g-turbo-form-left" :label-width="138" :model="copyFormData.configParam" ref="paramForm">
             <bk-form-item :label="config.paramName"
                 :property="config.paramKey"

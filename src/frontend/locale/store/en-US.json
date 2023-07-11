@@ -294,7 +294,7 @@
     "当新版本输入输出不兼容旧版本时，使用非兼容式升级方式，发布后用户需修改流水线中的插件版本号才能使用新版本。": "When the input and output of the new version is not compatible with that of the old version, we recommend using the non-compatible upgrade. After the release, users need to modify the plugin version number in the pipeline to use the new version.",
     "兼容式功能更新": "Compatible feature update",
     "当新版本输入输出兼容旧版本，仅更新功能时，使用兼容式升级方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。": "When the input and output of the new version is compatible with that of the old version, and when only function update is needed, we'll use compatible upgrade method. After the release, users do not have to modify the plugin version number in the pipeline, and the latest version is used by default.",
-    "兼容式问题修正": "Compatible bugfix",
+    "兼容式问题修正": "Compatible issue bugfix",
     "当新版本为bug fix时，使用兼容式问题修正方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。": "When the new version is bug fix, the compatible bug fixing method is used. After the release, users don't have to modify the plugin version number in the pipeline, and the latest version is used by default.",
     "提交失败": "Submission failed",
     "上架插件": "On-Sale Plugin",
