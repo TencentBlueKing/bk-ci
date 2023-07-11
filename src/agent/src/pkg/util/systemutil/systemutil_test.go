@@ -34,7 +34,7 @@ import (
 )
 
 func TestGetAgentIp(t *testing.T) {
-	logs.DebugInit()
+	logs.UNTestDebugInit()
 	type args struct {
 		ignoreIps []string
 	}
