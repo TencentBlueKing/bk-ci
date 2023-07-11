@@ -30,8 +30,13 @@ package com.tencent.devops.project.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.impl.RbacProjectExtPermissionServiceImpl
+import com.tencent.devops.project.service.tof.TOFService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -60,5 +65,17 @@ class TxRbacProjectInitConfiguration {
         BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
 
     @Bean
-    fun rbacProjectExtPermissionServiceImpl() = RbacProjectExtPermissionServiceImpl()
+    fun rbacProjectExtPermissionServiceImpl(
+        client: Client,
+        tokenService: ClientTokenService,
+        projectDao: ProjectDao,
+        dslContext: DSLContext,
+        tofService: TOFService
+    ) = RbacProjectExtPermissionServiceImpl(
+        client = client,
+        tokenService = tokenService,
+        projectDao = projectDao,
+        dslContext = dslContext,
+        tofService = tofService
+    )
 }

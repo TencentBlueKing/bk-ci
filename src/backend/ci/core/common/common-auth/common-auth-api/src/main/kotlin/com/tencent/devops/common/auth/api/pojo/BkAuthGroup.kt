@@ -32,16 +32,18 @@ package com.tencent.devops.common.auth.api.pojo
  */
 enum class BkAuthGroup(
     val value: String,
-    val groupName: String
+    val groupName: String,
+    /*用于兼容v0的角色ID*/
+    val roleId: Int
 ) {
-    CIADMIN("ciAdmin", "CI管理员"), // CI管理员
-    MANAGER("manager", "管理员"), // 管理员
-    DEVELOPER("developer", "开发人员"), // 开发人员
-    MAINTAINER("maintainer", "运维人员"), // 运维人员
-    TESTER("tester", "测试人员"), // 测试人员
-    PM("pm", "产品人员"), // 产品人员
-    QC("qc", "质量管理员"), // 质量管理员
-    CI_MANAGER("ci_manager", "CI管理员,流水线组使用"); // CI 管理员
+    CIADMIN("ciAdmin", "CI管理员", 1), // CI管理员
+    MANAGER("manager", "管理员", 2), // 管理员
+    DEVELOPER("developer", "开发人员", 4), // 开发人员
+    MAINTAINER("maintainer", "运维人员", 5), // 运维人员
+    TESTER("tester", "测试人员", 8), // 测试人员
+    PM("pm", "产品人员", 6), // 产品人员
+    QC("qc", "质量管理员", 7), // 质量管理员
+    CI_MANAGER("ci_manager", "CI管理员,流水线组使用", 9); // CI 管理员
 
     companion object {
         fun get(value: String): BkAuthGroup {
@@ -56,6 +58,13 @@ enum class BkAuthGroup(
                 if (value == it.value) return true
             }
             return false
+        }
+
+        fun getByRoleId(roleId: Int): BkAuthGroup {
+            values().forEach {
+                if (roleId == it.roleId) return it
+            }
+            throw IllegalArgumentException("No enum for constant $roleId")
         }
     }
 }

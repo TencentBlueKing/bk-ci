@@ -27,9 +27,31 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.tof.TOFService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
-class RbacProjectExtPermissionServiceImpl : ProjectExtPermissionService {
+class RbacProjectExtPermissionServiceImpl constructor(
+    val client: Client,
+    val tokenService: ClientTokenService,
+    val projectDao: ProjectDao,
+    val dslContext: DSLContext,
+    val tofService: TOFService
+) : ProjectExtPermissionService {
+    companion object {
+        val logger = LoggerFactory.getLogger(RbacProjectExtPermissionServiceImpl::class.java)
+    }
+
     override fun verifyUserProjectPermission(
         accessToken: String,
         projectCode: String,
@@ -47,13 +69,52 @@ class RbacProjectExtPermissionServiceImpl : ProjectExtPermissionService {
         checkManager: Boolean
     ): Boolean {
         // 校验项目是否存在
-        // 获取分级管理员id
-        // 获取操作用户
-        // 判断要加到那个组内
-        // 1.若roleId和roleName都为空，加到开发人员，若roleId不为空，查询对应的组code。若roleName不为空，查询对应的组code
-        // 若上一步找不到用户组，直接异常
-        // 校验用户是否为真实用户
-        // 添加用户到组   该接口字段：userId、projectId、roleCode、members、
+        projectDao.getByEnglishName(dslContext, projectCode)
+            ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+            )
+        if (checkManager) {
+            val isProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+                token = tokenService.getSystemToken(null)!!,
+                userId = createUser,
+                projectCode = projectCode,
+            ).data
+            if (!isProjectManager!!) {
+                logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.NOT_MANAGER,
+                    params = arrayOf(createUser, projectCode)
+                )
+            }
+        }
+        val roleCode = roleId?.let { BkAuthGroup.getByRoleId(it).value }
+            ?: roleName?.let { BkAuthGroup.get(it).value }
+            ?: BkAuthGroup.DEVELOPER.value
+        // 校验用户是否存在
+        userIds.forEach {
+            try {
+                tofService.getStaffInfo(it)
+            } catch (ope: OperationException) {
+                logger.warn("getStaffInfo fail $it $projectCode")
+                throw ope
+            } catch (ignore: Exception) {
+                logger.warn("getStaffInfo fail, userId[$it]", ignore)
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                        defaultMessage = ignore.message,
+                        params = arrayOf(it)
+                    )
+                )
+            }
+        }
+        client.get(ServiceProjectAuthResource::class).batchCreateProjectUser(
+            token = tokenService.getSystemToken(null)!!,
+            userId = createUser,
+            projectCode = projectCode,
+            roleCode = roleCode,
+            members = userIds
+        )
         return true
     }
 
