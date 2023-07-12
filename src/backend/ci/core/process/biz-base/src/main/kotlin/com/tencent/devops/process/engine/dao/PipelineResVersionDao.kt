@@ -293,4 +293,19 @@ class PipelineResVersionDao {
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
         }
     }
+
+    fun updateSettingVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        settingVersion: Int
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(SETTING_VERSION, settingVersion)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
 }

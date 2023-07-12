@@ -766,13 +766,33 @@ class PipelineInfoFacadeService @Autowired constructor(
     ) {
         val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, channelCode)
         setting.pipelineName = name
-        pipelineSettingFacadeService.saveSetting(
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting,
             checkPermission = true,
             dispatchPipelineUpdateEvent = true
+        )
+        updatePipelineSettingVersion(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            settingVersion = savedSetting.version
+        )
+    }
+
+    fun updatePipelineSettingVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        settingVersion: Int
+    ) {
+        pipelineRepositoryService.updateSettingVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            settingVersion = settingVersion
         )
     }
 

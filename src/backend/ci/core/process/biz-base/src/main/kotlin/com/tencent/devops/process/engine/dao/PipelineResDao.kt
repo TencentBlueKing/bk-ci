@@ -222,6 +222,22 @@ class PipelineResDao {
         }
     }
 
+    fun updateSettingVersion(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        settingVersion: Int
+    ): Int? {
+        with(T_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(SETTING_VERSION, settingVersion)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .returning(VERSION)
+                .fetchOne()?.version
+        }
+    }
+
     /**
      * 获取最新的modelString
      *

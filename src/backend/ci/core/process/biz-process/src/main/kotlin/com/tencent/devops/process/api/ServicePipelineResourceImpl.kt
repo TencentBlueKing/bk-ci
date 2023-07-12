@@ -330,13 +330,19 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
         setting.checkParam()
-        pipelineSettingFacadeService.saveSetting(
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting.copy(projectId, pipelineId),
             checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
+        )
+        pipelineInfoFacadeService.updatePipelineSettingVersion(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            settingVersion = savedSetting.version
         )
         auditService.createAudit(
             Audit(

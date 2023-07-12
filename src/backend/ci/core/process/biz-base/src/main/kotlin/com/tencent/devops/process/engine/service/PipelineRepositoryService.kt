@@ -1365,4 +1365,29 @@ class PipelineRepositoryService constructor(
             maxConRunningQueueSize = maxConRunningQueueSize
         )
     }
+
+    fun updateSettingVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        settingVersion: Int
+    ) {
+        val version = pipelineResDao.updateSettingVersion(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            settingVersion = settingVersion
+        )
+        // 同步刷新流水线版本历史中关联的设置版本号
+        if (version != null) {
+            pipelineResVersionDao.updateSettingVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                settingVersion = settingVersion
+            )
+        }
+    }
 }

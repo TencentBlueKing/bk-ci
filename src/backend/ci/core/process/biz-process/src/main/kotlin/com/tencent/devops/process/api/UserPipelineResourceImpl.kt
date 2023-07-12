@@ -317,12 +317,18 @@ class UserPipelineResourceImpl @Autowired constructor(
         setting: PipelineSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)
-        pipelineSettingFacadeService.saveSetting(
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting,
             checkPermission = true
+        )
+        pipelineInfoFacadeService.updatePipelineSettingVersion(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            settingVersion = savedSetting.version
         )
         auditService.createAudit(
             Audit(
