@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,6 +39,7 @@ data class Reason(
     @ApiModelProperty("原因类型", required = true)
     val type: String,
     @ApiModelProperty("原因内容", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val content: String,
     @ApiModelProperty("创建人")
     val creator: String,

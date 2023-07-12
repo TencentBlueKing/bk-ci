@@ -96,9 +96,9 @@ data class Stage(
     /**
      * 兼容性初始化等处理
      */
-    fun transformCompatibility() {
+    fun transformCompatibility(language: String? = null) {
         containers.forEach { container ->
-            container.transformCompatibility()
+            container.transformCompatibility(language)
         }
     }
 }

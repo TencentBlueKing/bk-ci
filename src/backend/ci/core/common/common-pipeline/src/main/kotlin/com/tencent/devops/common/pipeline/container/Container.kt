@@ -78,7 +78,7 @@ interface Container {
     /**
      * 兼容性初始化等处理
      */
-    fun transformCompatibility() {
+    fun transformCompatibility(language: String? = null) {
         elements.forEach {
             it.transformCompatibility()
         }
@@ -93,6 +93,8 @@ interface Container {
         }
         return configParams
     }
+
+    fun getI18nName(language: String?): String
 
     fun getClassType(): String
 

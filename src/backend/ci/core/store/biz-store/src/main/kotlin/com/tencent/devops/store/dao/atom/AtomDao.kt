@@ -85,18 +85,18 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -1247,9 +1247,12 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun batchGetAtomName(dslContext: DSLContext, atomCodes: Collection<String>): Result<Record2<String, String>>? {
+    fun batchGetAtomName(
+        dslContext: DSLContext,
+        atomCodes: Collection<String>
+    ): Result<Record3<String, String, String>>? {
         return with(TAtom.T_ATOM) {
-            dslContext.select(ATOM_CODE, NAME).from(this)
+            dslContext.select(ATOM_CODE, NAME, VERSION).from(this)
                 .where(
                     LATEST_FLAG.eq(true)
                         .and(ATOM_CODE.`in`(atomCodes))
