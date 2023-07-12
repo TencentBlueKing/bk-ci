@@ -1,6 +1,5 @@
 package com.tencent.devops.common.db.listener
 
-import org.jooq.exception.DataAccessException
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
