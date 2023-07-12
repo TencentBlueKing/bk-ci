@@ -278,9 +278,8 @@
             justify-content: space-between;
             .item-tab {
                 float: left;
-                width: 124px;
                 margin-right: -1px;
-                padding: 12px 0;
+                padding: 12px 20px;
                 border: 1px solid #DDE4EB;
                 background-color: #FFF;
                 color: #737987;
