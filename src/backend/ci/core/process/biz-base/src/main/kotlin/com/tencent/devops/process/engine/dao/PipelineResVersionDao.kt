@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
