@@ -97,7 +97,7 @@
         "iosCert": "IOS Certificate",
         "androidCert": "Android Certificate",
         "sslOrTlsCert": "SSL/TLS Certificate",
-        "jksFile": "JKS file",
+        "jksFile": "JKS File",
         "emptyFile": "No file has been selected",
         "selectFile": "Select File",
         "upload": "Upload",
@@ -114,14 +114,14 @@
         "certRemarkPlaceHolder": "Please enter certificate description",
         "remarkFile": "Description Document",
         "remarkFileRule": "Please upload description files that end with .mobileprovision",
-        "p12File": "P12 file",
+        "p12File": "P12 File",
         "p12FileRule": "Please enter p12 files that end with .p12",
         "p12RelativeCred": "Please select the credential that's associated with P12 certificate password",
         "serverCertFile": "Server certificate",
         "certFileRule": "Please upload .crt file",
-        "serverKeyFile": "Server key file",
+        "serverKeyFile": "Server Key File",
         "keyFileRule": "Please upload .key file",
         "userCertFile": "Client certificate",
-        "userKeyFile": "Client key file"
+        "userKeyFile": "Client Key File"
     }
 }
