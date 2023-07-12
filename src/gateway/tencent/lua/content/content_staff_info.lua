@@ -21,13 +21,18 @@ if nil == x_ckey then
     x_ckey = ngx.var.arg_cKey
 end
 
+local x_credentialKey = ngx.var.http_x_credentialKey -- 内部用户,新版接口
+if nil == x_credentialKey then
+    x_credentialKey = urlUtil:parseUrl(ngx.var.request_uri)["credentialKey"]
+end
+
 local x_otoken = ngx.var.http_x_otoken -- 外部用户
 if nil == x_otoken then
     x_otoken = ngx.var.arg_oToken
 end
 
-if x_ckey == nil and x_otoken == nil then
-    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
+if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
+    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken or header=x-credentialKey")
     ngx.exit(401)
     return
 end
@@ -45,6 +50,20 @@ if x_ckey ~= nil then
             staffId = staff_info.StaffId,
             departmentName = staff_info.DepartmentName,
             email = staff_info.EnglishName .. '@tencent.com'
+        }
+    }
+elseif x_credentialKey ~= nil then
+    local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
+    result = {
+        status = 0,
+        data = {
+            englishName = staff_info_new.EnglishName,
+            chineseName = staff_info_new.ChineseName,
+            avatars = "https://" .. config.externalHost .. "/avatars/" .. staff_info_new.EnglishName,
+            departmentId = staff_info_new.DepartmentId,
+            staffId = staff_info_new.StaffId,
+            departmentName = staff_info_new.DepartmentName,
+            email = staff_info_new.EnglishName .. '@tencent.com'
         }
     }
 else
