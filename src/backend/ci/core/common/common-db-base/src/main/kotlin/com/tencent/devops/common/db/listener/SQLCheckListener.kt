@@ -6,7 +6,6 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.slf4j.LoggerFactory
 
-
 class SQLCheckListener : DefaultExecuteListener() {
     override fun renderEnd(ctx: ExecuteContext) {
         val sql = ctx.sql()!!
