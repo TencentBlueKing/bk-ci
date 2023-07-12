@@ -31,7 +31,7 @@ class WatermarkService {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
 
-    fun getWatermark(userId: String, watermark: Watermark): String {
+    fun getWatermark(userId: String, watermark: Watermark): Any {
         val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val request = Request.Builder()
@@ -48,7 +48,7 @@ class WatermarkService {
                         errorCode = ErrorCodeEnum.GET_WATERMARK_FAIL.errorCode
                     )
                 }
-                val data = response.body!!.string()
+                val data = JsonUtil.to(response.body!!.string(), Any::class.java)
                 logger.info("getWatermark|response code|${response.code}|content|$data")
                 return data
             }

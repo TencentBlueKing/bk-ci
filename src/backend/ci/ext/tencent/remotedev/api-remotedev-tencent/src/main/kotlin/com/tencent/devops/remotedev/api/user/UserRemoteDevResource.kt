@@ -96,7 +96,7 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: Watermark
-    ): Result<String>
+    ): Result<Any>
 
     @ApiOperation("上报preci agent id")
     @POST

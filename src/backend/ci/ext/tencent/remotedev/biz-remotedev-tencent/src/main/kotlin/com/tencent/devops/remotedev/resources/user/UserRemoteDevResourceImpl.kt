@@ -91,7 +91,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         }
         return output
     }
-    override fun getWatermark(userId: String, watermark: Watermark): Result<String> {
+    override fun getWatermark(userId: String, watermark: Watermark): Result<Any> {
         return Result(watermarkService.getWatermark(userId, watermark))
     }
     override fun preCiAgent(
