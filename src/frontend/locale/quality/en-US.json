@@ -66,7 +66,7 @@
     "保存成功": "Saved successfully",
     "指标英文名": "ID",
     "通过设置不同的指标和阈值，质量红线规则可以控制流水线发布的质量": "By setting different indicators and thresholds, the quality Red Line rule can control the quality of deploy pipelines.",
-    "有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线": "There are multiple control point plugins. Please add the control point prefix + underscore at the beginning of the control point plugin alias for which the Red Line needs to be configured.",
+    "若有多个控制点插件，请将需配置红线的控制点插件名称开头加上控制点前缀+下划线。": "If there are multiple control point plugins, please add prefix + underscore at the beginning of the control point plugin name for which the red line needs to be configured.",
     "描述": "Description",
     "指标中文名": "Name",
     "指标列表": "Indicators List",
