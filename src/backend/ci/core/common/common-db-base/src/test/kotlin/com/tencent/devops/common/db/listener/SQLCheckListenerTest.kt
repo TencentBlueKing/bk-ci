@@ -12,41 +12,41 @@ class SQLCheckListenerTest {
     @DisplayName("正常数据--SELECT")
     fun test_1() {
         val sql = "SELECT * FROM db.table where id=1"
-        sqlCheckListener.check(sql)
+        Assertions.assertTrue(sqlCheckListener.check(sql))
     }
 
     @Test
     @DisplayName("没有WHERE--SELECT")
     fun test_2() {
         val sql = "SELECT * FROM db.table"
-        Assertions.assertThrows(DataAccessException::class.java) { sqlCheckListener.check(sql) }
+        Assertions.assertFalse(sqlCheckListener.check(sql))
     }
 
     @Test
     @DisplayName("正常数据--UPDATE")
     fun test_3() {
         val sql = "UPDATE db.table SET column=1 where id=1"
-        sqlCheckListener.check(sql)
+        Assertions.assertTrue(sqlCheckListener.check(sql))
     }
 
     @Test
     @DisplayName("没有WHERE--UPDATE")
     fun test_4() {
         val sql = "UPDATE db.table SET column=1"
-        Assertions.assertThrows(DataAccessException::class.java) { sqlCheckListener.check(sql) }
+        Assertions.assertFalse(sqlCheckListener.check(sql))
     }
 
     @Test
     @DisplayName("正常数据--DELETE")
     fun test_5() {
         val sql = "DELETE FROM db.table where id=1"
-        sqlCheckListener.check(sql)
+        Assertions.assertTrue(sqlCheckListener.check(sql))
     }
 
     @Test
     @DisplayName("没有WHERE--DELETE")
     fun test_6() {
         val sql = "DELETE FROM db.table"
-        Assertions.assertThrows(DataAccessException::class.java) { sqlCheckListener.check(sql) }
+        Assertions.assertFalse(sqlCheckListener.check(sql))
     }
 }

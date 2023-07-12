@@ -15,13 +15,13 @@ class SQLCheckListener : DefaultExecuteListener() {
         check(sql, ctx)
     }
 
-    @SuppressWarnings("NestedBlockDepth", "TooGenericExceptionCaught")
-    fun check(sql: String, ctx: ExecuteContext? = null) {
+    fun check(sql: String, ctx: ExecuteContext? = null): Boolean {
         val checkRegex = "^(?i:(UPDATE|DELETE|SELECT).*)$".toRegex()
         val noWhereRegex = "(?i:(?!.* WHERE ).*)".toRegex()
         if (sql.matches(checkRegex)) {
             if (sql.matches(noWhereRegex)) {
                 logger.error("This SQL : $sql must use WHERE")
+                return false
             }
             if (ctx?.query() != null) {
                 try {
@@ -37,12 +37,15 @@ class SQLCheckListener : DefaultExecuteListener() {
                         }
                         if (type == null || type.uppercase() == "ALL") {
                             logger.error("SQL: $realSQL , type: $type is not allowed")
+                            return false
                         }
                         if (key.isNullOrBlank()) {
                             logger.error("SQL: $realSQL , key can not be blank. Please add table index")
+                            return false
                         }
                         if (rows == null || rows.toInt() > 1000000) {
                             logger.error("SQL: $realSQL , too many rows. Please optimization table index")
+                            return false
                         }
                     }
                 } catch (e: Exception) {
@@ -50,6 +53,7 @@ class SQLCheckListener : DefaultExecuteListener() {
                 }
             }
         }
+        return true
     }
 
     companion object {
