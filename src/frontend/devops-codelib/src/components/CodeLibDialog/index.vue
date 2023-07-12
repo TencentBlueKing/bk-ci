@@ -84,7 +84,7 @@
 
                 <!-- 服务器 start -->
                 <div class="bk-form-item is-required" v-if="isP4">
-                    <label class="bk-label">P4 port:</label>
+                    <label class="bk-label">P4 Port:</label>
                     <div class="bk-form-content">
                         <div class="flex-content">
                             <input type="text" class="bk-form-input" :placeholder="portPlaceholder" name="codelibPort" v-model.trim="codelibPort" v-validate="'required'" :class="{ 'is-danger': errors.has('codelibPort') }">

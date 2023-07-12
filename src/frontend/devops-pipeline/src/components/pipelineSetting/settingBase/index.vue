@@ -453,7 +453,6 @@
             }
             .bk-form-item label{
                 display: inline-block;
-                width: 145px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;

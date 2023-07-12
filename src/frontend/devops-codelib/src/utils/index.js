@@ -90,11 +90,11 @@ export function extendParsePathAlias (type, path, authType, svnType) {
     switch (true) {
         case isGithub(type):
             reg = /^https\:\/\/github\.com\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.githubRule}`
             break
         case (authType === 'OAUTH') || (isGit(type) && authType === 'HTTP'):
             reg = /^https?\:\/\/git((\.code\.w?)|(\.w))oa\.com[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpsRule}`
             nameMatchIndex = 4
             break
         case isSvn(type) && svnType === 'ssh':
@@ -105,7 +105,7 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             // } else {
             //     reg = /^svn\+ssh\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+)+?(\/[\w\W\.\-\/\+]*)?$/i
             // }
-            msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.svnSshRule}`
             break
         case isSvn(type) && svnType === 'http':
             reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
@@ -115,11 +115,11 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             // } else {
             //     reg = /^http\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+?\_proj)+?(\/[\w\W\.\-\/\+]*)?$/i
             // }
-            msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpRule}`
             break
         case isGitLab(type) && authType === 'HTTP':
             reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpOrHttpsRule}`
             if (reg.test(path)) {
                 reg = /^https?\:\/\/gitlab-paas\.open\.oa\.com\/([\w\W\.\-\_\/\+]+)\.git$/i
                 msg = `${codelibLocaleObj.httpsGitlabRule}`
@@ -136,12 +136,12 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             break
         case isGit(type):
             reg = /^git@git((\.code\.w?)|(\.w))oa\.com[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.gitCodeInternalRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.gitCodeInternalRule}`
             nameMatchIndex = 4
             break
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'): {
             reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.tgitHttpRule}`
             nameMatchIndex = 2
             break
         }

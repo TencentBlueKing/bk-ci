@@ -57,6 +57,7 @@
   "gitlabSshRule": "Start by git@ and end with .git",
   "httpRule": "Start by http:// or svn:// and the correct one",
   "httpsRule": "Start by https:// and end with .git",
+  "gitlabSshFormatError": "Start by git@ and end with .git",
   "httpOrHttpsRule": "Start by http:// or https:// and end with .git",
   "paramBeString": "Parameter must be string",
   "tgitHttpRule": "Start by https:// and end with .git",
