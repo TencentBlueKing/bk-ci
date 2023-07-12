@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.EXCEPTION
 import com.tencent.devops.common.api.constant.NORMAL
-import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -74,19 +73,17 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                     client.get(ServiceEnvironmentResource::class).listBuildEnvs(userId, projectCode, containerOS)
                         .data // 第三方环境节点
                 logger.info("the envNodeList is :$envNodeList")
-
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
                 val normalName = I18nUtil.getCodeLanMessage(NORMAL, language = I18nUtil.getLanguage(userId))
                 val exceptionName = I18nUtil.getCodeLanMessage(EXCEPTION, language = I18nUtil.getLanguage(userId))
-                val numUnit = I18nUtil.getCodeLanMessage(NUM_UNIT, language = I18nUtil.getLanguage(userId))
                 envNodeList?.map {
                     AgentResponse(
                         id = it.envHashId,
                         name = it.name,
-                        label = "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName:" +
-                            " ${it.abnormalNodeCount}$numUnit）",
+                        label = BuildType.THIRD_PARTY_AGENT_ENV.getI18n(I18nUtil.getRequestUserLanguage()) +
+                                "（$normalName: ${it.normalNodeCount}，$exceptionName:${it.abnormalNodeCount}）",
                         sharedProjectId = it.sharedProjectId,
                         sharedUserId = it.sharedUserId
                     )
