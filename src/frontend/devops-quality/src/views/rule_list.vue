@@ -235,6 +235,7 @@
                                             </bk-table-column>
                                             <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="80">
                                                 <template slot-scope="props">
+                                                    <span v-if="props.row.interceptResult === 'WAIT'" style="color: #FFB400;">{{$t('quality.等待中')}}</span>
                                                     <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
                                                     <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
                                                 </template>
@@ -569,6 +570,7 @@
                         type: 'warning',
                         theme: 'warning',
                         subTitle: this.$t('quality.确定删除规则({0})？', [row.name]),
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }

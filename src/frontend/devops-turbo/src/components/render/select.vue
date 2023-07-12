@@ -4,7 +4,7 @@
         v-bind="{ ...$props, ...paramProps }"
         :value="paramValue[paramKey]"
         :loading="isLoading"
-        :placeholde="$t('turbo.请选择')"
+        :placeholder="$t('turbo.请选择')"
         :empty-text="$t('turbo.暂无选项')"
         @change="changeParamValue"
     >

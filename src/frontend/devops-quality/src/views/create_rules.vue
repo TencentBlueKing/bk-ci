@@ -22,9 +22,9 @@
                         @click="changeFastType(entry)"
                     >
                         <div class="template-icon" v-if="templateName.includes(entry.name)">
-                            <icon v-if="['日常构建', 'Daily Construction'].includes(entry.name)" name="daily-build" size="14" />
-                            <icon v-if="['版本转测', 'Version Retest'].includes(entry.name)" name="version-test" size="14" />
-                            <icon v-if="['发布上线', 'Release and launch'].includes(entry.name)" name="release-online" size="14" />
+                            <icon v-if="['日常构建', 'Daily Build'].includes(entry.name)" name="daily-build" size="14" />
+                            <icon v-if="['版本转测', 'Version Testing'].includes(entry.name)" name="version-test" size="14" />
+                            <icon v-if="['发布上线', 'Deploy to Production'].includes(entry.name)" name="release-online" size="14" />
                         </div>
                         <i :class="{ 'devops-icon': true, 'label-icon': true, 'icon-placeholder': true }" v-else></i>
                         <span class="card-label">{{entry.name}}</span>
@@ -242,7 +242,7 @@
                                                 {{$t('quality.指标所需插件完整')}}
                                             </p>
                                             <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>{{$t('quality.有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线')}}
+                                                <span class="mark-circle"></span>{{$t('quality.若有多个控制点插件，请将需配置红线的控制点插件名称开头加上控制点前缀+下划线。')}}
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
