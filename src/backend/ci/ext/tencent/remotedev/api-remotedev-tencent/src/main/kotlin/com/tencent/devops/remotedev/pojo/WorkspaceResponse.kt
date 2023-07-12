@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -43,5 +43,5 @@ data class WorkspaceResponse(
     @ApiModelProperty("系统类型")
     val systemType: WorkspaceSystemType? = null,
     @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
+    val workspaceMountType: WorkspaceMountType? = null
 )

@@ -1,0 +1,211 @@
+{{- if eq .Values.proxy.type "master"}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: proxy-init-route
+  labels:
+    app.kubernetes.io/component: init-route
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: init-route
+    spec:
+      initContainers:
+        - name: wait-for-apisix
+          image: alpine/curl:3.14
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              until getent hosts {{ include "proxy.apisix.admin.fullname" . }}
+              do 
+                echo waiting for {{ include "proxy.apisix.admin.fullname" . }}
+                sleep 2;
+              done
+              echo "Apisix admin is available";
+      containers:
+        - name: init-router
+          image: alpine/curl:3.14
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              # 创建dashboard route
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "uri": "/*",
+                  "host": "apisix.{{ .Values.proxy.domain }}",
+                  "name": "apisix-proxy-dashboard",
+                  "vars": [
+                      [
+                          "server_port",
+                          "==",
+                          "9000"
+                      ]
+                  ],
+                  "upstream": {
+                      "nodes": {
+                          "{{ include "proxy.apisix.dashboard.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:80": 1
+                      },
+                      "type": "roundrobin"
+                  }
+              }'
+
+              # 创建 wsproxy http route
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/2  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "uri": "/*",
+                  "host": "*.{{ .Values.proxy.domain }}",
+                  "name": "wsproxy-http",
+                  "enable_websocket": true,
+                  "vars": [
+                      [
+                          "host",
+                          "~~",
+                          "\\d*[-\\w]*\\w+[-\\w]*-[a-zA-Z0-9]{16}\\.{{ .Values.proxy.domain }}"
+                      ],
+                      [
+                          "http_x_forwarded_proto",
+                          "==",
+                          "http"
+                      ]
+                  ],
+                  "upstream": {
+                      "nodes": {
+                          "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:80": 1
+                      },
+                      "timeout": {
+                          "send": 60,
+                          "connect": 60,
+                          "read": 60
+                      },
+                      "keepalive_pool": {
+                          "size": 320,
+                          "idle_timeout": 60,
+                          "requests": 1000
+                      },
+                      "type": "roundrobin"
+                  },
+                  "plugins": {
+                    "limit-count": {
+                        "key_type": "var",
+                        "rejected_code": 503,
+                        "rejected_msg": "limit_count",
+                        "allow_degradation": true,
+                        "_meta": {
+                            "disable": true
+                        },
+                        "count": 20,
+                        "key": "remote_addr",
+                        "time_window": 1,
+                        "policy": "local",
+                        "show_limit_quota_header": true
+                    }
+                }
+              }'
+
+              # 创建https sni
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/ssls/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "id": "1",           
+                  "cert": "{{ .Values.proxy.https.crt }}",
+                  "key": "{{ .Values.proxy.https.key }}",       
+                  "snis": ["*.{{ .Values.proxy.domain }}","{{ .Values.proxy.domain }}","apisix.{{ .Values.proxy.domain }}"]
+              }'
+
+              # 创建 wsproxy https route
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/3  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "uri": "/*",
+                  "host": "*.{{ .Values.proxy.domain }}",
+                  "name": "wsproxy-https",
+                  "enable_websocket": true,
+                  "vars": [
+                      [
+                          "host",
+                          "~~",
+                          "\\d*[-\\w]*\\w+[-\\w]*-[a-zA-Z0-9]{16}\\.{{ .Values.proxy.domain }}"
+                      ]
+                  ],
+                  "upstream": {
+                      "nodes": {
+                          "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:443": 1
+                      },
+                      "timeout": {
+                          "send": 60,
+                          "connect": 60,
+                          "read": 60
+                      },
+                      "keepalive_pool": {
+                          "size": 320,
+                          "idle_timeout": 60,
+                          "requests": 1000
+                      },
+                      "scheme": "https",
+                      "type": "roundrobin"
+                  },
+                  "plugins": {
+                    "limit-count": {
+                        "key_type": "var",
+                        "rejected_code": 503,
+                        "rejected_msg": "limit_count",
+                        "allow_degradation": true,
+                        "_meta": {
+                            "disable": true
+                        },
+                        "count": 20,
+                        "key": "remote_addr",
+                        "time_window": 1,
+                        "policy": "local",
+                        "show_limit_quota_header": true
+                    }
+                  }
+              }'
+
+              # 创建 wsproxy ssh route
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/stream_routes/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "name": "wsproxy-ssh",
+                  "server_port": 2200,
+                  "upstream": {
+                      "nodes": {
+                          "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:22": 1
+                      },
+                      "type": "roundrobin"
+                  }
+              }'
+
+              # 创建 registry-facade route
+              curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/4  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
+              {
+                  "uri": "/*",
+                  "host": "reg.{{ .Values.proxy.domain }}",
+                  "name": "registry-facade",
+                  "enable_websocket": false,
+                  "vars": [
+                      [
+                          "server_port",
+                          "==",
+                          "20000"
+                      ]
+                  ],
+                  "upstream": {
+                      "nodes": {
+                          "{{ .Values.proxy.registryFacadeName }}.{{ .Release.Namespace }}.svc.cluster.local:9000": 1
+                      },
+                      "scheme": "https",
+                      "type": "roundrobin"
+                  }
+              }'
+
+      restartPolicy: OnFailure
+{{- end }}

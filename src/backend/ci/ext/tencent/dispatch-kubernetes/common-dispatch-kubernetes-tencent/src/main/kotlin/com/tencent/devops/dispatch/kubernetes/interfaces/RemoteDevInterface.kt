@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -74,4 +75,12 @@ interface RemoteDevInterface {
      * 查询工作空间状态
      */
     fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
+
+    /**
+     * 等待任务结束
+     */
+    fun waitTaskFinish(
+        userId: String,
+        taskId: String
+    ): DispatchBuildTaskStatus
 }
