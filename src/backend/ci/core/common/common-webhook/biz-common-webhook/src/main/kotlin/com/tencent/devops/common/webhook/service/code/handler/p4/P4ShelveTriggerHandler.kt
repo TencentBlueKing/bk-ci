@@ -79,7 +79,7 @@ class P4ShelveTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ShelveEvent) = ""
+    override fun getMessage(event: P4ShelveEvent) = event.description
 
     override fun getWebhookFilters(
         event: P4ShelveEvent,
@@ -158,7 +158,6 @@ class P4ShelveTriggerHandler(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
-        startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ShelveEvent.DEFAULT_SHELVE_DESCRIPTION
         return startParams
     }
 }

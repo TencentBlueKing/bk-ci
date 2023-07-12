@@ -78,7 +78,7 @@ class P4ChangeTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ChangeEvent) = ""
+    override fun getMessage(event: P4ChangeEvent) = event.description
 
     override fun getWebhookFilters(
         event: P4ChangeEvent,
@@ -161,7 +161,6 @@ class P4ChangeTriggerHandler(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
-        startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ChangeEvent.DEFAULT_CHANGE_DESCRIPTION
         return startParams
     }
 }
