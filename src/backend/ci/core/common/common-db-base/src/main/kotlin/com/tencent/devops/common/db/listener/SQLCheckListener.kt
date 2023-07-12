@@ -15,6 +15,7 @@ class SQLCheckListener : DefaultExecuteListener() {
         check(sql, ctx)
     }
 
+    @SuppressWarnings("NestedBlockDepth", "ComplexMethod")
     fun check(sql: String, ctx: ExecuteContext? = null): Boolean {
         val checkRegex = "^(?i:(UPDATE|DELETE|SELECT).*)$".toRegex()
         val noWhereRegex = "(?i:(?!.* WHERE ).*)".toRegex()
