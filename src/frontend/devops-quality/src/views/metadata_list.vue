@@ -93,7 +93,7 @@
                                             <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">{{$t('quality.编辑指标')}}</span>
                                             <span
                                                 v-perm="{
-                                                    hasPermission: row.canCreate,
+                                                    hasPermission: hasCreatePermission,
                                                     disablePermissionApi: true,
                                                     permissionData: {
                                                         projectId: projectId,
@@ -148,7 +148,8 @@
                 loading: {
                     isLoading: false,
                     title: ''
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -167,6 +168,7 @@
             }
         },
         created () {
+            this.requestHasCreatePermission()
             this.requestList()
         },
         methods: {
@@ -263,6 +265,12 @@
                     query: {
                         indicator: id
                     }
+                })
+            },
+
+            async requestHasCreatePermission () {
+                this.hasCreatePermission = await this.$store.dispatch('quality/requestPermission', {
+                    projectId: this.projectId
                 })
             }
         }
