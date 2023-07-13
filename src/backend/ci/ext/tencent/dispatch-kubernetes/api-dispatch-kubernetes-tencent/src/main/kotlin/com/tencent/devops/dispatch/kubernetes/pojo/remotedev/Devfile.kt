@@ -11,22 +11,22 @@ data class Devfile(
     @ApiModelProperty("定义devfile的版本")
     val version: String,
     @ApiModelProperty("定义在工作区的git配置键值对。")
-    val envs: Map<String, String>?,
+    val envs: Map<String, String>? = null,
     @JsonProperty("runs-on")
     @ApiModelProperty("定义用于工作区的docker镜像")
-    val runsOn: RunsOn?,
+    val runsOn: RunsOn? = null,
     @ApiModelProperty("配置vscode")
-    val vscode: DevfileVscode?,
+    val vscode: DevfileVscode? = null,
     @ApiModelProperty("配置需要监听的端口信息")
-    val ports: List<DevfilePorts>?,
+    val ports: List<DevfilePorts>? = null,
     @ApiModelProperty("用来指定工作空间声明周期命令")
-    val commands: DevfileCommands?,
+    val commands: DevfileCommands? = null,
     @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
-    var gitEmail: String?,
+    var gitEmail: String? = null,
     @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
-    var dotfileRepo: String?,
+    var dotfileRepo: String? = null,
     @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
-    var workspaceFolder: String?
+    var workspaceFolder: String? = null
 ) {
     fun checkWorkspaceMountType(): WorkspaceMountType {
         if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {

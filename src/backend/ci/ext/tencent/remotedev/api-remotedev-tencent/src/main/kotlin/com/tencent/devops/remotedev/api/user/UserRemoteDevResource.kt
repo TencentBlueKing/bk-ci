@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
+import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -127,6 +128,7 @@ interface UserRemoteDevResource {
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
+
     @ApiOperation("根据bi_ticket或bk_token获取用户名称")
     @GET
     @Path("/get_user")
@@ -134,4 +136,12 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
+
+    @ApiOperation("获取所有的WINDOWS GPU资源配置信息")
+    @GET
+    @Path("/get_all_windows_resource_config")
+    fun getAllWindowsResourceConfig(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceConfig>>
 }

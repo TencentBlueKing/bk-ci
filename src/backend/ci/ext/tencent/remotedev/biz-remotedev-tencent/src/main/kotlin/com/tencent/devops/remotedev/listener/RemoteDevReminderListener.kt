@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -52,7 +53,8 @@ class RemoteDevReminderListener @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val redisCacheService: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val dispatcher: RemoteDevDispatcher
+    private val dispatcher: RemoteDevDispatcher,
+    private val workspaceCommon: WorkspaceCommon
 ) : Listener<RemoteDevReminderEvent> {
 
     override fun execute(event: RemoteDevReminderEvent) {
@@ -67,7 +69,7 @@ class RemoteDevReminderListener @Autowired constructor(
                 // 给予5分钟的时间误差
                 if (duration * 60 * 60 - workspace.usageTime < (limit + 5) * 60) {
                     logger.info("start notify to user $userId")
-                    workspaceService.dispatchWebsocketPushEvent(
+                    workspaceCommon.dispatchWebsocketPushEvent(
                         userId = userId,
                         workspaceName = workspaceName,
                         workspaceHost = null,
