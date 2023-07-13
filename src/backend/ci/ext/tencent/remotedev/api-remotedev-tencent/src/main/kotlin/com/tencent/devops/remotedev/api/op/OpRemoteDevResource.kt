@@ -252,6 +252,7 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板ID", required = true)
+        @QueryParam("workspaceName")
         id: Long,
         @ApiParam(value = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceConfig
@@ -265,6 +266,7 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板信息", required = true)
+        @QueryParam("workspaceName")
         id: Long
     ): Result<Boolean>
 }
