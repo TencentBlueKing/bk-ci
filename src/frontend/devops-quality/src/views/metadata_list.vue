@@ -93,7 +93,7 @@
                                             <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">{{$t('quality.编辑指标')}}</span>
                                             <span
                                                 v-perm="{
-                                                    hasPermission: canEdit,
+                                                    hasPermission: row.canCreate,
                                                     disablePermissionApi: true,
                                                     permissionData: {
                                                         projectId: projectId,
