@@ -391,6 +391,13 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
 
+        if (windowsConfig.available == false) {
+            throw throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+            )
+        }
+
         windowsGpuCheck(workspaceCreate, userId)
 
         logger.info("createWorkspace|mountType|$mountType")

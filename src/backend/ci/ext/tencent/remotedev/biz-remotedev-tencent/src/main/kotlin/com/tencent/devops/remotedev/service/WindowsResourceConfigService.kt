@@ -54,7 +54,7 @@ class WindowsResourceConfigService @Autowired constructor(
 
     fun getAllConfig(): List<WindowsResourceConfig> {
         logger.info("get all windows resource config")
-        return windowsResourceConfigDao.fetchAll(dslContext).map {
+        return windowsResourceConfigDao.fetchAll(dslContext, true).map {
             WindowsResourceConfig(
                 it.id,
                 ByteUtils.byte2Bool(it.availabled),
