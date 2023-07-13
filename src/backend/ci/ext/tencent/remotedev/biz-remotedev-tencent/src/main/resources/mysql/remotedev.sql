@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',
                                              `WORKSPACE_FOLDER` varchar(256) NOT NULL DEFAULT '' COMMENT '指定用户在连接到容器时应打开的默认路径',
                                              `HOST_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '工作空间对应的IP',
+                                             `GPU` int(11) NOT NULL DEFAULT '0' COMMENT 'vGPU',
                                              `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
                                              `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
                                              `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间,单位:s（容器结束时更新）',
