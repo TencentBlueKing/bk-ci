@@ -523,4 +523,7 @@ onBeforeUnmount(() => {
   .dark {
     background: #26323d !important;
   }
+  .bk-form-error {
+    white-space: nowrap;
+  }
 </style>
