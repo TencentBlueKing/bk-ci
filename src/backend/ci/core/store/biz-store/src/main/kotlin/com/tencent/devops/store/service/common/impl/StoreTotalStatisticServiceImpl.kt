@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_NUM
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -53,6 +52,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record7
@@ -63,7 +63,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import kotlin.math.roundToInt
 
 @Suppress("ALL")
 @Service
