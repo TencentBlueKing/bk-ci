@@ -279,7 +279,10 @@ class TGitPushTriggerHandler(
         event.diffFiles?.forEach {
             if (it.deletedFile) {
                 changeFileList.add(it.oldPath)
-            } else {
+            } else if (it.renamedFile) { // 重命名文件
+                changeFileList.add(it.newPath)
+                changeFileList.add(it.oldPath)
+            } else { // 修改或添加文件
                 changeFileList.add(it.newPath)
             }
         }
