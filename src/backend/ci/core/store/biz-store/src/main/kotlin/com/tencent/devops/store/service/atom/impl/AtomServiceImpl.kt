@@ -58,6 +58,8 @@ import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.PROJECT_NO_PERMISSION
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -1090,8 +1092,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("uninstallAtom, isInstaller=$isInstaller")
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(atomCode),
+                messageCode = PROJECT_NO_PERMISSION,
+                params = arrayOf(projectCode, atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -1147,8 +1149,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(atomCode)
             )
         }
         // 查询插件的最新记录

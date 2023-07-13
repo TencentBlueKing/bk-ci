@@ -37,6 +37,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.BUILD_VISIT_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.SensitiveConfDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.SensitiveConfReq
@@ -301,8 +303,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             if (runningAtomCode != storeCode) {
                 // build类接口需要校验storeCode是否为正在运行的storeCode，防止越权查询storeCode信息
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PERMISSION_DENIED,
-                    params = arrayOf(storeCode)
+                    errorCode = BUILD_VISIT_NO_PERMISSION,
+                    params = arrayOf(runningAtomCode ?: "", storeCode)
                 )
             }
         }
@@ -320,7 +322,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 storeType = storeType.type.toByte())
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(storeCode)
             )
         }
