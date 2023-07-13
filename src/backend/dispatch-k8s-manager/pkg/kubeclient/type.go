@@ -53,6 +53,7 @@ type Container struct {
 	Command      []string
 	VolumeMounts []corev1.VolumeMount
 	Args         []string
+	LivenessProbe *corev1.Probe
 }
 
 type DockerSecret struct {
