@@ -41,10 +41,10 @@ const vm = getCurrentInstance();
 const rules = {
   englishName: [
     {
-      validator: (value) => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
+      validator: value => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
-    }
+    },
   ],
   bgId: [
     {
@@ -65,25 +65,25 @@ const rules = {
 const projectTypeList = [
   {
     id: 1,
-    name: t('手游')
+    name: t('手游'),
   },
   {
     id: 2,
-    name: t('端游')
+    name: t('端游'),
   },
   {
     id: 3,
-    name: t('页游')
+    name: t('页游'),
   },
   {
     id: 4,
-    name: t('平台产品')
+    name: t('平台产品'),
   },
   {
     id: 5,
-    name: t('支撑产品')
-  }
-]
+    name: t('支撑产品'),
+  },
+];
 
 const projectData = ref<any>(props.data);
 
@@ -227,10 +227,10 @@ const handleMessage = (event: any) => {
           // 回显数据
           vm?.refs?.iframeRef?.$el?.firstElementChild?.contentWindow?.postMessage?.(
             JSON.parse(JSON.stringify({
-              subject_scopes: projectData.value.subjectScopes
+              subject_scopes: projectData.value.subjectScopes,
             })),
-            window.BK_IAM_URL_PREFIX
-          )
+            window.BK_IAM_URL_PREFIX,
+          );
         }, 0);
         break;
     }
@@ -238,13 +238,13 @@ const handleMessage = (event: any) => {
 };
 
 const fetchUserDetail = async () => {
-  if (props.type !== 'apply') return
-  await http.getUserDetail().then(res => {
+  if (props.type !== 'apply') return;
+  await http.getUserDetail().then((res) => {
     const { bgId, centerId, deptId } = res;
     projectData.value.bgId = bgId;
     projectData.value.centerId = centerId === '0' ? '' : centerId;
     projectData.value.deptId = deptId;
-  })
+  });
 };
 
 const showMemberDialog = () => {
@@ -256,43 +256,43 @@ watch(() => projectData.value.projectName, (val) => {
   if (props.type === 'apply' && val) {
     http.validateProjectName(val)
       .then(() => {
-        validateProjectNameTips.value = ''
+        validateProjectNameTips.value = '';
       })
       .catch(() => {
         projectForm.value.clearValidate();
-        validateProjectNameTips.value = t('项目名称已存在')
-      })
+        validateProjectNameTips.value = t('项目名称已存在');
+      });
   } else if (!val) {
-    validateProjectNameTips.value = ''
+    validateProjectNameTips.value = '';
   }
 }, {
   deep: true,
-})
+});
 
 const validateEnglishNameTips = ref('');
 watch(() => projectData.value.englishName, (val) => {
   if (props.type === 'apply' && val && /^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
     http.validateEnglishName(val)
       .then(() => {
-        validateEnglishNameTips.value = ''
+        validateEnglishNameTips.value = '';
       })
       .catch(() => {
         projectForm.value.clearValidate();
-        validateEnglishNameTips.value = t('项目ID已存在')
-      })
+        validateEnglishNameTips.value = t('项目ID已存在');
+      });
   } else if (!val || !/^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
-    validateEnglishNameTips.value = ''
+    validateEnglishNameTips.value = '';
   }
 }, {
   deep: true,
-})
+});
 
 watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
   projectForm.value.validate();
   emits('approvedChange', true);
 }, {
   deep: true,
-})
+});
 
 onMounted(async () => {
   await fetchUserDetail();
@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
-        :maxlength="64"
+        :maxlength="32"
         @change="handleChangeForm"
       ></bk-input>
       <div class="error-tips" v-if="validateProjectNameTips">
