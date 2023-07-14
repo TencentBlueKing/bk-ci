@@ -49,9 +49,10 @@
             },
 
             showDebugBtn () {
+                const dispatchType = this.job.dispatchType || {}
                 return (
-                    this.job.dispatchType
-                    && ['GIT_CI', 'PUBLIC_DEVCLOUD'].includes(this.job.dispatchType.buildType)
+                    dispatchType
+                    && (['GIT_CI', 'PUBLIC_DEVCLOUD'].includes(dispatchType.buildType) || (dispatchType.buildType?.indexOf('THIRD_PARTY_') > -1 && dispatchType.dockerInfo))
                     && this.modelDetail
                     && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
                 )
