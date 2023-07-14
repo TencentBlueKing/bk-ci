@@ -184,8 +184,7 @@ class CreateControl @Autowired constructor(
                     WorkspaceAction.CREATE to getOpHistoryCreate(
                         WorkspaceSystemType.valueOf(ws.systemType),
                         pathWithNamespace ?: "",
-                        ws.branch ?: "",
-                        ws.name ?: ""
+                        ws.branch ?: ""
                     ),
                     WorkspaceAction.START to workspaceCommon.getOpHistory(OpHistoryCopyWriting.FIRST_START)
                 ).forEach { (action, actionMessage) ->
