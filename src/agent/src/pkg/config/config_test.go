@@ -117,7 +117,7 @@ func Test_matchWorkerVersion(t *testing.T) {
 			want: true,
 		},
 	}
-	logs.DebugInit()
+	logs.UNTestDebugInit()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := matchWorkerVersion(tt.args.line); got != tt.want {
