@@ -63,8 +63,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(atomCode)
             )
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
@@ -75,7 +74,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         ) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = NO_COMPONENT_ADMIN_PERMISSION,
-                language = I18nUtil.getLanguage(atomCode)
+                params = arrayOf(atomCode)
             )
         }
         val repositoryHashId = atomRecord.repositoryHashId
@@ -115,14 +114,12 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(storeCode)
             )
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(id),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(id)
             )
         // 如果删除的是管理员，只剩一个管理员则不允许删除
         if ((memberRecord.type).toInt() == 0) {

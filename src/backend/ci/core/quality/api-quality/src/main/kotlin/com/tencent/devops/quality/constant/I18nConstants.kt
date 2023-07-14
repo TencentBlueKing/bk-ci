@@ -28,8 +28,8 @@
 package com.tencent.devops.quality.constant
 
 const val QUALITY_RULE_TEMPLATE_NAME_KEY = "quality.ruleTemplate.%s.name" // $s == ID
-const val QUALITY_RULE_TEMPLATE_DESC_KEY = "quality.ruleTemplate.%S.desc" // $s == ID
-const val QUALITY_RULE_TEMPLATE_STAGE_KEY = "quality.ruleTemplate.%S.stage" // $s == ID
+const val QUALITY_RULE_TEMPLATE_DESC_KEY = "quality.ruleTemplate.%s.desc" // $s == ID
+const val QUALITY_RULE_TEMPLATE_STAGE_KEY = "quality.ruleTemplate.%s.stage" // $s == ID
 const val QUALITY_CONTROL_POINT_NAME_KEY = "quality.controlPoint.%s.name" // $s == elementType
 const val QUALITY_CONTROL_POINT_STAGE_KEY = "quality.controlPoint.%s.stage" // $s == elementType
 const val QUALITY_METADATA_DATA_NAME_KEY = "quality.metadata.%s.dataName" // $s == ID
