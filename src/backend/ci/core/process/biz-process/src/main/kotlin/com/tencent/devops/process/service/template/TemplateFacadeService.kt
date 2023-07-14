@@ -1983,7 +1983,7 @@ class TemplateFacadeService @Autowired constructor(
                         )
                         if (atomStatus in atomStatusList) {
                             throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.CANNOT_BE_UPDATED,
+                                errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
                                 params = arrayOf(
                                     atomName,
                                     AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))

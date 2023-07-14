@@ -278,7 +278,7 @@ object ProcessMessageCode {
     const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101177" // 流水线编排数量非法
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
-    const val CANNOT_BE_UPDATED = "2101180" // 模板中插件（{0}）（{1}），不允许更新
+    const val TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE = "2101181" // 模板中插件（{0}）（{1}），不允许更新
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
