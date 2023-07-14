@@ -39,7 +39,7 @@ object Versions {
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val Xinge = "1.2.4.9"
-    const val Pulsar = "2.10.1"
+    const val Pulsar = "2.10.4"
     const val reflections = "0.10.2"
     const val mockk = "1.12.2"
     const val Resilience4j = "1.7.1"
