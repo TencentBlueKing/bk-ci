@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
@@ -52,13 +53,13 @@ import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
 import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
 import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Service
 class TxStoreIndexCronService(
@@ -73,7 +74,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(fixedRate = 300000)
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -143,7 +145,10 @@ class TxStoreIndexCronService(
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
-                        result
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = result,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                     )
                     val elementValue = if (atomSlaIndexValue > 0) String.format("%.2f", atomSlaIndexValue) else "0.0"
                     val tStoreIndexResultRecord = TStoreIndexResultRecord()
@@ -154,7 +159,13 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>$BK_ATOM_SLA ： $elementValue%（$result）</span>"
+                        "<span style=\"line-height: 18px\"><span>${
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_ATOM_SLA,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        }" +
+                                " ： $elementValue%（$result）</span>"
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
                     tStoreIndexResultRecord.createTime = LocalDateTime.now()
@@ -197,7 +208,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(fixedRate = 300000)
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
@@ -256,7 +268,10 @@ class TxStoreIndexCronService(
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
-                        result
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = result,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                     )
                     val indexInfo = if (elementValue.isNullOrBlank()) {
                         elementValue = BK_NO_FAIL_DATA
@@ -296,11 +311,31 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.storeCode = atomCode
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
+                    val indexResult = if (codeccOpensourceMeasurement == 100.0) {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_UP_TO_PAR,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    } else {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_NOT_UP_TO_PAR,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    }
                     tStoreIndexResultRecord.iconTips =
                         "<span style=\"line-height: 18px\">" +
-                                "<span>$BK_COMPLIANCE_RATE ： $indexInfo" +
-                                "</span></br><span>$BK_CODE_QUALITY ： $codeccOpensourceMeasurement" +
-                                "（${if (codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）" +
+                                "<span>${
+                                    I18nUtil.getCodeLanMessage(
+                                        messageCode = BK_COMPLIANCE_RATE,
+                                        I18nUtil.getDefaultLocaleLanguage()
+                                    )
+                                } ： $indexInfo" +
+                                "</span></br><span>${
+                                    I18nUtil.getCodeLanMessage(
+                                        messageCode = BK_CODE_QUALITY,
+                                        language = I18nUtil.getDefaultLocaleLanguage()
+                                    )
+                                } ： $codeccOpensourceMeasurement（$indexResult）" +
                                 "</span></span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.creator = SYSTEM_USER
