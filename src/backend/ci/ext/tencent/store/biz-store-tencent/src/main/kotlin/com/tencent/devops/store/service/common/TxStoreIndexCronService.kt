@@ -164,8 +164,7 @@ class TxStoreIndexCronService(
                                 messageCode = BK_ATOM_SLA,
                                 language = I18nUtil.getDefaultLocaleLanguage()
                             )
-                        }" +
-                                " ： $elementValue%（$result）</span>"
+                        } ： $elementValue%（$result）</span>"
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
                     tStoreIndexResultRecord.createTime = LocalDateTime.now()
@@ -323,20 +322,17 @@ class TxStoreIndexCronService(
                         )
                     }
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\">" +
-                                "<span>${
+                        "<span style=\"line-height: 18px\"><span>${
                                     I18nUtil.getCodeLanMessage(
                                         messageCode = BK_COMPLIANCE_RATE,
                                         I18nUtil.getDefaultLocaleLanguage()
                                     )
-                                } ： $indexInfo" +
-                                "</span></br><span>${
+                                } ： $indexInfo</span></br><span>${
                                     I18nUtil.getCodeLanMessage(
                                         messageCode = BK_CODE_QUALITY,
                                         language = I18nUtil.getDefaultLocaleLanguage()
                                     )
-                                } ： $codeccOpensourceMeasurement（$indexResult）" +
-                                "</span></span>"
+                                } ： $codeccOpensourceMeasurement（$indexResult）</span></span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
