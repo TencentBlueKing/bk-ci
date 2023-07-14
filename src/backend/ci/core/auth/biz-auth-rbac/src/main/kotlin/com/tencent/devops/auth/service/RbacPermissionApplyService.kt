@@ -405,6 +405,7 @@ class RbacPermissionApplyService @Autowired constructor(
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
+        // 若动作是挂在项目下，返回的资源类型必须是project
         val finalResourceType =
             if (action?.substringAfterLast("_") == AuthResourceType.PROJECT.value) {
                 AuthResourceType.PROJECT.value
