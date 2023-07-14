@@ -247,7 +247,7 @@ class CreateControl @Autowired constructor(
 
     private fun getOpHistoryCreate(type: WorkspaceSystemType, vararg args: Any) = when (type) {
         WorkspaceSystemType.WINDOWS_GPU -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE_WINDOWS)
-        WorkspaceSystemType.LINUX -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE).format(args)
+        WorkspaceSystemType.LINUX -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE).format(*args)
     }
 
     @Suppress("ComplexMethod")
