@@ -74,7 +74,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+        @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(fixedRate = 300000)
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -140,14 +141,14 @@ class TxStoreIndexCronService(
                         } else {
                             (1 - (atomTotalComponentFailCount.toDouble() / storeExecuteCountByCode.toDouble())) * 100
                         }
-                    val result = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+                    val result = I18nUtil.getCodeLanMessage(
+                        messageCode = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = result,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
+                        result
                     )
                     val elementValue = if (atomSlaIndexValue > 0) String.format("%.2f", atomSlaIndexValue) else "0.0"
                     val tStoreIndexResultRecord = TStoreIndexResultRecord()
@@ -206,7 +207,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+        @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(fixedRate = 300000)
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
@@ -271,17 +273,28 @@ class TxStoreIndexCronService(
                         )
                     )
                     val indexInfo = if (elementValue.isNullOrBlank()) {
-                        elementValue = BK_NO_FAIL_DATA
+                        elementValue = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_NO_FAIL_DATA,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                         elementValue
                     } else {
-                        "$elementValue%(${if (complianceRate > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）"
+                        "$elementValue%(${
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = result,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        }）"
                     }
                     val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord()
                     tStoreIndexElementDetailRecord1.id = UUIDUtil.generate()
                     tStoreIndexElementDetailRecord1.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord1.storeCode = atomCode
                     tStoreIndexElementDetailRecord1.indexCode = indexCode
-                    tStoreIndexElementDetailRecord1.elementName = BK_COMPLIANCE_RATE
+                    tStoreIndexElementDetailRecord1.elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_COMPLIANCE_RATE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     tStoreIndexElementDetailRecord1.elementValue = elementValue
                     tStoreIndexElementDetailRecord1.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord1.creator = SYSTEM_USER
@@ -293,7 +306,10 @@ class TxStoreIndexCronService(
                     tStoreIndexElementDetailRecord2.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord2.storeCode = atomCode
                     tStoreIndexElementDetailRecord2.indexCode = indexCode
-                    tStoreIndexElementDetailRecord2.elementName = BK_CODE_QUALITY
+                    tStoreIndexElementDetailRecord2.elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CODE_QUALITY,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     tStoreIndexElementDetailRecord2.elementValue = "$codeccOpensourceMeasurement"
                     tStoreIndexElementDetailRecord2.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord2.creator = SYSTEM_USER
