@@ -172,8 +172,8 @@
                             <bk-select v-model="createRuleForm.controlPointPosition" style="width:467px;">
                                 <bk-option v-for="(option, index) in createRuleForm.availablePosition"
                                     :key="index"
-                                    :id="option.name"
-                                    :name="option.i18nName">
+                                    :id="option.code"
+                                    :name="option.name">
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
