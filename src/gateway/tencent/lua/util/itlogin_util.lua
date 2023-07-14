@@ -112,4 +112,51 @@ function _M:get_staff_info(ckey)
     end
 end
 
+function _M:get_staff_info_new(credentialKey)
+    if credentialKey == nil then
+        ngx.log(ngx.ERR, "credentialKey is null")
+        ngx.exit(400)
+        return
+    end
+
+    local httpc = http.new()
+    if not httpc then
+        ngx.log(ngx.ERR, "failed to create httpc")
+        ngx.exit(500)
+        return
+    end
+
+    local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
+        method = "POST",
+        body = "key=" .. credentialKey,
+        ssl_verify = false,
+        headers = {
+            ["X-System-Key"]="d4699d2782a6edb09a1837cfdc2df110",
+            ["Content-Type"] = "application/x-www-form-urlencoded",
+            ["Accept"] = "application/json"
+        }
+    })
+
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+
+    if not res then
+        ngx.log(ngx.ERR, "failed to request credentialKey info: ", err)
+        ngx.exit(500)
+        return
+    end
+
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request credentialKey info, status: ", res.status)
+        ngx.exit(res.status)
+        return
+    end
+
+    --- 获取所有回复
+    local responseBody = res.body
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+    return result
+end
+
 return _M

@@ -32,6 +32,8 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -142,7 +144,9 @@ class StartCloudRemoteDevService @Autowired constructor(
             curLaunchId = curLaunchId
         )
     }
-
+    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+        return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""

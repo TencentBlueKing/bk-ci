@@ -31,10 +31,12 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecord
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -109,6 +111,18 @@ class RemoteDevSettingDao {
         }
     }
 
+    fun fetchAllUserSettings(
+        dslContext: DSLContext
+    ): Result<TRemoteDevSettingsRecord> {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            return dslContext.selectFrom(this)
+                .where(
+                    USER_SETTING.isNotNull
+                )
+                .fetch()
+        }
+    }
+
     fun updateProjectId(
         dslContext: DSLContext,
         userId: String,
@@ -166,14 +180,15 @@ class RemoteDevSettingDao {
     ) {
         val setting = RemoteDevSettings()
         val userSetting = RemoteDevUserSettings().apply {
-            maxRunningCount = opSetting?.wsMaxRunningCount ?: maxRunningCount
-            maxHavingCount = opSetting?.wsMaxHavingCount ?: maxHavingCount
+            maxRunningCount = opSetting?.maxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting?.maxHavingCount ?: maxHavingCount
             onlyCloudIDE = opSetting?.onlyCloudIDE ?: onlyCloudIDE
             allowedCopy = opSetting?.allowedCopy ?: allowedCopy
             startCloudExperienceDuration = opSetting?.startCloudExperienceDuration ?: startCloudExperienceDuration
             allowedDownload = opSetting?.allowedDownload ?: allowedDownload
             needWatermark = opSetting?.needWatermark ?: needWatermark
             autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
+            mountType = opSetting?.mountType ?: mountType
         }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
