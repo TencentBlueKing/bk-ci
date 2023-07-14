@@ -165,11 +165,7 @@ class QualityTemplateService @Autowired constructor(
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
         val controlPointMap = controlPointService.listAllControlPoint().map {
-            it.name = I18nUtil.getCodeLanMessage(
-                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.elementType}"),
-                defaultMessage = it.name,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
+            it.name = it.name
             it.elementType to it
         }.toMap()
 
@@ -194,22 +190,10 @@ class QualityTemplateService @Autowired constructor(
             }
             TemplateData(
                 id = record.id,
-                name = I18nUtil.getCodeLanMessage(
-                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
-                    defaultMessage = record.name,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),
+                name = record.name,
                 type = record.type,
-                desc = I18nUtil.getCodeLanMessage(
-                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
-                    defaultMessage = record.desc,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),
-                stage = I18nUtil.getCodeLanMessage(
-                    messageCode = QUALITY_RULE_TEMPLATE_STAGE_KEY.format("${record.id}"),
-                    defaultMessage = record.stage,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),
+                desc = record.desc,
+                stage = record.stage,
                 elementType = record.controlPoint,
                 elementName = controlPointMap[record.controlPoint]?.name,
                 controlPointPostion = record.controlPointPosition,
