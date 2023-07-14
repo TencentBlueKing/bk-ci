@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.pojo.TaskReport
@@ -43,13 +44,17 @@ data class PipelineOutput(
     val createTime: Long
 ) {
     companion object {
-        fun convertFromFileInfo(fileInfo: FileInfo): PipelineOutput {
+        fun convertFromFileInfo(
+            fileInfo: FileInfo,
+            pathWithProjectRepo: Boolean = false,
+            projectId: String? = null
+        ): PipelineOutput {
             with(fileInfo) {
                 return PipelineOutput(
                     artifactoryType = artifactoryType,
                     name = name,
                     fullName = fullName,
-                    path = path,
+                    path = if (pathWithProjectRepo) "$projectId/${artifactoryType.toBkrepoName()}$path" else path,
                     fullPath = fullPath,
                     size = size,
                     folder = folder,
