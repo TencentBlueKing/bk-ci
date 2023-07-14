@@ -223,7 +223,6 @@ class StartControl @Autowired constructor(
         )
     }
 
-
     fun afterStartWorkspace(event: RemoteDevUpdateEvent) {
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
