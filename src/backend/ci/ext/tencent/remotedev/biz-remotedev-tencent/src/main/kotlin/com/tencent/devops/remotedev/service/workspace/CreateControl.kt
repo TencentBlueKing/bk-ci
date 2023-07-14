@@ -164,7 +164,7 @@ class CreateControl @Autowired constructor(
         if (event.status) {
             val pathWithNamespace = kotlin.runCatching {
                 GitUtils.getDomainAndRepoName(ws.url).second
-            }.getOrNull().toString()
+            }.getOrNull()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
@@ -183,9 +183,9 @@ class CreateControl @Autowired constructor(
                 arrayOf(
                     WorkspaceAction.CREATE to getOpHistoryCreate(
                         WorkspaceSystemType.valueOf(ws.systemType),
-                        pathWithNamespace,
-                        ws.branch.toString(),
-                        ws.name.toString()
+                        pathWithNamespace ?: "",
+                        ws.branch ?: "",
+                        ws.name ?: ""
                     ),
                     WorkspaceAction.START to workspaceCommon.getOpHistory(OpHistoryCopyWriting.FIRST_START)
                 ).forEach { (action, actionMessage) ->
