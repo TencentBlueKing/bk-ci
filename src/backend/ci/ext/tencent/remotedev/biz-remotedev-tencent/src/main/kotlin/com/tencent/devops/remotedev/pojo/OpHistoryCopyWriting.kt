@@ -12,6 +12,7 @@ enum class OpHistoryCopyWriting(
     val default: String
 ) {
     CREATE("create"), // 基于%s的%s分支创建了一个开发环境
+    CREATE_WINDOWS("createWindows"), // 创建了一个开桌面环境
     FIRST_START("firstStart"), // 激活了本环境
     NOT_FIRST_START("notFirstStart"), // 重新激活了本环境
     TIMEOUT_SLEEP("timeoutSleep"), // 此环境已处于"不活跃"状态30分钟，即将进入休眠

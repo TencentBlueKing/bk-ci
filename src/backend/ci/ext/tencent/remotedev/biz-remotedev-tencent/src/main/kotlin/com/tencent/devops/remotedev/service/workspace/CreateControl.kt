@@ -162,7 +162,9 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(event.workspaceName)
             )
         if (event.status) {
-            val pathWithNamespace = GitUtils.getDomainAndRepoName(ws.url).second
+            val pathWithNamespace = kotlin.runCatching {
+                GitUtils.getDomainAndRepoName(ws.url).second
+            }.getOrNull().toString()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
@@ -179,23 +181,22 @@ class CreateControl @Autowired constructor(
                     lastSleepTimeCost = 0
                 )
                 arrayOf(
-                    WorkspaceAction.CREATE to String.format(
-                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE),
+                    WorkspaceAction.CREATE to getOpHistoryCreate(
+                        WorkspaceSystemType.valueOf(ws.systemType),
                         pathWithNamespace,
-                        ws.branch,
-                        ws.name
+                        ws.branch.toString(),
+                        ws.name.toString()
                     ),
                     WorkspaceAction.START to workspaceCommon.getOpHistory(OpHistoryCopyWriting.FIRST_START)
-                )
-                    .forEach { (action, actionMessage) ->
-                        workspaceOpHistoryDao.createWorkspaceHistory(
-                            dslContext = transactionContext,
-                            workspaceName = event.workspaceName,
-                            operator = event.userId,
-                            action = action,
-                            actionMessage = actionMessage
-                        )
-                    }
+                ).forEach { (action, actionMessage) ->
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceName = event.workspaceName,
+                        operator = event.userId,
+                        action = action,
+                        actionMessage = actionMessage
+                    )
+                }
             }
 
             workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
@@ -240,6 +241,11 @@ class CreateControl @Autowired constructor(
             systemType = WorkspaceSystemType.valueOf(ws.systemType),
             workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType)
         )
+    }
+
+    private fun getOpHistoryCreate(type: WorkspaceSystemType, vararg args: Any) = when (type) {
+        WorkspaceSystemType.WINDOWS_GPU -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE_WINDOWS)
+        WorkspaceSystemType.LINUX -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE).format(args)
     }
 
     @Suppress("ComplexMethod")
