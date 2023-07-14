@@ -405,25 +405,32 @@ class RbacPermissionApplyService @Autowired constructor(
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
+        val finalResourceType =
+            if (action?.substringAfterLast("_") == AuthResourceType.PROJECT.value) {
+                AuthResourceType.PROJECT.value
+            } else {
+                resourceType
+            }
+        logger.info("buildRedirectGroupInfoResult|finalResourceType:$finalResourceType")
         if (action == null || iamRelatedResourceType == AuthResourceType.PROJECT.value) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectName, resourceType,
+                        authApplyRedirectUrl, projectId, projectName, finalResourceType,
                         resourceName, iamResourceCode, action ?: "", "", ""
                     )
                 )
             )
         } else {
             if (isEnablePermission) {
-                rbacCacheService.getGroupConfigAction(resourceType).forEach {
+                rbacCacheService.getGroupConfigAction(finalResourceType).forEach {
                     if (it.actions.contains(action)) {
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
                             projectInfo = projectInfo,
                             resourceName = resourceName,
                             action = action,
-                            resourceType = resourceType,
+                            resourceType = finalResourceType,
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
                             iamResourceCode = iamResourceCode
@@ -436,7 +443,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     projectInfo = projectInfo,
                     resourceName = resourceName,
                     action = action,
-                    resourceType = resourceType,
+                    resourceType = finalResourceType,
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode
@@ -473,7 +480,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     ),
                     groupName = I18nUtil.getCodeLanMessage(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
-                                AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                         defaultMessage = resourceGroup.groupName
                     )
                 )
