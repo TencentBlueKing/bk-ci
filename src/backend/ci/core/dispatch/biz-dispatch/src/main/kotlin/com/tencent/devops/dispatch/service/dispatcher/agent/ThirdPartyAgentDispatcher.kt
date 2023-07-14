@@ -515,6 +515,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         // docker和二进制任务区分开，所以单独设立一个
         val dockerRunningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
 
+        val pbAgents = sortAgent(event, dispatchType, preBuildAgents, runningBuildsMapper, dockerRunningBuildsMapper)
         /**
          * 1. 最高优先级的agent:
          *     a. 最近构建机中使用过这个构建机
@@ -538,15 +539,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
         )
-        if (startEmptyAgents(
-                event = event,
-                dispatchType = dispatchType,
-                agents = preBuildAgents,
-                hasTryAgents = hasTryAgents,
-                runningBuildsMapper = runningBuildsMapper,
-                dockerRunningBuildsMapper = dockerRunningBuildsMapper
-            )
-        ) {
+        if (startEmptyAgents(event, dispatchType, pbAgents, hasTryAgents)) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Get Lv.1")
             return true
         }
@@ -561,15 +554,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         /**
          * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
          */
-        if (startAvailableAgents(
-                event = event,
-                dispatchType = dispatchType,
-                agents = preBuildAgents,
-                hasTryAgents = hasTryAgents,
-                runningBuildsMapper = runningBuildsMapper,
-                dockerRunningBuildsMapper = dockerRunningBuildsMapper
-            )
-        ) {
+        if (startAvailableAgents(event, dispatchType, pbAgents, hasTryAgents)) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Get Lv.2")
             return true
         }
@@ -581,18 +566,11 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
         )
+        val allAgents = sortAgent(event, dispatchType, activeAgents, runningBuildsMapper, dockerRunningBuildsMapper)
         /**
          * 根据哪些agent没有任何任务
          */
-        if (startEmptyAgents(
-                event = event,
-                dispatchType = dispatchType,
-                agents = activeAgents,
-                hasTryAgents = hasTryAgents,
-                runningBuildsMapper = runningBuildsMapper,
-                dockerRunningBuildsMapper = dockerRunningBuildsMapper
-            )
-        ) {
+        if (startEmptyAgents(event, dispatchType, allAgents, hasTryAgents)) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|pickup Lv.3")
             return true
         }
@@ -607,14 +585,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         /**
          * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
          */
-        if (startAvailableAgents(
-                event = event,
-                dispatchType = dispatchType,
-                agents = activeAgents,
-                hasTryAgents = hasTryAgents,
-                runningBuildsMapper = runningBuildsMapper,
-                dockerRunningBuildsMapper = dockerRunningBuildsMapper
-            )
+        if (startAvailableAgents(event, dispatchType, allAgents, hasTryAgents)
         ) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Get Lv.4")
             return true
@@ -670,96 +641,35 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private fun startEmptyAgents(
         event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<ThirdPartyAgent>,
-        hasTryAgents: HashSet<String>,
-        runningBuildsMapper: HashMap<String, Int>,
-        dockerRunningBuildsMapper: HashMap<String, Int>
+        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
+        hasTryAgents: HashSet<String>
     ): Boolean {
-        return startAgentsForEnvBuild(
-            event = event,
-            dispatchType = dispatchType,
-            agents = agents,
-            hasTryAgents = hasTryAgents,
-            runningBuildsMapper = runningBuildsMapper,
-            dockerRunningBuildsMapper = dockerRunningBuildsMapper,
-            agentMatcher = object : AgentMatcher {
-                override fun match(
-                    runningCnt: Int,
-                    agent: ThirdPartyAgent,
-                    dockerBuilder: Boolean,
-                    dockerRunningCnt: Int
-                ): Boolean {
-                    if (dockerBuilder) {
-                        return dockerRunningCnt == 0
-                    }
-                    return runningCnt == 0
-                }
-            }
-        )
+        return startAgentsForEnvBuild(event, dispatchType, agents, hasTryAgents, idleAgentMatcher)
     }
 
     private fun startAvailableAgents(
         event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<ThirdPartyAgent>,
-        hasTryAgents: HashSet<String>,
-        runningBuildsMapper: HashMap<String, Int>,
-        dockerRunningBuildsMapper: HashMap<String, Int>
+        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
+        hasTryAgents: HashSet<String>
     ): Boolean {
-        return startAgentsForEnvBuild(
-            event = event,
-            dispatchType = dispatchType,
-            agents = agents,
-            hasTryAgents = hasTryAgents,
-            runningBuildsMapper = runningBuildsMapper,
-            dockerRunningBuildsMapper = dockerRunningBuildsMapper,
-            agentMatcher = object : AgentMatcher {
-                override fun match(
-                    runningCnt: Int,
-                    agent: ThirdPartyAgent,
-                    dockerBuilder: Boolean,
-                    dockerRunningCnt: Int
-                ): Boolean {
-                    if (dockerBuilder) {
-                        return agent.dockerParallelTaskCount != null &&
-                                agent.dockerParallelTaskCount!! > 0 &&
-                                agent.dockerParallelTaskCount!! > dockerRunningCnt
-                    }
-                    return agent.parallelTaskCount != null &&
-                            agent.parallelTaskCount!! > 0 &&
-                            agent.parallelTaskCount!! > runningCnt
-                }
-            }
-        )
+        return startAgentsForEnvBuild(event, dispatchType, agents, hasTryAgents, availableAgentMatcher)
     }
 
-    @Suppress("NestedBlockDepth")
     private fun startAgentsForEnvBuild(
         event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<ThirdPartyAgent>,
+        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
         hasTryAgents: HashSet<String>,
-        runningBuildsMapper: HashMap<String, Int>,
-        dockerRunningBuildsMapper: HashMap<String, Int>,
         agentMatcher: AgentMatcher
     ): Boolean {
         if (agents.isNotEmpty()) {
-            val sortQ = mutableListOf<Triple<ThirdPartyAgent, Int/*runningCnt*/, Int/*dockerRunningCnt*/>>()
+            // 当前正在运行任务少升序开始遍历(通常任务少是负载最低,但不完全是,负载取决于构建机上运行的任务大小,目前未有采集,先只按任务数来判断)
             agents.forEach {
-                if (hasTryAgents.contains(it.agentId)) {
+                if (hasTryAgents.contains(it.first.agentId)) {
                     return@forEach
                 }
-                val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
-                val dockerRunningCnt = if (dispatchType.dockerInfo == null) {
-                    0
-                } else {
-                    getDockerRunningCnt(it.agentId, dockerRunningBuildsMapper)
-                }
-                sortQ.add(Triple(it, runningCnt, dockerRunningCnt))
-            }
 
-            // 当前正在运行任务少升序开始遍历(通常任务少是负载最低,但不完全是,负载取决于构建机上运行的任务大小,目前未有采集,先只按任务数来判断)
-            sortQ.sortedBy { it.second + it.third }.forEach {
                 if (agentMatcher.match(
                         agent = it.first,
                         runningCnt = it.second,
@@ -767,7 +677,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         dockerRunningCnt = it.third
                     )
                 ) {
-                    val agent = it .first
+                    val agent = it.first
                     if (startEnvAgentBuild(event, agent, dispatchType, hasTryAgents)) {
                         logger.info(
                             "[${event.projectId}|$[${event.pipelineId}|${event.buildId}|${agent.agentId}] " +
@@ -816,7 +726,62 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         fun match(runningCnt: Int, agent: ThirdPartyAgent, dockerBuilder: Boolean, dockerRunningCnt: Int): Boolean
     }
 
+    class IdleAgent : AgentMatcher {
+        override fun match(
+            runningCnt: Int,
+            agent: ThirdPartyAgent,
+            dockerBuilder: Boolean,
+            dockerRunningCnt: Int
+        ): Boolean = if (dockerBuilder) dockerRunningCnt == 0 else runningCnt == 0
+    }
+
+    class AvailableAgent : AgentMatcher {
+        override fun match(
+            runningCnt: Int,
+            agent: ThirdPartyAgent,
+            dockerBuilder: Boolean,
+            dockerRunningCnt: Int
+        ): Boolean {
+            return if (dockerBuilder) {
+                agent.dockerParallelTaskCount != null &&
+                        agent.dockerParallelTaskCount!! > 0 &&
+                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+            } else {
+                agent.parallelTaskCount != null &&
+                        agent.parallelTaskCount!! > 0 &&
+                        agent.parallelTaskCount!! > runningCnt
+            }
+        }
+    }
+
+    private fun sortAgent(
+        event: PipelineAgentStartupEvent,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: Collection<ThirdPartyAgent>,
+        runningBuildsMapper: HashMap<String, Int>,
+        dockerRunningBuildsMapper: HashMap<String, Int>
+    ): MutableList<Triple<ThirdPartyAgent, Int/*runningCnt*/, Int/*dockerRunningCnt*/>> {
+        val sortQ = mutableListOf<Triple<ThirdPartyAgent, Int/*runningCnt*/, Int/*dockerRunningCnt*/>>()
+        agents.forEach {
+            val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
+            val dockerRunningCnt = if (dispatchType.dockerInfo == null) {
+                0
+            } else {
+                getDockerRunningCnt(it.agentId, dockerRunningBuildsMapper)
+            }
+            sortQ.add(Triple(it, runningCnt, dockerRunningCnt))
+            logDebug(
+                buildLogPrinter, event,
+                message = "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
+            )
+        }
+        sortQ.sortBy { it.second + it.third }
+        return sortQ
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentDispatcher::class.java)
+        private val availableAgentMatcher = AvailableAgent()
+        private val idleAgentMatcher = IdleAgent()
     }
 }
