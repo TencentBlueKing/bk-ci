@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.devcloud.pojo
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 data class Pool(
     val container: String?,

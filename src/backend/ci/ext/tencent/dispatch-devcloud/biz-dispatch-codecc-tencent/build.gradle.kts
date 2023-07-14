@@ -25,29 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.client
+dependencies {
+    api(project(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent"))
 
-import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.pipeline.type.DispatchType
+    api(project(":core:common:common-dispatch-sdk"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-db-base"))
+    api(project(":core:log:api-log"))
 
-data class DispatchMessage(
-    val id: String,
-    val secretKey: String,
-    val gateway: String,
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val dispatchMessage: String,
-    val userId: String,
-    val vmSeqId: String,
-    val channelCode: String,
-    val vmNames: String,
-    val atoms: Map<String, String> = mapOf(),
-    val zone: Zone?,
-    val containerHashId: String?,
-    val executeCount: Int?,
-    val containerId: String,
-    val containerType: String,
-    val stageId: String,
-    val dispatchType: DispatchType?
-)
+    api(project(":ext:tencent:common:common-devcloud"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
+}
