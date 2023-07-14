@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import org.slf4j.LoggerFactory
@@ -58,8 +59,8 @@ object I18nUtil {
      * @return 语言信息
      */
     private fun getUserLocaleLanguageFromCache(userId: String): String? {
-        // 先从本地缓存中获取用户语言信息
-        var language = BkI18nLanguageCacheUtil.getIfPresent(userId)
+        // 先从Cookie获取,没有再从本地缓存中获取用户设置的语言信息
+        var language = getCookieLocale() ?: BkI18nLanguageCacheUtil.getIfPresent(userId)
         if (language.isNullOrBlank()) {
             // 本地缓存中获取不到语言信息再从redis中获取
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
@@ -103,6 +104,33 @@ object I18nUtil {
             null // 不是接口请求来源则返回null
         }
     }
+
+    /**
+     * 获取Http Cookie中用户携带的语言
+     * @return 语言,如果没有,则为空
+     */
+    private fun getCookieLocale(): String? {
+        // 从request请求中获取本地语言信息
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return attributes?.let { bkLanguageTransMap[CookieUtil.getCookieValue(attributes.request, BK_LANGUAGE)] }
+    }
+
+    // 蓝鲸专定义的语言头, 有差异,要定制转换
+    private const val BK_LANGUAGE = "blueking_language"
+    private val bkLanguageTransMap = mapOf(
+        "zh-cn" to "zh_CN",
+        "zh-CN" to "zh_CN",
+        "en" to "en_US",
+        "en-US" to "en_US",
+        "zh-HK" to "zh_HK",
+        "zh-hk" to "zh_HK",
+        "zh-tw" to "zh_TW",
+        "zh-TW" to "zh_TW",
+        "zh-mo" to "zh_MO",
+        "zh-MO" to "zh_MO",
+        "zh-sg" to "zh_SG",
+        "zh-SG" to "zh_SG"
+    )
 
     /**
      * 获取接口请求用户信息
