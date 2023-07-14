@@ -36,7 +36,7 @@ class ThirdPartyAgentEnvLock(
     redisOperation: RedisOperation,
     projectId: String,
     envId: String
-) {
+): AutoCloseable {
 
     private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_ENV_${projectId}_$envId", 60L)
 
@@ -54,4 +54,7 @@ class ThirdPartyAgentEnvLock(
     fun lock() = redisLock.lock()
 
     fun unlock() = redisLock.unlock()
+    override fun close() {
+        unlock()
+    }
 }
