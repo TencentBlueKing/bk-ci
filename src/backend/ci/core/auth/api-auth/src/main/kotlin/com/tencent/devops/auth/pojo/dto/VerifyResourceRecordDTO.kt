@@ -40,5 +40,5 @@ data class VerifyResourceRecordDTO(
     @ApiModelProperty("资源Code")
     val resourceCode: String,
     @ApiModelProperty("用户ID")
-    val userId: String,
+    val userId: String
 )

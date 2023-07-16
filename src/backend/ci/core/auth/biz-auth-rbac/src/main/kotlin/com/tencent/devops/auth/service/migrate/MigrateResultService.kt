@@ -225,7 +225,7 @@ class MigrateResultService constructor(
             client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
-                action = actions.map { it.substringAfterLast("_")},
+                action = actions.map { it.substringAfterLast("_") },
                 projectCode = projectCode,
                 resourceCode = resourceCode,
                 resourceType = resourceType
