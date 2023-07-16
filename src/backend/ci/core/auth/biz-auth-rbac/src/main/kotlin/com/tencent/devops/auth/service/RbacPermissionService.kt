@@ -503,7 +503,7 @@ class RbacPermissionService constructor(
             AuthResourceType.PROJECT.value ->
                 projectResourceInstance
             // 流水线鉴权,需要添加关联的流水线组
-            AuthResourceType.PIPELINE_GROUP.value -> {
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
                 val parents = mutableListOf<AuthResourceInstance>()
                 parents.add(projectResourceInstance)
                 client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
