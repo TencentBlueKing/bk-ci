@@ -45,6 +45,7 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.concurrent.CompletableFuture
@@ -181,15 +182,12 @@ class MigrateResultService constructor(
         userId: String
     ) {
         // 校验资源是否存在
-        val resourceExists = if (resourceType == AuthResourceType.PROJECT.value) {
-            true
-        } else {
-            migrateResourceService.fetchInstanceInfo(
-                resourceType = resourceType,
-                projectCode = projectCode,
-                ids = listOf(resourceCode)
-            )?.data?.isNotEmpty() ?: false
-        }
+        val resourceExists = checkResourceExists(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            rbacResourceCode = rbacResourceCode
+        )
         if (!resourceExists) {
             logger.info(
                 "resource does not exist or has been deleted, skip comparison|$projectCode|$resourceCode|$userId"
@@ -238,6 +236,32 @@ class MigrateResultService constructor(
                 defaultMessage = "Failed to compare policy:permission not migrate" +
                         "$userId|$projectCode|$resourceType|$resourceCode|$action"
             )
+        }
+    }
+
+    private fun checkResourceExists(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        rbacResourceCode: String
+    ): Boolean {
+        // 校验资源是否存在
+        return when (resourceType) {
+            // 项目在迁移时已经校验是否存在
+            AuthResourceType.PROJECT.value -> true
+            // 记录表中记录的流水线ID和项目ID的关联关系可能有错误,回调接口查询资源信息没有传项目ID,导致流水线信息错误
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
+                client.get(ServicePipelineResource::class)
+                    .getPipelineId(projectCode = projectCode, pipelineId = rbacResourceCode).data != null
+            }
+
+            else -> {
+                migrateResourceService.fetchInstanceInfo(
+                    resourceType = resourceType,
+                    projectCode = projectCode,
+                    ids = listOf(resourceCode)
+                )?.data?.isNotEmpty() ?: false
+            }
         }
     }
 }
