@@ -24,7 +24,7 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
