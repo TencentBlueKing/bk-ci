@@ -233,7 +233,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     }
 
     fun getContainerI18nName(type: String, os: String): String? {
-        return when(type) {
+        return when (type) {
             "normal" -> {
                 I18nUtil.getCodeLanMessage(BK_NORMAL)
             }
