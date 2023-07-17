@@ -704,12 +704,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = qualityDataMap["stage"] as String
-                val stage = when (stageCode) {
-                    "DEVELOP" -> I18nUtil.getCodeLanMessage(DEVELOP)
-                    "TEST" -> I18nUtil.getCodeLanMessage(TEST)
-                    "DEPLOY" -> I18nUtil.getCodeLanMessage(DEPLOY)
-                    "SECURITY" -> I18nUtil.getCodeLanMessage(SECURITY)
-                    else -> throw ErrorCodeException(
+                if (stageCode !in listOf("DEVELOP", "TEST", "DEPLOY", "SECURITY")) {
+                    throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
                     )
@@ -730,7 +726,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
-                    stage = stage,
+                    stage = stageCode,
                     metadataResultMap = metadataResultMap,
                     indicators = indicators
                 )
@@ -741,7 +737,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
-                    stage = stage,
+                    stage = stageCode,
                     projectId = projectCode
                 )
 
