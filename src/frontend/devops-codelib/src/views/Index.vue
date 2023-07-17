@@ -1,6 +1,6 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="hasCodelibs">
+        <template v-if="hasCodelibs || isSearch || isLoading">
             <link-code-lib
                 v-perm="{
                     hasPermission: codelibs.hasCreatePermission,
@@ -18,16 +18,23 @@
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button> -->
-            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+            <bk-input
+                :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
                 right-icon="icon-search"
                 v-model="aliasName"
                 @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
-                @change="clearAliasName"
+                @clear="clearAliasName"
             >
             </bk-input>
-            <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
+            <code-lib-table
+                v-bind="codelibs"
+                :switch-page="switchPage"
+                :is-search="isSearch"
+                @handleSortChange="handleSortChange"
+            >
+            </code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <bk-button v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
@@ -43,18 +50,18 @@
 </template>
 
 <script>
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
     import {
         codelibTypes,
         getCodelibConfig,
         isGit,
-        isGithub,
         isGitLab,
-        isTGit,
-        isP4
+        isGithub,
+        isP4,
+        isTGit
     } from '../config/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
@@ -78,7 +85,8 @@
                 aliasName: '',
                 projectList: [],
                 sortBy: '',
-                sortType: ''
+                sortType: '',
+                isSearch: false
             }
         },
 
@@ -132,7 +140,7 @@
             ]),
 
             clearAliasName () {
-                if (this.aliasName === '') this.refreshCodelibList()
+                this.refreshCodelibList()
             },
 
             switchPage (page, pageSize) {
@@ -149,6 +157,7 @@
                 sortType = this.sortType
             ) {
                 this.isLoading = true
+                this.isSearch = !!aliasName
                 this.requestList({
                     projectId,
                     aliasName,
