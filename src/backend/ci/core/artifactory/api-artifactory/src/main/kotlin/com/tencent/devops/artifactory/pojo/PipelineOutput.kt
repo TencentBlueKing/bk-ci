@@ -1,6 +1,5 @@
 package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.pojo.TaskReport
