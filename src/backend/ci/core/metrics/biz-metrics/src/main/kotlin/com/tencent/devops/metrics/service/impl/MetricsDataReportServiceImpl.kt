@@ -39,6 +39,7 @@ import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomMonitorDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
@@ -481,6 +482,24 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
+        metricsDataReportDao.saveAtomMonitorDailyData(
+            dslContext = dslContext,
+            saveAtomMonitorDailyPO = SaveAtomMonitorDailyPO(
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("ATOM_MONITOR_DATA_DAILY").data ?: 0,
+                atomCode = taskMetricsData.atomCode,
+                executeCount = 1,
+                errorType = taskMetricsData.errorType ?: -1,
+                statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                    dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                    formatStr = YYYY_MM_DD
+                ),
+                creator = startUser,
+                modifier = startUser,
+                createTime = currentTime,
+                updateTime = currentTime
+            )
+        )
         if (taskSuccessFlag) return
         val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 40)
         try {
