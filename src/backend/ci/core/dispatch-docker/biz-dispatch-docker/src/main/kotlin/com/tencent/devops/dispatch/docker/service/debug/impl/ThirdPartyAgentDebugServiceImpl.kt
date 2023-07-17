@@ -19,6 +19,7 @@ class ThirdPartyAgentDebugServiceImpl @Autowired constructor(
         buildId: String?,
         vmSeqId: String
     ): String {
+
         var url = client.get(ServiceAgentResource::class).getDockerDebugUrl(
             userId = userId,
             projectId = projectId,

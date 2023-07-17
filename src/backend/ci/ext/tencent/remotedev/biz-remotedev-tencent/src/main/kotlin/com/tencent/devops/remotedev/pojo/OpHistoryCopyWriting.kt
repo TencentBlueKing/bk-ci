@@ -12,11 +12,12 @@ enum class OpHistoryCopyWriting(
     val default: String
 ) {
     CREATE("create"), // 基于%s的%s分支创建了一个开发环境
+    CREATE_WINDOWS("createWindows"), // 创建了一个云桌面环境
     FIRST_START("firstStart"), // 激活了本环境
     NOT_FIRST_START("notFirstStart"), // 重新激活了本环境
     TIMEOUT_SLEEP("timeoutSleep"), // 此环境已处于"不活跃"状态30分钟，即将进入休眠
     TIMEOUT_STOP("timeoutStop"), // 此环境已处于"不活跃"状态14天，即将进行销毁
-    EXPERIENCE_TIMEOUT_SLEEP("experienceTimeoutSleep"), // 你的云桌面体验时长已耗尽，此环境即将进入休眠
+    EXPERIENCE_TIMEOUT_SLEEP("experienceTimeoutSleep"), // 云桌面体验时长已用完，此环境即将进入休眠
     MANUAL_STOP("manualStop"), // 主动关闭了工作空间
     DELETE("delete"), // 删除了本环境
     SHARE("share"), // 给%s共享了此环境

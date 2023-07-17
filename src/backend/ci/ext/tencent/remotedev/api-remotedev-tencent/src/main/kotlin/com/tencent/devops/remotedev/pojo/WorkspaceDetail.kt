@@ -55,7 +55,7 @@ data class WorkspaceDetail(
     @ApiModelProperty("存储空间大小（GB）")
     val disk: Int,
     @ApiModelProperty("yaml 配置内容")
-    val yaml: String,
+    val yaml: String?,
     @ApiModelProperty("操作系统类型")
     val systemType: WorkspaceSystemType,
     @ApiModelProperty("挂载平台类型")

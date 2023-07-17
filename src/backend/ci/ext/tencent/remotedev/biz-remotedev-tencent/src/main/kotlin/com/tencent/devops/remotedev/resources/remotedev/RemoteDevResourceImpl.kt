@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.RsaUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,8 @@ class RemoteDevResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val redisHeartBeat: RedisHeartBeat,
     private val workspaceService: WorkspaceService,
-    private val workspaceImageService: WorkspaceImageService
+    private val workspaceImageService: WorkspaceImageService,
+    private val workspaceCommon: WorkspaceCommon
 ) : RemoteDevResource {
 
     @Value("\${remoteDev.callBackSignSecret:}")
@@ -91,7 +93,7 @@ class RemoteDevResourceImpl @Autowired constructor(
         val ws = workspaceService.getWorkspaceDetail(
             userId = Constansts.ADMIN_NAME, workspaceName = workspaceName, checkPermission = false
         ) ?: return Result(false)
-        workspaceService.dispatchWebsocketPushEvent(
+        workspaceCommon.dispatchWebsocketPushEvent(
             userId = Constansts.ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,

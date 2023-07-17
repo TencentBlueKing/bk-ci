@@ -33,6 +33,7 @@ enum class EnvStatusEnum {
     succeeded,
     failed,
     stopped,
+    readyToRun,
     unknow,
     deleted
 }
