@@ -56,7 +56,7 @@ class RbacArtPipelineServiceImpl(
             userId = user,
             projectId = projectId,
             page = 0,
-            pageSize = 1000,
+            pageSize = 5000,
             channelCode = ChannelCode.BS,
             checkPermission = false
         ).data?.records
