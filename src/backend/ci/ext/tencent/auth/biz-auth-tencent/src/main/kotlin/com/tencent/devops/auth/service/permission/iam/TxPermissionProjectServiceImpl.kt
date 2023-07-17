@@ -73,8 +73,11 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String, String>()
 
-    override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
-        val groupInfo = groupService.getGroupByCode(projectCode, group.value) ?: return emptyList()
+    override fun getUserByExt(
+        group: String,
+        projectCode: String
+    ): List<String> {
+        val groupInfo = groupService.getGroupByCode(projectCode, group) ?: return emptyList()
         val extProjectId = getExtProjectId(projectCode)
         val groupMemberInfos = permissionRoleMemberService.getRoleMember(
             projectId = extProjectId,
