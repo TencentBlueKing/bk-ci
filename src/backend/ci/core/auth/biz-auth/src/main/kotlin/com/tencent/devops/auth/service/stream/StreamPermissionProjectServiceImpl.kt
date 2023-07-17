@@ -31,17 +31,27 @@ import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import org.springframework.beans.factory.annotation.Autowired
 
 class StreamPermissionProjectServiceImpl @Autowired constructor(
     private val streamPermissionService: StreamPermissionServiceImpl
 ) : PermissionProjectService {
-    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+    override fun getProjectUsers(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: String?
+    ): List<String> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }
 
-    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<BkAuthGroupAndUserList> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }

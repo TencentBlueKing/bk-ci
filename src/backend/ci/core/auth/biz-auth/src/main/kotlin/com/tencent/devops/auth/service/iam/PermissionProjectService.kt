@@ -33,9 +33,21 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
 interface PermissionProjectService {
 
-    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
+    /**
+     * 获取特定资源下的用户组用户
+     * */
+    fun getProjectUsers(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: String?
+    ): List<String>
 
-    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
+    fun getProjectGroupAndUserList(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<BkAuthGroupAndUserList>
 
     fun getUserProjects(userId: String): List<String>
 

@@ -18,15 +18,16 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
@@ -46,8 +47,17 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String, String>()
 
-    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        val allGroupAndUser = getProjectGroupAndUserList(projectCode)
+    override fun getProjectUsers(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: String?
+    ): List<String> {
+        val allGroupAndUser = getProjectGroupAndUserList(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
         return if (group == null) {
             val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
@@ -65,7 +75,11 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return emptyList()
     }
 
-    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<BkAuthGroupAndUserList> {
         // 1. 转换projectCode为iam侧分级管理员Id
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组
@@ -212,7 +226,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return iamProjectId.toInt()
     }
 
-    abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
+    abstract fun getUserByExt(group: String, projectCode: String): List<String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)

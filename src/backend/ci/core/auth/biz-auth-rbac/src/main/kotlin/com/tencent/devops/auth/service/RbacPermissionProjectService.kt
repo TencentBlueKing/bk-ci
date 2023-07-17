@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -62,80 +63,112 @@ class RbacPermissionProjectService(
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
     }
 
-    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+    override fun getProjectUsers(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: String?
+    ): List<String> {
         return when (group) {
             // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员
-            BkAuthGroup.CIADMIN, BkAuthGroup.CI_MANAGER -> emptyList()
-            // 获取项目下组全部成员
+            BkAuthGroup.CIADMIN.value, BkAuthGroup.CI_MANAGER.value -> emptyList()
+            // 获取特定资源下全部成员
             null -> {
-                getProjectGroupAndUserList(projectCode).flatMap { it.userIdList }.distinct()
+                getProjectGroupAndUserList(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                ).flatMap { it.userIdList }.distinct()
             }
             else -> {
                 val dbGroupInfo = authResourceGroupDao.get(
                     dslContext = dslContext,
                     projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    groupCode = group.value
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    groupCode = group
                 ) ?: return emptyList()
-                val groupInfo = getProjectGroupAndUserList(projectCode)
-                    .find { it.roleId == dbGroupInfo.relationId.toInt() }
+                val groupInfo = getProjectGroupAndUserList(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                ).find { it.roleId == dbGroupInfo.relationId.toInt() }
                 groupInfo?.userIdList ?: emptyList()
             }
         }
     }
 
-    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
-        // 1、获取分级管理员id
-        val gradeManagerId = authResourceService.get(
+    override fun getProjectGroupAndUserList(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<BkAuthGroupAndUserList> {
+        // 1、获取管理员id
+        val managerId = authResourceService.get(
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
+            resourceType = resourceType,
+            resourceCode = resourceCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
+        val groupInfoList = getGroupInfoList(
+            resourceType = resourceType,
+            managerId = managerId
+        )
+        logger.info(
+            "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
+                " gradeManagerId = $managerId | groupInfoList: $groupInfoList"
+        )
+        // 3、获取组成员
+        return groupInfoList.map { getUsersUnderGroup(groupInfo = it) }
+    }
+
+    private fun getGroupInfoList(
+        resourceType: String,
+        managerId: String
+    ): List<V2ManagerRoleGroupInfo> {
         val v2PageInfoDTO = V2PageInfoDTO().apply {
             page = 1
             pageSize = 1000
         }
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-        val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId,
-            searchGroupDTO,
-            v2PageInfoDTO
-        ).results
-        logger.info(
-            "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
-                " gradeManagerId = $gradeManagerId | groupInfoList: $groupInfoList"
-        )
-        val result = mutableListOf<BkAuthGroupAndUserList>()
-        groupInfoList.forEach {
-            // 3、获取组成员
-            val pageInfoDTO = PageInfoDTO().apply {
-                limit = 1000
-                offset = 0
-            }
-            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
-            logger.info(
-                "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
-                    "| groupMemberInfoList: $groupMemberInfoList"
-            )
-            val members = mutableListOf<String>()
-            groupMemberInfoList.forEach { memberInfo ->
-                // todo 暂时不返回部门的用户
-                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
-                    members.add(memberInfo.id)
-                }
-            }
-            val groupAndUser = BkAuthGroupAndUserList(
-                displayName = it.name,
-                roleId = it.id,
-                roleName = it.name,
-                userIdList = members.toSet().toList(),
-                type = ""
-            )
-            result.add(groupAndUser)
+        return if (resourceType == AuthResourceType.PROJECT.value) {
+            val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
+            iamV2ManagerService.getGradeManagerRoleGroupV2(
+                managerId,
+                searchGroupDTO,
+                v2PageInfoDTO
+            ).results
+        } else {
+            iamV2ManagerService.getSubsetManagerRoleGroup(
+                managerId.toInt(),
+                v2PageInfoDTO
+            ).results
         }
-        return result
+    }
+
+    private fun getUsersUnderGroup(groupInfo: V2ManagerRoleGroupInfo): BkAuthGroupAndUserList {
+        val pageInfoDTO = PageInfoDTO().apply {
+            limit = 1000
+            offset = 0
+        }
+        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
+        logger.info(
+            "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${groupInfo.id} " +
+                "| groupMemberInfoList: $groupMemberInfoList"
+        )
+        val members = mutableListOf<String>()
+        groupMemberInfoList.forEach { memberInfo ->
+            // todo 暂时不返回部门的用户
+            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+                members.add(memberInfo.id)
+            }
+        }
+        return BkAuthGroupAndUserList(
+            displayName = groupInfo.name,
+            roleId = groupInfo.id,
+            roleName = groupInfo.name,
+            userIdList = members.toSet().toList(),
+            type = ""
+        )
     }
 
     override fun getUserProjects(userId: String): List<String> {

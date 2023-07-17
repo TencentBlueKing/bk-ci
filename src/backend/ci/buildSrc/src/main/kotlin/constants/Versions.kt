@@ -47,4 +47,7 @@ object Versions {
     const val Okhttp = "4.9.0"
     const val jgit = "5.13.1.202206130422-r"
     const val iam = "1.0.29-SNAPSHOT"
+    const val CloudSecurity = "2.1.0.RELEASE"
+    const val oauth = "2.3.5.RELEASE"
+    const val SecurityJwt = "1.0.10.RELEASE"
 }

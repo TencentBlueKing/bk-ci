@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -69,6 +70,27 @@ interface ServiceProjectAuthResource {
         @QueryParam("group")
         @ApiParam("用户组类型", required = false)
         group: BkAuthGroup? = null
+    ): Result<List<String>>
+
+    @GET
+    @Path("/{projectCode}/users/resource/byGroup")
+    @ApiOperation("获取特定资源用户组成员")
+    fun getResourceUsers(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型", required = false)
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源code", required = false)
+        resourceCode: String,
+        @QueryParam("group")
+        @ApiParam("资源用户组类型", required = false)
+        group: BkAuthResourceGroup? = null
     ): Result<List<String>>
 
     @GET

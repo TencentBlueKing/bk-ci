@@ -30,9 +30,11 @@ package com.tencent.devops.auth.resources.service
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,7 +51,26 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectUsers(
                 projectCode = projectCode,
-                group = group
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                group = group?.value
+            )
+        )
+    }
+
+    override fun getResourceUsers(
+        token: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: BkAuthResourceGroup?
+    ): Result<List<String>> {
+        return Result(
+            permissionProjectService.getProjectUsers(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                group = group?.value
             )
         )
     }
@@ -60,7 +81,9 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
     ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
             permissionProjectService.getProjectGroupAndUserList(
-                projectCode = projectCode
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
             )
         )
     }
