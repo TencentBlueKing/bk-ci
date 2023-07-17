@@ -13,6 +13,9 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.SleepControl
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +27,10 @@ class WorkspaceCheckJob @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val redisOperation: RedisOperation,
     private val workspaceService: WorkspaceService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val sleepControl: SleepControl,
+    private val workspaceCommon: WorkspaceCommon,
+    private val deleteControl: DeleteControl
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
@@ -60,7 +66,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         "workspace $workspaceName usage time exceeds limit, ready to sleep"
                     )
                     kotlin.runCatching {
-                        workspaceService.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.EXPERIENCE_TIMEOUT_SLEEP)
+                        sleepControl.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.EXPERIENCE_TIMEOUT_SLEEP)
                     }.onFailure {
                         logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
                     }
@@ -92,7 +98,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         } ready to sleep"
                     )
                     kotlin.runCatching {
-                        workspaceService.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                        sleepControl.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP)
                     }.onFailure {
                         logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
@@ -106,7 +112,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         }
                     }
                 }
-                workspaceService.fixUnexpectedWorkspace()
+                workspaceCommon.fixUnexpectedWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Stop inactive workspace failed", e)
@@ -126,7 +132,7 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Clear idle workspace get lock.")
-                workspaceService.deleteInactivityWorkspace()
+                deleteControl.deleteInactivityWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Clear idle workspace failed", e)

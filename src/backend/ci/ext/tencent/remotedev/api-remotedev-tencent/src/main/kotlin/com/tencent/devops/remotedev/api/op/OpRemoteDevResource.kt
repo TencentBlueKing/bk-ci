@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -222,5 +223,50 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取windows硬件配置")
+    @GET
+    @Path("/windowsResource/list")
+    fun getWindowsResourceList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceConfig>>
+    @ApiOperation("新增windows硬件配置")
+    @POST
+    @Path("/windowsResource/add")
+    fun addWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceConfig
+    ): Result<Boolean>
+
+    @ApiOperation("更新windows硬件配置")
+    @PUT
+    @Path("/windowsResource/update")
+    fun updateWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceConfig
+    ): Result<Boolean>
+
+    @ApiOperation("删除windows硬件配置")
+    @DELETE
+    @Path("/windowsResource/delete")
+    fun deleteWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        @QueryParam("id")
+        id: Long
     ): Result<Boolean>
 }
