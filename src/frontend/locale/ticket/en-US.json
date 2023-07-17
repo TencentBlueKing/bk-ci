@@ -86,7 +86,7 @@
         "expireDate": "Expire Date",
         "emptyCert": "Empty Certificate",
         "namePlaceholer": "Please enter certificate name",
-        "validateName": "Certificate name cannot be empty. Only English characters, numbers, underscores, and English periods are supported",
+        "validateName": "Please enter certificate name. Only English characters, numbers, underscores, and English periods are supported, No more than 30 characters.",
         "emptyCertTips": "You can create a new iOS or Android certificate",
         "iosCorporatesignCert": "IOS corporate signature certificate",
         "getCertError": "Error in getting certificate list",

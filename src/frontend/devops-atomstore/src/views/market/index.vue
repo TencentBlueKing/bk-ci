@@ -383,6 +383,7 @@
 
     .store-main {
         overflow-y: scroll;
+        height: calc(100% - 52px);
     }
 
     .home-main {
