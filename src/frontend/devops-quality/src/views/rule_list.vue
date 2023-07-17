@@ -12,7 +12,7 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <span
+                        <button
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -21,12 +21,13 @@
                                     action: RULE_RESOURCE_ACTION.CREATE
                                 }
                             }"
+                            key="createBtn"
+                            class="bk-button bk-primary"
+                            @click="toCreateRule"
                         >
-                            <button class="bk-button bk-primary" @click="toCreateRule">
-                                <i class="devops-icon icon-plus"></i>
-                                <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
-                            </button>
-                        </span>
+                            <i class="devops-icon icon-plus"></i>
+                            <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
+                        </button>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table

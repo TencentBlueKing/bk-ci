@@ -67,7 +67,7 @@
                                 @enter="submitRename(item)"
                                 v-model.trim="newViewName"
                             />
-                            <span v-else class="pipeline-group-item-name">
+                            <span v-else class="pipeline-group-item-name" v-bk-overflow-tips>
                                 {{item.name}}
                             </span>
                             <span
