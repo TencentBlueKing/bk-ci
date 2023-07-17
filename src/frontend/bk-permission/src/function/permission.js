@@ -207,7 +207,6 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
         ],
       ),
       extCls: 'permission-dialog',
-      width: 640,
       showFooter: false,
     });
   };
@@ -273,6 +272,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
         .map(column => h(
           ui.TableColumn,
           {
+            showOverflowTooltip: true,
             label: column.label,
             prop: column.prop,
           },
@@ -411,7 +411,6 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
         ],
       ),
       extCls: 'permission-dialog-v3',
-      width: 640,
       dialogType: 'show',
     });
   };

@@ -325,12 +325,7 @@ export default {
   },
   methods: {
     async initApplyQuery() {
-      let cacheQuery = JSON.parse(sessionStorage.getItem('group-apply-query'));
-      if (!cacheQuery || (cacheQuery && this.$route.query.project_code !== cacheQuery?.project_code && !cacheQuery.iamResourceCode)) {
-        sessionStorage.setItem('group-apply-query', JSON.stringify(this.$route.query))
-        cacheQuery = this.$route.query
-      }
-      const query = cacheQuery || this.$route.query
+      const query = this.$route.query
       const { resourceType, action, iamResourceCode, groupId, groupName, resourceName } = query;
       if (resourceType && iamResourceCode && action) {
         this.resourceType = resourceType;

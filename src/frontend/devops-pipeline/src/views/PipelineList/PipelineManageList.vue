@@ -36,14 +36,13 @@
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
-                        
                         <bk-button
                             v-perm="{
                                 hasPermission: !canNotMangeProjectedGroup,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: 'project',
                                     resourceCode: projectId,
                                     action: PROJECT_RESOURCE_ACTION.MANAGE
                                 }
