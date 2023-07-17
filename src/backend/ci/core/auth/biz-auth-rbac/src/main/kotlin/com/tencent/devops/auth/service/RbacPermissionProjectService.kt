@@ -61,6 +61,7 @@ class RbacPermissionProjectService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
+    private val deptService: DeptService,
     private val permissionGradeManagerService: PermissionGradeManagerService
 ) : PermissionProjectService {
 
@@ -69,12 +70,6 @@ class RbacPermissionProjectService(
         private const val expiredAt = 365L
         private const val USER_TYPE = "user"
     }
-
-    /*获取项目对应的ci管理员id*/
-    private val projectCode2CiManagerGroupId = Caffeine.newBuilder()
-        .maximumSize(500)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String/*projectCode*/, String/*CiManagerGroupId*/>()
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         return when (group) {
@@ -223,6 +218,16 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
+        members.forEach {
+            deptService.getUserInfo(
+                userId = "admin",
+                name = it
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                params = arrayOf(it),
+                defaultMessage = "user $it not exist"
+            )
+        }
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
             authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
