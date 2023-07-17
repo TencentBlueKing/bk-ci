@@ -201,6 +201,16 @@ spec:
                       "nodes": {
                           "{{ .Values.proxy.registryFacadeName }}.{{ .Release.Namespace }}.svc.cluster.local:9000": 1
                       },
+                      "timeout": {
+                          "send": 300,
+                          "connect": 300,
+                          "read": 300
+                      },
+                      "keepalive_pool": {
+                          "size": 320,
+                          "idle_timeout": 60,
+                          "requests": 1000
+                      },                      
                       "scheme": "https",
                       "type": "roundrobin"
                   }
