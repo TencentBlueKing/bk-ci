@@ -238,7 +238,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 I18nUtil.getCodeLanMessage(BK_NORMAL)
             }
             "vmBuild" -> {
-                I18nUtil.getCodeLanMessage(BK_BUILD_ENV_TYPE) + os
+                I18nUtil.getCodeLanMessage(BK_BUILD_ENV_TYPE + os)
             }
             "trigger" -> {
                 I18nUtil.getCodeLanMessage(BK_TRIGGER)
