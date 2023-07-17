@@ -29,15 +29,14 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -46,7 +45,8 @@ class RbacProjectExtPermissionServiceImpl constructor(
     val tokenService: ClientTokenService,
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
-    val tofService: TOFService
+    val authProjectApi: AuthProjectApi,
+    val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectExtPermissionService {
     companion object {
         val logger = LoggerFactory.getLogger(RbacProjectExtPermissionServiceImpl::class.java)
@@ -74,12 +74,12 @@ class RbacProjectExtPermissionServiceImpl constructor(
                 errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
             )
         if (checkManager) {
-            val isProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-                token = tokenService.getSystemToken(null)!!,
+            val isProjectManager = authProjectApi.checkProjectManager(
                 userId = createUser,
+                serviceCode = projectAuthServiceCode,
                 projectCode = projectCode
-            ).data
-            if (!isProjectManager!!) {
+            )
+            if (!isProjectManager) {
                 logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
                 throw ErrorCodeException(
                     errorCode = ProjectMessageCode.NOT_MANAGER,
@@ -90,24 +90,6 @@ class RbacProjectExtPermissionServiceImpl constructor(
         val roleCode = roleId?.let { BkAuthGroup.getByRoleId(it).value }
             ?: roleName?.let { BkAuthGroup.get(it).value }
             ?: BkAuthGroup.DEVELOPER.value
-        // 校验用户是否存在
-        userIds.forEach {
-            try {
-                tofService.getStaffInfo(it)
-            } catch (ope: OperationException) {
-                logger.warn("getStaffInfo fail $it $projectCode")
-                throw ope
-            } catch (ignore: Exception) {
-                logger.warn("getStaffInfo fail, userId[$it]", ignore)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                        defaultMessage = ignore.message,
-                        params = arrayOf(it)
-                    )
-                )
-            }
-        }
         client.get(ServiceProjectAuthResource::class).batchCreateProjectUser(
             token = tokenService.getSystemToken(null)!!,
             userId = createUser,
