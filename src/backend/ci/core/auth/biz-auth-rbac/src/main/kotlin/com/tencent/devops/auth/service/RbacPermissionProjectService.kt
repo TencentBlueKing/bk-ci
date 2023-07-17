@@ -28,17 +28,22 @@
 
 package com.tencent.devops.auth.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -47,6 +52,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionProjectService(
@@ -56,12 +62,21 @@ class RbacPermissionProjectService(
     private val iamConfiguration: IamConfiguration,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val permissionGradeManagerService: PermissionGradeManagerService
 ) : PermissionProjectService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
+        private const val expiredAt = 365L
+        private const val USER_TYPE = "user"
     }
+
+    /*获取项目对应的ci管理员id*/
+    private val projectCode2CiManagerGroupId = Caffeine.newBuilder()
+        .maximumSize(500)
+        .expireAfterWrite(7L, TimeUnit.DAYS)
+        .build<String/*projectCode*/, String/*CiManagerGroupId*/>()
 
     override fun getProjectUsers(
         projectCode: String,
@@ -126,17 +141,15 @@ class RbacPermissionProjectService(
         resourceType: String,
         managerId: String
     ): List<V2ManagerRoleGroupInfo> {
-        val v2PageInfoDTO = V2PageInfoDTO().apply {
-            page = 1
-            pageSize = 1000
-        }
+
         return if (resourceType == AuthResourceType.PROJECT.value) {
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-            iamV2ManagerService.getGradeManagerRoleGroupV2(
-                managerId,
-                searchGroupDTO,
-                v2PageInfoDTO
-            ).results
+            permissionGradeManagerService.listGroup(
+                gradeManagerId = managerId,
+                searchGroupDTO = searchGroupDTO,
+                page = 1,
+                pageSize = 1000
+            )
         } else {
             iamV2ManagerService.getSubsetManagerRoleGroup(
                 managerId.toInt(),
@@ -236,6 +249,57 @@ class RbacPermissionProjectService(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
+        return true
+    }
+
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean {
+        // 由于v0迁移过来的ci管理员没有存储在用户组表中，需要去iam搜索
+        logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
+        val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
+            projectCode2CiManagerGroupId.getIfPresent(projectCode) ?: run {
+                val gradeManagerId = authResourceService.get(
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode
+                ).relationId
+                val searchGroupDTO = SearchGroupDTO.builder().inherit(false)
+                    .name(BkAuthGroup.CI_MANAGER.groupName).build()
+                val ciMangerGroupId = permissionGradeManagerService.listGroup(
+                    gradeManagerId = gradeManagerId,
+                    searchGroupDTO = searchGroupDTO,
+                    page = 1,
+                    pageSize = 10
+                ).firstOrNull { it.name == BkAuthGroup.CI_MANAGER.groupName }?.id?.toString()
+                    ?: throw ErrorCodeException(
+                        errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+                        params = arrayOf(roleCode),
+                        defaultMessage = "group $roleCode not exist"
+                    )
+                projectCode2CiManagerGroupId.put(projectCode, ciMangerGroupId)
+                ciMangerGroupId
+            }
+        } else {
+            authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = roleCode
+            )?.relationId ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+                params = arrayOf(roleCode),
+                defaultMessage = "group $roleCode not exist"
+            )
+        }
+        val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
+        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
+        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
         return true
     }
 
