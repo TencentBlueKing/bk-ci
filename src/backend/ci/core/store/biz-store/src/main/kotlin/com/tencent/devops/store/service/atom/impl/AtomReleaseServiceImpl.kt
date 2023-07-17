@@ -704,7 +704,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = qualityDataMap["stage"] as String
-                if (stageCode !in listOf("DEVELOP", "TEST", "DEPLOY", "SECURITY")) {
+                if (stageCode !in listOf(DEVELOP, TEST, DEPLOY, SECURITY)) {
                     throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
