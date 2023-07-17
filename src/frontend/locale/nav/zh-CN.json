@@ -1,4 +1,4 @@
-{   
+{
     "okLabel": "确定",
     "cancelLabel": "取消",
     "logout": "退出",
@@ -68,10 +68,9 @@
         "pipelineStepDesc": "根据不同类型的代码库项目，我们为你提供了不同的流水线套餐，目前已支持Code平台的SVN、Git库以及蓝鲸Gitlab库",
         "previewPipeline": "预览流水线",
         "previewTips": "根据你选择的代码库，我们推荐如下流水线以完成持续交付",
-        "completeTips": "你已在[{projectName}]下成功创建了一个交付流水线",            
+        "completeTips": "你已在[{projectName}]下成功创建了一个交付流水线",
         "codelib": "代码库：",
         "getStarted": "开启流水线之旅"
-                
     },
     "accessGuide": "新手指引",
     "configProject": "配置项目",
@@ -100,7 +99,7 @@
     "service": "服务",
     "collection": "我的收藏",
     "noCollection": "未收藏任何服务",
-    "outofCollectionTips": "及时清除不常使用的链接，才能添加新的链接哦：）",
+    "outofCollectionTips": "及时清除不常使用的服务，才能添加新的服务哦：）",
     "DevopsMobile": "手机版",
     "scanToDownload": "扫一扫下载蓝盾App",
     "changeLogo": "修改LOGO",

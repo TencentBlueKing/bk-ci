@@ -25,7 +25,7 @@
     "switchProject": "Switch project",
     "applyPermission": "Apply permission",
     "noData": "No data available",
-    "noresultsFound":"no results found",
+    "noresultsFound": "no results found",
     "credential": {
         "nameTips": "When referencing credentials through variables in the pipeline, only referencing by name is supported",
         "emptyCredential": "Empty credential",
@@ -75,8 +75,9 @@
         "sshKeyToken": "SSH private key + private Token",
         "passwordToken": "User password+private token",
         "oauthTokenRequired": "Oauth Token cannot be empty",
+        "OauthToken": "Oauth Token",
         "oauthTokenDesc": "Oauth Token is generally used in scenarios where the upper platform invokes Stream. The user has authorized the upper platform with Oauth, and the upper platform uses the user authorization to operate when using the Stream service",
-        "oauthTokenPlaceholder": "OauthToken is used to pass user authorization information when the upper platform invokes the Stream service"
+        "oauthTokenPlaceholder": "OauthToken is used to pass user authorization information when the upper platform invokes the Stream service",
     },
     "cert": {
         "certName": "Name",

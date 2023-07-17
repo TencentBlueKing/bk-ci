@@ -153,6 +153,14 @@
                     v-if="isDeleteView"
                     text
                     theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'project',
+                            resourceCode: projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }"
                     @click="handleRestore(props.row)">
                     {{ $t('restore.restore') }}
                 </bk-button>
@@ -161,6 +169,14 @@
                     text
                     theme="primary"
                     :disabled="!isManage"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'project',
+                            resourceCode: projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }"
                     @click="removeHandler(props.row)"
                 >
                     {{ $t('removeFromGroup') }}
@@ -220,11 +236,11 @@
         DELETED_VIEW_ID,
         RECENT_USED_VIEW_ID
     } from '@/store/constants'
-    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import { convertTime, isShallowEqual } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 

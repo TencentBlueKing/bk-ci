@@ -135,20 +135,24 @@
 
 <script>
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
-    import Summary from '@/components/ExecDetail/Summary'
+    import codeRecord from '@/components/codeRecord'
+    import emptyTips from '@/components/devops/emptyTips'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
+    import Summary from '@/components/ExecDetail/Summary'
     import ExecPipeline from '@/components/ExecPipeline'
     import Logo from '@/components/Logo'
     import Outputs from '@/components/Outputs'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import stageReviewPanel from '@/components/StageReviewPanel'
     import StartParams from '@/components/StartParams'
-    import codeRecord from '@/components/codeRecord'
-    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
@@ -193,9 +197,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.execute, {
-                                    id: this.routerParams.pipelineId,
-                                    type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
+                                handlePipelineNoPermission({
+                                    projectId: this.routerParams.projectId,
+                                    resourceCode: this.routerParams.pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
                                 })
                             },
                             text: this.$t('applyPermission')

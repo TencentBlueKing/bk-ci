@@ -25,7 +25,7 @@
     "switchProject": "切换项目",
     "applyPermission": "申请权限",
     "noData": "暂无数据",
-    "noresultsFound":"未搜索到任何的结果",
+    "noresultsFound": "未搜索到任何的结果",
     "credential": {
         "nameTips": "在流水线中通过变量引用凭证时，仅支持通过名称引用",
         "emptyCredential": "暂无凭据",
@@ -75,6 +75,7 @@
         "sshKeyToken": "SSH私钥+私有Token",
         "passwordToken": "用户名密码+私有token",
         "oauthTokenRequired": "Oauth Token 不能为空",
+        "OauthToken": "Oauth Token",
         "oauthTokenDesc": "Oauth Token 一般用于上层平台调用 Stream 的场景。用户对上层平台进行了Oauth授权，上层平台使用 Stream 服务时使用用户授权进行操作",
         "oauthTokenPlaceholder": "OauthToken用于上层平台调用 Stream服务时传递用户授权信息"
     },

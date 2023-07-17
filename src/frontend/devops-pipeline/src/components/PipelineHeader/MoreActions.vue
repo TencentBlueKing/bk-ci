@@ -10,6 +10,9 @@
                         v-for="action in parent"
                         v-if="!action.hidden"
                         :key="action.label"
+                        v-perm="{
+                            permissionData: action.permissionData
+                        }"
                         @click="action.handler"
                     >
                         {{ $t(action.label) }}
@@ -50,14 +53,18 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
-    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
-    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        PROJECT_RESOURCE_ACTION,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     export default {
         components: {
             ImportPipelinePopup,
@@ -85,9 +92,10 @@
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
+                const { projectId, pipelineId } = this.$route.params
                 const pipeline = {
                     ...this.curPipeline,
-                    projectId: this.$route.params.projectId
+                    projectId
                 }
                 return [
                     [
@@ -95,6 +103,12 @@
                             label: 'rename',
                             handler: () => {
                                 this.toggleRenameDialog(true)
+                            },
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
                             }
                         },
                         {
@@ -105,20 +119,44 @@
                     [
                         {
                             label: 'newlist.exportPipelineJson',
-                            handler: this.exportPipeline
+                            handler: this.exportPipeline,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
-                            hidden: this.isTemplatePipeline
+                            hidden: this.isTemplatePipeline,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
                         },
                         {
                             label: 'newlist.copyAs',
-                            handler: () => this.copyAs(pipeline)
+                            handler: () => this.copyAs(pipeline),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'newlist.saveAsTemp',
-                            handler: () => this.saveAsTempHandler(pipeline)
+                            handler: () => this.saveAsTempHandler(pipeline),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'project',
+                                resourceCode: projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
                         },
                         {
                             label: 'newlist.jumpToTemp',
@@ -127,7 +165,13 @@
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline)
+                            handler: () => this.deleteHandler(pipeline),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
                         }
                     ]
                 ]

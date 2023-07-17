@@ -17,8 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { handleNoPermission } from 'bk-permission'
 import * as BKUI from 'bk-magic-vue'
+import { handleNoPermission } from 'bk-permission'
 
 // 处理流水线无权限的情况
 export const handlePipelineNoPermission = (query) => {
@@ -26,6 +26,18 @@ export const handlePipelineNoPermission = (query) => {
         BKUI,
         {
             resourceType: 'pipeline',
+            ...query
+        },
+        global.pipelineVue.$createElement
+    )
+}
+
+// 处理项目无权限的情况
+export const handleProjectNoPermission = (query) => {
+    return handleNoPermission(
+        BKUI,
+        {
+            resourceType: 'project',
             ...query
         },
         global.pipelineVue.$createElement
