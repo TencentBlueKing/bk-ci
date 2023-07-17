@@ -38,12 +38,12 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -407,7 +407,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val projectName = projectInfo.resourceName
         // 若动作是挂在项目下，返回的资源类型必须是project
         val finalResourceType =
-            if (action?.substringAfterLast("_") == AuthResourceType.PROJECT.value) {
+            if (action?.substringBeforeLast("_") == AuthResourceType.PROJECT.value) {
                 AuthResourceType.PROJECT.value
             } else {
                 resourceType
