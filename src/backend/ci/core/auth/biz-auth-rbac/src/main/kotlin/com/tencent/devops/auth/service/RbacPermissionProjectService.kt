@@ -151,6 +151,10 @@ class RbacPermissionProjectService(
                 pageSize = 1000
             )
         } else {
+            val v2PageInfoDTO = V2PageInfoDTO().apply {
+                pageSize = 1000
+                page = 1
+            }
             iamV2ManagerService.getSubsetManagerRoleGroup(
                 managerId.toInt(),
                 v2PageInfoDTO
