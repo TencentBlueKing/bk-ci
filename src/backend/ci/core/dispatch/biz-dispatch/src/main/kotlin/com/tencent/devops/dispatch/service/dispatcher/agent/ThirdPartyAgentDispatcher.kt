@@ -518,19 +518,19 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         val pbAgents = sortAgent(event, dispatchType, preBuildAgents, runningBuildsMapper, dockerRunningBuildsMapper)
         /**
          * 1. 最高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机
+         *     a. 最近构建机中使用过这个构建机,并且
          *     b. 当前没有任何构建机任务
          * 2. 次高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机
-         *     b. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+         *     a. 最近构建机中使用过这个构建机,并且
+         *     b. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          * 3. 第三优先级的agent:
          *     a. 当前没有任何构建机任务
          * 4. 第四优先级的agent:
-         *     a. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+         *     a. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
 
         /**
-         * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
+         * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
          */
         logDebug(
             buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
@@ -552,7 +552,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     )
         )
         /**
-         * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
+         * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
         if (startAvailableAgents(event, dispatchType, pbAgents, hasTryAgents)) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Get Lv.2")
@@ -568,7 +568,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         )
         val allAgents = sortAgent(event, dispatchType, activeAgents, runningBuildsMapper, dockerRunningBuildsMapper)
         /**
-         * 根据哪些agent没有任何任务
+         * 第三优先级的agent: 当前没有任何构建机任务
          */
         if (startEmptyAgents(event, dispatchType, allAgents, hasTryAgents)) {
             logger.info("${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|pickup Lv.3")
@@ -583,7 +583,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     )
         )
         /**
-         * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
+         * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
         if (startAvailableAgents(event, dispatchType, allAgents, hasTryAgents)
         ) {
