@@ -110,9 +110,9 @@ data class TriggerContainer(
     }
 
     override fun transformCompatibility(language: String?) {
-        language?.let {
-            name = getI18nName(language)
-        }
+//        language?.let {
+//            name = getI18nName(language)
+//        }
         super.transformCompatibility(language)
     }
 }
