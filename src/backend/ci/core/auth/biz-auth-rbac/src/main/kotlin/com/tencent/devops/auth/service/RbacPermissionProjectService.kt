@@ -222,31 +222,15 @@ class RbacPermissionProjectService(
         roleCode: String,
         members: List<String>
     ): Boolean {
-        // 由于v0迁移过来的ci管理员没有存储在用户组表中，需要去iam搜索
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
-            projectCode2CiManagerGroupId.getIfPresent(projectCode) ?: run {
-                val gradeManagerId = authResourceService.get(
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode
-                ).relationId
-                val searchGroupDTO = SearchGroupDTO.builder().inherit(false)
-                    .name(BkAuthGroup.CI_MANAGER.groupName).build()
-                val ciMangerGroupId = permissionGradeManagerService.listGroup(
-                    gradeManagerId = gradeManagerId,
-                    searchGroupDTO = searchGroupDTO,
-                    page = 1,
-                    pageSize = 10
-                ).firstOrNull { it.name == BkAuthGroup.CI_MANAGER.groupName }?.id?.toString()
-                    ?: throw ErrorCodeException(
-                        errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                        params = arrayOf(roleCode),
-                        defaultMessage = "group $roleCode not exist"
-                    )
-                projectCode2CiManagerGroupId.put(projectCode, ciMangerGroupId)
-                ciMangerGroupId
-            }
+            authResourceGroupDao.getByGroupName(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupName = BkAuthGroup.CI_MANAGER.groupName
+            )?.relationId
         } else {
             authResourceGroupDao.get(
                 dslContext = dslContext,
@@ -254,12 +238,12 @@ class RbacPermissionProjectService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode,
                 groupCode = roleCode
-            )?.relationId ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                params = arrayOf(roleCode),
-                defaultMessage = "group $roleCode not exist"
-            )
-        }
+            )?.relationId
+        } ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(roleCode),
+            defaultMessage = "group $roleCode not exist"
+        )
         val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
