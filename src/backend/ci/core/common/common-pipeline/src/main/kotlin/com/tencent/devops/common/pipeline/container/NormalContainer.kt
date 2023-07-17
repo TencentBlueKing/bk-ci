@@ -148,9 +148,6 @@ data class NormalContainer(
         if (mutexGroup?.timeoutVar.isNullOrBlank()) {
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
-//        language?.let {
-//            name = getI18nName(language)
-//        }
         super.transformCompatibility(language)
     }
 }
