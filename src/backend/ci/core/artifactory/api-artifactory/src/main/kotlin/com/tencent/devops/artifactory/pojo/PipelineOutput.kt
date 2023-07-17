@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.bkrepo.common.api.constant.ensurePrefix
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.pojo.TaskReport
@@ -53,7 +54,11 @@ data class PipelineOutput(
                     artifactoryType = artifactoryType,
                     name = name,
                     fullName = fullName,
-                    path = if (pathWithProjectRepo) "$projectId/${artifactoryType.toBkrepoName()}$path" else path,
+                    path = if (pathWithProjectRepo) {
+                        "$projectId/${artifactoryType.toBkrepoName()}${path.ensurePrefix("/")}"
+                    } else {
+                        path
+                    },
                     fullPath = fullPath,
                     size = size,
                     folder = folder,
