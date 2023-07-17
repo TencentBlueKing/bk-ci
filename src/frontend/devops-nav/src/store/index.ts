@@ -1,11 +1,11 @@
 import { Store } from 'vuex'
-import getters from './getters'
-import actions from './actions'
-import mutations from './mutations'
 import { transformObj } from '../utils/util'
+import actions from './actions'
 import {
     EMPTY_PROJECT
 } from './constants'
+import getters from './getters'
+import mutations from './mutations'
 
 const allServices: ObjectMap[] = window.allServices
 const projectList: ObjectMap[] = window.projectList
@@ -28,8 +28,8 @@ export default new Store<RootState>({
         user: userInfo,
         services: allServices,
         currentPage: window.currentPage,
-        related: null,
-        news: null,
+        related: [],
+        news: [],
         demo: null,
         showProjectDialog: false,
         isAnyPopupShow: false,
