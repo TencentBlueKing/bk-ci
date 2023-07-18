@@ -152,6 +152,10 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf("only workspace creator can share")
                 )
             }
+            // 共享时创建START云桌面的用户
+            client.get(ServiceRemoteDevResource::class)
+                .createStartCloudUser(userId, WorkspaceMountType.valueOf(workspace.workspaceMountType))
+
             val shareInfo = WorkspaceShared(workspaceName, userId, sharedUser)
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")

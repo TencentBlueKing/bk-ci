@@ -55,4 +55,8 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     ): Result<WorkspaceInfo> {
         return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName, mountType))
     }
+
+    override fun createStartCloudUser(user: String, mountType: WorkspaceMountType): Result<Boolean> {
+        return Result(remoteDevService.createStartCloudUser(user))
+    }
 }

@@ -68,8 +68,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
-    override fun getAllUserSettings(userId: String): Result<List<RemoteDevUserSettings>> {
-        return Result(remoteDevSettingService.getAllUserSetting4Op())
+    override fun getAllUserSettings(userId: String, queryUser: String): Result<List<RemoteDevUserSettings>> {
+        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser))
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
@@ -133,5 +133,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
+    }
+
+    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
+        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 }

@@ -257,4 +257,12 @@ class RemoteDevService @Autowired constructor(
     ): Boolean {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
+
+    // 专门用于START云桌面创建用户
+    fun createStartCloudUser(
+        user: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Boolean {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).createUser(user)
+    }
 }

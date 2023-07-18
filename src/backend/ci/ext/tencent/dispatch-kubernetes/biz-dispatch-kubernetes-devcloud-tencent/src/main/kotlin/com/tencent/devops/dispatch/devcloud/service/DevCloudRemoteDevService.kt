@@ -348,6 +348,9 @@ class DevCloudRemoteDevService @Autowired constructor(
 
         return envVarList
     }
+    override fun createUser(userId: String): Boolean {
+        return true
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudRemoteDevService::class.java)

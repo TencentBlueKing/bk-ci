@@ -138,7 +138,10 @@ interface OpRemoteDevResource {
     fun getAllUserSettings(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "指定查询的用户", required = false)
+        @QueryParam("queryUser")
+        queryUser: String
     ): Result<List<RemoteDevUserSettings>>
 
     @ApiOperation("更新用户组织架构")
@@ -268,5 +271,19 @@ interface OpRemoteDevResource {
         @ApiParam(value = "模板信息", required = true)
         @QueryParam("id")
         id: Long
+    ): Result<Boolean>
+    @ApiOperation("分享工作空间")
+    @POST
+    @Path("/share")
+    fun shareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam("分享用户", required = true)
+        @QueryParam("sharedUser")
+        sharedUser: String
     ): Result<Boolean>
 }

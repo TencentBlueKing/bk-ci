@@ -84,4 +84,17 @@ interface ServiceRemoteDevResource {
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType
     ): Result<WorkspaceInfo>
+
+    @ApiOperation("创建START云桌面用户")
+    @GET
+    @Path("/startCloud/user/create")
+    fun createStartCloudUser(
+        @ApiParam("user", required = true)
+        @QueryParam("user")
+        user: String,
+        @ApiParam("挂载模式", required = false)
+        @QueryParam("mountType")
+        @DefaultValue("DEVCLOUD")
+        mountType: WorkspaceMountType
+    ): Result<Boolean>
 }
