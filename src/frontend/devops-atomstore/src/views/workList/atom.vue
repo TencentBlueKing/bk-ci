@@ -236,7 +236,6 @@
                             <bk-popover
                                 class="info-circle-icon"
                                 placement="right"
-                                class="info-circle-icon"
                                 width="400"
                             >
                                 <i class="devops-icon icon-info-circle"></i>
