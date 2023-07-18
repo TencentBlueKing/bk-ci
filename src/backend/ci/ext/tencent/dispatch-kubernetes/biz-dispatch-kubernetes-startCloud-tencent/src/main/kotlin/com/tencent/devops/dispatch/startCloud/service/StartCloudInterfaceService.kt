@@ -25,34 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.resource.service
+package com.tencent.devops.dispatch.startCloud.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
-import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceRemoteDevResourceImpl @Autowired constructor(
-    private val remoteDevService: RemoteDevService
-) : ServiceRemoteDevResource {
-
-    override fun getWorkspaceUrl(
-        userId: String,
-        workspaceName: String,
-        mountType: WorkspaceMountType
-    ): Result<String?> {
-        return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName, mountType))
+@Service("startcloudInterfaceService")
+class StartCloudInterfaceService @Autowired constructor(
+    private val workspaceClient: WorkspaceStartCloudClient
+) {
+    @Value("\${startCloud.appName}")
+    val appName: String = "IEG_BKCI"
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
     }
 
-    override fun getWorkspaceInfo(
-        userId: String,
-        workspaceName: String,
-        mountType: WorkspaceMountType
-    ): Result<WorkspaceInfo> {
-        return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName, mountType))
+    fun createStartCloudUser(userId: String): Boolean {
+        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
+            logger.warn("create user failed.|${it.message}")
+            if (it is BuildFailureException &&
+                it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
+            ) {
+                throw it
+            }
+        }
+        return true
     }
 }

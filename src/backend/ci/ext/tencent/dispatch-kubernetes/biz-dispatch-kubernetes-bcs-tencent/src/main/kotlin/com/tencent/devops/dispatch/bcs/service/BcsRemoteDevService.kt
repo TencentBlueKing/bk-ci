@@ -346,7 +346,4 @@ class BcsRemoteDevService @Autowired constructor(
             val patchMap = mutableMapOf(envName to patchValue)
             return JsonUtil.toJson(patchMap)
         }
-    override fun createUser(userId: String): Boolean {
-        return true
-    }
 }

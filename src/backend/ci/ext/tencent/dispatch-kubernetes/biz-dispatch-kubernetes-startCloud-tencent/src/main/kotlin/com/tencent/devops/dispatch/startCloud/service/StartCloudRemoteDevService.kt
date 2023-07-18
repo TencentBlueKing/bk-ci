@@ -86,17 +86,6 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         return CreateWorkspaceRes(res.cgsIp, EMPTY, res.cloudZoneId.toInt())
     }
-    override fun createUser(userId: String): Boolean {
-        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
-            logger.warn("create user failed.|${it.message}")
-            if (it is BuildFailureException &&
-                it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
-            ) {
-                throw it
-            }
-        }
-        return true
-    }
 
         override fun startWorkspace(userId: String, workspaceName: String): String {
         return EMPTY

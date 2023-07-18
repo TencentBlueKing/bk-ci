@@ -91,9 +91,6 @@ class KubernetesRemoteDevService @Autowired constructor(
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         TODO("Not yet implemented")
     }
-    override fun createUser(userId: String): Boolean {
-        return true
-    }
 
     private fun getOnlyName(userId: String): String {
         val subUserId = if (userId.length > 14) {

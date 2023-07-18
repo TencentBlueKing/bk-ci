@@ -83,9 +83,4 @@ interface RemoteDevInterface {
         userId: String,
         taskId: String
     ): DispatchBuildTaskStatus
-
-    /**
-     * 创建用户
-     */
-    fun createUser(userId: String): Boolean
 }

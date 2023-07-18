@@ -36,6 +36,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts
@@ -153,8 +154,10 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 共享时创建START云桌面的用户
-            client.get(ServiceRemoteDevResource::class)
-                .createStartCloudUser(userId, WorkspaceMountType.valueOf(workspace.workspaceMountType))
+            if (workspace.workspaceMountType == WorkspaceMountType.START.name) {
+                client.get(ServiceStartCloudResource::class)
+                    .createStartCloudUser(userId)
+            }
 
             val shareInfo = WorkspaceShared(workspaceName, userId, sharedUser)
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
