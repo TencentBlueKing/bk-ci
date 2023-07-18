@@ -39,7 +39,16 @@ class RemoteDevDispatcher constructor(
     fun dispatch(event: WorkspaceEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                when {
+                    event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
+                    eventType.delayMills > 0 -> // 事件类型固化默认值
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
+                        message.messageProperties.expiration = "28800000"
+                }
+                message
+            }
         } catch (e: Throwable) {
             logger.error("BKSystemErrorMonitor|RemoteDevDispatcher|error:", e)
         }

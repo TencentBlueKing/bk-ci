@@ -69,6 +69,7 @@ class WorkspaceDao {
                 WORK_PATH,
                 WORKSPACE_FOLDER,
                 HOST_NAME,
+                GPU,
                 CPU,
                 MEMORY,
                 DISK,
@@ -85,7 +86,7 @@ class WorkspaceDao {
                 SYSTEM_TYPE
             )
                 .values(
-                    "",
+                    workspace.projectId,
                     workspace.workspaceName,
                     workspace.wsTemplateId,
                     workspace.repositoryUrl,
@@ -95,9 +96,10 @@ class WorkspaceDao {
                     workspace.workPath,
                     workspace.workspaceFolder,
                     workspace.hostName,
-                    8,
-                    32,
-                    100,
+                    workspace.gpu,
+                    workspace.cpu,
+                    workspace.memory,
+                    workspace.disk,
                     workspaceStatus.ordinal,
                     LocalDateTime.now(),
                     workspace.yaml,
@@ -248,10 +250,15 @@ class WorkspaceDao {
     fun fetchWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId, status = status)
+            val condition = mixCondition(
+                userId = userId,
+                status = status,
+                mountType = mountType
+            )
 
             if (condition.isEmpty()) {
                 return null
@@ -322,7 +329,6 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
                 .execute()
         }

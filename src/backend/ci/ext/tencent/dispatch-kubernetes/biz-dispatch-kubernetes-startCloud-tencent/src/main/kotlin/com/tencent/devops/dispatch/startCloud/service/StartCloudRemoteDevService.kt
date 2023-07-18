@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -60,7 +63,7 @@ class StartCloudRemoteDevService @Autowired constructor(
     @Value("\${startCloud.curLaunchId}")
     val curLaunchId: Int = 980007
 
-    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
 
         kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
@@ -72,7 +75,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             }
         }
 
-        val ip = workspaceClient.createWorkspace(
+        val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
                 userId = userId,
@@ -81,25 +84,15 @@ class StartCloudRemoteDevService @Autowired constructor(
             )
         )
 
-        return Pair(ip, EMPTY)
+        return CreateWorkspaceRes(res.cgsIp, EMPTY, res.cloudZoneId.toInt())
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
-        throw BuildFailureException(
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
-            "第三方服务-START-CLOUD 异常，异常信息 - 用户操作异常 - 不支持START操作"
-        )
+        return EMPTY
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
-        throw BuildFailureException(
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
-            ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
-            "第三方服务-START-CLOUD 异常，异常信息 - 用户操作异常 - 不支持STOP操作"
-        )
+        return EMPTY
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
@@ -151,7 +144,9 @@ class StartCloudRemoteDevService @Autowired constructor(
             curLaunchId = curLaunchId
         )
     }
-
+    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+        return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""

@@ -34,7 +34,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -44,7 +48,9 @@ import java.util.concurrent.TimeUnit
 @Service
 class PermissionService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val redisCache: RedisCacheService
 ) {
     @Value("\${remoteDev.enablePermission:true}")
     private val enablePermission: Boolean = true
@@ -79,6 +85,38 @@ class PermissionService @Autowired constructor(
         }
         return true
     }
+
+    fun checkUserCreate(userId: String, runningOnly: Boolean = false): Boolean {
+        val setting = remoteDevSettingDao.fetchSingleUserWsCount(dslContext, userId)
+        val maxRunningCount = setting.first ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT)?.toInt() ?: 1
+        if (!runningOnly) {
+            val maxHavingCount = setting.second ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT)
+                ?.toInt() ?: 3
+            workspaceDao.countUserWorkspace(dslContext, userId, unionShared = false).let {
+                if (it >= maxHavingCount) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_MAX_HAVING.errorCode,
+                        params = arrayOf(it.toString(), maxHavingCount.toString())
+                    )
+                }
+            }
+        }
+        workspaceDao.countUserWorkspace(
+            dslContext,
+            userId,
+            unionShared = false,
+            status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
+        ).let {
+            if (it >= maxRunningCount) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_MAX_RUNNING.errorCode,
+                    params = arrayOf(it.toString(), maxRunningCount.toString())
+                )
+            }
+        }
+        return true
+    }
+
     /**
      * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
      */

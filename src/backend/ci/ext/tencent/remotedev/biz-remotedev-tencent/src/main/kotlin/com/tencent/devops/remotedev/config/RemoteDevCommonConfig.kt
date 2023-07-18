@@ -36,4 +36,8 @@ class RemoteDevCommonConfig {
     // 用户工作空间镜像registry地址
     @Value("\${workspace.image.registryHost:#{null}}")
     val workspaceImageRegistryHost: String? = null
+
+    // 用户bcs工作空间镜像registry地址
+    @Value("\${workspace.image.bcsRegistryHost:#{null}}")
+    val bcsWorkspaceImageRegistryHost: String? = null
 }

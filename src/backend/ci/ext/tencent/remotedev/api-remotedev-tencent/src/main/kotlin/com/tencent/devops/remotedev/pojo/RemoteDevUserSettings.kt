@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("远程开发用户配置")
 data class RemoteDevUserSettings(
+    @ApiModelProperty("用户信息，用于OP页面操作")
+    var userId: String? = null,
     @ApiModelProperty("设置是否仅使用云端IDE")
     var onlyCloudIDE: Boolean = false,
     @ApiModelProperty("最大运行数")
@@ -18,5 +20,9 @@ data class RemoteDevUserSettings(
     @ApiModelProperty("是否需要数字水印")
     var needWatermark: Boolean = true,
     @ApiModelProperty("自动销毁连续空闲时间")
-    var autoDeletedDays: Int = 14
+    var autoDeletedDays: Int = 14,
+    @ApiModelProperty("设置linux构建集群类型")
+    var mountType: WorkspaceMountType? = null,
+    @ApiModelProperty("START云桌面体验时长")
+    var startCloudExperienceDuration: Int? = null
 )

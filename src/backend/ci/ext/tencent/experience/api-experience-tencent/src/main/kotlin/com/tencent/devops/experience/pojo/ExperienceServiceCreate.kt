@@ -60,6 +60,7 @@ data class ExperienceServiceCreate(
     @ApiModelProperty("产品类别", required = true)
     val categoryId: Int?,
     @ApiModelProperty("产品负责人", required = true)
-    val productOwner: List<String>?
-
+    val productOwner: List<String>?,
+    @ApiModelProperty("是否发送通知", required = false)
+    val sendNotification: Boolean = true
 )

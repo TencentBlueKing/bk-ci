@@ -3,17 +3,20 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
-import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.SleepControl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -23,7 +26,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val whiteListService: WhiteListService,
-    private val workspaceImageService: WorkspaceImageService
+    private val workspaceImageService: WorkspaceImageService,
+    private val sleepControl: SleepControl,
+    private val deleteControl: DeleteControl,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -59,7 +65,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
-        return Result(remoteDevSettingService.getUserSetting4Op(userId))
+        return Result(remoteDevSettingService.getUserSetting(userId))
+    }
+
+    override fun getAllUserSettings(userId: String): Result<List<RemoteDevUserSettings>> {
+        return Result(remoteDevSettingService.getAllUserSetting4Op())
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
@@ -90,19 +100,38 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceImageService.listImageSpecConfig())
     }
 
-    override fun deleteWorkspace(workspaceName: String): Result<Boolean> {
+    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
-            workspaceService.deleteWorkspace(
-                userId = ADMIN_NAME, workspaceName = workspaceName, needPermission = false
+            deleteControl.deleteWorkspace(
+                userId = userId, workspaceName = workspaceName, needPermission = false
             )
         )
     }
 
-    override fun stopWorkspace(workspaceName: String): Result<Boolean> {
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
-            workspaceService.stopWorkspace(
-                userId = ADMIN_NAME, workspaceName = workspaceName, needPermission = false
+            sleepControl.stopWorkspace(
+                userId = userId, workspaceName = workspaceName, needPermission = false
             )
         )
+    }
+    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
+        return Result(windowsResourceConfigService.getAllConfig())
+    }
+
+    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceConfig): Result<Boolean> {
+        return Result(windowsResourceConfigService.addWindowsResource(windowsResourceConfig))
+    }
+
+    override fun updateWindowsResource(
+        userId: String,
+        id: Long,
+        windowsResourceConfig: WindowsResourceConfig
+    ): Result<Boolean> {
+        return Result(windowsResourceConfigService.updateWindowsResource(id, windowsResourceConfig))
+    }
+
+    override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
+        return Result(windowsResourceConfigService.deleteWindowsResource(id))
     }
 }

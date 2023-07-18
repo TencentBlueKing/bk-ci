@@ -39,7 +39,8 @@ import org.springframework.context.annotation.FilterType
         "com.tencent.devops.dispatch.devcloud",
         "com.tencent.devops.dispatch.macos",
         "com.tencent.devops.dispatch.pcg",
-        "com.tencent.devops.dispatch.windows"
+        "com.tencent.devops.dispatch.windows",
+        "com.tencent.devops.dispatch.codecc"
     ],
     excludeFilters = [ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = [MQConfiguration::class])]
 )

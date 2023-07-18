@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.bk.sdk.iam.util.http.DefaultApacheHttpClientBuilder
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
@@ -82,12 +83,23 @@ class RbacAuthAutoConfiguration {
     @Value("\${auth.apigwUrl:#{null}}")
     val iamApigw = ""
 
+    /**
+     * 连接iam socket超时设置,默认60s.
+     */
+    @Value("\${auth.soTimeout:#{60000}}")
+    val iamSoTimeout = 60000
+
     @Bean
     @Primary
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
+    fun apigwHttpClientServiceImpl(): ApigwHttpClientServiceImpl {
+        val httpClientBuilder = DefaultApacheHttpClientBuilder.get()
+        httpClientBuilder.setSoTimeout(iamSoTimeout)
+        val httpClient = httpClientBuilder.build()
+        return ApigwHttpClientServiceImpl(httpClient, iamConfiguration())
+    }
 
     @Bean
     fun iamTokenService(

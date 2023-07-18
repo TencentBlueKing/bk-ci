@@ -7,6 +7,11 @@ enum class WorkspaceNotifyTemplateEnum(val templateCode: String) {
     REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE("REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE"),
 
     /**
+     * 流水线设置-启动的通知模板代码
+     */
+    REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE("REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE"),
+
+    /**
      * 未知模板代码
      */
     UNKNOWN("NULL");

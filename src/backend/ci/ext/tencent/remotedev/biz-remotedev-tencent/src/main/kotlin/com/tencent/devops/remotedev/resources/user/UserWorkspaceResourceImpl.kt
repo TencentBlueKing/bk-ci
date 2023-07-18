@@ -47,6 +47,10 @@ import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.SleepControl
+import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,15 +63,20 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
-    private val bkTicketService: BkTicketService
+    private val bkTicketService: BkTicketService,
+    private val createControl: CreateControl,
+    private val startControl: StartControl,
+    private val sleepControl: SleepControl,
+    private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
+        projectId: String,
         workspace: WorkspaceCreate
     ): Result<WorkspaceResponse> {
-        return Result(workspaceService.createWorkspace(userId, bkTicket, workspace))
+        return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
     }
 
     override fun startWorkspace(
@@ -75,11 +84,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicket: String,
         workspaceName: String
     ): Result<WorkspaceResponse> {
-        return Result(workspaceService.startWorkspace(userId, bkTicket, workspaceName))
+        return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
-        return Result(workspaceService.stopWorkspace(userId, workspaceName))
+        return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
     override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
@@ -91,7 +100,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
-        return Result(workspaceService.deleteWorkspace(userId, workspaceName))
+        return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
 
     override fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Result<Page<Workspace>> {
@@ -196,11 +205,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkUserCreate(userId: String): Result<Boolean> {
-        return Result(workspaceService.checkUserCreate(userId))
+        return Result(permissionService.checkUserCreate(userId))
     }
 
     override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
+        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
         return Result(true)
     }
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {

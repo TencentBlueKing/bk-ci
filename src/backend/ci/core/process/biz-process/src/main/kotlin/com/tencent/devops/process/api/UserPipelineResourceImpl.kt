@@ -36,12 +36,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -77,8 +79,8 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import io.micrometer.core.annotation.Timed
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
@@ -92,7 +94,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineRuleService: PipelineRuleService,
-    private val pipelineRecentUseService: PipelineRecentUseService
+    private val pipelineRecentUseService: PipelineRecentUseService,
+    private val client: Client
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -124,31 +127,14 @@ class UserPipelineResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
-        val bkAuthPermission = when (permission) {
-            Permission.DEPLOY -> AuthPermission.DEPLOY
-            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
-            Permission.EDIT -> AuthPermission.EDIT
-            Permission.EXECUTE -> AuthPermission.EXECUTE
-            Permission.DELETE -> AuthPermission.DELETE
-            Permission.VIEW -> AuthPermission.VIEW
-            Permission.CREATE -> AuthPermission.CREATE
-            Permission.LIST -> AuthPermission.LIST
-        }
-        val result = pipelineListFacadeService.hasPermissionList(
+        // TODO 权限迁移完后应该删除掉
+        return client.getGateway(ServicePipelineResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
-            authPermission = bkAuthPermission,
+            permission = permission,
             excludePipelineId = excludePipelineId,
             page = page,
-            pageSize = pageSize
-        )
-        return Result(
-            data = Page(
-                page = page ?: 0,
-                pageSize = pageSize ?: -1,
-                count = result.count,
-                records = result.records
-            )
+            pageSize
         )
     }
 

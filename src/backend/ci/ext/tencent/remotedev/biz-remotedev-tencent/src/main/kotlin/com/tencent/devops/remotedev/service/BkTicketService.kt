@@ -33,7 +33,9 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -72,13 +74,19 @@ class BkTicketService @Autowired constructor(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            updateBkTicket(userId, bkTicket, it.hostName)
+            updateBkTicket(userId, bkTicket, it.hostName, WorkspaceMountType.valueOf(it.workspaceMountType))
         }
         return true
     }
     // 更新指定容器内的bkticket
-    fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
-        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
+    fun updateBkTicket(
+        userId: String,
+        bkTicket: String?,
+        hostName: String?,
+        mountType: WorkspaceMountType,
+        retryTime: Int = 3
+    ): Boolean {
+        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName|mountType|$mountType")
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
             return false
         }
@@ -86,9 +94,12 @@ class BkTicketService @Autowired constructor(
         val params = mutableMapOf<String, Any?>()
         params["ticket"] = bkTicket
         params["user"] = userId
+        val headers = mutableMapOf(
+            "Cookie" to "X-DEVOPS-BK-TICKET=$bkTicket;X-REMOTEDEV-GATEWAY-TAG=${mountType.toString().lowercase()}"
+        )
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
-            .header("Cookie", "X-DEVOPS-BK-TICKET=$bkTicket")
+            .headers(headers.toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
 
@@ -98,7 +109,7 @@ class BkTicketService @Autowired constructor(
                 logger.info("updateBkTicket|response code|${response.code}|content|$data")
                 if (!response.isSuccessful && retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
-                    return updateBkTicket(userId, bkTicket, hostName, retryTimeLocal)
+                    return updateBkTicket(userId, bkTicket, hostName, mountType, retryTimeLocal)
                 }
                 if (!response.isSuccessful && retryTime <= 0) {
                     throw ErrorCodeException(
@@ -115,7 +126,7 @@ class BkTicketService @Autowired constructor(
             // 接口超时失败，重试三次
             if (retryTime > 0) {
                 logger.info("User $userId updateBkTicket. retry: $retryTime")
-                return updateBkTicket(userId, bkTicket, hostName, retryTime - 1)
+                return updateBkTicket(userId, bkTicket, hostName, mountType, retryTime - 1)
             } else {
                 logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
