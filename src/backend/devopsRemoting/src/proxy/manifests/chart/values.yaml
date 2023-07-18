@@ -107,9 +107,6 @@ apisix:
 
   etcd:
     image:
-      registry: mirrors.tencent.com
-      repository: ruotiantang/apisix
-      tag: etcd-3.5.7-debian-11-r14
       pullPolicy: IfNotPresent
     volumePermissions:
         image:
