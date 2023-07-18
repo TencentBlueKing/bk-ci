@@ -410,7 +410,7 @@
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontColor;
+                color: $fontLigtherColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 
@@ -563,6 +563,8 @@
         margin: 0 10px;
         background: #DCDEE5;
     }
+</style>
+<style lang="scss">
     .navigation-message-theme {
         position: relative;
         top: 5px;
