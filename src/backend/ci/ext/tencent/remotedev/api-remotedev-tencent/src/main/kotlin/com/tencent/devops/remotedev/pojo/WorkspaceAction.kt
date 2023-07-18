@@ -37,5 +37,6 @@ enum class WorkspaceAction {
     STARTING,
     SLEEPING,
     DELETING,
-    COMPLETE_PULL_CODE // 异步拉取代码完成，由proxy通知
+    COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
+    NEED_RENEWAL
 }

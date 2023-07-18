@@ -1,4 +1,7 @@
 // 智研交付流流水线定制页面
+const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
+const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../components/PipelineHeader/DetailHeader.vue')
+const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
 const zyPipelinesEntry = () => import(/* webpackChunkName: "zyPipeline" */'../views/zhiyan/index.vue')
 const zyPipelinesSubpage = () => import(/* webpackChunkName: "zyPipeline" */'../views/zhiyan/subpage.vue')
 
@@ -15,7 +18,10 @@ export default [{
             // 详情
             path: 'detail/:buildNo/:type?',
             name: 'zyPipelinesDetail',
-            component: zyPipelinesSubpage,
+            components: {
+                header: DetailHeader,
+                default: zyPipelinesSubpage
+            },
             meta: {
                 title: 'pipeline',
                 header: 'pipeline',
@@ -33,7 +39,10 @@ export default [{
                 header: 'pipeline',
                 to: 'pipelinesList'
             },
-            component: zyPipelinesSubpage
+            components: {
+                header: EditHeader,
+                default: zyPipelinesSubpage
+            }
         },
         {
             // 流水线执行可选插件
@@ -45,7 +54,10 @@ export default [{
                 header: 'pipeline',
                 to: 'pipelinesList'
             },
-            component: zyPipelinesSubpage
+            components: {
+                header: PreviewHeader,
+                default: zyPipelinesSubpage
+            }
         }
     ]
 }]

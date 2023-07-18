@@ -163,6 +163,7 @@ class DevcloudContainerService @Autowired constructor(
             val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                devcloudWorkspaceRedisUtils.deleteTask(taskId)
                 return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
                 } else {

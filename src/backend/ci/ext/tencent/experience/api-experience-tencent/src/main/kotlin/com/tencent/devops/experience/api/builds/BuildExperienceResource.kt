@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.ExperienceNotificationReq
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import io.swagger.annotations.Api
@@ -58,4 +59,15 @@ interface BuildExperienceResource {
         @ApiParam("发布详情", required = true)
         experience: ExperienceServiceCreate
     ): Result<ExperienceCreateResp>
+
+    @ApiOperation("发送通知")
+    @Path("/projects/{projectId}/batchNotification")
+    @POST
+    fun batchNotification(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("通知请求")
+        req: ExperienceNotificationReq
+    ): Result<Boolean>
 }

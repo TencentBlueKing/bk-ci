@@ -5,6 +5,7 @@ import com.tencent.devops.artifactory.pojo.PipelineOutput
 import com.tencent.devops.artifactory.pojo.PipelineOutputSearchOption
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.PipelineOutputType
+import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.artifactory.service.PipelineOutputService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceReportResource
@@ -13,9 +14,9 @@ import com.tencent.devops.common.archive.pojo.TaskReport
 import org.springframework.stereotype.Service
 
 @Service
-class BkRepoPipelineOutputServiceImpl(
+class PipelineOutputServiceImpl(
     private val client: Client,
-    private val bkRepoArchiveFileServiceImpl: BkRepoArchiveFileServiceImpl
+    private val archiveFileService: ArchiveFileService
 ) : PipelineOutputService {
     override fun search(
         userId: String,
@@ -35,7 +36,7 @@ class BkRepoPipelineOutputServiceImpl(
                 )
             )
             artifacts.addAll(
-                bkRepoArchiveFileServiceImpl.searchFileList(
+                archiveFileService.searchFileList(
                     userId = userId,
                     projectId = projectId,
                     page = 1,

@@ -53,7 +53,7 @@ spec:
       {{- end }}        
       containers:
         - name: notify
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.notify.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.notify.containerSecurityContext "enabled" | toYaml | nindent 12 }}

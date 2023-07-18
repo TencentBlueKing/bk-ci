@@ -11,7 +11,7 @@ import org.slf4j.MDC
 @Event(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, ROUTE_WORKSPACE_UPDATE_FROM_K8S)
 data class RemoteDevUpdateEvent(
     override val userId: String,
-    override val traceId: String = MDC.get(TraceTag.BIZID),
+    override val traceId: String = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
     override val workspaceName: String,
     val type: UpdateEventType,
     var status: Boolean,

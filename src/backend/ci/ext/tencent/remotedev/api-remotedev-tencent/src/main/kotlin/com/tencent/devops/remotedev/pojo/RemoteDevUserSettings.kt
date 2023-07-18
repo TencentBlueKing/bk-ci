@@ -22,5 +22,7 @@ data class RemoteDevUserSettings(
     @ApiModelProperty("自动销毁连续空闲时间")
     var autoDeletedDays: Int = 14,
     @ApiModelProperty("设置linux构建集群类型")
-    var mountType: WorkspaceMountType? = null
+    var mountType: WorkspaceMountType? = null,
+    @ApiModelProperty("START云桌面体验时长")
+    var startCloudExperienceDuration: Int? = null
 )

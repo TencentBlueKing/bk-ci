@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesRemoteDevClient
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.GitRepo
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
@@ -44,7 +45,7 @@ import org.springframework.stereotype.Service
 class KubernetesRemoteDevService @Autowired constructor(
     private val kubernetesRemoteDevClient: KubernetesRemoteDevClient
 ) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         val workspaceId = getOnlyName(userId)
         val kubernetesWorkspace = KubernetesWorkspace(
             workspaceId = workspaceId,
@@ -60,7 +61,7 @@ class KubernetesRemoteDevService @Autowired constructor(
         )
 
         val taskId = kubernetesRemoteDevClient.createWorkspace(userId, kubernetesWorkspace)
-        return Pair(workspaceId, taskId)
+        return CreateWorkspaceRes(workspaceId, taskId)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
