@@ -199,15 +199,13 @@ object AtomUtils {
     fun checkElementAtoms(
         element: Element,
         client: Client,
-        userId: String? = null,
+        userId: String? = null
     ) {
         if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-            val version = element.version
             val atomCode = element.getAtomCode()
-            val atomName = element.name
             val atomStatus = client.get(ServiceAtomResource::class)
                 .getAtomVersionInfo(
-                    atomCode, version
+                    atomCode, element.version
                 ).data!!.atomStatus
             val atomStatusList = listOf(
                 AtomStatusEnum.TESTING.name,
@@ -217,7 +215,7 @@ object AtomUtils {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
                     params = arrayOf(
-                        atomName,
+                        element.name,
                         AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
                     )
                 )
