@@ -369,7 +369,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
@@ -404,7 +404,7 @@
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontColor;
+                color: $fontLigtherColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 
@@ -427,7 +427,7 @@
                     outline: none;
                 }
                 ::v-deep .bk-select-dropdown .bk-select-name {
-                    color: #fff;
+                    color: $fontLigtherColor;
                     height: 36px;
                     line-height: 36px;
                     font-size: 14px;
@@ -555,7 +555,8 @@
         margin: 0 10px;
         background: #DCDEE5;
     }
-    
+</style>
+<style lang="scss">
     .navigation-message-theme {
         position: relative;
         top: 5px;
