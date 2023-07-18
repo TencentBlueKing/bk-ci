@@ -20,7 +20,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('turbo.方案名称')" required property="planName" :rules="[requireRule($t('turbo.方案名称')), nameRule]" error-display-type="normal">
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.planName" class="single-width" :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"></bk-input>
+                    <bk-input v-model="copyFormData.planName" @change="handleChange" class="single-width" :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"></bk-input>
                 </template>
                 <span v-else class="g-turbo-text-break">{{ formData.planName }}</span>
             </bk-form-item>
@@ -31,7 +31,7 @@
                         <li v-for="item in engineList"
                             :key="item"
                             :class="['single-width', 'turbo-model-item', 'g-turbo-text-overflow', { choose: copyFormData.engineCode === item.engineCode }]"
-                            @click="chooseMode(item)"
+                            @click="chooseMode(item, true)"
                         >
                             <p class="item-title g-turbo-black-font">{{ item.engineName }}<span class="recommend" v-if="item.recommend"> {{ $t('turbo.（荐）') }} <span></span></span></p>
                             <span class="item-desc g-turbo-gray-font g-turbo-text-overflow" v-bk-overflow-tips="{ interactive: true }">{{ item.desc }}</span>
@@ -43,7 +43,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('turbo.方案说明')" property="name">
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.desc" type="textarea" class="double-width" :maxlength="200" :placeholder="$t('turbo.请输入')"></bk-input>
+                    <bk-input v-model="copyFormData.desc" type="textarea" class="double-width" @change="handleChange" :maxlength="200" :placeholder="$t('turbo.请输入')"></bk-input>
                 </template>
                 <span v-else class="g-turbo-text-break">{{ formData.desc || '-' }}</span>
             </bk-form-item>
@@ -155,7 +155,12 @@
                 this.isEdit = false
             },
 
-            chooseMode (item) {
+            handleChange () {
+                window.changeFlag = true
+            },
+
+            chooseMode (item, changeFlag) {
+                window.changeFlag = changeFlag
                 const formData = {
                     ...JSON.parse(JSON.stringify(this.copyFormData)),
                     paramConfig: item.paramConfig,
@@ -175,7 +180,7 @@
                     this.engineList = res
                     const engineCode = this.copyFormData.engineCode || this.$route.query.engineCode
                     const curEngine = res.find((item) => (engineCode && item.engineCode === engineCode)) || {}
-                    this.chooseMode(curEngine)
+                    this.chooseMode(curEngine, false)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

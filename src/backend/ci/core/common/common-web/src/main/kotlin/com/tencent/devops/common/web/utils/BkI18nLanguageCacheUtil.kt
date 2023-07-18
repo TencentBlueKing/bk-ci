@@ -41,7 +41,7 @@ object BkI18nLanguageCacheUtil {
 
     private val i18nLanguageCache = Caffeine.newBuilder()
         .maximumSize(20000)
-        .expireAfterWrite(6, TimeUnit.SECONDS)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, String>()
 
     /**

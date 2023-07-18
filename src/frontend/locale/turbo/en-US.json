@@ -94,5 +94,12 @@
     "节省率(%)" : "Time-saving Rate(%)",
     "暂无选项": "No options",
     "请选择": "Please select",
-    "请输入": "Please enter"
+    "请输入": "Please enter",
+    "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting keywords or {0}",
+    "清空筛选条件": "Clear Search Conditions",
+    "暂无数据": "No Data",
+    "搜索结果为空": "Search result is empty",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "离开": "Leave"
 }

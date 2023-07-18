@@ -53,5 +53,12 @@
     "Success rate trend": "成功率趋势",
     "Success rate (%)": "成功率 (%)",
     "Plugin stat": "插件统计",
-    "Average time of failure runs (min)": "运行失败平均耗时 (分钟)"
+    "Average time of failure runs (min)": "运行失败平均耗时 (分钟)",
+    "noData": "暂无数据",
+    "searchEmpty": "搜索结果为空",
+    "清空筛选条件": "清空筛选条件",
+    "可以尝试 调整关键词 或 清空筛选条件": "可以尝试 调整关键词 或 {0}",
+    "确认离开当前页？": "确认离开当前页？",
+    "离开将会导致未保存信息丢失": "离开将会导致未保存信息丢失",
+    "离开": "离开"
 }
