@@ -82,6 +82,7 @@
             },
 
             showAddPool () {
+                window.changeFlag = false
                 this.isShowAddPool = true
             },
 

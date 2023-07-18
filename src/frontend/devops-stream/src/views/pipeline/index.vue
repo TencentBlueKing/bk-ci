@@ -68,18 +68,19 @@
 
         <router-view class="pipelines-main" v-if="!isLoading"></router-view>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')">
+        <bk-sideslider :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')" :before-close="hidden">
             <bk-form :model="yamlData" ref="yamlForm" slot="content" class="yaml-form" form-type="vertical">
                 <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule($t('pipeline.yamlName')), nameRule]" :required="true" property="file_name" error-display-type="normal">
                     <bk-compose-form-item class="yaml-name-container">
                         <bk-input value=".ci / " disabled class="yaml-path"></bk-input>
-                        <bk-input v-model="yamlData.file_name" class="yaml-name" :placeholder="$t('pipeline.ymlNamePlaceholder')"></bk-input>
+                        <bk-input v-model="yamlData.file_name" @change="handleChange" class="yaml-name" :placeholder="$t('pipeline.ymlNamePlaceholder')"></bk-input>
                     </bk-compose-form-item>
                 </bk-form-item>
                 <bk-form-item label="YAML" :rules="[requireRule('Yaml'), checkYaml]" ref="codeSection" :required="true" property="content" error-display-type="normal">
                     <bk-link theme="primary" :href="LINK_CONFIG.YAML_EXAMPLE" target="_blank" class="yaml-examples">{{$t('pipeline.yamlExample')}}</bk-link>
                     <code-section @blur="$refs.codeSection.validate('blur')"
                         @focus="$refs.codeSection.clearValidator()"
+                        @change="handleChange"
                         :code.sync="yamlData.content"
                         :read-only="false"
                         :cursor-blink-rate="530"
@@ -91,6 +92,7 @@
                         :loading="isLoadingBranches"
                         :clearable="false"
                         searchable
+                        @change="handleChange"
                         @toggle="toggleFilterBranch"
                         :placeholder="$t('pipeline.branchPlaceholder')"
                     >
@@ -102,7 +104,7 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('pipeline.commitMsg')" :rules="[requireRule($t('pipeline.commitMsg'))]" :required="true" property="commit_message" error-display-type="normal">
-                    <bk-input v-model="yamlData.commit_message" :placeholder="$t('pipeline.commitMsgPlaceholder')"></bk-input>
+                    <bk-input v-model="yamlData.commit_message" @change="handleChange" :placeholder="$t('pipeline.commitMsgPlaceholder')"></bk-input>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isSaving">{{$t('submit')}}</bk-button>
@@ -331,16 +333,39 @@
             },
 
             showAddYml () {
+                window.changeFlag = false
                 this.isShowAddYml = true
             },
 
-            hidden () {
+            hiddenFn () {
                 this.isShowAddYml = false
                 this.yamlData = {
                     file_name: '',
                     content: '',
                     branch_name: '',
                     commit_message: ''
+                }
+            },
+
+            hidden () {
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            window.changeFlag = false
+                            this.hiddenFn()
+                        }
+                    })
+                } else {
+                    this.hiddenFn()
                 }
             },
 
@@ -389,7 +414,7 @@
                     }
                     this.isSaving = true
                     pipelines.addPipelineYamlFile(this.projectId, postData).then(() => {
-                        this.hidden()
+                        this.hiddenFn()
                     }).catch((err) => {
                         this.messageError(err.message || err)
                     }).finally(() => {
@@ -406,6 +431,10 @@
                     message: name + this.$t('isRequired'),
                     trigger: 'blur'
                 }
+            },
+
+            handleChange () {
+                window.changeFlag = true
             }
         }
     }
