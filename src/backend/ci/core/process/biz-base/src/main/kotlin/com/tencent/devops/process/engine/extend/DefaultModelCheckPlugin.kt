@@ -143,8 +143,7 @@ open class DefaultModelCheckPlugin constructor(
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
                 contextMap = contextMap,
-                atomInputParamList = atomInputParamList,
-                client = client
+                atomInputParamList = atomInputParamList
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -152,7 +151,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
-                    client = client
+                    client = client,
+                    checkTemplateFlag = true
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)
@@ -192,8 +192,7 @@ open class DefaultModelCheckPlugin constructor(
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
-        atomInputParamList: MutableList<StoreParam>,
-        client: Client
+        atomInputParamList: MutableList<StoreParam>
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -220,7 +219,6 @@ open class DefaultModelCheckPlugin constructor(
                 )
             )
             container.elements.forEach { e ->
-                AtomUtils.checkElementAtoms(e, client)
                 container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }
         }

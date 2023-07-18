@@ -54,6 +54,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -299,7 +301,7 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         val templateModel: Model = objectMapper.readValue(template)
-        checkTemplateAtoms(templateModel, userId)
+        checkTemplateAtoms(templateModel)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -1960,15 +1962,17 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件
      */
-    fun checkTemplateAtoms(template: Model, userId: String) {
+    fun checkTemplateAtoms(template: Model) {
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach { element ->
-                    AtomUtils.checkElementAtoms(
-                        element = element,
-                        userId = userId,
-                        client = client
-                    )
+                    if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+                        AtomUtils.checkTemplateAtoms(
+                            atomCode = element.getAtomCode(),
+                            version = element.version,
+                            client = client
+                        )
+                    }
                 }
             }
         }

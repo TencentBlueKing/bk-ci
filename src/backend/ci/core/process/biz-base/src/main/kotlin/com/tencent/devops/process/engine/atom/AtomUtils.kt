@@ -196,30 +196,28 @@ object AtomUtils {
         return inputTypeConfigMap
     }
 
-    fun checkElementAtoms(
-        element: Element,
-        client: Client,
-        userId: String? = null
+    fun checkTemplateAtoms(
+        atomCode: String,
+        version: String,
+        client: Client
     ) {
-        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-            val atomCode = element.getAtomCode()
-            val atomStatus = client.get(ServiceAtomResource::class)
-                .getAtomVersionInfo(
-                    atomCode, element.version
-                ).data!!.atomStatus
-            val atomStatusList = listOf(
-                AtomStatusEnum.TESTING.name,
-                AtomStatusEnum.UNDERCARRIAGED.name
-            )
-            if (atomStatus in atomStatusList) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
-                    params = arrayOf(
-                        element.name,
-                        AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
-                    )
+        val atom = client.get(ServiceAtomResource::class)
+            .getAtomVersionInfo(
+                atomCode, version
+            ).data!!
+        val atomStatus = atom.atomStatus
+        val atomStatusList = listOf(
+            AtomStatusEnum.TESTING.name,
+            AtomStatusEnum.UNDERCARRIAGED.name
+        )
+        if (atomStatus in atomStatusList) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
+                params = arrayOf(
+                    atom.name,
+                    AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage())
                 )
-            }
+            )
         }
     }
 
@@ -228,7 +226,8 @@ object AtomUtils {
         atomVersions: Set<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         inputTypeConfigMap: Map<String, Int>,
-        client: Client
+        client: Client,
+        checkTemplateFlag: Boolean = false
     ): Boolean {
         if (atomVersions.isEmpty()) {
             return true
@@ -244,6 +243,13 @@ object AtomUtils {
             val version = storeParam.version
             val atomName = storeParam.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
+            if (checkTemplateFlag) {
+                checkTemplateAtoms(
+                    atomCode = atomCode,
+                    version = version,
+                    client = client
+                )
+            }
             if (atomRunInfo != null) {
                 validateAtomParam(
                     atomParamDataMap = storeParam.inputParam,
