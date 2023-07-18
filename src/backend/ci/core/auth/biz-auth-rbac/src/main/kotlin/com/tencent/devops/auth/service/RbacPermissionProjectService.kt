@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
