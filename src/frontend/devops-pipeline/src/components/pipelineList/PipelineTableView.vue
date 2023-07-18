@@ -237,6 +237,7 @@
         RECENT_USED_VIEW_ID
     } from '@/store/constants'
     import {
+        PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
         handlePipelineNoPermission
     } from '@/utils/permission'
@@ -270,7 +271,7 @@
                     count: 0
                 },
                 visibleTagCountList: {},
-                RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {
