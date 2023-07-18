@@ -38,7 +38,6 @@ const val QUALITY_METADATA_DATA_DESC_KEY = "quality.metadata.%s.desc" // $s == I
 const val QUALITY_INDICATOR_ELEMENT_NAME_KEY = "quality.indicator.%s.elementName" // $s == ID
 const val QUALITY_INDICATOR_NAME_KEY = "quality.indicator.%s.name" // $s == ID
 const val QUALITY_INDICATOR_DESC_KEY = "quality.indicator.%s.desc" // $s == ID
-const val QUALITY_INDICATOR_STAGE_KEY = "quality.indicator.%s.stage" // $s == ID
 const val BK_BEFORE_POSITION = "bkBeforePosition" // 准入-满足条件才能执行控制点
 const val BK_AFTER_POSITION = "bkAfterPosition" // 准出-满足条件才能执行后续插件
 const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup" // 项目下无Quality用户组

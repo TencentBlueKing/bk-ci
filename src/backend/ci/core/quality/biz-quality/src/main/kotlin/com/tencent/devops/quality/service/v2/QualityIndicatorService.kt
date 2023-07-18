@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.collect.Maps
+import com.tencent.devops.common.api.constant.DEVELOP
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
@@ -84,7 +85,6 @@ import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_DESC_KEY
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_ELEMENT_NAME_KEY
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_NAME_KEY
-import com.tencent.devops.quality.constant.QUALITY_INDICATOR_STAGE_KEY
 import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_CHINESE_NAME_EXISTS
 import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_ENGLISH_NAME_EXISTS
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
@@ -334,7 +334,7 @@ class QualityIndicatorService @Autowired constructor(
                 thresholdType = it.thresholdType,
                 desc = it.desc,
                 readOnly = it.indicatorReadOnly,
-                stage = it.stage,
+                stage = I18nUtil.getCodeLanMessage(messageCode = it.stage, defaultMessage = it.stage),
                 range = it.indicatorRange,
                 type = it.type,
                 tag = it.tag,
@@ -667,7 +667,7 @@ class QualityIndicatorService @Autowired constructor(
                 defaultMessage = indicator.cnName
             ),
             stage = I18nUtil.getCodeLanMessage(
-                messageCode = QUALITY_INDICATOR_STAGE_KEY.format(indicator.id),
+                messageCode = indicator.stage,
                 defaultMessage = indicator.stage ?: ""
             ),
             operation = QualityOperation.valueOf(indicator.defaultOperation),
@@ -789,7 +789,7 @@ class QualityIndicatorService @Autowired constructor(
             thresholdType = indicatorCreate.dataType.name,
             desc = indicatorCreate.desc,
             readOnly = false,
-            stage = "开发",
+            stage = I18nUtil.getCodeLanMessage(messageCode = DEVELOP, language = I18nUtil.getDefaultLocaleLanguage()),
             range = projectId,
             tag = "",
             enable = true,
