@@ -18,6 +18,9 @@
 local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
 if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
     ngx.header["X-DEVOPS-UID"] = ngx.var.http_x_devops_uid
+    if ngx.var.http_x_devops_organization_name ~= nil then
+        ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = ngx.var.http_x_devops_organization_name
+    end
     return
 end
 
