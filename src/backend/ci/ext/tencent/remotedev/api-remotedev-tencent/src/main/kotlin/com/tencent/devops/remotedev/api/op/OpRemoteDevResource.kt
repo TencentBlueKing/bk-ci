@@ -141,7 +141,7 @@ interface OpRemoteDevResource {
         userId: String,
         @ApiParam(value = "指定查询的用户", required = false)
         @QueryParam("queryUser")
-        queryUser: String
+        queryUser: String?
     ): Result<List<RemoteDevUserSettings>>
 
     @ApiOperation("更新用户组织架构")
