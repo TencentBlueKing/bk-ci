@@ -1,5 +1,6 @@
 package com.tencent.devops.common.auth.utils
 
+import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -63,6 +64,15 @@ object RbacAuthUtils {
             "experience_group" -> AuthResourceType.EXPERIENCE_GROUP
             else -> AuthResourceType.get(resourceTypeStr)
         }
+    }
+
+    fun getAdditionalAction(): List<Action> {
+        return listOf(
+            "project_visit", "experience_task_create", "experience_task_list", "experience_task_view",
+            "experience_group_list", "experience_group_create", "experience_group_view", "rule_list",
+            "quality_group_create", "quality_group_list", "env_node_create", "env_node_list", "env_node_view",
+            "cert_view"
+        ).map { Action(it) }
     }
 
     fun buildResultMap(
