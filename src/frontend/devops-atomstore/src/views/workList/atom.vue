@@ -264,10 +264,7 @@
                                     </a>
                                 </div>
                             </bk-select>
-                            <div
-                                v-if="atomErrors.languageError"
-                                class="error-tips"
-                            > {{ $t('store.开发语言不能为空') }} </div>
+                            <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('store.开发语言不能为空') }} </div>
                         </div>
                     </div>
                     <template v-if="!isEnterprise">
