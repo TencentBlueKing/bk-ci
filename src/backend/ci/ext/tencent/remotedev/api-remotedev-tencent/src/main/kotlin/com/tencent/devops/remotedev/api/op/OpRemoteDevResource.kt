@@ -274,7 +274,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
     @ApiOperation("分享工作空间")
     @POST
-    @Path("/share")
+    @Path("/workspace/share")
     fun shareWorkspace(
         @ApiParam(value = "用户ID", required = true)
         @QueryParam("userId")
