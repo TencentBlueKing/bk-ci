@@ -53,7 +53,7 @@
                         <bk-input :left-icon="'bk-icon icon-search'" :placeholder="$t('dashboard.filterByName')" :clearable="true" v-model="searchStr" @enter="search" @clear="search"></bk-input>
                     </div>
                     <div class="empty-repo" v-if="!slotProps.list.length">
-                        <empty-tips :title="$t('dashboard.noProject')"></empty-tips>
+                        <EmptyTableStatus :type="searchStr ? 'search-empty' : 'empty'" @clear="clearFilter" />
                     </div>
                     <div v-for="repo in slotProps.list" :key="repo.id" class="repo-item">
                         <div class="repo-img">
@@ -110,14 +110,14 @@
 <script>
     import { common, setting } from '@/http'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
-    import emptyTips from '@/components/empty-tips'
+    import EmptyTableStatus from '@/components/empty-table-status'
     import gitcode from './../images/home/gitcode.png'
     import infiniteScroll from '@/components/infinite-scroll'
     import dashboardHeader from '../components/dashboard-header.vue'
 
     export default {
         components: {
-            emptyTips,
+            EmptyTableStatus,
             infiniteScroll,
             dashboardHeader
         },
@@ -240,6 +240,11 @@
 
             getIconClass (status) {
                 return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status)]
+            },
+
+            clearFilter () {
+                this.searchStr = ''
+                this.search()
             }
         }
     }
@@ -330,6 +335,7 @@
             margin-top: 15px;
             .empty-repo {
                 height: 100%;
+                min-height: 180px;
                 background: #fff;
                 display: flex;
             }
