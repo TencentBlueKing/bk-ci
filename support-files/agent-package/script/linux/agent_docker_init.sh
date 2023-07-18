@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 # 本脚本应该兼容 POSIX shell.
 
 CI_DIR="/data"

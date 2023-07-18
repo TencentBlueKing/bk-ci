@@ -25,14 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.common.web.utils
 
-import org.springframework.stereotype.Service
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-@Service
-class SamplePipelineStartUpService : SubPipelineStartUpService() {
+/**
+ * 国际化语言信息缓存
+ *
+ * @since: 2023-06-13
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object BkI18nLanguageCacheUtil {
 
-    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        // 开源版暂不做权限校验
+    private val i18nLanguageCache = Caffeine.newBuilder()
+        .maximumSize(20000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String>()
+
+    /**
+     * 保存国际化语言信息缓存
+     * @param userId 用户Id
+     * @param language 国际化语言信息
+     */
+    fun put(userId: String, language: String) {
+        i18nLanguageCache.put(userId, language)
+    }
+
+    /**
+     * 从缓存中获取国际化语言信息
+     * @param userId 用户Id
+     * @return 国际化语言信息
+     */
+    fun getIfPresent(userId: String): String? {
+        return i18nLanguageCache.getIfPresent(userId)
     }
 }

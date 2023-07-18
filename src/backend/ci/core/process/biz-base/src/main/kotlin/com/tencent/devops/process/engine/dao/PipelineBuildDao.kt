@@ -436,7 +436,7 @@ class PipelineBuildDao {
     /**
      * 取最近一次失败的构建
      */
-    fun getLatestSuccessedBuild(
+    fun getLatestSucceedBuild(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
@@ -474,6 +474,21 @@ class PipelineBuildDao {
             return update.where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute() == 1
+        }
+    }
+
+    fun updateExecuteCount(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(EXECUTE_COUNT, executeCount)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute() == 1
         }
     }
@@ -822,17 +837,17 @@ class PipelineBuildDao {
         }
     }
 
-    fun getBuildByBuildNo(
+    fun getBuildByBuildNum(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        buildNo: Int
+        buildNum: Int
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_NUM.eq(buildNo))
+                .and(BUILD_NUM.eq(buildNum))
                 .fetchAny()
         }
     }
@@ -853,6 +868,25 @@ class PipelineBuildDao {
                 dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
             }
             return dsl.fetch(BUILD_ID)
+        }
+    }
+
+    fun getBuildCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): Int {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 

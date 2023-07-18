@@ -51,7 +51,10 @@ class RbacAuthPermissionApi(
             userId = user,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
             projectCode = projectCode,
-            resourceCode = resourceType.value
+            resourceCode = RbacAuthUtils.getRelationResourceType(
+                authPermission = permission,
+                authResourceType = resourceType
+            )
         ).data!!
     }
 

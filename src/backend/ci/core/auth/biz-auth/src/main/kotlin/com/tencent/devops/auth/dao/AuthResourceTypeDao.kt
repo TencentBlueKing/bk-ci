@@ -13,4 +13,27 @@ class AuthResourceTypeDao {
             dslContext.selectFrom(this).where(DELETE.eq(false)).orderBy(ID.asc()).fetch()
         }
     }
+
+    fun list(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Result<TAuthResourceTypeRecord> {
+        return with(TAuthResourceType.T_AUTH_RESOURCE_TYPE) {
+            dslContext.selectFrom(this)
+                .orderBy(CREATE_TIME.desc(), RESOURCE_TYPE)
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
+        }
+    }
+
+    fun batchUpdateAuthResourceType(
+        dslContext: DSLContext,
+        authActionResourceTypes: List<TAuthResourceTypeRecord>
+    ) {
+        if (authActionResourceTypes.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(authActionResourceTypes).execute()
+    }
 }

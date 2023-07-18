@@ -23,7 +23,7 @@
                 :atom-index="index"
                 :container-disabled="containerDisabled"
                 :is-waiting="isWaiting"
-                :is-last-atom="index === atomList.length - 1"
+                :is-last-atom="index === atomList.length - 1 && !hasHookAtom"
                 :prev-atom="index > 0 ? atomList[index - 1] : null"
                 @[COPY_EVENT_NAME]="handleCopy"
                 @[DELETE_EVENT_NAME]="handleDelete"
@@ -67,7 +67,9 @@
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
         ATOM_ADD_EVENT_NAME,
-        STATUS_MAP
+        STATUS_MAP,
+        QUALITY_IN_ATOM_CODE,
+        QUALITY_OUT_ATOM_CODE
     } from './constants'
     export default {
         name: 'atom-list',
@@ -129,10 +131,16 @@
             hookToggleTop () {
                 const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
                 if (firstHookIndex > -1) {
-                    const atomHeight = 53
+                    let top = 0
                     const hookToggleSize = 7
+                    this.container.elements.forEach((atom, index) => {
+                        if (index < firstHookIndex) {
+                            top += this.isQualityGate(atom) ? 35 : 53
+                        }
+                    })
+                    console.log(top, hookToggleSize)
                     // TODO: more elegant
-                    return `${firstHookIndex * atomHeight - hookToggleSize}px`
+                    return `${top - hookToggleSize}px`
                 }
                 return 0
             },
@@ -191,6 +199,13 @@
             isHookAtom (atom) {
                 try {
                     return !!atom.additionalOptions?.elementPostInfo
+                } catch (error) {
+                    return false
+                }
+            },
+            isQualityGate (atom) {
+                try {
+                    return [QUALITY_IN_ATOM_CODE, QUALITY_OUT_ATOM_CODE].includes(atom.atomCode)
                 } catch (error) {
                     return false
                 }

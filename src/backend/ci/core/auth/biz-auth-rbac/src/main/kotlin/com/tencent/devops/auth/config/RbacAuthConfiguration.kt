@@ -77,7 +77,10 @@ import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -317,12 +320,26 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
-        authVerifyRecordService: AuthVerifyRecordService
+        authVerifyRecordService: AuthVerifyRecordService,
+        migrateResourceService: MigrateResourceService,
+        authResourceService: AuthResourceService,
+        deptService: DeptService,
+        client: Client,
+        tokenService: ClientTokenService,
+        bkTag: BkTag,
+        redisOperation: RedisOperation
     ) = MigrateResultService(
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
-        authVerifyRecordService = authVerifyRecordService
+        authVerifyRecordService = authVerifyRecordService,
+        migrateResourceService = migrateResourceService,
+        authResourceService = authResourceService,
+        deptService = deptService,
+        client = client,
+        tokenService = tokenService,
+        bkTag = bkTag,
+        redisOperation = redisOperation
     )
 
     @Bean

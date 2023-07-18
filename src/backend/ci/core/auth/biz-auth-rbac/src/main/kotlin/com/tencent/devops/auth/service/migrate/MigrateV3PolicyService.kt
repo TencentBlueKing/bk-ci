@@ -47,11 +47,10 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 /**
  * v3权限策略迁移到rbac
@@ -105,6 +104,13 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_ENABLE = "project_enable"
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
+        // 流水线查看权限,v3没有pipeline_list权限,迁移至rbac需要添加
+        private const val PIPELINE_VIEW = "pipeline_view"
+        // 项目访问权限
+        private const val PIPELINE_LIST = "pipeline_list"
+
+        // 过期用户增加5分钟
+        private const val EXPIRED_MEMBER_ADD_TIME = 5L
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
 
@@ -247,7 +253,7 @@ class MigrateV3PolicyService constructor(
         gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int? {
+    ): List<Int> {
         // v3资源都只有一层
         val resource = permission.resources[0]
         val resourceType = resource.type
@@ -255,9 +261,10 @@ class MigrateV3PolicyService constructor(
         logger.info("match resource group|$projectCode|$resourceType|$userActions")
         // 如果path为空,则直接跳过
         if (resource.paths.isEmpty()) {
-            return null
+            return emptyList()
         }
-        return when {
+        val groupIds = mutableListOf<Int>()
+        val matchGroupId = when {
             // 如果有all_action,直接加入管理员组
             userActions.contains(Constants.ALL_ACTION) -> managerGroupId
             // 项目类型
@@ -293,6 +300,8 @@ class MigrateV3PolicyService constructor(
             }
             else -> null
         }
+        matchGroupId?.let { groupIds.add(it) }
+        return groupIds
     }
 
     /**
@@ -352,14 +361,18 @@ class MigrateV3PolicyService constructor(
         if (finalUserActions.contains(QUALITY_GROUP_ENABLE)) {
             finalUserActions.remove(QUALITY_GROUP_ENABLE)
         }
+        // v3没有pipeline_list权限,但是rbac有这个权限,迁移时需要补充
+        if (finalUserActions.contains(PIPELINE_VIEW)) {
+            finalUserActions.add(PIPELINE_LIST)
+        }
         return finalUserActions
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
         members?.forEach member@{ member ->
-            // 已过期用户,迁移时无法添加到用户组成员,增加1分钟添加到iam就过期，方便用户续期
+            // 已过期用户,迁移时无法添加到用户组成员,增加5分钟添加到iam就过期，方便用户续期
             val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
-                DateTimeUtil.getFutureDateFromNow(Calendar.MINUTE, 1).time
+                System.currentTimeMillis() / MILLISECOND + TimeUnit.MINUTES.toSeconds(EXPIRED_MEMBER_ADD_TIME)
             } else {
                 member.expiredAt
             }

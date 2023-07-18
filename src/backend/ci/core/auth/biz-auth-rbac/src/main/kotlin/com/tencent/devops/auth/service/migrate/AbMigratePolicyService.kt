@@ -93,6 +93,8 @@ abstract class AbMigratePolicyService(
 
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
+
+        const val RBAC_QC_GROUP_NAME = "质管人员"
     }
 
     fun migrateGroupPolicy(
@@ -171,8 +173,8 @@ abstract class AbMigratePolicyService(
                 results = taskDataResp.results
             )
             page++
-            totalCount += taskDataResp.count
-        } while (taskDataResp.count == pageSize)
+            totalCount = taskDataResp.count
+        } while (taskDataResp.results.size == pageSize)
         return totalCount
     }
 
@@ -311,8 +313,8 @@ abstract class AbMigratePolicyService(
                 results = taskDataResp.results
             )
             page++
-            totalCount += taskDataResp.count
-        } while (taskDataResp.count == pageSize)
+            totalCount = taskDataResp.count
+        } while (taskDataResp.results.size == pageSize)
         return totalCount
     }
 
@@ -333,7 +335,7 @@ abstract class AbMigratePolicyService(
             }
 
             result.permissions.forEach permission@{ permission ->
-                val groupId = matchResourceGroup(
+                val groupIds = matchResourceGroup(
                     userId = userId,
                     projectCode = projectCode,
                     projectName = projectName,
@@ -341,7 +343,7 @@ abstract class AbMigratePolicyService(
                     managerGroupId = managerGroupId,
                     permission = permission
                 )
-                if (groupId != null) {
+                groupIds.forEach { groupId ->
                     val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
                     val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                         .members(listOf(managerMember))
@@ -354,6 +356,13 @@ abstract class AbMigratePolicyService(
         }
     }
 
+    /**
+     * 匹配到的资源组Id列表
+     *
+     * v3 action只能匹配到一个组
+     * v0 iam返回的action列表包含创建动作,创建动作依赖的资源是项目,所以一个action组可能匹配到多个组,
+     * 如actions:[pipeline_create,pipeline_view],pipeline_create需查找项目下的组,pipeline_view需查找pipeline下的组
+     */
     abstract fun matchResourceGroup(
         userId: String,
         projectCode: String,
@@ -361,7 +370,7 @@ abstract class AbMigratePolicyService(
         gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int?
+    ): List<Int>
 
     /**
      * 根据action匹配资源最小action组
@@ -373,6 +382,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         actions: List<String>
     ): Int? {
+        logger.info("match min resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有资源actions权限
         val hasPermission = permissionService.batchValidateUserResourcePermission(
             userId = userId,
@@ -411,6 +421,7 @@ abstract class AbMigratePolicyService(
         actions: List<String>,
         gradeManagerId: Int
     ): Int? {
+        logger.info("match or create project resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有项目任意资源actions权限
         val hasPermission = actions.all { action ->
             permissionService.validateUserResourcePermission(

@@ -193,7 +193,7 @@ object CommonMessageCode {
     const val BK_CREATE_SERVICE = "bkCreateService" // 创建{0}服务
     const val BK_SESSION_ID = "bkSessionId" // 会话ID
     const val BK_GROUP_ID = "bkGroupId" // 群ID
-    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID={0}。PS:群ID可用于蓝盾平台上任意企业微信群通知。
     const val BK_MISSING_RESOURCE_DEPENDENCY = "bkMissingResourceDependency" // 依赖的资源不存在
 
     const val BK_REQUEST_TIMED_OUT = "bkRequestTimedOut" // 请求超时

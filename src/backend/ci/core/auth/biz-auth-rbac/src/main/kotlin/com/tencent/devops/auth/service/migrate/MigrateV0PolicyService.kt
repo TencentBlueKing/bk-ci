@@ -106,6 +106,7 @@ class MigrateV0PolicyService constructor(
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private const val V0_QC_GROUP_NAME = "质量管理员"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -139,7 +140,7 @@ class MigrateV0PolicyService constructor(
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
             val (resourceCreateActions, resourceActions) = buildRbacActions(
-                permission = permission
+                actions = permission.actions.map { it.id }
             )
             if (resourceCreateActions.isNotEmpty()) {
                 projectActions.addAll(resourceCreateActions)
@@ -177,10 +178,10 @@ class MigrateV0PolicyService constructor(
         return rbacAuthorizationScopes
     }
 
-    private fun buildRbacActions(permission: AuthorizationScopes): Pair<List<Action>, List<Action>> {
+    private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
-        replaceOrRemoveAction(permission.actions.map { it.id }).forEach { action ->
+        replaceOrRemoveAction(actions).forEach { action ->
             // 创建的action,需要关联在项目下
             if (action.contains(AuthPermission.CREATE.value)) {
                 resourceCreateActions.add(Action(action))
@@ -289,32 +290,50 @@ class MigrateV0PolicyService constructor(
         gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int? {
+    ): List<Int> {
         val resource = permission.resources[0]
         val resourceType = oldResourceTypeMappingNewResourceType[resource.type] ?: resource.type
         val userActions = permission.actions.map { it.id }
-        logger.info("find match resource group|$projectCode|$resourceType|$userActions")
-        // 项目下任意资源
-        return if (resource.paths.isEmpty() || resource.paths[0].isEmpty()) {
-            val finalUserActions = replaceOrRemoveAction(userActions)
-            matchOrCreateProjectResourceGroup(
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName,
-                resourceType = resourceType,
-                actions = finalUserActions,
-                gradeManagerId = gradeManagerId
-            )
-        } else {
-            val v0ResourceCode = resource.paths[0][0].id
+        logger.info("find match resource group|$userId|$projectCode|$resourceType|$userActions")
+        val (resourceCreateActions, resourceActions) = buildRbacActions(
+            actions = permission.actions.map { it.id }
+        )
+        val matchGroupIds = mutableListOf<Int>()
+        // 创建action匹配到的组
+        if (resourceCreateActions.isNotEmpty()) {
             v0MatchMinResourceGroup(
                 userId = userId,
                 projectCode = projectCode,
-                resourceType = resourceType,
-                v0ResourceCode = v0ResourceCode,
-                userActions = userActions
-            )
+                resourceType = AuthResourceType.PROJECT.value,
+                v0ResourceCode = projectCode,
+                userActions = resourceCreateActions.map { it.id }
+            )?.let { matchGroupIds.add(it) }
         }
+        // 资源action匹配到的组
+        if (resourceActions.isNotEmpty()) {
+            val matchResourceGroupId = if (resource.paths.isEmpty() || resource.paths[0].isEmpty()) {
+                matchOrCreateProjectResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    actions = resourceActions.map { it.id },
+                    gradeManagerId = gradeManagerId
+                )
+            } else {
+                val v0ResourceCode = resource.paths[0][0].id
+                v0MatchMinResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    v0ResourceCode = v0ResourceCode,
+                    userActions = resourceActions.map { it.id }
+                )
+            }
+            matchResourceGroupId?.let { matchGroupIds.add(matchResourceGroupId) }
+        }
+        // 项目下任意资源
+        return matchGroupIds
     }
 
     private fun v0MatchMinResourceGroup(
@@ -363,15 +382,15 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        val expiredDay = if (defaultGroup) {
-            // 默认用户组,2年或3年随机过期
-            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 3)]
-        } else {
-            // 自定义用户组,半年或者一年过期
-            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 1)]
-        }
-        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
         members?.forEach member@{ member ->
+            val expiredDay = if (defaultGroup) {
+                // 默认用户组,2年或3年随机过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
+            } else {
+                // 自定义用户组,半年或者一年过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
+            }
+            val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
@@ -382,6 +401,10 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
-        return result.subject.name!!
+        return if (result.subject.name == V0_QC_GROUP_NAME) {
+            RBAC_QC_GROUP_NAME
+        } else {
+            result.subject.name!!
+        }
     }
 }

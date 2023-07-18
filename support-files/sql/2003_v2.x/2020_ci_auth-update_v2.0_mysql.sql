@@ -21,6 +21,14 @@ BEGIN
         ADD COLUMN `ROUTER_TAG` varchar(32) DEFAULT NULL COMMENT '迁移项目的网关路由tags';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AUTH_RESOURCE'
+                    AND INDEX_NAME = 'RESOURCE_TYPE_UPDATE_TIME_IDX') THEN
+    ALTER TABLE T_AUTH_RESOURCE ADD INDEX `RESOURCE_TYPE_UPDATE_TIME_IDX` (`RESOURCE_TYPE`,`UPDATE_TIME`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -69,27 +69,37 @@
                     {{ $t("history.viewLog") }}
                 </bk-button>
             </header>
-            <div class="exec-pipeline-ui-wrapper">
-                <bk-pipeline
-                    :editable="false"
-                    ref="bkPipeline"
-                    is-exec-detail
-                    :current-exec-count="executeCount"
-                    :cancel-user-id="cancelUserId"
-                    :user-name="userName"
-                    :pipeline="curPipeline"
-                    v-bind="$attrs"
-                    @click="handlePiplineClick"
-                    @stage-check="handleStageCheck"
-                    @stage-retry="handleRetry"
-                    @atom-quality-check="qualityCheck"
-                    @atom-review="reviewAtom"
-                    @atom-continue="handleContinue"
-                    @atom-exec="handleExec"
-                />
-            </div>
+            <simplebar
+                class="exec-pipeline-scroll-box"
+                :class-names="{
+                    track: 'pipeline-scrollbar-track'
+                }"
+                data-simplebar-auto-hide="false"
+            >
+                <div class="exec-pipeline-ui-wrapper">
+                    <bk-pipeline
+                        :editable="false"
+                        ref="bkPipeline"
+                        is-exec-detail
+                        :current-exec-count="executeCount"
+                        :cancel-user-id="cancelUserId"
+                        :user-name="userName"
+                        :pipeline="curPipeline"
+                        v-bind="$attrs"
+                        @click="handlePiplineClick"
+                        @stage-check="handleStageCheck"
+                        @stage-retry="handleRetry"
+                        @atom-quality-check="qualityCheck"
+                        @atom-review="reviewAtom"
+                        @atom-continue="handleContinue"
+                        @atom-exec="handleExec"
+                        @debug-container="debugDocker"
+                    />
+                </div>
+            </simplebar>
             <footer
                 v-if="showErrorPopup"
+                ref="errorPopup"
                 :class="{
                     'exec-errors-popup': true,
                     visible: showErrors
@@ -125,6 +135,7 @@
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
                         <bk-table
+                            ext-cls="error-popup-table"
                             :data="errorList"
                             :border="false"
                             @row-click="(row) => setAtomLocate(row)"
@@ -134,9 +145,7 @@
                                 <div slot-scope="props" class="exec-error-type-cell">
                                     <span class="exec-error-locate-icon">
                                         <Logo
-                                            v-if="
-                                                activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
-                                            "
+                                            v-if="isActiveErrorAtom(props.row)"
                                             name="location-right"
                                             size="18"
                                         />
@@ -175,6 +184,7 @@
                                 </template>
                             </bk-table-column>
                         </bk-table>
+
                     </bk-tab-panel>
                 </bk-tab>
             </footer>
@@ -231,9 +241,12 @@
     import Logo from '@/components/Logo'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
+    import simplebar from 'simplebar-vue'
+    import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapState } from 'vuex'
     export default {
         components: {
+            simplebar,
             CheckAtomDialog,
             CompleteLog,
             Logo
@@ -320,21 +333,22 @@
             },
             errorsTableColumns () {
                 return [
+                    // {
+                    //     label: this.$t('details.pipelineErrorType'),
+                    //     prop: 'errorTypeAlias',
+                    //     width: 150
+                    // },
                     {
-                        label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorTypeAlias',
-                        width: 150
+                        label: this.$t('details.pipelineErrorPos'),
+                        prop: 'taskName',
+                        width: 200
                     },
                     {
                         label: this.$t('details.pipelineErrorCode'),
                         prop: 'errorCode',
                         width: 150
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorPos'),
-                        prop: 'taskName',
-                        width: 200
                     }
+
                 ]
             },
             userName () {
@@ -415,6 +429,9 @@
             },
             routerParams () {
                 return this.$route.params
+            },
+            errorPopupHeight () {
+                return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
         watch: {
@@ -426,7 +443,6 @@
             },
             'execDetail.model': function (val) {
                 if (val) {
-                    console.log('cha ge, modle')
                     this.curPipeline = val
                 }
             },
@@ -444,12 +460,17 @@
             }
 
         },
+        updated () {
+            if (this.showErrorPopup) {
+                this.setScrollBarPostion()
+            }
+        },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
+                this.setScrollBarPostion()
                 setTimeout(() => {
                     this.setAtomLocate(this.errorList[0])
-                    this.setShowErrorPopup()
                 }, 600)
             }
         },
@@ -460,6 +481,8 @@
             if (this.activeErrorAtom?.taskId) {
                 this.locateError(this.activeErrorAtom, false)
             }
+            const rootCssVar = document.querySelector(':root')
+            rootCssVar.style.setProperty('--track-bottom', 0)
         },
         methods: {
             ...mapActions('atom', [
@@ -501,6 +524,13 @@
                     ]
 
                 )
+            },
+            setScrollBarPostion () {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+            },
+            isActiveErrorAtom (atom) {
+                return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
             },
             isSkip (status) {
                 return ['SKIP'].includes(status)
@@ -657,11 +687,11 @@
                         ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(this.skipTask ? 'skipSuc' : 'subpage.retrySuc')
                         theme = 'success'
                         res?.executeCount && this.handleExecuteCountChange(res.executeCount)
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = res?.message ?? this.$t(this.skipTask ? 'skipFail' : 'subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
@@ -767,8 +797,7 @@
                 }
             },
             setAtomLocate (row, showLog = false) {
-                console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible', this.activeErrorAtom)
-                if (this.activeErrorAtom?.taskId === row.taskId && !showLog) return
+                if (this.isActiveErrorAtom(row) && !showLog) return
                 if (this.activeErrorAtom) {
                     this.locateError(this.activeErrorAtom, false, showLog)
                 }
@@ -791,6 +820,16 @@
                         executeCount
                     })
                 })
+            },
+            debugDocker ({ container }) {
+                const vmSeqId = container.id
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             }
         }
     }
@@ -799,6 +838,9 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+:root {
+  --track-bottom: 0;
+}
 .exec-pipeline-wrapper {
   height: 100%;
   display: flex;
@@ -912,18 +954,25 @@
       }
     }
   }
-  .exec-pipeline-ui-wrapper {
-    flex: 1;
-    overflow: auto;
-    padding: 0 24px 42px 24px;
-  }
+    .exec-pipeline-scroll-box {
+        flex: 1;
+        .simplebar-wrapper,
+        .simplebar-content-wrapper {
+            height: 100%;
+        }
+        .exec-pipeline-ui-wrapper {
+            padding: 0 24px 42px 24px;
+            height: 100%;
+        }
+    }
   .exec-errors-popup {
     position: fixed;
     bottom: 0;
     left: 24px;
-    right: 24px;
+    right: 34px;
     overflow: hidden;
     will-change: auto;
+    max-height: 30vh;
     transition: all 0.5s ease;
     transform: translateY(calc(100% - 42px));
     box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
@@ -938,6 +987,17 @@
         position: static;
       }
     }
+    .error-popup-table {
+        max-height: calc(30vh - 42px);
+        display: flex;
+        flex-direction: column;
+        .bk-table-header-wrapper {
+            flex-shrink: 0;
+        }
+        .bk-table-body-wrapper {
+            overflow-y: auto;
+        }
+    }
     .toggle-error-popup-icon {
         display: flex;
         align-items: center;
@@ -947,11 +1007,11 @@
     }
 
     &.visible {
-      transform: translateY(0);
-      .toggle-error-popup-icon {
-        transition: transform 0.6s ease;
-        transform: rotate(180deg);
-    }
+        transform: translateY(0);
+        .toggle-error-popup-icon {
+            transition: transform 0.6s ease;
+            transform: rotate(180deg);
+        }
     }
     .drag-dot {
       position: absolute;
@@ -1014,7 +1074,7 @@
       color: #979ba5;
       font-weight: normal;
       width: 60px;
-      flex-shrik: 0;
+      flex-shrink: 0;
     }
   }
   &.time-detail-popup .pipeline-time-detail-sum {
@@ -1033,7 +1093,7 @@
       > span:first-child {
         color: #979ba5;
         width: 60px;
-        flex-shrik: 0;
+        flex-shrink: 0;
       }
       &:last-child {
         margin-bottom: 0;
@@ -1048,5 +1108,19 @@
   .exec-count-select-option-user {
     color: #979ba5;
   }
+}
+.pipeline-scrollbar-track {
+    left: 24px;
+    right: 34px;
+    position: fixed;
+    bottom: var(--track-bottom);
+    height: 10px;
+    transition: all 0.3s;
+    .simplebar-scrollbar {
+        height: 12px;
+        &:before {
+            background: #a5a5a5;
+        }
+    }
 }
 </style>

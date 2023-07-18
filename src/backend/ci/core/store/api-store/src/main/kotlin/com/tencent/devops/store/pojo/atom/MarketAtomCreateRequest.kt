@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -57,5 +58,7 @@ data class MarketAtomCreateRequest(
     @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
     val privateReason: String? = null,
     @ApiModelProperty(value = "前端UI渲染方式", required = true)
-    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
+    @ApiModelProperty(value = "插件包发布方式", required = false)
+    val packageSourceType: PackageSourceTypeEnum? = null
 )
