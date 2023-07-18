@@ -1,12 +1,13 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.userGroup.editGroup') : $t('setting.userGroup.addGroup')">
+    <bk-sideslider :is-show.sync="show" :quick-close="true" :before-close="hidden" :width="622" :title="isEdit ? $t('setting.userGroup.editGroup') : $t('setting.userGroup.addGroup')">
         <bk-form :model="formData" ref="groupForm" slot="content" class="group-form" form-type="vertical" :label-width="400">
             <bk-form-item :label="$t('name')" :required="true" :rules="[requireRule('Name'), nameRule]" property="name" error-display-type="normal">
-                <bk-input v-model="formData.name" placeholder="No more than 10 characters"></bk-input>
+                <bk-input v-model="formData.name" @change="handleChangeForm" placeholder="No more than 10 characters"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('setting.userGroup.innerUsers')" property="innerUsers" error-display-type="normal">
                 <bk-member-selector
                     v-model="formData.innerUsers"
+                    @change="handleChangeForm"
                     class="user-select-item"
                     style="height: 100px"
                     :placeholder="$t('setting.userGroup.innerUsersPlaceholder')"
@@ -16,6 +17,7 @@
             <bk-form-item :label="$t('setting.userGroup.outerUsers')" property="outerUsers" :desc="{ content: 'Non-OA users 为外部协作用户，需要在蓝鲸用户管理先注册用户，指引参考：https://iwiki.woa.com/pages/viewpage.action?pageId=1556183163', width: '400px' }">
                 <bk-select
                     v-model="formData.outerUsers"
+                    @change="handleChangeForm"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     placeholder="Please select"
@@ -29,7 +31,7 @@
                 </bk-select>
             </bk-form-item>
             <bk-form-item :label="$t('description')" property="remark">
-                <bk-input type="textarea" v-model="formData.remark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
+                <bk-input type="textarea" v-model="formData.remark" :placeholder="$t('descriptionPlaceholder')" @change="handleChangeForm"></bk-input>
             </bk-form-item>
             <bk-form-item>
                 <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">{{$t('submit')}}</bk-button>
@@ -126,7 +128,24 @@
             },
 
             hidden () {
-                this.$emit('hidden')
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        confirmFn: () => {
+                            window.changeFlag = false
+                            this.$emit('hidden')
+                        }
+                    })
+                } else {
+                    this.$emit('hidden')
+                }
             },
 
             async getOuterUserList () {
@@ -140,6 +159,10 @@
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 })
+            },
+
+            handleChangeForm () {
+                window.changeFlag = true
             }
         }
     }

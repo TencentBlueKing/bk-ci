@@ -53,5 +53,12 @@
     "Success rate trend": "Success rate trend",
     "Success rate (%)": "Success rate (%)",
     "Plugin stat": "Plugin stat",
-    "Average time of failure runs (min)": "Average time of failure runs (min)"
+    "Average time of failure runs (min)": "Average time of failure runs (min)",
+    "noData": "No Data",
+    "searchEmpty": "Search result is empty",
+    "清空筛选条件": "Clear Search Conditions",
+    "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting keywords or {0}",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "离开": "Leave"
 }
