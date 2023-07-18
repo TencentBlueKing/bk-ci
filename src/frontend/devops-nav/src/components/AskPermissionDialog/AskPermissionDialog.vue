@@ -86,8 +86,8 @@
             }))
             if (!isProjectResource(resourceId) && projectId) {
                 dealInstanceIds.unshift({
-                  id: projectId,
-                  type: resourceTypeMap.PROJECT
+                    id: projectId,
+                    type: resourceTypeMap.PROJECT
                 })
             }
             return {
@@ -98,36 +98,36 @@
         }
 
         get permissionTableData () {
-          return this.noPermissionList.map(item => {
-              const instanceNames = item.instanceId.map(instance => instance.name).join(',')
-              return {
-                resource: `${resourceAliasMap[item.resourceId]}${item.instanceId.length ? ': ' + instanceNames : ''}`,
-                action: actionAliasMap[item.actionId] ? actionAliasMap[item.actionId].alias : '--'
-              }
-          })
-          // actionAliasMap
+            return this.noPermissionList.map(item => {
+                const instanceNames = item.instanceId.map(instance => instance.name).join(',')
+                return {
+                    resource: `${resourceAliasMap[item.resourceId]}${item.instanceId.length ? ': ' + instanceNames : ''}`,
+                    action: actionAliasMap[item.actionId] ? actionAliasMap[item.actionId].alias : '--'
+                }
+            })
+            // actionAliasMap
         }
 
         async toApplyPermission () {
-          try {
-              const body = this.noPermissionList.map(perm => this.getPermissionBody(perm))
-              console.log('permBody', body)
-              const redirectUrl = await this.getPermRedirectUrl(body)
-              console.log('redirectUrl', redirectUrl)
-              window.open(redirectUrl, '_blank')
-              this.showDialog = false
-              this.$bkInfo({
-                  title: this.$t('permissionRefreshtitle'),
-                  subTitle: this.$t('permissionRefreshSubtitle'),
-                  okText: this.$t('permissionRefreshOkText'),
-                  cancelText: this.$t('close'),
-                  confirmFn: () => {
-                      location.reload()
-                  }
-              })
-          } catch (e) {
-              console.error(e)
-          }
+            try {
+                const body = this.noPermissionList.map(perm => this.getPermissionBody(perm))
+                console.log('permBody', body)
+                const redirectUrl = await this.getPermRedirectUrl(body)
+                console.log('redirectUrl', redirectUrl)
+                window.open(redirectUrl, '_blank')
+                this.showDialog = false
+                this.$bkInfo({
+                    title: this.$t('permissionRefreshtitle'),
+                    subTitle: this.$t('permissionRefreshSubtitle'),
+                    okText: this.$t('permissionRefreshOkText'),
+                    cancelText: this.$t('close'),
+                    confirmFn: () => {
+                        location.reload()
+                    }
+                })
+            } catch (e) {
+                console.error(e)
+            }
         }
     }
 </script>

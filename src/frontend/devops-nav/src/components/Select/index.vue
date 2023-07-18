@@ -209,12 +209,12 @@
 
         get filterOptions () {
             return this.searchValue
-? this.finalOptions.filter((option: any) => {
-                const name = this.searchIgnoreCase ? option.name.toLowerCase() : option.name
-                const keyword = this.searchIgnoreCase ? this.searchValue.toLowerCase() : this.searchValue
-                return name.indexOf(keyword) > -1
-            })
-: this.finalOptions
+                ? this.finalOptions.filter((option: any) => {
+                    const name = this.searchIgnoreCase ? option.name.toLowerCase() : option.name
+                    const keyword = this.searchIgnoreCase ? this.searchValue.toLowerCase() : this.searchValue
+                    return name.indexOf(keyword) > -1
+                })
+                : this.finalOptions
         }
 
         get optionMap () {

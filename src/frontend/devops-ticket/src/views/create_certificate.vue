@@ -7,7 +7,8 @@
         </content-header>
 
         <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <empty-tips v-if="!hasPermission && showContent"
+            <empty-tips
+                v-if="!hasPermission && showContent"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
                 :btns="emptyTipsConfig.btns"
@@ -33,7 +34,8 @@
                     </div>
 
                     <transition name="fade">
-                        <ios v-if="certType === 'ios'"
+                        <ios
+                            v-if="certType === 'ios'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -43,7 +45,8 @@
                         </ios>
                     </transition>
                     <transition name="fade">
-                        <android v-if="certType === 'android'"
+                        <android
+                            v-if="certType === 'android'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -53,7 +56,8 @@
                         </android>
                     </transition>
                     <transition name="fade">
-                        <ssl v-if="certType === 'tls'"
+                        <ssl
+                            v-if="certType === 'tls'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"
@@ -62,7 +66,8 @@
                         </ssl>
                     </transition>
                     <transition name="fade">
-                        <enterprise v-if="certType === 'enterprise'"
+                        <enterprise
+                            v-if="certType === 'enterprise'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"

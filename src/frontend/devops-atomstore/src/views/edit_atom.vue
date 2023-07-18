@@ -10,7 +10,8 @@
                     <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <div style="width: 40%;">
-                            <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('store.请输入中英文名称')"
+                            <input
+                                type="text" class="bk-form-input atom-name-input" :placeholder="$t('store.请输入中英文名称')"
                                 ref="atomName"
                                 name="atomName"
                                 v-model="atomForm.name"
@@ -42,7 +43,8 @@
                     <label class="bk-label"> {{ $t('store.分类') }} </label>
                     <div class="bk-form-content atom-item-content atom-classify-content">
                         <bk-select v-model="atomForm.classifyCode" @selected="changeClassify" style="width: 40%;" searchable :clearable="false">
-                            <bk-option v-for="(option, index) in sortList"
+                            <bk-option
+                                v-for="(option, index) in sortList"
                                 :key="index"
                                 :id="option.classifyCode"
                                 :name="option.classifyName">
@@ -74,14 +76,16 @@
                 <div class="bk-form-item">
                     <label class="bk-label"> {{ $t('store.功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
-                        <bk-select :placeholder="$t('store.请选择功能标签')"
+                        <bk-select
+                            :placeholder="$t('store.请选择功能标签')"
                             v-model="atomForm.labelIdList"
                             @selected="changeClassify"
                             show-select-all
                             searchable
                             multiple
                         >
-                            <bk-option v-for="(option, index) in labelList"
+                            <bk-option
+                                v-for="(option, index) in labelList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.labelName">
@@ -92,7 +96,8 @@
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
+                        <input
+                            type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
                             maxlength="256"
                             v-model="atomForm.summary"
@@ -114,7 +119,8 @@
                 <div class="bk-form-item remark-form-item">
                     <label class="bk-label"> {{ $t('store.详细描述') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <mavon-editor class="atom-remark-input" :placeholder="descTemplate"
+                        <mavon-editor
+                            class="atom-remark-input" :placeholder="descTemplate"
                             ref="mdHook"
                             v-model="atomForm.description"
                             :toolbars="toolbarOptions"

@@ -94,39 +94,39 @@
 
         isAbsoluteUrl = isAbsoluteUrl
         
-       gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
-           const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
-           const nAlias = getServiceAliasByPath(linkNew)
-           const destUrl = this.addConsole(linkNew)
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
+            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
+            const nAlias = getServiceAliasByPath(linkNew)
+            const destUrl = this.addConsole(linkNew)
 
-           if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
-               eventBus.$emit('goHome')
-               return
-           }
-           (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
-           document.title = this.getDocumentTitle(linkNew)
-       }
+            if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
+                eventBus.$emit('goHome')
+                return
+            }
+            (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
+            document.title = this.getDocumentTitle(linkNew)
+        }
 
-       addConsole (link: string): string {
-           return urlJoin('/console', link)
-       }
+        addConsole (link: string): string {
+            return urlJoin('/console', link)
+        }
 
-       get showCollectStar (): boolean {
-           return typeof this.toggleCollect === 'function'
-       }
+        get showCollectStar (): boolean {
+            return typeof this.toggleCollect === 'function'
+        }
 
         serviceName (name): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
         }
 
-       serviceId (name): string {
-           return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
-       }
+        serviceId (name): string {
+            return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
+        }
 
-       serviceIcon (logoUrl): string {
-           return logoUrl ? `logo-${logoUrl}` : 'placeholder'
-       }
+        serviceIcon (logoUrl): string {
+            return logoUrl ? `logo-${logoUrl}` : 'placeholder'
+        }
     }
 </script>
 

@@ -1,5 +1,6 @@
 <template>
-    <div class="create-meta-wrapper"
+    <div
+        class="create-meta-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
@@ -16,7 +17,8 @@
                 <p class="info-title">{{$t('quality.基本信息')}}</p>
                 <hr>
                 <bk-form class="create-meta-form" :label-width="100" :model="createForm">
-                    <devops-form-item :label="$t('quality.名称')" :required="true" :property="'cnName'"
+                    <devops-form-item
+                        :label="$t('quality.名称')" :required="true" :property="'cnName'"
                         :is-error="errors.has('metaName')"
                         :error-msg="errors.first('metaName')">
                         <bk-input
@@ -30,7 +32,8 @@
                             }">
                         </bk-input>
                     </devops-form-item>
-                    <devops-form-item :label="$t('quality.英文ID')" :required="true" :property="'name'"
+                    <devops-form-item
+                        :label="$t('quality.英文ID')" :required="true" :property="'name'"
                         :is-error="errors.has('metaEnglishName')"
                         :error-msg="errors.first('metaEnglishName')">
                         <bk-input
@@ -54,34 +57,40 @@
                             v-model="createForm.desc">
                         </bk-input>
                     </bk-form-item>
-                    <devops-form-item :label="$t('quality.数值类型')" :required="true" :property="'dataType'"
+                    <devops-form-item
+                        :label="$t('quality.数值类型')" :required="true" :property="'dataType'"
                         :is-error="formErrors.typeError"
                         :error-msg="$t('quality.数值类型不能为空')">
                         <bk-select v-model="createForm.dataType" @selected="toggleType">
-                            <bk-option v-for="(option, index) in metaTypeList"
+                            <bk-option
+                                v-for="(option, index) in metaTypeList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.name">
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <devops-form-item :label="$t('quality.可选操作')" :required="true" :property="'operation'"
+                    <devops-form-item
+                        :label="$t('quality.可选操作')" :required="true" :property="'operation'"
                         :is-error="formErrors.operationError"
                         :error-msg="$t('quality.可选操作不能为空')">
                         <bk-select multiple v-model="createForm.operation" @selected="toggleOperation">
-                            <bk-option v-for="(option, index) in createForm.dataType === 'BOOLEAN' ? boolConf : handleListConf"
+                            <bk-option
+                                v-for="(option, index) in createForm.dataType === 'BOOLEAN' ? boolConf : handleListConf"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.name">
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <devops-form-item :label="$t('quality.默认阈值')" :required="true" :property="'threshold'" class="default-threshlod-item"
+                    <devops-form-item
+                        :label="$t('quality.默认阈值')" :required="true" :property="'threshold'" class="default-threshlod-item"
                         :is-error="createForm.dataType === 'BOOLEAN' ? formErrors.thresholdError : errors.has('threshold')"
                         :error-msg="errors.first('threshold') || $t('quality.默认阈值不能为空')">
                         <template v-if="createForm.dataType === 'BOOLEAN'">
                             <bk-select v-model="createForm.threshold" @selected="togglethreshold">
-                                <bk-option v-for="(option, index) in optionBoolean"
+                                <bk-option
+                                    v-for="(option, index) in optionBoolean"
                                     :key="index"
                                     :id="option.value"
                                     :name="option.label">
@@ -109,11 +118,13 @@
                             </bk-input>
                         </template>
                     </devops-form-item>
-                    <devops-form-item :label="$t('quality.产出插件')" :required="true" :property="'elementType'"
+                    <devops-form-item
+                        :label="$t('quality.产出插件')" :required="true" :property="'elementType'"
                         :is-error="formErrors.elementTypeError"
                         :error-msg="$t('quality.产出插件不能为空')">
                         <bk-select v-model="createForm.elementType" @selected="formErrors.elementTypeError = false">
-                            <bk-option v-for="(option, index) in atomList"
+                            <bk-option
+                                v-for="(option, index) in atomList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.name">

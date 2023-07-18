@@ -47,7 +47,8 @@
                         <logo name="right-shape" size="16" :class="showIds.includes(task.planId) ? 'task-right-down task-right-shape' : 'task-right-shape'"></logo>
                     </h3>
 
-                    <bk-table class="task-records g-turbo-scroll-table" v-if="showIds.includes(task.planId)"
+                    <bk-table
+                        class="task-records g-turbo-scroll-table" v-if="showIds.includes(task.planId)"
                         :data="task.tableList"
                         :outer-border="false"
                         :header-border="false"

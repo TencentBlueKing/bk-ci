@@ -7,7 +7,8 @@
             </template>
         </content-header>
 
-        <div class="env-detail-container"
+        <div
+            class="env-detail-container"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title

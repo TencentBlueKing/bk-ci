@@ -11,14 +11,16 @@
                 isLoading: loading.isLoading,
                 title: loading.title
             }">
-            <image-empty v-if="showContent && isEmptyRule"
+            <image-empty
+                v-if="showContent && isEmptyRule"
                 :title="emptyInfo.title"
                 :desc="emptyInfo.desc"
                 :btns="emptyInfo.btns">
             </image-empty>
             <div class="quality-overview-content" :class="{ 'overflow-content': isOverflow }" v-if="showContent && !isEmptyRule">
                 <div class="overview-index-list">
-                    <div class="indicator-card" :class="{ 'jumpable-item': index === 0 || index === 2 }"
+                    <div
+                        class="indicator-card" :class="{ 'jumpable-item': index === 0 || index === 2 }"
                         v-for="(entry, index) in indicatorList" :key="index"
                         @click="toLink(entry.label)">
                         <div class="card-info-title">
@@ -36,7 +38,8 @@
                 <div class="intercept-chart-wrapper">
                     <div class="intercept-item intercept-rank">
                         <p class="chart-name">{{$t('quality.流水线拦截Top5')}}</p>
-                        <chart class="chart-wrapper rankchart-wrapper"
+                        <chart
+                            class="chart-wrapper rankchart-wrapper"
                             :loading="loading.isLoading"
                             :option="processOptions('rank')"
                             autoresize
@@ -45,7 +48,8 @@
                     </div>
                     <div class="intercept-item intercept-trend">
                         <p class="chart-name">{{$t('quality.生效流水线执行数/拦截数趋势')}}</p>
-                        <chart class="chart-wrapper trend-chart-wrapper"
+                        <chart
+                            class="chart-wrapper trend-chart-wrapper"
                             :option="processOptions('trend')"
                             :loading="loading.isLoading"
                             autoresize
@@ -72,7 +76,8 @@
                             @row-click="handleRowClick">
                             <bk-table-column :label="$t('quality.流水线')" prop="pipelineName">
                                 <template slot-scope="props">
-                                    <a class="item-times item-pipelinename" :title="props.row.pipelineName"
+                                    <a
+                                        class="item-times item-pipelinename" :title="props.row.pipelineName"
                                         target="_blank"
                                         :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
                                     >{{props.row.pipelineName}}</a>

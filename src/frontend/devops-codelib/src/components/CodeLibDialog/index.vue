@@ -24,7 +24,8 @@
                                 name="name"
                                 class="codelib-credential-selector"
                             >
-                                <bk-option v-for="option in oAuth.project"
+                                <bk-option
+                                    v-for="option in oAuth.project"
                                     :key="option.httpUrl"
                                     :id="option.httpUrl"
                                     :name="option.httpUrl">
@@ -110,7 +111,8 @@
                 <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
                     <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
                     <div class="bk-form-content code-lib-credential" :class="{ 'is-danger': errors.has('credentialId') }">
-                        <bk-select v-model="credentialId"
+                        <bk-select
+                            v-model="credentialId"
                             :loading="isLoadingTickets"
                             searchable
                             :clearable="false"
@@ -120,7 +122,8 @@
                             :placeholder="$t('codelib.credentialPlaceholder')"
                             @toggle="refreshTicket"
                         >
-                            <bk-option v-for="(option, index) in credentialList"
+                            <bk-option
+                                v-for="(option, index) in credentialList"
                                 :key="index"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
@@ -143,7 +146,7 @@
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
-        name: 'codelib-dialog',
+        name: 'CodelibDialog',
         props: {
             padding: {
                 type: Number,

@@ -12,7 +12,8 @@
             }">
 
             <div class="group-content">
-                <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
+                <bk-button
+                    theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
                     @click="toCreateGroup">{{$t('quality.新增')}}</bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
@@ -55,13 +56,15 @@
                         </bk-table-column>
                     </bk-table>
                 </div>
-                <empty-data v-if="showContent && !noticeGroupList.length"
+                <empty-data
+                    v-if="showContent && !noticeGroupList.length"
                     :empty-info="emptyInfo"
                     :to-create-fn="toCreateGroup">
                 </empty-data>
             </div>
 
-            <createGroup :node-select-conf="nodeSelectConf"
+            <createGroup
+                :node-select-conf="nodeSelectConf"
                 :create-group-form="createGroupForm"
                 :loading="dialogLoading"
                 :on-change="onChange"

@@ -1,5 +1,6 @@
 <template>
-    <bk-table class="devops-codelib-table"
+    <bk-table
+        class="devops-codelib-table"
         :data="records"
         :pagination="pagination"
         @sort-change="handleSortChange"
@@ -14,7 +15,8 @@
         <bk-table-column :label="$t('codelib.authIdentity')">
             <template slot-scope="props">
                 <span>{{ props.row.authType }}@</span><!--
-                --><a class="text-link"
+                --><a
+class="text-link"
                     v-if="!['OAUTH'].includes(props.row.authType)"
                     :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
                     target="_blank"

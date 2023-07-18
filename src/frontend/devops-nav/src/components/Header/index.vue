@@ -15,7 +15,8 @@
                 </span>
             </router-link>
             <template v-if="showProjectList">
-                <bk-select ref="projectDropdown"
+                <bk-select
+                    ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
@@ -227,10 +228,10 @@
             }
 
             reload
-? location.href = path
-: this.$router.replace({
-                path
-            })
+                ? location.href = path
+                : this.$router.replace({
+                    path
+                })
         }
 
         handleProjectChange (id: string) {

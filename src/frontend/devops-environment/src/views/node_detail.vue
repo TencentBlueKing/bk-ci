@@ -1,5 +1,6 @@
 <template>
-    <div class="node-detail-wrapper"
+    <div
+        class="node-detail-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
@@ -7,7 +8,8 @@
         <content-header class="info-header">
             <div slot="left">
                 <i class="devops-icon icon-arrows-left" @click="toNodeList"></i>
-                <input type="text" class="bk-form-input display-name-input"
+                <input
+                    type="text" class="bk-form-input display-name-input"
                     ref="nodeName"
                     v-if="editable"
                     maxlength="30"

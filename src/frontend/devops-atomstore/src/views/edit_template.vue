@@ -9,7 +9,8 @@
                     <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <div style="min-width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入中英文名称')"
+                            <input
+                                type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入中英文名称')"
                                 ref="templateName"
                                 name="templateName"
                                 v-model="templateForm.templateName"
@@ -32,7 +33,8 @@
                     <label class="bk-label"> {{ $t('store.分类') }} </label>
                     <div class="bk-form-content template-item-content template-category-content">
                         <bk-select v-model="templateForm.classifyCode" style="width: 40%;" searchable>
-                            <bk-option v-for="(option, index) in sortList"
+                            <bk-option
+                                v-for="(option, index) in sortList"
                                 :key="index"
                                 :id="option.classifyCode"
                                 :name="option.classifyName"
@@ -60,7 +62,8 @@
                     <label class="bk-label"> {{ $t('store.功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
                         <bk-select v-model="templateForm.labelIdList" searchable multiple show-select-all>
-                            <bk-option v-for="(option, index) in labelList"
+                            <bk-option
+                                v-for="(option, index) in labelList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.labelName"
@@ -73,7 +76,8 @@
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
-                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('store.展示在模板市场上的文本简介，不超过256个字符。')"
+                        <input
+                            type="text" class="bk-form-input template-introduction-input" :placeholder="$t('store.展示在模板市场上的文本简介，不超过256个字符。')"
                             name="introduction"
                             maxlength="256"
                             v-model="templateForm.summary"
@@ -94,7 +98,8 @@
                 <div class="bk-form-item remark-form-item is-required" ref="descError">
                     <label class="bk-label"> {{ $t('store.详细描述') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
-                        <mavon-editor class="template-remark-input"
+                        <mavon-editor
+                            class="template-remark-input"
                             :placeholder="descTemplate"
                             ref="mdHook"
                             v-model="templateForm.description"
@@ -123,7 +128,8 @@
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content template-item-content">
                         <div style="width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入')"
+                            <input
+                                type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入')"
                                 name="publisher"
                                 v-model="templateForm.publisher"
                                 v-validate="{
@@ -138,7 +144,8 @@
                 <div class="bk-form-item versionlog-form-item">
                     <label class="bk-label"> {{ $t('store.发布描述') }} </label>
                     <div class="bk-form-content template-item-content">
-                        <textarea type="text" class="bk-form-input template-versionlog-input"
+                        <textarea
+                            type="text" class="bk-form-input template-versionlog-input"
                             placeholder=""
                             v-model="templateForm.pubDescription">
                         </textarea>

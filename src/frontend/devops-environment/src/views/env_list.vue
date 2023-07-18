@@ -7,12 +7,14 @@
             </div>
         </content-header>
 
-        <section class="sub-view-port"
+        <section
+            class="sub-view-port"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
             }">
-            <bk-table v-if="showContent && envList.length"
+            <bk-table
+                v-if="showContent && envList.length"
                 size="small"
                 :data="envList"
                 :row-class-name="getRowClsName"
@@ -42,7 +44,8 @@
                 </bk-table-column>
             </bk-table>
 
-            <empty-node v-if="showContent && !envList.length"
+            <empty-node
+                v-if="showContent && !envList.length"
                 :is-env="true"
                 :to-create-node="toCreateEnv"
                 :empty-info="emptyInfo"></empty-node>

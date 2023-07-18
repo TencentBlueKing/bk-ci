@@ -6,7 +6,8 @@
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button>
-            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+            <bk-input
+                :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
                 right-icon="icon-search"
@@ -45,7 +46,7 @@
         isP4
     } from '../config/'
     export default {
-        name: 'codelib-list',
+        name: 'CodelibList',
 
         components: {
             LinkCodeLib,

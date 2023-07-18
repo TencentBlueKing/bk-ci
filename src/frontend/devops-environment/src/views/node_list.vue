@@ -11,11 +11,13 @@
                 </bk-button>
             </div>
         </content-header>
-        <section class="sub-view-port" v-bkloading="{
-            isLoading: loading.isLoading,
-            title: loading.title
-        }">
-            <bk-table v-if="showContent && nodeList.length"
+        <section
+            class="sub-view-port" v-bkloading="{
+                isLoading: loading.isLoading,
+                title: loading.title
+            }">
+            <bk-table
+                v-if="showContent && nodeList.length"
                 size="medium"
                 class="node-table-wrapper"
                 :row-class-name="getRowCls"
@@ -24,7 +26,8 @@
                     <template slot-scope="props">
                         <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
                             <div class="edit-content">
-                                <input type="text" class="bk-form-input env-name-input"
+                                <input
+                                    type="text" class="bk-form-input env-name-input"
                                     maxlength="30"
                                     name="nodeName"
                                     v-validate="'required'"
@@ -37,7 +40,8 @@
                             </div>
                         </div>
                         <div class="table-node-item node-item-id" v-else>
-                            <span class="node-name"
+                            <span
+                                class="node-name"
                                 :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
@@ -66,7 +70,8 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
                     <template slot-scope="props">
-                        <div class="table-node-item node-item-status"
+                        <div
+                            class="table-node-item node-item-status"
                             v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
                             <span class="node-status-icon normal-stutus-icon"></span>
                             <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
@@ -74,10 +79,12 @@
                         <div class="table-node-item node-item-status">
                             <!-- 状态icon -->
                             <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
-                            <span class="node-status-icon abnormal-stutus-icon"
+                            <span
+                                class="node-status-icon abnormal-stutus-icon"
                                 v-if="failStatus.includes(props.row.nodeStatus)">
                             </span>
-                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                            <div
+                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                                 v-if="runningStatus.includes(props.row.nodeStatus)">
                                 <div class="rotate rotate1"></div>
                                 <div class="rotate rotate2"></div>
@@ -89,13 +96,15 @@
                                 <div class="rotate rotate8"></div>
                             </div>
                             <!-- 状态值 -->
-                            <span class="install-agent"
+                            <span
+                                class="install-agent"
                                 v-if="props.row.nodeStatus === 'RUNNING'"
                                 @click="installAgent(props.row)">
                                 {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
                             </span>
                             <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
-                            <div class="install-agent"
+                            <div
+                                class="install-agent"
                                 v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                 @click="installAgent(props.row)"
                             >{{ `（${$t('environment.install')}Agent）` }}</div>
@@ -114,9 +123,11 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <div class="table-node-item node-item-handler"
+                        <div
+                            class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
+                            <span
+                                class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
                                 v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
@@ -125,12 +136,14 @@
                 </bk-table-column>
             </bk-table>
 
-            <empty-node v-if="showContent && !nodeList.length"
+            <empty-node
+                v-if="showContent && !nodeList.length"
                 :to-import-node="toImportNode"
                 :empty-info="emptyInfo"
             ></empty-node>
         </section>
-        <third-construct :construct-tool-conf="constructToolConf"
+        <third-construct
+            :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
             :gateway-list="gatewayList"

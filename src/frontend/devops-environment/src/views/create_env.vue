@@ -14,7 +14,8 @@
                 title: loading.title
             }">
 
-            <empty-tips v-if="!hasPermission"
+            <empty-tips
+                v-if="!hasPermission"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
                 :btns="emptyTipsConfig.btns">
@@ -52,7 +53,8 @@
                             <bk-radio-group v-model="createEnvForm.source">
                                 <bk-radio :value="'EXISTING'">{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group>
-                            <span class="preview-node-btn"
+                            <span
+                                class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
                                 @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}
                             </span>
@@ -97,7 +99,8 @@
                 </bk-form-item>
             </bk-form>
         </section>
-        <node-select :node-select-conf="nodeSelectConf"
+        <node-select
+            :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
             :row-list="nodeList"

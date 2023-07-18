@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="iosId"
                     v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.p12File') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="p12FileName"
@@ -45,7 +47,8 @@
         <div class="bk-form-item cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certPassword') }}：</label>
             <div class="bk-form-content">
-                <selector :list="credentialList"
+                <selector
+                    :list="credentialList"
                     :display-key="'credentialId'"
                     :setting-key="'credentialId'"
                     :searchable="true"
@@ -69,7 +72,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.remarkFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="mobileProvisionFileName"

@@ -1,7 +1,8 @@
 <template>
     <article class="turbo-home">
         <bk-tab :active.sync="active" type="unborder-card" class="home-nav g-turbo-box-without-radius">
-            <bk-tab-panel v-for="(panel, index) in panels"
+            <bk-tab-panel
+                v-for="(panel, index) in panels"
                 v-bind="panel"
                 :key="index">
                 <template slot="label">

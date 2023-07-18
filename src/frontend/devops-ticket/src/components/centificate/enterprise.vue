@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="enterpriseId"
                     v-validate="{ required: isValidEnterprise, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.remarkFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="mobileProvisionFileName"

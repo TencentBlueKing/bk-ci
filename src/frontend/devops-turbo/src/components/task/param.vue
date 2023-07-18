@@ -2,7 +2,8 @@
     <section class="g-turbo-box task-param">
         <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.加速参数') }} </h3>
         <bk-form class="g-turbo-form-left" :label-width="138" :model="copyFormData.configParam" ref="paramForm">
-            <bk-form-item :label="config.paramName"
+            <bk-form-item
+                :label="config.paramName"
                 :property="config.paramKey"
                 v-for="config in paramConfig"
                 :key="config.paramKey"
@@ -11,7 +12,8 @@
                 :rules="requireRule(config)"
                 error-display-type="normal"
             >
-                <component :is="'param-' + config.paramType"
+                <component
+                    :is="'param-' + config.paramType"
                     v-bind="config"
                     v-if="config.displayed"
                     :disabled="!isEdit"

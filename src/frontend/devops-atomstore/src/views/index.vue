@@ -6,7 +6,7 @@
 
 <script>
     export default {
-        name: 'app',
+        name: 'App',
 
         computed: {
             logo () {

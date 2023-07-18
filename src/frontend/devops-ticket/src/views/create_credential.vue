@@ -54,14 +54,16 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('ticket.id') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\_]{1,40}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateId')"
+                            <input
+                                type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\_]{1,40}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateId')"
                                 v-model="localConfig.credentialId"
                                 :class="{
                                     'is-danger': errors.has('credentialId')
                                 }"
                                 :disabled="nameReadOnly"
                             >
-                            <p class="error-tips"
+                            <p
+                                class="error-tips"
                                 v-show="errors.has('credentialId')">
                                 {{ `${$t('ticket.credential.validateId')}` }}
                             </p>
@@ -73,14 +75,16 @@
                     <div class="bk-form-item">
                         <label class="bk-label">{{ $t('ticket.name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,64}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
+                            <input
+                                type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,64}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
                                 v-model="localConfig.credentialName"
                                 :class="{
                                     'is-danger': errors.has('credentialName')
                                 }"
                             >
                             <i class="devops-icon icon-info-circle name-icon" v-bk-tooltips="{ content: $t('ticket.credential.nameTips') }"></i>
-                            <p class="error-tips"
+                            <p
+                                class="error-tips"
                                 v-show="errors.has('credentialName')">
                                 {{ `${$t('ticket.credential.validateName')}` }}
                             </p>
@@ -95,7 +99,8 @@
                             <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'devops-icon icon-hide' : 'devops-icon icon-eye'"></i></a>
                             <component v-validate="($t(obj.label) === $t('ticket.credential.sshKey') && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
                             <component v-validate="obj.rule" v-if="obj.type === 'password' && showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" type="text" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
-                            <p class="error-tips"
+                            <p
+                                class="error-tips"
                                 v-show="errors.has(key)">
                                 {{$t(obj.errorMsg)}}
                             </p>
@@ -107,13 +112,15 @@
                     <div class="bk-form-item cre-content">
                         <label class="bk-label">{{ $t('ticket.remark') }}：</label>
                         <div class="bk-form-content">
-                            <textarea class="bk-form-textarea" :placeholder="$t('ticket.credential.credentialRemark')" name="credentialDesc" v-validate="{ required: false, max: 50 }"
+                            <textarea
+                                class="bk-form-textarea" :placeholder="$t('ticket.credential.credentialRemark')" name="credentialDesc" v-validate="{ required: false, max: 50 }"
                                 :class="{
                                     'is-danger': errors.has('credentialDesc')
                                 }"
                                 v-model="localConfig.credentialRemark"
                             ></textarea>
-                            <p class="error-tips"
+                            <p
+                                class="error-tips"
                                 v-show="errors.has('credentialDesc')">
                                 {{ $t('ticket.credential.remarkLenLimit') }}
                             </p>

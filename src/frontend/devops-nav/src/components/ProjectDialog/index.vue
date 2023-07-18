@@ -196,7 +196,7 @@
             } catch (err) {
                 this.handleError(err, this.$permissionActionMap.create)
             } finally {
-              setTimeout(() => {
+                setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -224,7 +224,7 @@
                     this.isCreating = false
                 }, 100)
             } finally {
-              setTimeout(() => {
+                setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -257,20 +257,20 @@
         }
 
         handleError (e, actionId, instanceId = []) {
-          if (e.code === 403) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId,
-                    instanceId,
-                    resourceId: this.$permissionResourceMap.project
-                }]
-            })
-          } else {
-            this.$bkMessage({
-                theme: 'error',
-                message: e.message || this.$t('exception.apiError')
-            })
-          }
+            if (e.code === 403) {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId,
+                        instanceId,
+                        resourceId: this.$permissionResourceMap.project
+                    }]
+                })
+            } else {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: e.message || this.$t('exception.apiError')
+                })
+            }
         }
     }
 </script>

@@ -277,12 +277,12 @@
         }
 
         async checkCreatePermission () {
-          try {
-            const hasCreatePermission = await this.hasCreateProjectPermission()
-            this.hasCreatePermission = hasCreatePermission
-          } catch (e) {
-            this.hasCreatePermission = false
-          }
+            try {
+                const hasCreatePermission = await this.hasCreateProjectPermission()
+                this.hasCreatePermission = hasCreatePermission
+            } catch (e) {
+                this.hasCreatePermission = false
+            }
         }
 
         async fetchAllProjects () {
@@ -404,10 +404,10 @@
                         return true
                     } catch (error) {
                         if (error.code === 403) {
-                          this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
-                            id: projectCode,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                          }])
+                            this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
+                                id: projectCode,
+                                type: this.$permissionResourceTypeMap.PROJECT
+                            }])
                         } else {
                             msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
                         }

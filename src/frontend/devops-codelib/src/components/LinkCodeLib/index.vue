@@ -15,7 +15,7 @@
 <script>
     import { codelibTypes } from '../../config'
     export default {
-        name: 'link-code-lib',
+        name: 'LinkCodeLib',
         props: {
             createCodelib: {
                 type: Function,

@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="sslTlsId"
                     v-validate="{ required: isValidSSL, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.serverCertFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="serverCrtFileName"
@@ -44,7 +46,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.serverKeyFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="serverKeyFileName"
@@ -68,7 +71,8 @@
         <div class="bk-form-item cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.userCertFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="clientCrtFileName"
@@ -89,7 +93,8 @@
         <div class="bk-form-item cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.userKeyFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="clientKeyFileName"

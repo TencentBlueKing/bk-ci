@@ -2,7 +2,8 @@
     <article class="history-list-home">
         <main class="g-turbo-box history-list-main" v-if="hasPermission">
             <header class="filter-area">
-                <bk-select multiple
+                <bk-select
+                    multiple
                     :value="filter.value"
                     @change="(options) => chooseFilter(filter.key, options)"
                     searchable
@@ -13,7 +14,8 @@
                     :key="filter.key"
                     :placeholder="filter.placeholder"
                 >
-                    <bk-option v-for="(value, key) in filter.list"
+                    <bk-option
+                        v-for="(value, key) in filter.list"
                         :key="key"
                         :id="key"
                         :name="value">
@@ -23,7 +25,8 @@
                 <bk-button @click="clearFilter" class="clear-btn"> {{ $t('turbo.重置') }} </bk-button>
             </header>
 
-            <bk-table class="history-records g-turbo-scroll-table"
+            <bk-table
+                class="history-records g-turbo-scroll-table"
                 :data="historyList"
                 :outer-border="false"
                 :header-border="false"

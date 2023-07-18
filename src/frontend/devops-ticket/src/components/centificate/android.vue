@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="androidId"
                     v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.jksFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="jksFileName"
@@ -45,7 +47,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certPassword') }}：</label>
             <div class="bk-form-content">
-                <selector name="credentialId"
+                <selector
+                    name="credentialId"
                     v-model="formData.credentialId"
                     v-validate="{ required: true }"
                     :list="credentialList"
@@ -73,7 +76,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certAlias') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="alias"
                     v-validate="{ required: true }"
@@ -90,7 +94,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.aliasPassword') }}：</label>
             <div class="bk-form-content">
-                <selector name="aliasCredentialId"
+                <selector
+                    name="aliasCredentialId"
                     v-validate="{ required: true }"
                     v-model="formData.aliasCredentialId"
                     :list="credentialList"
