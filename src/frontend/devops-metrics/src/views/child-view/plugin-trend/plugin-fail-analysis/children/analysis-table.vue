@@ -32,6 +32,7 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    showOverflowTooltip: true,
     render ({ cell, row }) {
       return h(
         'span',

@@ -159,8 +159,14 @@
                                 </template>
                             </bk-popover>
                         </div>
-
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
+
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.标识') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
@@ -186,6 +192,12 @@
                                 </template>
                             </bk-popover>
                         </div>
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.调试项目') }} </label>
@@ -258,12 +270,24 @@
                                     :placeholder="$t('store.请选择开发语言')"
                                 >
                                 </bk-option>
+                                <div slot="extension" style="cursor: pointer;">
+                                    <a :href="itemUrl" target="_blank">
+                                        <i class="devops-icon icon-plus-circle" />
+                                        {{ itemText }}
+                                    </a>
+                                </div>
                             </bk-select>
                             <div
                                 v-if="atomErrors.languageError"
                                 class="error-tips"
                             > {{ $t('store.开发语言不能为空') }} </div>
                         </div>
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.debugProjectTips') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
                     <template v-if="!isEnterprise">
                         <div class="bk-form-item is-required">

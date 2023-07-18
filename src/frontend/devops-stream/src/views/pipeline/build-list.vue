@@ -478,7 +478,7 @@
             },
 
             getIconClass (status) {
-                return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status)]
+                return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status), 'statuc-icon']
             },
 
             handleStatusChange (val, id) {

@@ -22,7 +22,7 @@
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.镜像名称')" width="180" show-overflow-tooltip>
+                <bk-table-column :label="$t('store.镜像名称')" width="200" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="atom-name" :title="props.row.imageName" @click="goToImageDetail(props.row.imageCode)">{{ props.row.imageName }}</span>
                     </template>
@@ -97,7 +97,7 @@
                     >
                         <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
                         <bk-popover placement="right" class="is-tooltips">
-                            <i class="devops-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle info-icon"></i>
                             <template slot="content">
                                 <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符') }} </p>
                             </template>
@@ -459,7 +459,6 @@
             handleChangeForm () {
                 window.changeFlag = true
             },
-
             toggleProjectList () {
                 this.handleChangeForm()
                 this.relateImageData.form.ticketId = ''

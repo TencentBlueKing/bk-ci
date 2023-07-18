@@ -116,6 +116,7 @@ const getData = () => {
         const column = {
           label,
           field,
+          showOverflowTooltip: true,
           sort: true,
         }
         if (field === 'atomCode') {
