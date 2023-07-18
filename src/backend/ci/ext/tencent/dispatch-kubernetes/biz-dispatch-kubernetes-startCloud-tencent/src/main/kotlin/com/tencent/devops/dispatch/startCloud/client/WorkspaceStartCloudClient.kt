@@ -35,7 +35,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val OK = 0
         const val USER_ALREADY_EXISTED = 32001
         const val HAS_BEEN_DELETED = 32006
-        const val APP_NOT_FOUND_CGS = 32005
+        const val APP_NOT_BIND_CGS = 32004
+        const val NO_CGS_CHOOSE = 32005
     }
 
     @Value("\${startCloud.appId}")
@@ -47,7 +48,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.apiUrl}")
     val apiUrl: String = ""
 
-    fun createWorkspace(userId: String, environment: EnvironmentCreate): String {
+    fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
         val url = "$apiUrl/openapi/computer/create"
         val body = JsonUtil.toJson(environment, false)
         logger.info("User $userId request url: $url, body: $body")
@@ -71,25 +72,26 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口异常: ${response.code}"
+                        "第三方服务-START-CLOUD 异常，异常信息 - 创建环境接口异常: ${response.code}"
                     )
                 }
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
-                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data.cgsIp
-                    APP_NOT_FOUND_CGS == environmentRsp.code -> throw BuildFailureException(
+                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data
+                    APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
+                    -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，云桌面资源不足($APP_NOT_FOUND_CGS)"
+                        "第三方服务-START-CLOUD 异常，云桌面资源不足(${environmentRsp.code})"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口返回失败" +
+                        "第三方服务-START-CLOUD 异常，- 创建环境接口返回失败" +
                             ": ${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
@@ -100,7 +102,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口超时, url: $url"
+                errorMessage = "第三方服务-START-CLOUD 异常 - 创建环境接口超时, url: $url"
             )
         }
     }
@@ -128,7 +130,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口异常: ${response.code}"
+                        "第三方服务-START-CLOUD 异常，异常信息 - 创建user接口异常: ${response.code}"
                     )
                 }
 
@@ -139,14 +141,14 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回失败:" +
+                        "第三方服务-START-CLOUD 异常，异常信息 - 创建user接口返回失败:" +
                             "${environmentRsp.code}-${environmentRsp.message}"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回异常:" +
+                        "第三方服务-START-CLOUD 异常，异常信息 - 创建user接口返回异常:" +
                             "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
@@ -157,7 +159,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口超时, url: $url"
+                errorMessage = "第三方服务-START-CLOUD 异常，异常信息 - 创建user接口超时, url: $url"
             )
         }
     }
@@ -191,7 +193,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口异常：${response.code}"
+                        "第三方服务-START-CLOUD 异常，异常信息 - 操作环境接口异常：${response.code}"
                     )
                 }
                 logger.info("User $userId  environment response: $responseContent")
@@ -210,7 +212,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：" +
+                        "第三方服务-START-CLOUD 异常，异常信息 - 操作环境接口返回失败：" +
                             "${environmentOpRsp.code}-${environmentOpRsp.message}"
                     )
                 }
@@ -221,7 +223,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口超时, url: $url"
+                errorMessage = "第三方服务-START-CLOUD 异常，异常信息 - 操作环境接口超时, url: $url"
             )
         }
     }

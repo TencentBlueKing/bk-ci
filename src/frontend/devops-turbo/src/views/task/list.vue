@@ -15,7 +15,7 @@
                     <h3 :class="['card-head', { 'disabled': !task.openStatus }]" @click="toggleShowCard(task)">
                         <p class="task-name">
                             <span class="g-turbo-deep-black-font name-desc" @click.stop="$router.push({ name: 'taskDetail', params: { id: task.planId } })">
-                                <span class="g-turbo-text-overflow plan-name">{{ task.planName }}</span>
+                                <span v-bk-overflow-tips class="g-turbo-text-overflow plan-name">{{ task.planName }}</span>
                                 <span class="name-detail">{{ task.engineName }}</span>
                             </span>
                             <span class="g-turbo-gray-font name-hash g-turbo-text-overflow">
@@ -54,12 +54,13 @@
                         :header-cell-style="{ background: '#f5f6fa' }"
                         :pagination="task.pagination"
                         v-bkloading="{ isLoading: task.loading }"
+                        :empty-text="$t('turbo.暂无数据')"
                         @page-change="(page) => pageChanged(page, task)"
                         @page-limit-change="(currentLimit) => pageLimitChange(currentLimit, task)"
                         @sort-change="(sort) => sortChange(sort, task)"
                         @row-click="(row) => rowClick(row, task)"
                     >
-                        <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable>
+                        <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable show-overflow-tooltip>
                             <template slot-scope="props">
                                 <span v-if="props.row.pipelineName">
                                     {{ props.row.pipelineName }}
@@ -349,6 +350,9 @@
             .name-desc {
                 line-height: 22px;
                 display: inline-block;
+                width: 90%;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .name-hash {
                 font-size: 12px;

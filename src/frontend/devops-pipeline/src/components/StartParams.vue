@@ -1,42 +1,42 @@
 <template>
     <section class="startup-parameter-box" v-bkloading="{ isLoading }">
         <div class="startup-parameter-wrapper">
-            <div class="build-param-row" v-for="(_chunk, index) in paramChunks" :key="index">
-                <div class="build-param-column" v-for="param in _chunk" :key="param.key">
-                    <span class="build-param-span">
-                        <span class="build-param-key-span" :title="param.key">
-                            {{ param.key }}
+            <div ref="parent" class="build-param-row" v-for="(param, index) in params" :key="index">
+                <span class="build-param-span">
+                    <span class="build-param-key-span" :title="param.key">
+                        {{ param.key }}
+                    </span>
+                    <i
+                        v-if="param.desc"
+                        v-bk-tooltips="param.desc"
+                        class="devops-icon icon-question-circle"
+                    />
+                </span>
+                <span class="build-param-span">
+                    <template v-if="typeof param.value !== 'undefined'">
+                        <span
+                            ref="valueSpan"
+                            :class="{
+                                'build-param-value-span': true,
+                                'diff-param-value': param.isDiff
+                            }"
+                        >
+                            {{ param.value }}
                         </span>
-                        <i
-                            v-if="param.desc"
-                            v-bk-tooltips="param.desc"
-                            class="devops-icon icon-question-circle"
-                        />
-                    </span>
-                    <span class="build-param-span">
-                        <template v-if="typeof param.value !== 'undefined'">
-                            <span
-                                :class="{
-                                    'build-param-value-span': true,
-                                    'diff-param-value': param.isDiff
-                                }"
-                            >
-                                {{ param.value }}
-                            </span>
-                            <bk-button
-                                v-if="param.isOverflow"
-                                text
-                                class="view-param-value-detail"
-                                size="small"
-                                @click="showDetail(param)"
-                            >
-                                {{ $t("detail") }}
-                            </bk-button>
-                        </template>
-                        <span v-else>--</span>
-                    </span>
-                </div>
+                        <bk-button
+                            v-if="overflowSpan[index]"
+                            text
+                            class="view-param-value-detail"
+                            size="small"
+                            @click="showDetail(param)"
+                        >
+                            {{ $t("detail") }}
+                        </bk-button>
+                    </template>
+                    <span v-else>--</span>
+                </span>
             </div>
+            
             <bk-sideslider
                 quick-close
                 :width="640"
@@ -62,12 +62,8 @@
                 params: [],
                 defaultParamMap: {},
                 activeParam: null,
-                isDetailShow: false
-            }
-        },
-        computed: {
-            paramChunks () {
-                return this.chunk(this.params, 2)
+                isDetailShow: false,
+                overflowSpan: []
             }
         },
         watch: {
@@ -103,10 +99,11 @@
                     }, {})
                     this.params = res.map((item) => ({
                         ...item,
-                        isDiff: this.isDefaultDiff(item),
-                        isOverflow: this.isOverflow(item.value ?? '')
+                        isDiff: this.isDefaultDiff(item)
                     }))
-                    console.log(this.params)
+                    this.$nextTick(() => {
+                        this.overflowSpan = this.isOverflow()
+                    })
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -120,27 +117,12 @@
                 }
                 return defaultValue !== value
             },
-            chunk (list, size = 2) {
-                if (!Array.isArray(list) || !Number.isInteger(size) || size < 0) {
+            isOverflow () {
+                try {
+                    return this.$refs.valueSpan?.map(span => span.scrollWidth > span.clientWidth) ?? []
+                } catch (e) {
                     return []
                 }
-                if (list.length < size) {
-                    return [list]
-                }
-                let resultIndex = 0
-                let index = 0
-                const result = []
-                while (index < list.length) {
-                    result[resultIndex++] = list.slice(index, (index += size))
-                }
-                return result
-            },
-            isOverflow (text) {
-                if (!text) return false
-                const canvas = document.createElement('canvas')
-                const context = canvas.getContext('2d')
-                const { width } = context.measureText(text)
-                return width > 282
             }
         }
     }
@@ -154,38 +136,33 @@
     padding: 24px;
 }
 .startup-parameter-wrapper {
-  border: 1px solid #dcdee5;
   border-radius: 2px;
   width: fit-content;
+  width: 100%;
   .build-param-row {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #dcdee5;
+    border: 1px solid #dcdee5;
+    border-bottom: 0;
+    border-collapse: collapse;
     &:last-child {
-      border-bottom: 0;
+        border-bottom: 1px solid #dcdee5;
     }
-
-    .build-param-column {
-      display: flex;
-      align-items: center;
-      &:nth-child(2n) {
-        .build-param-span:last-child {
-          border-right: 0;
-        }
-      }
-      .build-param-span {
-        border-right: 1px solid #dcdee5;
+    .build-param-span {
+        @include ellipsis();
         display: flex;
         align-items: center;
         font-size: 12px;
         height: 42px;
         line-height: 42px;
-        width: 382px;
+        flex: 1;
         padding: 0 16px;
+        
         &:first-child {
           color: #313238;
           background-color: #fafbfd;
-          width: 218px;
+          max-width: 382px;
+          border-right: 1px solid #dcdee5;
         }
         > .icon-question-circle {
           margin-left: auto;
@@ -193,10 +170,9 @@
           flex-shrink: 0;
           color: #979ba5;
         }
-        .build-param-value-span,
-        .build-param-key-span {
-          @include ellipsis();
-          margin-right: 4px;
+        .build-param-value-span {
+            @include ellipsis();
+            flex: 1;
         }
         .view-param-value-detail {
           display: flex;
@@ -209,7 +185,6 @@
           color: #4cbd20;
         }
       }
-    }
   }
 }
 .startup-param-detail-wrapper {

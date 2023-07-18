@@ -42,6 +42,10 @@ const handleToPluginTrend = () => {
     name: 'PluginRunAnalysis'
   })
 };
+
+const handleClear = (payload) => {
+  handleFilterChange(payload);
+};
 </script>
 
 <template>
@@ -68,6 +72,7 @@ const handleToPluginTrend = () => {
       :status="status"
       :reset-btn-disabled="resetBtnDisabled"
       @change="handleChangeResetBtnDisabled"
+      @clear="handleClear"
     />
   </main>
 </template>

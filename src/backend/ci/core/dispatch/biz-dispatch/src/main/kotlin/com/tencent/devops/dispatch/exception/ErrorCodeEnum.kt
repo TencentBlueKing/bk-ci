@@ -103,6 +103,16 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103018,
         "构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群："
+    ),
+    NO_CONTAINER_IS_READY_DEBUG(
+        ErrorType.USER,
+        2103019,
+        "pipeline({0})没有可用的容器进行登录调试"
+    ),
+    DEBUG_CONTAINER_URL_ERROR(
+        ErrorType.USER,
+        2103020,
+        "获取登录调试容器链接失败 ({0})"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

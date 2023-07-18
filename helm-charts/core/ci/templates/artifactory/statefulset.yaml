@@ -61,7 +61,7 @@ spec:
       {{- end }}        
       containers:
         - name: artifactory
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.artifactory.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.artifactory.containerSecurityContext "enabled" | toYaml | nindent 12 }}

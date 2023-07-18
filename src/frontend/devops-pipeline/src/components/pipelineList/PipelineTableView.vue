@@ -220,11 +220,11 @@
         DELETED_VIEW_ID,
         RECENT_USED_VIEW_ID
     } from '@/store/constants'
-    import {
-        RESOURCE_ACTION,
-        handlePipelineNoPermission
-    } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { convertTime, isShallowEqual } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE
     PROJECT_ID      varchar(64)   default ''                not null comment '项目ID',
     WORKSPACE_NAME  varchar(128)  default ''                not null comment '工作空间名称，唯一性',
     ENVIRONMENT_UID varchar(128)  default ''                not null comment 'DevCloud环境ID',
+	REGION_ID 		int(11) 	  default 0 				not null comment '云区域ID' ,
     GIT_URL         varchar(1024) default ''                not null comment '工蜂项目地址',
     BRANCH          varchar(1024) default ''                not null comment '工蜂项目分支',
     IMAGE           varchar(256)  default ''                not null comment '工作空间镜像',

@@ -1,6 +1,6 @@
 <template>
-  <permission-dialog
-    :isShow="isShow"
+  <bk-dialog
+    :value="isShow"
     :width="700"
     :title="title"
     @cancel="handleCancel"
@@ -52,7 +52,7 @@
             :max="365"
             @change="handleChangeCustomTime"
           >
-            <template v-slot:append>
+            <template #append>
               <div class="group-text">
                 {{ t('天') }}
               </div>
@@ -84,7 +84,7 @@
         </bk-input>
       </bk-form-item>
     </bk-form>
-    <template v-slot:footer>
+    <template #footer>
       <bk-button
         class="mr10"
         theme="primary"
@@ -100,17 +100,13 @@
         {{ t('取消') }}
       </bk-button>
     </template>
-  </permission-dialog>
+  </bk-dialog>
 </template>
 <script>
 import ajax from '../../../ajax/index';
-import PermissionDialog from '../../widget-components/dialog'
-import { localeMixins } from '../../../utils/locale'
+import { localeMixins } from '../../../utils/locale';
 
 export default {
-  components: {
-    PermissionDialog
-  },
   mixins: [localeMixins],
   props: {
     isShow: {
@@ -142,7 +138,7 @@ export default {
   },
   emits: ['update:show'],
   data() {
-    const self = this
+    const self = this;
     return {
       isLoading: false,
       pagination: {

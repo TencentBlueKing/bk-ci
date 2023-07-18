@@ -751,7 +751,7 @@ class DispatchDevCloudClient {
             var success = true
             var isFinish = false
             val statusResponse = getContainerStatus(projectId, pipelineId,
-                buildId, vmSeqId, userId, containerName)
+                                                    buildId, vmSeqId, userId, containerName)
             val actionCode = statusResponse.optInt("actionCode")
             if (actionCode == 200) {
                 val status = statusResponse.optString("data")

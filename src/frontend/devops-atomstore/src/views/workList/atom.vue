@@ -29,7 +29,7 @@
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.插件名称')">
+                <bk-table-column :label="$t('store.插件名称')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span
                             class="atom-name"
@@ -41,14 +41,17 @@
                 <bk-table-column
                     :label="$t('store.调试项目')"
                     prop="projectName"
+                    show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.开发语言')"
                     prop="language"
+                    show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.版本')"
                     prop="version"
+                    show-overflow-tooltip
                 >
                     <template slot-scope="props">
                         <span
@@ -67,10 +70,12 @@
                 <bk-table-column
                     :label="$t('store.修改人')"
                     prop="modifier"
+                    show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"
+                    show-overflow-tooltip
                     width="150"
                 ></bk-table-column>
                 <bk-table-column
@@ -111,6 +116,9 @@
                         > {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+                </template>
             </bk-table>
         </main>
         <bk-sideslider
@@ -122,7 +130,8 @@
             :is-show.sync="createAtomsideConfig.show"
             :title="createAtomsideConfig.title"
             :quick-close="createAtomsideConfig.quickClose"
-            :width="createAtomsideConfig.width">
+            :width="createAtomsideConfig.width"
+            :before-close="cancelCreateAtom">
             <template slot="content">
                 <form
                     v-if="hasOauth"
@@ -141,6 +150,7 @@
                                         required: true,
                                         regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_. ]{1,40}$'
                                     }"
+                                    @change="handleChangeForm"
                                     :class="{ 'is-danger': errors.has('atomName') }"
                                 />
                                 <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">
@@ -154,8 +164,14 @@
                                 </template>
                             </bk-popover>
                         </div>
-
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
+
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.标识') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
@@ -167,6 +183,7 @@
                                         required: true,
                                         regex: '^[a-zA-Z][a-zA-Z0-9_-]{1,30}$'
                                     }"
+                                    @change="handleChangeForm"
                                     :class="{ 'is-danger': errors.has('atomId') }"
                                 />
                                 <p :class="errors.has('atomId') ? 'error-tips' : 'normal-tips'">
@@ -180,6 +197,12 @@
                                 </template>
                             </bk-popover>
                         </div>
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.调试项目') }} </label>
@@ -187,6 +210,7 @@
                             <div style="min-width: 100%">
                                 <bk-select v-model="createAtomForm.projectCode"
                                     @selected="selectedProject"
+                                    @change="handleChangeForm"
                                     @toggle="toggleProjectList"
                                     searchable
                                     :placeholder="$t('store.请选择调试项目')"
@@ -216,6 +240,7 @@
                             </div>
                             
                             <bk-popover
+                                class="info-circle-icon"
                                 placement="right"
                                 class="info-circle-icon"
                                 width="400"
@@ -233,6 +258,7 @@
                             <bk-select
                                 v-model="createAtomForm.language"
                                 searchable
+                                @change="handleChangeForm"
                             >
                                 <bk-option
                                     v-for="(option, index) in languageList"
@@ -243,18 +269,30 @@
                                     :placeholder="$t('store.请选择开发语言')"
                                 >
                                 </bk-option>
+                                <div slot="extension" style="cursor: pointer;">
+                                    <a :href="itemUrl" target="_blank">
+                                        <i class="devops-icon icon-plus-circle" />
+                                        {{ itemText }}
+                                    </a>
+                                </div>
                             </bk-select>
                             <div
                                 v-if="atomErrors.languageError"
                                 class="error-tips"
                             > {{ $t('store.开发语言不能为空') }} </div>
                         </div>
+                        <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.debugProjectTips') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
                     <template v-if="!isEnterprise">
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.授权方式') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <bk-radio-group v-model="createAtomForm.authType">
+                                <bk-radio-group v-model="createAtomForm.authType" @change="handleChangeForm">
                                     <bk-radio
                                         :value="entry.value"
                                         v-for="(entry, key) in authTypeList"
@@ -266,7 +304,7 @@
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.是否开源') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <bk-radio-group v-model="createAtomForm.visibilityLevel">
+                                <bk-radio-group v-model="createAtomForm.visibilityLevel" @change="handleChangeForm">
                                     <bk-radio
                                         :disabled="entry.disable"
                                         :title="entry.title"
@@ -293,6 +331,7 @@
                                     type="textarea"
                                     :placeholder="$t('store.请输入不开源原因')"
                                     @input="atomErrors.privateReasonError = false"
+                                    @change="handleChangeForm"
                                 ></bk-input>
                                 <p
                                     v-if="atomErrors.privateReasonError"
@@ -309,7 +348,7 @@
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.自定义前端') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <bk-radio-group v-model="createAtomForm.frontendType">
+                                <bk-radio-group v-model="createAtomForm.frontendType" @change="handleChangeForm">
                                     <bk-radio
                                         :title="entry.title"
                                         :value="entry.value"
@@ -654,6 +693,7 @@
                 }
             },
             searchName () {
+                this.isLoading = true
                 debounce(this.search)
             }
         },
@@ -854,13 +894,23 @@
 
                         message = this.$t('store.新增成功')
                         theme = 'success'
-                        this.cancelCreateAtom()
+                        
                         this.routerAtoms(this.createAtomForm.atomCode)
                         this.requestList()
                     } catch (err) {
                         message = err.message ? err.message : err
                         theme = 'error'
                     } finally {
+                        this.createAtomForm = {
+                            projectCode: '',
+                            atomCode: '',
+                            name: '',
+                            language: '',
+                            frontendType: 'NORMAL'
+                        }
+                        setTimeout(() => {
+                            this.createAtomsideConfig.show = false
+                        })
                         this.$bkMessage({
                             message,
                             theme
@@ -921,7 +971,34 @@
             },
 
             cancelCreateAtom () {
-                this.createAtomsideConfig.show = false
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            this.createAtomForm = {
+                                projectCode: '',
+                                atomCode: '',
+                                name: '',
+                                language: '',
+                                frontendType: 'NORMAL'
+                            }
+                            setTimeout(() => {
+                                this.createAtomsideConfig.show = false
+                            })
+                            return true
+                        }
+                    })
+                } else {
+                    this.createAtomsideConfig.show = false
+                }
             },
 
             routerAtoms (code) {
@@ -952,6 +1029,7 @@
             },
 
             createNewAtom () {
+                window.changeFlag = false
                 this.showConvention = false
                 this.createAtomsideConfig.show = true
             },
@@ -1018,6 +1096,10 @@
                 this.deleteObj.formData.atomCode = ''
                 this.deleteObj.atomCode = ''
                 this.deleteObj.name = ''
+            },
+
+            handleChangeForm () {
+                window.changeFlag = true
             }
         }
     }

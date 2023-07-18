@@ -8,5 +8,7 @@ data class BkTicketInfo(
     @ApiModelProperty("bkTicket")
     val bkTicket: String,
     @ApiModelProperty("hostName")
-    val hostName: String
+    val hostName: String,
+    @ApiModelProperty("mountType")
+    val mountType: WorkspaceMountType
 )

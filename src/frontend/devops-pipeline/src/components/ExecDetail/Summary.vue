@@ -32,7 +32,7 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li v-for="material in visibleMaterial" :key="material.newCommitId">
+                        <li v-for="(material, index) in visibleMaterial" :key="index">
                             <material-item :material="material" />
                         </li>
                     </ul>
@@ -76,7 +76,18 @@
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
-                    <span class="exec-remark" v-else>{{ remark || "--" }}</span>
+                    <span
+                        v-else
+                        v-bk-tooltips="{
+                            content: remark,
+                            disabled: !remark,
+                            allowHTML: false,
+                            delay: [300, 0]
+                        }"
+                        class="exec-remark"
+                    >
+                        {{ remark || "--" }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -336,11 +347,8 @@
       .exec-remark {
         width: 100%;
         align-items: center;
-        overflow: hidden;
-        display: -webkit-box;
-        text-overflow: ellipsis;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        display: inline-block;
+        @include ellipsis();
 
         .bk-form-textarea,
         .bk-textarea-wrapper {

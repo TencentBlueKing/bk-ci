@@ -64,7 +64,7 @@
                 theme="warning"
                 @click.stop="debugDocker"
             >
-                {{ t("editPage.docker.debugConsole") }}
+                {{ t("debugConsole") }}
             </bk-button>
             <Logo
                 v-if="container.locateActive"

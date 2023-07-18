@@ -36,7 +36,7 @@
                 @sort-change="sortChange"
             >
                 <bk-table-column :label="$t('turbo.编号')" prop="executeNum" width="80" sortable></bk-table-column>
-                <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable>
+                <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable show-overflow-tooltip>
                     <template slot-scope="props">
                         <span v-if="props.row.pipelineName">
                             {{ props.row.pipelineName }}
@@ -54,6 +54,9 @@
                 <bk-table-column :label="$t('turbo.未加速耗时')" prop="estimateTimeValue" sortable></bk-table-column>
                 <bk-table-column :label="$t('turbo.实际耗时')" prop="executeTimeValue" sortable></bk-table-column>
                 <bk-table-column :label="$t('turbo.节省率')" prop="turboRatio" sortable></bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="emptyType" @clear="clearFilter" />
+                </template>
             </bk-table>
         </main>
         <permission-exception v-else :message="errMessage" />
@@ -65,12 +68,14 @@
     import taskStatus from '../../components/task-status.vue'
     import logo from '../../components/logo'
     import permissionException from '../../components/exception/permission.vue'
+    import EmptyTableStatus from '../../components/empty-table-status.vue'
 
     export default {
         components: {
             taskStatus,
             logo,
-            permissionException
+            permissionException,
+            EmptyTableStatus
         },
 
         data () {
@@ -117,6 +122,19 @@
 
             projectId () {
                 return this.$route.params.projectId
+            },
+            
+            emptyType () {
+                return (
+                    this.turboPlanId.length
+                    || this.pipelineId.length
+                    || this.status.length
+                    || this.timeRange.length
+                    || this.startTime
+                    || this.endTime
+                )
+                    ? 'search-empty'
+                    : 'empty'
             }
         },
 

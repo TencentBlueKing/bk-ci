@@ -79,6 +79,7 @@
 
 <script>
     import { debounce } from '@/utils/index'
+    import eventBus from '@/utils/eventBus'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
     import breadCrumbs from '@/components/bread-crumbs.vue'
@@ -186,6 +187,13 @@
 
         created () {
             if (VERSION_TYPE === 'ee') this.storeTypes.splice(2, 1)
+            eventBus.$off('clear')
+            eventBus.$on('clear', () => {
+                this.filterData.classifyValue = 'all'
+                this.filterData.searchStr = ''
+                this.clearFliterData('rates')
+                this.clearFliterData('features')
+            })
         },
 
         methods: {

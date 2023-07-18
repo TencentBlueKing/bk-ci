@@ -121,14 +121,14 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import ExtMenu from '@/components/pipelineList/extMenu'
+    import { statusColorMap } from '@/utils/pipelineStatus'
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
-    import { RECENT_USED_VIEW_ID } from '@/store/constants'
+    import ExtMenu from '@/components/pipelineList/extMenu'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { statusColorMap } from '@/utils/pipelineStatus'
+    import { RECENT_USED_VIEW_ID } from '@/store/constants'
 
     export default {
         components: {

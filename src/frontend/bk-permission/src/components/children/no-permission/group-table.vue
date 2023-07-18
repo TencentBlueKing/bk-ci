@@ -55,10 +55,10 @@
         </template>
       </bk-table-column>
     </bk-table>
-    <side-slider
-      :is-show="showDetail"
+    <bk-sideslider
+      quick-close
+      :is-show.sync="showDetail"
       :width="640"
-      @hidden="handleHidden"
     >
       <template v-slot:header>
         <div class="detail-title">
@@ -82,18 +82,19 @@
           </div>
         </div>
       </template>
-    </side-slider>
-    <permission-dialog
-      :is-show="logout.isShow"
+    </bk-sideslider>
+    <bk-dialog
+      :value="logout.isShow"
       :title="t('确认退出用户组')"
       :loading="logout.loading"
       @confirm="handleLogout"
       @cancel="handleCancelLogout"
     >
       {{ t('退出后，将无法再使用所赋予的权限。', [logout.name]) }}
-    </permission-dialog>
+    </bk-dialog>
     <apply-dialog
       :is-show="apply.isShow"
+      :ajax-prefix="ajaxPrefix"
       v-bind="apply"
       :resource-type="resourceType"
       @cancel="() => apply.isShow = false"
@@ -107,8 +108,6 @@ import ApplyDialog from './apply-dialog.vue';
 import syncDefault from '../../../svg/sync-default.svg?inline';
 import syncSuccess from '../../../svg/sync-success.svg?inline';
 import syncFailed from '../../../svg/sync-failed.svg?inline';
-import SideSlider from '../../widget-components/side-slider.jsx';
-import PermissionDialog from '../../widget-components/dialog.jsx';
 import { localeMixins } from '../../../utils/locale'
 
 const initFormData = () => ({
@@ -122,8 +121,6 @@ const initFormData = () => ({
 export default {
   components: {
     ApplyDialog,
-    SideSlider,
-    PermissionDialog,
   },
   mixins: [localeMixins],
   props: {

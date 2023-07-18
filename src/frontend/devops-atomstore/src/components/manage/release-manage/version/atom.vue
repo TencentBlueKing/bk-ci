@@ -13,14 +13,14 @@
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
         >
-            <bk-table-column :label="$t('store.版本')">
+            <bk-table-column :label="$t('store.版本')" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span>{{ props.row.version || 'init' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
-            <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t('store.创建时间')" prop="createTime"></bk-table-column>
+            <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('store.创建人')" prop="creator" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('store.创建时间')" prop="createTime" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('store.操作')" width="150" class-name="handler-btn">
                 <template slot-scope="props">
                     <section v-show="!index">

@@ -79,9 +79,7 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
-
-	runtime.GOMAXPROCS(4)
+	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
 	// 以agent安装目录为工作目录
 	workDir := systemutil.GetExecutableDir()

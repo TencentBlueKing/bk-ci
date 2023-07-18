@@ -37,16 +37,17 @@ function _M:isSafe()
     local host = ngx.var.host
     local header_clb = ngx.var.http_x_clb_lbid
     if string.find(host, "bkdevops.qq.com") ~= nil or header_clb ~= nil then -- bkdevops.qq.com 相关域名或者传了lb的ID
-        if string.find(path, "/api/app/") == nil -- app 路径
-        and string.find(path, "/api/open/") == nil -- open路径
-        and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
-        and string.find(path, "/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
-        and string.find(path, "/process/api/external/scm/codetgit/commit") == nil -- TGit回调
-        and string.find(path, "/repository/api/external/github") == nil -- Github回调
-        and string.find(path, "/external/api/external/github") == nil -- Github回调
-        and string.find(path, "/process/api/external/scm/p4/commit") == nil -- p4回调
-        and string.find(path, "/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
-        and string.find(path, "/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
+        if string.find(path, "^/([%w-_]+)/api/app/") == nil -- app 路径
+        and string.find(path, "^/([%w-_]+)/api/desktop/") == nil -- 离岸开发 路径
+        and string.find(path, "^/([%w-_]+)/api/open/") == nil -- open路径
+        and string.find(path, "^/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
+        and string.find(path, "^/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
+        and string.find(path, "^/process/api/external/scm/codetgit/commit") == nil -- TGit回调
+        and string.find(path, "^/repository/api/external/github") == nil -- Github回调
+        and string.find(path, "^/external/api/external/github") == nil -- Github回调
+        and string.find(path, "^/process/api/external/scm/p4/commit") == nil -- p4回调
+        and string.find(path, "^/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
+        and string.find(path, "^/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
         then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
