@@ -243,7 +243,7 @@ interface BuildListener {
 
             // 校验流水线是否还在运行中
             if (!dispatchService.checkRunning(event)) {
-                 return
+                return
             }
 
             // 校验构建资源配额是否超限，配额超限后会放进延迟队列
