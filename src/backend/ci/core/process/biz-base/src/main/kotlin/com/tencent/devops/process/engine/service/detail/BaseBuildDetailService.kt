@@ -248,7 +248,7 @@ open class BaseBuildDetailService constructor(
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordDetail",
                 projectId = pipelineBuildInfo.projectId,
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,

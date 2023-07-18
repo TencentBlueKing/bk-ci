@@ -236,7 +236,7 @@ open class BaseBuildRecordService(
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
