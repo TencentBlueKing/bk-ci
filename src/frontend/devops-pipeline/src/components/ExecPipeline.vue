@@ -93,6 +93,7 @@
                         @atom-review="reviewAtom"
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
+                        @debug-container="debugDocker"
                     />
                 </div>
             </simplebar>
@@ -248,7 +249,6 @@
             simplebar,
             CheckAtomDialog,
             CompleteLog,
-
             Logo
         },
         props: {
@@ -820,6 +820,16 @@
                         executeCount
                     })
                 })
+            },
+            debugDocker ({ container }) {
+                const vmSeqId = container.id
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             }
         }
     }

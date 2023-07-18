@@ -24,6 +24,7 @@ const (
 	DockerChmodInitshError
 	DockerCredGetError
 	DockerDockerOptions
+	DockerImageDebugError
 )
 
 type ErrorTypes string
@@ -119,6 +120,11 @@ var (
 		Type:    User,
 		Code:    DockerChmodInitshError,
 		Message: "docker校验并修改启动脚本权限失败",
+	}
+	DockerImageDebugErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerImageDebugError,
+		Message: "启动docker登录调试失败",
 	}
 )
 

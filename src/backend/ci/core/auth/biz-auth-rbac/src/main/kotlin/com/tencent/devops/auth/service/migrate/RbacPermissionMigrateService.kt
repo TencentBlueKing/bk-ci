@@ -175,6 +175,32 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun compareResult(projectCode: String): Boolean {
+        try {
+            migrateResultService.compare(projectCode)
+        } catch (ignored: Exception) {
+            handleException(
+                exception = ignored,
+                projectCode = projectCode
+            )
+            return false
+        }
+        return true
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean {
+        migrateResourceService.migrateResource(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            projectCreator = projectCreator
+        )
+        return true
+    }
+
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,
@@ -300,8 +326,7 @@ class RbacPermissionMigrateService constructor(
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = projectCode,
-                authType = authType.value
+                projectCode = projectCode
             )
             return false
         } finally {
@@ -392,11 +417,7 @@ class RbacPermissionMigrateService constructor(
         )?.relationId?.toInt()
     }
 
-    private fun handleException(
-        exception: Exception,
-        projectCode: String,
-        authType: String
-    ) {
+    private fun handleException(exception: Exception, projectCode: String) {
         val errorMessage = when (exception) {
             is IamException -> {
                 exception.errorMsg
@@ -411,7 +432,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
+        logger.error("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,

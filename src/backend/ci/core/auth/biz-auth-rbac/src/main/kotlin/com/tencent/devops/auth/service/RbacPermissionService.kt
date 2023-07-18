@@ -85,14 +85,27 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        return validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = action,
-            projectCode = projectCode,
-            resourceType = resourceType!!,
-            resourceCode = "*",
-            relationResourceType = null
-        )
+        val actionInfo = rbacCacheService.getActionInfo(action)
+        // 如果action关联的资源是项目,则直接查询项目的权限
+        return if (actionInfo.relatedResourceType == AuthResourceType.PROJECT.value) {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                relationResourceType = null
+            )
+        } else {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType!!,
+                resourceCode = "*",
+                relationResourceType = null
+            )
+        }
     }
 
     override fun validateUserResourcePermissionByRelation(
@@ -323,7 +336,13 @@ class RbacPermissionService constructor(
                     resourceType = resourceType
                 )
             }
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+            val useAction = if (!action.contains("_")) {
+                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+            } else {
+                action
+            }
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()

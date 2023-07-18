@@ -59,4 +59,22 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun compareResult(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.compareResult(projectCode = projectCode))
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateResource(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                projectCreator
+            )
+        )
+    }
 }
