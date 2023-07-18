@@ -1963,7 +1963,7 @@ class TemplateFacadeService @Autowired constructor(
     fun checkTemplateAtoms(template: Model, userId: String) {
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
-                container.elements.forEach nextElement@{ element ->
+                container.elements.forEach { element ->
                     AtomUtils.checkElementAtoms(
                         element = element,
                         userId = userId,

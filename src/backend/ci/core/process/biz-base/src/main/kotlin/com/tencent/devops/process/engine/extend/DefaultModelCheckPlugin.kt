@@ -147,7 +147,6 @@ open class DefaultModelCheckPlugin constructor(
                 client = client
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
-                logger.info("atomVersions $atomVersions")
                 AtomUtils.checkModelAtoms(
                     projectCode = projectId,
                     atomVersions = atomVersions,
@@ -221,7 +220,6 @@ open class DefaultModelCheckPlugin constructor(
                 )
             )
             container.elements.forEach { e ->
-                logger.info("checkModelIntegrity checkJob ")
                 AtomUtils.checkElementAtoms(e, client)
                 container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }
