@@ -58,7 +58,7 @@ class PipelineOutputServiceImpl(
         }
 
         val pipelineOutputList = mutableListOf<PipelineOutput>()
-        pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it, true, projectId) })
+        pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
         return pipelineOutputList.sortedByDescending { it.createTime }
