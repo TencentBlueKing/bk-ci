@@ -68,7 +68,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
-    override fun getAllUserSettings(userId: String, queryUser: String): Result<List<RemoteDevUserSettings>> {
+    override fun getAllUserSettings(userId: String, queryUser: String?): Result<List<RemoteDevUserSettings>> {
         return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser))
     }
 

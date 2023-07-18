@@ -114,13 +114,13 @@ class RemoteDevSettingDao {
 
     fun fetchAllUserSettings(
         dslContext: DSLContext,
-        queryUser: String
+        queryUser: String?
     ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             val condition = mutableListOf<Condition>()
             condition.add(USER_SETTING.isNotNull)
-            if (queryUser.isNotBlank()) {
-                condition.add(USER_ID.eq(queryUser))
+            if (!queryUser.isNullOrBlank()) {
+                    condition.add(USER_ID.eq(queryUser))
             }
             return dslContext.selectFrom(this)
                 .where(condition)

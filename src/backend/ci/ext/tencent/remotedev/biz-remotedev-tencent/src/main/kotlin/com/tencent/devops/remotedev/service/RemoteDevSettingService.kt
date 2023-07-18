@@ -121,7 +121,7 @@ class RemoteDevSettingService @Autowired constructor(
         return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId).startCloudExperienceDuration
             ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
-    fun getAllUserSetting4Op(queryUser: String): List<RemoteDevUserSettings> {
+    fun getAllUserSetting4Op(queryUser: String?): List<RemoteDevUserSettings> {
         logger.info("Start to getAllUserSetting4Op")
         val settings = remoteDevSettingDao.fetchAllUserSettings(dslContext, queryUser)
             .mapNotNull {
