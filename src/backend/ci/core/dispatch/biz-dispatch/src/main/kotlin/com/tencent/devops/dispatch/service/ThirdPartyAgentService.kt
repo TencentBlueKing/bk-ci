@@ -43,7 +43,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
-import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
@@ -116,20 +115,14 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun getPreBuildAgents(projectId: String, pipelineId: String, vmSeqId: String): List<ThirdPartyAgentPreBuildAgents> {
-        val records = thirdPartyAgentBuildDao.getPreBuildAgent(
-            dslContext, projectId, pipelineId, vmSeqId
+    fun getPreBuildAgentIds(projectId: String, pipelineId: String, vmSeqId: String, size: Int): List<String> {
+        return thirdPartyAgentBuildDao.getPreBuildAgentIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            size = size
         )
-        return records.map {
-            ThirdPartyAgentPreBuildAgents(
-                id = it.id,
-                projectId = it.projectId,
-                agentId = it.agentId,
-                buildId = it.buildId,
-                status = it.status,
-                createdTime = it.createdTime.timestamp()
-            )
-        }
     }
 
     fun getRunningBuilds(agentId: String): Int {
