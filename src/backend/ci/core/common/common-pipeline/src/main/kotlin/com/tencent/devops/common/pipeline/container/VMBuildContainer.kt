@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_ENV_TYPE
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -158,25 +156,13 @@ data class VMBuildContainer(
         return matrixContext
     }
 
-    override fun getI18nName(language: String?): String {
-        return language?.let {
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_ENV_TYPE + baseOS.name,
-                language = it
-            )
-        } ?: this.name
-    }
-
-    override fun transformCompatibility(language: String?) {
+    override fun transformCompatibility() {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
         }
         if (mutexGroup?.timeoutVar.isNullOrBlank()) {
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
-//        language?.let {
-//            name = getI18nName(language)
-//        }
-        super.transformCompatibility(language)
+        super.transformCompatibility()
     }
 }
