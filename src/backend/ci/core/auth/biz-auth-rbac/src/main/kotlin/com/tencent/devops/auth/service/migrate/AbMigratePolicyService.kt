@@ -224,18 +224,18 @@ abstract class AbMigratePolicyService(
                 )
                 Pair(false, rbacGroupId)
             }
-
+            // 迁移组默认需要添加rbac新增的权限控制
+            val additionalScopes = buildAdditionalAuthorizationScope(
+                projectCode = projectCode,
+                projectName = projectName
+            )
+            logger.info("AbMigratePolicyService|migrateGrou|additionalScope:$additionalScopes")
+            rbacAuthorizationScopeList.toMutableList().addAll(additionalScopes)
+            logger.info("AbMigratePolicyService|migrateGrou|rbacAuthorizationScopeList:$rbacAuthorizationScopeList")
             // 用户组授权
             rbacAuthorizationScopeList.forEach { authorizationScope ->
                 v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
             }
-            // 迁移组默认需要添加rbac新增的权限控制
-            val additionalScope = buildAdditionalAuthorizationScope(
-                projectCode = projectCode,
-                projectName = projectName
-            )
-            logger.info("AbMigratePolicyService|migrateGrou|additionalScope:$additionalScope")
-            v2ManagerService.grantRoleGroupV2(groupId, additionalScope)
             // 往用户组添加成员
             batchAddGroupMember(groupId = groupId, defaultGroup = defaultGroup, members = result.members)
         }
@@ -590,23 +590,25 @@ abstract class AbMigratePolicyService(
     private fun buildAdditionalAuthorizationScope(
         projectCode: String,
         projectName: String
-    ): AuthorizationScopes {
+    ): List<AuthorizationScopes> {
         val additionalAction = RbacAuthUtils.getAdditionalAction()
-        val projectPath = ManagerPath().apply {
-            system = iamConfiguration.systemId
-            id = projectCode
-            name = projectName
-            type = AuthResourceType.PROJECT.value
+        return additionalAction.map { (resourceType, actionList) ->
+            val projectPath = ManagerPath().apply {
+                system = iamConfiguration.systemId
+                id = projectCode
+                name = projectName
+                type = AuthResourceType.PROJECT.value
+            }
+            val resources = ManagerResources.builder()
+                .system(iamConfiguration.systemId)
+                .type(resourceType)
+                .paths(listOf(listOf(projectPath)))
+                .build()
+            AuthorizationScopes.builder()
+                .system(iamConfiguration.systemId)
+                .actions(actionList)
+                .resources(listOf(resources))
+                .build()
         }
-        val projectManagerResource = ManagerResources.builder()
-            .system(iamConfiguration.systemId)
-            .type(AuthResourceType.PROJECT.value)
-            .paths(listOf(listOf(projectPath)))
-            .build()
-        return AuthorizationScopes.builder()
-            .system(iamConfiguration.systemId)
-            .actions(additionalAction)
-            .resources(listOf(projectManagerResource))
-            .build()
     }
 }
