@@ -54,8 +54,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -70,6 +68,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -122,10 +121,8 @@ import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1968,29 +1965,11 @@ class TemplateFacadeService @Autowired constructor(
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach nextElement@{ element ->
-                    if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-                        val version = element.version
-                        if (version.contains("*")) return@nextElement
-                        val atomCode = element.getAtomCode()
-                        val atomName = element.name
-                        val atomStatus = client.get(ServiceAtomResource::class)
-                            .getAtomVersionInfo(
-                                atomCode, version
-                            ).data!!.atomStatus
-                        val atomStatusList = listOf(
-                            AtomStatusEnum.TESTING.name,
-                            AtomStatusEnum.UNDERCARRIAGED.name
-                        )
-                        if (atomStatus in atomStatusList) {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
-                                params = arrayOf(
-                                    atomName,
-                                    AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
-                                )
-                            )
-                        }
-                    }
+                    AtomUtils.checkElementAtoms(
+                        element = element,
+                        userId = userId,
+                        client = client
+                    )
                 }
             }
         }

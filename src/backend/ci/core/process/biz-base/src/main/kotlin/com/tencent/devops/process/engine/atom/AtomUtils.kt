@@ -47,8 +47,10 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -192,6 +194,35 @@ object AtomUtils {
             inputTypeConfigMap[it] = taskCommonSettingConfig.maxMultipleInputComponentSize
         }
         return inputTypeConfigMap
+    }
+
+    fun checkElementAtoms(
+        element: Element,
+        client: Client,
+        userId: String? = null,
+    ) {
+        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+            val version = element.version
+            val atomCode = element.getAtomCode()
+            val atomName = element.name
+            val atomStatus = client.get(ServiceAtomResource::class)
+                .getAtomVersionInfo(
+                    atomCode, version
+                ).data!!.atomStatus
+            val atomStatusList = listOf(
+                AtomStatusEnum.TESTING.name,
+                AtomStatusEnum.UNDERCARRIAGED.name
+            )
+            if (atomStatus in atomStatusList) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
+                    params = arrayOf(
+                        atomName,
+                        AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
+                    )
+                )
+            }
+        }
     }
 
     fun checkModelAtoms(

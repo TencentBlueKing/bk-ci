@@ -143,9 +143,11 @@ open class DefaultModelCheckPlugin constructor(
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
                 contextMap = contextMap,
-                atomInputParamList = atomInputParamList
+                atomInputParamList = atomInputParamList,
+                client = client
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
+                logger.info("atomVersions $atomVersions")
                 AtomUtils.checkModelAtoms(
                     projectCode = projectId,
                     atomVersions = atomVersions,
@@ -191,7 +193,8 @@ open class DefaultModelCheckPlugin constructor(
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
-        atomInputParamList: MutableList<StoreParam>
+        atomInputParamList: MutableList<StoreParam>,
+        client: Client
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -218,6 +221,8 @@ open class DefaultModelCheckPlugin constructor(
                 )
             )
             container.elements.forEach { e ->
+                logger.info("checkModelIntegrity checkJob ")
+                AtomUtils.checkElementAtoms(e, client)
                 container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }
         }
