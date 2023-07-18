@@ -1,3 +1,4 @@
+{{- if eq .Values.proxy.type "master"}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,6 +19,7 @@ spec:
         - name: wait-for-apisix
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
@@ -29,9 +31,10 @@ spec:
               done
               echo "Apisix admin is available";
       containers:
-        - name: init-sql
+        - name: init-router
           image: alpine/curl:3.14
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          resources: {{- toYaml .Values.proxy.initjob.resources | nindent 12 }}
           command:
             - "/bin/sh"
             - "-c"
@@ -199,10 +202,20 @@ spec:
                       "nodes": {
                           "{{ .Values.proxy.registryFacadeName }}.{{ .Release.Namespace }}.svc.cluster.local:9000": 1
                       },
+                      "timeout": {
+                          "send": 300,
+                          "connect": 300,
+                          "read": 300
+                      },
+                      "keepalive_pool": {
+                          "size": 320,
+                          "idle_timeout": 300,
+                          "requests": 1000
+                      },
                       "scheme": "https",
                       "type": "roundrobin"
                   }
               }'
 
       restartPolicy: OnFailure
-   
+{{- end }}
