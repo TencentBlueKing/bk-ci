@@ -79,10 +79,11 @@ onMounted(() => {
 .manage-tab {
   display: inline-block;
   position: relative;
-  width: 130px;
+  min-width: 130px;
   height: 60px;
   line-height: 60px;
   text-align: center;
+  padding: 0 10px;
   cursor: pointer;
   &.active {
     background-color: #E1ECFF;
