@@ -33,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -272,18 +273,38 @@ interface OpRemoteDevResource {
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
+
     @ApiOperation("分享工作空间")
     @POST
-    @Path("/workspace/share")
+    @Path("/workspace/share/add")
     fun shareWorkspace(
         @ApiParam(value = "用户ID", required = true)
-        @QueryParam("userId")
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间名称", required = true)
+        @ApiParam(value = "工作空间共享", required = true)
+        workspaceShared: WorkspaceShared
+    ): Result<Boolean>
+
+    @ApiOperation("获取分享工作空间列表")
+    @POST
+    @Path("/workspace/share/list")
+    fun getShareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String,
-        @ApiParam("分享用户", required = true)
-        @QueryParam("sharedUser")
-        sharedUser: String
+        workspaceName: String?
+    ): Result<List<WorkspaceShared>>
+
+    @ApiOperation("删除分享工作空间列表")
+    @POST
+    @Path("/workspace/share/delete")
+    fun deleteShareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "id", required = true)
+        @QueryParam("id")
+        id: Long
     ): Result<Boolean>
 }

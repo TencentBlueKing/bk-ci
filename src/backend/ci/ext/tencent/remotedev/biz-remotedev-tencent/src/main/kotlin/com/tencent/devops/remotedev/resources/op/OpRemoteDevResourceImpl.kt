@@ -7,6 +7,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -135,7 +136,20 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
     }
 
-    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
+    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceShared): Result<Boolean> {
+        return Result(workspaceService.shareWorkspace(
+            workspaceShared.operator,
+            workspaceShared.workspaceName,
+            workspaceShared.sharedUser
+            )
+        )
+    }
+
+    override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
+        return Result(workspaceService.getShareWorkspace(workspaceName))
+    }
+
+    override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
+        return Result(workspaceService.deleteSharedWorkspace(id))
     }
 }

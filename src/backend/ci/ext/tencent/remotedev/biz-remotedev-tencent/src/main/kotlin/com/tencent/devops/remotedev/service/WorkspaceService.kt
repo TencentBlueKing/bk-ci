@@ -159,7 +159,12 @@ class WorkspaceService @Autowired constructor(
                     .createStartCloudUser(userId)
             }
 
-            val shareInfo = WorkspaceShared(workspaceName, userId, sharedUser)
+            val shareInfo = WorkspaceShared(
+                id = null,
+                workspaceName = workspaceName,
+                operator = userId,
+                sharedUser = sharedUser
+            )
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
                 throw ErrorCodeException(
@@ -527,5 +532,24 @@ class WorkspaceService @Autowired constructor(
 
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
+    }
+    fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
+        logger.info("get all shared workspace")
+        return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
+            WorkspaceShared(
+                it.id,
+                it.workspaceName,
+                it.operator,
+                it.sharedUser
+            )
+        } ?: emptyList()
+    }
+
+    fun deleteSharedWorkspace(id: Long): Boolean {
+        workspaceDao.deleteSharedWorkspace(
+            id = id,
+            dslContext = dslContext
+        )
+        return true
     }
 }
