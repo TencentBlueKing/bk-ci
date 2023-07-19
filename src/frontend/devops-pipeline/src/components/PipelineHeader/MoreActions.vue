@@ -134,8 +134,8 @@
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: projectId,
-                                action: RESOURCE_ACTION.CREATE
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
                             }
                         },
                         {
