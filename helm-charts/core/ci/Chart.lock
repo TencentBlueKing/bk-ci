@@ -16,7 +16,7 @@ dependencies:
   version: 8.20.1
 - name: influxdb
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 2.3.7
+  version: 5.3.1
 - name: nginx-ingress-controller
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 7.6.21
@@ -29,5 +29,5 @@ dependencies:
 - name: kubernetes-manager
   repository: file://./local_chart/kubernetes-management
   version: 0.0.36
-digest: sha256:1ce4b50494ead247d371806c09c0c8c823c8857a7a1f1d7214410d279803e8a2
-generated: "2023-03-20T22:05:18.340401263+08:00"
+digest: sha256:9a64627edf1e223f51c5aac9ebef4ea399b13b48d0ac241f3a1fe55c5f974bc7
+generated: "2023-07-03T15:53:26.797752554+08:00"

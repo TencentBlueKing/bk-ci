@@ -28,7 +28,7 @@ package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+import com.tencent.devops.common.api.annotation.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

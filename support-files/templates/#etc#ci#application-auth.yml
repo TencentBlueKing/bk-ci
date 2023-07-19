@@ -26,3 +26,6 @@ itsm:
     update:
       # 项目更新ITSM回调URL
       url: __BK_CI_PUBLIC_URL__/ms/auth/api/external/auth/itsm/update_callback
+codecc:
+  openapi:
+    token: __BK_CI_CODECC_OPENAPI_TOKEN__

@@ -1,3 +1,9 @@
+# 镜像源公共配置
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
 # RBAC配置
 rbac:
   enabled: true
@@ -76,6 +82,8 @@ init:
   defaultImage: true
   plugin:
     enabled: true
+    useProxy: false
+    proxyUrl: https://ghproxy.com
     atoms:
     - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
       code: checkout
