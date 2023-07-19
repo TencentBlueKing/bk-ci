@@ -36,6 +36,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts
@@ -152,7 +153,18 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf("only workspace creator can share")
                 )
             }
-            val shareInfo = WorkspaceShared(workspaceName, userId, sharedUser)
+            // 共享时创建START云桌面的用户
+            if (workspace.workspaceMountType == WorkspaceMountType.START.name) {
+                client.get(ServiceStartCloudResource::class)
+                    .createStartCloudUser(userId)
+            }
+
+            val shareInfo = WorkspaceShared(
+                id = null,
+                workspaceName = workspaceName,
+                operator = userId,
+                sharedUser = sharedUser
+            )
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
                 throw ErrorCodeException(
@@ -520,5 +532,24 @@ class WorkspaceService @Autowired constructor(
 
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
+    }
+    fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
+        logger.info("get all shared workspace")
+        return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
+            WorkspaceShared(
+                it.id,
+                it.workspaceName,
+                it.operator,
+                it.sharedUser
+            )
+        } ?: emptyList()
+    }
+
+    fun deleteSharedWorkspace(id: Long): Boolean {
+        workspaceDao.deleteSharedWorkspace(
+            id = id,
+            dslContext = dslContext
+        )
+        return true
     }
 }

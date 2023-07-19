@@ -35,6 +35,7 @@ import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecor
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -112,13 +113,17 @@ class RemoteDevSettingDao {
     }
 
     fun fetchAllUserSettings(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        queryUser: String?
     ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            val condition = mutableListOf<Condition>()
+            condition.add(USER_SETTING.isNotNull)
+            if (!queryUser.isNullOrBlank()) {
+                    condition.add(USER_ID.eq(queryUser))
+            }
             return dslContext.selectFrom(this)
-                .where(
-                    USER_SETTING.isNotNull
-                )
+                .where(condition)
                 .fetch()
         }
     }

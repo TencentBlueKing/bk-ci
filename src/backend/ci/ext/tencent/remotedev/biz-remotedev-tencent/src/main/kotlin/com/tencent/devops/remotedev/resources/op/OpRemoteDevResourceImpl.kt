@@ -7,6 +7,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -68,8 +69,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
-    override fun getAllUserSettings(userId: String): Result<List<RemoteDevUserSettings>> {
-        return Result(remoteDevSettingService.getAllUserSetting4Op())
+    override fun getAllUserSettings(userId: String, queryUser: String?): Result<List<RemoteDevUserSettings>> {
+        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser))
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
@@ -133,5 +134,22 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
+    }
+
+    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceShared): Result<Boolean> {
+        return Result(workspaceService.shareWorkspace(
+            workspaceShared.operator,
+            workspaceShared.workspaceName,
+            workspaceShared.sharedUser
+            )
+        )
+    }
+
+    override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
+        return Result(workspaceService.getShareWorkspace(workspaceName))
+    }
+
+    override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
+        return Result(workspaceService.deleteSharedWorkspace(id))
     }
 }
