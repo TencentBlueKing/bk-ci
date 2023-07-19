@@ -174,13 +174,7 @@ class TGitPushTriggerHandler(
                             to = event.before
                         )
                     } else {
-                        val changeFiles = mutableSetOf<String>()
-                        commits?.forEach { commit ->
-                            changeFiles.addAll(commit.added ?: listOf())
-                            changeFiles.addAll(commit.removed ?: listOf())
-                            changeFiles.addAll(commit.modified ?: listOf())
-                        }
-                        changeFiles
+                        getPushChangeFiles(event)
                     }
                     pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
@@ -276,5 +270,25 @@ class TGitPushTriggerHandler(
                 action = event.action_kind
             )
         }
+    }
+
+    private fun getPushChangeFiles(
+        event: GitPushEvent
+    ): Set<String> {
+        val changeFileList = mutableSetOf<String>()
+        event.diffFiles?.forEach {
+            when {
+                // 删除文件
+                it.deletedFile -> changeFileList.add(it.oldPath)
+                // 重命名文件
+                it.renamedFile -> {
+                    changeFileList.add(it.newPath)
+                    changeFileList.add(it.oldPath)
+                }
+                // 修改或添加文件
+                else -> changeFileList.add(it.newPath)
+            }
+        }
+        return changeFileList
     }
 }

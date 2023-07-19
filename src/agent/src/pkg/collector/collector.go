@@ -239,14 +239,14 @@ func DoAgentCollect() {
 		logFile,
 	)
 	if err != nil {
-		logs.Error("init telegraf agent failed: %v", err)
+		logs.Errorf("init telegraf agent failed: %v", err)
 		return
 	}
 
 	for {
 		logs.Info("launch telegraf agent")
 		if err = tAgent.Run(context.Background()); err != nil {
-			logs.Error("telegraf agent exit: %v", err)
+			logs.Errorf("telegraf agent exit: %v", err)
 		}
 		time.Sleep(telegrafRelaunchTime)
 	}
@@ -266,7 +266,7 @@ func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
 	}
 
 	logger.SetupLogging(logConfig)
-	return agent.NewAgent(c), nil
+	return agent.NewAgent(c)
 }
 
 func writeTelegrafConfig() {

@@ -7,14 +7,36 @@
             :empty-text="$t('history.filterNullTips')"
             @row-click="handleRowClick"
             @header-dragend="handleDragend"
-            size="small">
+            size="small"
+        >
             <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
-                        <router-link :class="{ [props.row.status]: true }" :to="getArchiveUrl(props.row)">{{ getBuildNumHtml(props.row) }}</router-link>
-                        <logo v-if="props.row.status === 'STAGE_SUCCESS'" v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')" name="flag" class="devops-icon" size="12" fill="#34d97b" />
-                        <i v-else-if="retryable(props.row)" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(props.row.id)" />
-                        <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime"
+                        <router-link
+                            :class="{ [props.row.status]: true }"
+                            :to="getArchiveUrl(props.row)"
+                        >{{ getBuildNumHtml(props.row) }}</router-link
+                        >
+                        <logo
+                            v-if="props.row.status === 'STAGE_SUCCESS'"
+                            v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')"
+                            name="flag"
+                            class="devops-icon"
+                            size="12"
+                            fill="#34d97b"
+                        />
+                        <i
+                            v-else-if="retryable(props.row)"
+                            title="rebuild"
+                            class="devops-icon icon-retry"
+                            @click.stop="retry(props.row.id)"
+                        />
+                        <i
+                            v-else-if="
+                                props.row.status === 'QUEUE' ||
+                                    props.row.status === 'RUNNING' ||
+                                    !props.row.endTime
+                            "
                             :class="{
                                 'devops-icon': true,
                                 'spin-icon': true,
@@ -27,16 +49,39 @@
                     </span>
                 </template>
                 <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
-                    <stage-steps v-if="props.row.stageStatus" :steps="props.row.stageStatus"></stage-steps>
+                    <stage-steps
+                        v-if="props.row.stageStatus"
+                        :steps="props.row.stageStatus"
+                    ></stage-steps>
                     <span v-else>--</span>
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
-                    <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
-                        <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
-                            <p v-bk-tooltips="{ content: generateMaterial(material) }" :class="{ 'show-commit-times': material.commitTimes > 1 }" @click="handleRowClick(props.row)">{{ generateMaterial(material) }}</p>
-                            <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
+                    <template
+                        v-if="Array.isArray(props.row.material) && props.row.material.length > 0"
+                    >
+                        <div
+                            @click.stop=""
+                            v-for="material in props.row.material"
+                            :key="material.aliasName"
+                            class="material-item"
+                        >
+                            <p
+                                v-bk-tooltips="{ content: generateMaterial(material), delay: [300, 0], allowHTML: false }"
+                                :class="{ 'show-commit-times': material.commitTimes > 1 }"
+                                @click="handleRowClick(props.row)"
+                            >
+                                {{ generateMaterial(material) }}
+                            </p>
+                            <span
+                                class="material-commit-id"
+                                v-if="material.newCommitId"
+                                :title="material.newCommitId"
+                                @click.stop="goCodeRecords(props.row, material.aliasName)"
+                            >
                                 <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
-                                <span class="commit-times" v-if="material.commitTimes > 1">{{ material.commitTimes }} commit</span>
+                                <span class="commit-times" v-if="material.commitTimes > 1"
+                                >{{ material.commitTimes }} commit</span
+                                >
                             </span>
                         </div>
                     </template>
@@ -45,8 +90,20 @@
                 <template v-else-if="col.prop === 'artifactList'" v-slot="props">
                     <template v-if="props.row.hasArtifactories">
                         <div class="artifact-list-cell">
-                            <qrcode v-if="props.row.active && props.row.shortUrl" :text="props.row.shortUrl" :size="76">{{props.row.shortUrl}}</qrcode>
-                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{ $t('history.fileUnit', [props.row.artifactList.length]) }}（{{props.row.sumSize}}）</p>
+                            <qrcode
+                                v-if="props.row.active && props.row.shortUrl"
+                                :text="props.row.shortUrl"
+                                :size="76"
+                            >{{ props.row.shortUrl }}</qrcode
+                            >
+                            <p
+                                class="artifact-entry history-text-link"
+                                @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
+                            >
+                                {{ $t("history.fileUnit", [props.row.artifactList.length]) }}（{{
+                                    props.row.sumSize
+                                }}）
+                            </p>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -54,10 +111,14 @@
                 <template v-else-if="col.prop === 'appVersions'" v-slot="props">
                     <template v-if="props.row.appVersions.length">
                         <div class="build-app-version-list" v-bk-tooltips="versionToolTipsConf">
-                            <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">{{ appVersion }}</p>
+                            <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">
+                                {{ appVersion }}
+                            </p>
                         </div>
                         <div id="app-version-tooltip-content">
-                            <p v-for="(appVersion, index) in props.row.appVersions" :key="index">{{ appVersion }}</p>
+                            <p v-for="(appVersion, index) in props.row.appVersions" :key="index">
+                                {{ appVersion }}
+                            </p>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -69,22 +130,44 @@
                     </p>
                 </template>
                 <template v-else-if="col.prop === 'entry'" v-slot="props">
-                    <p class="entry-link" @click.stop="showLog(props.row.id, props.row.buildNum, true)">
-                        {{ $t('history.completedLog') }}
+                    <p
+                        class="entry-link"
+                        @click.stop="showLog(props.row.id, props.row.buildNum, true)"
+                    >
+                        {{ $t("history.completedLog") }}
                     </p>
                 </template>
                 <template v-else-if="col.prop === 'remark'" v-slot="props">
                     <div class="remark-cell">
-                        <span :class="{ 'remark-span': true, active: props.row.active }" v-bk-tooltips="{ content: props.row.remark, disabled: !props.row.remark }">
-                            {{ props.row.remark || '--' }}
+                        <span
+                            :class="{ 'remark-span': true, active: props.row.active }"
+                            v-bk-tooltips="{ content: props.row.remark, width: 500, disabled: !props.row.remark, delay: [300, 0], allowHTML: false }"
+                        >
+                            {{ props.row.remark || "--" }}
                         </span>
                         <bk-popover ref="remarkPopup" trigger="click" theme="light" placement="left">
-                            <i class="devops-icon icon-edit remark-entry" @click.stop="activeRemarkInput(props.row)" />
+                            <i
+                                class="devops-icon icon-edit remark-entry"
+                                @click.stop="activeRemarkInput(props.row)"
+                            />
                             <div slot="content">
-                                <bk-input type="textarea" ref="remarkInput" rows="3" class="remark-input" v-model.trim="tempRemark" />
+                                <bk-input
+                                    type="textarea"
+                                    ref="remarkInput"
+                                    rows="3"
+                                    class="remark-input"
+                                    v-model.trim="tempRemark"
+                                />
                                 <div class="remark-edit-footer">
-                                    <bk-button size="small" theme="primary" @click="handleRemarkChange(props.row)">{{ $t('confirm') }}</bk-button>
-                                    <bk-button size="small" @click="resetRemark">{{ $t('cancel') }}</bk-button>
+                                    <bk-button
+                                        size="small"
+                                        theme="primary"
+                                        @click="handleRemarkChange(props.row)"
+                                    >{{ $t("confirm") }}</bk-button
+                                    >
+                                    <bk-button size="small" @click="resetRemark">{{
+                                        $t("cancel")
+                                    }}</bk-button>
                                 </div>
                             </div>
                         </bk-popover>
@@ -93,14 +176,37 @@
                 <template v-else-if="col.prop === 'pipelineVersion'" v-slot="props">
                     <div>
                         <span>{{ props.row[col.prop] }}</span>
-                        <logo v-if="isNotLatest(props)" v-bk-tooltips="$t('details.pipelineVersionDiffTips')" size="12" class="version-tips" name="warning-circle" />
+                        <logo
+                            v-if="isNotLatest(props)"
+                            v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
+                            size="12"
+                            class="version-tips"
+                            name="warning-circle"
+                        />
                     </div>
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
-                    <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
-                        <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" size="12" :name="errorTypeMap[item.errorType].icon" />
-                            <span v-bk-tooltips="{ content: item.errorMsg }" v-if="item.errorMsg">{{ item.errorMsg }} </span>
+                    <template
+                        v-if="props.row.errorInfoList.length > 0"
+                    >
+                        <div
+                            @click.stop=""
+                            class="error-code-item"
+                            :style="`max-width: ${col.width - 30}px`"
+                            v-for="item in props.row.errorInfoList"
+                            :key="item.taskId"
+                        >
+                            <logo
+                                class="svg-error-icon"
+                                size="16"
+                                :name="item.icon"
+                            />
+                            <span
+                                v-bk-tooltips="{ content: item.title, maxWidth: 500, delay: [300, 0], allowHTML: false }"
+                                v-if="item.title"
+                            >
+                                {{ item.title }}
+                            </span>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -109,29 +215,69 @@
                     {{ props.row[col.prop] }}
                 </template>
             </bk-table-column>
-            <empty-tips v-if="emptyTipsConfig" class="build-list-table-empty-tips" slot="empty" v-bind="emptyTipsConfig"></empty-tips>
+            <empty-tips
+                v-if="emptyTipsConfig"
+                class="build-list-table-empty-tips"
+                slot="empty"
+                v-bind="emptyTipsConfig"
+            ></empty-tips>
         </bk-table>
         <portal to="artifactory-popup">
-            <div ref="artifactPopup" class="artifact-list-popup" v-show="actifactories.length" v-bk-clickoutside="hideArtifactoriesPopup">
+            <div
+                ref="artifactPopup"
+                class="artifact-list-popup"
+                v-show="actifactories.length"
+                v-bk-clickoutside="hideArtifactoriesPopup"
+            >
                 <div class="artifact-list-header">
-                    <h2>{{ $t('history.artifactList') }}</h2>
-                    <span @click.stop="gotoArtifactoryList" class="history-text-link">{{ $t('detail') }}</span>
+                    <h2>{{ $t("history.artifactList") }}</h2>
+                    <span @click.stop="gotoArtifactoryList" class="history-text-link">{{
+                        $t("detail")
+                    }}</span>
                 </div>
                 <span ref="popupTriangle" class="popup-triangle"></span>
                 <ul class="artifact-list-ul" v-if="visibleIndex !== -1">
                     <li v-for="artifactory in actifactories" :key="artifactory.name">
                         <p>
-                            <span :title="artifactory.name" class="artifact-name">{{ artifactory.name }}</span>
+                            <span :title="artifactory.name" class="artifact-name">{{
+                                artifactory.name
+                            }}</span>
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
-                        <bk-popover v-if="artifactory.artifactoryType !== 'IMAGE'" ref="popover" placement="top" :content="$t('download')" transfer>
-                            <i class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
+                        <bk-popover
+                            v-if="artifactory.artifactoryType !== 'IMAGE'"
+                            ref="popover"
+                            placement="top"
+                            :content="$t('download')"
+                            transfer
+                        >
+                            <i
+                                class="devops-icon icon-download download-link history-text-link"
+                                @click.stop="downloadFile(artifactory)"
+                            />
                         </bk-popover>
-                        <bk-popover v-if="artifactory.artifactoryType === 'PIPELINE'" ref="popover" placement="top" :content="$t('history.copyToCustomArtifactory')" transfer>
-                            <Logo class="icon-copy" name="copy" size="12" @click.stop.native="copyToCustom(artifactory)"></Logo>
+                        <bk-popover
+                            v-if="artifactory.artifactoryType === 'PIPELINE'"
+                            ref="popover"
+                            placement="top"
+                            :content="$t('history.copyToCustomArtifactory')"
+                            transfer
+                        >
+                            <Logo
+                                class="icon-copy"
+                                name="copy"
+                                size="12"
+                                @click.stop.native="copyToCustom(artifactory)"
+                            ></Logo>
                         </bk-popover>
                     </li>
-                    <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">{{ $t('history.showAll') }}</footer>
+                    <footer
+                        v-if="needShowAll"
+                        @click.stop="showAllArtifactory"
+                        class="history-text-link"
+                    >
+                        {{ $t("history.showAll") }}
+                    </footer>
                 </ul>
             </div>
         </portal>
@@ -139,14 +285,14 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
     import emptyTips from '@/components/devops/emptyTips'
-    import { convertFileSize, convertMStoStringByRule, convertMiniTime, convertMStoString } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMiniTime, convertMStoString } from '@/utils/util'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'build-history-table',
@@ -209,35 +355,16 @@
                     SKIP: 'redo-arrow'
                 }
             },
-            errorTypeMap () {
-                return [
-                    {
-                        title: 'systemError',
-                        icon: 'cog'
-                    },
-                    {
-                        title: 'userError',
-                        icon: 'user'
-                    },
-                    {
-                        title: 'thirdPartyError',
-                        icon: 'third-party'
-                    },
-                    {
-                        title: 'pluginError',
-                        icon: 'plugin'
-                    }
-                ]
-            },
             data () {
                 return this.buildList.map((item, index) => {
                     const active = index === this.activeIndex
-                    const hasArtifactories = Array.isArray(item.artifactList) && item.artifactList.length > 0
+                    const hasArtifactories
+                        = Array.isArray(item.artifactList) && item.artifactList.length > 0
                     let shortUrl = ''
                     const appVersions = []
                     let sumSize = 0
                     const artifactories = hasArtifactories
-                        ? item.artifactList.map(artifactory => {
+                        ? item.artifactList.map((artifactory) => {
                             if (artifactory.shortUrl) {
                                 shortUrl = artifactory.shortUrl
                             }
@@ -252,9 +379,10 @@
                             }
                         })
                         : []
-                    const needShowAll = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
+                    const needShowAll
+                        = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
                     const stageStatus = item.stageStatus
-                        ? item.stageStatus.slice(1).map(stage => ({
+                        ? item.stageStatus.slice(1).map((stage) => ({
                             ...stage,
                             tooltip: this.getStageTooltip(stage),
                             icon: this.statusIconMap[stage.status] || 'circle',
@@ -269,23 +397,39 @@
                         needShowAll,
                         shortUrl,
                         appVersions,
-                        visibleAppVersions: !active && Array.isArray(appVersions) && appVersions.length > 1 ? appVersions.slice(0, 1) : appVersions,
+                        visibleAppVersions:
+                            !active && Array.isArray(appVersions) && appVersions.length > 1
+                                ? appVersions.slice(0, 1)
+                                : appVersions,
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        executeTime: item.executeTime ? convertMStoStringByRule(item.executeTime) : '--',
-                        material: !active && Array.isArray(item.material) && item.material.length > 1 ? item.material.slice(0, 1) : item.material,
+                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        material:
+                            !active && Array.isArray(item.material) && item.material.length > 1
+                                ? item.material.slice(0, 1)
+                                : item.material,
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
                         visible: this.visibleIndex === index,
                         stageStatus,
-                        errorInfoList: !active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1 ? item.errorInfoList.slice(0, 1) : item.errorInfoList
+                        errorInfoList:
+                            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
+                                ? item.errorInfoList.slice(0, 1)
+                                : item.errorInfoList)?.map(err => {
+                                    return {
+                                    title: err?.errorMsg ?? '--',
+                                    icon: errorTypeMap[err.errorType]?.icon
+                                }
+                                }) ?? []
                     }
                 })
             },
             actifactories () {
                 const { data, visibleIndex } = this
-                return data[visibleIndex] && data[visibleIndex].artifactories ? data[visibleIndex].artifactories : []
+                return data[visibleIndex] && data[visibleIndex].artifactories
+                    ? data[visibleIndex].artifactories
+                    : []
             },
             currentBuildId () {
                 const { data, visibleIndex } = this
@@ -295,10 +439,10 @@
                 return this.data[this.visibleIndex].needShowAll
             },
             columnList () {
-                return this.columns.map(key => this.column[key]).filter(m => !!m)
+                return this.columns.map((key) => this.column[key]).filter((m) => !!m)
             },
             column () {
-                Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
+                Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map((item) => {
                     if (this.customColumn.includes(item)) {
                         const localStorageVal = localStorage.getItem(`${item}Width`)
                         if (localStorageVal) {
@@ -316,6 +460,7 @@
             }
         },
         methods: {
+            ...mapActions('pipelines', ['updateBuildRemark']),
             isNotLatest ({ $index }) {
                 const length = this.data.length
                 // table最后一条记录必不变化
@@ -347,7 +492,11 @@
                 }
             },
             getRemarkPopupInstance (activeRemarkIndex) {
-                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance
+                return (
+                    this.$refs.remarkPopup
+                    && this.$refs.remarkPopup[activeRemarkIndex]
+                    && this.$refs.remarkPopup[activeRemarkIndex].instance
+                )
             },
             retryable (row) {
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
@@ -356,12 +505,17 @@
                 if (this.isChangeRemark) return
                 const preRemark = row.remark
                 try {
-                    const { $route: { params }, tempRemark } = this
+                    const {
+                        $route: { params },
+                        tempRemark
+                    } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
                         this.$set(row, 'remark', tempRemark)
                         this.resetRemark()
-                        await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
+                        await this.updateBuildRemark({
+                            ...params,
+                            buildId: row.id,
                             remark: tempRemark
                         })
                         this.$showTips({
@@ -391,7 +545,11 @@
                 })
             },
             generateMaterial (material) {
-                return material ? `${material.aliasName || '--'}${material.branchName ? `@${material.branchName}` : ''}` : '--'
+                return material
+                    ? `${material.aliasName || '--'}${
+                        material.branchName ? `@${material.branchName}` : ''
+                    }`
+                    : '--'
             },
             handleRowStyle ({ row, rowIndex }) {
                 return rowIndex === this.activeIndex ? 'expand-row is-row-hover' : 'is-row-hover'
@@ -430,7 +588,7 @@
                 const { data, visibleIndex } = this
                 const row = data[visibleIndex]
                 if (row) {
-                    const url = this.getArchiveUrl(data[visibleIndex], 'partView')
+                    const url = this.getArchiveUrl(data[visibleIndex], 'outputs')
                     this.$router.push(url)
                 }
             },
@@ -457,7 +615,10 @@
                         const targetRect = e.target.getBoundingClientRect()
 
                         ele.style.top = `${targetRect.y - parseInt(triangleStyle.top)}px`
-                        ele.style.left = `${Math.max(0, targetRect.x - parseInt(eleStyle.width) - 16)}px`
+                        ele.style.left = `${Math.max(
+                            0,
+                            targetRect.x - parseInt(eleStyle.width) - 16
+                        )}px`
                     }
                 })
             },
@@ -499,7 +660,7 @@
                     const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
-                        buildId: this.currentBuildId,
+                        buildNo: this.currentBuildId,
                         params
                     })
                     if (res) {
@@ -541,21 +702,26 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.$route.params.pipelineId,
-                            name: this.$route.params.pipelineId
-                        }],
-                        projectId: this.$route.params.projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.execute,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.$route.params.pipelineId,
+                                    name: this.$route.params.pipelineId
+                                }
+                            ],
+                            projectId: this.$route.params.projectId
+                        }
+                    ])
                 } finally {
                     delete this.retryingMap[buildId]
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
             getBuildNumHtml (row) {
@@ -568,275 +734,272 @@
     }
 </script>
 
-<style lang="scss" >
-    @import '../../scss/conf';
-    @import '../../scss/mixins/ellipsis';
-    @import '../../scss/pipelineStatus';
+<style lang="scss">
+@import "../../scss/conf";
+@import "../../scss/mixins/ellipsis";
+@import "../../scss/pipelineStatus";
 
-    .entry-link {
-        padding: 2px 0;
-        font-size: 12px;
-        cursor: pointer;
-        color: #333333;
-        > a {
-            color: #333333;
-        }
-        &:hover {
-            color: $primaryColor;
-            > a {
-                color: $primaryColor;
-            }
-        }
+.entry-link {
+  padding: 2px 0;
+  font-size: 12px;
+  cursor: pointer;
+  color: #333333;
+  > a {
+    color: #333333;
+  }
+  &:hover {
+    color: $primaryColor;
+    > a {
+      color: $primaryColor;
     }
-    .build-history-table-container {
+  }
+}
+.build-history-table-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
 
-        margin-top: 10px;
-        display: flex;
-        flex-direction: column;
+.build-list-table-empty-tips {
+  width: auto;
+  margin: 0;
+}
+
+.history-text-link {
+  cursor: pointer;
+  &:hover {
+    color: $primaryColor;
+  }
+}
+
+.expand-row {
+  height: 148px;
+  cursor: pointer;
+}
+.bkdevops-build-history-table {
+  border-top: 1px solid #e6e6e6;
+  border-left: 1px solid #e6e6e6;
+  color: #333333;
+  .bk-table-header-wrapper {
+    height: 43px;
+  }
+  .bk-table-body-wrapper {
+    tr:hover {
+      .remark-entry {
+        display: inline-block;
+      }
     }
-
-    .build-list-table-empty-tips {
-        width: auto;
-        margin: 0;
+  }
+  tr:hover {
+    background-color: transparent;
+    > td {
+      background-color: transparent !important;
     }
-
-    .history-text-link {
-        cursor: pointer;
-        &:hover {
-            color: $primaryColor;
-        }
+  }
+  .build-num-status {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    .devops-icon {
+      margin-left: 6px;
+      display: inline-block;
     }
-
-    .expand-row {
-        height: 148px;
-        cursor: pointer;
+    .icon-retry {
+      font-size: 14px;
+      cursor: pointer;
+      &:hover {
+        color: $primaryColor;
+      }
     }
-    .bkdevops-build-history-table {
-        border-top: 1px solid #e6e6e6;
-        border-left: 1px solid #e6e6e6;
-        color: #333333;
-        .bk-table-header-wrapper {
-            height: 43px;
-        }
-        .bk-table-body-wrapper {
-            tr:hover {
-                .remark-entry {
-                    display: inline-block;
-                }
-            }
-        }
-        tr:hover {
-            background-color: transparent;
-            > td {
-                background-color: transparent !important;
-            }
-        }
-        .build-num-status {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            .devops-icon {
-                margin-left: 6px;
-                display: inline-block;
-            }
-            .icon-retry {
-                font-size: 14px;
-                cursor: pointer;
-                &:hover {
-                    color: $primaryColor;
-                }
-            }
-
-        }
-        .material-item {
-            display: flex;
-            p.show-commit-times  {
-                @include ellipsis();
-            }
-            .material-commit-id {
-                cursor: pointer;
-                color: $primaryColor;
-                padding: 0 6px;
-                display: flex;
-                .commit-nums {
-                    min-width: 64px;
-                }
-                .commit-times {
-                    padding: 0 6px;
-                    margin-left: 4px;
-                    min-width: 82px;
-                    background: #333333;
-                    color: white;
-                    border-radius: 20px;
-                    text-align: center;
-                    @include ellipsis();
-                }
-            }
-
-        }
-        .trigger-cell {
-            display: flex;
-            align-items: center;
-            > svg {
-                fill: currentColor;
-            }
-            > span {
-                padding-left: 4px;
-            }
-        }
-        .artifact-list-cell {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            canvas {
-                padding: 2px;
-                border: 1px solid #DDE4EB;
-            }
-        }
-        .build-app-version-list {
-          display: flex;
-          flex-direction: column;
-          > p {
-            @include ellipsis();
-          }
-        }
-        .remark-cell {
-            position: relative;
-            display: flex;
-            .remark-span {
-                cursor: pointer;
-                display: -webkit-box;
-                -webkit-box-orient: vertical;
-                -webkit-line-clamp: 1;
-                overflow: hidden;
-                &.active {
-                    -webkit-line-clamp: 5;
-                }
-
-            }
-            .remark-entry {
-                display: none;
-                cursor: pointer;
-                vertical-align: middle;
-                margin-left: 10px;
-                &:hover {
-                    color: $primaryColor;
-                }
-            }
-        }
-
-        .error-code-item {
-            display: flex;
-            width: 100%;
-            align-items: center;
-            > span {
-                margin-left: 4px;
-                @include ellipsis();
-            }
-            .svg-error-icon {
-                min-width: 12px;
-                min-height: 12px;
-            }
-        }
-        .version-tips {
-            display: inline-block;
-            vertical-align: -1px;
-            color: #F6B026;
-            font-size: 0;
-        }
+  }
+  .material-item {
+    display: flex;
+    p.show-commit-times {
+      @include ellipsis();
     }
-    .artifact-list-popup {
+    .material-commit-id {
+      cursor: pointer;
+      color: $primaryColor;
+      padding: 0 6px;
+      display: flex;
+      .commit-nums {
+        min-width: 64px;
+      }
+      .commit-times {
+        padding: 0 6px;
+        margin-left: 4px;
+        min-width: 82px;
+        background: #333333;
+        color: white;
+        border-radius: 20px;
+        text-align: center;
+        @include ellipsis();
+      }
+    }
+  }
+  .trigger-cell {
+    display: flex;
+    align-items: center;
+    > svg {
+      fill: currentColor;
+    }
+    > span {
+      padding-left: 4px;
+    }
+  }
+  .artifact-list-cell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    canvas {
+      padding: 2px;
+      border: 1px solid #dde4eb;
+    }
+  }
+  .build-app-version-list {
+    display: flex;
+    flex-direction: column;
+    > p {
+      @include ellipsis();
+    }
+  }
+  .remark-cell {
+    position: relative;
+    display: flex;
+    .remark-span {
+      cursor: pointer;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+      &.active {
+        -webkit-line-clamp: 5;
+      }
+    }
+    .remark-entry {
+      display: none;
+      cursor: pointer;
+      vertical-align: middle;
+      margin-left: 10px;
+      &:hover {
+        color: $primaryColor;
+      }
+    }
+  }
+
+  .error-code-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    > span {
+      margin-left: 4px;
+      @include ellipsis();
+    }
+    .svg-error-icon {
+      min-width: 12px;
+      min-height: 12px;
+      flex-shrink: 0;
+    }
+  }
+  .version-tips {
+    display: inline-block;
+    vertical-align: -1px;
+    color: #f6b026;
+    font-size: 0;
+  }
+}
+.artifact-list-popup {
+  position: absolute;
+  width: 800px;
+  background: white;
+  right: 150px;
+  top: 0;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+  font-size: 12px;
+  .popup-triangle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    right: -5px;
+    top: 50px;
+    background: white;
+    transform: rotate(-45deg);
+    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.35);
+  }
+  .artifact-list-header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 20px 0 24px;
+    height: 40px;
+    background: $bgHoverColor;
+    border-bottom: 2px solid #e6e7ea;
+    > h2 {
+      position: relative;
+      margin: 0;
+      flex: 1;
+      color: #4a4a4a;
+      font-size: 14px;
+      cursor: default;
+      &:before {
+        content: "";
         position: absolute;
-        width: 800px;
-        background: white;
-        right: 150px;
-        top: 0;
-        box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.35);
-        z-index: 1;
-        font-size: 12px;
-        .popup-triangle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            right: -5px;
-            top: 50px;
-            background: white;
-            transform: rotate(-45deg);
-            box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.35);
-        }
-        .artifact-list-header {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 20px 0 24px;
-            height: 40px;
-            background: $bgHoverColor;
-            border-bottom: 2px solid #E6E7EA;
-            > h2 {
-                position: relative;
-                margin: 0;
-                flex: 1;
-                color: #4A4A4A;
-                font-size: 14px;
-                cursor: default;
-                &:before {
-                    content: '';
-                    position: absolute;
-                    height: 14px;
-                    width: 4px;
-                    left: -6px;
-                    top: 3.5px;
-                    background: $fontWeightColor;
-                }
-            }
-        }
-        .artifact-list-ul {
-            overflow: auto;
-            max-height: 430px;
-            position: relative;
-            background-color: white;
-            z-index: 2;
-            > li {
-                height: 32px;
-                border-bottom: 1px solid #E6E7EA;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin: 0 20px;
-                > p {
-                    flex: 1;
-                    display: flex;
-                    align-items: center;
-                }
-                .artifact-name {
-                    max-width: 600px;
-                    @include ellipsis();
-                }
-                .artifact-size {
-                    color: $fontLighterColor;
-                    margin-left: 30px;
-                }
-                .download-link {
-                    margin-right: 18px;
-                    font-weight: bold;
-                }
-                .icon-copy {
-                    fill: $fontWeightColor;
-                    cursor: pointer;
-                    &:hover {
-                        fill: $primaryColor;
-                    }
-                }
-            }
-            > footer {
-                text-align: center;
-                line-height: 35px;
-            }
-        }
+        height: 14px;
+        width: 4px;
+        left: -6px;
+        top: 3.5px;
+        background: $fontWeightColor;
+      }
     }
+  }
+  .artifact-list-ul {
+    overflow: auto;
+    max-height: 430px;
+    position: relative;
+    background-color: white;
+    z-index: 2;
+    > li {
+      height: 32px;
+      border-bottom: 1px solid #e6e7ea;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 20px;
+      > p {
+        flex: 1;
+        display: flex;
+        align-items: center;
+      }
+      .artifact-name {
+        max-width: 600px;
+        @include ellipsis();
+      }
+      .artifact-size {
+        color: $fontLighterColor;
+        margin-left: 30px;
+      }
+      .download-link {
+        margin-right: 18px;
+        font-weight: bold;
+      }
+      .icon-copy {
+        fill: $fontWeightColor;
+        cursor: pointer;
+        &:hover {
+          fill: $primaryColor;
+        }
+      }
+    }
+    > footer {
+      text-align: center;
+      line-height: 35px;
+    }
+  }
+}
 
-    .remark-edit-footer {
-        margin: 10px 0;
-        text-align: right;
-    }
+.remark-edit-footer {
+  margin: 10px 0;
+  text-align: right;
+}
 </style>

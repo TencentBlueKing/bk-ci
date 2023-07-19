@@ -1,0 +1,89 @@
+{
+  "AttemptToRestoreFailed": {
+    "other": "\nRestore {{.filename}} failed, `run install.sh` or `unzip agent.zip` in {{.dir}}."
+  },
+  "ExecutableFileMissing": {
+    "other": "\nMissing {{.filename}}, `run install.sh` or `unzip agent.zip` in {{.dir}}."
+  },
+  "CreateTmpDirectoryFailed": {
+    "other": "create tmp directory failed: {{.err}}"
+  },
+  "StartWorkerProcessFailed": {
+    "other": "start worker process failed: {{.err}}"
+  },
+  "CreateStartScriptFailed": {
+    "other": "create start script failed: {{.err}}"
+  },
+  "BuilderProcessWasKilled": {
+    "other": "Builder process was killed, it may be killed by the operating system or other programs. You need to self-check and reduce the load and try again, or unzip agent.zip, restore the installation, restart the agent and try again."
+  },
+  "BuildProcessErr": {
+    "other": "build process err, pid: {{.pid}}, err: {{.err}}."
+  },
+  "WorkerExit": {
+    "other": "worker pid[%d] exit"
+  },
+  "DockerOnlySupportLinux": {
+    "other": "currently only supports linux system to use docker build machine."
+  },
+  "DownloadDockerInitScriptError": {
+    "other": "failed to download docker build machine init script|{{.err}}"
+  },
+  "StatDockerInitScriptError": {
+    "other": "getting docker build machine init script status failed|{{.err}}"
+  },
+  "CheckDockerInitScriptAuthError": {
+    "other": "failed to verify and modify the permissions of the docker startup script|{{.err}}"
+  },
+  "GetDockerCertError": {
+    "other": "getting docker credentials error|{{.err}}"
+  },
+  "LinkDockerError": {
+    "other": "link docker client error|{{.err}}"
+  },
+  "GetDockerImagesError": {
+    "other": "error getting docker image list|{{.err}}"
+  },
+  "PullLatest": {
+    "other": "The mirror version is latest to pull the latest version by default"
+  },
+  "StartPullImage": {
+    "other": "start to pull the image, image name: {{.name}}"
+  },
+  "FirstPullTips": {
+    "other": "[Tip] When the image is relatively large, the first pull time will be longer. You can pre-pull the image locally on the build machine to improve the pipeline startup speed."
+  },
+  "PullImageError": {
+    "other": "failed to pull image {{.name}}|{{.err}}"
+  },
+  "GetPullImageLogError": {
+    "other": "failed to get pull image information log: {{.err}}"
+  },
+  "LocalExistImage": {
+    "other": "there is a mirror locally, ready to start the build environment..."
+  },
+  "CreateDockerTmpDirError": {
+    "other": "create docker tmp directory failed: {{.err}}"
+  },
+  "CreateContainerError": {
+    "other": "create container {{.name}} error|{{.err}}"
+  },
+  "StartContainerError": {
+    "other": "start container {{.name}} error|{{.err}}"
+  },
+  "WaitContainerError": {
+    "other": "wait container {{.name}} done error|{{.err}}"
+  },
+  "ContainerExitCodeNotZero": {
+    "other": "wait container {{.name}} done exit code {{.code}} not 0 \n {{.msg}}"
+  },
+  "ReadDockerMountsError": {
+    "other": "Failed to prepare Docker mount directory: {{.err}}"
+  },
+  "DockerContainerLog": {
+    "other": "Docker container log is: \n"
+  },
+  "DockerImageDebugError": {
+    "other": "Failed to start docker image debug: {{.err}}"
+  }
+}

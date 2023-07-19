@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
@@ -52,6 +52,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
 import com.tencent.devops.environment.dao.EnvDao
@@ -68,6 +69,7 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -96,6 +98,7 @@ class EnvService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val nodeService: NodeService,
     private val client: Client
 ) : IEnvService {
 
@@ -111,7 +114,7 @@ class EnvService @Autowired constructor(
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_CREATE_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_CREATE_PERMISSSION)
             )
         }
 
@@ -127,7 +130,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
         checkName(projectId, envId, envUpdateInfo.name)
@@ -197,15 +200,20 @@ class EnvService @Autowired constructor(
         } else {
             emptyList()
         }
-
-        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
-        if (validRecordList.isEmpty()) {
+        val canListEnv = envRecordList.filter { canListEnvIds.contains(it.envId) }
+        // 用于兼容rbac和其他版本权限，rbac只会展示出用户有列表权限的环境。而其
+        // 他权限版本，则只要用户具有某个环境的列表权限，就会把该项目下所有的环境都返回
+        val envListResult = if (canListEnv.isEmpty()) {
             return listOf()
+        } else {
+            environmentPermissionService.getEnvListResult(
+                canListEnv = canListEnv,
+                envRecordList = envRecordList
+            )
         }
-
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })
-        return envRecordList.map {
+        return envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
@@ -391,7 +399,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
             )
         }
         val env = envDao.get(dslContext, projectId, envId)
@@ -468,7 +476,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
             )
         }
 
@@ -507,10 +515,26 @@ class EnvService @Autowired constructor(
         return resultMap
     }
 
+    fun thirdPartyEnv2Nodes(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): List<NodeWithPermission> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
+        }
+        val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
+        val nodes = nodeDao.listThirdpartyNodes(dslContext, projectId, envNodes.map { it.nodeId })
+        return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
+    }
+
     override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
-        val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
-        val invalidEnvIds = envIds.filterNot { canUseEnvIdList.contains(it) }
+        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
+        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
@@ -531,16 +555,17 @@ class EnvService @Autowired constructor(
             } else {
                 ""
             }
-
+            val nodeType = I18nUtil.getCodeLanMessage("ENV_NODE_TYPE_${it.nodeType}")
+            val nodeStatus = I18nUtil.getCodeLanMessage("envNodeStatus.${it.nodeStatus}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
                 nodeId = nodeStringId,
                 name = it.nodeName,
                 ip = it.nodeIp,
-                nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
+                nodeStatus = nodeStatus,
                 agentStatus = getAgentStatus(it),
-                nodeType = NodeType.getTypeName(it.nodeType),
+                nodeType = nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
                 operator = it.operator,
@@ -555,7 +580,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
 
@@ -566,7 +591,7 @@ class EnvService @Autowired constructor(
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }
@@ -614,7 +639,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
 
@@ -695,6 +720,27 @@ class EnvService @Autowired constructor(
         )
     }
 
+    fun getByName(projectId: String, envName: String): EnvWithPermission? {
+        return envDao.getByEnvName(dslContext, projectId, envName)?.let {
+            EnvWithPermission(
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = null,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = null,
+                projectName = null
+            )
+        }
+    }
+
     private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
         return records.map {
             EnvWithPermission(
@@ -720,7 +766,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
         envShareProjectDao.count(dslContext = dslContext, projectId = projectId, envId = envId, name = null).let {
@@ -748,7 +794,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
             )
         }
 
@@ -859,7 +905,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
             )
         }
 

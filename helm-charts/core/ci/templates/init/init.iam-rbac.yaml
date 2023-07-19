@@ -1,0 +1,72 @@
+# 初始化iam
+{{ if .Values.init.iam }}
+{{- if eq .Values.config.bkCiAuthProvider "rbac" -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-init-iam
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: init-iam
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-4"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: init-iam
+    spec:
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              until getent hosts {{ include "bkci.mysql.fullname" . }}
+              do
+                echo waiting for {{ include "bkci.mysql.fullname" . }};
+                sleep 2;
+              done
+              echo "MySQL is available";
+      {{- end }}
+      containers:
+        - name: init-iam
+          image: {{ include "bkci-backend.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          workingDir: /data/workspace/support-files/bkiam-rbac
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              # 修改auth链接
+              sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
+              # 导入模型
+              for i in $(find . -name '*.json'|sort)
+              do
+               python3 do_migrate.py -t {{ .Values.config.bkCiIamApigwUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i --apigateway
+              done
+              # 导入数据库
+              cat << EOF > iam.sql
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (1,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (2,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (3,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (4,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (5,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (6,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/project/api/open/project/callback/", "project", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (12,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/process/api/open/pipeline/callback/pipelineGroupInfo", "pipeline_group", "ci");
+              {{- if ne .Values.config.bkCodeccPrivateUrl "" }}
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (13,"{{ .Values.config.bkCodeccPrivateUrl }}", "/ms/openapi/api/open/v2/callback/instances/list", "codecc_task", "codecc");
+              {{- end }}
+              EOF
+              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
+      restartPolicy: OnFailure
+{{- end -}}
+{{- end -}}

@@ -27,10 +27,10 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -237,7 +237,7 @@ class PipelineBuildSummaryDao {
         if (includeDelete == false) {
             conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         }
-        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+        if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
         }
         if (permissionFlag != null) {
@@ -247,7 +247,7 @@ class PipelineBuildSummaryDao {
                 conditions.add(T_PIPELINE_INFO.PIPELINE_ID.notIn(authPipelines))
             }
         }
-        if (pipelineFilterParamList != null && pipelineFilterParamList.isNotEmpty()) {
+        if (!pipelineFilterParamList.isNullOrEmpty()) {
             handleFilterParamCondition(pipelineFilterParamList[0], conditions)
         }
         when (viewId) {
@@ -463,22 +463,32 @@ class PipelineBuildSummaryDao {
      */
     fun startLatestRunningBuild(
         dslContext: DSLContext,
-        latestRunningBuild: LatestRunningBuild
+        latestRunningBuild: LatestRunningBuild,
+        executeCount: Int
     ): Int {
         return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 dslContext.update(this)
-                    .set(LATEST_BUILD_ID, buildId)
+                    .let {
+                        if (executeCount == 1) {
+                            // 只有首次才写入LATEST_BUILD_ID
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
+                        } else {
+                            // 重试时只有最新的构建才能刷新LATEST_STATUS
+                            it.set(
+                                LATEST_STATUS,
+                                DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                            )
+                        }
+                    }
                     .set(LATEST_TASK_COUNT, taskCount)
                     .set(LATEST_START_USER, userId)
                     .set(QUEUE_COUNT, QUEUE_COUNT - 1)
                     .set(RUNNING_COUNT, RUNNING_COUNT + 1)
                     .set(LATEST_START_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
-                dslContext.update(this)
-                    .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId))).execute()
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
+                    .execute()
             }
         }
     }
@@ -496,11 +506,10 @@ class PipelineBuildSummaryDao {
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
-                .set(LATEST_TASK_ID, currentTaskId)
-                .set(LATEST_TASK_NAME, currentTaskName)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(LATEST_BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
+                .set(LATEST_TASK_ID, currentTaskId) // 字段目前没有用，没有实质意义，不用考虑是否是当前的LATEST_BUILD_ID
+                .set(LATEST_TASK_NAME, currentTaskName) // 界面一闪而过的提示，没有实质意义，不用考虑是否是当前的LATEST_BUILD_ID
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                 .execute()
         }
     }
@@ -513,35 +522,23 @@ class PipelineBuildSummaryDao {
         latestRunningBuild: LatestRunningBuild,
         isStageFinish: Boolean
     ) {
-        val count = with(latestRunningBuild) {
+        return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =
                     dslContext.update(this)
-                        .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
+                        .set(
+                            LATEST_STATUS,
+                            DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                        ) // 不一定是FINISH，也有可能其它失败的status
                         .set(LATEST_END_TIME, endTime) // 结束时间
                         .set(LATEST_TASK_ID, "") // 结束时清空
                         .set(LATEST_TASK_NAME, "") // 结束时清空
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
 
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
-                update.where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId))
-                    .and(PROJECT_ID.eq(projectId))
+                update.where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                     .execute()
-            }
-        }
-        // 没更新到，可能是因为他不是当前最新一次构建，那么要做的一件事是对finishCount值做加1，同时runningCount值减1
-        if (count == 0) {
-            with(latestRunningBuild) {
-                with(T_PIPELINE_BUILD_SUMMARY) {
-                    val update =
-                        dslContext.update(this)
-                            .set(FINISH_COUNT, FINISH_COUNT + 1)
-                    if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
-                    update.where(PIPELINE_ID.eq(pipelineId))
-                        .and(PROJECT_ID.eq(projectId))
-                        .execute()
-                }
             }
         }
     }
@@ -557,25 +554,21 @@ class PipelineBuildSummaryDao {
         runningIncrement: Int = 1
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
-            val count = dslContext.selectCount().from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(LATEST_BUILD_ID.eq(buildId))
-                .fetchOne(0, Int::class.java)!!
+            val update = dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
 
-            val update =
-                dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
-
-            if (count > 0) {
-                // 如果本次构建是最新一次，则要把状态和完成时间也刷新
-                update.set(LATEST_END_TIME, LocalDateTime.now())
-                if (runningIncrement > 0) {
-                    update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
-                } else {
-                    update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
-                        .set(LATEST_END_TIME, LocalDateTime.now())
-                }
+            if (runningIncrement > 0) {
+                update.set(
+                    LATEST_STATUS,
+                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.RUNNING.ordinal).otherwise(LATEST_STATUS)
+                )
+            } else {
+                update.set(
+                    LATEST_STATUS,
+                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.STAGE_SUCCESS.ordinal).otherwise(LATEST_STATUS)
+                ).set(LATEST_END_TIME, LocalDateTime.now())
             }
-            update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            update.where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
                 .execute()
         }
     }

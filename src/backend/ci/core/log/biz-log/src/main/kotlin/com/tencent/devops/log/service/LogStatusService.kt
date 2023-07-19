@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
@@ -51,16 +52,19 @@ class LogStatusService @Autowired constructor(
         logStorageMode: LogStorageMode?,
         finish: Boolean
     ) {
-        logStatusDao.finish(
-            dslContext = dslContext,
-            buildId = buildId,
-            tag = tag,
-            subTags = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
-            logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
-            finish = finish
-        )
+        JooqUtils.retryWhenDeadLock {
+            logStatusDao.finish(
+                dslContext = dslContext,
+                buildId = buildId,
+                // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+                tag = tag ?: "",
+                subTags = subTag ?: "",
+                jobId = jobId ?: "",
+                executeCount = executeCount ?: 1,
+                logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
+                finish = finish
+            )
+        }
     }
 
     fun updateStorageMode(
@@ -102,12 +106,13 @@ class LogStatusService @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?
-    ): Boolean {
-        return if (jobId.isNullOrBlank()) {
-            logStatusDao.isFinish(dslContext, buildId, tag, subTag, executeCount)
-        } else {
-            val logStatusList = logStatusDao.listFinish(dslContext, buildId, executeCount)
-            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
-        }
-    }
+    ) = logStatusDao.isFinish(
+        dslContext = dslContext,
+        buildId = buildId,
+        // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+        jobId = jobId,
+        tag = tag ?: "",
+        subTags = subTag ?: "",
+        executeCount = executeCount ?: 1
+    )
 }

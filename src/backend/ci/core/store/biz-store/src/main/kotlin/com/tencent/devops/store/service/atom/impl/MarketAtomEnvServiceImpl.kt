@@ -37,9 +37,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -62,13 +63,14 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -85,6 +87,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val marketAtomDao: MarketAtomDao,
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
+    private val storeI18nMessageService: StoreI18nMessageService,
     private val redisOperation: RedisOperation
 ) : MarketAtomEnvService {
 
@@ -129,11 +132,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             val params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = params,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                    params = params
-                )
+                params = params
             )
         }
         // 2、根据插件代码和版本号查找插件运行时信息
@@ -220,21 +219,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             val params = arrayOf(projectCode, atomName)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = params,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                    params = params
-                )
+                params = params
             )
         }
         // 查不到当前插件信息则中断流程
         val atomEnv = atomEnvResult.data ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-            params = arrayOf(projectCode, atomName),
-            defaultMessage = MessageCodeUtil.getCodeMessage(
-                messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = arrayOf(projectCode, atomName)
-            )
+            params = arrayOf(projectCode, atomName)
         )
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
@@ -301,7 +292,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     createTime = atom.createTime,
                     updateTime = atom.updateTime,
                     classifyCode = atom.classifyCode,
-                    classifyName = atom.classifyName
+                    classifyName = atom.classifyName,
+                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
                 )
             )
         }
@@ -387,7 +379,16 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
                     summary = atomBaseInfoRecord[tAtom.SUMMARY],
                     docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
-                    props = props,
+                    props = props?.let {
+                        storeI18nMessageService.parseJsonStrI18nInfo(
+                            jsonStr = it,
+                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                                storeType = StoreTypeEnum.ATOM,
+                                storeCode = atomCode,
+                                version = atomBaseInfoRecord[tAtom.VERSION]
+                            )
+                        )
+                    },
                     buildLessRunFlag = atomBaseInfoRecord[tAtom.BUILD_LESS_RUN_FLAG],
                     createTime = createTime.timestampmilli(),
                     updateTime = updateTime.timestampmilli(),
@@ -403,7 +404,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     classifyCode = atom.classifyCode,
                     classifyName = atom.classifyName,
                     runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
-                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag
+                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
+                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
                 )
             }
         )
@@ -522,10 +524,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             }
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$atomCode+$version"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
     }

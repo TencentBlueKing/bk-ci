@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
+@Suppress("LongParameterList")
 data class BuildRecordStage(
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
@@ -66,10 +67,6 @@ data class BuildRecordStage(
 ) {
     companion object {
         fun MutableList<BuildRecordStage>.addRecords(
-            projectId: String,
-            pipelineId: String,
-            version: Int,
-            buildId: String,
             stage: Stage,
             context: StartBuildContext,
             stageIndex: Int,
@@ -79,16 +76,25 @@ data class BuildRecordStage(
         ) {
             this.add(
                 BuildRecordStage(
-                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                    buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
-                    stageSeq = stageIndex, stageVar = mutableMapOf(), status = buildStatus?.name,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    resourceVersion = context.resourceVersion,
+                    buildId = context.buildId,
+                    stageId = stage.id!!,
+                    executeCount = context.executeCount,
+                    stageSeq = stageIndex,
+                    stageVar = mutableMapOf(),
+                    status = buildStatus?.name,
                     timestamps = mapOf()
                 )
             )
             stage.containers.forEach { container ->
                 containerBuildRecords.addRecords(
-                    projectId, pipelineId, version, buildId, stage, container,
-                    context, buildStatus, taskBuildRecords
+                    stageId = stage.id!!,
+                    container = container,
+                    context = context,
+                    buildStatus = buildStatus,
+                    taskBuildRecords = taskBuildRecords
                 )
             }
         }

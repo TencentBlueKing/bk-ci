@@ -36,9 +36,9 @@
 <script lang='ts'>
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
+    import { Action, State } from 'vuex-class'
+    import { actionAliasMap, isProjectResource, resourceAliasMap, resourceTypeMap } from '../../../../common-lib/permission-conf'
     import eventBus from '../../utils/eventBus'
-    import { isProjectResource, resourceTypeMap, resourceAliasMap, actionAliasMap } from '../../../../common-lib/permission-conf'
 
     @Component
     export default class AskPermissionDialog extends Vue {
@@ -98,14 +98,14 @@
         }
 
         get permissionTableData () {
-            return this.noPermissionList.map(item => {
-                const instanceNames = item.instanceId.map(instance => instance.name).join(',')
-                return {
-                    resource: `${resourceAliasMap[item.resourceId]}${item.instanceId.length ? ': ' + instanceNames : ''}`,
-                    action: actionAliasMap[item.actionId] ? actionAliasMap[item.actionId].alias : '--'
-                }
-            })
-            // actionAliasMap
+          return this.noPermissionList.map(item => {
+              const instanceNames = item.instanceId.map(instance => instance.name).join(',')
+              return {
+                resource: `${this.$t(resourceAliasMap[item.resourceId])}${item.instanceId.length ? ': ' + instanceNames : ''}`,
+                action: actionAliasMap[item.actionId] ? this.$t(actionAliasMap[item.actionId].i18nAlias) : '--'
+              }
+          })
+          // actionAliasMap
         }
 
         async toApplyPermission () {

@@ -1,7 +1,7 @@
 <template>
     <section class="atom-card">
         <honer-img class="card-pic atom-logo" :detail="atom" />
-        <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
+        <p v-bk-overflow-tips :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <honer-tag :detail="atom" :max-num="1"></honer-tag>
             <img
@@ -45,7 +45,7 @@
                 <img v-else class="hot-icon" src="../../../images/hot.png">
                 <span class="ml4">{{ getShowNum(atom.recentExecuteNum) }}</span>
             </section>
-            <span class="text-overflow">{{ atom.publisher }}</span>
+            <span class="text-overflow ml5">{{ atom.publisher }}</span>
         </section>
         <i class="devops-icon icon-lock-shape" v-if="!atom.flag"></i>
     </section>
@@ -72,6 +72,8 @@
             starWidth () {
                 if (this.atom.score >= 5) {
                     return '14px'
+                } else if (this.atom.score <= 0) {
+                    return '0px'
                 } else {
                     return '7px'
                 }
@@ -139,6 +141,7 @@
             justify-content: space-between;
             align-items: center;
             line-height: 16px;
+            color: #979BA5;
             .score-group {
                 position: relative;
                 .score-real {
@@ -179,6 +182,7 @@
             position: absolute;
             top: 12px;
             right: 12px;
+            color: #737987;
         }
         .ml4 {
             margin-left: 4px;

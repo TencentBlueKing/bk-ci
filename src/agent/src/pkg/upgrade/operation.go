@@ -45,17 +45,47 @@ import (
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
+const DAEMON_EXIT_CODE = 88
+
 // UninstallAgent 卸载
 func UninstallAgent() {
 	logs.Info("start uninstall agent")
 
-	err := runUpgrader(config.ActionUninstall)
+	err := runUninstallUpgrader(config.ActionUninstall)
 	if err != nil {
 		logs.Error("start upgrader failed")
-		return
+		// 错误了也不退出，最少也要干掉daemon
 	}
 	logs.Warn("agent process exiting")
-	systemutil.ExitProcess(0)
+	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+}
+
+// runUninstallUpgrader 卸载的区分开，方便进行退出处理
+func runUninstallUpgrader(action string) error {
+	logs.Info("[agentUpgrade]|start uninstall upgrader process")
+
+	scripPath := systemutil.GetUpgradeDir() + "/" + config.GetClientUpgraderFile()
+
+	if !systemutil.IsWindows() {
+		err := systemutil.Chmod(scripPath, 0777)
+		if err != nil {
+			logs.Error("[agentUpgrade]|chmod failed: ", err.Error())
+			return errors.New("chmod failed: ")
+		}
+	}
+
+	args := []string{"-action=" + action}
+
+	pid, err := command.StartProcess(scripPath, args, systemutil.GetWorkDir(), nil, "")
+	if err != nil {
+		logs.Error("[agentUpgrade]|run uninstall upgrader failed: ", err.Error())
+		return errors.New("run uninstall upgrader failed")
+	}
+	logs.Info("[agentUpgrade]|start uninstall process success, pid: ", pid)
+
+	logs.Warn("[agentUpgrade]|agent uninstall process exiting")
+	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+	return nil
 }
 
 // runUpgrader 执行升级器

@@ -34,5 +34,6 @@ data class PathFilterConfig(
     val pipelineId: String,
     val triggerOnPath: List<String>,
     val includedPaths: List<String>,
-    val excludedPaths: List<String>
+    val excludedPaths: List<String>,
+    val caseSensitive: Boolean = true
 )

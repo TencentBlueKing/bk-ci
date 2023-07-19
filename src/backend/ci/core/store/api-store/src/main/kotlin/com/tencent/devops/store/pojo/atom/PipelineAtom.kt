@@ -27,7 +27,9 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.ApiModel
@@ -38,6 +40,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件ID", required = true)
     val id: String,
     @ApiModelProperty("插件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
@@ -50,6 +53,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件图标", required = false)
     val icon: String?,
     @ApiModelProperty("插件简介", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("服务范围", required = false)
     val serviceScope: List<String>?,
@@ -72,6 +76,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
     @ApiModelProperty("插件描述", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("版本信息列表", required = true)
     val versionList: List<VersionInfo>,
@@ -97,6 +102,8 @@ data class PipelineAtom(
     val recommendFlag: Boolean? = null,
     @ApiModelProperty(value = "前端UI渲染方式", required = false)
     val frontendType: FrontendTypeEnum?,
+    @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源", required = false)
+    val visibilityLevel: String? = null,
     @ApiModelProperty("插件创建时间", required = true)
     val createTime: Long,
     @ApiModelProperty("插件最后修改时间", required = true)

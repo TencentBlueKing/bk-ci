@@ -28,7 +28,6 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -39,6 +38,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList", "LongMethod")
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordContainer(
     @ApiModelProperty("构建ID", required = true)
@@ -76,16 +76,13 @@ data class BuildRecordContainer(
 ) {
     companion object {
 
+        @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
-            projectId: String,
-            pipelineId: String,
-            version: Int,
-            buildId: String,
-            stage: Stage,
+            stageId: String,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
-            taskBuildRecords: MutableList<BuildRecordTask>
+            taskBuildRecords: MutableList<BuildRecordTask>?
         ) {
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = container.name
@@ -107,22 +104,41 @@ data class BuildRecordContainer(
             }
             this.add(
                 BuildRecordContainer(
-                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                    buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                    containerType = container.getClassType(), executeCount = context.executeCount,
-                    matrixGroupFlag = container.matrixGroupFlag, status = buildStatus?.name,
-                    containerVar = containerVar, timestamps = mapOf()
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    resourceVersion = context.resourceVersion,
+                    buildId = context.buildId,
+                    stageId = stageId,
+                    containerId = container.containerId!!,
+                    containerType = container.getClassType(),
+                    executeCount = context.executeCount,
+                    matrixGroupFlag = container.matrixGroupFlag,
+                    status = buildStatus?.name,
+                    containerVar = containerVar,
+                    timestamps = mapOf()
                 )
             )
+            if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
                 taskBuildRecords.add(
                     BuildRecordTask(
-                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                        stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = element.id!!, classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(), executeCount = context.executeCount,
-                        resourceVersion = version, taskSeq = index, status = buildStatus?.name,
-                        taskVar = mutableMapOf(), timestamps = mapOf()
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        buildId = context.buildId,
+                        stageId = stageId,
+                        containerId = container.containerId!!,
+                        taskId = element.id!!,
+                        classType = element.getClassType(),
+                        atomCode = element.getTaskAtom(),
+                        executeCount = context.executeCount,
+                        resourceVersion = context.resourceVersion,
+                        taskSeq = index,
+                        status = buildStatus?.name,
+                        taskVar = mutableMapOf(),
+                        timestamps = mapOf(),
+                        elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
+                            info.parentElementId != element.id
+                        }
                     )
                 )
             }

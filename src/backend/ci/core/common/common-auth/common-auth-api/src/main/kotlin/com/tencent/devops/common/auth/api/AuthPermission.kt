@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.MSG_CODE_PERMISSION_PREFIX
+import com.tencent.devops.common.api.util.MessageUtil
+
 enum class AuthPermission(val value: String, val alias: String) {
     CREATE("create", "创建"), // 流水线，凭据，证书，代码仓库
     DEPLOY("deploy", "部署"), // 流水线，容器，自定义目录
@@ -46,7 +49,14 @@ enum class AuthPermission(val value: String, val alias: String) {
 
     VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
     WEB_CHECK("webcheck", "页面按钮校验"), // 页面按钮校验
-    MANAGE("manage", "管理"); // 项目管理
+    MANAGE("manage", "管理"), // 管理
+    VISIT("visit", "访问"), // 项目访问权限
+
+    ANALYZE("analyze", "分析"), // 分析任务
+    MANAGE_DEFECT("manage-defect", "问题管理"), // 问题管理
+    VIEW_DEFECT("view-defect", "查看问题列表和详情"), // 查看问题列表和详情
+    VIEW_REPORT("view-report", "查看报表"), // 查看报表
+    SETTING("setting", "设置"); // 设置
 
     companion object {
         fun get(value: String): AuthPermission {
@@ -55,5 +65,13 @@ enum class AuthPermission(val value: String, val alias: String) {
             }
             throw IllegalArgumentException("No enum for constant $value")
         }
+    }
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "$MSG_CODE_PERMISSION_PREFIX${this.name}",
+            defaultMessage = this.alias,
+            language = language
+        )
     }
 }

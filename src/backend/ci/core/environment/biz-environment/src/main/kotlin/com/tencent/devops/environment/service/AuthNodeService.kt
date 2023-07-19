@@ -49,7 +49,7 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listRawServerNodeByIds(hashIds as List<String>)
         val result = FetchInstanceInfo()
         if (nodeInfos == null || nodeInfos.isEmpty()) {
-            logger.info("$hashIds 无节点")
+            logger.info("$hashIds no node")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -69,7 +69,7 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listByPage(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId 项目下无节点")
+            logger.info("project $projectId no node")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -98,7 +98,7 @@ class AuthNodeService @Autowired constructor(
             displayName = keyword)
         val result = SearchInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId 项目下无节点")
+            logger.info("$projectId There are no nodes under the project")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

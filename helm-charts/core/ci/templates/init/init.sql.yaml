@@ -21,20 +21,20 @@ spec:
         - name: wait-for-mysql
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
           command:
             - "/bin/sh"
             - "-c"
             - |
-              until getent hosts {{ include "bkci.mysql.fullname" . }}
-              do 
-                echo waiting for {{ include "bkci.mysql.fullname" . }};
-                sleep 2;
+              while ! mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}; do
+                echo "mysql connecting.."
+                sleep 3
               done
               echo "MySQL is available";
       {{- end }}
       containers:
         - name: init-sql
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/sql
           {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
@@ -42,7 +42,10 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done ;
+              find . -type f -name "*.sql" | sort | while read SQL; do
+                echo "Importing $SQL ..."
+                mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} < $SQL
+              done
               echo 'DELETE FROM devops_ci_store.T_CONTAINER WHERE ID = "d51a712508c011e99792fa163e50f2b5";'|mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}
               echo 'update devops_ci_store.T_BUSINESS_CONFIG set CONFIG_VALUE="DOCKER" WHERE BUSINESS_VALUE="LINUX" AND FEATURE="defaultBuildType";'|mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}
       restartPolicy: OnFailure

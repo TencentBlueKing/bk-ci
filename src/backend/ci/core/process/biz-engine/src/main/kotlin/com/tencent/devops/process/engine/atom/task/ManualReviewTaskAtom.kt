@@ -41,6 +41,16 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_APPROVE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_REJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_DESCRIPTION
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FINAL_APPROVAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PARAMS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PENDING_APPROVAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEWER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEWERS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEW_COMMENTS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -56,11 +66,11 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
+import java.time.LocalDateTime
+import java.util.Date
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
-import java.util.Date
 
 /**
  * 人工审核插件
@@ -106,6 +116,7 @@ class ManualReviewTaskAtom(
             projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
             taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
             taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
+            operation = "manualReviewTaskStart#${task.taskId}",
             timestamps = mapOf(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
@@ -120,19 +131,22 @@ class ManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤等待审核(Pending approval)============",
+            buildId = task.buildId,
+            message = "============${getI18nByLocal(BK_PENDING_APPROVAL)}============",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "待审核人(Reviewers)：$reviewUsers",
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：$reviewUsers",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核说明(Description)：$reviewDesc",
+            buildId = task.buildId, message = "${getI18nByLocal(BK_DESCRIPTION)}：$reviewDesc",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = buildId, message = "审核参数(Params)：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+            buildId = buildId,
+            message = getI18nByLocal(BK_PARAMS) +
+                    "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
@@ -210,11 +224,11 @@ class ManualReviewTaskAtom(
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
                 buildLogPrinter.addLine(
-                    buildId = buildId, message = "审核结果(result)：继续(Approve)",
+                    buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_APPROVE),
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 buildLogPrinter.addLine(
-                    buildId = buildId, message = "审核参数(Params)：${getParamList(taskParam)}",
+                    buildId = buildId, message = "${getI18nByLocal(BK_PARAMS)}：${getParamList(taskParam)}",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -230,7 +244,7 @@ class ManualReviewTaskAtom(
             }
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
-                    buildId = buildId, message = "审核结果(result)：驳回(Reject)",
+                    buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_REJECT),
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -326,18 +340,26 @@ class ManualReviewTaskAtom(
     ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤审核结束(Final approval)============",
+            buildId = task.buildId, message = "============${getI18nByLocal(BK_FINAL_APPROVAL)}============",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核人(Reviewer)：$manualActionUserId",
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWER)}：$manualActionUserId",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核意见(Review comments)：$suggestContent",
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEW_COMMENTS)}：$suggestContent",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent
+    }
+
+    private fun getI18nByLocal(messageCode: String, params: Array<String>? = null): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = messageCode,
+            language = I18nUtil.getDefaultLocaleLanguage(),
+            params = params
+        )
     }
 
     companion object {

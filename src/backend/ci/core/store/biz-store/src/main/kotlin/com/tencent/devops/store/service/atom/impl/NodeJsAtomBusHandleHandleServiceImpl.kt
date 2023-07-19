@@ -33,7 +33,7 @@ import com.tencent.devops.store.service.atom.AtomBusHandleService
 class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
     override fun handleOsName(osName: String): String {
-        return when (osName.toUpperCase()) {
+        return when (osName.uppercase()) {
             OSType.MAC_OS.name -> {
                 "darwin"
             }
@@ -41,13 +41,13 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
                 "win"
             }
             else -> {
-                osName.toLowerCase()
+                osName.lowercase()
             }
         }
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
-        val osType = when (osName.toLowerCase()) {
+        val osType = when (osName.lowercase()) {
             "darwin" -> {
                 OSType.MAC_OS
             }
@@ -55,12 +55,12 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
                 OSType.WINDOWS
             }
             else -> {
-                OSType.valueOf(osName.toUpperCase())
+                OSType.valueOf(osName.uppercase())
             }
         }
         return when (osType) {
             OSType.LINUX, OSType.MAC_OS -> {
-                if (osArch.contains("arm")) {
+                if (osArch.contains("arm") || osArch.contains("aarch")) {
                     "arm64"
                 } else {
                     "x64"

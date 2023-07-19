@@ -30,14 +30,21 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -59,13 +66,14 @@ import com.tencent.devops.stream.trigger.pojo.ManualPreScriptBuildYaml
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList", "LongMethod", "ThrowsCount")
 abstract class BaseManualTriggerService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val streamGitConfig: StreamGitConfig,
     private val streamEventService: StreamEventService,
@@ -120,6 +128,25 @@ abstract class BaseManualTriggerService @Autowired constructor(
 
         action.data.context.pipeline = buildPipeline
 
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val projectCode =
+            GitCommonUtils.getCiProjectId(buildPipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
+        action.data.context.pipelineAsCodeSettings = try {
+            if (buildPipeline.pipelineId.isNotBlank()) {
+                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                    projectId = projectCode,
+                    pipelineId = buildPipeline.pipelineId,
+                    channelCode = ChannelCode.GIT
+                ).data?.pipelineAsCodeSettings
+            } else {
+                client.get(ServiceProjectResource::class).get(projectCode)
+                    .data?.properties?.pipelineAsCodeSettings
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
+            null
+        }
+
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
@@ -164,7 +191,13 @@ abstract class BaseManualTriggerService @Autowired constructor(
             commitId = triggerBuildReq.commitId,
             buildId = result.id,
             buildUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+                homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                    MessageUtil.getMessageByLocale(
+                        STARTUP_CONFIG_MISSING,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(" streamUrl")
+                    )
+                ),
                 gitProjectId = buildPipeline.gitProjectId,
                 pipelineId = pipelineId,
                 buildId = result.id

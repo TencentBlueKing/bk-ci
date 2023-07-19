@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -85,7 +84,8 @@ import kotlin.math.min
     "ReturnCount",
     "NestedBlockDepth",
     "ThrowsCount",
-    "LongParameterList"
+    "LongParameterList",
+    "LargeClass"
 )
 @Service
 class InitializeMatrixGroupStageCmd(
@@ -331,6 +331,16 @@ class InitializeMatrixGroupStageCmd(
                         )
                     )
                     recordContainer?.let {
+                        val containerVar = mutableMapOf<String, Any>(
+                            "@type" to newContainer.getClassType(),
+                            newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            newContainer::name.name to (newContainer.name),
+                            newContainer::matrixGroupId.name to matrixGroupId,
+                            newContainer::matrixContext.name to contextCase
+                        )
+                        modelContainer.mutexGroup?.let {
+                            containerVar[newContainer::mutexGroup.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -343,11 +353,7 @@ class InitializeMatrixGroupStageCmd(
                                 executeCount = context.executeCount,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
-                                containerVar = mutableMapOf(
-                                    "@type" to newContainer.getClassType(),
-                                    Container::containerHashId.name to (newContainer.containerHashId ?: ""),
-                                    Container::name.name to (newContainer.name)
-                                ),
+                                containerVar = containerVar,
                                 status = newContainer.status,
                                 startTime = null,
                                 endTime = null,
@@ -438,6 +444,37 @@ class InitializeMatrixGroupStageCmd(
                             mutexGroup = mutexGroup
                         )
                     )
+                    recordContainer?.let {
+                        val containerVar = mutableMapOf<String, Any>(
+                            "@type" to newContainer.getClassType(),
+                            newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            newContainer::name.name to (newContainer.name),
+                            newContainer::matrixGroupId.name to matrixGroupId,
+                            newContainer::matrixContext.name to contextCase
+                        )
+                        modelContainer.mutexGroup?.let {
+                            containerVar[newContainer::mutexGroup.name] = it
+                        }
+                        recordContainerList.add(
+                            BuildRecordContainer(
+                                projectId = event.projectId,
+                                pipelineId = event.pipelineId,
+                                resourceVersion = recordContainer.resourceVersion,
+                                buildId = event.buildId,
+                                stageId = event.stageId,
+                                containerId = newContainer.containerId!!,
+                                containerType = recordContainer.containerType,
+                                executeCount = context.executeCount,
+                                matrixGroupFlag = false,
+                                matrixGroupId = matrixGroupId,
+                                containerVar = containerVar,
+                                status = newContainer.status,
+                                startTime = null,
+                                endTime = null,
+                                timestamps = mapOf()
+                            )
+                        )
+                    }
 
                     // 如为空就初始化，如有元素就直接追加
                     if (modelContainer.groupContainers.isNullOrEmpty()) {
