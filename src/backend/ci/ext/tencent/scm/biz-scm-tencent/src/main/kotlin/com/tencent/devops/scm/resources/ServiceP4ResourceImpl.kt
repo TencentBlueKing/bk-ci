@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
+import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 
 @RestResource
@@ -42,12 +43,12 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         username: String,
         password: String,
         change: Int
-    ): Result<P4ChangeList> {
+    ): Result<List<P4FileSpec>> {
         val changeListFiles = P4Api(
             p4port = p4Port,
             username = username,
             password = password
-        ).getChangelist(change)
+        ).getChangelistFiles(change)
         return Result(changeListFiles)
     }
 
@@ -56,12 +57,12 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         username: String,
         password: String,
         change: Int
-    ): Result<P4ChangeList> {
+    ): Result<List<P4FileSpec>> {
         val shelvedFiles = P4Api(
             p4port = p4Port,
             username = username,
             password = password
-        ).getShelvedChangelist(change)
+        ).getShelvedFiles(change)
         return Result(shelvedFiles)
     }
 
@@ -95,5 +96,33 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
             password = password
         ).getServerInfo()
         return Result(serverInfo)
+    }
+
+    override fun getChangelist(
+        p4Port: String,
+        username: String,
+        password: String,
+        change: Int
+    ): Result<P4ChangeList> {
+        val changeList = P4Api(
+            p4port = p4Port,
+            username = username,
+            password = password
+        ).getChangelist(change)
+        return Result(changeList)
+    }
+
+    override fun getShelvedChangeList(
+        p4Port: String,
+        username: String,
+        password: String,
+        change: Int
+    ): Result<P4ChangeList> {
+        val changeList = P4Api(
+            p4port = p4Port,
+            username = username,
+            password = password
+        ).getShelvedChangeList(change)
+        return Result(changeList)
     }
 }
