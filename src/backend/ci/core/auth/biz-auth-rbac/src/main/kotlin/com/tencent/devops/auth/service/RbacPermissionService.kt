@@ -40,11 +40,14 @@ import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
@@ -56,7 +59,8 @@ class RbacPermissionService constructor(
     private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionSuperManagerService: PermissionSuperManagerService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val client: Client
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -116,22 +120,12 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
-            AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-        } else {
-            val projectResourceInstance = AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                parents = listOf(projectResourceInstance)
-            )
-        }
+        val resource = buildAuthResourceInstance(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType
+        )
         return validateUserResourcePermissionByInstance(
             userId = userId,
             action = action,
@@ -228,22 +222,12 @@ class RbacPermissionService constructor(
         resourceCode: String,
         resourceType: String
     ): Map<String, Boolean> {
-        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        } else {
-            val projectResourceInstance = AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                parents = listOf(projectResourceInstance)
-            )
-        }
+        val resource = buildAuthResourceInstance(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType
+        )
 
         return batchValidateUserResourcePermissionByInstance(
             userId = userId,
@@ -502,6 +486,52 @@ class RbacPermissionService constructor(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
                     "$userId|$actions|$projectCode|$resourceType"
             )
+        }
+    }
+
+    private fun buildAuthResourceInstance(
+        userId: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): AuthResourceInstance {
+        val projectResourceInstance = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        return when (resourceType) {
+            AuthResourceType.PROJECT.value ->
+                projectResourceInstance
+            // 流水线鉴权,需要添加关联的流水线组
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
+                val parents = mutableListOf<AuthResourceInstance>()
+                parents.add(projectResourceInstance)
+                client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = resourceCode
+                ).data?.forEach { viewId ->
+                    parents.add(
+                        AuthResourceInstance(
+                            resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                            resourceCode = HashUtil.encodeLongId(viewId),
+                            parents = listOf(projectResourceInstance)
+                        )
+                    )
+                }
+                AuthResourceInstance(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    parents = parents
+                )
+            }
+            else -> {
+                AuthResourceInstance(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    parents = listOf(projectResourceInstance)
+                )
+            }
         }
     }
 
