@@ -86,7 +86,7 @@ const handleShowInstances = (data, name) => {
                       <span class="resources-content" v-if="data.relatedResourceInfo?.instances?.path.length > 1">
                         {{ data.relatedResourceInfo?.name }}: {{ t('已选择个流水线', [data.relatedResourceInfo?.instances?.path.length]) }}
                       </span>
-                      <span v-else>
+                      <span class="resources-content" v-else>
                         {{ data.relatedResourceInfo?.name }}:
                         <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
                           {{ item.name }}{{ index !== data.relatedResourceInfo?.instances?.path[0].length - 1 ? ' / ' : '' }} 
