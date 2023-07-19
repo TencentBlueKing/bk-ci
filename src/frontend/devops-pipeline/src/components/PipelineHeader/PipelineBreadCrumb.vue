@@ -115,7 +115,7 @@
                     this.$store.commit('pipelines/updateCurPipeline', curPipeline)
                     return curPipeline
                 } catch (error) {
-                    if (error.status === 403) {
+                    if (error.code === 403) {
                         handlePipelineNoPermission({
                             projectId,
                             resourceCode: pipelineId,
