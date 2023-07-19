@@ -8,7 +8,7 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
-                :disabled="loading || (!isRunning && !canManualStartup)"
+                :disabled="loading || !isRunning"
                 :icon="loading ? 'loading' : ''"
                 outline
                 :theme="isRunning ? 'warning' : 'default'"
@@ -52,12 +52,6 @@
             }),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
-            },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
             },
             buildNumConf () {
                 return {
