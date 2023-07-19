@@ -6,10 +6,10 @@
             </div>
             <div class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <template v-for="action in parent">
+                    <template v-for="(action, aIndex) in parent">
                         <li
                             v-if="!action.hidden"
-                            :key="action.label"
+                            :key="aIndex"
                             v-perm="{
                                 permissionData: action.permissionData
                             }"
