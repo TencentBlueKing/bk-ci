@@ -309,7 +309,7 @@ class P4Api(
         }
     }
 
-    fun getShelvedChangelist(
+    fun getShelvedChangeList(
         change: Int
     ): P4ChangeList {
         return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->

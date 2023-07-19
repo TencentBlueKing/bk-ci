@@ -125,17 +125,13 @@ class P4ChangeTriggerHandler(
                             p4ServerInfo?.run {
                                 caseSensitive = this.caseSensitive
                             }
-                            eventCacheService.getP4Changelist(
+                            eventCacheService.getP4ChangelistFiles(
                                 repo = repository,
                                 projectId = projectId,
                                 repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                                 repositoryType = repositoryConfig.repositoryType,
                                 change = event.change
-                            )?.run {
-                                // 保存提交描述信息
-                                event.description = this.description
-                                this.fileList.map { it.depotPathString }
-                            } ?: emptyList()
+                            )
                         }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
