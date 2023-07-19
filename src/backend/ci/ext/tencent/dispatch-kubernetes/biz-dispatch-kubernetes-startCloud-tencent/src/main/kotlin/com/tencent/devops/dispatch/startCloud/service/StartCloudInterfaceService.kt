@@ -25,39 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.dispatch.startCloud.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
-@ApiModel("组件版本信息")
-data class StoreVersion(
-    @ApiModelProperty("组件代码", required = true)
-    var storeCode: String,
-    @ApiModelProperty("组件名称", required = true)
-    var storeName: String,
-    @ApiModelProperty("版本号", required = true)
-    var version: String,
-    @ApiModelProperty("是否是旧版本", required = true)
-    var historyFlag: Boolean
+@Service("startcloudInterfaceService")
+class StartCloudInterfaceService @Autowired constructor(
+    private val workspaceClient: WorkspaceStartCloudClient
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as StoreVersion
-
-        if (storeCode != other.storeCode) return false
-        if (version != other.version) return false
-        if (historyFlag != other.historyFlag) return false
-
-        return true
+    @Value("\${startCloud.appName}")
+    val appName: String = "IEG_BKCI"
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
     }
 
-    override fun hashCode(): Int {
-        var result = storeCode.hashCode()
-        result = 31 * result + version.hashCode()
-        result = 31 * result + historyFlag.hashCode()
-        return result
+    fun createStartCloudUser(userId: String): Boolean {
+        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
+            logger.warn("create user failed.|${it.message}")
+            if (it is BuildFailureException &&
+                it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
+            ) {
+                throw it
+            }
+        }
+        return true
     }
 }

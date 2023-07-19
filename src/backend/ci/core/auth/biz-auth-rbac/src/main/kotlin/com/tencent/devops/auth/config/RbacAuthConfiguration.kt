@@ -197,7 +197,8 @@ class RbacAuthConfiguration {
         iamV2PolicyService: PolicyService,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionSuperManagerService: PermissionSuperManagerService,
-        rbacCacheService: RbacCacheService
+        rbacCacheService: RbacCacheService,
+        client: Client
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -205,7 +206,8 @@ class RbacAuthConfiguration {
         policyService = iamV2PolicyService,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionSuperManagerService = permissionSuperManagerService,
-        rbacCacheService = rbacCacheService
+        rbacCacheService = rbacCacheService,
+        client = client
     )
 
     @Bean
@@ -270,12 +272,10 @@ class RbacAuthConfiguration {
     @Primary
     fun rbacPermissionResourceValidateService(
         permissionService: PermissionService,
-        rbacCacheService: RbacCacheService,
-        client: Client
+        rbacCacheService: RbacCacheService
     ) = RbacPermissionResourceValidateService(
         permissionService = permissionService,
-        rbacCacheService = rbacCacheService,
-        client = client
+        rbacCacheService = rbacCacheService
     )
 
     @Bean

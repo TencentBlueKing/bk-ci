@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -269,6 +270,34 @@ class WorkspaceDao {
                 .fetch()
         }
     }
+    fun fetchSharedWorkspace(
+        dslContext: DSLContext,
+        workspaceName: String? = null
+    ): Result<TWorkspaceSharedRecord>? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            val condition = mutableListOf<Condition>()
+            if (!workspaceName.isNullOrBlank()) {
+                condition.add(WORKSPACE_NAME.eq(workspaceName))
+            }
+            val query = dslContext.selectFrom(this)
+            if (condition.isNotEmpty()) {
+                query.where(condition)
+            }
+            return query.fetch()
+        }
+    }
+
+    fun deleteSharedWorkspace(
+        id: Long,
+        dslContext: DSLContext
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.delete(this)
+                .where(ID.eq(id))
+                .limit(1)
+                .execute()
+        }
+    }
 
     private fun mixCondition(
         userId: String? = null,
@@ -387,6 +416,7 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.delete(this)
                 .where(NAME.eq(workspaceName))
+                .limit(1)
                 .execute()
         }
     }

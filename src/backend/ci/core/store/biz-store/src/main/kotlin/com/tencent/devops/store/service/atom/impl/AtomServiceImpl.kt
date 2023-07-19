@@ -631,6 +631,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     },
                     recommendFlag = atomFeature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
+                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(pipelineAtomRecord.visibilityLevel as Int),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
                     updateTime = pipelineAtomRecord.updateTime.timestampmilli()
                 )

@@ -25,39 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.dispatch.kubernetes.api.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("组件版本信息")
-data class StoreVersion(
-    @ApiModelProperty("组件代码", required = true)
-    var storeCode: String,
-    @ApiModelProperty("组件名称", required = true)
-    var storeName: String,
-    @ApiModelProperty("版本号", required = true)
-    var version: String,
-    @ApiModelProperty("是否是旧版本", required = true)
-    var historyFlag: Boolean
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as StoreVersion
-
-        if (storeCode != other.storeCode) return false
-        if (version != other.version) return false
-        if (historyFlag != other.historyFlag) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = storeCode.hashCode()
-        result = 31 * result + version.hashCode()
-        result = 31 * result + historyFlag.hashCode()
-        return result
-    }
+@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "START云桌面接口模块")
+@Path("/service/startCloud")
+@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceStartCloudResource {
+    @ApiOperation("创建START云桌面用户")
+    @GET
+    @Path("/startCloud/user/create")
+    fun createStartCloudUser(
+        @ApiParam("user", required = true)
+        @QueryParam("user")
+        user: String
+    ): Result<Boolean>
 }
