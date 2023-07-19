@@ -6,14 +6,18 @@
             </div>
             <div class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <li
-                        v-for="action in parent"
-                        v-if="!action.hidden"
-                        :key="action.label"
-                        @click="action.handler"
-                    >
-                        {{ $t(action.label) }}
-                    </li>
+                    <template v-for="action in parent">
+                        <li
+                            v-if="!action.hidden"
+                            :key="action.id"
+                            v-perm="{
+                                permissionData: action.permissionData
+                            }"
+                            @click="action.handler"
+                        >
+                            {{ $t(action.label) }}
+                        </li>
+                    </template>
                 </ul>
             </div>
         </bk-dropdown-menu>
@@ -50,14 +54,18 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
-    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
-    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        PROJECT_RESOURCE_ACTION,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     export default {
         components: {
             ImportPipelinePopup,
@@ -85,49 +93,94 @@
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
+                const { projectId } = this.$route.params
                 const pipeline = {
                     ...this.curPipeline,
-                    projectId: this.$route.params.projectId
+                    projectId
                 }
                 return [
                     [
                         {
+                            id: pipeline.pipelineId + 'rename',
                             label: 'rename',
                             handler: () => {
                                 this.toggleRenameDialog(true)
+                            },
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
                             }
                         },
                         {
+                            id: 'collectAction',
                             label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
                         }
                     ],
                     [
                         {
+                            id: pipeline.pipelineId + 'newlist.exportPipelineJson',
                             label: 'newlist.exportPipelineJson',
-                            handler: this.exportPipeline
+                            handler: this.exportPipeline,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.importModifyPipelineJson',
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
-                            hidden: this.isTemplatePipeline
+                            hidden: this.isTemplatePipeline,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.copyAs',
                             label: 'newlist.copyAs',
-                            handler: () => this.copyAs(pipeline)
+                            handler: () => this.copyAs(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.saveAsTemp',
                             label: 'newlist.saveAsTemp',
-                            handler: () => this.saveAsTempHandler(pipeline)
+                            handler: () => this.saveAsTempHandler(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'project',
+                                resourceCode: projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
                         },
                         {
+                            id: 'jumpToTemp',
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
                         },
                         {
+                            id: pipeline.pipelineId + 'delete',
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline)
+                            handler: () => this.deleteHandler(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
                         }
                     ]
                 ]

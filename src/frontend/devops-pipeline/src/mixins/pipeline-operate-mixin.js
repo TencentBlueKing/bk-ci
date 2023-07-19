@@ -22,7 +22,7 @@ import {
     convertTime
 } from '@/utils/util'
 import { mapActions, mapGetters, mapState } from 'vuex'
-import { AUTH_URL_PREFIX, PROCESS_API_URL_PREFIX } from '../store/constants'
+import { PROCESS_API_URL_PREFIX } from '../store/constants'
 
 export default {
     computed: {
@@ -446,35 +446,6 @@ export default {
         },
         changeProject () {
             this.$toggleProjectMenu(true)
-        },
-
-        async toApplyPermission (actionId, pipeline) {
-            try {
-                const { projectId } = this.$route.params
-                const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                    actionId,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: projectId,
-                        type: this.$permissionResourceTypeMap.PROJECT
-                    }, {
-                        type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT,
-                        ...pipeline
-                    }]
-                }])
-                window.open(redirectUrl, '_blank')
-                this.$bkInfo({
-                    title: this.$t('permissionRefreshtitle'),
-                    subTitle: this.$t('permissionRefreshSubtitle'),
-                    okText: this.$t('permissionRefreshOkText'),
-                    cancelText: this.$t('close'),
-                    confirmFn: () => {
-                        location.reload()
-                    }
-                })
-            } catch (e) {
-                console.error(e)
-            }
         },
         formatParams (pipeline) {
             const params = pipeline.stages[0].containers[0].params

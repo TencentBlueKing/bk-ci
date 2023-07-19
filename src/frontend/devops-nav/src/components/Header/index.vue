@@ -36,9 +36,11 @@
                         :name="item.projectName"
                     >
                         <template>
-                            <div
-                                class="option-item">
-                                <div class="project-name">
+                            <div class="option-item">
+                                <div
+                                    class="project-name"
+                                    v-bk-tooltips="{ content: item.projectName, allowHTML: false, delay: [300, 0] }"
+                                >
                                     {{ item.projectName }}
                                 </div>
                                 <span
@@ -49,7 +51,8 @@
                                         'is-disabled': !item.managePermission
                                     }"
                                     v-bk-tooltips="$t('userManage')"
-                                    @click.stop.prevent="goToUserManage(item)">
+                                    @click.stop.prevent="goToUserManage(item)"
+                                >
                                     <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
                                     <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
                                 </span>
@@ -466,6 +469,7 @@
             cursor: pointer;
             position: relative;
             top: 5px;
+            flex-shrink: 0;
         }
         
         .is-selected {
