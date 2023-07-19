@@ -6,17 +6,18 @@
             </div>
             <div class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <li
-                        v-for="action in parent"
-                        v-show="!action.hidden"
-                        :key="action.id"
-                        v-perm="{
-                            permissionData: action.permissionData
-                        }"
-                        @click="action.handler"
-                    >
-                        {{ $t(action.label) }}
-                    </li>
+                    <template v-for="action in parent">
+                        <li
+                            v-if="!action.hidden"
+                            :key="action.id"
+                            v-perm="{
+                                permissionData: action.permissionData
+                            }"
+                            @click="action.handler"
+                        >
+                            {{ $t(action.label) }}
+                        </li>
+                    </template>
                 </ul>
             </div>
         </bk-dropdown-menu>
