@@ -69,14 +69,15 @@ object RbacAuthUtils {
     fun getAdditionalAction(): Map<String, List<Action>> {
         return mapOf(
             AuthResourceType.PROJECT.value to listOf(
-                "project_visit","quality_group_create","env_node_create",
-                "experience_task_create","experience_group_create"),
+                "project_visit", "quality_group_create", "env_node_create",
+                "experience_task_create", "experience_group_create"
+            ),
             AuthResourceType.TICKET_CERT.value to listOf("cert_view"),
             AuthResourceType.QUALITY_RULE.value to listOf("rule_list"),
             AuthResourceType.QUALITY_GROUP_NEW.value to listOf("quality_group_list"),
             AuthResourceType.ENVIRONMENT_ENV_NODE.value to listOf("env_node_list", "env_node_view"),
             AuthResourceType.EXPERIENCE_TASK_NEW.value to listOf("experience_task_list", "experience_task_view"),
-            AuthResourceType.EXPERIENCE_GROUP_NEW.value to listOf("experience_group_list",  "experience_group_view")
+            AuthResourceType.EXPERIENCE_GROUP_NEW.value to listOf("experience_group_list", "experience_group_view")
         ).mapValues { (_, actions) -> actions.map { Action(it) } }
     }
 
