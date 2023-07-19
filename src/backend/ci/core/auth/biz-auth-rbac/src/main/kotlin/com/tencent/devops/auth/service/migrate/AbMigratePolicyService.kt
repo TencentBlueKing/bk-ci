@@ -230,10 +230,11 @@ abstract class AbMigratePolicyService(
                 projectName = projectName
             )
             logger.info("AbMigratePolicyService|migrateGrou|additionalScope:$additionalScopes")
-            rbacAuthorizationScopeList.toMutableList().addAll(additionalScopes)
-            logger.info("AbMigratePolicyService|migrateGrou|rbacAuthorizationScopeList:$rbacAuthorizationScopeList")
+            val finalAuthorizationScopeList = rbacAuthorizationScopeList.toMutableList()
+                .apply { addAll(additionalScopes) }
+            logger.info("AbMigratePolicyService|migrateGrou|rbacAuthorizationScopeList:$finalAuthorizationScopeList")
             // 用户组授权
-            rbacAuthorizationScopeList.forEach { authorizationScope ->
+            finalAuthorizationScopeList.forEach { authorizationScope ->
                 v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
             }
             // 往用户组添加成员
