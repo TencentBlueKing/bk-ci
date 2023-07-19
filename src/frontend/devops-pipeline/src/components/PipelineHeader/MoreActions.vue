@@ -92,7 +92,7 @@
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
-                const { projectId, pipelineId } = this.$route.params
+                const { projectId } = this.$route.params
                 const pipeline = {
                     ...this.curPipeline,
                     projectId
@@ -105,9 +105,9 @@
                                 this.toggleRenameDialog(true)
                             },
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: pipelineId,
+                                resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
@@ -121,9 +121,9 @@
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: pipelineId,
+                                resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
@@ -132,9 +132,9 @@
                             handler: this.importModifyPipeline,
                             hidden: this.isTemplatePipeline,
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: pipelineId,
+                                resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
@@ -142,9 +142,9 @@
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: pipelineId,
+                                resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
@@ -152,7 +152,7 @@
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'project',
                                 resourceCode: projectId,
                                 action: PROJECT_RESOURCE_ACTION.MANAGE
@@ -167,9 +167,9 @@
                             label: 'delete',
                             handler: () => this.deleteHandler(pipeline),
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
-                                resourceCode: pipelineId,
+                                resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.DELETE
                             }
                         }
