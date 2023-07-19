@@ -74,7 +74,7 @@ object SvnUtils {
             )
         } else {
             SVNPasswordAuthentication.newInstance(
-                userName,
+                privateKey,
                 passphrase?.toCharArray(),
                 false,
                 svnURL,
