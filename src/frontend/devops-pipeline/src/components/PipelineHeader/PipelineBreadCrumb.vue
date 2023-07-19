@@ -127,10 +127,11 @@
             },
             doSelectPipeline (pipelineId, cur) {
                 const { projectId } = this.$route.params
-                this.updateCurPipeline({
+                const result = this.updateCurPipeline({
                     pipelineId,
                     projectId
                 })
+                if (!result) return
                 // 清空搜索
                 this.searchPipelineList({
                     projectId
