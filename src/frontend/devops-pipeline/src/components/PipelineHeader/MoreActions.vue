@@ -9,7 +9,7 @@
                     <li
                         v-for="action in parent"
                         v-if="!action.hidden"
-                        :key="action.label"
+                        :key="action.id"
                         v-perm="{
                             permissionData: action.permissionData
                         }"
@@ -100,6 +100,7 @@
                 return [
                     [
                         {
+                            id: pipeline.pipelineId + 'rename',
                             label: 'rename',
                             handler: () => {
                                 this.toggleRenameDialog(true)
@@ -112,12 +113,14 @@
                             }
                         },
                         {
+                            id: 'collectAction',
                             label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
                         }
                     ],
                     [
                         {
+                            id: pipeline.pipelineId + 'newlist.exportPipelineJson',
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             permissionData: {
@@ -128,6 +131,7 @@
                             }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.importModifyPipelineJson',
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
                             hidden: this.isTemplatePipeline,
@@ -139,6 +143,7 @@
                             }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.copyAs',
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
                             permissionData: {
@@ -149,6 +154,7 @@
                             }
                         },
                         {
+                            id: pipeline.pipelineId + 'newlist.saveAsTemp',
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
                             permissionData: {
@@ -159,11 +165,13 @@
                             }
                         },
                         {
+                            id: 'jumpToTemp',
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
                         },
                         {
+                            id: pipeline.pipelineId + 'delete',
                             label: 'delete',
                             handler: () => this.deleteHandler(pipeline),
                             permissionData: {
