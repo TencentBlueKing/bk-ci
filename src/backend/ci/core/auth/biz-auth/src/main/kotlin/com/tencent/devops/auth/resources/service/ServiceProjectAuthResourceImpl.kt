@@ -58,23 +58,6 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getResourceUsers(
-        token: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        group: BkAuthResourceGroup?
-    ): Result<List<String>> {
-        return Result(
-            permissionProjectService.getProjectUsers(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                group = group?.value
-            )
-        )
-    }
-
     override fun getProjectGroupAndUserList(
         token: String,
         projectCode: String

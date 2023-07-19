@@ -35,6 +35,7 @@ import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
 class SamplePermissionResourceGroupService : PermissionResourceGroupService {
 
@@ -102,5 +103,22 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean {
         return true
+    }
+
+    override fun getResourceGroupUsers(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        group: String?
+    ): List<String> {
+        return emptyList()
+    }
+
+    override fun getResourceGroupAndUserList(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<BkAuthGroupAndUserList> {
+        return emptyList()
     }
 }

@@ -73,27 +73,6 @@ interface ServiceProjectAuthResource {
     ): Result<List<String>>
 
     @GET
-    @Path("/{projectCode}/users/resource/byGroup")
-    @ApiOperation("获取特定资源用户组成员")
-    fun getResourceUsers(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @ApiParam("项目Code", required = true)
-        projectCode: String,
-        @QueryParam("resourceType")
-        @ApiParam("资源类型", required = false)
-        resourceType: String,
-        @QueryParam("resourceCode")
-        @ApiParam("资源code", required = false)
-        resourceCode: String,
-        @QueryParam("group")
-        @ApiParam("资源用户组类型", required = false)
-        group: BkAuthResourceGroup? = null
-    ): Result<List<String>>
-
-    @GET
     @Path("/{projectCode}/users")
     @ApiOperation("拉取项目所有成员，并按项目角色组分组成员信息返回")
     fun getProjectGroupAndUserList(
