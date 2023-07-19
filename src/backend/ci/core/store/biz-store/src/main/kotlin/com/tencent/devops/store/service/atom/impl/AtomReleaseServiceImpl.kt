@@ -124,6 +124,7 @@ import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -703,7 +704,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     repositoryHashId = repositoryHashId
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
-                val stageCode = qualityDataMap["stage"] as String
+                val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())
                 if (stageCode !in listOf(DEVELOP, TEST, DEPLOY, SECURITY)) {
                     throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
