@@ -125,21 +125,20 @@
                     return false
                 }
             },
-            doSelectPipeline (pipelineId, cur) {
+            async doSelectPipeline (pipelineId, cur) {
                 const { projectId } = this.$route.params
-                const result = this.updateCurPipeline({
+                const result = await this.updateCurPipeline({
                     pipelineId,
                     projectId
                 })
                 if (!result) return
                 // 清空搜索
-                this.searchPipelineList({
+                const list = await this.searchPipelineList({
                     projectId
-                }).then((list) => {
-                    this.setBreadCrumbPipelineList(list, {
-                        pipelineId,
-                        pipelineName: cur.pipelineName
-                    })
+                })
+                await this.setBreadCrumbPipelineList(list, {
+                    pipelineId,
+                    pipelineName: cur.pipelineName
                 })
 
                 const name = this.$route.params.buildNo ? 'pipelinesHistory' : this.$route.name
