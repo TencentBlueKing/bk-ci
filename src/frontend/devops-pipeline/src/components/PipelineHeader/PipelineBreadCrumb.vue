@@ -10,10 +10,10 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { debounce } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -114,7 +114,7 @@
                 return curPipeline
             },
             doSelectPipeline (pipelineId, cur) {
-                const { projectId, $route } = this
+                const { projectId } = this.$route.params
                 this.updateCurPipeline({
                     pipelineId,
                     projectId
@@ -129,7 +129,7 @@
                     })
                 })
 
-                const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+                const name = this.$route.params.buildNo ? 'pipelinesHistory' : this.$route.name
                 this.$router.push({
                     name,
                     params: {
