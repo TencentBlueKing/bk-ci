@@ -144,6 +144,23 @@ abstract class AbMigratePolicyService(
         }
     }
 
+    fun grantGroupAdditionalAuthorization(projectCode: String) {
+        authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).filter { it.groupCode == CUSTOM_GROUP_CODE }.forEach { groupInfo ->
+            val authorizationScopeList = buildAdditionalAuthorizationScope(
+                projectCode = groupInfo.resourceCode,
+                projectName = groupInfo.resourceName
+            )
+            authorizationScopeList.forEach { authorizationScope ->
+                v2ManagerService.grantRoleGroupV2(groupInfo.relationId.toInt(), authorizationScope)
+            }
+        }
+    }
+
     private fun loopMigrateGroup(
         projectCode: String,
         version: String,
@@ -229,10 +246,8 @@ abstract class AbMigratePolicyService(
                 projectCode = projectCode,
                 projectName = projectName
             )
-            logger.info("AbMigratePolicyService|migrateGrou|additionalScope:$additionalScopes")
             val finalAuthorizationScopeList = rbacAuthorizationScopeList.toMutableList()
                 .apply { addAll(additionalScopes) }
-            logger.info("AbMigratePolicyService|migrateGrou|rbacAuthorizationScopeList:$finalAuthorizationScopeList")
             // 用户组授权
             finalAuthorizationScopeList.forEach { authorizationScope ->
                 v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
