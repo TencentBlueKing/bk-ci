@@ -238,7 +238,7 @@
                 const limit = (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
-                if (!query.id) {
+                if (query.id) {
                     this.isListFlod = true
                     this.curRepoId = id
                     this.$router.push({

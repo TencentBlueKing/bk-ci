@@ -8,7 +8,7 @@
                 v-if="!isEditing"
                 class="codelib-name"
             >
-                <span class="mr5">{{ repoInfo.aliasName }}</span>
+                <span class="name mr5">{{ repoInfo.aliasName }}</span>
                 <span @click="handleEditName">
                     <Icon
                         name="edit-line"
@@ -24,7 +24,10 @@
                     />
                 </span>
             </div>
-            <div v-else>
+            <div
+                v-else
+                class="edit-input"
+            >
                 <bk-input
                     class="aliasName-input"
                     ref="aliasNameInput"
@@ -101,11 +104,13 @@
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
     import BasicSetting from './basic-setting.vue'
+    import TriggerEvent from './trigger-event.vue'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     export default {
         name: 'CodeLibDetail',
         components: {
             BasicSetting,
+            TriggerEvent,
             UsingPipelinesDialog
         },
         props: {
@@ -131,9 +136,10 @@
                 isLoading: false,
                 oldAliasName: '',
                 panels: [
-                    { name: 'basic', label: this.$t('codelib.basicSetting') }
+                    { name: 'basic', label: this.$t('codelib.basicSetting') },
+                    { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
-                active: 'basic',
+                active: 'triggerEvent',
                 repoInfo: {},
                 pipelinesList: [],
                 pipelinesDialogPayload: {
@@ -157,7 +163,8 @@
         computed: {
             componentName () {
                 const comMap = {
-                    basic: 'BasicSetting'
+                    basic: 'BasicSetting',
+                    triggerEvent: 'TriggerEvent'
                 }
                 return comMap[this.active]
             },
@@ -346,9 +353,15 @@
                 }
             }
         }
+        .edit-input {
+            display: flex;
+            width: 100%;
+        }
 
         .aliasName-input {
-            width: 400px;
+            flex: 1;
+            max-width: 400px;
+            min-width: 200px;
             line-height: 48px;
         }
         .edit-icon,

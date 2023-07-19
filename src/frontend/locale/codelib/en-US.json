@@ -65,6 +65,7 @@
     "authIdentity": "Authorized Identity",
     "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
     "basicSetting": "Basic Setting",
+    "triggerEvent": "Trigger Event",
     "resetAuth": "Reset Authorization",
     "PACmode": "PAC Mode",
     "common": "Common Settings",
@@ -136,5 +137,11 @@
     "是否删除该代码库？": "是否删除该代码库？",
     "重置成功": "重置成功",
     "已开启 PAC 模式": "已开启 PAC 模式",
-    "未开启 PAC 模式": "未开启 PAC 模式"
+    "未开启 PAC 模式": "未开启 PAC 模式",
+    "选择日期范围": "选择日期范围",
+    "触发器类型": "触发器类型",
+    "事件类型": "事件类型",
+    "触发人": "触发人",
+    "流水线名称": "流水线名称",
+    "触发器类型/事件类型/触发人/流水线名称": "触发器类型/事件类型/触发人/流水线名称"
 }
