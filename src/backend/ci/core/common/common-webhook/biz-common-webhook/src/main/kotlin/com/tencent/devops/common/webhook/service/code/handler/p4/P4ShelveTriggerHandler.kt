@@ -128,11 +128,7 @@ class P4ShelveTriggerHandler(
                             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                             repositoryType = repositoryConfig.repositoryType,
                             change = event.change
-                        ).data?.run {
-                            // 保存提交描述信息
-                            event.description = this.description
-                            this.fileList.map { it.depotPathString }
-                        } ?: emptyList()
+                        ).data?.map { it.depotPathString } ?: emptyList()
                     }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
