@@ -207,6 +207,15 @@ class SubPipelineStartUpService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
+        val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = parentProjectId,
+            pipelineId = parentPipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            params = arrayOf(parentPipelineId),
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
+
         val startEpoch = System.currentTimeMillis()
         try {
 
@@ -233,7 +242,7 @@ class SubPipelineStartUpService @Autowired constructor(
                 }
             }
             // 校验父流水线最后修改人是否有子流水线执行权限
-            checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+            checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(

@@ -242,7 +242,10 @@ interface BuildListener {
             DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
 
             // 校验流水线是否还在运行中
-            dispatchService.checkRunning(event)
+            if (!dispatchService.checkRunning(event)) {
+                return
+            }
+
             // 校验构建资源配额是否超限，配额超限后会放进延迟队列
             val jobQuotaService = getJobQuotaService()
             if (!jobQuotaService.checkAndAddRunningJob(

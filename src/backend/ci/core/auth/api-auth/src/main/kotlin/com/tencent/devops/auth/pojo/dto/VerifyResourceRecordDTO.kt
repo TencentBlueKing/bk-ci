@@ -23,41 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("组件版本信息")
-data class StoreVersion(
-    @ApiModelProperty("组件代码", required = true)
-    var storeCode: String,
-    @ApiModelProperty("组件名称", required = true)
-    var storeName: String,
-    @ApiModelProperty("版本号", required = true)
-    var version: String,
-    @ApiModelProperty("是否是旧版本", required = true)
-    var historyFlag: Boolean
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as StoreVersion
-
-        if (storeCode != other.storeCode) return false
-        if (version != other.version) return false
-        if (historyFlag != other.historyFlag) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = storeCode.hashCode()
-        result = 31 * result + version.hashCode()
-        result = 31 * result + historyFlag.hashCode()
-        return result
-    }
-}
+@ApiModel("鉴权记录实体")
+data class VerifyResourceRecordDTO(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("资源类型")
+    val resourceType: String,
+    @ApiModelProperty("资源Code")
+    val resourceCode: String,
+    @ApiModelProperty("用户ID")
+    val userId: String
+)
