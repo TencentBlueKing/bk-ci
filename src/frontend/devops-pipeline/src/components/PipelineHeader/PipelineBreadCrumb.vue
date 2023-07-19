@@ -12,6 +12,7 @@
 <script>
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
+    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
     import { debounce } from '@/utils/util'
     import { mapActions, mapGetters } from 'vuex'
 
@@ -106,12 +107,23 @@
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
             async updateCurPipeline ({ projectId, pipelineId }) {
-                const curPipeline = await this.requestPipelineDetail({
-                    projectId,
-                    pipelineId
-                })
-                this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-                return curPipeline
+                try {
+                    const curPipeline = await this.requestPipelineDetail({
+                        projectId,
+                        pipelineId
+                    })
+                    this.$store.commit('pipelines/updateCurPipeline', curPipeline)
+                    return curPipeline
+                } catch (error) {
+                    if (error.status === 403) {
+                        handlePipelineNoPermission({
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.VIEW
+                        })
+                    }
+                    return false
+                }
             },
             doSelectPipeline (pipelineId, cur) {
                 const { projectId } = this.$route.params
