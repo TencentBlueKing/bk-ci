@@ -73,7 +73,13 @@ object SvnUtils {
                 false
             )
         } else {
-            SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
+            SVNPasswordAuthentication.newInstance(
+                privateKey,
+                passphrase?.toCharArray(),
+                false,
+                svnURL,
+                false
+            )
         }
 
         val basicAuthenticationManager = TmatesoftBasicAuthenticationManager2(arrayOf(auth))
