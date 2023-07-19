@@ -70,7 +70,6 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
-    private val migratePolicyService: AbMigratePolicyService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -204,7 +203,7 @@ class RbacPermissionMigrateService constructor(
 
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
-        projectCodes.forEach { migratePolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
         return true
     }
 
