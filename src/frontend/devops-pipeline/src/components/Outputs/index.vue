@@ -351,7 +351,7 @@
                     this.outputs = res.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
                         const icon = isReportOutput ? 'order' : extForFile(item.name)
-                        const id = isReportOutput ? item.createTime : item.fullPath
+                        const id = isReportOutput ? (item.createTime + item.indexFileUrl) : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
                             type,

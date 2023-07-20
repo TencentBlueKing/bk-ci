@@ -32,7 +32,7 @@
                 }"
                 :disabled="btnDisabled || !canManualStartup"
                 :loading="executeStatus"
-                :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 @click="saveAndExec"
             >
                 {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
@@ -46,6 +46,7 @@
     import VersionSideslider from '@/components/VersionSideslider'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
+        handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
@@ -252,19 +253,11 @@
                         data: responses
                     }
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
+                    handlePipelineNoPermission({
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message

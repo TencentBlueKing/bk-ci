@@ -116,7 +116,7 @@
             display: inline-block;
             line-height: 34px;
             padding: 0;
-            width: 180px;
+            width: 220px;
         }
     }
 </style>

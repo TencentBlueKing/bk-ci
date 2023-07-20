@@ -6,7 +6,18 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button :disabled="executeStatus" @click="goEdit">
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
                 {{ $t("cancel") }}
             </bk-button>
             <bk-button
@@ -30,12 +41,12 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
     import { bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
             PipelineBreadCrumb

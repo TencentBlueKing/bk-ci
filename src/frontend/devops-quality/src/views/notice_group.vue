@@ -26,7 +26,7 @@
                     v-if="showContent && noticeGroupList.length"
                     @click="toCreateGroup"
                 >
-                    {{$t('quality.新增')}}
+                    {{$t('quality.新增通知组')}}
                 </bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
@@ -121,10 +121,10 @@
 
 <script>
     import createGroup from '@/components/devops/create_group'
-    import { getQueryString } from '@/utils/util'
     import { QUALITY_GROUP_RESOURCE_ACTION, QUALITY_GROUP_RESOURCE_TYPE } from '@/utils/permission.js'
-    import emptyData from './empty_data'
+    import { getQueryString } from '@/utils/util'
     import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {
@@ -170,7 +170,8 @@
                         action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
                     },
                     title: this.$t('quality.暂无通知组'),
-                    desc: this.$t('quality.您可以新增一个通知组')
+                    desc: this.$t('quality.您可以新增一个通知组'),
+                    btnText: this.$t('quality.新增通知组')
                 },
                 urlParams: getQueryString('groupId') || ''
             }

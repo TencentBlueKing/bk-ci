@@ -19,7 +19,7 @@
             </bk-button>
             <bk-button
                 v-else
-                :disabled="loading || !canManualStartup"
+                :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
                 theme="default"
@@ -38,28 +38,25 @@
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <bk-button
-                key="edit"
                 v-perm="{
                     permissionData: {
-                        projectId: projectId,
+                        projectId: $route.params.projectId,
                         resourceType: 'pipeline',
-                        resourceCode: pipelineId,
+                        resourceCode: $route.params.pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
-                @click="$router.push(editRouteName)"
+                @click="goEdit"
             >
                 {{ $t("edit") }}
             </bk-button>
-
             <bk-button
-                key="exec"
                 theme="primary"
                 v-perm="{
                     permissionData: {
-                        projectId: projectId,
+                        projectId: $route.params.projectId,
                         resourceType: 'pipeline',
-                        resourceCode: pipelineId,
+                        resourceCode: $route.params.pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
@@ -118,9 +115,6 @@
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1
                 }
-            },
-            editRouteName () {
-                return { name: 'pipelinesEdit' }
             }
         },
         watch: {
@@ -201,6 +195,11 @@
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
                 })
             }
         }

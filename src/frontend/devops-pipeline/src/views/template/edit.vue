@@ -79,7 +79,8 @@
                 isLoading: true,
                 saveVersionName: '',
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                confirmTitle: this.$t('editPage.confirmTitle')
+                confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel')
             }
         },
         computed: {
@@ -214,7 +215,7 @@
                     const { data } = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}?versionName=${this.saveVersionName}`, this.pipeline)
                     if (data) {
                         this.$showTips({
-                            message: `${this.pipeline.name} ${this.$t('updateSuc')}`,
+                            message: `${this.pipeline.name}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.setPipelineEditing(false)
@@ -272,7 +273,7 @@
             deleteVersion (row) {
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
                     const content = `${this.$t('delete')}${row.versionName}`
-                    navConfirm({ type: 'warning', content })
+                    navConfirm({ type: 'warning', content, cancelText: this.$t('cancel') })
                         .then(() => {
                             this.confirmDeleteVersion(row)
                         }).catch(() => {})
@@ -296,7 +297,7 @@
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
-                    navConfirm({ content: this.confirmMsg, type: 'warning' })
+                    navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                         .then(() => next())
                         .catch(() => next(false))
                 } else {

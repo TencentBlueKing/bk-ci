@@ -57,12 +57,12 @@
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
-                    { id: 'hostname', name: this.$t('environment.nodeInfo.cpuName'), value: '' },
+                    { id: 'hostname', name: this.$t('environment.nodeInfo.hostName'), value: '' },
                     { id: 'ip', name: 'IP', value: '' },
                     { id: 'ncpus', name: 'CPU', value: '' },
                     { id: 'memTotal', name: this.$t('environment.nodeInfo.ram'), value: '' },
                     { id: 'createdUser', name: this.$t('environment.nodeInfo.owner'), value: '' },
-                    { id: 'osName', name: this.$t('environment.nodeInfo.cpuName'), value: '' }
+                    { id: 'osName', name: 'OS', value: '' }
                 ],
                 loading: {
                     isLoading: false,

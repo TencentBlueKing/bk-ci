@@ -35,9 +35,9 @@
                             </bk-popover>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="80" class-name="primary-color">
+                    <bk-table-column width="120" class-name="primary-color">
                         <template slot-scope="props">
-                            <bk-button :title="!props.row.hasPermission ? $t('atomManage.installedAtom') : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">{{ $t('atomManage.uninstall') }}</bk-button>
+                            <bk-button :title="!props.row.hasPermission ? uninstallTipsMap(props.row.installType) : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">{{ $t('atomManage.uninstall') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -172,6 +172,22 @@
                     }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
                         this.isLoading = false
                     })
+            },
+
+            uninstallTipsMap (installType) {
+                let tips = ''
+                switch (installType) {
+                    case 'INIT':
+                        tips = this.$t('atomManage.initAtomTips')
+                        break
+                    case 'TEST':
+                        tips = this.$t('atomManage.testAtomTips')
+                        break
+                    case 'COMMON':
+                        tips = this.$t('atomManage.commonAtomTips')
+                        break
+                }
+                return tips
             },
 
             fetchAtomList () {
@@ -379,7 +395,7 @@
                     line-height: 19px;
                     span:nth-child(1) {
                         display: inline-block;
-                        width: 70px;
+                        width: 90px;
                         text-align: right;
                         margin-right: 14px;
                         color: $fontWeightColor;

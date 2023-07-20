@@ -667,7 +667,7 @@
             border-top: none;
             font-size: 12px;
             .meta-name {
-                flex: 2;
+                flex: 4;
                 margin-right: 10px;
                 font-weight: bold;
                 white-space:nowrap;
@@ -675,7 +675,7 @@
                 text-overflow: ellipsis;
             }
             .meta-desc {
-                flex: 4;
+                flex: 2;
                 color: #979BA5;
                 white-space:nowrap;
                 overflow: hidden;

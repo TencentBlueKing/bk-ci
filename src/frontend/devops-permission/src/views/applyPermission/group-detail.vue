@@ -77,16 +77,16 @@ const handleShowInstances = (data, name) => {
                   {{ data?.name }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="t('资源实例')" show-overflow-tooltip>
+              <bk-table-column :label="t('资源实例')">
                 <template #default="{ data }">
                   <div v-if="data?.relatedResourceInfo" class="resources-info">
                     <bk-popover
                       theme="light"
                     >
-                      <span v-if="data.relatedResourceInfo?.instances?.path.length > 1">
+                      <span class="resources-content" v-if="data.relatedResourceInfo?.instances?.path.length > 1">
                         {{ data.relatedResourceInfo?.name }}: {{ t('已选择个流水线', [data.relatedResourceInfo?.instances?.path.length]) }}
                       </span>
-                      <span v-else>
+                      <span class="resources-content" v-else>
                         {{ data.relatedResourceInfo?.name }}:
                         <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
                           {{ item.name }}{{ index !== data.relatedResourceInfo?.instances?.path[0].length - 1 ? ' / ' : '' }} 
@@ -191,7 +191,12 @@ const handleShowInstances = (data, name) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+    .resources-content {
+      overflow: hidden;
+      margin-right: 10px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
     .path-item {
       height: 30px;
       line-height: 30px;

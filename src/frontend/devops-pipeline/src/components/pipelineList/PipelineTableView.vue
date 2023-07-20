@@ -24,7 +24,7 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
@@ -153,6 +153,14 @@
                     v-if="isDeleteView"
                     text
                     theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'project',
+                            resourceCode: projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }"
                     @click="handleRestore(props.row)">
                     {{ $t('restore.restore') }}
                 </bk-button>
@@ -161,6 +169,14 @@
                     text
                     theme="primary"
                     :disabled="!isManage"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'project',
+                            resourceCode: projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }"
                     @click="removeHandler(props.row)"
                 >
                     {{ $t('removeFromGroup') }}
@@ -220,11 +236,12 @@
         DELETED_VIEW_ID,
         RECENT_USED_VIEW_ID
     } from '@/store/constants'
-    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
+        PROJECT_RESOURCE_ACTION,
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import { convertTime, isShallowEqual } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
@@ -254,7 +271,7 @@
                     count: 0
                 },
                 visibleTagCountList: {},
-                RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {

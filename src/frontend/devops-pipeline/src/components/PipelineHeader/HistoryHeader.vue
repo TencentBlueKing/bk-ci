@@ -30,6 +30,7 @@
                 @click="goExecPreview"
             >
                 {{ $t("exec") }}
+
             </bk-button>
             <more-actions />
         </aside>
@@ -37,11 +38,11 @@
 </template>
 
 <script>
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import MoreActions from './MoreActions.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -65,6 +66,11 @@
             }
         },
         methods: {
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
+            },
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'

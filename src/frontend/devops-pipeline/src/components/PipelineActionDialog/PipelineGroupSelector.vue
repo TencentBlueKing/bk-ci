@@ -1,70 +1,75 @@
 <template>
-    <bk-form form-type="vertical">
-        <bk-form-item>
-            <label class="label-selector-label">
-                <span>{{ $t('label') }}</span>
-                <span class="pipeline-label-action-span">
-                    <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
-                        <logo name="plus" size="18" />
-                        {{$t('addLabel')}}
-                    </router-link>
-                    <span @click="refreshLabel" class="pipeline-label-action-span-btn">
-                        <logo name="refresh" size="16" />
-                        {{$t('editPage.atomForm.reflash')}}
+    <div ref="groupSelectorParent">
+        <bk-form form-type="vertical">
+            <bk-form-item>
+                <label class="label-selector-label">
+                    <span>{{ $t('label') }}</span>
+                    <span class="pipeline-label-action-span">
+                        <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
+                            <logo name="plus" size="18" />
+                            {{$t('addLabel')}}
+                        </router-link>
+                        <span @click="refreshLabel" class="pipeline-label-action-span-btn">
+                            <logo name="refresh" size="16" />
+                            {{$t('editPage.atomForm.reflash')}}
+                        </span>
                     </span>
-                </span>
-            </label>
-            <PipelineLabelSelector
-                ref="labelSelector"
-                v-model="initTags"
-                @change="updateDynamicGroup"
-            />
-        </bk-form-item>
-
-        <bk-form-item label-width="auto" :label="$t('dynamicPipelineGroup')">
-            <bk-select
-                disabled
-                multiple
-                :value="dynamicGroup"
-                :loading="isMatching"
-                :placeholder="$t('pipelineDynamicMatchPlaceholder')"
-            >
-                <bk-option
-                    v-for="group in dynamicPipelineGroups"
-                    :key="group.id"
-                    :id="group.id"
-                    :name="group.name"
+                </label>
+                <PipelineLabelSelector
+                    ref="labelSelector"
+                    v-model="initTags"
+                    @change="updateDynamicGroup"
+                />
+            </bk-form-item>
+    
+            <bk-form-item label-width="auto" :label="$t('dynamicPipelineGroup')">
+                <bk-select
+                    disabled
+                    multiple
+                    :value="dynamicGroup"
+                    :loading="isMatching"
+                    :placeholder="$t('pipelineDynamicMatchPlaceholder')"
+                    
                 >
-                </bk-option>
-            </bk-select>
-        </bk-form-item>
-        <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
-            <bk-select
-                multiple
-                v-model="staticViews"
-                @change="emitChange"
-            >
-                <bk-option-group
-                    v-for="(group, index) in visibleStaticGroups"
-                    :name="group.name"
-                    :key="index">
-                    <bk-option v-for="option in group.children"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name">
+                    <bk-option
+                        v-for="group in dynamicPipelineGroups"
+                        :key="group.id"
+                        :id="group.id"
+                        :name="group.name"
+                    >
                     </bk-option>
-                </bk-option-group>
-            </bk-select>
-        </bk-form-item>
-    </bk-form>
-
+                </bk-select>
+            </bk-form-item>
+            <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
+                <bk-select
+                    multiple
+                    v-model="staticViews"
+                    @change="emitChange"
+                    :popover-options="{
+                        placement: 'top'
+                    }"
+                >
+                    <bk-option-group
+                        v-for="(group, index) in visibleStaticGroups"
+                        :name="group.name"
+                        :key="index">
+                        <bk-option v-for="option in group.children"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name">
+                        </bk-option>
+                    </bk-option-group>
+                </bk-select>
+            </bk-form-item>
+        </bk-form>
+    </div>
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import PipelineLabelSelector from '@/components/PipelineActionDialog/PipelineLabelSelector'
     import Logo from '@/components/Logo'
+    import PipelineLabelSelector from '@/components/PipelineActionDialog/PipelineLabelSelector'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {

@@ -13,7 +13,7 @@
                 <p class="bk-pipeline-card-summary">
                     <span>
                         <logo size="16" name="record" />
-                        {{pipeline.buildCount}}次
+                        {{pipeline.buildCount}}{{ $t('runs') }}
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
                         <logo size="16" name="pipeline-group" />

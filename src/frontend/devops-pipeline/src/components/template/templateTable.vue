@@ -40,7 +40,7 @@
                                     <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
                                         {{ $t('more') }}
                                         <ul v-show="row.showMore" class="btn-more">
-                                            <li @click="copyTemplate(row)" data-name="copy">{{ $t('copy') }}</li>
+                                            <li @click="copyTemplate(row)" data-name="copy">{{ $t('clone') }}</li>
                                             <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
                                                 <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">{{ $t('template.alreadyToStore') }}</li>
                                                 <li @click="toRelativeStore(row)" v-else data-name="store">{{ $t('template.toStore') }}</li>

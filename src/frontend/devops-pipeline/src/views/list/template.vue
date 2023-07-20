@@ -24,6 +24,7 @@
             :close-icon="false"
             header-position="left"
             :title="$t('template.addTemplate')"
+            :cancel-text="$t('cancel')"
             width="480"
             @confirm="createTemplate">
             <div>

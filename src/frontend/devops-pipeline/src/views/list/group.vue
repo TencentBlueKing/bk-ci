@@ -32,7 +32,7 @@
                                     <span class="bk-form-content">
                                         <bk-input
                                             ref="labelInput"
-                                            style="width: 95%; margin-right: 10px;"
+                                            style="width: 94%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
                                             v-model="labelValue"
                                             v-validate="'required|max:20'"
@@ -119,6 +119,7 @@
                     v-model="groupSetting.isShow"
                     :title="groupSetting.title"
                     :close-icon="false"
+                    :cancel-text="$t('cancel')"
                     header-position="left"
                     width="480"
                     @confirm="dialogCommit">
@@ -145,9 +146,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
+    import { mapGetters } from 'vuex'
 
     export default {
         directives: {
@@ -354,7 +355,7 @@
                     title: this.$t('labelGroupDeleteConfirm'),
                     confirmFn: async () => {
                         try {
-                            const res = await this.$store.dispatch('pipelines/deleteGroup', {
+                            const res = await this.$store.dispatch('pipelines/deleteLabelGroup', {
                                 projectId: this.projectId,
                                 groupId: this.tagList[groupIndex].id
                             })

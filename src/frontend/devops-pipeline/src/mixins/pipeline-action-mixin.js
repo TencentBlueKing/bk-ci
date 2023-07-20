@@ -17,12 +17,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {
+    PROJECT_RESOURCE_ACTION,
+    RESOURCE_ACTION
+    ,
+    handleProjectNoPermission
+} from '@/utils/permission'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
-import {
-    RESOURCE_ACTION,
-    PROJECT_RESOURCE_ACTION
-} from '@/utils/permission'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations } from 'vuex'
 
@@ -439,8 +441,6 @@ export default {
          * 恢复流水线
          */
         async restore ({ projectId, pipelineId, pipelineName }) {
-            let message = this.$t('restore.restoreSuc')
-            let theme = 'success'
             await navConfirm({
                 content: this.$t('restorePipelineConfirm', [pipelineName])
             })
@@ -449,16 +449,25 @@ export default {
                     projectId,
                     pipelineId
                 })
+                this.$showTips({
+                    message: this.$t('restore.restoreSuc'),
+                    theme: 'success'
+                })
                 return true
             } catch (err) {
-                message = err.message || err
-                theme = 'error'
+                if (err.code === 403) {
+                    handleProjectNoPermission({
+                        projectId: projectId,
+                        resourceCode: projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    })
+                } else {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
                 return false
-            } finally {
-                this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         updatePipelineStatus (data, isFirst = false) {

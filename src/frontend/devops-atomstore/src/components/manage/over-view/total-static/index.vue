@@ -122,6 +122,7 @@
                     font-size: .14rem;
                     color: #999;
                     line-height: .2rem;
+                    white-space: nowrap;
                 }
                 .item-value {
                     font-weight: 600;

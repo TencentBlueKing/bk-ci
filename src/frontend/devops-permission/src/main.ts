@@ -16,6 +16,8 @@ import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
 import ZhCN from '../../locale/permission/zh-CN.json';
 import EnUS from '../../locale/permission/en-US.json';
+import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
+import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
@@ -32,7 +34,9 @@ const app = createApp(App)
 app
   .use(router)
   .use(createPinia())
-  .use(bkui)
+  .use(bkui, {
+    locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? bkuiEn : bkuiZhCn
+  })
   .use(i18n)
   .mount('.app');
 app.directive('bk-tooltips', bkTooltips);

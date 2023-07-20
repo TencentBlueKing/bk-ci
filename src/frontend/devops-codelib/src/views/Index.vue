@@ -1,9 +1,9 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="hasCodelibs">
+        <template v-if="hasCodelibs || isSearch || isLoading">
             <link-code-lib
                 v-perm="{
-                    hasPermission: codelibs.hasCreatePermission,
+                    hasPermission: hasCodelibs && codelibs.hasCreatePermission,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: projectId,
@@ -19,16 +19,23 @@
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button> -->
-            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+            <bk-input
+                :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
                 right-icon="icon-search"
                 v-model="aliasName"
                 @enter="query"
-                @change="clearAliasName"
+                @clear="clearAliasName"
             >
             </bk-input>
-            <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
+            <code-lib-table
+                v-bind="codelibs"
+                :switch-page="switchPage"
+                :is-search="isSearch"
+                @handleSortChange="handleSortChange"
+            >
+            </code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <template v-for="typeLabel in codelibTypes" theme="primary">
@@ -54,8 +61,9 @@
         codelibTypes,
         getCodelibConfig,
         isGit,
+        isGitLab,
         isGithub,
-        isGitLab, isP4, isTGit
+        isP4, isTGit
     } from '../config/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
@@ -100,8 +108,7 @@
                 return typeList
             },
             hasCodelibs () {
-                const { codelibs } = this
-                return codelibs && codelibs.records && codelibs.records.length > 0
+                return this.codelibs?.records?.length > 0
             },
             isBlueKing () {
                 const projectId = this.$route.params.projectId
@@ -152,7 +159,7 @@
             ]),
 
             clearAliasName () {
-                if (this.aliasName === '') this.refreshCodelibList()
+                this.refreshCodelibList()
             },
 
             switchPage (page, pageSize) {
@@ -176,6 +183,7 @@
             ) {
                 this.isLoading = true
                 aliasName = encodeURIComponent(aliasName)
+                this.isSearch = !!aliasName
                 this.requestList({
                     projectId,
                     aliasName,

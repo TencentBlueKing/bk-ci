@@ -12,6 +12,7 @@
 <script>
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
+    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
     import { debounce } from '@/utils/util'
     import { mapActions, mapGetters } from 'vuex'
 
@@ -106,34 +107,45 @@
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
             async updateCurPipeline ({ projectId, pipelineId }) {
-                const curPipeline = await this.requestPipelineDetail({
-                    projectId,
-                    pipelineId
-                })
-                this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-                return curPipeline
-            },
-            doSelectPipeline (pipelineId, cur) {
-                const { $route } = this
-                this.updateCurPipeline({
-                    pipelineId,
-                    projectId: $route.params.projectId
-                })
-                // 清空搜索
-                this.searchPipelineList({
-                    projectId: $route.params.projectId
-                }).then((list) => {
-                    this.setBreadCrumbPipelineList(list, {
-                        pipelineId,
-                        pipelineName: cur.pipelineName
+                try {
+                    const curPipeline = await this.requestPipelineDetail({
+                        projectId,
+                        pipelineId
                     })
+                    this.$store.commit('pipelines/updateCurPipeline', curPipeline)
+                    return curPipeline
+                } catch (error) {
+                    if (error.code === 403) {
+                        handlePipelineNoPermission({
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.VIEW
+                        })
+                    }
+                    return false
+                }
+            },
+            async doSelectPipeline (pipelineId, cur) {
+                const { projectId } = this.$route.params
+                const result = await this.updateCurPipeline({
+                    pipelineId,
+                    projectId
+                })
+                if (!result) return
+                // 清空搜索
+                const list = await this.searchPipelineList({
+                    projectId
+                })
+                await this.setBreadCrumbPipelineList(list, {
+                    pipelineId,
+                    pipelineName: cur.pipelineName
                 })
 
-                const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+                const name = this.$route.params.buildNo ? 'pipelinesHistory' : this.$route.name
                 this.$router.push({
                     name,
                     params: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         pipelineId
                     }
                 })

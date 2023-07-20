@@ -8,14 +8,13 @@
 }
 
 .permission-table {
-    padding: 0 25px;
+    width: 590px !important;
+    margin-left: 25px;
     margin-bottom: 20px;
 }
 
 .permission-table.bk-table:before {
     background: #dfe0e5;
-    left: 25px;
-    width: calc(100% - 50px);
 }
 
 .permission-table .bk-table-empty-block {
@@ -107,7 +106,8 @@
 }
 
 .permission-dialog-v3 .permission-table-wrapper {
-    padding: 0 25px;
+    width: 590px !important;
+    margin-left: 25px;
     margin-bottom: 20px;
 }
 

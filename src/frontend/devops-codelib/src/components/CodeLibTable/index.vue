@@ -65,6 +65,12 @@
                 </template>
             </template>
         </bk-table-column>
+        <bk-exception
+            v-if="isSearch"
+            slot="empty"
+            type="search-empty"
+            scene="part"
+        />
     </bk-table>
 </template>
 
@@ -79,6 +85,7 @@
                 type: Function,
                 required: true
             },
+            isSearch: Boolean,
             count: Number,
             hasCreatePermission: Boolean,
             totalPages: Number,

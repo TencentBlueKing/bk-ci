@@ -2,12 +2,12 @@
     <section class="g-turbo-box basic-info">
         <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.基本信息') }} </h3>
         <bk-form class="g-turbo-form-left" :label-width="138" :model="copyFormData" v-bkloading="{ isLoading: isLoadingEngine }" ref="createTask">
-            <bk-form-item :label="$t('turbo.方案ID')" property="openStatus">
-                <template v-if="isEdit">
+            <bk-form-item v-if="!isEdit" :label="$t('turbo.方案ID')" property="openStatus">
+                <!-- <template v-if="isEdit">
                     <bk-input v-model="copyFormData.planId" class="single-width" :placeholder="$t('turbo.系统自动生成，方案的唯一标识')" disabled></bk-input>
-                    <bk-checkbox v-model="copyFormData.openStatus" @change="handleChange" v-bk-tooltips="{ content: $t('turbo.若不开启，配置不生效') }"> {{ $t('turbo.开启方案') }} </bk-checkbox>
-                </template>
-                <span v-else class="g-turbo-text-break plan-id">
+                    <bk-checkbox v-model="copyFormData.openStatus" v-bk-tooltips="{ content: $t('turbo.若不开启，配置不生效') }"> {{ $t('turbo.开启方案') }} </bk-checkbox>
+                </template> -->
+                <span class="g-turbo-text-break plan-id">
                     <span>{{ copyFormData.planId }}</span>
                     <logo name="copy" @click.native="copyValue(copyFormData.planId)" size="16" class="icon-copy"></logo>
                     <span v-if="copyFormData.openStatus" class="plan-open plan-common" @click="toggleOpen(false)" v-bk-tooltips="{ content: $t('turbo.点击禁用当前方案，禁用后，配置将不再生效') }">
@@ -43,7 +43,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('turbo.方案说明')" property="name">
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.desc" @change="handleChange" type="textarea" class="double-width" :maxlength="200"></bk-input>
+                    <bk-input v-model="copyFormData.desc" type="textarea" class="double-width" @change="handleChange" :maxlength="200" :placeholder="$t('turbo.请输入')"></bk-input>
                 </template>
                 <span v-else class="g-turbo-text-break">{{ formData.desc || '-' }}</span>
             </bk-form-item>

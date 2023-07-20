@@ -43,9 +43,9 @@
                         <div class="notice-tab">
                             <div class="bk-form-item item-notice">
                                 <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
-                                <div class="bk-form-content notice-group">
-                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
-                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value" class="atom-checkbox-list-item">
+                                <div class="bk-form-content">
+                                    <bk-checkbox-group class="checkbox-group" :value="pipelineSubscription.types" @change="handleCheckNoticeType">
+                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value">
                                             {{ item.name }}
                                         </bk-checkbox>
                                     </bk-checkbox-group>
@@ -388,7 +388,7 @@
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
+                            message: `${pipelineSetting.pipelineName}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -453,7 +453,6 @@
             }
             .bk-form-item label{
                 display: inline-block;
-                width: 145px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
@@ -577,5 +576,10 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
+    }
+    .checkbox-group {
+        .bk-form-checkbox {
+            width: 250px !important;
+        }
     }
 </style>

@@ -474,34 +474,6 @@ export default {
         changeProject () {
             this.$toggleProjectMenu(true)
         },
-        async toApplyPermission (role) {
-            const { projectId, pipelineId } = this.$route.params
-            this.tencentPermission(this.getPermUrlByRole(projectId, pipelineId, role))
-            // try {
-            //     const { projectId } = this.$route.params
-            //     const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-            //         actionId,
-            //         resourceId: this.$permissionResourceMap.pipeline,
-            //         instanceId: [{
-            //             id: projectId,
-            //             type: this.$permissionResourceTypeMap.PROJECT
-            //         }, pipeline]
-            //     }])
-            //     console.log('redirectUrl', redirectUrl)
-            //     window.open(redirectUrl, '_blank')
-            //     this.$bkInfo({
-            //         title: this.$t('permissionRefreshtitle'),
-            //         subTitle: this.$t('permissionRefreshSubtitle'),
-            //         okText: this.$t('permissionRefreshOkText'),
-            //         cancelText: this.$t('close'),
-            //         confirmFn: () => {
-            //             location.reload()
-            //         }
-            //     })
-            // } catch (e) {
-            //     console.error(e)
-            // }
-        },
         formatParams (pipeline) {
             const params = pipeline.stages[0].containers[0].params
             const paramList = params && params.map(param => {

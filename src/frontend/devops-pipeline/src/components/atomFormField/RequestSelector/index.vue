@@ -20,7 +20,7 @@
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
                     <i class="devops-icon icon-plus-circle" />
-                    {{ itemText }}
+                    {{ itemText || $t('template.relatedCodelib') }}
                 </a>
             </div>
         </template>
@@ -42,8 +42,7 @@
                 default: false
             },
             itemText: {
-                type: String,
-                default: '关联代码库'
+                type: String
             },
             itemTargetUrl: {
                 type: String,

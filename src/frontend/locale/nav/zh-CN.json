@@ -2,7 +2,7 @@
     "serviceManage": "扩展管理",
     "okLabel": "确定",
     "cancelLabel": "取消",
-    "logout": "退出",
+    "logout": "退出登录",
     "close": "关闭",
     "accessCenter": "权限中心",
     "recentVisiteService": "最近访问服务",
@@ -100,7 +100,7 @@
     "service": "服务",
     "collection": "我的收藏",
     "noCollection": "未收藏任何服务",
-    "outofCollectionTips": "及时清除不常使用的链接，才能添加新的链接哦：）",
+    "outofCollectionTips": "及时清除不常使用的服务，才能添加新的服务哦：）",
     "DevopsMobile": "手机版",
     "scanToDownload": "扫一扫下载蓝盾App",
     "changeLogo": "修改LOGO",
@@ -236,5 +236,6 @@
         "execute": "执行",
         "enable/disable": "停用/启用",
         "manage": "管理"
-    }
+    },
+    "documentation": "产品文档"
 }

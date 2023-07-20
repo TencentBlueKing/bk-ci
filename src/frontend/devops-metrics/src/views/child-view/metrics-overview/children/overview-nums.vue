@@ -229,11 +229,11 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            {{ t('Interception rate') }}
+            {{ t('Unqualified rate') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                {{ t('Intercepted') }}: {{ data.interceptionCount || '--' }} / {{ t('No. of total runs') }}: {{ data.totalQualityExecuteCount || '--' }}
+                {{ t('Unqualified') }}: {{ data.interceptionCount || '--' }} / {{ t('No. of total runs') }}: {{ data.totalQualityExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>

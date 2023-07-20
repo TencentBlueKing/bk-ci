@@ -130,7 +130,7 @@
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('new') }}</bk-button>
                             <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
