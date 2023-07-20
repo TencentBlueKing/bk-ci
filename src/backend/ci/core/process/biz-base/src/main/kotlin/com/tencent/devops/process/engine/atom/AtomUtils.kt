@@ -243,13 +243,13 @@ object AtomUtils {
             val version = storeParam.version
             val atomName = storeParam.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-            if (checkTemplateFlag) {
+            /*if (checkTemplateFlag) {
                 checkTemplateAtoms(
                     atomCode = atomCode,
                     version = version,
                     client = client
                 )
-            }
+            }*/
             if (atomRunInfo != null) {
                 validateAtomParam(
                     atomParamDataMap = storeParam.inputParam,
