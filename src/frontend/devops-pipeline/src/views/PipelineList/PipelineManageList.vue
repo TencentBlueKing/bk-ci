@@ -5,7 +5,6 @@
             <bk-input :placeholder="$t('restore.restoreSearchTips')" />
         </div>
         <template v-else>
-
             <h5 class="current-pipeline-group-name">
                 <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
                 <span>{{currentViewName}}</span>
@@ -37,14 +36,13 @@
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
-                        
                         <bk-button
                             v-perm="{
                                 hasPermission: !canNotMangeProjectedGroup,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: 'project',
                                     resourceCode: projectId,
                                     action: PROJECT_RESOURCE_ACTION.MANAGE
                                 }

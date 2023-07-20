@@ -12,7 +12,7 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <span
+                        <button
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -21,12 +21,13 @@
                                     action: RULE_RESOURCE_ACTION.CREATE
                                 }
                             }"
+                            key="createBtn"
+                            class="bk-button bk-primary"
+                            @click="toCreateRule"
                         >
-                            <button class="bk-button bk-primary" @click="toCreateRule">
-                                <i class="devops-icon icon-plus"></i>
-                                <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
-                            </button>
-                        </span>
+                            <i class="devops-icon icon-plus"></i>
+                            <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
+                        </button>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table
@@ -235,6 +236,7 @@
                                             </bk-table-column>
                                             <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="80">
                                                 <template slot-scope="props">
+                                                    <span v-if="props.row.interceptResult === 'WAIT'" style="color: #FFB400;">{{$t('quality.等待中')}}</span>
                                                     <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
                                                     <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
                                                 </template>
@@ -569,6 +571,7 @@
                         type: 'warning',
                         theme: 'warning',
                         subTitle: this.$t('quality.确定删除规则({0})？', [row.name]),
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }
@@ -711,6 +714,7 @@
                     this.$bkInfo({
                         title: infoTitle,
                         subHeader: content,
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.toSwitchRule(row)
                         }

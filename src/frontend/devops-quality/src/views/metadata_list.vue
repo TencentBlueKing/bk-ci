@@ -67,7 +67,7 @@
                                         <span>{{props.row.elementDetail}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column :label="$t('quality.可选操作')" prop="availableOperation">
+                                <bk-table-column :label="$t('quality.已支持操作')" prop="availableOperation">
                                     <template slot-scope="props">
                                         <span>{{getOperation(props.row.availableOperation)}}</span>
                                     </template>
@@ -93,7 +93,7 @@
                                             <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">{{$t('quality.编辑指标')}}</span>
                                             <span
                                                 v-perm="{
-                                                    hasPermission: canEdit,
+                                                    hasPermission: hasCreatePermission,
                                                     disablePermissionApi: true,
                                                     permissionData: {
                                                         projectId: projectId,
@@ -148,7 +148,8 @@
                 loading: {
                     isLoading: false,
                     title: ''
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -167,6 +168,7 @@
             }
         },
         created () {
+            this.requestHasCreatePermission()
             this.requestList()
         },
         methods: {
@@ -264,6 +266,12 @@
                         indicator: id
                     }
                 })
+            },
+
+            async requestHasCreatePermission () {
+                this.hasCreatePermission = await this.$store.dispatch('quality/requestPermission', {
+                    projectId: this.projectId
+                })
             }
         }
     }
@@ -294,9 +302,8 @@
             justify-content: space-between;
             .item-tab {
                 float: left;
-                width: 124px;
                 margin-right: -1px;
-                padding: 12px 0;
+                padding: 12px 20px;
                 border: 1px solid #DDE4EB;
                 background-color: #FFF;
                 color: #737987;

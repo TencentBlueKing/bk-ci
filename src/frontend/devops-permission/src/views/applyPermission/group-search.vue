@@ -118,8 +118,7 @@ watch(() => props.groupList, () => {
 });
 
 watch(() => userGroupList.value, () => {
-  const query = JSON.parse(sessionStorage.getItem('group-apply-query'));
-  const { groupId } = query;
+  const { groupId } = route.query;
   if (groupId && filter.value.length) {
     const group = userGroupList.value.find(group => String(group.id) === groupId);
     if (group && selections.value.findIndex(selection => String(selection.id) === groupId) === -1) {
@@ -157,7 +156,7 @@ const initTable = () => {
 const handleChangeSearch = (data) => {
   setTimeout(() => {
     filter.value = data;
-    const query = JSON.parse(sessionStorage.getItem('group-apply-query'))
+    const query = route.query;
     // const resourceType = query?.resourceType
     if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
       applyTips.value = t('根据筛选条件，匹配到如下用户组:');

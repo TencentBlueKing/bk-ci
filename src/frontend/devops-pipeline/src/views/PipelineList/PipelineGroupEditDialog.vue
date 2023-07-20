@@ -144,11 +144,13 @@
                 </header>
                 <article v-bkloading="{ isLoading: loading }">
                     <header class="preview-pipeline-title">
-                        {{$t('total')}}
-                        <span class="pipeline-total-count">
-                            {{ totalPreviewCount }}
-                        </span>
-                        {{$t('strip')}}，
+                        <p>
+                            {{$t('total')}}
+                            <span class="pipeline-total-count">
+                                {{ totalPreviewCount }}
+                            </span>
+                            {{$t('strip')}}，
+                        </p>
                         <p>
                             {{$t('new')}}
                             <span class="pipeline-add-count">

@@ -4,6 +4,8 @@
         v-bind="{ ...$props, ...paramProps }"
         :value="paramValue[paramKey]"
         :loading="isLoading"
+        :placeholder="$t('turbo.请选择')"
+        :empty-text="$t('turbo.暂无选项')"
         @change="changeParamValue"
     >
         <bk-option v-for="(param, index) in renderList"

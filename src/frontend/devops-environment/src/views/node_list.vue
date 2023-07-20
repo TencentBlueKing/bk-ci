@@ -79,7 +79,7 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')}IP`" prop="ip" min-width="80">
+                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')} Ip`" prop="ip" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.ip || '-' }}
                     </template>

@@ -22,9 +22,9 @@
                         @click="changeFastType(entry)"
                     >
                         <div class="template-icon" v-if="templateName.includes(entry.name)">
-                            <icon v-if="entry.name === '日常构建'" name="daily-build" size="14" />
-                            <icon v-if="entry.name === '版本转测'" name="version-test" size="14" />
-                            <icon v-if="entry.name === '发布上线'" name="release-online" size="14" />
+                            <icon v-if="['日常构建', 'Daily Build'].includes(entry.name)" name="daily-build" size="14" />
+                            <icon v-if="['版本转测', 'Version Testing'].includes(entry.name)" name="version-test" size="14" />
+                            <icon v-if="['发布上线', 'Deploy to Production'].includes(entry.name)" name="release-online" size="14" />
                         </div>
                         <i :class="{ 'devops-icon': true, 'label-icon': true, 'icon-placeholder': true }" v-else></i>
                         <span class="card-label">{{entry.name}}</span>
@@ -157,7 +157,7 @@
                             :error-msg="errors.first('controlPoint')">
                             <bk-input
                                 class="control-point-name"
-                                placeholder=""
+                                :placeholder="$t('quality.请选择')"
                                 disabled
                                 name="controlPoint"
                                 v-model="createRuleForm.controlPointName"
@@ -172,8 +172,8 @@
                             <bk-select v-model="createRuleForm.controlPointPosition" style="width:467px;">
                                 <bk-option v-for="(option, index) in createRuleForm.availablePosition"
                                     :key="index"
-                                    :id="option.name"
-                                    :name="option.cnName">
+                                    :id="option.code"
+                                    :name="option.name">
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
@@ -197,7 +197,7 @@
                             :property="'controlPointPosition'">
                             <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
                                 <bk-button type="primary" slot="dropdown-trigger">
-                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>{{$t('quality.选择流水线')}}</span>
+                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>{{$t('quality.选择流水线/模板')}}</span>
                                     <i :class="['devops-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -242,12 +242,12 @@
                                                 {{$t('quality.指标所需插件完整')}}
                                             </p>
                                             <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>{{$t('quality.有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线')}}
+                                                <span class="mark-circle"></span>{{$t('quality.若有多个控制点插件，请将需配置红线的控制点插件名称开头加上控制点前缀+下划线。')}}
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('quality.操作建议')">
+                                    <bk-table-column :label="$t('quality.操作')">
                                         <template slot-scope="props">
                                             <a class="add-btn"
                                                 v-if="props.row.type === 'pipeline' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
@@ -312,12 +312,12 @@
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
+                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入审核人，支持输入流水线变量')" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
                                             <bk-input type="number"
-                                                :placeholder="$t('quality.可设置60分钟以内的超时时间，以分钟为单位')"
+                                                :placeholder="$t('quality.超时以分钟为单位，最高60')"
                                                 v-model="createRuleForm.auditTimeoutMinutes">
                                             </bk-input>
                                             <span class="time-unit">{{$t('quality.分钟')}}</span>
@@ -329,7 +329,7 @@
                         </bk-form-item>
                     </bk-form>
                     <div>
-                        <bk-button theme="primary" class="submit-handle" @click="submit()">{{$t('quality.完成')}}</bk-button>
+                        <bk-button theme="primary" class="submit-handle" @click="submit()">{{$t('quality.提交')}}</bk-button>
                         <bk-button theme="default" class="submit-handle" @click="toRuleList()">{{$t('quality.取消')}}</bk-button>
                     </div>
                 </div>
@@ -337,10 +337,10 @@
                     <p class="info-title">{{$t('quality.红线预览')}}</p>
                     <hr>
                     <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之后需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将不会执行后续插件。')}}
+                        {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <p class="priview-tips" v-else>
-                        {{$t('quality.流水线在执行控制点')}} <i>{{createRuleForm.controlPointName || '-'}}</i> {{$t('quality.之前需满足')}} <i>{{currentINdicators || '-'}}</i> {{$t('quality.的阈值条件，否则将会停在红线位置。')}}
+                        {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
                     </p>
                     <div class="preview-image">
                         <img v-if="createRuleForm.controlPointPosition"
@@ -1520,7 +1520,6 @@
                 display: flex;
                 align-items: center;
                 position: relative;
-                width: 130px;
                 height: 76px;
                 margin-right: 10px;
                 border: 1px solid #DDE4EB;
@@ -1963,5 +1962,8 @@
                 }
             }
         }
+    }
+    .bk-dialog-header-inner {
+        white-space: inherit !important;
     }
 </style>

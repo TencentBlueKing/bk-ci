@@ -1,5 +1,5 @@
 <template>
-    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" @confirm="submitCodelib" @cancel="handleCancel">
+    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" :ok-text="$t('codelib.confirm')" :cancel-text="$t('codelib.cancel')" @confirm="submitCodelib" @cancel="handleCancel">
         <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
         <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
             <div class="bk-form-item is-required" v-if="isGit || isGitLab">
@@ -7,7 +7,7 @@
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
                     <bk-radio value="SSH" v-if="!isTGit">SSH</bk-radio>
-                    <bk-radio value="HTTP">HTTP</bk-radio>
+                    <bk-radio value="HTTP">Username + Password + PrivateToken</bk-radio>
                     <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
@@ -41,9 +41,9 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                         <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
-                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
-                            <span class="error-tips" v-if="errors.has('codelibAliasName')">
-                                {{ errors.first('codelibAliasName') }}
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
+                            <span class="error-tips" v-if="errors.has('alias')">
+                                {{ errors.first('alias') }}
                             </span>
                         </div>
                     </div>
@@ -61,7 +61,7 @@
             </div>
             <div class="bk-form-item" v-else>
                 <div class="bk-form-item is-required" v-if="codelibConfig.label === 'SVN'">
-                    <label class="bk-label">{{ $t('codelib.codelibPullType') }}:</label>
+                    <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                     <bk-radio-group v-model="codelib.svnType" @change="svnTypeChange(codelib)" class="bk-form-content form-radio">
                         <bk-radio value="ssh">SSH</bk-radio>
                         <bk-radio value="http">HTTP/HTTPS</bk-radio>
@@ -84,7 +84,7 @@
 
                 <!-- 服务器 start -->
                 <div class="bk-form-item is-required" v-if="isP4">
-                    <label class="bk-label">p4 port:</label>
+                    <label class="bk-label">P4 Port:</label>
                     <div class="bk-form-content">
                         <div class="flex-content">
                             <input type="text" class="bk-form-input" :placeholder="portPlaceholder" name="codelibPort" v-model.trim="codelibPort" v-validate="'required'" :class="{ 'is-danger': errors.has('codelibPort') }">
@@ -101,16 +101,16 @@
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                     <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
-                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
-                        <span class="error-tips" v-if="errors.has('codelibAliasName')">
-                            {{ errors.first('codelibAliasName') }}
+                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
+                        <span class="error-tips" v-if="errors.has('alias')">
+                            {{ errors.first('alias') }}
                         </span>
                     </div>
                 </div>
                 <!-- 别名 end -->
 
                 <!-- 访问凭据 start -->
-                <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
+                <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'GitHub'">
                     <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
                     <div class="bk-form-content code-lib-credential" :class="{ 'is-danger': errors.has('credentialId') }">
                         <bk-select v-model="credentialId"
@@ -174,15 +174,15 @@
                     url: {
                         SVN: this.$t('codelib.svnUrlPlaceholder'),
                         Git: this.$t('codelib.gitUrlPlaceholder'),
-                        TGit: this.$t('codelib.tgitUrlPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
+                        TGit: this.$t('codelib.httpsUrlPlaceholder'),
+                        GitLab: this.$t('codelib.gitlabUrlPlaceholder'),
                         HTTP: this.$t('codelib.httpUrlPlaceholder'),
                         HTTPS: this.$t('codelib.httpsUrlPlaceholder')
                     },
                     cred: {
                         SVN: this.$t('codelib.svnCredPlaceholder'),
                         Git: this.$t('codelib.gitCredPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabCredPlaceholder')
+                        GitLab: this.$t('codelib.gitlabCredPlaceholder')
                     },
                     port: {
                         P4: 'localhost:1666'
@@ -222,6 +222,9 @@
                             ? this.gitOAuth.status
                             : this.githubOAuth.status) !== 403
                 )
+            },
+            isOAUTH () {
+                return this.codelib.authType === 'OAUTH'
             },
             oAuth () {
                 return this.isTGit
@@ -320,7 +323,7 @@
                     this.updateCodelib(param)
                 }
             },
-            codelibAliasName: {
+            alias: {
                 get () {
                     return this.codelib.aliasName
                 },

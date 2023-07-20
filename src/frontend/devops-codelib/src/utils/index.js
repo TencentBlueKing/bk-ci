@@ -34,32 +34,32 @@ export function parsePathAlias (type, path, authType, svnType) {
     switch (true) {
         case isGithub(type):
             reg = /^https\:\/\/(github)(\.com)\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.githubRule}`
             break
         case isSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
-            msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.svnSshRule}`
             break
         case isSvn(type) && svnType === 'http':
             reg = /^(http|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
-            msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpRule}`
             break
         case isGitLab(type) && authType === 'HTTP':
             reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpOrHttpsRule}`
             break
         case isGitLab(type) && authType === 'SSH':
             reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
-            msg = `${codelibLocaleObj.gitlabSshRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.gitlabSshRule}`
             break
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
             reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.tgitHttpRule}`
             aliasIndex = 2
             break
         case isTGit(type):
             reg = /^git@([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.tgitRule}`
             aliasIndex = 2
             break
     }

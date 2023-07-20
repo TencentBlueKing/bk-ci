@@ -1,7 +1,7 @@
 {   
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
-    "logout": "Log out",
+    "logout": "Sign out",
     "close": "Close",
     "accessCenter": "Access center",
     "recentVisiteService": "Recent service",
@@ -38,8 +38,8 @@
         "noOperateAccess": "No operate access",
         "noOperateAccessTip": "Rejected，no operate access"
     },
-    "projectManage": "Project management",
-    "myPermission": "My permission",
+    "projectManage": "Project Management",
+    "myPermission": "My Permission",
     "recommendationLabel": "Google chrome is recommended for the best viewing experience",
     "dismiss": "Dismiss",
     "exception": {
@@ -78,11 +78,11 @@
     "configPipeline": "Configure pipeline",
     "complete": "Complete",
     "noProjectFtind": "Lease select project accordingly",
-    "projectName": "Project name",
+    "projectName": "Project Name",
     "showDisableProject": "Show disabled project",
-    "projectDesc": "Project description",
+    "projectDesc": "Project Description",
     "projectCreator": "Creator",
-    "projectOperation": "Operation",
+    "projectOperation": "Actions",
     "disableLabel": "Disable",
     "enableLabel": "Enable",
     "waitforReview": "Pending review, no access to operate",
@@ -98,8 +98,8 @@
     "newProject": "New Project",
     "selectProjectPlaceholder": "Select project",
     "service": "Service",
-    "collection": "My collection",
-    "noCollection": "No collection",
+    "collection": "MY FAVORITES",
+    "noCollection": "No Favorite",
     "outofCollectionTips": "Clear unused links to add new ones：）",
     "DevopsMobile": "Mobile",
     "scanToDownload": "Scan to download BK DevOps App",
@@ -109,8 +109,8 @@
     "changeLogoSuccessTips": "LOGO change successfully",
     "supportExtTips": "Png、jpg only",
     "logoSizelimit": "Size is less than 2M",
-    "toCollect": "Collect",
-    "collected": "Collected",
+    "toCollect": "Add to Favorite",
+    "collected": "Cancel Favorite",
     "editProject": "Edit project",
     "englishName": "English abbreviation",
     "projectNamePlaceholder": "Please enter project name in 1-32 characters",
@@ -232,5 +232,6 @@
         "execute": "Execute",
         "enable/disable": "Enable/Disable",
         "manage": "Manage"
-    }
+    },
+    "documentation": "Documentation"
 }
