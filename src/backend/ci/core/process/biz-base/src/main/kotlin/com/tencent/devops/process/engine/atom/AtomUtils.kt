@@ -226,8 +226,8 @@ object AtomUtils {
         atomVersions: Set<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         inputTypeConfigMap: Map<String, Int>,
-        client: Client,
-        checkTemplateFlag: Boolean = false
+        client: Client/*,
+        checkTemplateFlag: Boolean = false*/
     ): Boolean {
         if (atomVersions.isEmpty()) {
             return true
