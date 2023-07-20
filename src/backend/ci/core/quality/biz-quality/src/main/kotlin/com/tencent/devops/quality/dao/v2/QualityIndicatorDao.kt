@@ -240,6 +240,7 @@ class QualityIndicatorDao {
                         .onDuplicateKeyUpdate()
                         .set(ELEMENT_NAME, qualityIndicatorPO.elementName)
                         .set(DESC, qualityIndicatorPO.desc)
+                        .set(STAGE, qualityIndicatorPO.stage)
                         .set(UPDATE_TIME, LocalDateTime.now())
                 }
             ).execute()

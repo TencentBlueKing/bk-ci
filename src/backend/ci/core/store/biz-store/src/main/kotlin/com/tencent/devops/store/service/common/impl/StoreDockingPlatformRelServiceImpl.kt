@@ -26,9 +26,9 @@
  */
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -95,7 +95,7 @@ class StoreDockingPlatformRelServiceImpl @Autowired constructor(
                 storeType = storeType.type.toByte())
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(storeCode)
             )
         }
