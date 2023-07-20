@@ -1024,6 +1024,38 @@ class BkRepoClient constructor(
         return query(userId, projectId, rule, page, pageSize)
     }
 
+    fun createReplicaTask(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        taskType: ReplicaType = ReplicaType.EDGE_PULL
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/replication/api/task/edge/create"
+        val taskCreateRequest = ReplicaTaskCreateRequest(
+            name = "$fullPath-${UUID.randomUUID()}",
+            localProjectId = projectId,
+            replicaObjectType = ReplicaObjectType.PATH,
+            replicaTaskObjects = listOf(
+                ReplicaObjectInfo(
+                    localRepoName = repoName,
+                    remoteProjectId = projectId,
+                    remoteRepoName = repoName,
+                    repoType = RepositoryType.GENERIC,
+                    packageConstraints = null,
+                    pathConstraints = listOf(PathConstraint(fullPath))
+                )
+            ),
+            replicaType = taskType,
+            setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
+            remoteClusterIds = emptySet()
+        )
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
     private fun query(
         userId: String,
         projectId: String,

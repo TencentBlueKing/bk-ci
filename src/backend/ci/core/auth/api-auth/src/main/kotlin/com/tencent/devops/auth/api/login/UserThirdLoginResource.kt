@@ -38,7 +38,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["AUTH_THIRD_LOGIN_OUT"], description = "权限-第三方登陆")
+@Api(tags = ["AUTH_THIRD_LOGIN_OUT"], description = "权限-第三方登录")
 @Path("/user/third/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
