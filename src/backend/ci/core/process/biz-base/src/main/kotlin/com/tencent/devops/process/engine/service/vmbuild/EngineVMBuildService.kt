@@ -734,6 +734,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     projectId = projectId,
                     buildId = buildId,
                     taskId = updateTaskStatusInfo.taskId,
+                    executeCount = updateTaskStatusInfo.executeCount,
                     taskStatus = updateTaskStatusInfo.buildStatus
                 )
             )

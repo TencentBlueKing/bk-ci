@@ -1,7 +1,7 @@
 [ {
   "id" : 1,
-  "elementType" : "linuxPaasCodeCCScript",
-  "name" : "CodeCC Code Review Task",
+  "elementType" : "CodeccCheckAtomDebug",
+  "name" : "Tencent code analysis",
   "stage" : "Development",
   "availablePosition" : "BEFORE,AFTER",
   "defaultPosition" : "BEFORE",

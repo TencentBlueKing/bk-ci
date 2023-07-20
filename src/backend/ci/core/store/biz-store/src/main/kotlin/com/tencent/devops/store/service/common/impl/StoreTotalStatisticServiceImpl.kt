@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_NUM
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -35,6 +34,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -52,6 +52,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record7
@@ -62,7 +63,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import kotlin.math.roundToInt
 
 @Suppress("ALL")
 @Service
@@ -276,7 +276,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             )
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(storeCode)
             )
         }

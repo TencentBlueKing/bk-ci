@@ -349,10 +349,10 @@ class QualityRuleService @Autowired constructor(
                 hashId = HashUtil.encodeLongId(record.id),
                 name = record.controlPoint,
                 cnName = ElementUtils.getElementCnName(record.controlPoint, record.projectId),
-                position = ControlPointPosition(record.controlPointPosition),
+                position = ControlPointPosition.create(record.controlPointPosition),
                 availablePosition = if (controlPoint?.availablePosition != null &&
                     !controlPoint.availablePosition.isNullOrBlank()) {
-                    controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
+                    controlPoint.availablePosition.split(",").map { ControlPointPosition.create(it) }
                 } else listOf()
             )
             // 查询红线通知方式
@@ -445,10 +445,10 @@ class QualityRuleService @Autowired constructor(
             hashId = HashUtil.encodeLongId(record.id),
             name = record.controlPoint,
             cnName = ElementUtils.getElementCnName(record.controlPoint, record.projectId),
-            position = ControlPointPosition(record.controlPointPosition),
+            position = ControlPointPosition.create(record.controlPointPosition),
             availablePosition = if (controlPoint?.availablePosition != null &&
                 !controlPoint.availablePosition.isNullOrBlank()) {
-                controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
+                controlPoint.availablePosition.split(",").map { ControlPointPosition.create(it) }
             } else listOf()
         )
 
@@ -610,7 +610,9 @@ class QualityRuleService @Autowired constructor(
                     indicators.add(indicatorsMap[it]!!)
                 }
             }
-            logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
+            logger.info(
+                "serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}"
+            )
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
             val indicatorThresholds = ruleDetail?.indicatorThresholds?.split(",") ?: listOf()
             val ruleIndicatorMap = ruleIndicators.mapIndexed { index, id ->

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.artifactory.api.service.ServiceReplicaResource
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -43,19 +44,25 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.SampleAtomReleaseService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
+
+    @Autowired
+    private lateinit var marketAtomEnvService: MarketAtomEnvService
 
     private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
 
@@ -127,7 +134,17 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
-    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) = Unit
+    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
+        with(atomReleaseRequest) {
+            val atomEnvInfo = marketAtomEnvInfoDao.getAtomEnvInfo(dslContext, atomId)!!
+            client.get(ServiceReplicaResource::class).createReplicaTask(
+                userId = userId,
+                projectId = "bk-store",
+                repoName = "plugin",
+                fullPath = atomEnvInfo.pkgPath!!
+            )
+        }
+    }
 
     /**
      * 初始化插件版本进度
@@ -150,11 +167,12 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         atomId: String,
         status: Byte,
         isNormalUpgrade: Boolean?
-    ): Pair<Boolean, String> {
+    ): Triple<Boolean, String, Array<String>?> {
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Triple(
                 false,
-                CommonMessageCode.PARAMETER_IS_INVALID
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                null
             )
         val atomCode = record.atomCode
         val creator = record.creator
@@ -168,7 +186,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             ) || creator == userId)
         ) {
-            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
+            return Triple(false, NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION, arrayOf(atomCode))
         }
 
         logger.info("record status=$recordStatus, status=$status")
@@ -203,6 +221,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             validateFlag = false
         }
 
-        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
+        return if (validateFlag) Triple(true, "", null)
+        else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,14 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.monitoring.pojo.annotions;
+package com.tencent.devops.common.archive.pojo.replica.setting
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface InfluxTag {
-}
+/**
+ * 任务设置
+ */
+data class ReplicaSetting(
+    /**
+     * 限速（byte per second），<=0代表不限速
+     */
+    val rateLimit: Long = 0,
+    /**
+     * 是否同步元数据
+     */
+    val includeMetadata: Boolean = true,
+    /**
+     * 冲突解决策略
+     */
+    val conflictStrategy: ConflictStrategy = ConflictStrategy.SKIP,
+    /**
+     * 错误处理策略
+     */
+    val errorStrategy: ErrorStrategy = ErrorStrategy.FAST_FAIL,
+    /**
+     * 执行计划策略
+     */
+    val executionStrategy: ExecutionStrategy = ExecutionStrategy.IMMEDIATELY,
+    /**
+     * 执行计划
+     */
+    val executionPlan: ExecutionPlan = ExecutionPlan()
+)

@@ -243,21 +243,29 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        atomCreateTime: Long,
         file: File,
-        isVmBuildEnv: Boolean
+        authFlag: Boolean
     ) {
         val filePath = when (realm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
             REALM_BK_REPO -> "/bk-store/plugin/$atomFilePath"
             else -> throw IllegalArgumentException("unknown artifactory realm")
         }
+        if (realm == REALM_BK_REPO) {
+            try {
+                val path = "/generic$filePath"
+                val request = buildGet(path, useFileDevnetGateway = true)
+                return download(request, file)
+            } catch (e: Exception) {
+                logger.info("download with fileGateway error: ${e.message}")
+            }
+        }
         val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
             URLEncoder.encode(
                 filePath,
                 "UTF-8"
             )
-        }"
+        }&authFlag=$authFlag"
         val request = buildGet(path)
         download(request, file)
     }
