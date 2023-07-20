@@ -8,7 +8,12 @@
         render-directive="if"
         :show-footer="!isOAUTH"
     >
-        <h3 slot="header" class="bk-dialog-title">{{ $t('codelib.resetAuth') }}</h3>
+        <h3
+            slot="header"
+            class="bk-dialog-title"
+        >
+            {{ $t('codelib.resetAuth') }}
+        </h3>
         <bk-form
             :label-width="120"
         >
@@ -49,7 +54,10 @@
                     >
                         {{ $t('codelib.oauthCert') }}
                     </bk-button>
-                    <div class="oauth-tips" v-if="isGit || isTGit">
+                    <div
+                        v-if="isGit || isTGit"
+                        class="oauth-tips"
+                    >
                         <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
                         <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
                         <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
@@ -57,7 +65,10 @@
                         <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
                         <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
                     </div>
-                    <div class="oauth-tips" v-else-if="isGithub">
+                    <div
+                        v-else-if="isGithub"
+                        class="oauth-tips"
+                    >
                         <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
                         <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
                         <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
@@ -97,7 +108,12 @@
                         </i>
                     </bk-option>
                 </bk-select>
-                <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                <span
+                    class="text-link"
+                    @click="addCredential"
+                >
+                    {{ $t('codelib.new') }}
+                </span>
             </bk-form-item>
         </bk-form>
         <footer slot="footer">

@@ -270,7 +270,8 @@
                 default: ''
             },
             repoInfo: {
-                type: Object
+                type: Object,
+                default: () => {}
             },
             curRepo: {
                 type: Object,

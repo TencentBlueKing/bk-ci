@@ -328,6 +328,17 @@
     }
 </script>
 <style lang='scss' scoped>
+    ::v-deep {
+        .bk-tab {
+            height: calc(100% - 48px);
+        }
+        .bk-tab-section {
+            height: calc(100% - 50px);
+        }
+        .bk-tab-content {
+            height: 100%;
+        }
+    }
     .codelib-detail {
         height: 100%;
         .detail-header {
