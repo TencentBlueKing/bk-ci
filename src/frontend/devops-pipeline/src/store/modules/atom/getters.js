@@ -17,10 +17,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { buildEnvMap, jobConst } from '@/utils/pipelineConst'
 import Vue from 'vue'
+import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
-import { getAtomModalKey, isVmContainer, isTriggerContainer, isNormalContainer, isCodePullAtom, isNewAtomTemplate } from './atomUtil'
-import { jobConst, buildEnvMap } from '@/utils/pipelineConst'
+
+function isSkip (status) {
+    return status === 'SKIP'
+}
 
 export default {
     getAtomCodeListByCategory: state => category => {
@@ -42,7 +46,7 @@ export default {
         })
         return list
     },
-    
+
     isAtomDisabled: state => ({ os, atom, category }) => {
         if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
@@ -118,7 +122,7 @@ export default {
             if (pipelineSetting && !pipelineSetting.pipelineName) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
             }
-           
+
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -288,12 +292,16 @@ export default {
     isBcsContainer: state => container => { // 是否是第三方构建机
         return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
     },
+    isThirdDockerContainer: state => container => {
+        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
+    },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
+        const isThirdDocker = getters.isThirdDockerContainer(container)
         const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
@@ -325,5 +333,49 @@ export default {
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,
     isNewAtomTemplate: state => isNewAtomTemplate,
-    atomVersionChangedKeys: state => state.atomVersionChangedKeys
+    atomVersionChangedKeys: state => state.atomVersionChangedKeys,
+    getExecDetail: state => {
+        if (!state.execDetail) return null
+        if (!state.hideSkipExecTask) {
+            return state.execDetail
+        }
+        console.time('getExecDetail')
+        const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
+            const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
+                const elements = container.elements.filter(
+                    (element) => !isSkip(element.status)
+                )
+                if (container.matrixGroupFlag && Array.isArray(container.groupContainers)) {
+                    return {
+                        ...container,
+                        elements,
+                        groupContainers: container.groupContainers.filter(groupContainer => !isSkip(groupContainer.status)).map(groupContainer => {
+                            const subElements = groupContainer.elements.filter(
+                                (element, index) => !isSkip(element.status ?? elements[index]?.status)
+                            )
+                            return {
+                                ...groupContainer,
+                                elements: subElements
+                            }
+                        })
+                    }
+                }
+                return {
+                    ...container,
+                    elements
+                }
+            })
+            return {
+                ...stage,
+                containers
+            }
+        })
+        console.timeEnd('getExecDetail')
+        return Object.assign({}, state.execDetail, {
+            model: {
+                ...state.execDetail.model,
+                stages
+            }
+        })
+    }
 }

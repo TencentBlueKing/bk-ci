@@ -5,7 +5,7 @@
             <bk-form-item :label="$t('turbo.方案ID')" property="openStatus">
                 <template v-if="isEdit">
                     <bk-input v-model="copyFormData.planId" class="single-width" :placeholder="$t('turbo.系统自动生成，方案的唯一标识')" disabled></bk-input>
-                    <bk-checkbox v-model="copyFormData.openStatus" v-bk-tooltips="{ content: $t('turbo.若不开启，配置不生效') }"> {{ $t('turbo.开启方案') }} </bk-checkbox>
+                    <bk-checkbox v-model="copyFormData.openStatus" @change="handleChange" v-bk-tooltips="{ content: $t('turbo.若不开启，配置不生效') }"> {{ $t('turbo.开启方案') }} </bk-checkbox>
                 </template>
                 <span v-else class="g-turbo-text-break plan-id">
                     <span>{{ copyFormData.planId }}</span>
@@ -20,7 +20,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('turbo.方案名称')" required property="planName" :rules="[requireRule($t('turbo.方案名称')), nameRule]" error-display-type="normal">
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.planName" class="single-width" :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"></bk-input>
+                    <bk-input v-model="copyFormData.planName" @change="handleChange" class="single-width" :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"></bk-input>
                 </template>
                 <span v-else class="g-turbo-text-break">{{ formData.planName }}</span>
             </bk-form-item>
@@ -31,7 +31,7 @@
                         <li v-for="item in engineList"
                             :key="item"
                             :class="['single-width', 'turbo-model-item', 'g-turbo-text-overflow', { choose: copyFormData.engineCode === item.engineCode }]"
-                            @click="chooseMode(item)"
+                            @click="chooseMode(item, true)"
                         >
                             <p class="item-title g-turbo-black-font">{{ item.engineName }}<span class="recommend" v-if="item.recommend"> {{ $t('turbo.（荐）') }} <span></span></span></p>
                             <span class="item-desc g-turbo-gray-font g-turbo-text-overflow" v-bk-overflow-tips="{ interactive: true }">{{ item.desc }}</span>
@@ -43,7 +43,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('turbo.方案说明')" property="name">
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.desc" type="textarea" class="double-width" :maxlength="200"></bk-input>
+                    <bk-input v-model="copyFormData.desc" @change="handleChange" type="textarea" class="double-width" :maxlength="200"></bk-input>
                 </template>
                 <span v-else class="g-turbo-text-break">{{ formData.desc || '-' }}</span>
             </bk-form-item>
@@ -155,7 +155,12 @@
                 this.isEdit = false
             },
 
-            chooseMode (item) {
+            handleChange () {
+                window.changeFlag = true
+            },
+
+            chooseMode (item, changeFlag) {
+                window.changeFlag = changeFlag
                 const formData = {
                     ...JSON.parse(JSON.stringify(this.copyFormData)),
                     paramConfig: item.paramConfig,
@@ -175,7 +180,7 @@
                     this.engineList = res
                     const engineCode = this.copyFormData.engineCode || this.$route.query.engineCode
                     const curEngine = res.find((item) => (engineCode && item.engineCode === engineCode)) || {}
-                    this.chooseMode(curEngine)
+                    this.chooseMode(curEngine, false)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

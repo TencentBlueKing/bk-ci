@@ -80,7 +80,10 @@
   "ReadDockerMountsError": {
     "other": "Failed to prepare Docker mount directory: {{.err}}"
   },
-  "DockerContainerLog":{
-     "other": "Docker container log is: \n"
+  "DockerContainerLog": {
+    "other": "Docker container log is: \n"
+  },
+  "DockerImageDebugError": {
+    "other": "Failed to start docker image debug: {{.err}}"
   }
 }

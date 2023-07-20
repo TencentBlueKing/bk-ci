@@ -73,9 +73,7 @@ interface UserMarketAtomResource {
     @Path("/atom/list/main")
     @GET
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].records[*].code", "data[*].records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data[*].records[*].code}", "{data[*].records[*].version}", "releaseInfo"]
     )
     fun mainPageList(
         @ApiParam("userId", required = true)
@@ -93,9 +91,7 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atom/list/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].code", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].code}", "{data.records[*].version}", "releaseInfo"]
     )
     fun list(
         @ApiParam("userId", required = true)
@@ -140,9 +136,7 @@ interface UserMarketAtomResource {
     @GET
     @Path("/desk/atom/list/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listMyAtoms(
         @ApiParam("token", required = true)
@@ -167,9 +161,7 @@ interface UserMarketAtomResource {
     @GET
     @Path("/desk/atom/{atomId}")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomById(
         @ApiParam("userId", required = true)
@@ -184,9 +176,7 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atom/{atomCode}")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
         @ApiParam("userId", required = true)
@@ -201,9 +191,7 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atom/version/list/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun getAtomVersionsByCode(
         @ApiParam("userId", required = true)

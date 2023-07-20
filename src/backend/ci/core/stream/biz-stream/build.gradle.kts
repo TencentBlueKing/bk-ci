@@ -44,7 +44,7 @@ dependencies {
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))
-    api(project(":core:process:common-pipeline-yaml"))
+    api(project(":core:common:common-pipeline-yaml"))
     api(project(":core:notify:api-notify"))
 
     api("com.zaxxer:HikariCP")

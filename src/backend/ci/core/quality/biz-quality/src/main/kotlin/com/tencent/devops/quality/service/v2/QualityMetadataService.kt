@@ -33,14 +33,19 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicatorMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
+import com.tencent.devops.quality.constant.QUALITY_METADATA_DATA_DESC_KEY
+import com.tencent.devops.quality.constant.QUALITY_METADATA_DATA_ELEMENT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_METADATA_DATA_NAME_KEY
 import com.tencent.devops.quality.dao.v2.QualityMetadataDao
 import com.tencent.devops.quality.pojo.po.QualityMetadataPO
+import java.io.File
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -55,7 +60,8 @@ import org.springframework.stereotype.Service
 class QualityMetadataService @Autowired constructor(
     private val dslContext: DSLContext,
     private val metadataDao: QualityMetadataDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
@@ -69,18 +75,20 @@ class QualityMetadataService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality metadata")
                     val classPathResource = ClassPathResource(
-                        "metadata_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}metadata_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                     val qualityMetadataPOs = JsonUtil.to(json, object : TypeReference<List<QualityMetadataPO>>() {})
                     metadataDao.batchCrateQualityMetadata(dslContext, qualityMetadataPOs)
                     logger.info("init quality metadata end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality metadata fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
@@ -93,12 +101,21 @@ class QualityMetadataService @Autowired constructor(
             QualityIndicatorMetadata(
                 hashId = HashUtil.encodeLongId(it.id),
                 dataId = it.dataId,
-                dataName = it.dataName,
+                dataName = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_METADATA_DATA_NAME_KEY.format(it.id),
+                    defaultMessage = it.dataName
+                ),
                 elementType = it.elementType,
-                elementName = it.elementName,
+                elementName = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_METADATA_DATA_ELEMENT_NAME_KEY.format(it.id),
+                    defaultMessage = it.elementName
+                ),
                 elementDetail = it.elementDetail,
                 valueType = QualityDataType.valueOf(it.valueType),
-                desc = it.desc,
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_METADATA_DATA_DESC_KEY.format(it.id),
+                    defaultMessage = it.desc
+                ),
                 extra = it.extra
             )
         }?.toList() ?: listOf()

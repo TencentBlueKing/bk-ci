@@ -43,13 +43,13 @@ open class EmailNotifyMessage : BaseMessage() {
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
 
     @ApiModelProperty("通知接收者")
-    private val receivers: MutableSet<String> = mutableSetOf()
+    private val receivers: LinkedHashSet<String> = LinkedHashSet()
 
     @ApiModelProperty("邮件抄送接收者")
-    private val cc: MutableSet<String> = mutableSetOf()
+    private val cc: LinkedHashSet<String> = LinkedHashSet()
 
     @ApiModelProperty("邮件密送接收者")
-    private val bcc: MutableSet<String> = mutableSetOf()
+    private val bcc: LinkedHashSet<String> = LinkedHashSet()
 
     @ApiModelProperty("邮件内容")
     var body: String = ""
@@ -104,7 +104,7 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getReceivers(): Set<String> {
-        return receivers.toSet()
+        return receivers
     }
 
     @ApiModelProperty(hidden = true)
@@ -118,7 +118,7 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getBcc(): Set<String> {
-        return bcc.toSet()
+        return bcc
     }
 
     fun clearCc() {
@@ -126,7 +126,7 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getCc(): Set<String> {
-        return cc.toSet()
+        return cc
     }
 
     override fun toString(): String {

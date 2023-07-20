@@ -38,6 +38,7 @@ object Versions {
     const val Leaf = "1.0.2-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
+    const val Xinge = "1.2.4.9"
     const val Pulsar = "2.7.2"
     const val reflections = "0.10.2"
     const val mockk = "1.12.2"
@@ -45,5 +46,5 @@ object Versions {
     const val jjwt = "0.11.5"
     const val Okhttp = "4.9.0"
     const val jgit = "5.13.1.202206130422-r"
-    const val iam = "1.0.19-SNAPSHOT"
+    const val iam = "1.0.29-SNAPSHOT"
 }

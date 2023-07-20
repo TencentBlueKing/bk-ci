@@ -22,11 +22,13 @@ import store from './store'
 import './assets/scss/index.scss'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-
+import EmptyTableStatus from '@/components/empty-table-status.vue'
 const Vue = window.Vue
+Vue.component('EmptyTableStatus', EmptyTableStatus)
 Vue.use(mavonEditor)
 
 window.Pages = window.Pages || {}
+window.changeFlag = false
 window.Pages.store = {
     title: '研发商店',
     routes,

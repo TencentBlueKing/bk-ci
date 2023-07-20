@@ -43,6 +43,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -66,6 +67,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
+import java.io.File
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
@@ -91,7 +93,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val redisOperation: RedisOperation,
-    private val messageTemplateDao: MessageTemplateDao
+    private val messageTemplateDao: MessageTemplateDao,
+    private val commonConfig: CommonConfig
 ) : NotifyMessageTemplateService {
 
     companion object {
@@ -110,12 +113,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init MessageTemplate")
                     updateMessageTemplate()
-                    logger.info("start init succeed")
+                    logger.info("start init MessageTemplate succeed")
+                } catch (ignored: Throwable) {
+                    logger.warn("start init MessageTemplate fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
@@ -125,7 +130,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     fun updateMessageTemplate() {
         val classPathResource = ClassPathResource(
-            "template_${I18nUtil.getDefaultLocaleLanguage()}.yaml"
+            "i18n${File.separator}template_${commonConfig.devopsDefaultLocaleLanguage}.yaml"
         )
         val inputStream = classPathResource.inputStream
         val yamlStr = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
@@ -151,7 +156,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.title = wechatTemplate.title
                     this.sender = wechatTemplate.sender
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
@@ -164,7 +169,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.body = weworkGroupTemplate.body
                     this.title = weworkGroupTemplate.title
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
@@ -178,7 +183,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.title = weworkTemplate.title
                     this.sender = weworkTemplate.sender
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
@@ -193,7 +198,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.bodyFormat = emailTemplate.bodyFormat?.getValue()?.toByte()
                     this.emailType = emailTemplate.emailType?.getValue()?.toByte()
                     this.creator = template.creator
-                    this.modifior = template.modifier
+                    this.modifior = template.modifior
                     this.createTime = LocalDateTime.now()
                     this.updateTime = LocalDateTime.now()
                 }
