@@ -93,10 +93,11 @@
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
-                const { projectId } = this.$route.params
+                const { projectId, pipelineId } = this.$route.params
                 const pipeline = {
-                    ...this.curPipeline,
-                    projectId
+                    pipelineId,
+                    projectId,
+                    ...this.curPipeline
                 }
                 return [
                     [
