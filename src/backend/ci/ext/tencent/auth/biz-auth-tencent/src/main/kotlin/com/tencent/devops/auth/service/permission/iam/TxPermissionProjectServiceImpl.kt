@@ -46,8 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
-class
-TxPermissionProjectServiceImpl @Autowired constructor(
+class TxPermissionProjectServiceImpl @Autowired constructor(
     override val permissionRoleService: PermissionRoleService,
     override val permissionRoleMemberService: PermissionRoleMemberService,
     override val authHelper: AuthHelper,
