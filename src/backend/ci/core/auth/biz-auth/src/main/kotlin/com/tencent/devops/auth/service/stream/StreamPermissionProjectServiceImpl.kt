@@ -31,7 +31,6 @@ import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import org.springframework.beans.factory.annotation.Autowired
 
 class StreamPermissionProjectServiceImpl @Autowired constructor(

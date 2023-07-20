@@ -34,7 +34,6 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
 interface PermissionResourceGroupService {
     /**

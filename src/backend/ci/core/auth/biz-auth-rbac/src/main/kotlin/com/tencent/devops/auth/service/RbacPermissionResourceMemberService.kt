@@ -19,7 +19,7 @@ class RbacPermissionResourceMemberService constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val dslContext: DSLContext,
+    private val dslContext: DSLContext
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
