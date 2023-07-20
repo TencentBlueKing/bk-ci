@@ -527,7 +527,7 @@ class WorkspaceService @Autowired constructor(
         val startWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = retentionTime - 1,
             dslContext = dslContext,
-            workspaceMountType = null
+            workspaceMountType = WorkspaceMountType.START
         ).groupBy { it.creator }
         logger.info("sendInactivityWorkspaceNotify|startWorkspaceMap|$startWorkspaceMap")
         sendNotification(
