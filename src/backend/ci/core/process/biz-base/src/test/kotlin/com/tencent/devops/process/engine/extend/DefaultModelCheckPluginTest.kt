@@ -142,6 +142,11 @@ class DefaultModelCheckPluginTest : TestBase() {
         } returns (
                 Result(genAtomVersionInfo())
                 )
+        every {
+            client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode = "manualTrigger", version = "1.*")
+        } returns (
+                Result(genAtomVersionInfo())
+                )
         every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
         every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
@@ -207,7 +212,7 @@ class DefaultModelCheckPluginTest : TestBase() {
             id = "id",
             name = "atomName",
             atomCode = atomCode,
-            version = "1.*",
+            version = "1.0.10",
             classType = "classType",
             logoUrl ="logoUrl",
             icon = "icon",
