@@ -16,7 +16,7 @@
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageCountChange">
                     <bk-table-column :label="$t('ticket.id')" prop="credentialId" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('ticket.name')" prop="credentialName" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('ticket.alias')" prop="credentialName" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('ticket.type')" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
                     <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">

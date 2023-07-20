@@ -42,6 +42,10 @@ const handleToPluginTrend = () => {
     name: 'PluginRunAnalysis'
   })
 };
+
+const handleClear = (payload) => {
+  handleFilterChange(payload);
+};
 </script>
 
 <template>
@@ -49,7 +53,7 @@ const handleToPluginTrend = () => {
     <div class="header">
       <a class="plugin-trend-title" @click="handleToPluginTrend">{{ t('Plugin trend') }}</a>
       <span class="crumbs-icon"> > </span>
-      <span>{{ t('Plugin fail analtysis') }}: {{ route.query.atomCode }}</span>
+      <span>{{ t('Plugin fail analysis') }}: {{ route.query.atomCode }}</span>
     </div>
     <!-- <add-plugin></add-plugin> -->
   </metrics-header>
@@ -68,6 +72,7 @@ const handleToPluginTrend = () => {
       :status="status"
       :reset-btn-disabled="resetBtnDisabled"
       @change="handleChangeResetBtnDisabled"
+      @clear="handleClear"
     />
   </main>
 </template>

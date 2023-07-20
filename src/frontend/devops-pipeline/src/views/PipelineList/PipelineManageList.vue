@@ -5,7 +5,6 @@
             <bk-input :placeholder="$t('restore.restoreSearchTips')" />
         </div>
         <template v-else>
-
             <h5 class="current-pipeline-group-name">
                 <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
                 <span>{{currentViewName}}</span>

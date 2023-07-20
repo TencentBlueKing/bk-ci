@@ -166,11 +166,10 @@
             }
         }
         .tag-group-row {
-            display: flex;
-            justify-content: space-around;
             .group-col {
-                flex: 1;
-                margin-right:8px;
+                display: inline-block;
+                width: 250px;
+                margin-right: 15px;
                 .group-title {
                     font-size: 12px;
                     line-height: 34px;

@@ -52,6 +52,7 @@
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -226,7 +227,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning' })
+                        navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                             .then(() => {
                                 next(true)
                                 this.leaving = false

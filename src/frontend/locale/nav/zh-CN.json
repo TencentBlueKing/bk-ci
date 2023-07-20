@@ -1,7 +1,7 @@
 {
     "okLabel": "确定",
     "cancelLabel": "取消",
-    "logout": "退出",
+    "logout": "退出登录",
     "close": "关闭",
     "accessCenter": "权限中心",
     "recentVisiteService": "最近访问服务",
@@ -231,5 +231,6 @@
         "execute": "执行",
         "enable/disable": "停用/启用",
         "manage": "管理"
-    }
+    },
+    "documentation": "产品文档"
 }

@@ -5,7 +5,14 @@
         </bread-crumbs>
 
         <div class="edit-atom-content" v-if="showContent">
-            <div class="bk-form edit-atom-form g-form-radio">
+            <div
+                :class="{
+                    'bk-form': true,
+                    'edit-atom-form': true,
+                    'g-form-radio': true,
+                    'edit-atom-form-en': !isZH
+                }"
+            >
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -141,7 +148,7 @@
                         <hr class="cut-line">
                     </div>
                     <div class="bk-form-item is-required" ref="categoryError">
-                        <label class="bk-label category-label"> {{ $t('store.自定义前端') }} </label>
+                        <label class="bk-label category-label"> {{ $t('store.自定义前端UI') }} </label>
                         <div class="bk-form-content atom-item-content">
                             <bk-radio-group v-model="atomForm.frontendType" class="radio-group">
                                 <bk-radio :value="entry.value" :title="entry.title" v-for="(entry, key) in frontendTypeList" :key="key">{{entry.label}}</bk-radio>
@@ -369,7 +376,8 @@
                 },
                 versionMap: {},
                 publishersList: [],
-                containerList: []
+                containerList: [],
+                isZH: true
             }
         },
         computed: {
@@ -425,6 +433,7 @@
             }
         },
         async created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             await this.fetchContainerList()
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
@@ -768,6 +777,20 @@
             overflow: auto;
             display: flex;
             justify-content: center;
+        }
+        .edit-atom-form-en {
+            .bk-label {
+                width: 150px !important;
+            }
+            .version-msg {
+                padding: 12px 0 12px 6px !important;
+            }
+            .form-footer {
+                margin: 26px 0 30px 147px !important;
+            }
+            .atom-os .bk-form-checkbox:first-child {
+                margin-left: 150px !important;
+            }
         }
         .edit-atom-form {
             position: relative;

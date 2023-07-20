@@ -1,6 +1,6 @@
 <template>
     <div v-bkloading="{ isLoading }" class="remote-trigger">
-        <p>{{ $t('editPage.remoteCurlTips') }}</p>
+        <route-tips :visible="true" :tips="$t('editPage.remoteCurlTips')"></route-tips>
         <p>{{ $t('editPage.example') }}：</p>
         <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -H "X-DEVOPS-UID: " -d "{{stringifyParmas}}" </p>
     </div>
@@ -10,8 +10,12 @@
     import atomFieldMixin from '../atomFieldMixin'
     import { mapActions } from 'vuex'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import RouteTips from '@/components/atomFormField/RouteTips'
     export default {
         name: 'remote-curl-url',
+        components: {
+            RouteTips
+        },
         mixins: [atomFieldMixin],
         props: {
             container: Object,

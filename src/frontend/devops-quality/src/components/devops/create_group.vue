@@ -38,7 +38,7 @@
                                 :placeholder="$t('quality.请输入通知人员')"
                             ></user-input>
                         </bk-form-item>
-                        <bk-form-item :label="$t('quality.备注：')" :property="'desc'">
+                        <bk-form-item :label="$t('quality.描述：')" :property="'desc'">
                             <bk-input
                                 class="group-desc-textarea"
                                 type="textarea"
