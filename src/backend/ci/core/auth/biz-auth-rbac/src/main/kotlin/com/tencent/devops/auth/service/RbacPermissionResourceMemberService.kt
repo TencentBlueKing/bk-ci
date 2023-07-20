@@ -112,8 +112,7 @@ class RbacPermissionResourceMemberService constructor(
         }
         val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
         logger.info(
-            "[RBAC-IAM] getUsersUnderGroup ,groupId: ${groupInfo.id} " +
-                "| groupMemberInfoList: $groupMemberInfoList"
+            "[RBAC-IAM] getUsersUnderGroup ,groupId: ${groupInfo.id} | groupMemberInfoList: $groupMemberInfoList"
         )
         val members = mutableListOf<String>()
         groupMemberInfoList.forEach { memberInfo ->
