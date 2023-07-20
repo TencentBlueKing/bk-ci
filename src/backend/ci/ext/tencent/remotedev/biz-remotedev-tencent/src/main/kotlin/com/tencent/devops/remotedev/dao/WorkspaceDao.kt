@@ -428,11 +428,13 @@ class WorkspaceDao {
         dslContext: DSLContext
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
-            val  condition = mutableListOf<Condition>()
+            val condition = mutableListOf<Condition>()
             condition.add(timestampDiff(DatePart.DAY, LAST_STATUS_UPDATE_TIME.cast(java.sql.Timestamp::class.java))
-                              .greaterOrEqual(timeOutDays))
+                .greaterOrEqual(timeOutDays))
+
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
-            if (workspaceMountType != null ){
+
+            if (workspaceMountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))
             }
             return dslContext.selectFrom(this)
