@@ -441,7 +441,7 @@ class ProjectTagService @Autowired constructor(
         } ?: emptyMap()
 
         val projectProperties = projectData.properties?.let {
-            JsonUtil.to<ProjectProperties>(projectData.properties.toString())
+            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
         }
         return ProjectInfoResponse(
             projectId = projectData.projectId,
