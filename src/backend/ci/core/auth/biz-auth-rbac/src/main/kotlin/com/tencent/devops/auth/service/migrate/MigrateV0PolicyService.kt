@@ -107,6 +107,10 @@ class MigrateV0PolicyService constructor(
             "quality_gate_group" to "quality_group"
         )
         private const val V0_QC_GROUP_NAME = "质量管理员"
+        private const val CERT_VIEW = "cert_view"
+        private const val CERT_EDIT = "cert_edit"
+        private const val ENV_NODE_VIEW = "env_node_view"
+        private const val ENV_NODE_EDIT = "env_node_edit"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -148,6 +152,9 @@ class MigrateV0PolicyService constructor(
             if (resourceActions.isEmpty()) {
                 return@permission
             }
+            // 当v0有证书和环境节点编辑权限时，得添加证书和环境节点的查看权限
+            val additionalActions = buildRbacAdditionalActions(resourceActions.map { it.id })
+            val finalResourceActions = resourceActions.toMutableList().apply { addAll(additionalActions) }
             val rbacResources = buildRbacManagerResources(
                 projectCode = projectCode,
                 projectName = projectName,
@@ -156,7 +163,7 @@ class MigrateV0PolicyService constructor(
             rbacAuthorizationScopes.add(
                 AuthorizationScopes.builder()
                     .system(iamConfiguration.systemId)
-                    .actions(resourceActions)
+                    .actions(finalResourceActions)
                     .resources(rbacResources)
                     .build()
             )
@@ -176,6 +183,15 @@ class MigrateV0PolicyService constructor(
             )
         }
         return rbacAuthorizationScopes
+    }
+
+    private fun buildRbacAdditionalActions(actions: List<String>): List<Action> {
+        val resourceActions = mutableListOf<Action>()
+        if (actions.contains(CERT_EDIT))
+            resourceActions.add(Action(CERT_VIEW))
+        if (actions.contains(ENV_NODE_EDIT))
+            resourceActions.add(Action(ENV_NODE_VIEW))
+        return resourceActions
     }
 
     private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
