@@ -15,10 +15,10 @@
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.id')" prop="credentialId"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.alias')" prop="credentialName"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.id')" prop="credentialId" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('ticket.alias')" prop="credentialName" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('ticket.type')" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
                             <template v-if="props.row.permissions.use">
@@ -64,9 +64,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
     import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

@@ -146,9 +146,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
+    import { mapGetters } from 'vuex'
 
     export default {
         directives: {
@@ -355,7 +355,7 @@
                     title: this.$t('labelGroupDeleteConfirm'),
                     confirmFn: async () => {
                         try {
-                            const res = await this.$store.dispatch('pipelines/deleteGroup', {
+                            const res = await this.$store.dispatch('pipelines/deleteLabelGroup', {
                                 projectId: this.projectId,
                                 groupId: this.tagList[groupIndex].id
                             })

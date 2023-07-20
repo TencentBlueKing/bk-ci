@@ -1,4 +1,4 @@
-{   
+{
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
     "logout": "Sign out",
@@ -68,10 +68,9 @@
         "pipelineStepDesc": "We have provided various pipeline packages based on different code library projects，now SVN, Git library and blue whale Gitlab library of Code platform are supported",
         "previewPipeline": "Preview pipeline",
         "previewTips": "We recommend the following pipeline for continous delivery based on the code library you selected",
-        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",            
+        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",
         "codelib": "Code library：",
         "getStarted": "Get the pipeline started"
-                
     },
     "accessGuide": "User guide",
     "configProject": "Configure project",
@@ -100,7 +99,7 @@
     "service": "Service",
     "collection": "MY FAVORITES",
     "noCollection": "No Favorite",
-    "outofCollectionTips": "Clear unused links to add new ones：）",
+    "outofCollectionTips": "Clear unused service to add new ones：）",
     "DevopsMobile": "Mobile",
     "scanToDownload": "Scan to download BK DevOps App",
     "changeLogo": "Change LOGO",

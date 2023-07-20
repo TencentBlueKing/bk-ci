@@ -25,7 +25,7 @@
     "switchProject": "Switch Project",
     "applyPermission": "Apply",
     "noData": "No Data",
-    "noresultsFound":"No Results Found",
+    "noresultsFound": "No Results Found",
     "credential": {
         "nameTips": "When referencing credentials through variables in pipeline, only referencing by ID is supported.",
         "emptyCredential": "Empty Credential",
