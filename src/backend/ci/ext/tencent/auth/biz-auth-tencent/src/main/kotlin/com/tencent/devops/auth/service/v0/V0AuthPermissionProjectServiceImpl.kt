@@ -49,8 +49,6 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
 
     override fun getProjectUsers(
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
         group: String?
     ): List<String> {
         return authProjectApi.getProjectUsers(
@@ -60,11 +58,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         return authProjectApi.getProjectGroupAndUserList(
             serviceCode = authServiceCode,
             projectCode = projectCode
@@ -134,7 +128,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
             projectName = projectInfo.projectName,
             creator = projectInfo.creator!!,
             owners = getProjectUsers(
-                projectCode, BkAuthGroup.MANAGER
+                projectCode, BkAuthGroup.MANAGER.value
             ),
             members = getProjectUsers(projectCode, null)
         )
