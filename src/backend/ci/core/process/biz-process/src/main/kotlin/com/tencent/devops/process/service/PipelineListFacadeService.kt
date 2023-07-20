@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -97,6 +98,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
@@ -1391,7 +1393,11 @@ class PipelineListFacadeService @Autowired constructor(
                 it.viewNames = pipelineViewNameMap[it.pipelineId]
             }
             pipelineBuildMap[pipelineId]?.let { lastBuild ->
-                it.lastBuildMsg = lastBuild.buildMsg
+                it.lastBuildMsg = BuildMsgUtils.getBuildMsg(
+                    buildMsg = lastBuild.buildMsg,
+                    startType = StartType.toStartType(lastBuild.trigger),
+                    channelCode = ChannelCode.getChannel(lastBuild.channel)
+                )
                 it.trigger = lastBuild.trigger
                 val webhookInfo = lastBuild.webhookInfo?.let { self ->
                     JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})

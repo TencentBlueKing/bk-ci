@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.pojo.agent
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.util.MessageUtil
+import java.util.Locale
 
 @Suppress("UNUSED")
 enum class NodeStatus(
@@ -55,7 +56,7 @@ enum class NodeStatus(
     companion object {
         fun getStatusName(status: String, language: String): String {
             values().forEach {
-                if (it.name == status) {
+                if (it.name == status.uppercase(Locale.getDefault())) {
                     return MessageUtil.getMessageByLocale(messageCode = it.statusName, language = language)
                 }
             }
