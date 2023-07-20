@@ -35,8 +35,8 @@ import org.springframework.stereotype.Component
 @RefreshScope
 class MetricsConfig {
 
-    @Value("\${metrics.queryCountMax:10000}")
-    val queryCountMax: Int = 10000
+    @Value("\${metrics.queryCountMax:100000}")
+    val queryCountMax: Int = 100000
 
     @Value("\${metrics.devopsUrl:}")
     val devopsUrl: String = ""
