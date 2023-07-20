@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.common.archive.pojo.replica
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
+import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-@RefreshScope
-class MetricsConfig {
-
-    @Value("\${metrics.queryCountMax:100000}")
-    val queryCountMax: Int = 100000
-
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
-
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
-
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
-
-    @Value("\${metrics.queryDaysMax:180}")
-    val queryDaysMax: Long = 180
-
-    @Value("\${metrics.unReportClusterTags:}")
-    val unReportClusterTags: String = ""
-}
+@ApiModel("同步任务创建请求")
+data class ReplicaTaskCreateRequest(
+    @ApiModelProperty("任务名称", required = true)
+    val name: String,
+    @ApiModelProperty("本地项目", required = true)
+    val localProjectId: String,
+    @ApiModelProperty("同步对象类型", required = true)
+    val replicaObjectType: ReplicaObjectType,
+    @ApiModelProperty("任务对象信息", required = true)
+    val replicaTaskObjects: List<ReplicaObjectInfo>,
+    @ApiModelProperty("同步类型", required = true)
+    val replicaType: ReplicaType = ReplicaType.SCHEDULED,
+    @ApiModelProperty("任务设置", required = true)
+    val setting: ReplicaSetting,
+    @ApiModelProperty("远程集群集合", required = true)
+    val remoteClusterIds: Set<String>,
+    @ApiModelProperty("是否启用", required = true)
+    val enabled: Boolean = true,
+    @ApiModelProperty("任务描述", required = false)
+    val description: String? = null
+)

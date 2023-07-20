@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,31 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.common.archive.pojo.replica.objects
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-@RefreshScope
-class MetricsConfig {
-
-    @Value("\${metrics.queryCountMax:100000}")
-    val queryCountMax: Int = 100000
-
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
-
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
-
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
-
-    @Value("\${metrics.queryDaysMax:180}")
-    val queryDaysMax: Long = 180
-
-    @Value("\${metrics.unReportClusterTags:}")
-    val unReportClusterTags: String = ""
-}
+/**
+ * 包版本限制
+ */
+@ApiModel("包版本限制")
+data class PackageConstraint(
+    @ApiModelProperty("包唯一key")
+    val packageKey: String? = null,
+    @ApiModelProperty("包版本列表")
+    val versions: List<String>? = null,
+    @ApiModelProperty("目标包存储版本:将源版本经过分发后存储为指定的目标版本，在源版本只有一个时生效,只针对镜像类型")
+    val targetVersions: List<String>? = null,
+    @ApiModelProperty("包正则匹配规则")
+    val packageRegex: List<String>? = null,
+    @ApiModelProperty("包版本正则匹配规则")
+    val versionRegex: List<String>? = null
+)

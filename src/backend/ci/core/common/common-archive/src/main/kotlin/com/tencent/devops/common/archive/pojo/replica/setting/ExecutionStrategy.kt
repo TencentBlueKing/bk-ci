@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,31 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.common.archive.pojo.replica.setting
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+/**
+ * 计划调度策略
+ */
+enum class ExecutionStrategy {
+    /**
+     * 立即执行
+     */
+    IMMEDIATELY,
 
-@Component
-@RefreshScope
-class MetricsConfig {
+    /**
+     * 指定时间执行
+     */
+    SPECIFIED_TIME,
 
-    @Value("\${metrics.queryCountMax:100000}")
-    val queryCountMax: Int = 100000
-
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
-
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
-
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
-
-    @Value("\${metrics.queryDaysMax:180}")
-    val queryDaysMax: Long = 180
-
-    @Value("\${metrics.unReportClusterTags:}")
-    val unReportClusterTags: String = ""
+    /**
+     * cron表达式执行
+     */
+    CRON_EXPRESSION
 }

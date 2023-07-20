@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,31 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.common.archive.pojo.replica
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
-
-@Component
-@RefreshScope
-class MetricsConfig {
-
-    @Value("\${metrics.queryCountMax:100000}")
-    val queryCountMax: Int = 100000
-
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
-
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
-
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
-
-    @Value("\${metrics.queryDaysMax:180}")
-    val queryDaysMax: Long = 180
-
-    @Value("\${metrics.unReportClusterTags:}")
-    val unReportClusterTags: String = ""
+/**
+ * 同步类型
+ */
+enum class ReplicaType {
+    // 调度同步，指定时间/定时执行
+    SCHEDULED,
+    // 实时同步，有新数据立即同步，可执行多次
+    REAL_TIME,
+    // 只执行一次，手动调用执行
+    RUN_ONCE,
+    // 边缘节点主动拉取的同步任务
+    EDGE_PULL
 }
