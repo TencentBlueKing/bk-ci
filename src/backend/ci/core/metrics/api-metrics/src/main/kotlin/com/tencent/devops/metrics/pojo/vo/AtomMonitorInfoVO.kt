@@ -24,15 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.metrics.pojo.vo
 
-package com.tencent.devops.process.service
+import com.tencent.devops.metrics.pojo.`do`.AtomMonitorFailDetailDO
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import org.springframework.stereotype.Service
-
-@Service
-class SamplePipelineStartUpService : SubPipelineStartUpService() {
-
-    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        // 开源版暂不做权限校验
-    }
-}
+@ApiModel("插件监控统计数据")
+data class AtomMonitorInfoVO(
+    @ApiModelProperty("插件标识", required = true)
+    val atomCode: String,
+    @ApiModelProperty("执行成功总数量", required = true)
+    var totalSuccessNum: Int = 0,
+    @ApiModelProperty("执行失败总数量", required = true)
+    var totalFailNum: Int = 0,
+    @ApiModelProperty("执行失败详情", required = true)
+    val totalFailDetail: AtomMonitorFailDetailDO
+)

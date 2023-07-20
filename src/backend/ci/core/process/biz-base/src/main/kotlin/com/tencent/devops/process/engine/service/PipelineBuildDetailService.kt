@@ -192,7 +192,7 @@ class PipelineBuildDetailService @Autowired constructor(
             model = JsonUtil.toJson(model, formatted = false),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(projectId, buildId)
+//        pipelineDetailChangeEvent(projectId, buildId)
     }
 
     fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {

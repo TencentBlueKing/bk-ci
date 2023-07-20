@@ -50,6 +50,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.GET_PIPELINE_ATOM_INFO_NO_PERMISSION
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -380,7 +381,7 @@ class PipelineAtomService @Autowired constructor(
             )
         } else if (validateResult.isOk() && validateResult.data == false) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_PIPELINE_ATOM_INFO_NO_PERMISSION,
                 params = arrayOf(atomCode)
             )
         }

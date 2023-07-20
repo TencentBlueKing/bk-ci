@@ -326,7 +326,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             queryAtomStatisticsInfoDTO.atomCodes
         } else {
             if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
-                // 插件配置为空择读取项目下插件
+                // 插件配置为空则读取项目下插件
                 atomDisplayConfigDao.getOptionalAtomDisplayConfig(
                     dslContext = dslContext,
                     projectId = queryAtomStatisticsInfoDTO.projectId,
