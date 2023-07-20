@@ -43,9 +43,6 @@ spec:
               check_atom_response=$(curl -s $check_atom_url)
               if [ -z $(echo $check_atom_response | grep -o "atomCode") ]; then
                 atom_url={{ .url }}
-                {{ if $.Values.init.plugin.useProxy }}
-                atom_url={{ $.Values.init.plugin.proxyUrl }}/{{ .url }}
-                {{ end }}
                 atom_file=${atom_code}.zip
                 curl -s $atom_url -o $atom_file -L
                 if [ $? -eq 0 ]; then
