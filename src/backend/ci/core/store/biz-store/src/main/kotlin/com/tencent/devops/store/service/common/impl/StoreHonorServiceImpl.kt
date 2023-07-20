@@ -36,6 +36,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -187,7 +188,7 @@ class StoreHonorServiceImpl @Autowired constructor(
             )
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(storeCode)
             )
         }

@@ -97,4 +97,8 @@ data class TriggerContainer(
     override fun fetchGroupContainers(): List<Container>? = null
 
     override fun fetchMatrixContext(): Map<String, String>? = null
+
+    override fun transformCompatibility() {
+        super.transformCompatibility()
+    }
 }

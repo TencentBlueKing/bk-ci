@@ -421,11 +421,12 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             pipelineId = pipelineId,
             buildId = buildId
         )
-        return getFileDownloadUrls(userId, filePath, artifactoryType, fileChannelType, fullUrl = fullUrl)
+        return getFileDownloadUrls(userId, projectId, filePath, artifactoryType, fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
         userId: String,
+        projectId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,

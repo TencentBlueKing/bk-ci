@@ -93,7 +93,7 @@ class ProjectInfoDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(queryCondition.projectId))
             if (!queryCondition.pipelineIds.isNullOrEmpty()) {
-                    conditions.add(PIPELINE_ID.`in`(queryCondition.pipelineIds))
+                conditions.add(PIPELINE_ID.`in`(queryCondition.pipelineIds))
             }
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(LABEL_NAME.like("%${queryCondition.keyword}%"))

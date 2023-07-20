@@ -61,7 +61,6 @@ const val DEPLOY = "deploy" // 部署
 const val SECURITY = "security" // 安全
 const val NORMAL = "normal" // 正常
 const val EXCEPTION = "exception" // 异常
-const val NUM_UNIT = "numUnit" // 数量单位：个
 const val REQUIRED = "required" // 必选
 const val MIN_LENGTH = "minLength" // 最小长度
 const val MAX_LENGTH = "maxLength" // 最大长度

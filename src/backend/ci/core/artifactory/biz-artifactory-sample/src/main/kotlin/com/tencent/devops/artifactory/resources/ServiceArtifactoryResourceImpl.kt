@@ -109,6 +109,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     ): Result<Url> {
         val urls = archiveFileService.getFileDownloadUrls(
             userId = userId,
+            projectId = projectId,
             fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
             filePath = path,
             artifactoryType = artifactoryType
