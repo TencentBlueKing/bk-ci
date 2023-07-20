@@ -454,7 +454,6 @@
 
     .store-main {
         overflow-y: scroll;
-        background: #f1f2f3;
         height: calc(100% - 52px);
     }
 

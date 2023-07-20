@@ -10,7 +10,8 @@
             class="user-entry"
         >
             {{ username }}
-            <i class="devops-icon icon-down-shape ml5" />
+            <span v-if="!isHideHint" class="user-header-hint" />
+            <i v-if="!disabled" class="devops-icon icon-down-shape" />
         </div>
         <template slot="content">
             <li
@@ -31,6 +32,7 @@
                     class="user-menu-item"
                     @click.stop="item.cb"
                 >{{ item.label }}</span>
+                <span v-if="!isHideHint && item.isShowHint" class="user-hint" />
             </li>
         </template>
     </bk-popover>

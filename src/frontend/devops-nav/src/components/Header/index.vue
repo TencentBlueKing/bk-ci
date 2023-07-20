@@ -118,6 +118,7 @@
                     </li>
                 </template>
             </bk-popover>
+            <qrcode class="feed-back-icon" />
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
@@ -365,10 +366,6 @@ import Qrcode from './Qrcode.vue'
 
         closeTooltip (): void {
             this.isShowTooltip = false
-        }
-
-        setDocumentTitle () {
-            document.title = String(this.$t('documentTitleHome'))
         }
 
         handleChangeLang (item) {

@@ -59,7 +59,7 @@
   "httpRule": "Start by http:// or svn:// and the correct one",
   "httpsRule": "Start by https:// and end with .git",
   "httpOrHttpsRule": "Start by http:// or https:// and end with .git",
-  "paramBeString": "parameter must be string",
+  "paramBeString": "Parameter must be string",
   "tgitHttpRule": "Start by https:// and end with .git",
   "tgitRule": "Start by git@ and end with .git",
   "SVN": "SVN",

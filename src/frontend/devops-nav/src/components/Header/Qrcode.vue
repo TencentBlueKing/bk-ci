@@ -1,16 +1,14 @@
 <template>
     <div
         v-clickoutside="hideOrcode"
-        :class="{ &quot;devops-qrcode&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-qrcode': true, 'active': show }"
     >
         <div
-            class="qrcode-tips"
             @click="toggleOrcode(show)"
         >
-            <div class="qrcode-icon">
-                <i class="devops-icon icon-phone" />
+            <div class="flag-box">
+                <Icon name="phone" size="20" />
             </div>
-            <div><span>{{ $t("DevopsMobile") }}</span></div>
         </div>
         <div
             v-if="show"
@@ -99,23 +97,9 @@
             top: 52px;
             left: 6px;
             width: 140px;
-            height: 160px;
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
             font-size: 12px;
             color: #7b7d8a;
-            &:before {
-                position: absolute;
-                content: '';
-                width: 8px;
-                height: 8px;
-                border: 1px solid $borderWeightColor;
-                border-bottom: 0;
-                border-right: 0;
-                left: 9px;
-                top: -5px;
-                transform: rotate(45deg);
-                background: white;
-            }
             > .content {
                 margin: 10px;
                 > p {
