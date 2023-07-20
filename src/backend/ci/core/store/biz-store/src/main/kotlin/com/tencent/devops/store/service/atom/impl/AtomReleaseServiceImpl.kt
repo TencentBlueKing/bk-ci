@@ -129,6 +129,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.Locale
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -703,7 +704,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     repositoryHashId = repositoryHashId
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
-                val stageCode = qualityDataMap["stage"] as String
+                val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())
                 if (stageCode !in listOf(DEVELOP, TEST, DEPLOY, SECURITY)) {
                     throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

@@ -242,7 +242,8 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             ruleIds = ruleIdSet
         )?.map { it.id to it }?.toMap()
-        return interceptHistory.distinctBy { it.ruleId }.map {
+        return interceptHistory.sortedByDescending { it.checkTimes }.distinctBy { it.ruleId }.map {
+            logger.info("QUALITY|get intercept history: ${it.buildId}, check_time: ${it.checkTimes}")
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
@@ -275,7 +276,8 @@ class QualityHistoryService @Autowired constructor(
             ruleIds = ruleIdSet
         )?.map { it.id to it }?.toMap()
         return interceptHistory.filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }
-            .distinctBy { it.ruleId }.map {
+            .sortedByDescending { it.checkTimes }.distinctBy { it.ruleId }.map {
+            logger.info("QUALITY|get rule intercept history: ${it.buildId}, check_time: ${it.checkTimes}")
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { record ->
                 if (CodeccUtils.isCodeccAtom(record.indicatorType)) {

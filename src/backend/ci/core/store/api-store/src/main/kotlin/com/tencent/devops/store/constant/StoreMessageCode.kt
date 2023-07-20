@@ -146,7 +146,7 @@ object StoreMessageCode {
     const val IMAGE_ADD_NO_PROJECT_MEMBER = "2120920" // 无权限新增镜像，不是项目{0}成员
     const val IMAGE_PUBLISH_REPO_NO_PERMISSION = "2120921" // 无权限操作公共镜像仓库
     const val COMMENT_UPDATE_NO_PERMISSION = "2120922" // 不是该评论的发表人，无权限更新该评论
-    const val BUILD_VISIT_NO_PERMISSION = "2120923" // 运行中组件{0}无权限访问组件{1}信息
+    const val BUILD_VISIT_NO_PERMISSION = "2120923" // 接口请求中的插件【{0}】不是当前当前构建运行的插件
     const val VERSION_PUBLISHED = "2120924" // 组件{0}版本({1})已发布
     const val NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION = "2120925" // 无组件{0}管理员或当前版本创建者权限，请联系组件管理员。
 

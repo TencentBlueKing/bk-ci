@@ -789,7 +789,7 @@ class QualityIndicatorService @Autowired constructor(
             thresholdType = indicatorCreate.dataType.name,
             desc = indicatorCreate.desc,
             readOnly = false,
-            stage = I18nUtil.getCodeLanMessage(messageCode = DEVELOP, language = I18nUtil.getDefaultLocaleLanguage()),
+            stage = DEVELOP,
             range = projectId,
             tag = "",
             enable = true,

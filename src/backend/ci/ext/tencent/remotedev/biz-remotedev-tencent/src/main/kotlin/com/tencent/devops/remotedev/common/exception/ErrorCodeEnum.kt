@@ -110,6 +110,16 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132020",
         formatErrorMessage = "The usage time of the current workspace [{0}] has reached the user limit [{1}h]"
+    ),
+    WINDOWS_CONFIG_NOT_FIND(
+        errorType = ErrorType.USER,
+        errorCode = "2132021",
+        formatErrorMessage = "windows config {0} not find"
+    ),
+    WINDOWS_RESOURCE_NOT_AVAILABLE(
+        errorType = ErrorType.USER,
+        errorCode = "2132022",
+        formatErrorMessage = "windows resource {0} not available"
     );
 
     fun getErrorMessage(): String {

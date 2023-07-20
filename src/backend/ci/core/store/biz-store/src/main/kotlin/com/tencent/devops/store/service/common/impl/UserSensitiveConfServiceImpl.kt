@@ -304,7 +304,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 // build类接口需要校验storeCode是否为正在运行的storeCode，防止越权查询storeCode信息
                 throw ErrorCodeException(
                     errorCode = BUILD_VISIT_NO_PERMISSION,
-                    params = arrayOf(runningAtomCode ?: "", storeCode)
+                    params = arrayOf(storeCode)
                 )
             }
         }

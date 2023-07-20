@@ -45,6 +45,7 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.concurrent.CompletableFuture
@@ -101,18 +102,17 @@ class MigrateResultService constructor(
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         do {
-            val verifyRecordList = authVerifyRecordService.list(
+            val verifyRecordList = authVerifyRecordService.groupByResourceAndUserId(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 offset = offset,
                 limit = limit
             )
-            verifyRecordList.filter { it.verifyResult }.forEach {
-                compareRecord(
+            verifyRecordList.forEach {
+                compareResource(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = it.resourceCode,
-                    action = it.action,
                     userId = it.userId
                 )
             }
@@ -121,48 +121,53 @@ class MigrateResultService constructor(
         return true
     }
 
-    private fun compareRecord(
+    private fun compareResource(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        action: String,
         userId: String
     ) {
-        if (isSkipCompare(resourceCode = resourceCode, action = action)) return
+        if (resourceCode == "*") {
+            return
+        }
+        val actions = authVerifyRecordService.listResourceActions(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            userId = userId
+        ).filter { !isSkipAction(it) }
+        if (actions.isEmpty()) {
+            return
+        }
         // v0或v3资源转换成rbac不存在,说明资源可能已经被删除或者不是这个项目的
         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
             projectCode = projectCode,
             resourceType = resourceType,
             migrateResourceCode = resourceCode
         ) ?: return
-        val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
+        val rbacVerifyResultMap = permissionService.batchValidateUserResourcePermission(
             userId = userId,
-            action = action,
+            actions = actions,
             projectCode = projectCode,
             resourceCode = rbacResourceCode,
-            resourceType = resourceType,
-            relationResourceType = null
+            resourceType = resourceType
         )
+        val exceptionActions = rbacVerifyResultMap.filter { !it.value }.keys.toList()
         // 如果迁移后的权限不匹配,则需要再次确认资源、用户和权限
-        if (!rbacVerifyResult) {
+        if (exceptionActions.isNotEmpty()) {
             reconfirm(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 rbacResourceCode = rbacResourceCode,
-                action = action,
+                actions = exceptionActions,
                 userId = userId
             )
         }
     }
 
-    private fun isSkipCompare(
-        resourceCode: String,
-        action: String
-    ): Boolean {
-        return resourceCode == "*" ||
-            action.substringAfterLast("_") == AuthPermission.DELETE.value ||
-            action == "all_action"
+    private fun isSkipAction(action: String): Boolean {
+        return action.substringAfterLast("_") == AuthPermission.DELETE.value || action == "all_action"
     }
 
     /**
@@ -177,19 +182,16 @@ class MigrateResultService constructor(
         resourceType: String,
         resourceCode: String,
         rbacResourceCode: String,
-        action: String,
+        actions: List<String>,
         userId: String
     ) {
         // 校验资源是否存在
-        val resourceExists = if (resourceType == AuthResourceType.PROJECT.value) {
-            true
-        } else {
-            migrateResourceService.fetchInstanceInfo(
-                resourceType = resourceType,
-                projectCode = projectCode,
-                ids = listOf(resourceCode)
-            )?.data?.isNotEmpty() ?: false
-        }
+        val resourceExists = checkResourceExists(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            rbacResourceCode = rbacResourceCode
+        )
         if (!resourceExists) {
             logger.info(
                 "resource does not exist or has been deleted, skip comparison|$projectCode|$resourceCode|$userId"
@@ -220,14 +222,13 @@ class MigrateResultService constructor(
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
         val hasPermission = bkTag.invokeByTag(projectConsulTag) {
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
-            client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
-                action = action.substringAfterLast("_"),
+                action = actions.map { it.substringAfterLast("_") },
                 projectCode = projectCode,
                 resourceCode = resourceCode,
-                resourceType = resourceType,
-                relationResourceType = null
+                resourceType = resourceType
             )
         }.data!!
         logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId|$hasPermission")
@@ -236,8 +237,34 @@ class MigrateResultService constructor(
                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
                 params = arrayOf(projectCode),
                 defaultMessage = "Failed to compare policy:permission not migrate" +
-                        "$userId|$projectCode|$resourceType|$resourceCode|$action"
+                        "$userId|$projectCode|$resourceType|$resourceCode|$actions"
             )
+        }
+    }
+
+    private fun checkResourceExists(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        rbacResourceCode: String
+    ): Boolean {
+        // 校验资源是否存在
+        return when (resourceType) {
+            // 项目在迁移时已经校验是否存在
+            AuthResourceType.PROJECT.value -> true
+            // 记录表中记录的流水线ID和项目ID的关联关系可能有错误,回调接口查询资源信息没有传项目ID,导致流水线信息错误
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
+                client.get(ServicePipelineResource::class)
+                    .getPipelineId(projectCode = projectCode, pipelineId = rbacResourceCode).data != null
+            }
+
+            else -> {
+                migrateResourceService.fetchInstanceInfo(
+                    resourceType = resourceType,
+                    projectCode = projectCode,
+                    ids = listOf(resourceCode)
+                )?.data?.isNotEmpty() ?: false
+            }
         }
     }
 }

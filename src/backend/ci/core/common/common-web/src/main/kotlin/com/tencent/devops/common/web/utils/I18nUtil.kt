@@ -29,6 +29,7 @@ package com.tencent.devops.common.web.utils
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -38,6 +39,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import java.net.URLDecoder
@@ -49,14 +51,16 @@ object I18nUtil {
 
     private val logger = LoggerFactory.getLogger(I18nUtil::class.java)
 
+    private val syncObj = Object()
+
     /**
      * 从redis缓存获取用户的国际化语言信息
      * @param userId 用户ID
      * @return 语言信息
      */
-    fun getUserLocaleLanguageFromCache(userId: String): String? {
-        // 先从本地缓存中获取用户语言信息
-        var language = BkI18nLanguageCacheUtil.getIfPresent(userId)
+    private fun getUserLocaleLanguageFromCache(userId: String): String? {
+        // 先从Cookie获取,没有再从本地缓存中获取用户设置的语言信息
+        var language = getCookieLocale() ?: BkI18nLanguageCacheUtil.getIfPresent(userId)
         if (language.isNullOrBlank()) {
             // 本地缓存中获取不到语言信息再从redis中获取
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
@@ -69,20 +73,29 @@ object I18nUtil {
         return language
     }
 
+    private var devopsDefaultLocaleLanguage: String? = null // 部署配置不会动态变化, 运行时可一次解析固化.
+
     /**
      * 获取蓝盾默认支持的语言
      * @return 系统默认语言
      */
     fun getDefaultLocaleLanguage(): String {
-        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsDefaultLocaleLanguage
+        return devopsDefaultLocaleLanguage ?: run {
+            synchronized(syncObj) {
+                if (devopsDefaultLocaleLanguage.isNullOrBlank()) {
+                    val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+                    devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
+                }
+            }
+            devopsDefaultLocaleLanguage ?: DEFAULT_LOCALE_LANGUAGE
+        }
     }
 
     /**
      * 获取接口请求渠道信息
      * @return 渠道信息
      */
-    fun getRequestChannel(): String? {
+    private fun getRequestChannel(): String? {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         return if (null != attributes) {
             val request = attributes.request
@@ -91,6 +104,33 @@ object I18nUtil {
             null // 不是接口请求来源则返回null
         }
     }
+
+    /**
+     * 获取Http Cookie中用户携带的语言
+     * @return 语言,如果没有,则为空
+     */
+    private fun getCookieLocale(): String? {
+        // 从request请求中获取本地语言信息
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return attributes?.let { bkLanguageTransMap[CookieUtil.getCookieValue(attributes.request, BK_LANGUAGE)] }
+    }
+
+    // 蓝鲸专定义的语言头, 有差异,要定制转换
+    private const val BK_LANGUAGE = "blueking_language"
+    private val bkLanguageTransMap = mapOf(
+        "zh-cn" to "zh_CN",
+        "zh-CN" to "zh_CN",
+        "en" to "en_US",
+        "en-US" to "en_US",
+        "zh-HK" to "zh_HK",
+        "zh-hk" to "zh_HK",
+        "zh-tw" to "zh_TW",
+        "zh-TW" to "zh_TW",
+        "zh-mo" to "zh_MO",
+        "zh-MO" to "zh_MO",
+        "zh-sg" to "zh_SG",
+        "zh-SG" to "zh_SG"
+    )
 
     /**
      * 获取接口请求用户信息
@@ -188,7 +228,6 @@ object I18nUtil {
      * @param data 数据对象
      * @return Result响应结果对象
      */
-    @Suppress("UNCHECKED_CAST")
     fun <T> generateResponseDataObject(
         messageCode: String,
         params: Array<String>? = null,

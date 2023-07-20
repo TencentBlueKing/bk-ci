@@ -40,4 +40,24 @@ data class StoreVersion(
     var version: String,
     @ApiModelProperty("是否是旧版本", required = true)
     var historyFlag: Boolean
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as StoreVersion
+
+        if (storeCode != other.storeCode) return false
+        if (version != other.version) return false
+        if (historyFlag != other.historyFlag) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = storeCode.hashCode()
+        result = 31 * result + version.hashCode()
+        result = 31 * result + historyFlag.hashCode()
+        return result
+    }
+}
