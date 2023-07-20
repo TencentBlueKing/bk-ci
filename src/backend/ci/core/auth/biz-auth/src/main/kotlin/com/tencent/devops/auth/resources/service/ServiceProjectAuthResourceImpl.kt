@@ -51,8 +51,6 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectUsers(
                 projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
                 group = group?.value
             )
         )
@@ -63,11 +61,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         projectCode: String
     ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
-            permissionProjectService.getProjectGroupAndUserList(
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
+            permissionProjectService.getProjectGroupAndUserList(projectCode = projectCode)
         )
     }
 

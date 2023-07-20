@@ -100,17 +100,4 @@ interface PermissionResourceGroupService {
         groupId: Int,
         renameGroupDTO: RenameGroupDTO
     ): Boolean
-
-    fun getResourceGroupUsers(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        group: String?
-    ): List<String>
-
-    fun getResourceGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList>
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceAuthResource
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
@@ -9,9 +10,9 @@ import com.tencent.devops.common.web.RestResource
 
 @RestResource
 class ServiceResourceAuthResourceImpl constructor(
-    private val resourceGroupService: PermissionResourceGroupService
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : ServiceResourceAuthResource {
-    override fun getResourceUsers(
+    override fun getResourceGroupMembers(
         token: String,
         projectCode: String,
         resourceType: String,
@@ -19,7 +20,7 @@ class ServiceResourceAuthResourceImpl constructor(
         group: BkAuthResourceGroup?
     ): Result<List<String>> {
         return Result(
-            resourceGroupService.getResourceGroupUsers(
+            permissionResourceMemberService.getResourceGroupMembers(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
@@ -28,13 +29,13 @@ class ServiceResourceAuthResourceImpl constructor(
         )
     }
 
-    override fun getProjectGroupAndUserList(
+    override fun getResourceGroupAndMembers(
         token: String,
         projectCode: String,
         resourceType: String
     ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
-            resourceGroupService.getResourceGroupAndUserList(
+            permissionResourceMemberService.getResourceGroupAndMembers(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = projectCode

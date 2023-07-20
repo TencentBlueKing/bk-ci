@@ -58,6 +58,7 @@ import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
+import com.tencent.devops.auth.service.RbacPermissionResourceMemberService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionResourceValidateService
 import com.tencent.devops.auth.service.RbacPermissionService
@@ -171,6 +172,21 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun permissionResourceMemberService(
+        authResourceService: AuthResourceService,
+        iamV2ManagerService: V2ManagerService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        dslContext: DSLContext
+    ) = RbacPermissionResourceMemberService(
+        authResourceService = authResourceService,
+        iamV2ManagerService = iamV2ManagerService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        authResourceGroupDao = authResourceGroupDao,
+        dslContext = dslContext
+    )
+
+    @Bean
     @Primary
     fun rbacPermissionExtService(
         permissionResourceService: PermissionResourceService
@@ -220,8 +236,7 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         rbacCacheService: RbacCacheService,
         deptService: DeptService,
-        permissionGradeManagerService: PermissionGradeManagerService,
-        resourceGroupService: RbacPermissionResourceGroupService
+        resourceGroupMemberService: RbacPermissionResourceMemberService
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -231,8 +246,7 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         rbacCacheService = rbacCacheService,
         deptService = deptService,
-        permissionGradeManagerService = permissionGradeManagerService,
-        resourceGroupService = resourceGroupService
+        resourceGroupMemberService = resourceGroupMemberService
     )
 
     @Bean

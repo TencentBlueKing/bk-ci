@@ -63,8 +63,7 @@ class RbacPermissionProjectService(
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
-    private val resourceGroupService: RbacPermissionResourceGroupService
+    private val resourceGroupMemberService: RbacPermissionResourceMemberService
 ) : PermissionProjectService {
 
     companion object {
@@ -75,27 +74,21 @@ class RbacPermissionProjectService(
 
     override fun getProjectUsers(
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
         group: String?
     ): List<String> {
-        return resourceGroupService.getResourceGroupUsers(
+        return resourceGroupMemberService.getResourceGroupMembers(
             projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
             group = group
         )
     }
 
-    override fun getProjectGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
-        return resourceGroupService.getResourceGroupAndUserList(
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
+        return resourceGroupMemberService.getResourceGroupAndMembers(
             projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
         )
     }
 

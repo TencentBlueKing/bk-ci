@@ -9,18 +9,12 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 class SampleAuthPermissionProjectService : PermissionProjectService {
     override fun getProjectUsers(
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
         group: String?
     ): List<String> {
         return emptyList()
     }
 
-    override fun getProjectGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         return emptyList()
     }
 

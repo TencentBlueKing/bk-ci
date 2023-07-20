@@ -26,7 +26,7 @@ interface ServiceResourceAuthResource {
     @GET
     @Path("/{projectCode}/users/resource/byGroup")
     @ApiOperation("获取特定资源下用户组成员")
-    fun getResourceUsers(
+    fun getResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
@@ -47,7 +47,7 @@ interface ServiceResourceAuthResource {
     @GET
     @Path("/{projectCode}/resource/users")
     @ApiOperation("拉取资源下所有成员，并按项目角色组分组成员信息返回")
-    fun getProjectGroupAndUserList(
+    fun getResourceGroupAndMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,

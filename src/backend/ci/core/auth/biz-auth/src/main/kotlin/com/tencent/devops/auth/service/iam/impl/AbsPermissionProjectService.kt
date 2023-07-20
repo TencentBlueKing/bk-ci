@@ -49,15 +49,9 @@ abstract class AbsPermissionProjectService @Autowired constructor(
 
     override fun getProjectUsers(
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
         group: String?
     ): List<String> {
-        val allGroupAndUser = getProjectGroupAndUserList(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
+        val allGroupAndUser = getProjectGroupAndUserList(projectCode = projectCode)
         return if (group == null) {
             val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
@@ -75,11 +69,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return emptyList()
     }
 
-    override fun getProjectGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         // 1. 转换projectCode为iam侧分级管理员Id
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组

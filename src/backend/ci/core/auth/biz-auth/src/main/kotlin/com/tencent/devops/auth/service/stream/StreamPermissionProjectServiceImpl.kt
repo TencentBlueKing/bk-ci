@@ -39,19 +39,13 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
 ) : PermissionProjectService {
     override fun getProjectUsers(
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
         group: String?
     ): List<String> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }
 
-    override fun getProjectGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }

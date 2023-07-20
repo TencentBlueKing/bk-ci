@@ -104,21 +104,4 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
-
-    override fun getResourceGroupUsers(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        group: String?
-    ): List<String> {
-        return emptyList()
-    }
-
-    override fun getResourceGroupAndUserList(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<BkAuthGroupAndUserList> {
-        return emptyList()
-    }
 }
