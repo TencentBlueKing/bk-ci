@@ -50,9 +50,9 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component@Suppress("ALL")
 interface BuildListener {

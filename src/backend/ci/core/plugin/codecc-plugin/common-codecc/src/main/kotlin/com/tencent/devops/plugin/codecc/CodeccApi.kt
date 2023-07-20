@@ -36,13 +36,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
-import javax.ws.rs.HttpMethod
 
 @Suppress("ALL")
 open class CodeccApi constructor(

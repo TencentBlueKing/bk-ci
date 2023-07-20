@@ -61,9 +61,9 @@ import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import org.slf4j.LoggerFactory
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 
 class DispatchService constructor(
     private val redisOperation: RedisOperation,

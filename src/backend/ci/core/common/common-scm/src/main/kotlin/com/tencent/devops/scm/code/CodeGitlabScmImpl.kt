@@ -42,9 +42,9 @@ import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.net.URLEncoder
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
 
 @SuppressWarnings("TooManyFunctions")
 class CodeGitlabScmImpl constructor(

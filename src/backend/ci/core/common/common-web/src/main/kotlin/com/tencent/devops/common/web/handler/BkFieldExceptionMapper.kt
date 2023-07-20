@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.slf4j.LoggerFactory
 import java.text.MessageFormat
 import javax.validation.ConstraintViolationException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {

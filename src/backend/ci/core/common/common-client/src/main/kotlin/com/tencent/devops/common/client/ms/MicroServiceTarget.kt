@@ -41,13 +41,13 @@ import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Request
 import feign.RequestTemplate
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 class MicroServiceTarget<T> constructor(

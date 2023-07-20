@@ -50,9 +50,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     open val iamManagerService: ManagerService,

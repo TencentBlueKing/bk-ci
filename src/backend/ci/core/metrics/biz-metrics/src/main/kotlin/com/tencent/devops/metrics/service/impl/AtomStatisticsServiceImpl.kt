@@ -70,12 +70,12 @@ import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Service
 class AtomStatisticsServiceImpl @Autowired constructor(

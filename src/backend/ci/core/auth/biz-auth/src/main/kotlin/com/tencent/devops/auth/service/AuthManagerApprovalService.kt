@@ -24,11 +24,11 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WeworkMarkdownAction
 import com.tencent.devops.notify.pojo.WeworkMarkdownAttachment
 import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @SuppressWarnings("ALL")

@@ -37,9 +37,9 @@ import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 object CommonUtils {

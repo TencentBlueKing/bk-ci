@@ -13,17 +13,17 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import javax.ws.rs.container.ResourceInfo
+import javax.ws.rs.core.Context
+import javax.ws.rs.ext.Provider
+import javax.ws.rs.ext.WriterInterceptor
+import javax.ws.rs.ext.WriterInterceptorContext
 import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.ws.rs.container.ResourceInfo
-import javax.ws.rs.core.Context
-import javax.ws.rs.ext.Provider
-import javax.ws.rs.ext.WriterInterceptor
-import javax.ws.rs.ext.WriterInterceptorContext
 
 @Provider
 @BkInterfaceI18n

@@ -44,12 +44,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
+import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.ConcurrentHashMap
-import javax.annotation.PostConstruct
 
 @Service
 @Suppress("ALL")

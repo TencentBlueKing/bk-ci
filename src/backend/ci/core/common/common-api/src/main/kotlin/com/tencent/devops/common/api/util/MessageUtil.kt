@@ -30,7 +30,6 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
-import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
 import java.text.MessageFormat
 import java.util.Locale

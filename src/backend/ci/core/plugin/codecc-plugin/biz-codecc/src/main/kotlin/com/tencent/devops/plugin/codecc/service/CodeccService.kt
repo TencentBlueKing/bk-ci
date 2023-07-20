@@ -45,6 +45,9 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import java.text.SimpleDateFormat
+import java.util.Date
+import javax.ws.rs.NotFoundException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -53,9 +56,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.SimpleDateFormat
-import java.util.Date
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")

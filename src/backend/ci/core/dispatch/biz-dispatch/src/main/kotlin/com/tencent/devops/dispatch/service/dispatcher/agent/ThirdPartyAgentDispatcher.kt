@@ -65,10 +65,10 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 @Suppress("UNUSED", "ComplexMethod", "LongMethod", "NestedBlockDepth", "MagicNumber")
