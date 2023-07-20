@@ -286,7 +286,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
 
     @ApiOperation("获取分享工作空间列表")
-    @POST
+    @GET
     @Path("/workspace/share/list")
     fun getShareWorkspace(
         @ApiParam(value = "用户ID", required = true)
@@ -296,8 +296,8 @@ interface OpRemoteDevResource {
         workspaceName: String?
     ): Result<List<WorkspaceShared>>
 
-    @ApiOperation("删除分享工作空间列表")
-    @POST
+    @ApiOperation("删除分享工作空间")
+    @DELETE
     @Path("/workspace/share/delete")
     fun deleteShareWorkspace(
         @ApiParam(value = "用户ID", required = true)

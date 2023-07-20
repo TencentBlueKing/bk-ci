@@ -222,7 +222,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
 
                 val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
                 if (HttpStatus.OK.value == environmentStatusRsp.code) {
-                    return environmentStatusRsp.data
+                    return environmentStatusRsp.data!!
                 } else {
                     val message = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(

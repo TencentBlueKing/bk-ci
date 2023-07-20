@@ -4,5 +4,5 @@ data class EnvironmentStatusRsp(
     val result: Boolean? = false,
     val code: Int,
     val message: String,
-    val data: EnvironmentStatus
+    val data: EnvironmentStatus?
 )
