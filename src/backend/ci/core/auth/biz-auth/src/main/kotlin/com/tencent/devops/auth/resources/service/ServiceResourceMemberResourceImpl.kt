@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.api.service.ServiceResourceAuthResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -8,9 +8,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class ServiceResourceAuthResourceImpl constructor(
+class ServiceResourceMemberResourceImpl constructor(
     private val permissionResourceMemberService: PermissionResourceMemberService
-) : ServiceResourceAuthResource {
+) : ServiceResourceMemberResource {
     override fun getResourceGroupMembers(
         token: String,
         projectCode: String,

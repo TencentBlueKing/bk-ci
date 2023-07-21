@@ -17,12 +17,12 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_SERVICE_RESOURCE"], description = "权限--资源相关接口")
-@Path("/open/service/auth/resource")
+@Path("/open/service/auth/resource/member")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceResourceAuthResource {
+interface ServiceResourceMemberResource {
     @GET
-    @Path("/{projectCode}/users/resource/byGroup")
+    @Path("/{projectCode}/getResourceGroupUsers")
     @ApiOperation("获取特定资源下用户组成员")
     fun getResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
@@ -43,7 +43,7 @@ interface ServiceResourceAuthResource {
     ): Result<List<String>>
 
     @GET
-    @Path("/{projectCode}/resource/users")
+    @Path("/{projectCode}/getResourceUsers")
     @ApiOperation("拉取资源下所有成员，并按项目角色组分组成员信息返回")
     fun getResourceGroupAndMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
