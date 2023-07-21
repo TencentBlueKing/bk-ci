@@ -143,7 +143,7 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
-            val (resourceCreateActions, resourceActions) = buildRbacActions(
+            val (resourceCreateActions, resourceActions) = buildRbacAdditionalActions(
                 actions = permission.actions.map { it.id }
             )
             if (resourceCreateActions.isNotEmpty()) {
@@ -152,9 +152,6 @@ class MigrateV0PolicyService constructor(
             if (resourceActions.isEmpty()) {
                 return@permission
             }
-            // 当v0有证书和环境节点编辑权限时，得添加证书和环境节点的查看权限
-            val additionalActions = buildRbacAdditionalActions(resourceActions.map { it.id })
-            val finalResourceActions = resourceActions.toMutableList().apply { addAll(additionalActions) }
             val rbacResources = buildRbacManagerResources(
                 projectCode = projectCode,
                 projectName = projectName,
@@ -163,7 +160,7 @@ class MigrateV0PolicyService constructor(
             rbacAuthorizationScopes.add(
                 AuthorizationScopes.builder()
                     .system(iamConfiguration.systemId)
-                    .actions(finalResourceActions)
+                    .actions(resourceActions)
                     .resources(rbacResources)
                     .build()
             )
@@ -185,15 +182,24 @@ class MigrateV0PolicyService constructor(
         return rbacAuthorizationScopes
     }
 
-    private fun buildRbacAdditionalActions(actions: List<String>): List<Action> {
-        val resourceActions = mutableListOf<Action>()
-        if (actions.contains(CERT_EDIT))
-            resourceActions.add(Action(CERT_VIEW))
-        if (actions.contains(ENV_NODE_EDIT))
-            resourceActions.add(Action(ENV_NODE_VIEW))
-        return resourceActions
+    /**
+     *   由于rbac增加了一些旧版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
+     * */
+    private fun buildRbacAdditionalActions(actions: List<String>): Pair<List<Action>, List<Action>> {
+        val (resourceCreateActions, resourceActions) = buildRbacActions(actions)
+        val mutableResourceActions = resourceActions.toMutableList()
+        if (actions.contains(CERT_EDIT)) {
+            mutableResourceActions.add(Action(CERT_VIEW))
+        }
+        if (actions.contains(ENV_NODE_EDIT)) {
+            mutableResourceActions.add(Action(CERT_VIEW))
+        }
+        return Pair(resourceCreateActions, mutableResourceActions)
     }
 
+    /**
+     *   由于rbac和旧版本版本动作不一致，需要做一些转换
+     * */
     private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
@@ -206,6 +212,27 @@ class MigrateV0PolicyService constructor(
             }
         }
         return Pair(resourceCreateActions, resourceActions)
+    }
+
+    /**
+     * action替换或移除
+     *
+     */
+    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
+        val rbacActions = actions.toMutableList()
+        actions.forEach action@{ action ->
+            when {
+                oldActionMappingNewAction.containsKey(action) -> {
+                    rbacActions.remove(action)
+                    rbacActions.add(oldActionMappingNewAction[action]!!)
+                }
+                skipActions.contains(action) -> {
+                    logger.info("skip $action action")
+                    rbacActions.remove(action)
+                }
+            }
+        }
+        return rbacActions
     }
 
     @Suppress("NestedBlockDepth", "ReturnCount", "LongMethod")
@@ -374,27 +401,6 @@ class MigrateV0PolicyService constructor(
             resourceCode = rbacResourceCode,
             actions = replaceOrRemoveAction(userActions)
         )
-    }
-
-    /**
-     * action替换或移除
-     *
-     */
-    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
-        val rbacActions = actions.toMutableList()
-        actions.forEach action@{ action ->
-            when {
-                oldActionMappingNewAction.containsKey(action) -> {
-                    rbacActions.remove(action)
-                    rbacActions.add(oldActionMappingNewAction[action]!!)
-                }
-                skipActions.contains(action) -> {
-                    logger.info("skip $action action")
-                    rbacActions.remove(action)
-                }
-            }
-        }
-        return rbacActions
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
