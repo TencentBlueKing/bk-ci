@@ -107,6 +107,7 @@ class MigrateV0PolicyService constructor(
             "quality_gate_group" to "quality_group"
         )
         private const val V0_QC_GROUP_NAME = "质量管理员"
+        private const val MAX_GROUP_MEMBER = 1000
         private const val CERT_VIEW = "cert_view"
         private const val CERT_EDIT = "cert_edit"
         private const val ENV_NODE_VIEW = "env_node_view"
@@ -410,7 +411,14 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        members?.forEach member@{ member ->
+        if (members.isNullOrEmpty() ) {
+            return
+        }
+        if ( members.size > MAX_GROUP_MEMBER) {
+            logger.warn("group member size is too large, max size is $MAX_GROUP_MEMBER")
+            return
+        }
+        members.forEach member@{ member ->
             val expiredDay = if (defaultGroup) {
                 // 默认用户组,2年或3年随机过期
                 V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
