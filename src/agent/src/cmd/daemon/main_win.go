@@ -72,9 +72,7 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
-
-	runtime.GOMAXPROCS(4)
+	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
 	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
