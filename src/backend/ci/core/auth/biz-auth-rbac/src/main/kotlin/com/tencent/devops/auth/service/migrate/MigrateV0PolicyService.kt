@@ -145,7 +145,7 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
-            val (resourceCreateActions, resourceActions) = buildRbacGroupActions(
+            val (resourceCreateActions, resourceActions) = buildRbacActions(
                 actions = permission.actions.map { it.id }
             )
             if (resourceCreateActions.isNotEmpty()) {
@@ -188,26 +188,16 @@ class MigrateV0PolicyService constructor(
      *   在构造用户组授权范围的动作组时，由于rbac和v0版本版本动作不一致，需要做一些转换
      *   同时由于rbac增加了一些v0版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
      * */
-    @Suppress("ComplexCondition")
-    private fun buildRbacGroupActions(actions: List<String>): Pair<List<Action>, List<Action>> {
-        val (resourceCreateActions, resourceActions) = buildRbacActions(actions)
-        val mutableResourceActions = resourceActions.toMutableList()
-        if (actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)) {
-            mutableResourceActions.add(Action(CERT_VIEW))
-        }
-        if ((actions.contains(ENV_NODE_EDIT) || actions.contains(ENV_NODE_USE) ||
-                actions.contains(ENV_NODE_DELETE)) && !actions.contains(ENV_NODE_VIEW)) {
-            mutableResourceActions.add(Action(ENV_NODE_VIEW))
-        }
-        return Pair(resourceCreateActions, mutableResourceActions)
-    }
-
-    /**
-     *   由于rbac和旧版本版本动作不一致，需要做一些转换
-     * */
     private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
+        if (actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)) {
+            resourceActions.add(Action(CERT_VIEW))
+        }
+        if ((actions.contains(ENV_NODE_EDIT) || actions.contains(ENV_NODE_USE) ||
+                actions.contains(ENV_NODE_DELETE)) && !actions.contains(ENV_NODE_VIEW)) {
+            resourceActions.add(Action(ENV_NODE_VIEW))
+        }
         replaceOrRemoveAction(actions).forEach { action ->
             // 创建的action,需要关联在项目下
             if (action.contains(AuthPermission.CREATE.value)) {
