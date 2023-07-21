@@ -214,9 +214,7 @@ class PipelineSettingDao {
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
                 setting.cleanVariablesWhenRetry,
-                setting.pipelineAsCodeSettings?.let { self ->
-                    JsonUtil.toJson(self, false)
-                },
+                setting.pipelineAsCodeSettings?.let { self -> JsonUtil.toJson(self, false) },
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.version
@@ -259,8 +257,7 @@ class PipelineSettingDao {
             if (setting.maxConRunningQueueSize != null) {
                 insert.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             }
-            return insert.where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
-                .execute()
+            return insert.execute()
         }
     }
 

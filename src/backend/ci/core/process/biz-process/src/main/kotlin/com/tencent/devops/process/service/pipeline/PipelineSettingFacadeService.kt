@@ -62,6 +62,7 @@ import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -81,6 +82,8 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
+
+    private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
 
     /**
      * 修改配置时需要返回具体的版本号用于传递
@@ -119,6 +122,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )?.let { origin ->
+            logger.info("[$projectId]|$pipelineId|saveSetting|origin=\n\n$origin\n\nsetting=\n\n$setting")
             val originJson = JSONObject(origin)
             val currentJson = JSONObject(setting)
             if (currentJson.similar(originJson)) {
@@ -127,6 +131,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                 origin.version + 1
             }
         } ?: 1
+        logger.info("[$projectId]|$pipelineId|saveSetting|settingVersion=$settingVersion|")
 
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,

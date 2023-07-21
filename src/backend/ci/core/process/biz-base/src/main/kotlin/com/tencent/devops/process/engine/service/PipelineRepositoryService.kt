@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -216,7 +217,6 @@ class PipelineRepositoryService constructor(
                 modelTasks = modelTasks,
                 useTemplateSettings = useTemplateSettings,
                 templateId = templateId,
-                trigger = triggerContainer,
                 saveDraft = saveDraft
             )
         }
@@ -492,7 +492,6 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        trigger: TriggerContainer,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -600,7 +599,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    trigger = trigger,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
@@ -614,12 +612,11 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    trigger = trigger,
                     versionName = getVersionName(modelVersion, triggerVersion, settingVersion),
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    draftFlag = saveDraft == true
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
                 )
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
@@ -664,7 +661,6 @@ class PipelineRepositoryService constructor(
         saveDraft: Boolean? = false
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$saveDraft")
@@ -739,7 +735,6 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = triggerContainer,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
@@ -752,12 +747,11 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    trigger = triggerContainer,
                     versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    draftFlag = saveDraft == true
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
                 )
                 // 针对新增version表做的数据迁移
                 watcher.start("updatePipelineResourceVersion")
@@ -786,7 +780,7 @@ class PipelineRepositoryService constructor(
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,
-                            draftFlag = false
+                            status = VersionStatus.RELEASED
                         )
                     }
                 }
@@ -1371,5 +1365,30 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
         )
+    }
+
+    fun updateSettingVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        settingVersion: Int
+    ) {
+        val version = pipelineResDao.updateSettingVersion(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            settingVersion = settingVersion
+        )
+        // 同步刷新流水线版本历史中关联的设置版本号
+        if (version != null) {
+            pipelineResVersionDao.updateSettingVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                settingVersion = settingVersion
+            )
+        }
     }
 }

@@ -25,19 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.process.pojo.PipelineDetail
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
-
-data class PipelineResourceAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val pipelineInfo: PipelineDetail?,
-    @ApiModelProperty("流水线模型", required = true)
-    val pipelineResource: PipelineResourceVersion,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+enum class VersionStatus(val statusName: String) {
+    RELEASED("已发布"),
+    COMMITTING("提交中");
+}

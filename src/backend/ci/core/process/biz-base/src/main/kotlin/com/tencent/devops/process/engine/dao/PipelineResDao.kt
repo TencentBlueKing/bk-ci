@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
 @Repository
 class PipelineResDao {
 
@@ -55,7 +54,6 @@ class PipelineResDao {
         version: Int,
         versionName: String,
         model: Model,
-        trigger: TriggerContainer,
         pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
@@ -63,7 +61,6 @@ class PipelineResDao {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
             val modelString = JsonUtil.toJson(model, formatted = false)
-            val triggerString = JsonUtil.toJson(trigger, formatted = false)
             dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
@@ -221,6 +218,22 @@ class PipelineResDao {
                 .set(CREATOR, userId)
                 .where(conditions)
                 .execute()
+        }
+    }
+
+    fun updateSettingVersion(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        settingVersion: Int
+    ): Int? {
+        with(T_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(SETTING_VERSION, settingVersion)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .returning(VERSION)
+                .fetchOne()?.version
         }
     }
 
