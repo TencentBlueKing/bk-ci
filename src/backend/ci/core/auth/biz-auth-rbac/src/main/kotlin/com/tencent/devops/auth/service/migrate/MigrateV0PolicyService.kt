@@ -189,11 +189,11 @@ class MigrateV0PolicyService constructor(
     private fun buildRbacGroupActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val (resourceCreateActions, resourceActions) = buildRbacActions(actions)
         val mutableResourceActions = resourceActions.toMutableList()
-        if (actions.contains(CERT_EDIT)) {
+        if (actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)) {
             mutableResourceActions.add(Action(CERT_VIEW))
         }
-        if (actions.contains(ENV_NODE_EDIT)) {
-            mutableResourceActions.add(Action(CERT_VIEW))
+        if (actions.contains(ENV_NODE_EDIT) && !actions.contains(ENV_NODE_VIEW)) {
+            mutableResourceActions.add(Action(ENV_NODE_VIEW))
         }
         return Pair(resourceCreateActions, mutableResourceActions)
     }
