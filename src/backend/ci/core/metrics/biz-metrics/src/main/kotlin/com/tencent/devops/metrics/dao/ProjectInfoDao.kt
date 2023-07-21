@@ -43,9 +43,6 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Result
-import org.jooq.impl.DSL
-import org.jooq.impl.DSL.partitionBy
-import org.jooq.impl.DSL.rowNumber
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -267,23 +264,23 @@ class ProjectInfoDao {
         pageSize: Int
     ): Result<Record3<String, String, String>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            val t = (dslContext.select(
-                ID,
-                PROJECT_ID,
-                ATOM_CODE,
-                ATOM_NAME,
-                CREATE_TIME,
-                rowNumber().over(
-                    partitionBy(PROJECT_ID, ATOM_CODE)
-                        .orderBy(CREATE_TIME.desc())
-                ).`as`(DSL.field("ROW_NUM", Int::class.java))
-            ).from(this))
-            return dslContext.select(PROJECT_ID, ATOM_CODE,ATOM_NAME)
-                .from(t)
-                .where(t.field(PROJECT_ID)!!.`in`(projectIds))
-                .and(DSL.field("ROW_NUM", Int::class.java).eq(1))
+            val tAtomOverviewData1 = this.`as`("t1")
+            val tAtomOverviewData2 = this.`as`("t2")
+
+            val query = dslContext.select(
+                tAtomOverviewData1.PROJECT_ID,
+                tAtomOverviewData1.ATOM_CODE,
+                tAtomOverviewData1.ATOM_NAME
+            ).from(tAtomOverviewData1)
+                .leftJoin(tAtomOverviewData2)
+                .on(tAtomOverviewData1.PROJECT_ID.eq(tAtomOverviewData2.PROJECT_ID)
+                    .and(tAtomOverviewData1.ATOM_CODE.eq(tAtomOverviewData2.ATOM_CODE))
+                    .and(tAtomOverviewData1.CREATE_TIME.lt(tAtomOverviewData2.CREATE_TIME))
+                )
+                .where(tAtomOverviewData1.PROJECT_ID.`in`(projectIds))
+                .and(tAtomOverviewData2.ID.isNull())
                 .limit((page - 1) * pageSize, pageSize)
-                .fetch()
+            return query.fetch()
         }
     }
 
