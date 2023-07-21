@@ -278,7 +278,7 @@ class ProjectInfoDao {
                     .and(tAtomOverviewData1.CREATE_TIME.lt(tAtomOverviewData2.CREATE_TIME))
                 )
                 .where(tAtomOverviewData1.PROJECT_ID.`in`(projectIds))
-                .and(tAtomOverviewData2.ID.isNull())
+                .and(tAtomOverviewData2.ID.isNull)
                 .limit((page - 1) * pageSize, pageSize)
             return query.fetch()
         }
