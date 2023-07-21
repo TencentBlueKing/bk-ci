@@ -10,9 +10,9 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.services.Handler
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class ImagePushHandler(

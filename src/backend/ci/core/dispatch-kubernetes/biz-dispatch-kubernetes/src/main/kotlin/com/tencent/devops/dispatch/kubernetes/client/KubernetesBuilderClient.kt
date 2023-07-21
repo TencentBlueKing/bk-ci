@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatus
@@ -41,15 +42,14 @@ import com.tencent.devops.dispatch.kubernetes.pojo.OperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
+import java.net.SocketTimeoutException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesBuilderClient @Autowired constructor(

@@ -57,13 +57,13 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import java.net.URLEncoder
 
 @Suppress("ALL")
 open class GitApi {

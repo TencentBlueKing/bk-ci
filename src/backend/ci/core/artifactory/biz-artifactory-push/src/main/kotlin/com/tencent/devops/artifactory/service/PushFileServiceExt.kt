@@ -42,11 +42,11 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.io.File
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Service@Suppress("ALL")
 class PushFileServiceExt @Autowired constructor(

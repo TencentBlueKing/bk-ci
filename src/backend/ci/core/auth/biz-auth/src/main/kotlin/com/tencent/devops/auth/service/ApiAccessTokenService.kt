@@ -36,14 +36,14 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("MagicNumber")

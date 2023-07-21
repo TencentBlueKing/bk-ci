@@ -35,10 +35,10 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import feign.Response
 import feign.codec.ErrorDecoder
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.IOException
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 /**
  *

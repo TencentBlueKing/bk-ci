@@ -45,10 +45,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import io.mockk.every
 import io.mockk.mockk
+import java.nio.charset.Charset
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.core.io.ClassPathResource
-import java.nio.charset.Charset
 
 open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
     val v2ManagerService: V2ManagerService = mockk()

@@ -50,7 +50,6 @@ import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.SampleAtomReleaseService

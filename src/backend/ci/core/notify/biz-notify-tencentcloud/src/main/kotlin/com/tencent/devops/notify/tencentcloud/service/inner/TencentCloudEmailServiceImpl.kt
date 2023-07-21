@@ -53,10 +53,10 @@ import com.tencent.devops.notify.tencentcloud.pojo.EmailResponse
 import com.tencent.devops.notify.tencentcloud.pojo.EmailSignatureConfig
 import com.tencent.devops.notify.tencentcloud.pojo.Template
 import com.tencent.devops.notify.tencentcloud.utils.TencentCloudSignatureUtil
+import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.stream.Collectors
 
 @Suppress("ALL")
 class TencentCloudEmailServiceImpl @Autowired constructor(

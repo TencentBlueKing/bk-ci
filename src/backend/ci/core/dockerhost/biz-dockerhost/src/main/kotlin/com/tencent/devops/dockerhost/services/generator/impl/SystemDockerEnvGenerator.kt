@@ -31,10 +31,10 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
 import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
 import com.tencent.devops.dockerhost.utils.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP

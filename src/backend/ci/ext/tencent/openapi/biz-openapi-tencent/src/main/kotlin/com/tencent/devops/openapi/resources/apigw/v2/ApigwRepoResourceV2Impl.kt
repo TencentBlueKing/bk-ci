@@ -28,12 +28,12 @@
 package com.tencent.devops.openapi.resources.apigw.v2
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.pojo.ReportListDTO
-import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwRepoResourceV2
 import com.tencent.devops.process.api.service.ServiceReportResource
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

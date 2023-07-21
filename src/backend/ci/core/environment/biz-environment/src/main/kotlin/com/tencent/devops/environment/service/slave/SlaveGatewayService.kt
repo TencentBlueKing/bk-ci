@@ -34,11 +34,11 @@ import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class SlaveGatewayService @Autowired constructor(
