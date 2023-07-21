@@ -181,26 +181,27 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncProjectAtomData(userId: String): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin syncProjectAtomData")
-            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-            if (projectMinId != null && projectMaxId != null) {
+//        Executors.newFixedThreadPool(1).submit {
+//
+//        }
+        logger.info("begin syncProjectAtomData")
+        var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+        val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+        if (projectMinId != null && projectMaxId != null) {
 
-                do {
-                    val projectIds = client.get(ServiceProjectResource::class)
-                        .getProjectListById(
-                            minId = projectMinId,
-                            maxId = projectMinId + 10
-                        ).data?.map { it.englishName }
-                    if (!projectIds.isNullOrEmpty()) {
-                        saveProjectAtomInfo(projectIds)
-                    }
-                    projectMinId += (MAX_PAGE_SIZE + 1)
-                } while (projectMinId <= projectMaxId)
-                logger.info("end syncProjectAtomData")
-            }
+            do {
+                val projectIds = client.get(ServiceProjectResource::class)
+                    .getProjectListById(
+                        minId = projectMinId,
+                        maxId = projectMinId + 10
+                    ).data?.map { it.englishName }
+                if (!projectIds.isNullOrEmpty()) {
+                    saveProjectAtomInfo(projectIds)
+                }
+                projectMinId += (MAX_PAGE_SIZE + 1)
+            } while (projectMinId <= projectMaxId)
         }
+        logger.info("end syncProjectAtomData")
         return true
     }
 
