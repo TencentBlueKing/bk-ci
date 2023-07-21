@@ -285,27 +285,6 @@ class ProjectInfoDao {
     }
 
     fun batchSaveProjectAtomInfo(dslContext: DSLContext, tProjectAtomRecords: List<TProjectAtomRecord>) {
-        dslContext.batch(
-            tProjectAtomRecords.map {
-                with(TProjectAtom.T_PROJECT_ATOM) {
-                    dslContext.insertInto(
-                        this,
-                        ID,
-                        PROJECT_ID,
-                        ATOM_CODE,
-                        ATOM_NAME,
-                        CREATOR,
-                        MODIFIER,
-                    ).values(
-                        it.id,
-                        it.projectId,
-                        it.atomCode,
-                        it.atomName,
-                        it.creator,
-                        it.modifier
-                    )
-                }
-            }
-        ).execute()
+        dslContext.batchInsert(tProjectAtomRecords).execute()
     }
 }
