@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -615,7 +616,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    draftFlag = saveDraft == true
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
                 )
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
@@ -750,7 +751,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    draftFlag = saveDraft == true
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
                 )
                 // 针对新增version表做的数据迁移
                 watcher.start("updatePipelineResourceVersion")
@@ -779,7 +780,7 @@ class PipelineRepositoryService constructor(
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,
-                            draftFlag = false
+                            status = VersionStatus.RELEASED
                         )
                     }
                 }

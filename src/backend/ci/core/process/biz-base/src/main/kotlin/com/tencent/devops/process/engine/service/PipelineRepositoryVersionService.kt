@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -149,7 +150,7 @@ class PipelineRepositoryVersionService(
                     pipelineVersion = it.pipelineVersion,
                     triggerVersion = it.triggerVersion,
                     settingVersion = it.settingVersion,
-                    draftFlag = it.draftFlag,
+                    status = it.status,
                     debugBuildId = it.debugBuildId,
                     pacRefs = it.pacRefs
                 )

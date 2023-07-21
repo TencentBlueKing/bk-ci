@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -53,7 +54,7 @@ class PipelineResVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        draftFlag: Boolean
+        status: VersionStatus?
     ) {
         create(
             dslContext = dslContext,
@@ -66,7 +67,7 @@ class PipelineResVersionDao {
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
-            draftFlag = draftFlag
+            status = status
         )
     }
 
@@ -81,7 +82,7 @@ class PipelineResVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        draftFlag: Boolean
+        status: VersionStatus?
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(this)
@@ -95,7 +96,7 @@ class PipelineResVersionDao {
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
-                .set(DRAFT_FLAG, draftFlag)
+                .set(STATUS, status?.name)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -103,6 +104,7 @@ class PipelineResVersionDao {
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
+                .set(STATUS, status?.name)
                 .execute()
         }
     }
@@ -123,7 +125,7 @@ class PipelineResVersionDao {
                 where.and(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) where.and(DRAFT_FLAG.ne(true))
+                if (includeDraft != true) where.and(STATUS.ne(VersionStatus.COMMITTING.name))
                 where.orderBy(VERSION.desc()).limit(1)
             }
             where.fetchAny(0, String::class.java)
@@ -144,7 +146,7 @@ class PipelineResVersionDao {
                 where.and(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) where.and(DRAFT_FLAG.ne(true))
+                if (includeDraft != true) where.and(STATUS.ne(VersionStatus.COMMITTING.name))
                 where.orderBy(VERSION.desc()).limit(1)
             }
             val record = where.fetchAny() ?: return null
@@ -167,7 +169,7 @@ class PipelineResVersionDao {
                 settingVersion = record.settingVersion,
                 referFlag = record.referFlag,
                 referCount = record.referCount,
-                draftFlag = record.draftFlag,
+                status = record.status?.let { VersionStatus.valueOf(it) },
                 refs = record.refs
             )
         }
@@ -215,22 +217,22 @@ class PipelineResVersionDao {
                 .limit(limit).offset(offset)
                 .fetch()
 
-            result.forEach {
+            result.forEach { record ->
                 list.add(
                     PipelineVersionSimple(
                         pipelineId = pipelineId,
-                        creator = it.creator ?: "unknown",
-                        createTime = it.createTime?.timestampmilli() ?: 0,
-                        version = it.version ?: 1,
-                        versionName = it.versionName ?: "init",
-                        referFlag = it.referFlag,
-                        referCount = it.referCount,
-                        pipelineVersion = it.pipelineVersion,
-                        triggerVersion = it.triggerVersion,
-                        settingVersion = it.settingVersion,
-                        draftFlag = it.draftFlag,
-                        debugBuildId = it.debugBuildId,
-                        pacRefs = it.refs
+                        creator = record.creator ?: "unknown",
+                        createTime = record.createTime?.timestampmilli() ?: 0,
+                        version = record.version ?: 1,
+                        versionName = record.versionName ?: "init",
+                        referFlag = record.referFlag,
+                        referCount = record.referCount,
+                        pipelineVersion = record.pipelineVersion,
+                        triggerVersion = record.triggerVersion,
+                        settingVersion = record.settingVersion,
+                        status = record.status?.let { VersionStatus.valueOf(it) },
+                        debugBuildId = record.debugBuildId,
+                        pacRefs = record.refs
                     )
                 )
             }
