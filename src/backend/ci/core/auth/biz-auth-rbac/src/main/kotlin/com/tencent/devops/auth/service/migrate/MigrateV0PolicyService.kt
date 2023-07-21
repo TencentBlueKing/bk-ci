@@ -143,7 +143,7 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
-            val (resourceCreateActions, resourceActions) = buildRbacAdditionalActions(
+            val (resourceCreateActions, resourceActions) = buildRbacGroupActions(
                 actions = permission.actions.map { it.id }
             )
             if (resourceCreateActions.isNotEmpty()) {
@@ -183,9 +183,10 @@ class MigrateV0PolicyService constructor(
     }
 
     /**
-     *   由于rbac增加了一些旧版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
+     *   由于rbac和旧版本版本动作不一致，需要做一些转换
+     *   同时由于rbac增加了一些旧版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
      * */
-    private fun buildRbacAdditionalActions(actions: List<String>): Pair<List<Action>, List<Action>> {
+    private fun buildRbacGroupActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val (resourceCreateActions, resourceActions) = buildRbacActions(actions)
         val mutableResourceActions = resourceActions.toMutableList()
         if (actions.contains(CERT_EDIT)) {
@@ -216,7 +217,6 @@ class MigrateV0PolicyService constructor(
 
     /**
      * action替换或移除
-     *
      */
     private fun replaceOrRemoveAction(actions: List<String>): List<String> {
         val rbacActions = actions.toMutableList()
