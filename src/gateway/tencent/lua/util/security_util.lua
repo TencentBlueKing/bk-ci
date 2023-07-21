@@ -47,6 +47,7 @@ function _M:isSafe()
         and string.find(path, "^/ms/([%w-_]+)/api/app/") == nil -- app 路径
         and string.find(path, "^/([%w-_]+)/api/desktop/") == nil -- 离岸开发 路径
         and string.find(path, "^/ms/([%w-_]+)/api/desktop/") == nil -- 离岸开发 路径
+        and string.find(path, "^/websocket/ws/") == nil -- 离岸开发 ws
         and string.find(path, "^/([%w-_]+)/api/open/") == nil -- open路径
         and string.find(path, "^/ms/([%w-_]+)/api/open/") == nil -- open路径
         and string.find(path, "^/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
