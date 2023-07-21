@@ -170,15 +170,15 @@ class CodeSvnRepositoryService @Autowired constructor(
                         message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
-                scmService.checkPrivateKeyAndToken(
+                scmService.checkUsernameAndPassword(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
-                    privateKey = repoCredentialInfo.password,
-                    passPhrase = repoCredentialInfo.passPhrase,
-                    token = null,
+                    username = username,
+                    password = repoCredentialInfo.password,
+                    token = repoCredentialInfo.token,
                     region = repository.region,
-                    userName = username
+                    repoUsername = repository.userName
                 )
             }
             SVN_TYPE_SSH -> {

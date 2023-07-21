@@ -27,6 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
+/**
+ * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
+ */
 enum class EnvStatusEnum {
     pending,
     running,
@@ -34,5 +37,6 @@ enum class EnvStatusEnum {
     failed,
     stopped,
     unknow,
-    deleted
+    deleted,
+    readyToRun
 }

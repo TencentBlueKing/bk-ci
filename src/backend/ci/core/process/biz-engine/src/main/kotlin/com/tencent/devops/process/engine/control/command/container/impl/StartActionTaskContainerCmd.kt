@@ -295,14 +295,12 @@ class StartActionTaskContainerCmd(
         val containerTasks = containerContext.containerTasks
         val message = StringBuilder()
         val (needSkip, parseException) = try {
-            val checkResult = ControlUtils.checkTaskSkip(
-                buildId = buildId,
-                additionalOptions = additionalOptions,
-                containerFinalStatus = containerContext.buildStatus,
-                variables = contextMap,
+            val checkResult = checkAllSkipQuickly(
+                startPos = index,
+                containerContext = containerContext,
+                contextMap = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
             Pair(checkResult, null)
         } catch (e: ExpressionParseException) {
@@ -440,6 +438,51 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }
         return toDoTask
+    }
+
+    private fun PipelineBuildTask.checkAllSkipQuickly(
+        startPos: Int,
+        containerContext: ContainerContext,
+        contextMap: Map<String, String>,
+        hasFailedTaskInSuccessContainer: Boolean,
+        message: StringBuilder
+    ): Boolean {
+
+        if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
+            return ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = additionalOptions,
+                containerFinalStatus = containerContext.buildStatus,
+                variables = contextMap,
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+            )
+        }
+
+        var skip = false
+        var idx = startPos
+        while (++idx < containerContext.containerTasks.size) {
+            val it = containerContext.containerTasks[idx]
+            if (!VMUtils.isVMTask(it.taskId)) {
+                skip = ControlUtils.checkTaskSkip(
+                    buildId = buildId,
+                    additionalOptions = it.additionalOptions,
+                    containerFinalStatus = containerContext.buildStatus,
+                    variables = contextMap,
+                    hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                    message = message,
+                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                )
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")
+                }
+                if (!skip) { // 发现有未跳过的插件, 必须开机
+                    break
+                }
+            }
+        }
+        return skip
     }
 
     private fun refreshTaskStatus(

@@ -171,28 +171,38 @@ class MigrateResourceService @Autowired constructor(
             ) ?: return
             instanceInfoList.data.map {
                 JsonUtil.to(JsonUtil.toJson(it), InstanceInfoDTO::class.java)
-            }.forEach {
+            }.forEach { instance ->
                 val resourceCode =
                     migrateResourceCodeConverter.getRbacResourceCode(
                         projectCode = projectCode,
                         resourceType = resourceType,
-                        migrateResourceCode = it.id
+                        migrateResourceCode = instance.id
                     ) ?: return@forEach
                 logger.info("MigrateResourceService|projectCode:$projectCode|resourceCode:$resourceCode")
                 authResourceService.getOrNull(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode
-                ) ?: run {
+                )?.let { authResource ->
+                    // 如果存在,说明重复迁移,判断资源名称是否相同,如果不同则需要修改
+                    if (instance.displayName != authResource.resourceName) {
+                        rbacPermissionResourceService.resourceModifyRelation(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            resourceName = instance.displayName
+                        )
+                    }
+                } ?: run {
                     rbacPermissionResourceService.resourceCreateRelation(
                         userId = migrateCreatorFixService.getResourceCreator(
                             projectCreator = projectCreator,
-                            resourceCreator = it.iamApprover.first()
+                            resourceCreator = instance.iamApprover.first()
                         ),
                         projectCode = projectCode,
                         resourceType = resourceType,
                         resourceCode = resourceCode,
-                        resourceName = it.displayName,
+                        resourceName = instance.displayName,
                         async = false
                     )
                 }

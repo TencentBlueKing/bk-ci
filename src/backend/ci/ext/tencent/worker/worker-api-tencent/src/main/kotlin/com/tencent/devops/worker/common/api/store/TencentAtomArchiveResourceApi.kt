@@ -278,15 +278,14 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        atomCreateTime: Long,
         file: File,
-        isVmBuildEnv: Boolean
+        authFlag: Boolean
     ) {
         val envType = AgentEnv.getEnv().name.toLowerCase()
         val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
         val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
         val bkrepoUrl = "${HomeHostUtil.getHost(AgentEnv.getGateway())}/repo/storge/build/atom/$bkrepoProjectName/" +
-            "bk-plugin/$atomFilePath"
+            "bk-plugin/$atomFilePath?authFlag=$authFlag"
         val request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
         download(request, file)
     }

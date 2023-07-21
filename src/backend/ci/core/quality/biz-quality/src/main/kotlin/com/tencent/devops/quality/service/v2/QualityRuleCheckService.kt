@@ -520,9 +520,13 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             } else {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataListCopy
-                        .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                        .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
+                    listOf(
+                        metadataListCopy.filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+                        .find {
+                            indicator.enName == it.enName &&
+                                    it.taskName.startsWith(indicator.taskName ?: "")
+                        }
+                    )
                 } else {
                     metadataListCopy.filter {
                         it.taskName.startsWith(indicator.taskName ?: "") &&
@@ -976,7 +980,9 @@ class QualityRuleCheckService @Autowired constructor(
                     // 脚本及三方插件可直接用指标英文名判断，并对结果元数据和指标taskName添加标识后缀
                     if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
                         indicatorsCopy.remove(indicator)
-                        metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
+                        metadataListCopy.filter {
+                            it.enName == indicator.enName
+                        }.forEachIndexed { index, metadata ->
                             handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
                         }
                     }

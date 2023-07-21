@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthVerifyRecordDao
 import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
+import com.tencent.devops.auth.pojo.dto.VerifyResourceRecordDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,6 +33,36 @@ class AuthVerifyRecordService @Autowired constructor(
             offset = offset,
             limit = limit
         ).map { authVerifyRecordDao.convert(it) }
+    }
+
+    fun groupByResourceAndUserId(
+        projectCode: String,
+        resourceType: String,
+        offset: Int,
+        limit: Int
+    ): List<VerifyResourceRecordDTO> {
+        return authVerifyRecordDao.groupByResourceAndUserId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            offset = offset,
+            limit = limit
+        )
+    }
+
+    fun listResourceActions(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        userId: String
+    ): List<String> {
+        return authVerifyRecordDao.listResourceActions(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            userId = userId
+        )
     }
 
     fun deleteVerifyRecord(

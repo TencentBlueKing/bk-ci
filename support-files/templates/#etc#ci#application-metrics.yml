@@ -60,7 +60,7 @@ metrics:
   devopsUrl: __BK_CI_PUBLIC_URL__
   streamUrl: __BK_CI_STREAM_URL__
   queryDaysMax: 180
-  queryCountMax: 10000
+  queryCountMax: 100000
   defaultLimitNum: 10
 
 sharding:

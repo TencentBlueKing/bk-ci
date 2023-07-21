@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -131,6 +133,18 @@ interface OpRemoteDevResource {
         userId: String
     ): Result<RemoteDevUserSettings>
 
+    @ApiOperation("获取所有用户设置列表")
+    @GET
+    @Path("/get_all_user_settings")
+    fun getAllUserSettings(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "指定查询的用户", required = false)
+        @QueryParam("queryUser")
+        queryUser: String?
+    ): Result<List<RemoteDevUserSettings>>
+
     @ApiOperation("更新用户组织架构")
     @POST
     @Path("/refresh/all")
@@ -213,5 +227,84 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取windows硬件配置")
+    @GET
+    @Path("/windowsResource/list")
+    fun getWindowsResourceList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceConfig>>
+    @ApiOperation("新增windows硬件配置")
+    @POST
+    @Path("/windowsResource/add")
+    fun addWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceConfig
+    ): Result<Boolean>
+
+    @ApiOperation("更新windows硬件配置")
+    @PUT
+    @Path("/windowsResource/update")
+    fun updateWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceConfig
+    ): Result<Boolean>
+
+    @ApiOperation("删除windows硬件配置")
+    @DELETE
+    @Path("/windowsResource/delete")
+    fun deleteWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<Boolean>
+
+    @ApiOperation("分享工作空间")
+    @POST
+    @Path("/workspace/share/add")
+    fun shareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间共享", required = true)
+        workspaceShared: WorkspaceShared
+    ): Result<Boolean>
+
+    @ApiOperation("获取分享工作空间列表")
+    @GET
+    @Path("/workspace/share/list")
+    fun getShareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String?
+    ): Result<List<WorkspaceShared>>
+
+    @ApiOperation("删除分享工作空间")
+    @DELETE
+    @Path("/workspace/share/delete")
+    fun deleteShareWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "id", required = true)
+        @QueryParam("id")
+        id: Long
     ): Result<Boolean>
 }
