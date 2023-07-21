@@ -59,8 +59,7 @@ interface ProjectInfoManageService {
     fun syncPipelineLabelData(userId: String): Boolean
 
     /**
-     * 同步流水线标签数据
-     * @return 同步的数据量
+     * 同步项目插件关联信息
      */
     fun syncProjectAtomData(userId: String): Boolean
 }

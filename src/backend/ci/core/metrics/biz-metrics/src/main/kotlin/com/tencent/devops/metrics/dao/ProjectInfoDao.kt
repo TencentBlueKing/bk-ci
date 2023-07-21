@@ -43,6 +43,9 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Result
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL.partitionBy
+import org.jooq.impl.DSL.rowNumber
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -257,25 +260,56 @@ class ProjectInfoDao {
         }
     }
 
-    fun queryProjectAtomInfo(
+    fun queryProjectAtomNewNameInfo(
         dslContext: DSLContext,
         projectIds: List<String>,
         page: Int,
         pageSize: Int
     ): Result<Record3<String, String, String>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val t = (dslContext.select(
+                ID,
+                PROJECT_ID,
+                ATOM_CODE,
+                ATOM_NAME,
+                CREATE_TIME,
+                rowNumber().over(
+                    partitionBy(PROJECT_ID, ATOM_CODE)
+                        .orderBy(CREATE_TIME.desc())
+                ).`as`(DSL.field("ROW_NUM", Int::class.java))
+            ).from(this))
             return dslContext.select(PROJECT_ID, ATOM_CODE,ATOM_NAME)
-                .from(this)
-                .where(PROJECT_ID.`in`(projectIds))
-                .orderBy(PROJECT_ID, ATOM_CODE, ID)
+                .from(t)
+                .where(t.field(PROJECT_ID)!!.`in`(projectIds))
+                .and(DSL.field("ROW_NUM", Int::class.java).eq(1))
                 .limit((page - 1) * pageSize, pageSize)
                 .fetch()
         }
     }
 
     fun batchSaveProjectAtomInfo(dslContext: DSLContext, tProjectAtomRecords: List<TProjectAtomRecord>) {
-        with(TProjectAtom.T_PROJECT_ATOM) {
-
-        }
+        dslContext.batch(
+            tProjectAtomRecords.map {
+                with(TProjectAtom.T_PROJECT_ATOM) {
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        PROJECT_ID,
+                        ATOM_CODE,
+                        ATOM_NAME,
+                        CREATOR,
+                        MODIFIER,
+                    ).values(
+                        it.id,
+                        it.projectId,
+                        it.atomCode,
+                        it.atomName,
+                        it.creator,
+                        it.modifier
+                    ).onDuplicateKeyUpdate()
+                        .set(ATOM_NAME, it.atomName)
+                }
+            }
+        ).execute()
     }
 }

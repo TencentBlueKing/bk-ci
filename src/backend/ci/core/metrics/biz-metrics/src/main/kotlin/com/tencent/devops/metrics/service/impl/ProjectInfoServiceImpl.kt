@@ -191,9 +191,11 @@ class ProjectInfoServiceImpl @Autowired constructor(
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(
                             minId = projectMinId,
-                            maxId = projectMinId + MAX_PAGE_SIZE
+                            maxId = projectMinId + 10
                         ).data?.map { it.englishName }
-
+                    if (!projectIds.isNullOrEmpty()) {
+                        saveProjectAtomInfo(projectIds)
+                    }
                     projectMinId += (MAX_PAGE_SIZE + 1)
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncProjectAtomData")
@@ -205,7 +207,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
     fun saveProjectAtomInfo(projectIds: List<String>) {
         var page = DEFAULT_PAGE
         do {
-            val projectAtomInfo = projectInfoDao.queryProjectAtomInfo(
+            val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfo(
                 dslContext = dslContext,
                 projectIds = projectIds,
                 page = page,
@@ -223,7 +225,9 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 tProjectAtomRecord.modifier = SYSTEM
                 tProjectAtomRecords.add(tProjectAtomRecord)
             }
-
+            if (tProjectAtomRecords.isNotEmpty()) {
+                projectInfoDao.batchSaveProjectAtomInfo(dslContext, tProjectAtomRecords)
+            }
             page ++
         } while (projectAtomInfo.size == MAX_PAGE_SIZE)
     }
