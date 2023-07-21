@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.EXCEPTION
 import com.tencent.devops.common.api.constant.NORMAL
-import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -114,13 +113,12 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }?.toList()
                 val normalName = I18nUtil.getCodeLanMessage(messageCode = NORMAL)
                 val exceptionName = I18nUtil.getCodeLanMessage(messageCode = EXCEPTION)
-                val numUnit = I18nUtil.getCodeLanMessage(messageCode = NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
                         id = it.envHashId,
                         name = it.name,
-                        label = "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName:" +
-                            " ${it.abnormalNodeCount}$numUnit）",
+                        label = BuildType.THIRD_PARTY_AGENT_ENV.getI18n(I18nUtil.getRequestUserLanguage()) +
+                        "（$normalName: ${it.normalNodeCount}，$exceptionName: ${it.abnormalNodeCount}）",
                         sharedProjectId = it.sharedProjectId,
                         sharedUserId = it.sharedUserId
                     )
@@ -138,7 +136,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                     AgentResponse(
                         it.agentId,
                         it.displayName,
-                        "/${it.ip}（${it.status}）"
+                        "/${it.ip}（${NodeStatus.getStatusName(it.status)}）"
                     )
                 }
             }

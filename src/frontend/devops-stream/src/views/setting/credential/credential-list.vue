@@ -14,10 +14,10 @@
             :empty-text="$t('setting.ticket.emptyCredential')"
             class="credential-table"
         >
-            <bk-table-column label="Key" prop="credentialId"></bk-table-column>
-            <bk-table-column :label="$t('displayName')" prop="credentialName"></bk-table-column>
+            <bk-table-column label="Key" prop="credentialId" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('displayName')" prop="credentialName" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('type')" prop="credentialType"></bk-table-column>
-            <bk-table-column :label="$t('description')" prop="credentialRemark"></bk-table-column>
+            <bk-table-column :label="$t('description')" prop="credentialRemark" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
                     <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="editCredential(props.row)">{{$t('edit')}}</span>

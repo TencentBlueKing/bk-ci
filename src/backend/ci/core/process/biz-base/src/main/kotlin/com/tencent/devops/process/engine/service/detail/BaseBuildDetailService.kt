@@ -139,11 +139,11 @@ open class BaseBuildDetailService constructor(
             return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
-            logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
-            if (message == "update done") { // 防止MQ异常导致锁时间过长，将推送事件移出锁定范围
-                watcher.start("dispatchEvent")
-                pipelineDetailChangeEvent(projectId, buildId)
-            }
+//            logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
+//            if (message == "update done") { // 防止MQ异常导致锁时间过长，将推送事件移出锁定范围
+//                watcher.start("dispatchEvent")
+//                pipelineDetailChangeEvent(projectId, buildId)
+//            }
             LogUtils.printCostTimeWE(watcher)
         }
     }
@@ -248,7 +248,7 @@ open class BaseBuildDetailService constructor(
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordDetail",
                 projectId = pipelineBuildInfo.projectId,
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,

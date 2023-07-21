@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -69,6 +70,7 @@ class WorkspaceDao {
                 WORK_PATH,
                 WORKSPACE_FOLDER,
                 HOST_NAME,
+                GPU,
                 CPU,
                 MEMORY,
                 DISK,
@@ -95,9 +97,10 @@ class WorkspaceDao {
                     workspace.workPath,
                     workspace.workspaceFolder,
                     workspace.hostName,
-                    8,
-                    32,
-                    100,
+                    workspace.gpu,
+                    workspace.cpu,
+                    workspace.memory,
+                    workspace.disk,
                     workspaceStatus.ordinal,
                     LocalDateTime.now(),
                     workspace.yaml,
@@ -248,10 +251,15 @@ class WorkspaceDao {
     fun fetchWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId, status = status)
+            val condition = mixCondition(
+                userId = userId,
+                status = status,
+                mountType = mountType
+            )
 
             if (condition.isEmpty()) {
                 return null
@@ -260,6 +268,34 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .fetch()
+        }
+    }
+    fun fetchSharedWorkspace(
+        dslContext: DSLContext,
+        workspaceName: String? = null
+    ): Result<TWorkspaceSharedRecord>? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            val condition = mutableListOf<Condition>()
+            if (!workspaceName.isNullOrBlank()) {
+                condition.add(WORKSPACE_NAME.eq(workspaceName))
+            }
+            val query = dslContext.selectFrom(this)
+            if (condition.isNotEmpty()) {
+                query.where(condition)
+            }
+            return query.fetch()
+        }
+    }
+
+    fun deleteSharedWorkspace(
+        id: Long,
+        dslContext: DSLContext
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.delete(this)
+                .where(ID.eq(id))
+                .limit(1)
+                .execute()
         }
     }
 
@@ -322,7 +358,6 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
                 .execute()
         }
@@ -381,6 +416,7 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.delete(this)
                 .where(NAME.eq(workspaceName))
+                .limit(1)
                 .execute()
         }
     }
@@ -388,16 +424,21 @@ class WorkspaceDao {
     // 获取已休眠(status:3)且过期14天的工作空间
     fun getTimeOutInactivityWorkspace(
         timeOutDays: Int,
+        workspaceMountType: WorkspaceMountType?,
         dslContext: DSLContext
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
+            val condition = mutableListOf<Condition>()
+            condition.add(timestampDiff(DatePart.DAY, LAST_STATUS_UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                .greaterOrEqual(timeOutDays))
+
+            condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+
+            if (workspaceMountType != null) {
+                condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))
+            }
             return dslContext.selectFrom(this)
-                .where(
-                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(
-                        timeOutDays
-                    )
-                )
-                .and(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+                .where(condition)
                 .limit(1000)
                 .fetch()
         }

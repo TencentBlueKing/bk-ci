@@ -35,7 +35,7 @@ import (
 	"os/exec"
 )
 
-func setUser(cmd *exec.Cmd, runUser string) error {
+func setUser(_ *exec.Cmd, runUser string) error {
 	logs.Info("set user(windows): ", runUser)
 	return nil
 }

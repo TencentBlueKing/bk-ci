@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_MSG_MANUAL
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_MSG_TRIGGERS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -80,14 +80,14 @@ class ModelCreate @Autowired constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement(
-            I18nUtil.getCodeLanMessage(BK_BUILD_MSG_MANUAL),
+            I18nUtil.getCodeLanMessage(BK_MANUAL_TRIGGER),
             "T-1-1-1"
         )
         triggerElementList.add(manualTriggerElement)
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = I18nUtil.getCodeLanMessage(BK_BUILD_MSG_TRIGGERS),
+            name = I18nUtil.getCodeLanMessage(BK_BUILD_TRIGGER),
             elements = triggerElementList,
             status = null,
             startEpoch = null,

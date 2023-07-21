@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomMonitorDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
@@ -45,6 +46,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
+import com.tencent.devops.model.metrics.tables.TAtomMonitorDataDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
@@ -431,6 +433,29 @@ class MetricsDataReportDao {
                 .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
                 .set(MODIFIER, saveErrorCodeInfoPO.modifier)
                 .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
+                .execute()
+        }
+    }
+
+    fun saveAtomMonitorDailyData(
+        dslContext: DSLContext,
+        saveAtomMonitorDailyPO: SaveAtomMonitorDailyPO
+    ) {
+        with(TAtomMonitorDataDaily.T_ATOM_MONITOR_DATA_DAILY) {
+            dslContext.insertInto(this)
+                .set(ID, saveAtomMonitorDailyPO.id)
+                .set(ERROR_TYPE, saveAtomMonitorDailyPO.errorType)
+                .set(EXECUTE_COUNT, saveAtomMonitorDailyPO.executeCount)
+                .set(STATISTICS_TIME, saveAtomMonitorDailyPO.statisticsTime)
+                .set(CREATOR, saveAtomMonitorDailyPO.creator)
+                .set(MODIFIER, saveAtomMonitorDailyPO.modifier)
+                .set(UPDATE_TIME, saveAtomMonitorDailyPO.updateTime)
+                .set(CREATE_TIME, saveAtomMonitorDailyPO.createTime)
+                .set(ATOM_CODE, saveAtomMonitorDailyPO.atomCode)
+                .onDuplicateKeyUpdate()
+                .set(EXECUTE_COUNT, EXECUTE_COUNT + 1)
+                .set(MODIFIER, saveAtomMonitorDailyPO.modifier)
+                .set(UPDATE_TIME, saveAtomMonitorDailyPO.updateTime)
                 .execute()
         }
     }

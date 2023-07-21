@@ -81,9 +81,7 @@ init:
   bkrepo: true
   defaultImage: true
   plugin:
-    enabled: true
-    useProxy: false
-    proxyUrl: https://ghproxy.com
+    enabled: false
     atoms:
     - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
       code: checkout

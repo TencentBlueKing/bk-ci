@@ -5,6 +5,7 @@ import {
   ArrowsRight,
   CloseLine,
 } from 'bkui-vue/lib/icon';
+import { InfoBox } from 'bkui-vue';
 import {
   ref,
   watch,
@@ -27,6 +28,7 @@ const isShow = ref(false);
 const searchStr = ref('');
 const isLoading = ref(false);
 const isSubmitting = ref(false);
+const changeFlag = ref(false);
 
 let originProjectPluginList = [];
 let originProjectOptionPluginList = [];
@@ -36,6 +38,27 @@ const projectOptionPluginList = ref([]);
 // 事件
 const handleToggleShow = () => {
   isShow.value = !isShow.value;
+};
+
+const handleCancel = () => {
+  if (changeFlag.value) {
+    InfoBox({
+      title: t('确认离开当前页？'),
+      subTitle: t('离开将会导致未保存信息丢失'),
+      confirmText: t('离开'),
+      onConfirm() {
+        isShow.value=!isShow.value;
+        searchStr.value = '';
+        changeFlag.value = false;
+      },
+      headerAlign: 'center',
+      footerAlign: 'center',
+      contentAlign: 'center'
+    })
+  } else {
+    searchStr.value = '';
+    isShow.value = !isShow.value;
+  }
 };
 
 const getPluginList = () => {
@@ -64,12 +87,14 @@ const restore = () => {
 };
 
 const addPlugin = (plugin) => {
+  changeFlag.value = true;
   projectPluginList.value.push(plugin);
   const index = projectOptionPluginList.value.findIndex(item => item === plugin);
   projectOptionPluginList.value.splice(index, 1);
 };
 
 const minusPlugin = (plugin) => {
+  changeFlag.value = true;
   projectOptionPluginList.value.push(plugin);
   const index = projectPluginList.value.findIndex(item => item === plugin);
   projectPluginList.value.splice(index, 1);
@@ -138,6 +163,7 @@ watch(
     width="640"
     :title="t('Add plugin')"
     quick-close
+    :before-close="handleCancel"
     v-model:isShow="isShow"
   >
     <bk-loading
@@ -150,6 +176,7 @@ watch(
             class="list-header"
             clearable
             v-model="searchStr"
+            @change="changeFlag = true"
           >
             <template #suffix>
               <span class="input-icon">
@@ -197,7 +224,7 @@ watch(
       <section class="add-plugin-footer">
         <section>
           <bk-button theme="primary" class="mr8" :loading="isSubmitting" @click="submit">{{ t('Submit') }}</bk-button>
-          <bk-button @click="handleToggleShow">{{ t('Cancel') }}</bk-button>
+          <bk-button @click="handleCancel">{{ t('Cancel') }}</bk-button>
         </section>
         <!-- <bk-button @click="restore">Restore default</bk-button> -->
       </section>

@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.pojo
 
 import io.swagger.annotations.ApiModel
+import java.time.LocalDateTime
 
 @ApiModel("资源信息")
 data class AuthResourceInfo(
@@ -39,5 +40,9 @@ data class AuthResourceInfo(
     val resourceName: String,
     val iamResourceCode: String,
     val enable: Boolean,
-    val relationId: String
+    val relationId: String,
+    val createUser: String,
+    val updateUser: String,
+    val createTime: LocalDateTime,
+    val updateTime: LocalDateTime
 )

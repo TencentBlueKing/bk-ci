@@ -60,7 +60,7 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         }
         return when (osType) {
             OSType.LINUX, OSType.MAC_OS -> {
-                if (osArch.contains("arm")) {
+                if (osArch.contains("arm") || osArch.contains("aarch")) {
                     "arm64"
                 } else {
                     "x64"

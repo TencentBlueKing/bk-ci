@@ -111,9 +111,16 @@ function _M:get_tag(ns_config)
     end
 
     -- 客户端选择路由到容器环境
-    if type(tag) == "string" and not string.find(tag, '^kubernetes-') and config.kubernetes.useForceHeader and
-        ngx.var.http_x_gateway_force_k8s == 'true' then
-        tag = "kubernetes-" .. tag
+    if type(tag) == "string" and not string.find(tag, '^kubernetes-') and config.kubernetes.useForceHeader then
+        if devops_project == 'codecc' then
+            if ngx.var.http_x_gateway_codecc_force_k8s == 'true' then
+                tag = "kubernetes-" .. tag
+            end
+        else
+            if ngx.var.http_x_gateway_force_k8s == 'true' then
+                tag = "kubernetes-" .. tag
+            end
+        end
     end
 
     -- 设置tag到http请求头

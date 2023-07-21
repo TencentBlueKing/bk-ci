@@ -117,6 +117,10 @@ apisix:
 
   # -- Set pod resource requests & limits
   resources: {}
+  # 为了方便proxy部署而进行魔改的配置,initcontainer的资源
+  waitEtcd:
+    resources: {}
+
     # -- Use the host's network namespace
 
     # We usually recommend not to specify default resources and to leave this as a conscious

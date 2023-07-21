@@ -27,18 +27,22 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.annotation.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件监控数据")
 data class AtomMonitorData(
     @ApiModelProperty("插件执行错误码", required = true)
+    @InfluxTag
     val errorCode: Int,
     @ApiModelProperty("插件执行错误信息", required = false)
     val errorMsg: String? = null,
     @ApiModelProperty("插件执行错误类型", required = false)
+    @InfluxTag
     val errorType: String? = null,
     @ApiModelProperty("插件代码", required = true)
+    @InfluxTag
     val atomCode: String,
     @ApiModelProperty("插件版本", required = true)
     val version: String,
@@ -51,8 +55,10 @@ data class AtomMonitorData(
     @ApiModelProperty("构建环境ID", required = true)
     val vmSeqId: String,
     @ApiModelProperty("执行开始时间", required = false)
+    @InfluxTag
     val startTime: Long?,
     @ApiModelProperty("执行结束时间", required = false)
+    @InfluxTag
     val endTime: Long?,
     @ApiModelProperty("执行耗时时间", required = false)
     val elapseTime: Long?,

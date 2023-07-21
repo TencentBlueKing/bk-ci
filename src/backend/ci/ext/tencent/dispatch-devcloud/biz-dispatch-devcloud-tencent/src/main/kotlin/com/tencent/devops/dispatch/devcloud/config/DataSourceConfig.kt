@@ -118,6 +118,29 @@ class DataSourceConfig {
         )
     }
 
+    @Bean
+    fun dispatchCodeccDataSource(
+        @Value("\${spring.datasource.dispatchCodecc.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.dispatchCodecc.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.dispatchCodecc.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.dispatchCodecc.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.dispatchCodecc.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-dispatchCodecc",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasouceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
     private fun hikariDataSource(
         datasourcePoolName: String,
         datasourceUrl: String,

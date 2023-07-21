@@ -119,7 +119,7 @@ class ThirdLoginService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdLoginService::class.java)
-        const val LOGIN_EXPIRE_TIME = 7 * 24 * 3600L // 登陆7天有效
+        const val LOGIN_EXPIRE_TIME = 7 * 24 * 3600L // 登录7天有效
         const val LOGIN_REDIS_KEY = "bk:login:third:key:"
         const val LOGIN_CODE_REDIS_KEY = "bk:login:third:%s:code:%s"
     }
