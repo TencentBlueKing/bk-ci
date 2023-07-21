@@ -60,6 +60,7 @@ data class CodeSVNWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeSVNWebHookTrigger"
+        const val taskAtom = "codeSvnWebHookTriggerTaskAtom"
     }
 
     override fun getClassType() = classType

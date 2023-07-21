@@ -3,8 +3,8 @@ package com.tencent.devops.stream.trigger.actions
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.service.code.pojo.EventRepositoryCache
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.common.Constansts
@@ -17,7 +17,7 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 object GitActionCommon {
 
@@ -97,7 +97,7 @@ object GitActionCommon {
                     matcher = matcher,
                     variables = mapOf(),
                     params = webHookParams,
-                    matchResult = ScmWebhookMatcher.MatchResult(isMatch = isMatch)
+                    matchResult = WebhookMatchResult(isMatch = isMatch)
                 ).map { entry -> entry.key to entry.value.toString() }.toMap()
             } else {
                 emptyMap()

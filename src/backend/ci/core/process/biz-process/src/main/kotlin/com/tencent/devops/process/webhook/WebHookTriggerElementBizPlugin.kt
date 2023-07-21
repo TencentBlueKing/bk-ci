@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
@@ -71,16 +70,6 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     }
 
     override fun check(element: T, appearedCnt: Int) = Unit
-}
-
-@ElementBiz
-class CodeGitWebHookTriggerElementBizPlugin constructor(
-    pipelineWebhookService: PipelineWebhookService
-) : WebHookTriggerElementBizPlugin<CodeGitWebHookTriggerElement>(pipelineWebhookService) {
-
-    override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
-        return CodeGitWebHookTriggerElement::class.java
-    }
 }
 
 @ElementBiz

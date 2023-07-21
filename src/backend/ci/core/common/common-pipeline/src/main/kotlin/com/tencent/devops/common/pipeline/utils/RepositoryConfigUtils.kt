@@ -160,4 +160,38 @@ object RepositoryConfigUtils {
                 repositoryType = RepositoryType.NAME
             )
         }
+
+    fun getRepositoryConfig(
+        repoHashId: String?,
+        repoName: String?,
+        repoType: RepositoryType?,
+        variable: Map<String, String>? = null
+    ): RepositoryConfig {
+        return when (repoType) {
+            RepositoryType.ID -> RepositoryConfig(repoHashId, null, RepositoryType.ID)
+            RepositoryType.NAME -> {
+                val repositoryName = if (variable.isNullOrEmpty()) {
+                    repoName!!
+                } else {
+                    EnvUtils.parseEnv(repoName!!, variable)
+                }
+                RepositoryConfig(null, repositoryName, RepositoryType.NAME)
+            }
+            else -> {
+                if (!repoHashId.isNullOrBlank()) {
+                    RepositoryConfig(repoHashId, null, RepositoryType.ID)
+                } else if (!repoName.isNullOrBlank()) {
+                    val repositoryName = if (variable.isNullOrEmpty()) {
+                        repoName
+                    } else {
+                        EnvUtils.parseEnv(repoName, variable)
+                    }
+                    RepositoryConfig(null, repositoryName, RepositoryType.NAME)
+                } else {
+                    // 两者不能同时为空
+                    throw IllegalArgumentException("repoName and Id cannot both be empty")
+                }
+            }
+        }
+    }
 }

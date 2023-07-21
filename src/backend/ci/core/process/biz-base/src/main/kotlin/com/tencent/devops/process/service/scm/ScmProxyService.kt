@@ -379,7 +379,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         }
     }
 
-    fun addGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
+    fun addGitWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): CodeGitRepository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
@@ -418,7 +422,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             )
         }
 
-        return repo.projectName
+        return repo
     }
 
     fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {

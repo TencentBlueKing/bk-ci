@@ -81,6 +81,7 @@ data class CodeGitlabWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"
+        const val taskAtom = "codeGitlabWebHookTriggerTaskAtom"
     }
 
     override fun getClassType() = classType

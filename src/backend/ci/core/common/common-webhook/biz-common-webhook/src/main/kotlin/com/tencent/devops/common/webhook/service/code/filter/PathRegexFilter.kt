@@ -34,12 +34,18 @@ class PathRegexFilter(
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String,
+    // 排除过滤失败原因
+    private val excludedFailedReason: String,
     private val caseSensitive: Boolean
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,
     includedPaths = includedPaths,
     excludedPaths = excludedPaths,
+    includedFailedReason = includedFailedReason,
+    excludedFailedReason = excludedFailedReason,
     caseSensitive = caseSensitive
 ) {
     private val matcher = AntPathMatcher()

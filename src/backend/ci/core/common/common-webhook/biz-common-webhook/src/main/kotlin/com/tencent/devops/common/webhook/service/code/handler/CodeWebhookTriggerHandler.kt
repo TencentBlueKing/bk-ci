@@ -33,7 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 
@@ -67,9 +67,22 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
 
     fun getMergeRequestId(event: T): Long? = null
 
+    /**
+     * 事件产生时的消息
+     */
     fun getMessage(event: T): String?
 
-    fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
+    /**
+     * 获取事件说明,根据不同的事件组织事件说明
+     */
+    fun getEventDesc(event: T): String = ""
+
+    /**
+     * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port
+     */
+    fun getExternalId(event: T): String = ""
+
+    fun preMatch(event: T): WebhookMatchResult = WebhookMatchResult(isMatch = true)
 
     fun getWebhookCommitList(
         event: T,
@@ -90,7 +103,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
+    ): WebhookMatchResult {
         val filters = getWebhookFilters(
             event = event,
             projectId = projectId,
@@ -100,12 +113,13 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         )
         val response = WebhookFilterResponse()
         return if (filters.isNotEmpty()) {
-            ScmWebhookMatcher.MatchResult(
+            WebhookMatchResult(
                 isMatch = WebhookFilterChain(filters = filters).doFilter(response),
-                extra = response.getParam()
+                extra = response.params,
+                reason = response.failedReason
             )
         } else {
-            ScmWebhookMatcher.MatchResult(isMatch = true)
+            WebhookMatchResult(isMatch = true)
         }
     }
 

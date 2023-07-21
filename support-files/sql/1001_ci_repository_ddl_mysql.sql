@@ -176,4 +176,23 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_CODE_P4` (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
 
+-- ----------------------------
+-- Table structure for T_REPOSITORY_WEBHOOK_REQUEST
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_WEBHOOK_REQUEST`
+(
+    `REQUEST_ID`      bigint(20) NOT NULL AUTO_INCREMENT COMMENT '请求ID',
+    `EXTERNAL_ID`     varchar(255)                       DEFAULT NULL COMMENT '代码库平台ID',
+    `REPOSITORY_TYPE` varchar(32)                        DEFAULT NULL COMMENT '触发类型',
+    `EVENT_TYPE`      varchar(255)                       DEFAULT NULL COMMENT '事件类型',
+    `TRIGGER_USER`    varchar(100)              NOT NULL COMMENT '触发用户',
+    `EVENT_MESSAGE`   text                      NOT NULL COMMENT '事件信息',
+    `REQUEST_HEADER`  text COMMENT '事件请求头',
+    `REQUEST_PARAM`   text COMMENT '事件请求参数',
+    `REQUEST_BODY`    text COMMENT '事件请求体',
+    `CREATE_TIME`     timestamp                 NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`REQUEST_ID`, `CREATE_TIME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='代码库WEBHOOK请求表';
+
 SET FOREIGN_KEY_CHECKS = 1;

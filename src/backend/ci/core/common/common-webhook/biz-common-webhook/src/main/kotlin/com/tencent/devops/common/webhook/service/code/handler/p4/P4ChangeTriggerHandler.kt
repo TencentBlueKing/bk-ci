@@ -140,7 +140,9 @@ class P4ChangeTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
-                            caseSensitive = caseSensitive
+                            caseSensitive = caseSensitive,
+                            includedFailedReason = "on.change-commit.paths change path($includePaths) not match",
+                            excludedFailedReason = "on.change-commit.paths-ignore change path($excludePaths) match"
                         )
                     ).doFilter(response)
                 }

@@ -63,7 +63,9 @@ import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.WebhookElementParams
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
+import com.tencent.devops.process.pojo.webhook.PipelineTriggerTask
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -207,7 +209,11 @@ class PipelineWebhookService @Autowired constructor(
             redisLock.lock()
             return when (pipelineWebhook.repositoryType) {
                 ScmType.CODE_GIT ->
-                    scmProxyService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                    scmProxyService.addGitWebhook(
+                        projectId = pipelineWebhook.projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    ).projectName
                 ScmType.CODE_SVN ->
                     scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
@@ -250,6 +256,33 @@ class PipelineWebhookService @Autowired constructor(
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/edit"
 
+    fun save(
+        projectId: String,
+        pipelineId: String,
+        repositoryType: String,
+        repoType: String,
+        repoHashId: String?,
+        repoName: String?,
+        projectName: String,
+        taskId: String,
+        eventSource: String,
+        eventType: String
+    ) {
+        pipelineWebhookDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repositoryType = repositoryType,
+            repoType = repoType,
+            repoHashId = repoHashId,
+            repoName = repoName,
+            projectName = projectName,
+            taskId = taskId,
+            eventSource = eventSource,
+            eventType = eventType
+        )
+    }
+
     fun deleteWebhook(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
         logger.info("delete $pipelineId webhook by $userId")
         pipelineWebhookDao.deleteByPipelineId(dslContext, projectId, pipelineId)
@@ -278,17 +311,12 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getWebhookPipelines(name: String, type: String): Set<Pair<String, String>> {
-        val records = pipelineWebhookDao.getByProjectNameAndType(
+    fun getWebhookPipelines(name: String, repositoryType: String): List<PipelineWebhookSubscriber> {
+        return pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
-            repositoryType = getWebhookScmType(type).name
-        )
-        val pipelineWebhookSet = mutableSetOf<Pair<String, String>>()
-        records?.forEach {
-            pipelineWebhookSet.add(Pair(it.value1(), it.value2()))
-        }
-        return pipelineWebhookSet
+            repositoryType = repositoryType
+        ) ?: emptyList()
     }
 
     fun getWebhookScmType(type: String) =
@@ -619,6 +647,17 @@ class PipelineWebhookService @Autowired constructor(
             }
             start += 100
         }
+    }
+
+    fun getSubscriber(
+        eventSource: String,
+        eventType: String
+    ): List<PipelineTriggerTask> {
+        return pipelineWebhookDao.getSubscriber(
+            dslContext = dslContext,
+            eventSource = eventSource,
+            eventType = eventType
+        )
     }
 
     private fun PipelineWebhook.doUpdateWebhookSecret(
