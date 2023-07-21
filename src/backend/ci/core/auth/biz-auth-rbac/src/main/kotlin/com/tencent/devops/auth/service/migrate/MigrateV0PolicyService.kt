@@ -111,6 +111,8 @@ class MigrateV0PolicyService constructor(
         private const val CERT_EDIT = "cert_edit"
         private const val ENV_NODE_VIEW = "env_node_view"
         private const val ENV_NODE_EDIT = "env_node_edit"
+        private const val ENV_NODE_USE = "env_node_use"
+        private const val ENV_NODE_DELETE = "env_node_delete"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -183,16 +185,18 @@ class MigrateV0PolicyService constructor(
     }
 
     /**
-     *   由于rbac和旧版本版本动作不一致，需要做一些转换
-     *   同时由于rbac增加了一些旧版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
+     *   在构造用户组授权范围的动作组时，由于rbac和v0版本版本动作不一致，需要做一些转换
+     *   同时由于rbac增加了一些v0版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
      * */
+    @Suppress("ComplexCondition")
     private fun buildRbacGroupActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val (resourceCreateActions, resourceActions) = buildRbacActions(actions)
         val mutableResourceActions = resourceActions.toMutableList()
         if (actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)) {
             mutableResourceActions.add(Action(CERT_VIEW))
         }
-        if (actions.contains(ENV_NODE_EDIT) && !actions.contains(ENV_NODE_VIEW)) {
+        if ((actions.contains(ENV_NODE_EDIT) || actions.contains(ENV_NODE_USE) ||
+                actions.contains(ENV_NODE_DELETE)) && !actions.contains(ENV_NODE_VIEW)) {
             mutableResourceActions.add(Action(ENV_NODE_VIEW))
         }
         return Pair(resourceCreateActions, mutableResourceActions)
