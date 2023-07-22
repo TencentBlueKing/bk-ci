@@ -1,5 +1,7 @@
 package com.tencent.devops.auth.service.oauth2.grant
 
+import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
+import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import org.slf4j.LoggerFactory
 
 class RefreshTokenGranter : AbstractTokenGranter(GRANT_TYPE) {
@@ -8,13 +10,16 @@ class RefreshTokenGranter : AbstractTokenGranter(GRANT_TYPE) {
         private val logger = LoggerFactory.getLogger(RefreshTokenGranter::class.java)
     }
 
-    override fun getAccessToken(grantType: String): String {
+    override fun getAccessToken(
+        oauth2AccessTokenDTO: Oauth2AccessTokenDTO,
+        accessToken: String?
+    ): Oauth2AccessTokenVo {
         logger.info("refresh_token getAccessToken")
         //1.校验refresh_token是否为空
         //2.清除跟该refresh_token授权码相关的access_token
         //3.校验refresh_token是否过期
         //3.1 过期，清除refresh_token记录,则直接返回异常
         //3.2 未过期,走主流程,此时accessToken
-        return super.getAccessToken(grantType)
+        return super.getAccessToken(oauth2AccessTokenDTO, accessToken)
     }
 }

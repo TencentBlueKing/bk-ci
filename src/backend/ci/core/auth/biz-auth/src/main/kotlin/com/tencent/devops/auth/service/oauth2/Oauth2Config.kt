@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class Oauth2Config {
     @Bean
-    fun tokenService(): TokenService {
-        return TokenService(compositeTokenGranter())
+    fun oauth2EndpointService(): Oauth2EndpointService {
+        return Oauth2EndpointService(compositeTokenGranter())
     }
 
     @Bean
