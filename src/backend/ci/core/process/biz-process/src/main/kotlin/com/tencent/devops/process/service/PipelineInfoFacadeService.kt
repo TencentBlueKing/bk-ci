@@ -662,7 +662,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
-        saveDraft: Boolean? = false
+        saveDraft: Boolean? = false,
+        description: String? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -42,6 +41,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResVersionDao: PipelineResVersionDao,
@@ -113,17 +113,27 @@ class PipelineRepositoryVersionService(
         projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int
+        limit: Int,
+        creator: String?,
+        description: String?
     ): Pair<Int, List<PipelineResVersion>> {
         if (pipelineInfo == null) {
             return Pair(0, emptyList())
         }
 
-        val count = pipelineResVersionDao.count(dslContext, projectId, pipelineId)
+        val count = pipelineResVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description
+        )
         val result = pipelineResVersionDao.listPipelineVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            creator = creator,
+            description = description,
             offset = offset,
             limit = limit
         )
@@ -157,5 +167,31 @@ class PipelineRepositoryVersionService(
             )
         }
         return count to list
+    }
+
+    fun getVersionCreatorInPage(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int
+    ): Pair<Int, List<String>> {
+        if (pipelineInfo == null) {
+            return Pair(0, emptyList())
+        }
+
+        val count = pipelineResVersionDao.countVersionCreator(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val result = pipelineResVersionDao.getVersionCreatorInPage(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        )
+        return count to result
     }
 }

@@ -207,16 +207,18 @@ class PipelineResVersionDao {
         projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int
+        limit: Int,
+        creator: String?,
+        description: String?
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val result = dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(VERSION.desc())
-                .limit(limit).offset(offset)
-                .fetch()
-
+            creator?.let { query.and(CREATOR.eq(creator)) }
+            description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            val result = query
+                .orderBy(VERSION.desc()).limit(limit).offset(offset).fetch()
             result.forEach { record ->
                 list.add(
                     PipelineVersionSimple(
@@ -240,12 +242,49 @@ class PipelineResVersionDao {
         return list
     }
 
-    fun count(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+    fun getVersionCreatorInPage(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int
+    ): List<String> {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.select(DSL.count(PIPELINE_ID))
+            return dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchOne(0, Int::class.java)!!
+                .limit(limit).offset(offset)
+                .fetch().map { it.component1() }
+        }
+    }
+
+    fun count(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        creator: String?,
+        description: String?
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val query = dslContext.select(DSL.count(PIPELINE_ID))
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            creator?.let { query.and(CREATOR.eq(creator)) }
+            description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            return query.fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countVersionCreator(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val query = dslContext.selectDistinct(CREATOR)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            return query.fetchCount()
         }
     }
 
