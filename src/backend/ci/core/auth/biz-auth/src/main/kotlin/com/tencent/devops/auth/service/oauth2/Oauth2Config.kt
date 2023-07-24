@@ -9,7 +9,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class Oauth2Config {
+class Oauth2Config constructor(
+    private val clientCredentialsTokenGranter: ClientCredentialsTokenGranter,
+    private val authorizationCodeTokenGranter: AuthorizationCodeTokenGranter,
+    private val refreshTokenGranter: RefreshTokenGranter,
+) {
     @Bean
     fun oauth2EndpointService(): Oauth2EndpointService {
         return Oauth2EndpointService(compositeTokenGranter())
@@ -22,12 +26,9 @@ class Oauth2Config {
 
     private fun getDefaultTokenGranters(): List<TokenGranter> {
         val tokenGranters = ArrayList<TokenGranter>()
-        val refreshTokenGranter = RefreshTokenGranter()
-        val clientCredentialsTokenGranter = ClientCredentialsTokenGranter()
-        val authorizationCodeTokenGranter = AuthorizationCodeTokenGranter()
-        tokenGranters.add(refreshTokenGranter)
         tokenGranters.add(clientCredentialsTokenGranter)
         tokenGranters.add(authorizationCodeTokenGranter)
+        tokenGranters.add(refreshTokenGranter)
         return tokenGranters
     }
 }
