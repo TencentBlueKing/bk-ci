@@ -57,6 +57,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.ProjectInfoManageService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
@@ -83,8 +84,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
-    val projectInfoDao: ProjectInfoDao,
+    private val projectInfoDao: ProjectInfoDao,
     private val metricsDataClearService: MetricsDataClearService,
+    private val projectInfoManageService: ProjectInfoManageService,
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : MetricsDataReportService {
@@ -188,6 +190,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveProjectAtomRelationPOs.isNotEmpty()) {
                     projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                    if (syncProjectAtomFlag) {
+                        projectInfoManageService.syncProjectAtomData(
+                            projectId, saveProjectAtomRelationPOs.map { it.atomCode }
+                        )
+                    }
                 }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
