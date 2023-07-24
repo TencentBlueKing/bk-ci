@@ -242,7 +242,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 shardingRoutingRuleAssignService.assignShardingRoutingRule(
                     channelCode = projectChannel,
                     routingName = projectInfo.englishName,
-                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS),
+                    dataTag = projectInfo.properties?.dataTag
                 )
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)

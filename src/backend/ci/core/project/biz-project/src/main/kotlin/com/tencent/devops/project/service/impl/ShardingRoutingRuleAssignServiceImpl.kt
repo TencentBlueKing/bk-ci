@@ -72,13 +72,14 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
     override fun assignShardingRoutingRule(
         channelCode: ProjectChannelCode,
         routingName: String,
-        moduleCodes: List<SystemModuleEnum>
+        moduleCodes: List<SystemModuleEnum>,
+        dataTag: String?
     ): Boolean {
         // 获取集群名称
         val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
             // 1、为微服务模块分配db分片规则
-            val dbShardingRoutingRule = assignDbShardingRoutingRule(moduleCode, routingName)
+            val dbShardingRoutingRule = assignDbShardingRoutingRule(moduleCode, routingName, dataTag)
 
             // 2、为微服务模块分配数据库表分片规则
             val tableShardingConfigs = tableShardingConfigService.listByModule(
@@ -99,7 +100,8 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
 
     override fun assignDbShardingRoutingRule(
         moduleCode: SystemModuleEnum,
-        routingName: String
+        routingName: String,
+        dataTag: String?
     ): ShardingRoutingRule {
         val clusterName = CommonUtils.getDbClusterName()
         var validDataSourceName = DEFAULT_DATA_SOURCE_NAME
@@ -108,13 +110,14 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
-            fullFlag = false
+            fullFlag = false,
+            dataTag = dataTag
         )?.map { it.dataSourceName }
 
         if (dataSourceNames.isNullOrEmpty()) {
             logger.warn("[$clusterName]$moduleCode has no dataSource available")
-            if (assignDbFusibleSwitch) {
-                // 当分配db的熔断开关打开时，如果没有可用的数据源则报错
+            if (assignDbFusibleSwitch || !dataTag.isNullOrBlank()) {
+                // 当分配db的熔断开关打开时或者数据标签不为空，如果没有可用的数据源则报错
                 throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
             }
         } else {

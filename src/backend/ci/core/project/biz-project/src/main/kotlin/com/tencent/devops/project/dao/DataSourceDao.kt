@@ -101,12 +101,14 @@ class DataSourceDao {
         dslContext: DSLContext,
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        fullFlag: Boolean? = false
+        fullFlag: Boolean? = false,
+        dataTag: String? = null
     ): Result<TDataSourceRecord>? {
         return with(TDataSource.T_DATA_SOURCE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(CLUSTER_NAME.eq(clusterName))
             conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TAG.eq(dataTag))
             if (fullFlag != null) {
                 conditions.add(FULL_FLAG.eq(fullFlag))
             }
