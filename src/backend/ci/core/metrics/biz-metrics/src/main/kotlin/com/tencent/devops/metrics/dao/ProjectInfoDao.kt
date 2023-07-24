@@ -30,17 +30,16 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TProjectAtom
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
-import com.tencent.devops.model.metrics.tables.records.TProjectAtomRecord
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -247,13 +246,42 @@ class ProjectInfoDao {
     fun projectAtomRelationCount(
         dslContext: DSLContext,
         projectId: String,
-        atomCode: String
-    ): Record1<Int>? {
+        atomCodes: List<String> = emptyList()
+    ): Int {
         with(TProjectAtom.T_PROJECT_ATOM) {
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId).and(ATOM_CODE.eq(atomCode)))
-                .fetchOne()
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.notIn(atomCodes))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomCount(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCodes: List<String> = emptyList()
+    ): Int {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.notIn(atomCodes))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomRelationCountByAtomCode(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCode: String
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.eq(atomCode))
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
@@ -284,7 +312,33 @@ class ProjectInfoDao {
         }
     }
 
-    fun batchSaveProjectAtomInfo(dslContext: DSLContext, tProjectAtomRecords: List<TProjectAtomRecord>) {
-        dslContext.batchInsert(tProjectAtomRecords).execute()
+    fun batchSaveProjectAtomInfo(
+        dslContext: DSLContext,
+        saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
+    ) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            dslContext.batch(
+                saveProjectAtomRelationPOs.map { po ->
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        PROJECT_ID,
+                        ATOM_CODE,
+                        ATOM_NAME,
+                        CREATOR,
+                        MODIFIER
+                    ).values(
+                        po.id,
+                        po.projectId,
+                        po.atomCode,
+                        po.atomName,
+                        po.creator,
+                        po.modifier,
+                    ).onDuplicateKeyUpdate()
+                        .set(ATOM_NAME, po.atomName)
+
+                }
+            ).execute()
+        }
     }
 }

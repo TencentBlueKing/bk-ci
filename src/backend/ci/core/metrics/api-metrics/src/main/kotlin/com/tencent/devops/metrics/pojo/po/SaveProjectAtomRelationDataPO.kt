@@ -25,46 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.pojo.po
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
-import com.tencent.devops.metrics.pojo.dto.QueryProjectAtomListDTO
-import com.tencent.devops.metrics.pojo.dto.QueryProjectPipelineLabelDTO
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectInfoManageService {
-
-    /**
-     * 获取项目下插件列表
-     * @param queryProjectInfoDTO 获取项目下信息列表信息传输对象
-     */
-    fun queryProjectAtomList(queryProjectInfoDTO: QueryProjectAtomListDTO): Page<AtomBaseInfoDO>
-
-    /**
-     * 获取项目下流水线标签列表
-     */
-    fun queryProjectPipelineLabels(queryProjectPipelineLabelDTO: QueryProjectPipelineLabelDTO): Page<PipelineLabelInfo>
-
-    /**
-     * 获取项目下流水线异常类型列表
-     */
-    fun queryPipelineErrorTypes(page: Int, pageSize: Int, keyword: String?): Page<PipelineErrorTypeInfoDO>
-
-    /**
-     * 同步流水线标签数据
-     * @return 同步的数据量
-     */
-    fun syncPipelineLabelData(userId: String): Boolean
-
-    /**
-     * 同步项目插件关联信息
-     */
-    fun syncProjectAtomData(userId: String): Boolean
-
-    /**
-     * 同步项目插件关联信息
-     */
-    fun syncProjectAtomData(projectId: String, excludeAtomCodes: List<String>): Boolean
-}
+@ApiModel("保存项目插件关联数据")
+data class SaveProjectAtomRelationDataPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
+    @ApiModelProperty("插件名称")
+    val atomName: String,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String
+)
