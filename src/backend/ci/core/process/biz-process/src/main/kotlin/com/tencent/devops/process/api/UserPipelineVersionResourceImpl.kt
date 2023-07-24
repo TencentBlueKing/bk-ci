@@ -42,31 +42,21 @@ import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
-import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.service.PipelineListFacadeService
-import com.tencent.devops.process.service.PipelineRemoteAuthService
-import com.tencent.devops.process.service.StageTagService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineVersionResourceImpl @Autowired constructor(
-    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineGroupService: PipelineGroupService,
-    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val stageTagService: StageTagService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
-    private val pipelineRuleService: PipelineRuleService
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService
 ) : UserPipelineVersionResource {
 
     override fun savePipeline(

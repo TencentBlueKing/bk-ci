@@ -56,9 +56,9 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
-    @ApiOperation("保存流水线编排")
+    @ApiOperation("保存流水线编排草稿")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/savePipeline")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveDraft")
     fun savePipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
