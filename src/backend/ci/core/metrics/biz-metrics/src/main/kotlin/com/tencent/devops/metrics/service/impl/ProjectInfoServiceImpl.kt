@@ -243,6 +243,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 saveProjectAtomRelationPOs.add(saveProjectAtomRelationDataPO)
             }
             if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                logger.info("saveProjectAtomInfo saveProjectAtomRelationPOs[]$saveProjectAtomRelationPOs")
                 projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
             }
             page ++
