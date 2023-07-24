@@ -3,7 +3,7 @@ package com.tencent.devops.auth.pojo.vo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("oauth2获取token返回报文体")
+@ApiModel("oauth2获取token请求返回体")
 data class Oauth2AccessTokenVo(
     @ApiModelProperty("accessToken", required = true)
     val accessToken: String,

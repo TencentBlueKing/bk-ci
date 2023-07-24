@@ -28,7 +28,6 @@ class Oauth2EndpointService constructor(
         oauth2AccessTokenDTO: Oauth2AccessTokenDTO
     ): Oauth2AccessTokenVo? {
         // 1、校验用户是否登录
-        // 2、校验client_id和client_secret是否正确
         val grantType = oauth2AccessTokenDTO.grantType
         return tokenGranter.grant(grantType, oauth2AccessTokenDTO)
     }
