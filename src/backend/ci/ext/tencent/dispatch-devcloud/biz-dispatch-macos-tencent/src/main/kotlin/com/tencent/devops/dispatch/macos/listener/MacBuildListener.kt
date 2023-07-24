@@ -149,7 +149,7 @@ class MacBuildListener @Autowired constructor(
                     executeCount = dispatchMessage.executeCount
                 )
             } ?: run {
-                // 如果没有找到合适的vm机器，则等待5秒后再执行, 总共执行120次（10min）
+                // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行60次（10min）
                 logRed(
                     buildLogPrinter,
                     dispatchMessage.buildId,
@@ -159,8 +159,8 @@ class MacBuildListener @Autowired constructor(
                     dispatchMessage.executeCount
                 )
 
-                logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 5s")
-                retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
+                logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 10s")
+                retry(sleepTimeInMS = 10000, retryTimes = 60, pipelineEvent = dispatchMessage.event)
             }
         } catch (e: BuildFailureException) {
             handleStartupException(
