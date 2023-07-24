@@ -41,10 +41,10 @@
 }, {
   "system" : "bk_ci_rbac",
   "actions" : [ {
-    "id" : "cert_view"
-  },{
     "id" : "cert_edit"
-  } ],
+  },{
+    "id" : "cert_view"
+  }],
   "resources" : [ {
     "system" : "bk_ci_rbac",
     "type" : "cert",
@@ -58,10 +58,10 @@
 }, {
   "system" : "bk_ci_rbac",
   "actions" : [ {
-    "id" : "env_node_view"
-  },{
     "id" : "env_node_use"
-  } ],
+  },{
+    "id" : "env_node_view"
+  }],
   "resources" : [ {
     "system" : "bk_ci_rbac",
     "type" : "env_node",

@@ -106,14 +106,12 @@ class MigrateV0PolicyService constructor(
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private val certActions = listOf("cert_edit")
+        private val envNodeActions = listOf("env_node_edit", "env_node_use", "env_node_delete")
         private const val V0_QC_GROUP_NAME = "质量管理员"
         private const val MAX_GROUP_MEMBER = 1000
         private const val CERT_VIEW = "cert_view"
-        private const val CERT_EDIT = "cert_edit"
         private const val ENV_NODE_VIEW = "env_node_view"
-        private const val ENV_NODE_EDIT = "env_node_edit"
-        private const val ENV_NODE_USE = "env_node_use"
-        private const val ENV_NODE_DELETE = "env_node_delete"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -193,9 +191,6 @@ class MigrateV0PolicyService constructor(
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
         fillNewActions(actions).forEach { action ->
-            resourceActions.add(Action(action))
-        }
-        replaceOrRemoveAction(actions).forEach { action ->
             // 创建的action,需要关联在项目下
             if (action.contains(AuthPermission.CREATE.value)) {
                 resourceCreateActions.add(Action(action))
@@ -206,25 +201,11 @@ class MigrateV0PolicyService constructor(
         return Pair(resourceCreateActions, resourceActions)
     }
 
-    private fun fillNewActions(actions: List<String>): List<String> {
-        val rbacActions = mutableListOf<String>()
-        val isFillCertViewAction = actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)
-        val isFillEnvNodeViewAction = (actions.contains(ENV_NODE_EDIT) || actions.contains(ENV_NODE_USE) ||
-            actions.contains(ENV_NODE_DELETE)) && !actions.contains(ENV_NODE_VIEW)
-
-        if (isFillCertViewAction) {
-            rbacActions.add(CERT_VIEW)
-        }
-        if (isFillEnvNodeViewAction) {
-            rbacActions.add(ENV_NODE_VIEW)
-        }
-        return rbacActions
-    }
 
     /**
      * action替换或移除
      */
-    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
+    private fun fillNewActions(actions: List<String>): List<String> {
         val rbacActions = actions.toMutableList()
         actions.forEach action@{ action ->
             when {
@@ -235,6 +216,12 @@ class MigrateV0PolicyService constructor(
                 skipActions.contains(action) -> {
                     logger.info("skip $action action")
                     rbacActions.remove(action)
+                }
+                certActions.contains(action) && !actions.contains(CERT_VIEW) -> {
+                    rbacActions.add(CERT_VIEW)
+                }
+                envNodeActions.contains(action) && !actions.contains(ENV_NODE_VIEW) -> {
+                    rbacActions.add(ENV_NODE_VIEW)
                 }
             }
         }
@@ -405,7 +392,7 @@ class MigrateV0PolicyService constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = rbacResourceCode,
-            actions = replaceOrRemoveAction(userActions)
+            actions = fillNewActions(userActions)
         )
     }
 
