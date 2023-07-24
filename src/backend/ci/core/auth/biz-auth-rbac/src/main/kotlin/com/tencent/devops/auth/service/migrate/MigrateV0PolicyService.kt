@@ -410,10 +410,10 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        if (members.isNullOrEmpty() ) {
+        if (members.isNullOrEmpty()) {
             return
         }
-        if ( members.size > MAX_GROUP_MEMBER) {
+        if (members.size > MAX_GROUP_MEMBER) {
             logger.warn("group member size is too large, max size is $MAX_GROUP_MEMBER")
             return
         }
