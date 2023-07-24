@@ -42,10 +42,29 @@
   "system" : "bk_ci_rbac",
   "actions" : [ {
     "id" : "cert_view"
+  },{
+    "id" : "cert_edit"
   } ],
   "resources" : [ {
     "system" : "bk_ci_rbac",
     "type" : "cert",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "env_node_view"
+  },{
+    "id" : "env_node_use"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "env_node",
     "paths" : [ [ {
       "system" : "bk_ci_rbac",
       "type" : "project",

@@ -207,7 +207,7 @@ class MigrateV0PolicyService constructor(
     }
 
     private fun fillNewActions(actions: List<String>): List<String> {
-        val rbacActions = actions.toMutableList()
+        val rbacActions = mutableListOf<String>()
         val isFillCertViewAction = actions.contains(CERT_EDIT) && !actions.contains(CERT_VIEW)
         val isFillEnvNodeViewAction = (actions.contains(ENV_NODE_EDIT) || actions.contains(ENV_NODE_USE) ||
             actions.contains(ENV_NODE_DELETE)) && !actions.contains(ENV_NODE_VIEW)
