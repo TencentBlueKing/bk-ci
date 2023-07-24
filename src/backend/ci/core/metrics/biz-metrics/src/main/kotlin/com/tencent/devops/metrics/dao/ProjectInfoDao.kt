@@ -334,8 +334,7 @@ class ProjectInfoDao {
                         po.atomName,
                         po.creator,
                         po.modifier,
-                    ).onDuplicateKeyUpdate()
-                        .set(ATOM_NAME, po.atomName)
+                    )
                 }
             }
         ).execute()
