@@ -190,11 +190,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveProjectAtomRelationPOs.isNotEmpty()) {
                     projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
-                    if (syncProjectAtomFlag) {
-                        projectInfoManageService.syncProjectAtomData(
-                            projectId, saveProjectAtomRelationPOs.map { it.atomCode }
-                        )
-                    }
                 }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
@@ -211,10 +206,17 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
+            // 同步项目插件关联信息
+            if (syncProjectAtomFlag) {
+                projectInfoManageService.syncProjectAtomData(
+                    projectId, saveProjectAtomRelationPOs.map { it.atomCode }
+                )
+            }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
+
         return true
     }
 
