@@ -316,27 +316,27 @@ class ProjectInfoDao {
         dslContext: DSLContext,
         saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
     ) {
-        dslContext.batch(
-            saveProjectAtomRelationPOs.map { po ->
-                with(TProjectAtom.T_PROJECT_ATOM) {
-                    dslContext.insertInto(
-                        this,
-                        ID,
-                        PROJECT_ID,
-                        ATOM_CODE,
-                        ATOM_NAME,
-                        CREATOR,
-                        MODIFIER
-                    ).values(
-                        po.id,
-                        po.projectId,
-                        po.atomCode,
-                        po.atomName,
-                        po.creator,
-                        po.modifier,
-                    )
-                }
+        saveProjectAtomRelationPOs.forEach {
+            with(TProjectAtom.T_PROJECT_ATOM) {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PROJECT_ID,
+                    ATOM_CODE,
+                    ATOM_NAME,
+                    CREATOR,
+                    MODIFIER
+                ).values(
+                    it.id,
+                    it.projectId,
+                    it.atomCode,
+                    it.atomName,
+                    it.creator,
+                    it.modifier,
+                ).onDuplicateKeyUpdate()
+                    .set(ATOM_NAME, it.atomName)
+                    .execute()
             }
-        ).execute()
+        }
     }
 }
