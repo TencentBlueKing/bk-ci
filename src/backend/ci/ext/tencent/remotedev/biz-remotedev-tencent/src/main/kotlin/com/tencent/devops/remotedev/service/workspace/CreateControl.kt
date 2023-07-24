@@ -487,7 +487,8 @@ class CreateControl @Autowired constructor(
         } else {
             userId
         }
-        return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+        return subUserId.replace(Regex("[@_]"), "-") +
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

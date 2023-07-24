@@ -215,7 +215,7 @@ class WorkspaceBcsClient @Autowired constructor(
 
                 val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
                 if (OK == environmentStatusRsp.code) {
-                    return environmentStatusRsp.data
+                    return environmentStatusRsp.data!!
                 } else {
                     val message = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage
                     throw BuildFailureException(
