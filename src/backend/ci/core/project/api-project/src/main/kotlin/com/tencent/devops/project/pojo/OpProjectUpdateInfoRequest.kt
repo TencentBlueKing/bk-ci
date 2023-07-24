@@ -99,5 +99,14 @@ data class OpProjectUpdateInfoRequest(
     @ApiModelProperty(value = "支持IDC构建机", required = false)
     val enableIdc: Boolean? = false,
     @ApiModelProperty(value = "流水线数量上限", required = false)
-    val pipelineLimit: Int? = 500
+    val pipelineLimit: Int? = 500,
+    @JsonProperty(value = "enable_pac", required = false)
+    @ApiModelProperty("是否设置pipeline as code")
+    val enablePac: Boolean?,
+    @JsonProperty(value = " enable_remotedev", required = false)
+    @ApiModelProperty("是否启用云研发")
+    val enableRemotedev: Boolean?,
+    @JsonProperty(value = "cloud_desktop_num", required = false)
+    @ApiModelProperty("可申请的云桌面配额")
+    val cloudDesktopNum: Int?
 )
