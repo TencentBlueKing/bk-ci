@@ -189,7 +189,6 @@ class MigrateV0PolicyService constructor(
      *   在构造用户组授权范围的动作组时，由于rbac和v0版本版本动作不一致，需要做一些转换
      *   同时由于rbac增加了一些v0版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
      * */
-    @Suppress("ComplexCondition")
     private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
