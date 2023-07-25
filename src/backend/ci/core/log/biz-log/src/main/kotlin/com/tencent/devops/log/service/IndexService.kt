@@ -53,7 +53,6 @@ class IndexService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(IndexService::class.java)
         private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
-        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock"
         private const val INDEX_CACHE_MAX_SIZE = 100000L
         private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
         private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
@@ -123,6 +122,7 @@ class IndexService @Autowired constructor(
             redisOperation.setIfAbsent(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
         } else {
             lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
+            redisOperation.expire(getLineNumRedisKey(buildId), TimeUnit.DAYS.toSeconds(2))
         }
         return lineNum!! - size
     }
