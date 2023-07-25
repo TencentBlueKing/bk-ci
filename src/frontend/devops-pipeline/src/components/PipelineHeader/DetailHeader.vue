@@ -104,12 +104,6 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
-            },
             buildNumConf () {
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
@@ -118,6 +112,11 @@
             }
         },
         watch: {
+            '$route.params.buildNo': function (newBuildNum, oldBuildNum) {
+                if (newBuildNum !== oldBuildNum) {
+                    this.loading = false
+                }
+            },
             'execDetail.status': function (newStatus, oldStatus) {
                 if (newStatus !== oldStatus) {
                     this.loading = false
