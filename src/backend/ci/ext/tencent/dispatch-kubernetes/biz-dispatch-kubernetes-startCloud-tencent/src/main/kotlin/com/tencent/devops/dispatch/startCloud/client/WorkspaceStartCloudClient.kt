@@ -72,7 +72,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        ": ${response.code}"
+                        "${response.code}"
                     )
                 }
 
@@ -86,20 +86,20 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorType,
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorCode,
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.formatErrorMessage,
-                        "(${environmentRsp.data.cgsIp})"
+                        environmentRsp.data.cgsIp
                     )
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
                     -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        ": 云桌面资源不足(${environmentRsp.code})"
+                        " 云桌面资源不足(${environmentRsp.code})"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        ": ${environmentRsp.code}-${environmentRsp.message}"
+                        "(${environmentRsp.code}-${environmentRsp.message})"
                     )
                 }
             }
@@ -109,7 +109,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = ": 接口超时, url: $url"
+                errorMessage = " 接口超时, url: $url"
             )
         }
     }
@@ -137,7 +137,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        ": 创建user接口异常: ${response.code}"
+                        " 创建user接口异常: ${response.code}"
                     )
                 }
 
@@ -148,14 +148,14 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        ": 创建user接口返回失败:" +
+                        " 创建user接口返回失败:" +
                             "${environmentRsp.code}-${environmentRsp.message}"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        ": 创建user接口返回异常:" +
+                        " 创建user接口返回异常:" +
                             "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
@@ -166,7 +166,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = ": 创建user接口超时, url: $url"
+                errorMessage = " 创建user接口超时, url: $url"
             )
         }
     }
@@ -200,7 +200,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "：${response.code}"
+                        "${response.code}"
                     )
                 }
                 logger.info("User $userId  environment response: $responseContent")
@@ -219,7 +219,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "：${environmentOpRsp.code}-${environmentOpRsp.message}"
+                        "${environmentOpRsp.code}-${environmentOpRsp.message}"
                     )
                 }
             }
@@ -229,7 +229,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = ": 接口超时, url: $url"
+                errorMessage = " 接口超时, url: $url"
             )
         }
     }
