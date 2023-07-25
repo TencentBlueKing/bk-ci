@@ -68,4 +68,9 @@ interface PermissionMigrateService {
         resourceType: String,
         projectCreator: String
     ): Boolean
+
+    /**
+     * 授予项目下自定义用户组RBAC新增的权限
+     */
+    fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
 }

@@ -374,7 +374,10 @@ class PermissionGradeManagerService @Autowired constructor(
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
-            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+                .groups(listOf(managerRoleGroup))
+                .createAttributes(false)
+                .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
             authResourceGroupDao.create(
                 dslContext = dslContext,
