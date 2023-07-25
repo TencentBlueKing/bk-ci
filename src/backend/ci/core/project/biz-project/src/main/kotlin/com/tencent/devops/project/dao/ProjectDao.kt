@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
@@ -587,6 +588,14 @@ class ProjectDao {
     }
 
     fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {
+        val projectProperties = ProjectProperties().apply {
+            pipelineAsCodeSettings = if (projectInfoRequest.enablePac == true) {
+                PipelineAsCodeSettings()
+            } else{pipelineAsCodeSettings}
+            remotedev = projectInfoRequest.enableRemotedev ?: remotedev
+            cloudDesktopNum = projectInfoRequest.cloudDesktopNum ?: cloudDesktopNum
+        }
+
         with(TProject.T_PROJECT) {
             val step = dslContext.update(this)
                 .set(PROJECT_NAME, projectInfoRequest.projectName)
@@ -609,6 +618,7 @@ class ProjectDao {
                 .set(KIND, projectInfoRequest.kind)
                 .set(ENABLED, projectInfoRequest.enabled)
                 .set(PIPELINE_LIMIT, projectInfoRequest.pipelineLimit)
+                .set(PROPERTIES, JsonUtil.toJson(projectProperties, false))
 
             if (projectInfoRequest.hybridCCAppId != null) {
                 step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)
