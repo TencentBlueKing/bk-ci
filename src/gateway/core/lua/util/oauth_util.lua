@@ -99,8 +99,8 @@ function _M:is_login(bk_token)
         return
     end
 
-    local res, err = httpc:request_uri(config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.esb.app_code ..
-                                           "&bk_app_secret=" .. config.esb.app_secret .. "&bk_token=" .. bk_token,
+    local res, err = httpc:request_uri(config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
+                                           "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
                                        {method = "GET", ssl_verify = false})
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
