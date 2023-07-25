@@ -79,7 +79,15 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
-                    OK == environmentRsp.code && environmentRsp.data != null -> return environmentRsp.data
+                    OK == environmentRsp.code && environmentRsp.data != null && !environmentRsp.data.existed
+                    -> return environmentRsp.data
+                    OK == environmentRsp.code && environmentRsp.data != null && environmentRsp.data.existed
+                    -> throw BuildFailureException(
+                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorType,
+                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorCode,
+                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.formatErrorMessage,
+                        "该云桌面已存在您名下(${environmentRsp.data.cgsIp})"
+                    )
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
                     -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
