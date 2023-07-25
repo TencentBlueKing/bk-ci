@@ -158,7 +158,8 @@ class PipelineRepositoryService constructor(
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
-        saveDraft: Boolean? = false
+        saveDraft: Boolean? = false,
+        description: String?
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -202,7 +203,8 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode,
                 setting = pipelineSetting,
                 updateLastModifyUser = updateLastModifyUser,
-                saveDraft = saveDraft
+                saveDraft = saveDraft,
+                description = description
             )
         } else {
             create(
@@ -217,7 +219,8 @@ class PipelineRepositoryService constructor(
                 modelTasks = modelTasks,
                 useTemplateSettings = useTemplateSettings,
                 templateId = templateId,
-                saveDraft = saveDraft
+                saveDraft = saveDraft,
+                description = description
             )
         }
     }
@@ -500,7 +503,8 @@ class PipelineRepositoryService constructor(
         modelTasks: Collection<PipelineModelTask>,
         useTemplateSettings: Boolean? = false,
         templateId: String? = null,
-        saveDraft: Boolean? = false
+        saveDraft: Boolean? = false,
+        description: String?
     ): DeployPipelineResult {
         val modelVersion = 1
         val pipelineVersion = 1
@@ -616,7 +620,8 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED,
+                    description = description
                 )
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
@@ -658,7 +663,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         setting: PipelineSetting? = null,
         updateLastModifyUser: Boolean? = true,
-        saveDraft: Boolean? = false
+        saveDraft: Boolean? = false,
+        description: String?
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
@@ -751,7 +757,8 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED
+                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED,
+                    description = description
                 )
                 // 针对新增version表做的数据迁移
                 watcher.start("updatePipelineResourceVersion")
@@ -780,7 +787,8 @@ class PipelineRepositoryService constructor(
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,
-                            status = VersionStatus.RELEASED
+                            status = VersionStatus.RELEASED,
+                            description = description
                         )
                     }
                 }

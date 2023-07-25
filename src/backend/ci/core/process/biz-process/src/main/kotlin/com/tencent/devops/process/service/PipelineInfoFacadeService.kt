@@ -369,7 +369,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useTemplateSettings = useTemplateSettings,
-                    templateId = model.templateId
+                    templateId = model.templateId,
+                    description = null
                 ).pipelineId
                 watcher.stop()
 
@@ -744,7 +745,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 create = false,
                 updateLastModifyUser = updateLastModifyUser,
                 savedSetting = savedSetting,
-                saveDraft = saveDraft
+                saveDraft = saveDraft,
+                description = description
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

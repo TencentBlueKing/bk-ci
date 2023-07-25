@@ -54,7 +54,8 @@ class PipelineResVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        status: VersionStatus?
+        status: VersionStatus?,
+        description: String?
     ) {
         create(
             dslContext = dslContext,
@@ -67,7 +68,8 @@ class PipelineResVersionDao {
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
-            status = status
+            status = status,
+            description = description
         )
     }
 
@@ -82,7 +84,8 @@ class PipelineResVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        status: VersionStatus?
+        status: VersionStatus?,
+        description: String?
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(this)
@@ -97,6 +100,7 @@ class PipelineResVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, status?.name)
+                .set(DESCRIPTION, description)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -105,6 +109,7 @@ class PipelineResVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, status?.name)
+                .set(DESCRIPTION, description)
                 .execute()
         }
     }
