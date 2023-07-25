@@ -31,8 +31,13 @@ abstract class AbstractTokenGranter(
             grantType = grantType,
             clientDetail = clientDetail
         )
-        return getAccessToken(
+        val accessTokenDTO = getAccessToken(
             accessTokenRequest = accessTokenRequest,
+            clientDetail = clientDetail
+        )
+        return handleAccessToken(
+            accessTokenRequest = accessTokenRequest,
+            accessTokenDTO = accessTokenDTO,
             clientDetail = clientDetail
         )
     }
@@ -76,7 +81,7 @@ abstract class AbstractTokenGranter(
     abstract fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
-    ): Oauth2AccessTokenVo
+    ): Oauth2AccessTokenDTO
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbstractTokenGranter::class.java)

@@ -26,19 +26,15 @@ class ClientCredentialsTokenGranter constructor(
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
-    ): Oauth2AccessTokenVo {
+    ): Oauth2AccessTokenDTO {
         logger.info("client_credentials getAccessToken")
         // 1、根据appcode获取accessToken
         val accessTokenRecord = accessTokenService.get(
             clientId = accessTokenRequest.clientId
         )
-        return super.handleAccessToken(
-            accessTokenRequest,
-            Oauth2AccessTokenDTO(
-                accessToken = accessTokenRecord?.accessToken,
-                expiredTime = accessTokenRecord?.expiredTime
-            ),
-            clientDetail = clientDetail
+        return Oauth2AccessTokenDTO(
+            accessToken = accessTokenRecord?.accessToken,
+            expiredTime = accessTokenRecord?.expiredTime
         )
     }
 }

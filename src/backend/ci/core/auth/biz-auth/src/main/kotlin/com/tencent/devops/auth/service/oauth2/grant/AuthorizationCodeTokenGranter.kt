@@ -31,7 +31,7 @@ class AuthorizationCodeTokenGranter constructor(
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
-    ): Oauth2AccessTokenVo {
+    ): Oauth2AccessTokenDTO {
         logger.info("authorization_code getAccessToken|$accessTokenRequest|$clientDetail")
         val clientId = accessTokenRequest.clientId
         val code = accessTokenRequest.code
@@ -68,14 +68,10 @@ class AuthorizationCodeTokenGranter constructor(
             )
             refreshToken
         }
-        return super.handleAccessToken(
-            accessTokenRequest,
-            Oauth2AccessTokenDTO(
-                accessToken = accessTokenRecord?.accessToken,
-                refreshToken = refreshToken,
-                expiredTime = accessTokenRecord?.expiredTime
-            ),
-            clientDetail = clientDetail
+        return Oauth2AccessTokenDTO(
+            accessToken = accessTokenRecord?.accessToken,
+            refreshToken = refreshToken,
+            expiredTime = accessTokenRecord?.expiredTime
         )
     }
 }

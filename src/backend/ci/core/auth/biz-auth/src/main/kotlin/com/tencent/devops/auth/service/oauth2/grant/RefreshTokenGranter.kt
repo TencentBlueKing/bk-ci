@@ -32,7 +32,7 @@ class RefreshTokenGranter(
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
-    ): Oauth2AccessTokenVo {
+    ): Oauth2AccessTokenDTO {
         logger.info("refresh_token getAccessToken")
         //1.校验refresh_token是否为空
         val refreshToken = accessTokenRequest.refreshToken
@@ -61,10 +61,6 @@ class RefreshTokenGranter(
                 defaultMessage = "The refresh token has expired!"
             )
         }
-        return super.handleAccessToken(
-            accessTokenRequest = accessTokenRequest,
-            accessTokenDTO = Oauth2AccessTokenDTO(),
-            clientDetail = clientDetail
-        )
+        return Oauth2AccessTokenDTO()
     }
 }
