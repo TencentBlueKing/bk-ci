@@ -588,13 +588,15 @@ class ProjectDao {
     }
 
     fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {
-        val projectProperties = ProjectProperties().apply {
+        val projectProperties = ProjectProperties(
             pipelineAsCodeSettings = if (projectInfoRequest.enablePac == true) {
-                PipelineAsCodeSettings()
-            } else{pipelineAsCodeSettings}
-            remotedev = projectInfoRequest.enableRemotedev ?: remotedev
-            cloudDesktopNum = projectInfoRequest.cloudDesktopNum ?: cloudDesktopNum
-        }
+                PipelineAsCodeSettings(enable = true)
+            } else{
+                PipelineAsCodeSettings(enable = false)
+            },
+                remotedev = projectInfoRequest.enableRemotedev,
+                cloudDesktopNum = projectInfoRequest.cloudDesktopNum
+        )
 
         with(TProject.T_PROJECT) {
             val step = dslContext.update(this)
