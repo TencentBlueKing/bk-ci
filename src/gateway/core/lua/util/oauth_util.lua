@@ -99,9 +99,12 @@ function _M:is_login(bk_token)
         return
     end
 
-    local res, err = httpc:request_uri(config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
-                                           "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
-                                       {method = "GET", ssl_verify = false})
+    local lang = cookieUtil:get_cookie("blueking_language")
+
+    local res, err = httpc:request_uri(
+                         config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
+                             "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
+                         {method = "GET", ssl_verify = false, headers = {["blueking-language"] = lang}})
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
 
@@ -122,7 +125,19 @@ function _M:is_login(bk_token)
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
 
-    return result
+    --  判断是否有权限
+    if result == nil then
+        ngx.log(ngx.ERR, "null is login result")
+        ngx.exit(401)
+    end
+    if result.code == 1302403 then
+        ngx.log(ngx.ERR, "is_login code is 1302403 , need Authentication")
+        ngx.header["X-DEVOPS-ESB-MESSAGE"] = result.message
+        ngx.exit(401)
+    elseif result.code ~= 0 then
+        ngx.log(ngx.ERR, "is_login code is " .. result.code .. " , return 401")
+        ngx.exit(401)
+    end
 end
 
 return _M

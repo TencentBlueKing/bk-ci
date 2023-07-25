@@ -65,14 +65,13 @@
             var lang = getCookie('blueking_language');
             var title = '蓝鲸 403'
             var h3 = '无该应用访问权限'
-            var p = '请联系 __BK_ESB_ADMIN__ 开通。'
             switch (lang) {
                 case 'en':
                     title = 'BlueKing 403'
                     h3 = 'No access to this application'
-                    p = 'Please contact __BK_ESB_ADMIN__ to access it. '
                     break;
             }
+            var p = '{{ message }}'
             document.title = title
             document.querySelector('h3').innerHTML = h3
             document.querySelector('p').innerHTML = p
