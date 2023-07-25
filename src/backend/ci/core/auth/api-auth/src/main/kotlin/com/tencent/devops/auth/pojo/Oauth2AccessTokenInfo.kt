@@ -7,6 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class Oauth2AccessTokenInfo(
     @ApiModelProperty("accessToken", required = true)
     var accessToken: String? = null,
+    @ApiModelProperty("refreshToken", required = true)
+    var refreshToken: String? = null,
     @ApiModelProperty("accessToken过期时间", required = true)
-    var expiredTime: Long? = null
+    var expiredTime: Int? = null
 )
