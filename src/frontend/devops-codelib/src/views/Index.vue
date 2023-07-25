@@ -3,7 +3,7 @@
         <template v-if="hasCodelibs || isSearch || isLoading">
             <link-code-lib
                 v-perm="{
-                    hasPermission: hasCodelibs && codelibs.hasCreatePermission,
+                    hasPermission: codelibs.hasCreatePermission,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: projectId,
