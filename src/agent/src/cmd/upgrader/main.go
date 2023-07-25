@@ -32,7 +32,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
@@ -52,8 +51,6 @@ func main() {
 		fmt.Printf("init upgrader log error %v\n", err)
 		systemutil.ExitProcess(1)
 	}
-
-	runtime.GOMAXPROCS(4)
 
 	defer func() {
 		if err := recover(); err != nil {

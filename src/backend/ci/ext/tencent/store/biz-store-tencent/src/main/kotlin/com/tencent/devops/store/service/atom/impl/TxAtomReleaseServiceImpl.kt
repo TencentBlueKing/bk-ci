@@ -83,6 +83,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
@@ -465,11 +466,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         logger.info("rebuild, projectCode=$projectCode, userId=$userId, atomId=$atomId, request=$atomRebuildRequest")
         // 判断是否可以启动构建
         val status = AtomStatusEnum.BUILDING.status.toByte()
-        val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
+        val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
         if (!checkResult) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = code,
-                language = I18nUtil.getLanguage(userId))
+                language = I18nUtil.getLanguage(userId),
+                params = params
+            )
         }
         // 拉取task.json，检查格式，更新入库
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(false)
@@ -879,12 +882,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         atomId: String,
         status: Byte,
         isNormalUpgrade: Boolean?
-    ): Pair<Boolean, String> {
+    ): Triple<Boolean, String, Array<String>?> {
         logger.info("checkAtomVersionOptRight params[$userId|$atomId|$status|$isNormalUpgrade]")
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Triple(
                 false,
-                CommonMessageCode.PARAMETER_IS_INVALID
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                null
             )
         val atomCode = record.atomCode
         val creator = record.creator
@@ -898,7 +902,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             ) || creator == userId)
         ) {
-            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
+            return Triple(false, NO_COMPONENT_ADMIN_PERMISSION, arrayOf(atomCode))
         }
         val allowReleaseStatus =
             if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING else AtomStatusEnum.AUDITING
@@ -962,6 +966,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             validateFlag = false
         }
 
-        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
+        return if (validateFlag) Triple(true, "", null)
+        else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
 }

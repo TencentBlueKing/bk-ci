@@ -39,6 +39,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.pojo.Result
 
 @Api(tags = ["SERVICE_AGENT"], description = "服务-Agent")
 @Path("/service/agents")
@@ -60,4 +61,20 @@ interface ServiceAgentResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Page<AgentBuildInfo>
+
+    @ApiOperation("获取agent登录调试url")
+    @GET
+    @Path("/docker/debug/url")
+    fun getDockerDebugUrl(
+        @QueryParam("userId")
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("buildId")
+        buildId: String?,
+        @QueryParam("vmSeqId")
+        vmSeqId: String
+    ): Result<String>
 }

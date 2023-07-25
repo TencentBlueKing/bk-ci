@@ -37,6 +37,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_ADD_NOTIFY_TEMPLATE
@@ -89,8 +91,9 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             )
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         val records = storeMemberDao.list(
@@ -200,8 +203,9 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeType = storeType.type.toByte()
             )) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         val receivers = mutableSetOf<String>()
@@ -273,8 +277,9 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             )
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         val record = storeMemberDao.getById(dslContext, id)
@@ -331,7 +336,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
             if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                     params = arrayOf(storeCode),
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -339,7 +344,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         } else {
             if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    messageCode = GET_INFO_NO_PERMISSION,
                     params = arrayOf(storeCode),
                     language = I18nUtil.getLanguage(userId)
                 )

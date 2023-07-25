@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ExtServiceEntity
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
@@ -41,6 +43,7 @@ import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
@@ -49,11 +52,12 @@ import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
 import com.tencent.devops.store.api.ServiceItemRelResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_EXIST
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class ServiceItemService @Autowired constructor(
@@ -61,7 +65,8 @@ class ServiceItemService @Autowired constructor(
     private val client: Client,
     private val serviceItemDao: ServiceItemDao,
     private val projectServiceDao: ServiceDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) {
 
     // 用于存放服务信息的Map
@@ -71,7 +76,7 @@ class ServiceItemService @Autowired constructor(
     fun init() {
         // 初始化projectServiceMap
         try {
-            getServiceList()
+            getServiceList(language = commonConfig.devopsDefaultLocaleLanguage)
             logger.info("projectServiceMap: $projectServiceMap")
         } catch (t: Exception) {
             logger.warn("init ServiceList fail", t)
@@ -82,7 +87,10 @@ class ServiceItemService @Autowired constructor(
         }
     }
 
-    fun getServiceList(itemStatusList: List<ServiceItemStatusEnum>? = null): List<ExtItemDTO> {
+    fun getServiceList(
+        itemStatusList: List<ServiceItemStatusEnum>? = null,
+        language: String? = null
+    ): List<ExtItemDTO> {
         val allItemData = serviceItemDao.getAllServiceItem(dslContext, itemStatusList) ?: return emptyList()
         // 用于放所有数据
         val allItemMap = mutableMapOf<String, ServiceItem>()
@@ -107,7 +115,7 @@ class ServiceItemService @Autowired constructor(
         }
 
         parentIndexMap.forEach { (parentId, list) ->
-            val parentInfo = getProjectService(parentId) ?: return@forEach
+            val parentInfo = getProjectService(parentId, language) ?: return@forEach
             val childList = mutableListOf<ExtServiceEntity>()
             list.forEach {
                 val itemInfo = allItemMap[it]
@@ -202,7 +210,7 @@ class ServiceItemService @Autowired constructor(
     fun getItemByIds(itemIds: Set<String>): List<ExtItemDTO> {
         logger.info("getItemByIds: itemIds[$itemIds]")
         val itemList = mutableListOf<ExtItemDTO>()
-        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds).forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -218,7 +226,7 @@ class ServiceItemService @Autowired constructor(
     fun getItemInfoByCodes(itemCodes: Set<String>): List<ServiceItem> {
         logger.info("getItemInfoByCodes: itemCodes[$itemCodes]")
         val itemList = mutableListOf<ServiceItem>()
-        serviceItemDao.getItemByCodes(dslContext, itemCodes)?.forEach {
+        serviceItemDao.getItemByCodes(dslContext, itemCodes).forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -234,7 +242,7 @@ class ServiceItemService @Autowired constructor(
     fun getItemInfoByIds(itemIds: Set<String>): List<ServiceItem> {
         logger.info("getItemInfoByIds: itemIds[$itemIds]")
         val itemList = mutableListOf<ServiceItem>()
-        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds).forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -251,7 +259,7 @@ class ServiceItemService @Autowired constructor(
 
     fun addServiceNum(itemIds: Set<String>): Boolean {
         logger.info("addServiceNum: itemIds[$itemIds]")
-        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds).forEach {
             val serviceNum = it!!.serviceNum + 1
             serviceItemDao.addCount(dslContext, it.id, serviceNum)
         }
@@ -279,7 +287,10 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getProjectService(serviceId: String): ExtServiceEntity? {
+    fun getProjectService(
+        serviceId: String,
+        language: String? = commonConfig.devopsDefaultLocaleLanguage
+    ): ExtServiceEntity? {
         return if (!projectServiceMap.containsKey(serviceId)) {
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             if (serviceRecord == null) {
@@ -288,7 +299,11 @@ class ServiceItemService @Autowired constructor(
             } else {
                 val serviceEntity = ExtServiceEntity(
                     id = serviceRecord!!.id.toString(),
-                    name = serviceRecord.name.substringBefore("("),
+                    name = I18nUtil.getCodeLanMessage(
+                        messageCode = T_SERVICE_PREFIX + serviceRecord.englishName,
+                        language = language,
+                        defaultMessage = serviceRecord.name.substringBefore("(")
+                    ),
                     code = serviceRecord.englishName
                 )
                 projectServiceMap[serviceId] = serviceEntity
@@ -296,7 +311,15 @@ class ServiceItemService @Autowired constructor(
                 serviceEntity
             }
         } else {
-            projectServiceMap[serviceId]!!
+            val extServiceEntity = projectServiceMap[serviceId]!!
+            ExtServiceEntity(
+                id = extServiceEntity.id,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = T_SERVICE_PREFIX + extServiceEntity.code,
+                    language = language
+                ),
+                code = extServiceEntity.code
+            )
         }
     }
 
@@ -340,7 +363,7 @@ class ServiceItemService @Autowired constructor(
         // 检验增加扩展点时，父服务是否存在
         if (projectServiceMap[itemInfo.pid] == null && getProjectService(itemInfo.pid) == null) {
             logger.warn("createItem :Parent service is not exist, service[${itemInfo.pid}]")
-            throw ErrorCodeException(errorCode = CommonMessageCode.SERVICE_NOT_EXIST, params = arrayOf(itemInfo.pid))
+            throw ErrorCodeException(errorCode = USER_SERVICE_NOT_EXIST, params = arrayOf(itemInfo.pid))
         }
         validArgs(itemInfo)
         val createInfo = ItemCreateInfo(

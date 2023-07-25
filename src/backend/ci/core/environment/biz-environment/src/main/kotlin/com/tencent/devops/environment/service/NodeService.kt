@@ -140,11 +140,18 @@ class NodeService @Autowired constructor(
         projectId: String,
         nodeRecordList: List<TNodeRecord>
     ): List<NodeWithPermission> {
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId = userId, projectId = projectId,
+            userId = userId,
+            projectId = projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-
         val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
@@ -167,14 +174,6 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)

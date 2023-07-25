@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo.mq
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import io.swagger.annotations.ApiModelProperty
@@ -37,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_OPERATE_STARTUP)
 data class WorkspaceOperateEvent(
     override val userId: String,
-    override val traceId: String,
+    override val traceId: String = TraceTag.buildBiz(),
     val type: UpdateEventType,
     @ApiModelProperty("用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String> = emptyMap(),
