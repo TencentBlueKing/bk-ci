@@ -369,7 +369,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useTemplateSettings = useTemplateSettings,
-                    templateId = model.templateId
+                    templateId = model.templateId,
+                    description = null
                 ).pipelineId
                 watcher.stop()
 
@@ -662,7 +663,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
-        saveDraft: Boolean? = false
+        saveDraft: Boolean? = false,
+        description: String? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -743,7 +745,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 create = false,
                 updateLastModifyUser = updateLastModifyUser,
                 savedSetting = savedSetting,
-                saveDraft = saveDraft
+                saveDraft = saveDraft,
+                description = description
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

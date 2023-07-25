@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -75,8 +76,8 @@ data class PipelineResVersion(
     val triggerVersion: Int? = null,
     @ApiModelProperty("配置版本号", required = false)
     val settingVersion: Int? = null,
-    @ApiModelProperty("标识是否为草稿", required = false)
-    val draftFlag: Boolean? = null,
+    @ApiModelProperty("草稿版本标识", required = false)
+    val status: VersionStatus? = VersionStatus.RELEASED,
     @ApiModelProperty("调试构建ID", required = false)
     val debugBuildId: String? = null,
     @ApiModelProperty("来源代码库标识（分支名）", required = false)
