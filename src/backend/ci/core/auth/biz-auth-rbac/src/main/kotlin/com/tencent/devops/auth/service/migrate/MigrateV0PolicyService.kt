@@ -216,10 +216,10 @@ class MigrateV0PolicyService constructor(
                     logger.info("skip $action action")
                     rbacActions.remove(action)
                 }
-                certActions.contains(action) && !actions.contains(CERT_VIEW) -> {
+                certActions.contains(action) && !rbacActions.contains(CERT_VIEW) -> {
                     rbacActions.add(CERT_VIEW)
                 }
-                envNodeActions.contains(action) && !actions.contains(ENV_NODE_VIEW) -> {
+                envNodeActions.contains(action) && !rbacActions.contains(ENV_NODE_VIEW) -> {
                     rbacActions.add(ENV_NODE_VIEW)
                 }
             }
