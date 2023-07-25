@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.common.test.BkCiAbstractTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 class AuthDeptServiceImplTest : BkCiAbstractTest() {
     private val authDeptServiceImpl = AuthDeptServiceImpl(redisOperation, objectMapper)
@@ -168,10 +167,5 @@ class AuthDeptServiceImplTest : BkCiAbstractTest() {
         mockUsers.add("456")
         mockUsers.add("9878")
         Assertions.assertEquals(users, mockUsers)
-    }
-
-    @Test
-    fun test2(){
-        println(UUID.randomUUID().toString())
     }
 }
