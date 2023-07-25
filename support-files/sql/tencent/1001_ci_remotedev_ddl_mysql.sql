@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 -- 工作空间模板信息表
 -- ----------------------------
 
-CREATE TABLE `T_WORKSPACE_TEMPLATE`  (
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_TEMPLATE`  (
                                          `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
                                          `NAME` varchar(64) NOT NULL COMMENT '模板名称',
                                          `IMAGE` varchar(256) NOT NULL DEFAULT ''  COMMENT '模板镜像',
@@ -192,19 +192,19 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
 -- ----------------------------
 -- Table structure for T_WINDOWS_RESOURCE_CONFIG WINDOWS硬件资源配置
 -- ----------------------------
-CREATE TABLE `T_WINDOWS_RESOURCE_CONFIG` (
-                                             `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-                                             `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
-                                             `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
-                                             `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
-                                             `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
-                                             `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
-                                             `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
-                                             `DISK` int(11) NOT NULL DEFAULT '100' COMMENT 'SSD磁盘',
-                                             `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
-                                             `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
-                                             `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                             `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-                                             PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='WINDOWS GPU资源配置表';
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_CONFIG` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
+    `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
+    `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
+    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
+    `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
+    `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
+    `DISK` int(11) NOT NULL DEFAULT '100' COMMENT 'SSD磁盘',
+    `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
+    `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='WINDOWS GPU资源配置表';
 SET FOREIGN_KEY_CHECKS = 1;

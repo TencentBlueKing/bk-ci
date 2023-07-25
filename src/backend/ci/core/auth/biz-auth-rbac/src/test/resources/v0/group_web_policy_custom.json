@@ -54,12 +54,26 @@
     {
       "actions": [
         {
-          "id": "cert_view"
+          "id": "cert_edit"
         }
       ],
       "resources": [
         {
           "type": "cert",
+          "paths": [
+
+          ]
+        }
+      ]
+    },{
+      "actions": [
+        {
+          "id": "env_node_use"
+        }
+      ],
+      "resources": [
+        {
+          "type": "env_node",
           "paths": [
 
           ]

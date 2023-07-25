@@ -42,6 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_SERVICE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TIME
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_WEBHOOK
 
 object BuildMsgUtils {
 
@@ -64,9 +65,8 @@ object BuildMsgUtils {
                 } else {
                     I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)
                 }
-            PIPELINE ->
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
-            WEB_HOOK -> TODO()
+            PIPELINE -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
+            WEB_HOOK -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
         }
     }
 
