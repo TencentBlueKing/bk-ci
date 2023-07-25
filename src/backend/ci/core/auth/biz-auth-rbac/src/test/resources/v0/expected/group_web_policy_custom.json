@@ -60,6 +60,8 @@
   "actions" : [ {
     "id" : "env_node_use"
   },{
+    "id" : "env_node_edit"
+  },{
     "id" : "env_node_view"
   }],
   "resources" : [ {
