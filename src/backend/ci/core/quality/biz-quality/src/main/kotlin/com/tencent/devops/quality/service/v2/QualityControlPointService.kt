@@ -34,12 +34,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointData
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_STAGE_KEY
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
@@ -136,14 +139,20 @@ class QualityControlPointService @Autowired constructor(
         return QualityControlPoint(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
-            name = record.name ?: "",
-            stage = record.stage ?: "",
+            name = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.elementType),
+                defaultMessage = record.name ?: ""
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.elementType),
+                defaultMessage = record.stage ?: ""
+            ),
             availablePos = if (record.availablePosition.isNullOrBlank()) {
                 listOf()
             } else {
-                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+                record.availablePosition.split(",").map { name -> ControlPointPosition.create(name) }
             },
-            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            defaultPos = ControlPointPosition.create(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion
         )
@@ -162,10 +171,17 @@ class QualityControlPointService @Autowired constructor(
                 QualityControlPoint(
                     hashId = HashUtil.encodeLongId(it.id),
                     type = it.elementType,
-                    name = it.name,
-                    stage = it.stage,
-                    availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                    defaultPos = ControlPointPosition(it.defaultPosition),
+                    name = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(it.elementType),
+                        defaultMessage = it.name
+                    ),
+                    stage = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.elementType),
+                        defaultMessage = it.stage
+                    ),
+                    availablePos = it.availablePosition.split(",")
+                        .map { name -> ControlPointPosition.create(name) },
+                    defaultPos = ControlPointPosition.create(it.defaultPosition),
                     enable = it.enable,
                     atomVersion = it.atomVersion
                 )

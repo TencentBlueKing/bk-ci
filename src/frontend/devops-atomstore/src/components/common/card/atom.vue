@@ -1,7 +1,7 @@
 <template>
     <section class="atom-card">
         <honer-img class="card-pic atom-logo" :detail="atom" />
-        <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
+        <p v-bk-overflow-tips :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <honer-tag :detail="atom" :max-num="1"></honer-tag>
             <img

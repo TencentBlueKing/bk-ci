@@ -7,8 +7,8 @@
 
         <section v-bkloading="{ isLoading }" class="g-scroll-table">
             <bk-table :data="memberList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
-                <bk-table-column :label="$t('store.成员')" prop="userName"></bk-table-column>
-                <bk-table-column :label="$t('store.调试项目')">
+                <bk-table-column :label="$t('store.成员')" prop="userName" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.调试项目')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <section class="member-project">
                             <template v-if="props.row.editing">
@@ -30,8 +30,8 @@
                         </section>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.角色')" width="160" prop="type" :formatter="typeFormatter"></bk-table-column>
-                <bk-table-column :label="$t('store.描述')" prop="type" :formatter="desFormatter"></bk-table-column>
+                <bk-table-column :label="$t('store.角色')" width="160" prop="type" :formatter="typeFormatter" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.描述')" prop="type" :formatter="desFormatter" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
                     <template slot-scope="props">
                         <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)"> {{ $t('store.删除') }} </span>
@@ -39,13 +39,18 @@
                 </bk-table-column>
             </bk-table>
 
-            <bk-sideslider :is-show.sync="addMemberObj.isShow" :quick-close="true" :title="$t('store.新增成员')" :width="640" @hidden="closeAddMember">
+            <bk-sideslider
+                :is-show.sync="addMemberObj.isShow"
+                :quick-close="true"
+                :title="$t('store.新增成员')"
+                :width="640"
+                :before-close="closeAddMember">
                 <bk-form :label-width="100" :model="addMemberObj.form" slot="content" class="add-member" ref="addForm">
                     <bk-form-item :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
-                        <bk-input v-model="addMemberObj.form.memberName"></bk-input>
+                        <bk-input v-model="addMemberObj.form.memberName" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.角色')" property="type">
-                        <bk-radio-group v-model="addMemberObj.form.type" class="radio-group">
+                        <bk-radio-group v-model="addMemberObj.form.type" @change="handleChangeForm" class="radio-group">
                             <bk-radio :value="key" v-for="(entry, key) in memberType" :key="key">{{entry}}</bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -195,6 +200,7 @@
             },
 
             openAddMember () {
+                window.changeFlag = false
                 this.addMemberObj.isShow = true
             },
 
@@ -208,7 +214,13 @@
                         storeType: this.storeType
                     }
                     api.requestAddMember(postData).then(() => {
-                        this.closeAddMember()
+                        this.addMemberObj.form = {
+                            memberName: '',
+                            type: 'ADMIN'
+                        }
+                        setTimeout(() => {
+                            this.addMemberObj.isShow = false
+                        })
                         this.initData()
                     }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                         this.isSaving = false
@@ -219,10 +231,34 @@
             },
 
             closeAddMember () {
-                this.addMemberObj.isShow = false
-                this.addMemberObj.form = {
-                    memberName: '',
-                    type: 'ADMIN'
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            this.addMemberObj.form = {
+                                memberName: '',
+                                type: 'ADMIN'
+                            }
+                            setTimeout(() => {
+                                this.addMemberObj.isShow = false
+                            })
+                            return true
+                        }
+                    })
+                } else {
+                    this.addMemberObj.isShow = false
+                    this.addMemberObj.form = {
+                        memberName: '',
+                        type: 'ADMIN'
+                    }
                 }
             },
 
@@ -275,6 +311,10 @@
                     this.deleteObj.loading = false
                     this.deleteObj.show = false
                 })
+            },
+
+            handleChangeForm () {
+                window.changeFlag = true
             }
         }
     }

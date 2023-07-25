@@ -8,7 +8,7 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
-                :disabled="loading || !canManualStartup"
+                :disabled="loading || !isRunning"
                 :icon="loading ? 'loading' : ''"
                 outline
                 :theme="isRunning ? 'warning' : 'default'"
@@ -29,10 +29,10 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
     import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb'
 
     export default {
         components: {
@@ -53,12 +53,6 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
-            },
             buildNumConf () {
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
@@ -70,6 +64,11 @@
             }
         },
         watch: {
+            '$route.params.buildNo': function (newBuildNum, oldBuildNum) {
+                if (newBuildNum !== oldBuildNum) {
+                    this.loading = false
+                }
+            },
             'execDetail.status': function (newStatus, oldStatus) {
                 if (newStatus !== oldStatus) {
                     this.loading = false

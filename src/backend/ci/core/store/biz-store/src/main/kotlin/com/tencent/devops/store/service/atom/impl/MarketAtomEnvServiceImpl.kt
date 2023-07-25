@@ -40,6 +40,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -291,7 +292,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     createTime = atom.createTime,
                     updateTime = atom.updateTime,
                     classifyCode = atom.classifyCode,
-                    classifyName = atom.classifyName
+                    classifyName = atom.classifyName,
+                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
                 )
             )
         }
@@ -402,7 +404,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     classifyCode = atom.classifyCode,
                     classifyName = atom.classifyName,
                     runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
-                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag
+                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
+                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
                 )
             }
         )

@@ -23,7 +23,7 @@
                         @click="downLoadFile(props.row)"
                         v-if="hasPermission && props.row.artifactoryType !== 'IMAGE'"
                         :disabled="!hasPermission"
-                        v-bk-tooltips="{ content: $t('details.noDownloadPermTips'), disabled: hasPermission }"
+                        v-bk-tooltips="{ content: $t('details.noDownloadPermTips'), disabled: hasPermission, allowHTML: false }"
                     >{{ $t('download') }}</bk-button>
                 </template>
             </bk-table-column>
@@ -33,8 +33,8 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { convertFileSize } from '@/utils/util'
     import { extForFile } from '@/utils/pipelineConst'
+    import { convertFileSize } from '@/utils/util'
 
     export default {
         components: {

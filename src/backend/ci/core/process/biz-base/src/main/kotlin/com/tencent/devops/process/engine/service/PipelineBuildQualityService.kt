@@ -327,7 +327,7 @@ class PipelineBuildQualityService(
         buildLogPrinter: BuildLogPrinter
     ): AtomResponse {
         with(task) {
-            val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
+            val atomDesc = ControlPointPosition.create(position).cnName
             val elementId = task.taskId
 
             if (checkResult.success) {
@@ -427,8 +427,10 @@ class PipelineBuildQualityService(
                 )
                 taskBuildRecordService.updateTaskRecord(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                    taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+                    taskId = taskId, executeCount = task.executeCount ?: 1,
+                    buildStatus = null,
                     taskVar = mapOf(QualityGateInElement::reviewUsers.name to auditUsers),
+                    operation = "handleQualityResult#$taskId",
                     timestamps = mapOf(
                         BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                             BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)

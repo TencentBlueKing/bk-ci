@@ -84,7 +84,7 @@ import java.time.LocalDateTime
 /**
  * 启动流水线上下文类，属于非线程安全类
  */
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongParameterList")
 data class StartBuildContext(
     val now: LocalDateTime = LocalDateTime.now(),
     val projectId: String,

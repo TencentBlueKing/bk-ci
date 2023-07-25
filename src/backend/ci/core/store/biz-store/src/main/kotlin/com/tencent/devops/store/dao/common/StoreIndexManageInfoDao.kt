@@ -37,12 +37,12 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreIndexManageInfoDao {
@@ -338,6 +338,7 @@ class StoreIndexManageInfoDao {
                 ).onDuplicateKeyUpdate()
                     .set(ELEMENT_VALUE, it.elementValue)
                     .set(REMARK, it.remark)
+                    .set(UPDATE_TIME, it.updateTime)
             }).execute()
         }
     }

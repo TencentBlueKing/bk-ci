@@ -52,6 +52,9 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
@@ -220,7 +223,8 @@ abstract class ImageReleaseService {
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    messageCode = IMAGE_ADD_NO_PROJECT_MEMBER,
+                    params = arrayOf(projectCode),
                     language = I18nUtil.getLanguage(userId)
                 )
             }
@@ -363,7 +367,7 @@ abstract class ImageReleaseService {
                 if ((null == publicImageListResp ||
                         publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                     return I18nUtil.generateResponseDataObject(
-                        messageCode = CommonMessageCode.PERMISSION_DENIED,
+                        messageCode = IMAGE_PUBLISH_REPO_NO_PERMISSION,
                         language = I18nUtil.getLanguage(userId)
                     )
                 }
@@ -889,7 +893,7 @@ abstract class ImageReleaseService {
                 StoreTypeEnum.IMAGE.type.toByte()
             ) || creator == userId || !validateUserFlag)
         ) {
-            return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
+            return Triple(false, NO_COMPONENT_ADMIN_PERMISSION, arrayOf(imageCode))
         }
         val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
@@ -1004,7 +1008,8 @@ abstract class ImageReleaseService {
             ) || !validateUserFlag)
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }

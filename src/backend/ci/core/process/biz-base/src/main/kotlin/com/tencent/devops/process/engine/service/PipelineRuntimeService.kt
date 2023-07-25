@@ -123,6 +123,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -725,7 +726,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                     context.containerSeq++
                     containerBuildRecords.addRecords(
-                        stage = stage,
+                        stageId = stage.id!!,
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -736,7 +737,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
-                            stage = stage,
+                            stageId = stage.id!!,
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -748,7 +749,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
-                            stage = stage,
+                            stageId = stage.id!!,
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -1079,15 +1080,17 @@ class PipelineRuntimeService @Autowired constructor(
                     BuildRecordTimeStamp(context.now.timestampmilli(), null)
             ), queueTime = context.now
         )
-
+        // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录
+        val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
         if (updateExistsTask.isNotEmpty()) {
             pipelineTaskService.batchUpdate(transactionContext, updateExistsTask)
-            saveTaskRecords(updateExistsTask, taskBuildRecords, context.resourceVersion)
+            taskBuildRecordResult.addRecords(updateExistsTask, context.resourceVersion)
         }
         if (buildTaskList.isNotEmpty()) {
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
-            saveTaskRecords(buildTaskList, taskBuildRecords, context.resourceVersion)
+            taskBuildRecordResult.addRecords(buildTaskList, context.resourceVersion)
         }
+        taskBuildRecordResult.addAll(taskBuildRecords)
         if (updateExistsContainer.isNotEmpty()) {
             pipelineContainerService.batchUpdate(
                 transactionContext, updateExistsContainer.map { it.first }
@@ -1111,31 +1114,8 @@ class PipelineRuntimeService @Autowired constructor(
         }
         pipelineBuildRecordService.batchSave(
             transactionContext, modelRecord, stageBuildRecords,
-            containerBuildRecords, taskBuildRecords
+            containerBuildRecords, taskBuildRecordResult
         )
-    }
-
-    private fun saveTaskRecords(
-        buildTaskList: MutableList<PipelineBuildTask>,
-        taskBuildRecords: MutableList<BuildRecordTask>,
-        resourceVersion: Int
-    ) {
-        buildTaskList.forEach {
-            // 自动填充的构建机控制插件，不需要存入Record
-            if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
-            taskBuildRecords.add(
-                BuildRecordTask(
-                    projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
-                    stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
-                    taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
-                    executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
-                    taskVar = mutableMapOf(), timestamps = mapOf(),
-                    elementPostInfo = it.additionalOptions?.elementPostInfo?.let { info ->
-                        if (info.parentElementId == it.taskId) null else info
-                    }
-                )
-            )
-        }
     }
 
     private fun saveContainerRecords(
@@ -1159,6 +1139,11 @@ class PipelineRuntimeService @Autowired constructor(
             } else if (detail is NormalContainer) {
                 detail.mutexGroup?.let {
                     containerVar[VMBuildContainer::mutexGroup.name] = it
+                }
+            }
+            if (detail.matrixGroupFlag == true) {
+                containerVar[Container::elements.name] = detail.elements.map {
+                    JsonUtil.toMutableMap(it)
                 }
             }
             containerBuildRecords.add(
@@ -1416,6 +1401,7 @@ class PipelineRuntimeService @Autowired constructor(
                             ManualReviewUserTaskElement::suggest.name to (params.suggest ?: ""),
                             ManualReviewUserTaskElement::params.name to params.params
                         ),
+                        operation = "manualDealReview#$taskId",
                         timestamps = mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                                 BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
@@ -1520,6 +1506,14 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun updateBuildNo(projectId: String, pipelineId: String, buildNo: Int) {
         pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo)
+    }
+
+    fun updateExecuteCount(
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ) {
+        pipelineBuildDao.updateExecuteCount(dslContext, projectId, buildId, executeCount)
     }
 
     /**
@@ -1784,7 +1778,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     // 获取流水线最后成功的构建号
     fun getLatestSucceededBuildId(projectId: String, pipelineId: String): String? {
-        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, projectId, pipelineId)?.buildId
+        return pipelineBuildDao.getLatestSucceedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
     // 获取流水线最后失败的构建号
