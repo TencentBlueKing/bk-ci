@@ -27,8 +27,11 @@
 
 package com.tencent.devops.dispatch.docker.client.context
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+
 open class HandlerContext(
-    open val grayEnv: Boolean,
     open var agentId: String,
-    open var secretKey: String
+    open var secretKey: String,
+    open var buildLogKey: String,
+    open var clusterType: DockerHostClusterType
 )

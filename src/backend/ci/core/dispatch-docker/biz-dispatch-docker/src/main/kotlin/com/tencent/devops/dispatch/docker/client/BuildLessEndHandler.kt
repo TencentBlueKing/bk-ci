@@ -32,12 +32,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildLessEndHandler @Autowired constructor(
+    private val client: Client,
     private val dockerHostProxyService: DockerHostProxyService
 ) : Handler<BuildLessEndHandlerContext>() {
     private val logger = LoggerFactory.getLogger(BuildLessEndHandler::class.java)
@@ -61,6 +64,19 @@ class BuildLessEndHandler @Autowired constructor(
                 containerId = containerId
             )
 
+            when (clusterType) {
+                DockerHostClusterType.BUILD_LESS -> endBuildLess(buildLessEndInfo, handlerContext)
+                DockerHostClusterType.K8S_BUILD_LESS -> endK8sBuildLess(buildLessEndInfo)
+                else -> endBuildLess(buildLessEndInfo, handlerContext)
+            }
+        }
+    }
+
+    private fun endBuildLess(
+        buildLessEndInfo: BuildLessEndInfo,
+        handlerContext: BuildLessEndHandlerContext
+    ) {
+        with(handlerContext) {
             val request = dockerHostProxyService.getDockerHostProxyRequest(
                 dockerHostUri = Constants.BUILD_LESS_END_URI,
                 dockerHostIp = buildLessHost,
@@ -87,5 +103,9 @@ class BuildLessEndHandler @Autowired constructor(
                 }
             }
         }
+    }
+
+    private fun endK8sBuildLess(buildLessEndInfo: BuildLessEndInfo) {
+        client.get(ServiceBaseBuildLessResource::class).endBuildLess(buildLessEndInfo)
     }
 }

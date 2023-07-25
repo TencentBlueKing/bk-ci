@@ -25,31 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.resource.service
 
-enum class DockerHostClusterType {
-    /**
-     * 公共构建机集群
-     */
-    COMMON,
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseBuildLessService
+import org.springframework.beans.factory.annotation.Autowired
 
-    /**
-     * 无编译环境构建机群
-     */
-    AGENT_LESS,
+@RestResource
+class ServiceBaseBuildLessResourceImpl @Autowired constructor(
+    private val dispatchBaseBuildLessService: DispatchBaseBuildLessService
+) : ServiceBaseBuildLessResource {
 
-    /**
-     * 无编译环境构建机群(new)
-     */
-    BUILD_LESS,
+    override fun startBuildLess(buildLessStartInfo: BuildLessStartInfo): Result<Boolean> {
+        return Result(dispatchBaseBuildLessService.startBuildLess(buildLessStartInfo))
+    }
 
-    /**
-     * 无编译环境构建机群(k8s)
-     */
-    K8S_BUILD_LESS,
-
-    /**
-     * mac构建机群
-     */
-    MACOS
+    override fun endBuildLess(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
+        return Result(dispatchBaseBuildLessService.endBuildLess(buildLessEndInfo))
+    }
 }

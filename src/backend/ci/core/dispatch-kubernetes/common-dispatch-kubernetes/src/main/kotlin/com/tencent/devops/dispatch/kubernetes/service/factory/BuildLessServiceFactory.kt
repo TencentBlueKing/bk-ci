@@ -25,30 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.utils
+package com.tencent.devops.dispatch.kubernetes.service.factory
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import kotlin.math.min
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.kubernetes.interfaces.BuildLessService
+import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class DockerHostLock(redisOperation: RedisOperation, pipelineId: String? = "") {
+@Service
+class BuildLessServiceFactory @Autowired constructor(
+    private val dockerRoutingSdkService: DockerRoutingSdkService
+) {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY_$pipelineId", 60L)
+    fun load(projectId: String): BuildLessService {
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
 
-//    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
-
-    fun tryLock(timeout: Long = 0, interval: Long = 40): Boolean {
-        val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
-        val start = System.currentTimeMillis()
-        var tryLock = redisLock.tryLock()
-        while (timeout > 0 && !tryLock && timeout > (System.currentTimeMillis() - start)) {
-            Thread.sleep(sleep)
-            tryLock = redisLock.tryLock()
-        }
-        return tryLock
+        return SpringContextUtil.getBean(
+            BuildLessService::class.java,
+            dockerRoutingType.name.toLowerCase() + "BuildLessService"
+        )
     }
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() = redisLock.unlock()
 }

@@ -25,31 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-enum class DockerHostClusterType {
-    /**
-     * 公共构建机集群
-     */
-    COMMON,
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 
-    /**
-     * 无编译环境构建机群
-     */
-    AGENT_LESS,
-
-    /**
-     * 无编译环境构建机群(new)
-     */
-    BUILD_LESS,
+/**
+ * 用来获取不同类型的dispatchType的buildless service来调用相关实现
+ * 注：仅在构建相关接口使用使用此类
+ */
+interface BuildLessService {
 
     /**
-     * 无编译环境构建机群(k8s)
+     * 开始无编译构建
      */
-    K8S_BUILD_LESS,
+    fun startBuildLess(
+        buildLessStartInfo: BuildLessStartInfo
+    ): Boolean
 
     /**
-     * mac构建机群
+     * 结束无编译构建
      */
-    MACOS
+    fun endBuildLess(
+        buildLessEndInfo: BuildLessEndInfo
+    ): Boolean
 }
