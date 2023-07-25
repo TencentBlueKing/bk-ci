@@ -115,5 +115,8 @@ object AuthMessageCode {
     const val INVALID_AUTHORIZATION_TYPE = "2121065" // 授权类型{0}不合法
     const val INVALID_REDIRECT_URI = "2121066" // 跳转链接{0}不合法
     const val INVALID_CLIENT_SECRET = "2121067" // 客户端{0}密钥不合法
-    const val INVALID_AUTHORIZATION_CODE = "2121068" //授权码不合法
+    const val INVALID_AUTHORIZATION_CODE = "2121068" // 授权码不合法
+    const val ERROR_REFRESH_TOKEN_NOT_FOUND = "2121069" // refresh_token不能为空
+    const val INVALID_REFRESH_TOKEN = "2121070" // refresh_token不合法
+    const val ERROR_REFRESH_TOKEN_EXPIRED = "2121071" // refresh token已过期
 }

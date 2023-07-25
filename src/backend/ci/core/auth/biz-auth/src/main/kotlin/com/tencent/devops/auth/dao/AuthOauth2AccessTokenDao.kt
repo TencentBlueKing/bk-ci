@@ -52,10 +52,10 @@ class AuthOauth2AccessTokenDao {
     fun create(
         dslContext: DSLContext,
         clientId: String,
-        userName: String,
+        userName: String?,
         accessToken: String,
-        refreshToken: String,
-        expiredTime: Int
+        refreshToken: String? = null,
+        expiredTime: Long
     ): Int {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.insertInto(
@@ -70,7 +70,7 @@ class AuthOauth2AccessTokenDao {
                 userName,
                 accessToken,
                 refreshToken,
-                expiredTime
+                expiredTime.toInt()
             ).execute()
         }
     }

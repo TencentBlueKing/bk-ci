@@ -22,7 +22,7 @@ class AuthOauth2CodeDao {
         dslContext: DSLContext,
         code: String,
         clientId: String,
-        expiredTime: Int
+        expiredTime: Long
     ): Int {
         return with(TAuthOauth2Code.T_AUTH_OAUTH2_CODE) {
             dslContext.insertInto(
@@ -33,7 +33,7 @@ class AuthOauth2CodeDao {
             ).values(
                 clientId,
                 code,
-                expiredTime
+                expiredTime.toInt()
             ).execute()
         }
     }

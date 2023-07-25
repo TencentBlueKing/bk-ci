@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class ClientService constructor(
+class Oauth2ClientService constructor(
     private val dslContext: DSLContext,
     private val authOauth2ClientDetailsDao: AuthOauth2ClientDetailsDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ClientService::class.java)
+        private val logger = LoggerFactory.getLogger(Oauth2ClientService::class.java)
     }
 
     fun getClientDetail(clientId: String): TAuthOauth2ClientDetailsRecord {
@@ -31,12 +31,13 @@ class ClientService constructor(
 
     fun verifyClientInformation(
         clientId: String,
-        redirectUri: String,
-        grantType: String,
         clientDetail: TAuthOauth2ClientDetailsRecord,
+        clientSecret: String? = null,
+        redirectUri: String? = null,
+        grantType: String? = null,
     ): Boolean {
         val authorizedGrantTypes = clientDetail.authorizedGrantTypes.split(",")
-        if (!authorizedGrantTypes.contains(grantType)) {
+        if (grantType != null && !authorizedGrantTypes.contains(grantType)) {
             logger.warn("The client($clientId) does not support the authorization code type")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_AUTHORIZATION_TYPE,
@@ -44,13 +45,20 @@ class ClientService constructor(
                 defaultMessage = "The client($clientId) does not support the authorization code type"
             )
         }
-        // 4、校验redirectUri是否和数据库一致
-        if (redirectUri != clientDetail.webServerRedirectUri) {
+        if (redirectUri != null && redirectUri != clientDetail.webServerRedirectUri) {
             logger.warn("The redirectUri is invalid|$clientId|$redirectUri")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REDIRECT_URI,
                 params = arrayOf(redirectUri),
                 defaultMessage = "The redirectUri($redirectUri) is invalid"
+            )
+        }
+        if (clientSecret != null && clientSecret != clientDetail.clientSecret) {
+            logger.warn("The client($clientId) secret is invalid")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.INVALID_CLIENT_SECRET,
+                params = arrayOf(clientId),
+                defaultMessage = "The client($clientId) secret is invalid"
             )
         }
         return true
