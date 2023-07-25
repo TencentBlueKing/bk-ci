@@ -201,6 +201,12 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        logger.info("grant group additional authorization|projectCode:$projectCodes")
+        projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,
