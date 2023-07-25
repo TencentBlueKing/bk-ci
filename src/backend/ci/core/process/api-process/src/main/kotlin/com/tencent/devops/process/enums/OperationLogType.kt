@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.enums
 
-enum class OperationLogType(val description: String = "") {
+enum class OperationLogType(val description: String) {
     CREATE_PIPELINE_AND_DRAFT("创建流水线首次保存草稿：「创建了草稿」"),
     CREATE_DRAFT_VERSION("编辑流水线生成草稿：「从 P1.T2.0 创建了草稿」"),
     UPDATE_DRAFT_VERSION("修改草稿保存后：「修改了草稿」"),
