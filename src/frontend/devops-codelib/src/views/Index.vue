@@ -360,7 +360,7 @@
         width: 480px;
     }
     .is-fold-search {
-        width: 270px;
+        width: 240px;
     }
 }
 .header-content {

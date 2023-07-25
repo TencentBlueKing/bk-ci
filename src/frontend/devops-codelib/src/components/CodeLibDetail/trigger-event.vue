@@ -21,7 +21,11 @@
             >
             </bk-search-select>
         </header>
-        <section class="timeline-warpper">
+        <section
+            v-if="eventList.length"
+            class="timeline-warpper"
+            v-bkloading="{ isLoading: pageLoading }"
+        >
             <ul
                 class="trigger-timeline"
                 @scroll.passive="handleScroll"
@@ -32,80 +36,30 @@
                         <div class="timeline-content"> timeline-content</div>
                     </div>
                 </li>
-                <li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li><li class="timeline-dot">
-                    <div class="timeline-section">
-                        <div class="timeline-title">timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
-                    </div>
-                </li>
             </ul>
+            <div class="timeline-footer" v-bkloading="{ isLoading: isLoadingMore }">
+                <a v-if="!hasLoadEnd" @click="getListData">{{ $t('codelib.加载更多') }}</a>
+                <span v-else class="load-end">{{ $t('codelib.到底啦') }}</span>
+            </div>
         </section>
+        <EmptyTableStatus
+            v-else
+            :type="isSearch ? 'search-empty' : 'empty'"
+            @clear="resetFilter"
+        />
+        
     </section>
 </template>
 <script>
+    import {
+        mapActions
+    } from 'vuex'
+    import EmptyTableStatus from '../empty-table-status.vue'
+
     export default {
         name: 'basicSetting',
         components: {
+            EmptyTableStatus
         },
         props: {
             curRepo: {
@@ -115,11 +69,24 @@
         },
         data () {
             return {
+                eventList: [],
                 searchValue: [],
-                daterange: []
+                daterange: ['', ''],
+                page: 1,
+                pageSize: 1,
+                catchRepoId: '',
+                isLoadingMore: false,
+                hasLoadEnd: false,
+                pageLoading: false
             }
         },
         computed: {
+            repoId () {
+                return this.$route.query.id
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
             triggerType () {
                 return this.curRepo.type || ''
             },
@@ -213,19 +180,85 @@
                 return list.filter((data) => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            isSearch () {
+                return this.daterange[0] || this.searchValue.length
+            }
+        },
+        watch: {
+            repoId (id) {
+                this.catchRepoId = id
+                this.resetFilter()
+            },
+            daterange () {
+                this.page = 1
+                this.hasLoadEnd = false
+                this.eventList = []
+                if (this.catchRepoId === this.repoId) {
+                    this.getListData()
+                }
+            },
+            searchValue () {
+                this.page = 1
+                this.hasLoadEnd = false
+                this.eventList = []
+                if (this.catchRepoId === this.repoId) {
+                    this.getListData()
+                }
             }
         },
         created () {
-            
+            this.catchRepoId = this.repoId
+            this.getListData()
         },
         methods: {
+            ...mapActions('codelib', [
+                'fetchTriggerEventList'
+            ]),
             handleScroll (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                // if (bottomDis <= 300 && !this.hasLoadEnd && !this.isLoadingMore) this.getListData()
-                if (bottomDis <= 300) {
-                    console.log('123 1')
+                if (bottomDis <= 300 && !this.hasLoadEnd && !this.isLoadingMore) this.getListData()
+            },
+            getListData () {
+                if (this.hasLoadEnd) return
+                if (this.page === 1) {
+                    this.pageLoading = true
+                } else {
+                    this.isLoadingMore = true
                 }
+                const daterange = this.daterange.map(i => i && new Date(i).getTime())
+                const params = {}
+                this.searchValue.forEach(i => {
+                    params[`${i.id}`] = (i.values && i.values[0].id) || i.name
+                })
+                console.log(params.triggerType || this.triggerType, 'params.triggerType || this.triggerType,')
+                
+                this.fetchTriggerEventList({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoId,
+                    page: this.page,
+                    pageSize: this.pageSize,
+                    ...params,
+                    triggerType: params.triggerType || this.triggerType,
+                    startTimeEndTime: daterange[0],
+                    endTimeStartTime: daterange[1]
+                }).then(res => {
+                    this.eventList = [...this.eventList, ...res.records]
+                    this.hasLoadEnd = res.totalPages === res.page || res.totalPages === 0
+                    this.page += 1
+                }).finally(() => {
+                    this.pageLoading = false
+                    this.isLoadingMore = false
+                })
+            },
+            resetFilter () {
+                this.daterange = []
+                this.searchValue = []
+                this.page = 1
+                this.hasLoadEnd = false
+                this.eventList = []
+                this.getListData()
             }
         }
     }
@@ -246,17 +279,16 @@
         .timeline-warpper {
             height: calc(100% - 32px);
             padding-top: 20px;
+            overflow-y: scroll;
+            &::-webkit-scrollbar {
+                background-color: #fff;
+                height: 0px !important;
+                width: 0px !important;
+            }
         }
     }
     .trigger-timeline {
-        overflow-y: scroll;
-        height: 100%;
         padding: 8px;
-        &::-webkit-scrollbar {
-            background-color: #fff;
-            height: 0px !important;
-            width: 0px !important;
-        }
         .timeline-dot {
             border-left: 1px solid #d8d8d8;
             font-size: 0;
@@ -297,6 +329,32 @@
             word-break: break-all;
             font-size: 14px;
             color: #666;
+        }
+    }
+    .empty-data {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .empty-icon {
+            width: 120px;
+            margin-top: 20%;
+            img {
+                width: 100%;
+            }
+        }
+        .search-empty-icon {
+            width: 70%;
+            margin-top: 10%;
+        }
+    }
+    .timeline-footer {
+        text-align: center;
+        font-size: 12px;
+        .load-end {
+            color: #C4C6CC;
+        }
+        ::v-deep .bk-loading {
+            background-color: #fafbfd !important;
         }
     }
 </style>

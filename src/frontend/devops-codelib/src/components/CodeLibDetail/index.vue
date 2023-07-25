@@ -77,6 +77,7 @@
                 v-bind="panel"
                 :key="index">
                 <component
+                    v-if="panel.name === active"
                     :is="componentName"
                     :repo-info="repoInfo"
                     :cur-repo="curRepo"

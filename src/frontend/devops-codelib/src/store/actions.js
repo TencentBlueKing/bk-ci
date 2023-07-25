@@ -22,6 +22,7 @@ import {
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
     TICKET_API_URL_PREFIX,
+    PROCESS_API_URL_PREFIX,
     SET_TICKETS_MUTATION,
     UPDATE_CODE_LIB_MUTATION,
     TOGGLE_CODE_LIB_DIALOG,
@@ -423,6 +424,24 @@ const actions = {
         pageSize
     }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listUsingPipeline?page=${page}&pageSize=${pageSize}`)
+    },
+
+    /**
+     * 获取触发信息列表
+     */
+    fetchTriggerEventList ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize,
+        triggerType,
+        eventType = '',
+        triggerUser = '',
+        pipelineName = '',
+        startTimeEndTime = '',
+        endTimeStartTime = ''
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/triggerEvent/${projectId}/${repositoryHashId}/byRepoHashId?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
     }
 }
 
