@@ -26,7 +26,12 @@ data class Devfile(
     @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
     var dotfileRepo: String? = null,
     @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
-    var workspaceFolder: String? = null
+    var workspaceFolder: String? = null,
+    @ApiModelProperty("申请云桌面时指定的区域")
+    val zoneId: String? = null,
+    @ApiModelProperty("申请云桌面时指定的机型:L、XL等")
+    val machineType: String? = null
+
 ) {
     fun checkWorkspaceMountType(): WorkspaceMountType {
         if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {

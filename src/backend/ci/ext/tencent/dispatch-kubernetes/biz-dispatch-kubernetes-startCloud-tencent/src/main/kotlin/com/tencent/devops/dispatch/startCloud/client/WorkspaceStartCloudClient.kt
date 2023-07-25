@@ -169,7 +169,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         workspaceName: String,
         environment: EnvironmentDelete
     ) {
-        val url = "$apiUrl/openapi/computer/destory"
+        val url = "$apiUrl/openapi/computer/destroy"
         val body = JsonUtil.toJson(environment, false)
         logger.info("deleteWorkspace User $userId request url: $url, body: $body")
         val request = Request.Builder()
