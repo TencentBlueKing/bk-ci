@@ -5,6 +5,7 @@ import com.tencent.devops.auth.dao.AuthOauth2CodeDao
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -35,6 +36,18 @@ class Oauth2CodeService constructor(
         )
     }
 
+    fun create(
+        code: String,
+        clientId: String
+    ) {
+        authOauth2CodeDao.create(
+            dslContext = dslContext,
+            code = code,
+            clientId = clientId,
+            expiredTime = System.currentTimeMillis() + codeValiditySeconds
+        )
+    }
+
     fun verifyCode(
         clientId: String,
         codeDetails: TAuthOauth2CodeRecord
@@ -52,5 +65,10 @@ class Oauth2CodeService constructor(
             )
         }
         return true
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(Oauth2EndpointService::class.java)
+        private const val codeValiditySeconds = 5 * 60 * 1000L
     }
 }
