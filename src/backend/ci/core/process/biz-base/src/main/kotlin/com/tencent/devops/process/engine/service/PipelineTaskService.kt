@@ -38,11 +38,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -62,7 +60,6 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
@@ -71,7 +68,6 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory

@@ -68,8 +68,8 @@ import org.springframework.stereotype.Component
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
-        private val pipelineUrlBean: PipelineUrlBean,
-        private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineContainerService: PipelineContainerService
 ) {
 
