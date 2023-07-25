@@ -588,16 +588,6 @@ class ProjectDao {
     }
 
     fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {
-        val projectProperties = ProjectProperties(
-            pipelineAsCodeSettings = if (projectInfoRequest.enablePac == true) {
-                PipelineAsCodeSettings(enable = true)
-            } else{
-                PipelineAsCodeSettings(enable = false)
-            },
-                remotedev = projectInfoRequest.enableRemotedev,
-                cloudDesktopNum = projectInfoRequest.cloudDesktopNum
-        )
-
         with(TProject.T_PROJECT) {
             val step = dslContext.update(this)
                 .set(PROJECT_NAME, projectInfoRequest.projectName)
@@ -620,7 +610,7 @@ class ProjectDao {
                 .set(KIND, projectInfoRequest.kind)
                 .set(ENABLED, projectInfoRequest.enabled)
                 .set(PIPELINE_LIMIT, projectInfoRequest.pipelineLimit)
-                .set(PROPERTIES, JsonUtil.toJson(projectProperties, false))
+                .set(PROPERTIES, projectInfoRequest.properties?.let { JsonUtil.toJson(it, false) })
 
             if (projectInfoRequest.hybridCCAppId != null) {
                 step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)
