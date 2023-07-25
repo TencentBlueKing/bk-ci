@@ -178,6 +178,13 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return true
     }
 
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean = true
+
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         val roleInfos = permissionRoleService.getPermissionRole(projectId.toInt())
         logger.info("[IAM] getProjectRoles : roleInfos = $roleInfos")

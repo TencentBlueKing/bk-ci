@@ -92,8 +92,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = PageUtil.getValidPageSize(pageSize)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
+            val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
             permissionGradeManagerService.listGroup(
                 gradeManagerId = resourceInfo.relationId,
+                searchGroupDTO = searchGroupDTO,
                 page = validPage,
                 pageSize = validPageSize
             )
