@@ -24,11 +24,12 @@ if config.esb.enabled then
         ngx.exit(401)
     end
     if is_login_result.code == 1302403 then
-      ngx.log(ngx.ERR , "is_login code is 1302403 , need Authentication")
-      ngx.exit(407)
+        ngx.log(ngx.ERR, "is_login code is 1302403 , need Authentication")
+        ngx.header["X-DEVOPS-ERROR-PAGE"] = 'esb.error.html'
+        ngx.exit(401)
     elseif is_login_result.code ~= 0 then
-      ngx.log(ngx.ERR , "is_login code is "..is_login_result.code.." , return 401")
-      ngx.exit(401)
+        ngx.log(ngx.ERR, "is_login code is " .. is_login_result.code .. " , return 401")
+        ngx.exit(401)
     end
 end
 
