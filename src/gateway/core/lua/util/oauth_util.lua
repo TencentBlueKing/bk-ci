@@ -132,7 +132,7 @@ function _M:is_login(bk_token)
     end
     if result.code == 1302403 then
         ngx.log(ngx.ERR, "is_login code is 1302403 , need Authentication")
-        ngx.header["X-DEVOPS-ESB-MESSAGE"] = result.message
+        ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 417,"message": "'..result.message..'", "errorCode": 1302403}'
         ngx.exit(401)
     elseif result.code ~= 0 then
         ngx.log(ngx.ERR, "is_login code is " .. result.code .. " , return 401")
