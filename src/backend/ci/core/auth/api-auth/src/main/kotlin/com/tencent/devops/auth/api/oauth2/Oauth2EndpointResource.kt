@@ -17,7 +17,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OAUTH2_ENDPOINT"], description = "oauth2相关")
-@Path("open/oauth2/endpoint")
+@Path("user/oauth2/endpoint")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface Oauth2EndpointResource {
