@@ -82,7 +82,8 @@ class PipelineBuildExtTencentService @Autowired constructor(
                 stageId = task.stageId,
                 containerId = task.containerId,
                 taskId = null,
-                variables = variable
+                variables = variable,
+                executeCount = task.executeCount
             )
         )
         return extMap
