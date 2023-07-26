@@ -127,23 +127,24 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        val ip = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)?.environmentUid
+        val workspaceInfo = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
             ?: throw BuildFailureException(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                "第三方服务-START-CLOUD 异常，异常信息 - ip 为空"
+                "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
         return WorkspaceInfo(
             status = EnvStatusEnum.running,
-            hostIP = ip,
-            environmentIP = ip,
+            hostIP = workspaceInfo.environmentUid,
+            environmentIP = workspaceInfo.environmentUid,
             clusterId = "",
             namespace = "",
             environmentHost = "",
             ready = true,
             started = true,
-            curLaunchId = curLaunchId
+            curLaunchId = curLaunchId,
+            regionId = workspaceInfo.regionId
         )
     }
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {

@@ -386,7 +386,7 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
-        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!)
+        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!, detail.regionId)
     }
 
     fun getWorkspaceTimeline(
@@ -449,7 +449,8 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.namespace,
-                workspaceInfo.curLaunchId
+                workspaceInfo.curLaunchId,
+                workspaceInfo.regionId
             )
             redisCache.saveWorkspaceDetail(
                 it.name,
