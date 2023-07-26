@@ -81,7 +81,7 @@ interface BuildStoreIndexInfoResource {
 
     @ApiOperation("根据组件代码删除指标结果")
     @DELETE
-    @Path("/types/{storeType}//indexCodes/{indexCode}/result/delete")
+    @Path("/types/{storeType}/indexCodes/{indexCode}/result/delete")
     fun deleteStoreIndexResultByStoreCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
