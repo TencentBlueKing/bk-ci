@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -208,6 +209,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             containerVar.remove(Container::startVMStatus.name)
             containerVar.remove(Container::startEpoch.name)
             containerVar.remove(BuildRecordTimeLine::class.java.simpleName)
+            // 将当前重试 task id 做记录
+            containerVar[JOB_RETRY_TASK_ID] = taskId
             lastContainerRecord.copy(
                 status = BuildStatus.QUEUE.name, containerVar = containerVar,
                 executeCount = executeCount, timestamps = mapOf()
