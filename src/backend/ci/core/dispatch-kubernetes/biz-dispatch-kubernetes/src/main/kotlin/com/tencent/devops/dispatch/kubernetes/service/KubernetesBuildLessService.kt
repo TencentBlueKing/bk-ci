@@ -34,7 +34,7 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.BuildLessService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service("kubernetesContainerService")
+@Service("kubernetesBuildLessService")
 class KubernetesBuildLessService @Autowired constructor(
     private val kubernetesBuildLessClient: KubernetesBuildLessClient
 ) : BuildLessService {
