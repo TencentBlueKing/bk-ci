@@ -197,7 +197,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
                         if (!projectIds.isNullOrEmpty()) {
                             saveProjectAtomInfo(projectIds)
                         }
-                        projectMinId += (MAX_PAGE_SIZE + 1)
+                        projectMinId += 11
                     } while (projectMinId <= projectMaxId)
                 }
             } catch (ignore: Throwable) {
