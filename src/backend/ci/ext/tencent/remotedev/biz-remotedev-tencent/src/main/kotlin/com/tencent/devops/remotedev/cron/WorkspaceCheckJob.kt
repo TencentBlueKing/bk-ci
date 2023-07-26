@@ -197,8 +197,6 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)
-        } finally {
-            redisLock.unlock()
         }
     }
 }
