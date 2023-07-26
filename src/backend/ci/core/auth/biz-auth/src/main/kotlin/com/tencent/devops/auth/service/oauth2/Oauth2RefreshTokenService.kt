@@ -22,7 +22,8 @@ class Oauth2RefreshTokenService constructor(
         )
     }
 
-    fun delete(refreshToken: String) {
+    fun delete(refreshToken: String?) {
+        refreshToken ?: return
         authOauth2RefreshTokenDao.delete(
             dslContext = dslContext,
             refreshToken = refreshToken
@@ -38,7 +39,7 @@ class Oauth2RefreshTokenService constructor(
             dslContext = dslContext,
             refreshToken = refreshToken,
             clientId = clientId,
-            expiredTime = expiredTime.toInt()
+            expiredTime = expiredTime
         )
     }
 }

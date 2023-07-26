@@ -26,12 +26,10 @@ class Oauth2EndpointResourceImpl constructor(
     }
 
     override fun getAccessToken(
-        userId: String,
         accessTokenRequest: Oauth2AccessTokenRequest
     ): Result<Oauth2AccessTokenVo?> {
         return Result(
             endpointService.getAccessToken(
-                userId = userId,
                 accessTokenRequest = accessTokenRequest
             )
         )

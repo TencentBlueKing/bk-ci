@@ -7,8 +7,6 @@ import io.swagger.annotations.ApiModelProperty
 data class Oauth2AccessTokenRequest(
     @ApiModelProperty("客户端id", required = true)
     val clientId: String,
-    @ApiModelProperty("用户名称", required = true)
-    val userName: String = "",
     @ApiModelProperty("客户端密钥", required = true)
     val clientSecret: String,
     @ApiModelProperty("授权类型", required = true)

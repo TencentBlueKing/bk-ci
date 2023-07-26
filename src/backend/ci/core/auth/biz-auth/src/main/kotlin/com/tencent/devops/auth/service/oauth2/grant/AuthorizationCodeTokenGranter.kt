@@ -2,15 +2,16 @@ package com.tencent.devops.auth.service.oauth2.grant
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
-import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
 import com.tencent.devops.auth.service.oauth2.Oauth2CodeService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.UUID
 
 @Service
 class AuthorizationCodeTokenGranter constructor(
@@ -32,7 +33,7 @@ class AuthorizationCodeTokenGranter constructor(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
     ): Oauth2AccessTokenDTO {
-        logger.info("authorization_code getAccessToken|$accessTokenRequest|$clientDetail")
+        logger.info("authorization code getAccessToken|$accessTokenRequest|$clientDetail")
         val clientId = accessTokenRequest.clientId
         val code = accessTokenRequest.code
         val codeDetails = codeService.get(
@@ -41,37 +42,38 @@ class AuthorizationCodeTokenGranter constructor(
         codeService.verifyCode(
             clientId = clientId,
             codeDetails = codeDetails
-
         )
+        val userName = codeDetails.userName
         // 若授权码没有问题，则直接消费授权码，授权码单次有效
         codeService.consume(code = code!!)
 
-        val accessTokenRecord = accessTokenService.get(
+        val accessTokenInfo = accessTokenService.get(
             clientId = clientId,
-            userName = accessTokenRequest.userName
+            userName = codeDetails.userName
         )
-        val isAccessTokenValid = accessTokenRecord != null && accessTokenRecord.expiredTime < System.currentTimeMillis()
+        val isAccessTokenValid = accessTokenInfo != null && AuthUtils.isExpired(accessTokenInfo.expiredTime)
         val refreshToken = if (isAccessTokenValid) {
             // 若accessToken未过期，refreshToken不变
-            accessTokenRecord!!.refreshToken
+            accessTokenInfo!!.refreshToken
         } else {
-            val refreshToken = UUID.randomUUID().toString()
+            val newRefreshToken = UUIDUtil.generate()
             // 若accessToken过期，refreshToken重新生成
             refreshTokenService.delete(
-                refreshToken = accessTokenRecord?.refreshToken ?: ""
+                refreshToken = accessTokenInfo?.refreshToken
             )
             val refreshTokenValidity = clientDetail.refreshTokenValidity
             refreshTokenService.create(
-                refreshToken = refreshToken,
+                refreshToken = newRefreshToken,
                 clientId = clientId,
-                expiredTime = System.currentTimeMillis() + refreshTokenValidity * 1000L
+                expiredTime = DateTimeUtil.getFutureTimestamp(refreshTokenValidity)
             )
-            refreshToken
+            newRefreshToken
         }
         return Oauth2AccessTokenDTO(
-            accessToken = accessTokenRecord?.accessToken,
+            accessToken = accessTokenInfo?.accessToken,
             refreshToken = refreshToken,
-            expiredTime = accessTokenRecord?.expiredTime
+            expiredTime = accessTokenInfo?.expiredTime,
+            userName = userName
         )
     }
 }

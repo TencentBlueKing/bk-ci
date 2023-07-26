@@ -337,7 +337,7 @@ statistics:
 cert:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aes-key: "gHi(xG9Af)jEvCx&"
-
+v
 credential:
   mixer: "******"
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
@@ -412,7 +412,7 @@ wework:
   enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
   duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
   enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
-  
+
 # 分布式ID配置
 leaf:
   segment:

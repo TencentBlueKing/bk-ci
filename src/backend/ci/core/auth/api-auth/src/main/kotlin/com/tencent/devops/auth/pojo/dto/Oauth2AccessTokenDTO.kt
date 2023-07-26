@@ -6,9 +6,11 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("oauth2获取token中间处理态")
 data class Oauth2AccessTokenDTO(
     @ApiModelProperty("accessToken", required = true)
-    var accessToken: String? = null,
+    val accessToken: String? = null,
     @ApiModelProperty("refreshToken", required = true)
-    var refreshToken: String? = null,
+    val refreshToken: String? = null,
     @ApiModelProperty("accessToken过期时间", required = true)
-    var expiredTime: Int? = null
+    val expiredTime: Long? = null,
+    @ApiModelProperty("accessToken绑定的用户名称", required = true)
+    val userName: String? = null
 )

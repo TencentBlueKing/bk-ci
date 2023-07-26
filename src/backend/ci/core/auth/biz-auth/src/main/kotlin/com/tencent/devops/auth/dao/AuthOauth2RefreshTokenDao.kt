@@ -33,7 +33,7 @@ class AuthOauth2RefreshTokenDao {
         dslContext: DSLContext,
         refreshToken: String,
         clientId: String,
-        expiredTime: Int
+        expiredTime: Long
     ): Int {
         return with(TAuthOauth2RefreshToken.T_AUTH_OAUTH2_REFRESH_TOKEN) {
             dslContext.insertInto(

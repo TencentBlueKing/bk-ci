@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class AuthOauth2ClientDetailsDao {
-    fun get(
+    fun  get(
         dslContext: DSLContext,
         clientId: String
     ): TAuthOauth2ClientDetailsRecord? {

@@ -5,11 +5,11 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPI
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_NOT_FOUND
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
-import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -33,7 +33,7 @@ class RefreshTokenGranter(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetail: TAuthOauth2ClientDetailsRecord
     ): Oauth2AccessTokenDTO {
-        logger.info("refresh_token getAccessToken")
+        logger.info("refresh token getAccessToken|$accessTokenRequest|$clientDetail")
         //1.校验refresh_token是否为空
         val refreshToken = accessTokenRequest.refreshToken
             ?: throw ErrorCodeException(
@@ -41,21 +41,22 @@ class RefreshTokenGranter(
                 defaultMessage = "The refresh token must be provided"
             )
         // 2.校验refresh_token是否存在
-        val refreshTokenRecord = refreshTokenService.get(
+        val refreshTokenInfo = refreshTokenService.get(
             refreshToken = refreshToken
         )!!
-        if (refreshTokenRecord.clientId != accessTokenRequest.clientId) {
+        // 3.校验refresh_token是否跟client_id匹配
+        if (refreshTokenInfo.clientId != accessTokenRequest.clientId) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REFRESH_TOKEN,
                 defaultMessage = "The authorization code invalid"
             )
         }
-        //2.清除跟该refresh_token授权码相关的access_token
+        //4.清除跟该refresh_token授权码相关的access_token
         accessTokenService.deleteByRefreshToken(
             refreshToken = accessTokenRequest.refreshToken!!
         )
-        //3.校验refresh_token是否过期
-        if (refreshTokenRecord.expiredTime < System.currentTimeMillis()) {
+        //5.校验refresh_token是否过期
+        if (AuthUtils.isExpired(refreshTokenInfo.expiredTime)) {
             throw ErrorCodeException(
                 errorCode = ERROR_REFRESH_TOKEN_EXPIRED,
                 defaultMessage = "The refresh token has expired!"

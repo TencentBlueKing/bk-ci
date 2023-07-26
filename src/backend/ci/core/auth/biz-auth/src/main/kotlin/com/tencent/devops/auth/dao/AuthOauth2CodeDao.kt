@@ -3,7 +3,6 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.model.auth.tables.TAuthOauth2Code
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -21,6 +20,7 @@ class AuthOauth2CodeDao {
     fun create(
         dslContext: DSLContext,
         code: String,
+        userId: String,
         clientId: String,
         expiredTime: Long
     ): Int {
@@ -29,11 +29,13 @@ class AuthOauth2CodeDao {
                 this,
                 CLIENT_ID,
                 CODE,
+                USER_NAME,
                 EXPIRED_TIME
             ).values(
                 clientId,
                 code,
-                expiredTime.toInt()
+                userId,
+                expiredTime
             ).execute()
         }
     }

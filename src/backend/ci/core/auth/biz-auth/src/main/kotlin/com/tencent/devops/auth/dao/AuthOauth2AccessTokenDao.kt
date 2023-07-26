@@ -3,7 +3,6 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.model.auth.tables.TAuthOauth2AccessToken
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2AccessTokenRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -70,7 +69,7 @@ class AuthOauth2AccessTokenDao {
                 userName,
                 accessToken,
                 refreshToken,
-                expiredTime.toInt()
+                expiredTime
             ).execute()
         }
     }

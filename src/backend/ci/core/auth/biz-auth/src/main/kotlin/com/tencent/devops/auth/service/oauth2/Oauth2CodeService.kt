@@ -3,6 +3,8 @@ package com.tencent.devops.auth.service.oauth2
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthOauth2CodeDao
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -37,14 +39,16 @@ class Oauth2CodeService constructor(
     }
 
     fun create(
+        userId: String,
         code: String,
         clientId: String
     ) {
         authOauth2CodeDao.create(
             dslContext = dslContext,
             code = code,
+            userId = userId,
             clientId = clientId,
-            expiredTime = System.currentTimeMillis() + codeValiditySeconds
+            expiredTime = DateTimeUtil.getFutureTimestamp(codeValiditySeconds)
         )
     }
 
@@ -58,7 +62,7 @@ class Oauth2CodeService constructor(
                 defaultMessage = "The authorization code does not belong to the client($clientId)"
             )
         }
-        if (codeDetails.expiredTime < System.currentTimeMillis()) {
+        if (AuthUtils.isExpired(codeDetails.expiredTime)) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_AUTHORIZATION_CODE,
                 defaultMessage = "The authorization code expired"
