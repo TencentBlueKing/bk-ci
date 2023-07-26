@@ -30,9 +30,6 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.metrics.config.MetricsConfig
-import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
-import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
-import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
@@ -40,13 +37,19 @@ import com.tencent.devops.metrics.pojo.po.PipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
+import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
+import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
+import java.math.BigDecimal
+import java.sql.Connection
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
-import org.springframework.stereotype.Repository
 import org.jooq.Result
-import java.math.BigDecimal
-import java.time.LocalDateTime
+import org.jooq.SQLDialect
+import org.jooq.impl.DSL
+import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
@@ -229,7 +232,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
     }
 
     fun queryPipelineFailDetailCount(
-        dslContext: DSLContext,
+        connection: Connection,
         queryPipelineFailQo: QueryPipelineFailQO
     ): Long {
         with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
@@ -243,14 +246,17 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
             }
-            val step = dslContext.select().from(this)
+            val query = DSL.using(connection, SQLDialect.MYSQL)
+                .selectCount()
+                .from(this)
             if (!pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tProjectPipelineLabelInfo)
+                query.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
-            return step.where(conditions)
+            val result = query.where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
-                .execute().toLong()
+                .fetchOne()
+            return result?.getValue(0, Long::class.java) ?: 0L
         }
     }
 
