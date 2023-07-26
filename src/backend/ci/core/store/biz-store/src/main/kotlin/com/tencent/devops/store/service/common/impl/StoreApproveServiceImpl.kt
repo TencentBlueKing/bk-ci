@@ -36,6 +36,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreApproveRecord
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.dao.common.StoreApproveDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.StoreApproveDetail
@@ -102,7 +104,8 @@ class StoreApproveServiceImpl : StoreApproveService {
         val flag = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType)
         if (!flag) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -135,7 +138,8 @@ class StoreApproveServiceImpl : StoreApproveService {
         val flag = storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())
         if (!flag) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -203,8 +207,9 @@ class StoreApproveServiceImpl : StoreApproveService {
             )
             if (!flag) {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
-                    language = I18nUtil.getLanguage(userId)
+                    messageCode = GET_INFO_NO_PERMISSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(storeApproveRecord.storeCode)
                 )
             }
             val approveType = storeApproveRecord.type
