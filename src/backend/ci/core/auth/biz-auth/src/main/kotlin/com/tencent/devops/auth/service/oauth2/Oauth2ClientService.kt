@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthOauth2ClientDetailsDao
+import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.jooq.DSLContext
@@ -18,25 +19,38 @@ class Oauth2ClientService constructor(
         private val logger = LoggerFactory.getLogger(Oauth2ClientService::class.java)
     }
 
-    fun getClientDetail(clientId: String): TAuthOauth2ClientDetailsRecord {
+    fun getClientDetails(clientId: String): ClientDetailsInfo {
         return authOauth2ClientDetailsDao.get(
             dslContext = dslContext,
             clientId = clientId
-        ) ?: throw ErrorCodeException(
+        )?.convert() ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
             params = arrayOf(clientId),
             defaultMessage = "the client $clientId not exists"
         )
     }
 
+    fun TAuthOauth2ClientDetailsRecord.convert(): ClientDetailsInfo {
+        return ClientDetailsInfo(
+            clientId = clientId,
+            clientSecret = clientSecret,
+            scope = scope,
+            authorizedGrantTypes = authorizedGrantTypes,
+            redirectUri = webServerRedirectUri,
+            accessTokenValidity = accessTokenValidity,
+            refreshTokenValidity = refreshTokenValidity,
+        )
+    }
+
+    @Suppress("ThrowsCount")
     fun verifyClientInformation(
         clientId: String,
-        clientDetail: TAuthOauth2ClientDetailsRecord,
+        clientDetails: ClientDetailsInfo,
         clientSecret: String? = null,
         redirectUri: String? = null,
         grantType: String? = null,
     ): Boolean {
-        val authorizedGrantTypes = clientDetail.authorizedGrantTypes.split(",")
+        val authorizedGrantTypes = clientDetails.authorizedGrantTypes.split(",")
         if (grantType != null && !authorizedGrantTypes.contains(grantType)) {
             logger.warn("The client($clientId) does not support the authorization code type")
             throw ErrorCodeException(
@@ -45,7 +59,7 @@ class Oauth2ClientService constructor(
                 defaultMessage = "The client($clientId) does not support the authorization code type"
             )
         }
-        if (redirectUri != null && redirectUri != clientDetail.webServerRedirectUri) {
+        if (redirectUri != null && redirectUri != clientDetails.redirectUri) {
             logger.warn("The redirectUri is invalid|$clientId|$redirectUri")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REDIRECT_URI,
@@ -53,7 +67,7 @@ class Oauth2ClientService constructor(
                 defaultMessage = "The redirectUri($redirectUri) is invalid"
             )
         }
-        if (clientSecret != null && clientSecret != clientDetail.clientSecret) {
+        if (clientSecret != null && clientSecret != clientDetails.clientSecret) {
             logger.warn("The client($clientId) secret is invalid")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_CLIENT_SECRET,

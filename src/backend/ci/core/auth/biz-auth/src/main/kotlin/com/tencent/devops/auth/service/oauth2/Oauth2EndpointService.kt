@@ -4,10 +4,8 @@ import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.service.oauth2.grant.TokenGranter
 import com.tencent.devops.common.api.util.UUIDUtil
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.UUID
 
 @Service
 class Oauth2EndpointService constructor(
@@ -27,13 +25,13 @@ class Oauth2EndpointService constructor(
     ): String {
         logger.info("Oauth2EndpointService|getAuthorizationCode:$userId|$clientId|$redirectUri")
         // 1、校验clientId是否存在
-        val clientDetail = clientService.getClientDetail(clientId = clientId)
+        val clientDetails = clientService.getClientDetails(clientId = clientId)
         // 2、校验客户端信息是否正确
         clientService.verifyClientInformation(
             clientId = clientId,
             redirectUri = redirectUri,
             grantType = AUTHORIZATION_CODE_TYPE,
-            clientDetail = clientDetail
+            clientDetails = clientDetails
         )
         // 3、生成授权码并存储数据库，授权码有效期为5分钟
         val code = UUIDUtil.generate()
@@ -52,6 +50,19 @@ class Oauth2EndpointService constructor(
         val grantType = accessTokenRequest.grantType
         val clientId = accessTokenRequest.clientId
         logger.info("Oauth2EndpointService|getAccessToken:$clientId|$grantType")
-        return tokenGranter.grant(grantType = grantType, accessTokenRequest = accessTokenRequest)
+        val clientDetails = clientService.getClientDetails(
+            clientId = clientId
+        )
+        clientService.verifyClientInformation(
+            clientId = clientId,
+            clientSecret = accessTokenRequest.clientSecret,
+            grantType = grantType,
+            clientDetails = clientDetails
+        )
+        return tokenGranter.grant(
+            grantType = grantType,
+            clientDetails = clientDetails,
+            accessTokenRequest = accessTokenRequest
+        )
     }
 }

@@ -1,20 +1,17 @@
 package com.tencent.devops.auth.service.oauth2.grant
 
+import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
-import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
-import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class ClientCredentialsTokenGranter constructor(
-    private val clientService: Oauth2ClientService,
     private val accessTokenService: Oauth2AccessTokenService
 ) : AbstractTokenGranter(
     grantType = GRANT_TYPE,
-    oauth2ClientService = clientService,
     accessTokenService = accessTokenService
 ) {
     companion object {
@@ -24,9 +21,9 @@ class ClientCredentialsTokenGranter constructor(
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
-        clientDetail: TAuthOauth2ClientDetailsRecord
+        clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("client credentials getAccessToken|$accessTokenRequest|$clientDetail")
+        logger.info("client credentials getAccessToken|$accessTokenRequest|$clientDetails")
         // 1、根据appcode获取accessToken
         val accessTokenInfo = accessTokenService.get(
             clientId = accessTokenRequest.clientId

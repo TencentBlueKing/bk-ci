@@ -1,27 +1,24 @@
 package com.tencent.devops.auth.service.oauth2.grant
 
+import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
-import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
 import com.tencent.devops.auth.service.oauth2.Oauth2CodeService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.utils.AuthUtils
-import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class AuthorizationCodeTokenGranter constructor(
-    private val clientService: Oauth2ClientService,
     private val codeService: Oauth2CodeService,
     private val accessTokenService: Oauth2AccessTokenService,
     private val refreshTokenService: Oauth2RefreshTokenService
 ) : AbstractTokenGranter(
     grantType = GRANT_TYPE,
-    oauth2ClientService = clientService,
     accessTokenService = accessTokenService
 ) {
     companion object {
@@ -31,9 +28,9 @@ class AuthorizationCodeTokenGranter constructor(
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
-        clientDetail: TAuthOauth2ClientDetailsRecord
+        clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("authorization code getAccessToken|$accessTokenRequest|$clientDetail")
+        logger.info("authorization code getAccessToken|$accessTokenRequest|$clientDetails")
         val clientId = accessTokenRequest.clientId
         val code = accessTokenRequest.code
         val codeDetails = codeService.get(
@@ -61,7 +58,7 @@ class AuthorizationCodeTokenGranter constructor(
             refreshTokenService.delete(
                 refreshToken = accessTokenInfo?.refreshToken
             )
-            val refreshTokenValidity = clientDetail.refreshTokenValidity
+            val refreshTokenValidity = clientDetails.refreshTokenValidity
             refreshTokenService.create(
                 refreshToken = newRefreshToken,
                 clientId = clientId,

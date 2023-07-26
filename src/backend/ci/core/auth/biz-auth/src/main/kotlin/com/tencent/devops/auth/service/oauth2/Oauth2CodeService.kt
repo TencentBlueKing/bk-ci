@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -72,7 +71,6 @@ class Oauth2CodeService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(Oauth2EndpointService::class.java)
-        private const val codeValiditySeconds = 5 * 60 * 1000L
+        private const val codeValiditySeconds = 300L
     }
 }

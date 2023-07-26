@@ -3,25 +3,22 @@ package com.tencent.devops.auth.service.oauth2.grant
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPIRED
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_NOT_FOUND
-import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
+import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
-import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.utils.AuthUtils
-import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class RefreshTokenGranter(
-    private val clientService: Oauth2ClientService,
     private val accessTokenService: Oauth2AccessTokenService,
     private val refreshTokenService: Oauth2RefreshTokenService
 ) : AbstractTokenGranter(
     grantType = GRANT_TYPE,
-    oauth2ClientService = clientService,
     accessTokenService = accessTokenService
 ) {
     companion object {
@@ -31,9 +28,9 @@ class RefreshTokenGranter(
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
-        clientDetail: TAuthOauth2ClientDetailsRecord
+        clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("refresh token getAccessToken|$accessTokenRequest|$clientDetail")
+        logger.info("refresh token getAccessToken|$accessTokenRequest|$clientDetails")
         //1.校验refresh_token是否为空
         val refreshToken = accessTokenRequest.refreshToken
             ?: throw ErrorCodeException(
