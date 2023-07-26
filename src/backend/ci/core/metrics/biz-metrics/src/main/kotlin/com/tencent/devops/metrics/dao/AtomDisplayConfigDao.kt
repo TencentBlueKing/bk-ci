@@ -27,10 +27,10 @@
 
 package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
-import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
+import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
+import com.tencent.devops.model.metrics.tables.TProjectAtom
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -101,7 +101,7 @@ class AtomDisplayConfigDao {
         page: Int,
         pageSize: Int
     ): List<AtomBaseInfoDO> {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!atomCodes.isNullOrEmpty()) {
@@ -113,7 +113,6 @@ class AtomDisplayConfigDao {
             val step = dslContext.select(ATOM_CODE, ATOM_NAME).from(this)
                 .where(conditions)
                 return step.groupBy(ATOM_CODE)
-                    .orderBy(SUCCESS_RATE)
                     .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }
@@ -125,7 +124,7 @@ class AtomDisplayConfigDao {
         atomCodes: List<String>,
         keyword: String?
     ): Long {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val step = dslContext.selectDistinct(ATOM_CODE)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))

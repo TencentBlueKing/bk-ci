@@ -84,7 +84,10 @@ class AtomStatisticsDao {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
-            return step.where(conditions).groupBy(ATOM_CODE, STATISTICS_TIME).fetch()
+            return step.where(conditions)
+                .groupBy(ATOM_CODE, STATISTICS_TIME)
+                .limit(queryCondition.pageSize)
+                .fetch()
         }
     }
 
