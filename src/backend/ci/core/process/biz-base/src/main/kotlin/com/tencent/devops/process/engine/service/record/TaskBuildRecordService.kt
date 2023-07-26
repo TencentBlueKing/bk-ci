@@ -378,7 +378,7 @@ class TaskBuildRecordService(
                         recordTask.originClassType == MarketBuildLessAtomElement.classType
                     ) {
                         taskVar[MarketBuildAtomElement::version.name] = atomVersion
-                    } else  {
+                    } else {
                         taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
                     }
                 }
