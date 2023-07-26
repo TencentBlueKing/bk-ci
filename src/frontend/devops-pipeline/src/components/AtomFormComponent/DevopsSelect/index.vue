@@ -181,7 +181,7 @@
                             })
                             result.push({
                                 ...item,
-                                children: (noSensiveKeyword && !this.isMultiple) ? children.filter(child => child.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : children
+                                children: noSensiveKeyword ? children.filter(child => child.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : children
                             })
                         }
                         return result
@@ -204,7 +204,7 @@
                     }
                 })
 
-                return (noSensiveKeyword && !this.isMultiple) ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
+                return noSensiveKeyword ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
             },
 
             selectOption ({ id, name, disabled = false }) {
