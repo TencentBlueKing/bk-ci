@@ -577,7 +577,12 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun syncStartCloudResourceList() {
+        try {
             client.get(ServiceStartCloudResource::class)
                 .syncStartCloudResourceList()
+        } catch (e: Throwable) {
+            // 处理异常
+            println("Error syncing start cloud resource list: ${e.message}")
+        }
     }
 }
