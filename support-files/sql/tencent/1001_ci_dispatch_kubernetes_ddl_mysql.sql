@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
 (
-    ZONE_ID varchar(32) default ''                not null comment '工作空间名称',
-    CGS_IP  varchar(32)  default ''                not null comment 'DevCloud环境ID',
+    ZONE_ID varchar(32) default ''                not null comment '区域ID，SZ3，NJ1等',
+    CGS_IP  varchar(32)  default ''                not null comment 'ip',
     STATUS int           default 0                 not null comment '0未使用 1使用中 2待销毁',
     UNIQUE `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
