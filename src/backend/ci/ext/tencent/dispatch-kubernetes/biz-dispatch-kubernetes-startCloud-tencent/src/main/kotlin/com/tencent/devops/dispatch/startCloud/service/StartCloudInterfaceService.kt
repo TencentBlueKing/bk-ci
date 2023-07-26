@@ -30,7 +30,9 @@ package com.tencent.devops.dispatch.startCloud.service
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -38,7 +40,9 @@ import org.springframework.stereotype.Service
 
 @Service("startcloudInterfaceService")
 class StartCloudInterfaceService @Autowired constructor(
-    private val workspaceClient: WorkspaceStartCloudClient
+    private val dslContext: DSLContext,
+    private val workspaceClient: WorkspaceStartCloudClient,
+    private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -54,6 +58,16 @@ class StartCloudInterfaceService @Autowired constructor(
             ) {
                 throw it
             }
+        }
+        return true
+    }
+
+    // 同步更新云桌面资源池列表
+    fun syncStartCloudResourceList(): Boolean {
+        val resourceList = workspaceClient.getResourceList()
+        logger.info("syncStartCloudResourceList|resourceList|$resourceList")
+        for (resource in resourceList) {
+            windowsGpuResourceDao.createOrUpdateResource(dslContext, resource)
         }
         return true
     }

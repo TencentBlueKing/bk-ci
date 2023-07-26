@@ -13,6 +13,7 @@ import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -47,6 +48,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     @Value("\${startCloud.apiUrl}")
     val apiUrl: String = ""
+
+    @Value("\${startCloud.appName}")
+    val appName: String = "IEG_BKCI"
 
     fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
         val url = "$apiUrl/openapi/computer/create"
@@ -234,6 +238,57 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun getResourceList(): List<EnvironmentResourceDataRsp.EnvironmentResourceData> {
+        val url = "$apiUrl/openapi/resource/list"
+        val body = JsonUtil.toJson(mapOf("AppName" to appName), false)
+        logger.info("getResourceList request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                )
+                    .toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("getResourceList response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentResourceDataRsp = jacksonObjectMapper().readValue(responseContent)
+                logger.info("createWorkspace rsp: $environmentRsp")
+                when {
+                    OK == environmentRsp.code && environmentRsp.data != null
+                    -> return environmentRsp.data
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "(${environmentRsp.code}-${environmentRsp.message})"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("getResourceList SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
     fun makeHeaders(
         body: String
     ): Map<String, String> {

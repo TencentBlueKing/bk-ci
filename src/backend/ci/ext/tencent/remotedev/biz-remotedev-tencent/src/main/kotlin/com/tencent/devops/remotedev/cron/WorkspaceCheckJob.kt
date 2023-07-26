@@ -41,6 +41,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
         private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
+        private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
     }
 
     /**
@@ -175,6 +176,29 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("failed to init bill", e)
+        }
+    }
+
+    /**
+     * 定时同步更新START云桌面资源池 30min一次
+     */
+    @Scheduled(cron = "0 0/30 * * * ?")
+    fun syncStartCloudResourceList() {
+        logger.info("=========>> start to sync START resource list <<=========")
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
+            return
+        }
+        val redisLock = RedisLock(redisOperation, syncJobLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("sync START resource list get lock.")
+                workspaceService.syncStartCloudResourceList()
+            }
+        } catch (e: Throwable) {
+            logger.error("sync START resource list failed", e)
+        } finally {
+            redisLock.unlock()
         }
     }
 }

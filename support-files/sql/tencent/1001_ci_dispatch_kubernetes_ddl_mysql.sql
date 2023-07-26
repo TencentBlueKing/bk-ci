@@ -41,5 +41,16 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     KEY `uni_1` (`WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
 
+-- ----------------------------
+-- Table structure for T_WINDOWS_GPU_POOL
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
+(
+    ZONE_ID varchar(32) default ''                not null comment '工作空间名称',
+    CGS_IP  varchar(32)  default ''                not null comment 'DevCloud环境ID',
+    STATUS int           default 0                 not null comment '0未使用 1使用中 2待销毁',
+    UNIQUE `uni_1` (`ZONE_ID`,`CGS_IP`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
+
 
 SET FOREIGN_KEY_CHECKS = 1;

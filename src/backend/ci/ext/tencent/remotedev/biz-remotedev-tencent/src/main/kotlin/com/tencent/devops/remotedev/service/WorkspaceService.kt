@@ -575,4 +575,9 @@ class WorkspaceService @Autowired constructor(
         )
         return true
     }
+
+    fun syncStartCloudResourceList() {
+            client.get(ServiceStartCloudResource::class)
+                .syncStartCloudResourceList()
+    }
 }
