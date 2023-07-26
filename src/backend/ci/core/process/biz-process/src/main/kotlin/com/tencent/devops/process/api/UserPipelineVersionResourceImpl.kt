@@ -191,8 +191,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                creator = creator,
-                description = description,
+                creator = creator?.takeIf { it.isNotBlank() },
+                description = description?.takeIf { it.isNotBlank() },
                 page = page,
                 pageSize = pageSize
             )
