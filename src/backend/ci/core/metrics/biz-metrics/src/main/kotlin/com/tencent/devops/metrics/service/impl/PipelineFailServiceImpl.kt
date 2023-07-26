@@ -185,7 +185,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                 params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
-        stopWatch.start("queryPipelineFailDetailCount")
+        stopWatch.start("queryPipelineFailDetailInfo")
         val result = pipelineFailDao.queryPipelineFailDetailInfo(
             dslContext = dslContext,
             queryPipelineFailQo = QueryPipelineFailQO(
