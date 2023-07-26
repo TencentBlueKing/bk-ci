@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -442,7 +443,7 @@ class ProjectTagService @Autowired constructor(
 
         val projectProperties = projectData.properties?.let {
             JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
-        }
+        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
         return ProjectInfoResponse(
             projectId = projectData.projectId,
             projectName = projectData.projectName,
