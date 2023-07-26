@@ -329,7 +329,7 @@ class ProjectInfoDao {
                     it.atomCode,
                     it.atomName,
                     it.creator,
-                    it.modifier,
+                    it.modifier
                 ).onDuplicateKeyUpdate()
                     .set(ATOM_NAME, it.atomName)
                     .execute()
