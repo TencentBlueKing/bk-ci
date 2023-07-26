@@ -123,9 +123,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?,
-        creator: String? = null,
-        description: String? = null
+        pageSize: Int?
     ): Page<String> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
