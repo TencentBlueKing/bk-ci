@@ -28,17 +28,21 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
-import com.tencent.devops.model.metrics.tables.TAtomOverviewData
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
-import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
+import com.tencent.devops.model.metrics.tables.TAtomOverviewData
+import com.tencent.devops.model.metrics.tables.TErrorTypeDict
+import com.tencent.devops.model.metrics.tables.TProjectAtom
+import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record3
+import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ProjectInfoDao {
@@ -50,7 +54,7 @@ class ProjectInfoDao {
         pageSize: Int,
         keyWord: String? = null
     ): List<AtomBaseInfoDO> {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {
@@ -59,8 +63,6 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE, ATOM_NAME)
                 .from(this)
                 .where(conditions)
-                .groupBy(ATOM_CODE)
-                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(AtomBaseInfoDO::class.java)
         }
@@ -71,7 +73,7 @@ class ProjectInfoDao {
         projectId: String,
         keyWord: String? = null
     ): Long {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {
@@ -80,7 +82,6 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE)
                 .from(this)
                 .where(conditions)
-                .groupBy(ATOM_CODE)
                 .execute().toLong()
         }
     }
@@ -235,6 +236,103 @@ class ProjectInfoDao {
                         .where(conditions)
                         .execute()
                 }
+            }
+        }
+    }
+
+    fun projectAtomRelationCount(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCodes: List<String> = emptyList()
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.notIn(atomCodes))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomCount(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCodes: List<String> = emptyList()
+    ): Int {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.notIn(atomCodes))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomRelationCountByAtomCode(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCode: String
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.eq(atomCode))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun queryProjectAtomNewNameInfo(
+        dslContext: DSLContext,
+        projectIds: List<String>,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, String>> {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val tAtomOverviewData1 = this.`as`("t1")
+            val tAtomOverviewData2 = this.`as`("t2")
+
+            val query = dslContext.select(
+                tAtomOverviewData1.PROJECT_ID,
+                tAtomOverviewData1.ATOM_CODE,
+                tAtomOverviewData1.ATOM_NAME
+            ).from(tAtomOverviewData1)
+                .leftJoin(tAtomOverviewData2)
+                .on(tAtomOverviewData1.PROJECT_ID.eq(tAtomOverviewData2.PROJECT_ID)
+                    .and(tAtomOverviewData1.ATOM_CODE.eq(tAtomOverviewData2.ATOM_CODE))
+                    .and(tAtomOverviewData1.CREATE_TIME.lt(tAtomOverviewData2.CREATE_TIME))
+                )
+                .where(tAtomOverviewData1.PROJECT_ID.`in`(projectIds))
+                .and(tAtomOverviewData2.ID.isNull)
+                .limit((page - 1) * pageSize, pageSize)
+            return query.fetch()
+        }
+    }
+
+    fun batchSaveProjectAtomInfo(
+        dslContext: DSLContext,
+        saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
+    ) {
+        saveProjectAtomRelationPOs.forEach {
+            with(TProjectAtom.T_PROJECT_ATOM) {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PROJECT_ID,
+                    ATOM_CODE,
+                    ATOM_NAME,
+                    CREATOR,
+                    MODIFIER
+                ).values(
+                    it.id,
+                    it.projectId,
+                    it.atomCode,
+                    it.atomName,
+                    it.creator,
+                    it.modifier,
+                ).onDuplicateKeyUpdate()
+                    .set(ATOM_NAME, it.atomName)
+                    .execute()
             }
         }
     }

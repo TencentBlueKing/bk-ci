@@ -47,16 +47,17 @@ import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Repository
 class AtomStatisticsDao {
@@ -83,7 +84,10 @@ class AtomStatisticsDao {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
-            return step.where(conditions).groupBy(ATOM_CODE, STATISTICS_TIME).fetch()
+            return step.where(conditions)
+                .groupBy(ATOM_CODE, STATISTICS_TIME)
+                .limit(queryCondition.pageSize)
+                .fetch()
         }
     }
 
@@ -229,6 +233,19 @@ class AtomStatisticsDao {
             ).from(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .fetchOne()
+        }
+    }
+
+    fun queryMetricsLatestProjectAtomName(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCode: String
+    ): Record1<String>? {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.select(ATOM_NAME).from(this)
+                .where(PROJECT_ID.eq(projectId).and(ATOM_CODE.eq(atomCode)))
+                .orderBy(CREATE_TIME.desc())
                 .fetchOne()
         }
     }
