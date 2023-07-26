@@ -182,7 +182,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     override fun syncProjectAtomData(userId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
-            logger.info("begin syncProjectAtomData")
+            logger.info("begin op sync project atom data")
             try {
                 var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
                 val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
@@ -203,7 +203,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
             } catch (ignore: Throwable) {
                 logger.warn("ProjectInfoServiceImpl sync project atom data fail", ignore)
             }
-            logger.info("end syncProjectAtomData")
+            logger.info("end op sync project atom data")
         }
         return true
     }
@@ -245,6 +245,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
             if (saveProjectAtomRelationPOs.isNotEmpty()) {
                 projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
             }
+            logger.debug("batchSaveProjectAtomInfo count:${saveProjectAtomRelationPOs.size}")
             page ++
         } while (projectAtomInfo.size == MAX_PAGE_SIZE)
     }
