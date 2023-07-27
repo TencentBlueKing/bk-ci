@@ -48,6 +48,8 @@ data class RemoteDevSettings(
     val envsForFile: List<RemoteDevFile> = emptyList(),
     @ApiModelProperty("dotfiles仓库路径")
     val dotfileRepo: String = "",
+    @ApiModelProperty("windows-gpu体验剩余时长")
+    val winUsageTimeLeft: Int? = null,
     @ApiModelProperty("项目Id")
     var projectId: String = "",
     @ApiModelProperty("平台维护的用户管理设置")

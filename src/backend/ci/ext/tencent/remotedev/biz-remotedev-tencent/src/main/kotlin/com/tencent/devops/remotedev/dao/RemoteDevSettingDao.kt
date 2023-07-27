@@ -98,6 +98,7 @@ class RemoteDevSettingDao {
                         it.envsForVariable,
                         object : TypeReference<Map<String, String>>() {}
                     ) ?: emptyMap(),
+                    winUsageTimeLeft = it.winUsageRemainingTime,
                     envsForFile = emptyList(),
                     dotfileRepo = it.dotfileRepo,
                     projectId = it.projectId ?: "",
