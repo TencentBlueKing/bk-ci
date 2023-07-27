@@ -316,7 +316,9 @@ class WorkspaceService @Autowired constructor(
                 } else {
                     0
                 }
-            }
+            },
+            winUsageTimeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+                ?: (remoteDevSettingService.startCloudExperienceDuration(userId) * 60 * 60)
         )
     }
 
@@ -551,6 +553,7 @@ class WorkspaceService @Autowired constructor(
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
     }
+
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
         logger.info("get all shared workspace")
         return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
