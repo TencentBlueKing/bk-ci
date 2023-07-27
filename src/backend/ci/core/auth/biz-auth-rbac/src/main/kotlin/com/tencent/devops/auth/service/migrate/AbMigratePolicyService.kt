@@ -58,6 +58,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
@@ -185,6 +186,7 @@ abstract class AbMigratePolicyService(
                 projectName = projectName,
                 gradeManagerId = gradeManagerId,
                 managerGroupId = managerGroupId,
+                version = version,
                 results = taskDataResp.results
             )
             page++
@@ -198,6 +200,7 @@ abstract class AbMigratePolicyService(
         projectName: String,
         gradeManagerId: Int,
         managerGroupId: Int,
+        version: String,
         results: List<MigrateTaskDataResult>
     ) {
         results.forEach result@{ result ->
@@ -216,6 +219,11 @@ abstract class AbMigratePolicyService(
                     )
                 }"
             )
+
+            if (rbacAuthorizationScopeList.isEmpty() && version == AuthSystemType.V3_AUTH_TYPE.value) {
+                return@result
+            }
+
             // 创建用户组
             val groupName = getGroupName(projectName = projectName, result = result)
             val groupInfo = authResourceGroupDao.getByGroupName(
