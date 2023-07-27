@@ -34,6 +34,13 @@ class SampleAuthPermissionProjectService : PermissionProjectService {
         return true
     }
 
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean = true
+
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return emptyList()
     }

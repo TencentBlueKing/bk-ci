@@ -53,4 +53,8 @@ interface ServiceStartCloudResource {
         @QueryParam("user")
         user: String
     ): Result<Boolean>
+    @ApiOperation("同步更新START云桌面的资源池")
+    @GET
+    @Path("/startCloud/resourece/list")
+    fun syncStartCloudResourceList(): Result<Boolean>
 }

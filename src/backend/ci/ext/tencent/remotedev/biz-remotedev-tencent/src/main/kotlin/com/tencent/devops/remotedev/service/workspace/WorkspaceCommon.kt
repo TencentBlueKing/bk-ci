@@ -156,7 +156,8 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.namespace,
-                workspaceInfo.curLaunchId
+                workspaceInfo.curLaunchId,
+                workspaceInfo.regionId
             )
             redisCache.saveWorkspaceDetail(
                 workspaceName,

@@ -444,16 +444,21 @@ class WorkspaceDao {
     // 获取已休眠(status:3)且过期14天的工作空间
     fun getTimeOutInactivityWorkspace(
         timeOutDays: Int,
+        workspaceMountType: WorkspaceMountType?,
         dslContext: DSLContext
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
+            val condition = mutableListOf<Condition>()
+            condition.add(timestampDiff(DatePart.DAY, LAST_STATUS_UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                .greaterOrEqual(timeOutDays))
+
+            condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+
+            if (workspaceMountType != null) {
+                condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))
+            }
             return dslContext.selectFrom(this)
-                .where(
-                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(
-                        timeOutDays
-                    )
-                )
-                .and(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+                .where(condition)
                 .limit(1000)
                 .fetch()
         }

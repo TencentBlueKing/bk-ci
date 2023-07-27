@@ -106,7 +106,12 @@ class MigrateV0PolicyService constructor(
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private val certActions = listOf("cert_edit")
+        private val envNodeActions = listOf("env_node_edit", "env_node_use", "env_node_delete")
         private const val V0_QC_GROUP_NAME = "质量管理员"
+        private const val MAX_GROUP_MEMBER = 1000
+        private const val CERT_VIEW = "cert_view"
+        private const val ENV_NODE_VIEW = "env_node_view"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -178,10 +183,14 @@ class MigrateV0PolicyService constructor(
         return rbacAuthorizationScopes
     }
 
+    /**
+     *   在构造用户组授权范围的动作组时，由于rbac和v0版本版本动作不一致，需要做一些转换
+     *   同时由于rbac增加了一些v0版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
+     * */
     private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
-        replaceOrRemoveAction(actions).forEach { action ->
+        fillNewActions(actions).forEach { action ->
             // 创建的action,需要关联在项目下
             if (action.contains(AuthPermission.CREATE.value)) {
                 resourceCreateActions.add(Action(action))
@@ -190,6 +199,32 @@ class MigrateV0PolicyService constructor(
             }
         }
         return Pair(resourceCreateActions, resourceActions)
+    }
+
+    /**
+     * action替换或移除
+     */
+    private fun fillNewActions(actions: List<String>): List<String> {
+        val rbacActions = actions.toMutableList()
+        actions.forEach action@{ action ->
+            when {
+                oldActionMappingNewAction.containsKey(action) -> {
+                    rbacActions.remove(action)
+                    rbacActions.add(oldActionMappingNewAction[action]!!)
+                }
+                skipActions.contains(action) -> {
+                    logger.info("skip $action action")
+                    rbacActions.remove(action)
+                }
+                certActions.contains(action) && !rbacActions.contains(CERT_VIEW) -> {
+                    rbacActions.add(CERT_VIEW)
+                }
+                envNodeActions.contains(action) && !rbacActions.contains(ENV_NODE_VIEW) -> {
+                    rbacActions.add(ENV_NODE_VIEW)
+                }
+            }
+        }
+        return rbacActions
     }
 
     @Suppress("NestedBlockDepth", "ReturnCount", "LongMethod")
@@ -356,33 +391,19 @@ class MigrateV0PolicyService constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = rbacResourceCode,
-            actions = replaceOrRemoveAction(userActions)
+            actions = fillNewActions(userActions)
         )
     }
 
-    /**
-     * action替换或移除
-     *
-     */
-    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
-        val rbacActions = actions.toMutableList()
-        actions.forEach action@{ action ->
-            when {
-                oldActionMappingNewAction.containsKey(action) -> {
-                    rbacActions.remove(action)
-                    rbacActions.add(oldActionMappingNewAction[action]!!)
-                }
-                skipActions.contains(action) -> {
-                    logger.info("skip $action action")
-                    rbacActions.remove(action)
-                }
-            }
-        }
-        return rbacActions
-    }
-
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        members?.forEach member@{ member ->
+        if (members.isNullOrEmpty()) {
+            return
+        }
+        if (members.size > MAX_GROUP_MEMBER) {
+            logger.warn("group member size is too large, max size is $MAX_GROUP_MEMBER")
+            return
+        }
+        members.forEach member@{ member ->
             val expiredDay = if (defaultGroup) {
                 // 默认用户组,2年或3年随机过期
                 V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]

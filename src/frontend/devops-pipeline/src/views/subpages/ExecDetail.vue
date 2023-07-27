@@ -360,8 +360,8 @@
                 }
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
-                    this.isLoading = false
                     this.hasNoPermission = true
                 }
             }

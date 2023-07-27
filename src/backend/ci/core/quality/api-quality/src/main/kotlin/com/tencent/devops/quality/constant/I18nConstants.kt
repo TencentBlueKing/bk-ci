@@ -27,6 +27,19 @@
 
 package com.tencent.devops.quality.constant
 
+const val QUALITY_RULE_TEMPLATE_NAME_KEY = "quality.ruleTemplate.%s.name" // $s == ID
+const val QUALITY_RULE_TEMPLATE_DESC_KEY = "quality.ruleTemplate.%s.desc" // $s == ID
+const val QUALITY_RULE_TEMPLATE_STAGE_KEY = "quality.ruleTemplate.%s.stage" // $s == ID
+const val QUALITY_CONTROL_POINT_NAME_KEY = "quality.controlPoint.%s.name" // $s == elementType
+const val QUALITY_CONTROL_POINT_STAGE_KEY = "quality.controlPoint.%s.stage" // $s == elementType
+const val QUALITY_METADATA_DATA_NAME_KEY = "quality.metadata.%s.dataName" // $s == ID
+const val QUALITY_METADATA_DATA_ELEMENT_NAME_KEY = "quality.metadata.%s.elementName" // $s == ID
+const val QUALITY_METADATA_DATA_DESC_KEY = "quality.metadata.%s.desc" // $s == ID
+const val QUALITY_INDICATOR_ELEMENT_NAME_KEY = "quality.indicator.%s.elementName" // $s == ID
+const val QUALITY_INDICATOR_NAME_KEY = "quality.indicator.%s.name" // $s == ID
+const val QUALITY_INDICATOR_DESC_KEY = "quality.indicator.%s.desc" // $s == ID
+const val BK_BEFORE_POSITION = "bkBeforePosition" // 准入-满足条件才能执行控制点
+const val BK_AFTER_POSITION = "bkAfterPosition" // 准出-满足条件才能执行后续插件
 const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup" // 项目下无Quality用户组
 const val BK_PASSED = "bkPassed" // 已通过：
 const val BK_BLOCKED = "bkBlocked" // 已拦截：

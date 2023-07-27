@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts
@@ -64,6 +65,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
@@ -384,7 +386,7 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
-        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!)
+        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!, detail.regionId)
     }
 
     fun getWorkspaceTimeline(
@@ -447,7 +449,8 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.namespace,
-                workspaceInfo.curLaunchId
+                workspaceInfo.curLaunchId,
+                workspaceInfo.regionId
             )
             redisCache.saveWorkspaceDetail(
                 it.name,
@@ -485,17 +488,10 @@ class WorkspaceService @Autowired constructor(
         )?.map { it.name } ?: emptyList()
     }
 
-    // 提前7天邮件提醒，云环境即将自动回收
-    fun sendInactivityWorkspaceNotify() {
-        logger.info("sendInactivityWorkspaceNotify")
-        val workspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
-            Constansts.timeoutDays - Constansts.sendNotifyDays, dslContext
-        ).groupBy { it.creator }
-        logger.info("sendInactivityWorkspaceNotify|workspaceMap|$workspaceMap")
-        // 遍历workspaceMap，按 creator 分批发送邮件
+    fun sendNotification(workspaceMap: Map<String, List<TWorkspaceRecord>>, templateCode: String) {
         workspaceMap.forEach { (creator, workspaces) ->
             val request = SendNotifyMessageTemplateRequest(
-                templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE.templateCode,
+                templateCode = templateCode,
                 receivers = mutableSetOf(creator),
                 cc = mutableSetOf(creator),
                 titleParams = null,
@@ -507,6 +503,33 @@ class WorkspaceService @Autowired constructor(
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }
+    }
+
+    // 提前7天邮件提醒，云环境即将自动回收
+    fun sendInactivityWorkspaceNotify() {
+        logger.info("sendInactivityWorkspaceNotify")
+        val inactivityWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
+            timeOutDays = Constansts.timeoutDays - Constansts.sendNotifyDays,
+            dslContext = dslContext,
+            workspaceMountType = null
+        ).groupBy { it.creator }
+        logger.info("sendInactivityWorkspaceNotify|workspaceMap|$inactivityWorkspaceMap")
+        sendNotification(
+            workspaceMap = inactivityWorkspaceMap,
+            templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE.templateCode
+        )
+
+        val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
+        val startWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
+            timeOutDays = retentionTime - 1,
+            dslContext = dslContext,
+            workspaceMountType = WorkspaceMountType.START
+        ).groupBy { it.creator }
+        logger.info("sendInactivityWorkspaceNotify|startWorkspaceMap|$startWorkspaceMap")
+        sendNotification(
+            workspaceMap = startWorkspaceMap,
+            templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_START_DESKTOP_RECYCLE_TEMPLATE.templateCode
+        )
     }
 
     fun initBilling(freeTime: Int? = null) {
@@ -546,5 +569,15 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext
         )
         return true
+    }
+
+    fun syncStartCloudResourceList() {
+        try {
+            client.get(ServiceStartCloudResource::class)
+                .syncStartCloudResourceList()
+        } catch (e: Throwable) {
+            // 处理异常
+            println("Error syncing start cloud resource list: ${e.message}")
+        }
     }
 }

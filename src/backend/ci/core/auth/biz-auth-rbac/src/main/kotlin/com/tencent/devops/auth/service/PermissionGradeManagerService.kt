@@ -374,7 +374,10 @@ class PermissionGradeManagerService @Autowired constructor(
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
-            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+                .groups(listOf(managerRoleGroup))
+                .createAttributes(false)
+                .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
             authResourceGroupDao.create(
                 dslContext = dslContext,
@@ -496,19 +499,19 @@ class PermissionGradeManagerService @Autowired constructor(
                 actionType = CANCEL_ITSM_APPLICATION_ACTION
             )
         )
-            logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
+        logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
     }
 
     fun listGroup(
         gradeManagerId: String,
+        searchGroupDTO: SearchGroupDTO,
         page: Int,
         pageSize: Int
     ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = page
         pageInfoDTO.pageSize = pageSize
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
             searchGroupDTO,

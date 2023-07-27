@@ -93,6 +93,13 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean = true
+
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return authProjectApi.getProjectRoles(
             serviceCode = authServiceCode,

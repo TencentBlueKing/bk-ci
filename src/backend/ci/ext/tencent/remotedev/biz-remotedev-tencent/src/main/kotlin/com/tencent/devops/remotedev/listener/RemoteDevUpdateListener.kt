@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.listener
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
@@ -42,7 +41,6 @@ import org.springframework.stereotype.Component
 @Suppress("LongParameterList")
 @Component
 class RemoteDevUpdateListener @Autowired constructor(
-    private val workspaceService: WorkspaceService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,

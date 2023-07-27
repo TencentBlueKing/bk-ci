@@ -59,4 +59,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     ): Boolean {
         return true
     }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        return true
+    }
 }
