@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.store.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveAtomService
+import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource

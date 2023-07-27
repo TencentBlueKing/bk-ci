@@ -25,11 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.store.resources
 
-enum class PushTypeEnum {
-//    NodeName,
-    NodeId,
-    ENVName,
-    ENVId;
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.store.service.ArchiveAtomService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceArchiveAtomResourceImpl @Autowired constructor(
+    private val archiveAtomService: ArchiveAtomService
+) : ServiceArchiveAtomResource {
+
+    override fun getAtomFileContent(filePath: String): Result<String> {
+        return Result(archiveAtomService.getAtomFileContent(filePath))
+    }
+
+    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
+        return Result(true)
+    }
+
+    override fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Result<Boolean> {
+        return Result(
+            archiveAtomService.updateArchiveFile(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                fileName = fileName,
+                content = content
+            )
+        )
+    }
 }

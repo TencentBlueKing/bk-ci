@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.impl
+package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_LOCAL

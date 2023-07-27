@@ -25,25 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.store.service
 
-import com.tencent.devops.artifactory.api.ServiceFilePushResource
-import com.tencent.devops.artifactory.pojo.dto.PushFileDTO
-import com.tencent.devops.artifactory.pojo.vo.PushResultVO
-import com.tencent.devops.artifactory.service.PushFileServiceExt
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
+import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
-@RestResource
-class ServiceFilePushResourceImpl @Autowired constructor(
-    private val pushFileService: PushFileServiceExt
-) : ServiceFilePushResource {
-    override fun pushFile(userId: String, pushInfo: PushFileDTO): Result<Long?> {
-        return pushFileService.pushFileByJob(userId, pushInfo.remoteResourceInfo, pushInfo.fileInfo)
-    }
+interface ArchiveAtomService {
 
-    override fun checkPushStatus(userId: String, projectId: String, jobInstanceId: Long): Result<PushResultVO?> {
-        return pushFileService.checkStatus(userId, projectId, jobInstanceId)
-    }
+    /**
+     * 归档插件
+     */
+    fun archiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveAtomRequest: ArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
+
+    /**
+     * 重新归档插件
+     */
+    fun reArchiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        reArchiveAtomRequest: ReArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
+
+    /**
+     * 获取插件相关文件内容
+     */
+    fun getAtomFileContent(filePath: String): String
+
+    /**
+     * 删除插件
+     */
+    fun deleteAtom(userId: String, projectCode: String, atomCode: String)
+
+    /**
+     * 更新插件相关文件内容
+     */
+    fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean
 }
