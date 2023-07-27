@@ -66,9 +66,8 @@ class StartCloudInterfaceService @Autowired constructor(
     fun syncStartCloudResourceList(): Boolean {
         val resourceList = workspaceClient.getResourceList()
         logger.info("syncStartCloudResourceList|resourceList|$resourceList")
-        for (resource in resourceList) {
-            windowsGpuResourceDao.createOrUpdateResource(dslContext, resource)
-        }
+        windowsGpuResourceDao.deleteAllResource(dslContext)
+        windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
         return true
     }
 }

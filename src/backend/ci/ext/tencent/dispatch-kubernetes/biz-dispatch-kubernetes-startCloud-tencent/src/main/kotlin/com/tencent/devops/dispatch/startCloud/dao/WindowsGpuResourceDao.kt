@@ -37,22 +37,34 @@ class WindowsGpuResourceDao {
 
     fun createOrUpdateResource(
         dslContext: DSLContext,
-        resource: EnvironmentResourceDataRsp.EnvironmentResourceData
+        resourceList: List<EnvironmentResourceDataRsp.EnvironmentResourceData>
     ) {
-        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
-            dslContext.insertInto(
-                this,
-                ZONE_ID,
-                CGS_IP,
-                STATUS
-            )
-                .values(
-                    resource.zoneId,
-                    resource.cgsIp,
-                    resource.status
+        if (resourceList.isEmpty()) {
+            return
+        }
+        dslContext.batch(resourceList.map {
+            with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+                dslContext.insertInto(
+                    this,
+                    ZONE_ID,
+                    CGS_IP,
+                    STATUS
+                ).values(
+                    it.zoneId,
+                    it.cgsIp,
+                    it.status
                 ).onDuplicateKeyUpdate()
-                .set(STATUS, resource.status)
-                .execute()
+                    .set(STATUS, it.status)
+            }
+        }).execute()
+    }
+
+    // 删除已有数据
+    fun deleteAllResource(
+        dslContext: DSLContext
+    ) {
+        return with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            dslContext.delete(this).execute()
         }
     }
 }
