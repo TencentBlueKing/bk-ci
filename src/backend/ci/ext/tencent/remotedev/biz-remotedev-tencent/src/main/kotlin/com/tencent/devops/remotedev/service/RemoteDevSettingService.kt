@@ -108,10 +108,10 @@ class RemoteDevSettingService @Autowired constructor(
         remoteDevSettingDao.batchUpdateWinUsageRemainingTime(dslContext, updateData)
     }
 
-    fun userWinTimeLeft(userId: String): Int? {
+    fun userWinTimeLeft(userId: String): Int {
         val time = remoteDevSettingDao.fetchSingleUserWinTimeLeft(dslContext, userId)
         logger.info("get user Win time left $time")
-        return time
+        return time ?: (startCloudExperienceDuration(userId) * 60 * 60)
     }
 
     fun updateRemoteDevSettings(userId: String, setting: RemoteDevSettings): Boolean {

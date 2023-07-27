@@ -318,7 +318,6 @@ class WorkspaceService @Autowired constructor(
                 }
             },
             winUsageTimeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-                ?: (remoteDevSettingService.startCloudExperienceDuration(userId) * 60 * 60)
         )
     }
 

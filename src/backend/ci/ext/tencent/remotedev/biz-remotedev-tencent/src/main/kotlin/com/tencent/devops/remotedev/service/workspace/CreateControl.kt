@@ -208,14 +208,13 @@ class CreateControl @Autowired constructor(
             }
 
             if (systemType.needReminderUser()) {
-                val duration = remoteDevSettingService.startCloudExperienceDuration(event.userId)
-                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
+                val duration = remoteDevSettingService.userWinTimeLeft(event.userId)
+                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toInt() ?: 60
                 dispatcher.dispatch(
                     RemoteDevReminderEvent(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
-                        delayMills = (duration * 60 - limit).times(60).toInt()
-                            .coerceAtLeast(60) * 1000
+                        delayMills = (duration - limit * 60).coerceAtLeast(60) * 1000
                     )
                 )
             }

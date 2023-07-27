@@ -63,11 +63,11 @@ class RemoteDevReminderListener @Autowired constructor(
             kotlin.runCatching {
                 val workspace = workspaceService.getWorkspaceDetail(userId, workspaceName) ?: return
                 if (!workspace.status.checkRunning()) return
-                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
+                val duration = remoteDevSettingService.userWinTimeLeft(userId)
                 val limit = redisCacheService.get(REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
-                val timeLeft = duration * 60 * 60 - workspace.usageTime
+                val timeLeft = duration - workspace.usageTime
                 // 给予5分钟的时间误差
-                if (duration * 60 * 60 - workspace.usageTime < (limit + 5) * 60) {
+                if (duration - workspace.usageTime < (limit + 5) * 60) {
                     logger.info("start notify to user $userId")
                     workspaceCommon.dispatchWebsocketPushEvent(
                         userId = userId,
