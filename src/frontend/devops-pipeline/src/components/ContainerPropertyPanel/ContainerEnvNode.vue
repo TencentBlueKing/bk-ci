@@ -20,8 +20,8 @@
                 
                 <template v-if="isAgentEnv" v-slot:option-item="optionProps">
                     <div class="env-option-item">
-                        <span>{{optionProps.name}}</span>
-                        <span v-if="optionProps.isShared" class="env-info">{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
+                        <span :title="optionProps.name">{{optionProps.name}}</span>
+                        <span v-if="optionProps.isShared" :title="$t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId])" class="env-info">{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
                         <bk-link target="_blank" class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
                     </div>
                 </template>
