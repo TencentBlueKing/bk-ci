@@ -50,9 +50,13 @@ class RefreshTokenGranter(
             errorCode = AuthMessageCode.INVALID_REFRESH_TOKEN,
             defaultMessage = "The refresh token invalid"
         )
-        // 4.校验refresh_token是否过期
+        // 4.清除跟该refresh_token授权码相关的access_token
+        accessTokenService.delete(
+            accessToken = accessTokenInfo.accessToken
+        )
+        // 5.校验refresh_token是否过期
         if (AuthUtils.isExpired(refreshTokenInfo.expiredTime)) {
-            // 5.删除掉refresh_token
+            // 6.删除掉refresh_token
             refreshTokenService.delete(refreshToken = refreshToken)
             throw ErrorCodeException(
                 errorCode = ERROR_REFRESH_TOKEN_EXPIRED,
@@ -60,9 +64,7 @@ class RefreshTokenGranter(
             )
         }
         return Oauth2AccessTokenDTO(
-            accessToken = accessTokenInfo.accessToken,
             userName = accessTokenInfo.userName,
-            expiredTime = 0L,
             refreshToken = refreshToken
         )
     }

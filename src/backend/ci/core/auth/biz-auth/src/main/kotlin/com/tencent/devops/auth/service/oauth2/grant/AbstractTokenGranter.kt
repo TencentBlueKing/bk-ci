@@ -41,17 +41,16 @@ abstract class AbstractTokenGranter(
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenVo {
         // todo 记得要去掉改行日志，内包含敏感信息
-        logger.info("AbstractTokenGranter|handleAccessToken:$accessTokenRequest|$accessTokenDTO|$clientDetails")
+        logger.info("handle access token:$accessTokenRequest|$accessTokenDTO|$clientDetails")
         val clientId = accessTokenRequest.clientId
         val accessToken = accessTokenDTO.accessToken
         val refreshToken = accessTokenDTO.refreshToken
 
         if (accessToken == null || AuthUtils.isExpired(accessTokenDTO.expiredTime!!)) {
-            // 生成新的 access_token
             val newAccessToken = UUIDUtil.generate()
             val accessTokenValidity = clientDetails.accessTokenValidity
             val accessTokenExpiredTime = DateTimeUtil.getFutureTimestamp(accessTokenValidity)
-            // 删除旧的 access_token 记录
+            // 删除过期的access_token记录
             if (accessToken != null) {
                 accessTokenService.delete(accessToken)
             }
