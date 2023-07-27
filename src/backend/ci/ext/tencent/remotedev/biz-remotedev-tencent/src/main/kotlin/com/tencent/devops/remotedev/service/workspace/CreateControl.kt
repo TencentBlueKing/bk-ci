@@ -117,6 +117,8 @@ class CreateControl @Autowired constructor(
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
+        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType.name)
+
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = userId,
