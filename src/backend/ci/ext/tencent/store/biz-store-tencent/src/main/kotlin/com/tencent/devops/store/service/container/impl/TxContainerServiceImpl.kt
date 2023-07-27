@@ -117,8 +117,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                     AgentResponse(
                         id = it.envHashId,
                         name = it.name,
-                        label = BuildType.THIRD_PARTY_AGENT_ENV.getI18n(I18nUtil.getRequestUserLanguage()) +
-                        "（$normalName: ${it.normalNodeCount}，$exceptionName: ${it.abnormalNodeCount}）",
+                        label = "（$normalName: ${it.normalNodeCount}，$exceptionName: ${it.abnormalNodeCount}）",
                         sharedProjectId = it.sharedProjectId,
                         sharedUserId = it.sharedUserId
                     )
