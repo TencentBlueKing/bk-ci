@@ -103,6 +103,9 @@ class MigrateV0PolicyService constructor(
         // v0有的action，但是在rbac没有,需要跳过
         private val skipActions = listOf("quality_gate_group_enable")
 
+        // v0有的资源，但是在rbac没有,需要跳过
+        private val skipResourceType = listOf("artifactory")
+
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
@@ -214,6 +217,10 @@ class MigrateV0PolicyService constructor(
                 }
                 skipActions.contains(action) -> {
                     logger.info("skip $action action")
+                    rbacActions.remove(action)
+                }
+                skipResourceType.contains(action.substringBeforeLast("_")) -> {
+                    logger.info("skip $action resource")
                     rbacActions.remove(action)
                 }
                 certActions.contains(action) && !rbacActions.contains(CERT_VIEW) -> {

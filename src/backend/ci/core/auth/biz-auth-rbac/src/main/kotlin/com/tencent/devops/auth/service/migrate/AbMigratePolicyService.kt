@@ -216,11 +216,6 @@ abstract class AbMigratePolicyService(
                     )
                 }"
             )
-
-            if (rbacAuthorizationScopeList.isEmpty()) {
-                return@result
-            }
-
             // 创建用户组
             val groupName = getGroupName(projectName = projectName, result = result)
             val groupInfo = authResourceGroupDao.getByGroupName(
