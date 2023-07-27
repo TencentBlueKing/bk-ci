@@ -325,11 +325,11 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         when (workspace.workspaceMountType) {
             WorkspaceMountType.START.name -> {
-                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
-                if (duration * 60 * 60 < workspace.usageTime) {
+                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+                if (timeLeft != null && timeLeft <= 0) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
-                        params = arrayOf(workspace.name, duration.toString())
+                        params = arrayOf(workspace.name, timeLeft.toString())
                     )
                 }
             }

@@ -480,14 +480,9 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getUnavailableWorkspace(): List<String> {
-        val now = LocalDateTime.now()
-        return workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.RUNNING, mountType = WorkspaceMountType.START
-        )?.asSequence()
-            ?.filter {
-                val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
-                remoteDevSettingService.startCloudExperienceDuration(it.creator) * 60 * 60 < usageTime
-            }?.map { it.name }?.toList() ?: emptyList()
+        return workspaceDao.fetchNotUsageTimeWinWorkspace(
+            dslContext, status = WorkspaceStatus.RUNNING
+        )?.map { it.name } ?: emptyList()
     }
 
     // 提前7天邮件提醒，云环境即将自动回收
