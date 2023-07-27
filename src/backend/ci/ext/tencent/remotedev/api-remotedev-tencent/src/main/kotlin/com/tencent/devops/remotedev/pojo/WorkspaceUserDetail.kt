@@ -53,5 +53,5 @@ data class WorkspaceUserDetail(
     @ApiModelProperty("存储空间大小（GB）")
     val disk: Int,
     @ApiModelProperty("windows-gpu体验剩余时长(秒)")
-    val winUsageTimeLeft: Int? = null
+    val winUsageTimeLeft: Int
 )
