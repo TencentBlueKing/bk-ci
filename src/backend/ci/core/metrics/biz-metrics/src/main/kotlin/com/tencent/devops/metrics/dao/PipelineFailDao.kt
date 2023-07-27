@@ -243,13 +243,13 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
             }
-            val step = dslContext.select().from(this)
+            val step = dslContext.selectCount().from(this)
             if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions)
-                .execute().toLong()
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
