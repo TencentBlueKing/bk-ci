@@ -63,7 +63,7 @@ class Oauth2CodeService constructor(
         }
         if (AuthUtils.isExpired(codeDetails.expiredTime)) {
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.INVALID_AUTHORIZATION_CODE,
+                errorCode = AuthMessageCode.INVALID_AUTHORIZATION_EXPIRED,
                 defaultMessage = "The authorization code expired"
             )
         }

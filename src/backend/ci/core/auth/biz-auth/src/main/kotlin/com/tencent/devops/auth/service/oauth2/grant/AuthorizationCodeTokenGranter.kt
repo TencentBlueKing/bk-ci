@@ -48,7 +48,7 @@ class AuthorizationCodeTokenGranter constructor(
             clientId = clientId,
             userName = codeDetails.userName
         )
-        val isAccessTokenValid = accessTokenInfo != null && AuthUtils.isExpired(accessTokenInfo.expiredTime)
+        val isAccessTokenValid = accessTokenInfo != null && !AuthUtils.isExpired(accessTokenInfo.expiredTime)
         val refreshToken = if (isAccessTokenValid) {
             // 若accessToken未过期，refreshToken不变
             accessTokenInfo!!.refreshToken
