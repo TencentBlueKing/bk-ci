@@ -51,10 +51,12 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import java.time.LocalDateTime
 import javax.ws.rs.BadRequestException
 import kotlin.math.ceil
 
+@Primary
 @RestResource
 class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
