@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PullRequestFileResponse(
     val additions: Int,
     @JsonProperty("blob_url")
-    val blobUrl: String,
+    val blobUrl: String?,
     val changes: Int,
     @JsonProperty("contents_url")
     val contentsUrl: String,
