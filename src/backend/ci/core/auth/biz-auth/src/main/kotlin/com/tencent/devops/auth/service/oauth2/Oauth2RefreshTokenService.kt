@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service.oauth2
 
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_NOT_FOUND
 import com.tencent.devops.auth.constant.AuthMessageCode.INVALID_REFRESH_TOKEN
 import com.tencent.devops.auth.dao.AuthOauth2RefreshTokenDao
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -12,13 +13,18 @@ class Oauth2RefreshTokenService constructor(
     private val authOauth2RefreshTokenDao: AuthOauth2RefreshTokenDao,
     private val dslContext: DSLContext
 ) {
-    fun get(refreshToken: String): TAuthOauth2RefreshTokenRecord? {
+    fun get(refreshToken: String?): TAuthOauth2RefreshTokenRecord? {
+        if (refreshToken == null)
+            throw ErrorCodeException(
+                errorCode = ERROR_REFRESH_TOKEN_NOT_FOUND,
+                defaultMessage = "The refresh token must be provided"
+            )
         return authOauth2RefreshTokenDao.get(
             dslContext = dslContext,
             refreshToken = refreshToken
         ) ?: throw ErrorCodeException(
             errorCode = INVALID_REFRESH_TOKEN,
-            defaultMessage = "The authorization code invalid"
+            defaultMessage = "The refresh token invalid"
         )
     }
 
