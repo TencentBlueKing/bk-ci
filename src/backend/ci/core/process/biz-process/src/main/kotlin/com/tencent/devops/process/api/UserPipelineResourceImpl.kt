@@ -393,7 +393,8 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = resource.settingVersion ?: resource.version
+            version = resource.settingVersion ?: resource.version,
+            detailInfo = detailInfo
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
@@ -404,7 +405,12 @@ class UserPipelineResourceImpl @Autowired constructor(
                         pipelineName = it.pipelineName,
                         hasCollect = it.hasCollect,
                         canManualStartup = it.canManualStartup,
-                        hasPermission = it.hasPermission
+                        hasPermission = it.hasPermission,
+                        pipelineDesc = it.pipelineDesc,
+                        creator = it.creator,
+                        createTime = it.createTime,
+                        updateTime = it.updateTime,
+                        viewNames = it.viewNames
                     )
                 },
                 pipelineResource = resource,

@@ -1726,8 +1726,7 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
-            dslContext = dslContext,
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: return null
@@ -1762,11 +1761,16 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineName = pipelineInfo.pipelineName,
             instanceFromTemplate = instanceFromTemplate,
             hasCollect = hasCollect,
-            canManualStartup = pipelineInfo.manualStartup,
+            canManualStartup = pipelineInfo.canManualStartup,
             pipelineVersion = pipelineInfo.version.toString(),
-            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
+            deploymentTime = pipelineInfo.updateTime,
             hasPermission = hasEditPermission,
-            templateId = templateId
+            templateId = templateId,
+            creator = pipelineInfo.creator,
+            pipelineDesc = pipelineInfo.pipelineDesc,
+            createTime = pipelineInfo.createTime,
+            updateTime = pipelineInfo.updateTime,
+            viewNames = pipelineInfo.viewNames
         )
     }
 
