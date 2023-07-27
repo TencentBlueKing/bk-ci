@@ -25,10 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    implementation("io.micrometer:micrometer-core")
-    api(project(":core:common:common-db-base"))
-    api(project(":core:common:common-event"))
-    api("org.springframework.boot:spring-boot-starter-amqp")
-    api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
-}
+package com.tencent.devops.common.event.pojo.sharding
+
+import com.tencent.devops.common.api.enums.CrudEnum
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
+@Event(exchange = MQ.EXCHANGE_SHARDING_ROUTING_RULE_FANOUT)
+data class ShardingRoutingRuleBroadCastEvent(
+    val routingName: String,
+    val routingRule: String? = null,
+    val actionType: CrudEnum
+)

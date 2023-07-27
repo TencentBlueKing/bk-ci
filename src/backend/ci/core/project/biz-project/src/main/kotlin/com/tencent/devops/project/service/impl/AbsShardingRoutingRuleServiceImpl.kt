@@ -28,15 +28,18 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
+import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val redisOperation: RedisOperation,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
 
     /**
@@ -112,6 +116,10 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 tableName = shardingRoutingRuleRecord.tableName
             )
             redisOperation.delete(key)
+            // 发送规则删除事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.DELETE)
+            )
         }
         return true
     }
@@ -164,6 +172,14 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 key = key,
                 value = shardingRoutingRule.routingRule,
                 expired = false
+            )
+            // 发送规则更新事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(
+                    routingName = key,
+                    routingRule = shardingRoutingRule.routingRule,
+                    actionType = CrudEnum.DELETE
+                )
             )
         } finally {
             lock.unlock()
