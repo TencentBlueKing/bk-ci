@@ -139,7 +139,8 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID
+        UNCLASSIFIED_PIPELINE_VIEW_ID,
+        CACHE_PIPELINE_GROUP_NAV_STATUS
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
@@ -158,10 +159,7 @@
                 editingGroupId: null,
                 renaming: false,
                 newViewName: '',
-                showClassify: {
-                    personalViewList: true,
-                    projectViewList: true
-                },
+                showClassify: {},
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 isValidGroupName: false,
@@ -250,6 +248,13 @@
             }
         },
         created () {
+            this.showClassify = JSON.parse(localStorage.getItem(CACHE_PIPELINE_GROUP_NAV_STATUS)) || {
+                personalViewList: true,
+                projectViewList: true
+            }
+
+            console.log(this.showClassify)
+
             this.refreshPipelineGroup()
         },
         methods: {
@@ -330,6 +335,7 @@
             },
             toggle (id) {
                 this.showClassify[id] = !this.showClassify[id]
+                localStorage.setItem(CACHE_PIPELINE_GROUP_NAV_STATUS, JSON.stringify(this.showClassify))
             },
             resetEditing () {
                 this.editingGroupId = ''
