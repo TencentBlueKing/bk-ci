@@ -48,9 +48,17 @@ class RefreshTokenGranter(
                 defaultMessage = "The authorization code invalid"
             )
         }
-        //4.清除跟该refresh_token授权码相关的access_token
-        accessTokenService.deleteByRefreshToken(
+        // 根据refresh_token获取access_token，获取access_token中的user_name
+        val accessTokenInfo = accessTokenService.get(
+            clientId = accessTokenRequest.clientId,
             refreshToken = accessTokenRequest.refreshToken!!
+        )?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.INVALID_REFRESH_TOKEN,
+            defaultMessage = "The refresh token invalid"
+        )
+        //4.清除跟该refresh_token授权码相关的access_token
+        accessTokenService.delete(
+            accessToken = accessTokenInfo.accessToken
         )
         //5.校验refresh_token是否过期
         if (AuthUtils.isExpired(refreshTokenInfo.expiredTime)) {
@@ -59,6 +67,8 @@ class RefreshTokenGranter(
                 defaultMessage = "The refresh token has expired!"
             )
         }
-        return Oauth2AccessTokenDTO()
+        return Oauth2AccessTokenDTO(
+            userName = accessTokenInfo.userName
+        )
     }
 }

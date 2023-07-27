@@ -26,7 +26,8 @@ class ClientCredentialsTokenGranter constructor(
         logger.info("client credentials getAccessToken|$accessTokenRequest|$clientDetails")
         // 1、根据appcode获取accessToken
         val accessTokenInfo = accessTokenService.get(
-            clientId = accessTokenRequest.clientId
+            clientId = accessTokenRequest.clientId,
+            grantType = GRANT_TYPE
         )
         return Oauth2AccessTokenDTO(
             accessToken = accessTokenInfo?.accessToken,

@@ -10,7 +10,9 @@ class AuthOauth2AccessTokenDao {
     fun get(
         dslContext: DSLContext,
         clientId: String,
-        userName: String? = null
+        refreshToken: String?,
+        userName: String?,
+        grantType: String?
     ): TAuthOauth2AccessTokenRecord? {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.selectFrom(this).where(
@@ -18,6 +20,18 @@ class AuthOauth2AccessTokenDao {
             ).let {
                 if (userName != null) {
                     it.and(USER_NAME.eq(userName))
+                } else {
+                    it
+                }
+            }.let {
+                if (grantType != null) {
+                    it.and(GRANT_TYPE.eq(grantType))
+                } else {
+                    it
+                }
+            }.let {
+                if (refreshToken != null) {
+                    it.and(REFRESH_TOKEN.eq(refreshToken))
                 } else {
                     it
                 }
@@ -36,22 +50,12 @@ class AuthOauth2AccessTokenDao {
         }
     }
 
-    fun deleteByRefreshToken(
-        dslContext: DSLContext,
-        refreshToken: String
-    ): Int {
-        return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
-            dslContext.deleteFrom(this)
-                .where(REFRESH_TOKEN.eq(refreshToken))
-                .execute()
-        }
-    }
-
     @Suppress("LongParameterList")
     fun create(
         dslContext: DSLContext,
         clientId: String,
         userName: String?,
+        grantType: String,
         accessToken: String,
         refreshToken: String? = null,
         expiredTime: Long
@@ -61,12 +65,14 @@ class AuthOauth2AccessTokenDao {
                 this,
                 CLIENT_ID,
                 USER_NAME,
+                GRANT_TYPE,
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 EXPIRED_TIME,
             ).values(
                 clientId,
                 userName,
+                grantType,
                 accessToken,
                 refreshToken,
                 expiredTime

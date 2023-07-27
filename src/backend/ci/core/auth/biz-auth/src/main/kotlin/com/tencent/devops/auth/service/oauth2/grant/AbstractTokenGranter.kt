@@ -59,6 +59,7 @@ abstract class AbstractTokenGranter(
             accessTokenService.create(
                 clientId = clientId,
                 userName = accessTokenDTO.userName,
+                grantType = grantType,
                 accessToken = newAccessToken,
                 refreshToken = refreshToken,
                 expiredTime = accessTokenExpiredTime

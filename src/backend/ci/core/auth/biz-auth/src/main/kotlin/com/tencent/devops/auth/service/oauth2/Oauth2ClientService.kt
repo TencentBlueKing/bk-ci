@@ -52,11 +52,11 @@ class Oauth2ClientService constructor(
     ): Boolean {
         val authorizedGrantTypes = clientDetails.authorizedGrantTypes.split(",")
         if (grantType != null && !authorizedGrantTypes.contains(grantType)) {
-            logger.warn("The client($clientId) does not support the authorization code type")
+            logger.warn("The client($clientId) does not support $grantType type")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_AUTHORIZATION_TYPE,
                 params = arrayOf(clientId),
-                defaultMessage = "The client($clientId) does not support the authorization code type"
+                defaultMessage = "The client($clientId) does not not support $grantType type"
             )
         }
         if (redirectUri != null && redirectUri != clientDetails.redirectUri) {

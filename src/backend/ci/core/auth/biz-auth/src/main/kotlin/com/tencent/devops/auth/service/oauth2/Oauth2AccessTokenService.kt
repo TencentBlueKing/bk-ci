@@ -12,18 +12,24 @@ class Oauth2AccessTokenService constructor(
 ) {
     fun get(
         clientId: String,
-        userName: String? = null
+        refreshToken: String? = null,
+        userName: String? = null,
+        grantType: String? = null
     ): TAuthOauth2AccessTokenRecord? {
         return oauth2AccessTokenDao.get(
             dslContext = dslContext,
             clientId = clientId,
-            userName = userName
+            refreshToken = refreshToken,
+            userName = userName,
+            grantType = grantType
         )
     }
 
+    @Suppress("LongParameterList")
     fun create(
         clientId: String,
         userName: String?,
+        grantType: String,
         accessToken: String,
         refreshToken: String?,
         expiredTime: Long
@@ -32,6 +38,7 @@ class Oauth2AccessTokenService constructor(
             dslContext = dslContext,
             clientId = clientId,
             userName = userName,
+            grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
             expiredTime = expiredTime
@@ -42,13 +49,6 @@ class Oauth2AccessTokenService constructor(
         oauth2AccessTokenDao.delete(
             dslContext = dslContext,
             accessToken = accessToken
-        )
-    }
-
-    fun deleteByRefreshToken(refreshToken: String) {
-        oauth2AccessTokenDao.deleteByRefreshToken(
-            dslContext = dslContext,
-            refreshToken = refreshToken
         )
     }
 }
