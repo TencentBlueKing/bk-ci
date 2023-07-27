@@ -23,14 +23,12 @@ class AuthorizationCodeTokenGranter constructor(
 ) {
     companion object {
         private const val GRANT_TYPE = "authorization_code"
-        private val logger = LoggerFactory.getLogger(AuthorizationCodeTokenGranter::class.java)
     }
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("authorization code getAccessToken|$accessTokenRequest|$clientDetails")
         val clientId = accessTokenRequest.clientId
         val code = accessTokenRequest.code
         val codeDetails = codeService.get(

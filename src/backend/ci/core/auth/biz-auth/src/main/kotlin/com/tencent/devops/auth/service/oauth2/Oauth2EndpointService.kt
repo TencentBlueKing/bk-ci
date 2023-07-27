@@ -23,7 +23,7 @@ class Oauth2EndpointService constructor(
         clientId: String,
         redirectUri: String
     ): String {
-        logger.info("Oauth2EndpointService|getAuthorizationCode:$userId|$clientId|$redirectUri")
+        logger.info("get authorization code:$userId|$clientId|$redirectUri")
         // 1、校验clientId是否存在
         val clientDetails = clientService.getClientDetails(clientId = clientId)
         // 2、校验客户端信息是否正确
@@ -49,7 +49,7 @@ class Oauth2EndpointService constructor(
     ): Oauth2AccessTokenVo? {
         val grantType = accessTokenRequest.grantType
         val clientId = accessTokenRequest.clientId
-        logger.info("Oauth2EndpointService|getAccessToken:$clientId|$grantType")
+        logger.info("get access token:$clientId|$grantType|$accessTokenRequest")
         val clientDetails = clientService.getClientDetails(
             clientId = clientId
         )

@@ -16,14 +16,12 @@ class ClientCredentialsTokenGranter constructor(
 ) {
     companion object {
         private const val GRANT_TYPE = "client_credentials"
-        private val logger = LoggerFactory.getLogger(ClientCredentialsTokenGranter::class.java)
     }
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("client credentials getAccessToken|$accessTokenRequest|$clientDetails")
         val accessTokenInfo = accessTokenService.get(
             clientId = accessTokenRequest.clientId,
             grantType = GRANT_TYPE

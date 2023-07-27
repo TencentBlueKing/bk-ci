@@ -22,8 +22,6 @@ abstract class AbstractTokenGranter(
         if (this.grantType != grantType) {
             return null
         }
-        // todo 记得要去掉改行日志，内包含敏感信息
-        logger.info("AbstractTokenGranter|grant:$grantType|$accessTokenRequest")
         val accessTokenDTO = getAccessToken(
             accessTokenRequest = accessTokenRequest,
             clientDetails = clientDetails
@@ -40,8 +38,6 @@ abstract class AbstractTokenGranter(
         accessTokenDTO: Oauth2AccessTokenDTO,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenVo {
-        // todo 记得要去掉改行日志，内包含敏感信息
-        logger.info("handle access token:$accessTokenRequest|$accessTokenDTO|$clientDetails")
         val clientId = accessTokenRequest.clientId
         val accessToken = accessTokenDTO.accessToken
         val refreshToken = accessTokenDTO.refreshToken
@@ -54,7 +50,7 @@ abstract class AbstractTokenGranter(
             if (accessToken != null) {
                 accessTokenService.delete(accessToken)
             }
-            // 创建新的 access_token 记录
+            // 创建新的 access_token记录
             accessTokenService.create(
                 clientId = clientId,
                 userName = accessTokenDTO.userName,
@@ -74,8 +70,4 @@ abstract class AbstractTokenGranter(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AbstractTokenGranter::class.java)
-    }
 }

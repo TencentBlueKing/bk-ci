@@ -22,14 +22,12 @@ class RefreshTokenGranter(
 ) {
     companion object {
         private const val GRANT_TYPE = "refresh_token"
-        private val logger = LoggerFactory.getLogger(RefreshTokenGranter::class.java)
     }
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        logger.info("refresh token getAccessToken|$accessTokenRequest|$clientDetails")
         val refreshToken = accessTokenRequest.refreshToken
         // 1.校验refresh_token是否存在
         val refreshTokenInfo = refreshTokenService.get(
