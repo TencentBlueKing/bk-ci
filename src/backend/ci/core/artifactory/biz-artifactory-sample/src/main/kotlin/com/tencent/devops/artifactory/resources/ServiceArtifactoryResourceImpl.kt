@@ -68,7 +68,15 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-        TODO("not implemented")
+        val count = archiveFileService.acrossProjectCopy(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            targetPath = targetPath,
+            targetProjectId = targetProjectId
+        )
+        return Result(count)
     }
 
     override fun properties(

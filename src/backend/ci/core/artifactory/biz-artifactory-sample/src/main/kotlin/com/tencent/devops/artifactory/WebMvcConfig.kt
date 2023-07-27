@@ -27,14 +27,17 @@
 
 package com.tencent.devops.artifactory
 
+import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.common.api.constant.STATIC
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-class WebMvcConfig : WebMvcConfigurerAdapter() {
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_LOCAL) // 本地服务器存储时才生效
+class WebMvcConfig : WebMvcConfigurer {
 
     @Value("\${artifactory.archiveLocalBasePath:/data/bkce/public/ci/artifactory}")
     private lateinit var archiveLocalBasePath: String

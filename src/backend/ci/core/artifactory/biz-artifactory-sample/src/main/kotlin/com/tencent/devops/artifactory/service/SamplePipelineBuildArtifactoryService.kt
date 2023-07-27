@@ -45,7 +45,8 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Service@Suppress("ALL")
+@Service
+//@Suppress("ALL")
 class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao,
@@ -71,8 +72,10 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<FileInfo> {
-        logger.info("getBkRepoArtifactoryList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, " +
-            "buildId: $buildId")
+        logger.info(
+            "getBkRepoArtifactoryList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, " +
+                "buildId: $buildId"
+        )
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
@@ -82,17 +85,19 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             page = 1,
             pageSize = 1000
         ).records
-        return nodeList.map { FileInfo(
-            name = it.name,
-            fullName = it.name,
-            path = it.path,
-            fullPath = it.fullPath,
-            size = it.size,
-            folder = it.folder,
-            properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
-            modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            artifactoryType = BkRepoUtils.parseArtifactoryType(it.repoName)
-        ) }
+        return nodeList.map {
+            FileInfo(
+                name = it.name,
+                fullName = it.name,
+                path = it.path,
+                fullPath = it.fullPath,
+                size = it.size,
+                folder = it.folder,
+                properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                artifactoryType = BkRepoUtils.parseArtifactoryType(it.repoName)
+            )
+        }
     }
 
     private fun getLocalArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {

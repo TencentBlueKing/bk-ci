@@ -30,7 +30,7 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
-import com.tencent.devops.artifactory.service.impl.ArchiveAtomToBkRepoServiceImpl
+import com.tencent.devops.artifactory.store.service.impl.ArchiveAtomToBkRepoServiceImpl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
