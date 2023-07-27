@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentRecord
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.COMMENT_UPDATE_NO_PERMISSION
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentPraiseDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
@@ -299,7 +300,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         val creator = storeCommentRecord.creator
         if (userId != creator) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = COMMENT_UPDATE_NO_PERMISSION,
                 params = null,
                 data = false,
                 language = I18nUtil.getLanguage(userId)

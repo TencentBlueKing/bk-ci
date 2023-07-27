@@ -871,6 +871,25 @@ class PipelineBuildDao {
         }
     }
 
+    fun getBuildCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): Int {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,

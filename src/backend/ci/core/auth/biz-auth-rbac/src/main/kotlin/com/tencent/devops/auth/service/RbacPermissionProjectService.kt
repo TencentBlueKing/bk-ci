@@ -32,12 +32,15 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -46,6 +49,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionProjectService(
@@ -55,11 +59,15 @@ class RbacPermissionProjectService(
     private val iamConfiguration: IamConfiguration,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val deptService: DeptService,
+    private val permissionGradeManagerService: PermissionGradeManagerService
 ) : PermissionProjectService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
+        private const val expiredAt = 365L
+        private const val USER_TYPE = "user"
     }
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
@@ -92,17 +100,13 @@ class RbacPermissionProjectService(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         ).relationId
-        // 2、获取分级管理员下所有的用户组
-        val v2PageInfoDTO = V2PageInfoDTO().apply {
-            page = 1
-            pageSize = 1000
-        }
         val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-        val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId,
-            searchGroupDTO,
-            v2PageInfoDTO
-        ).results
+        val groupInfoList = permissionGradeManagerService.listGroup(
+            gradeManagerId = gradeManagerId,
+            searchGroupDTO = searchGroupDTO,
+            page = 1,
+            pageSize = 1000
+        )
         logger.info(
             "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
                 " gradeManagerId = $gradeManagerId | groupInfoList: $groupInfoList"
@@ -203,6 +207,51 @@ class RbacPermissionProjectService(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
+        return true
+    }
+
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean {
+        logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
+        members.forEach {
+            deptService.getUserInfo(
+                userId = "admin",
+                name = it
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                params = arrayOf(it),
+                defaultMessage = "user $it not exist"
+            )
+        }
+        val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
+            authResourceGroupDao.getByGroupName(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupName = BkAuthGroup.CI_MANAGER.groupName
+            )?.relationId
+        } else {
+            authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = roleCode
+            )?.relationId
+        } ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(roleCode),
+            defaultMessage = "group $roleCode not exist"
+        )
+        val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
+        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
+        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
         return true
     }
 

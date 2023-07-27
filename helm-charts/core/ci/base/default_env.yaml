@@ -45,3 +45,4 @@ bkCiRedisSsl: false
 bkCiEsHttps: false
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
+bkEsbEnabled: false

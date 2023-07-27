@@ -616,5 +616,12 @@
     "历史大版本问题修复": "Bugfix in previous major versions",
     "当历史大版本下发现 bug 时，使用此方式进行 fix。不建议在此场景下新增/删除入参。": "When a bug is found in a major historical version, use this method to fix it. It is not recommended to add/delete input parameters in this scenario.",
     "镜像Tag": "Image Tag",
-    "质量红线服务": "Quality Gate"
+    "质量红线服务": "Quality Gate",
+    "暂无数据": "No Data",
+    "搜索结果为空": "Search result is empty",
+    "清空筛选条件": "Clear Search Conditions",
+    "可以尝试 调整关键词 或": "You can try adjusting keywords or ",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "离开": "Leave"
 }
