@@ -25,19 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.store.resources
 
+import com.tencent.devops.artifactory.api.BuildArchiveStoreFileResource
+import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-interface ArchiveStoreFileService {
+@RestResource
+class BuildArchiveStoreFileResourceImpl @Autowired constructor(
+    private val archiveStoreFileService: ArchiveStoreFileService
+) : BuildArchiveStoreFileResource {
 
-    /**
-     * 归档文件
-     */
-    fun archiveFile(
+    override fun archiveFile(
         userId: String,
         repoName: String,
         projectId: String,
@@ -47,11 +51,17 @@ interface ArchiveStoreFileService {
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean>
-
-    fun deleteFile(
-        repoName: String,
-        fullPath: String,
-        type: String
-    ): Result<Boolean>
+    ): Result<Boolean> {
+        return archiveStoreFileService.archiveFile(
+            userId = userId,
+            repoName = repoName,
+            projectId = projectId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

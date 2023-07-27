@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.impl
+package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
-import com.tencent.devops.artifactory.service.ArchiveStoreFileService
+import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.config
+package com.tencent.devops.artifactory.store.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

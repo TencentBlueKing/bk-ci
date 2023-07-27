@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.store.resources
 
-import com.tencent.devops.artifactory.api.BuildArchiveStoreFileResource
-import com.tencent.devops.artifactory.service.ArchiveStoreFileService
+import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
+import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -37,9 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class BuildArchiveStoreFileResourceImpl @Autowired constructor(
+class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
     private val archiveStoreFileService: ArchiveStoreFileService
-) : BuildArchiveStoreFileResource {
+) : ServiceArchiveStoreFileResource {
 
     override fun archiveFile(
         userId: String,
@@ -63,5 +63,9 @@ class BuildArchiveStoreFileResourceImpl @Autowired constructor(
             inputStream = inputStream,
             disposition = disposition
         )
+    }
+
+    override fun deleteFile(repoName: String, fullPath: String, type: String): Result<Boolean> {
+        return archiveStoreFileService.deleteFile(repoName, fullPath, type)
     }
 }

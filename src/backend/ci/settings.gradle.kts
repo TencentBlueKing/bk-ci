@@ -343,10 +343,7 @@ include(":ext:tencent:environment:boot-environment-tencent")
 
 include(":ext:tencent:artifactory")
 include(":ext:tencent:artifactory:api-artifactory-tencent")
-include(":ext:tencent:artifactory:api-artifactory-store-tencent")
 include(":ext:tencent:artifactory:biz-artifactory-tencent")
-include(":ext:tencent:artifactory:biz-artifactory-push-tencent")
-include(":ext:tencent:artifactory:biz-artifactory-store-tencent")
 include(":ext:tencent:artifactory:boot-artifactory-tencent")
 
 include(":ext:tencent:dockerhost")

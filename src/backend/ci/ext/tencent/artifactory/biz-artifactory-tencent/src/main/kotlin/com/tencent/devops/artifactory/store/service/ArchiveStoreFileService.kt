@@ -25,23 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.store.service
 
-import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
-import com.tencent.devops.artifactory.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-@RestResource
-class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
-    private val archiveStoreFileService: ArchiveStoreFileService
-) : ServiceArchiveStoreFileResource {
+interface ArchiveStoreFileService {
 
-    override fun archiveFile(
+    /**
+     * 归档文件
+     */
+    fun archiveFile(
         userId: String,
         repoName: String,
         projectId: String,
@@ -51,21 +47,11 @@ class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        return archiveStoreFileService.archiveFile(
-            userId = userId,
-            repoName = repoName,
-            projectId = projectId,
-            storeType = storeType,
-            storeCode = storeCode,
-            version = version,
-            destPath = destPath,
-            inputStream = inputStream,
-            disposition = disposition
-        )
-    }
+    ): Result<Boolean>
 
-    override fun deleteFile(repoName: String, fullPath: String, type: String): Result<Boolean> {
-        return archiveStoreFileService.deleteFile(repoName, fullPath, type)
-    }
+    fun deleteFile(
+        repoName: String,
+        fullPath: String,
+        type: String
+    ): Result<Boolean>
 }
