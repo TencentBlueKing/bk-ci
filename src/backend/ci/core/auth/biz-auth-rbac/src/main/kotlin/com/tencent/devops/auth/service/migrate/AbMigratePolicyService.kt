@@ -220,6 +220,7 @@ abstract class AbMigratePolicyService(
                 }"
             )
 
+            // 如果是v3版本，返回为空，可能是用户已经加入管理员组，不需要再创建用户组
             if (rbacAuthorizationScopeList.isEmpty() && version == AuthSystemType.V3_AUTH_TYPE.value) {
                 return@result
             }

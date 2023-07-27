@@ -103,6 +103,12 @@ class MigrateV0PolicyService constructor(
         // v0有的action，但是在rbac没有,需要跳过
         private val skipActions = listOf("quality_gate_group_enable")
 
+        // v0有的资源，但是在rbac没有,需要跳过
+        private val skipResourceTypes = listOf(
+            "artifactory", "bcs", "gs-apk", "job",
+            "vs", "wetest", "xinghai"
+        )
+
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
@@ -205,6 +211,11 @@ class MigrateV0PolicyService constructor(
      * action替换或移除
      */
     private fun fillNewActions(actions: List<String>): List<String> {
+        // 若action为空或该类型资源不需要迁移到新版本，则直接返回
+        val actionResourceType = actions.firstOrNull()?.substringBeforeLast("_")
+        if (actions.isEmpty() || skipResourceTypes.contains(actionResourceType)) {
+            return emptyList()
+        }
         val rbacActions = actions.toMutableList()
         actions.forEach action@{ action ->
             when {
