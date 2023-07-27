@@ -220,7 +220,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
                     .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions)
-                .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
+//                .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .orderBy(START_TIME.desc())
                 .offset((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize)
                 .limit(queryPipelineFailQo.pageSize)
@@ -249,7 +249,6 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions)
-                .groupBy(this.PROJECT_ID, this.PIPELINE_ID, this.BUILD_ID)
                 .execute().toLong()
         }
     }
