@@ -117,7 +117,6 @@ class CreateControl @Autowired constructor(
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
-
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = userId,
