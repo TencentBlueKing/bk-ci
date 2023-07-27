@@ -117,7 +117,6 @@ class CreateControl @Autowired constructor(
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
-        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType.name)
 
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -322,6 +321,8 @@ class CreateControl @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
+
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
@@ -408,6 +409,7 @@ class CreateControl @Autowired constructor(
         }
 
         windowsGpuCheck(workspaceCreate, userId)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)

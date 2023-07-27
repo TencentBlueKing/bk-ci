@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
@@ -93,7 +93,7 @@ class RemoteDevSettingService @Autowired constructor(
         val workingSpace = remoteDevBillingDao.fetchBillings(dslContext, WorkspaceSystemType.WINDOWS_GPU, userId)
         val winUsageTime = workingSpace.associateBy({ it.first }) { 0 }.toMutableMap()
         if (winUsageTime.isEmpty()) return
-        val now = LocalDate.now()
+        val now = LocalDateTime.now()
         workingSpace.forEach { (userId, startTime, usageTime) ->
             val use = winUsageTime[userId] ?: return@forEach
             winUsageTime[userId] = use + (usageTime ?: Duration.between(startTime, now).seconds.toInt())
