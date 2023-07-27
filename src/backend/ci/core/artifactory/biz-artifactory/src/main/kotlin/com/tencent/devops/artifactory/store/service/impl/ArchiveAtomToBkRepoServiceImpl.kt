@@ -1,4 +1,4 @@
-package com.tencent.devops.artifactory.service.impl
+package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR

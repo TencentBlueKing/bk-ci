@@ -25,55 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.store.resources
 
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
-import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
-import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.common.api.pojo.Result
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-interface ArchiveAtomService {
+@RestResource
+class ServiceArchiveAtomResourceImpl @Autowired constructor(
+    private val archiveAtomService: ArchiveAtomService
+) : ServiceArchiveAtomResource {
 
-    /**
-     * 归档插件
-     */
-    fun archiveAtom(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        archiveAtomRequest: ArchiveAtomRequest
-    ): Result<ArchiveAtomResponse?>
+    override fun getAtomFileContent(filePath: String): Result<String> {
+        return Result(archiveAtomService.getAtomFileContent(filePath))
+    }
 
-    /**
-     * 重新归档插件
-     */
-    fun reArchiveAtom(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        reArchiveAtomRequest: ReArchiveAtomRequest
-    ): Result<ArchiveAtomResponse?>
+    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
+        return Result(true)
+    }
 
-    /**
-     * 获取插件相关文件内容
-     */
-    fun getAtomFileContent(filePath: String): String
-
-    /**
-     * 删除插件
-     */
-    fun deleteAtom(userId: String, projectCode: String, atomCode: String)
-
-    /**
-     * 更新插件相关文件内容
-     */
-    fun updateArchiveFile(
+    override fun updateArchiveFile(
         projectCode: String,
         atomCode: String,
         version: String,
         fileName: String,
         content: String
-    ): Boolean
+    ): Result<Boolean> {
+        return Result(
+            archiveAtomService.updateArchiveFile(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                fileName = fileName,
+                content = content
+            )
+        )
+    }
 }
