@@ -436,7 +436,11 @@ class CreateControl @Autowired constructor(
                 repositoryUrl = "",
                 branch = "",
                 devFilePath = workspace.devFilePath,
-                devFile = Devfile(""),
+                devFile = Devfile(
+                    version = "",
+                    zoneId = windowsConfig.zoneShortName,
+                    machineType = windowsConfig.size
+                ),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
