@@ -4,12 +4,22 @@ backendImage:
 
 proxy:
   # 网关类型：master 为主网关，域名绑定网关,child 为子网关，接受主网关流量
-  type: master
+  initroute:
+    # apisix后台界面的 host 限制
+    apisixDashboardHost: ""
+    # registryfacade 域名前词缀限制，因为 registryfacade 无法通过转发，只能区分域名，所以主从部署是 prefix 不同
+    registryfacadeHostPrefix: reg
+    # wsproxy ssh端口号
+    wsproxysshPort: 2200
+    # wsproxy 转发流量的限制
+    wsproxyHttpvars: ""
+    # 额外的路由，由外部 values 进行补充
+    extraRoutes: ""
   # 远程开发泛域名
-  domain: 
+  domain: ""
   https:
-    crt:
-    key:
+    crt: ""
+    key: ""
   # wsproxy service名称
   wsproxyName: wsproxy 
   # registry-facade service名称 
@@ -107,9 +117,6 @@ apisix:
 
   etcd:
     image:
-      registry: mirrors.tencent.com
-      repository: ruotiantang/apisix
-      tag: etcd-3.5.7-debian-11-r14
       pullPolicy: IfNotPresent
     volumePermissions:
         image:

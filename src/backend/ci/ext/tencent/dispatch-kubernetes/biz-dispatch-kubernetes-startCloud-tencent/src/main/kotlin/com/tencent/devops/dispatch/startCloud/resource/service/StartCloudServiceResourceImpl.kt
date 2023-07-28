@@ -41,4 +41,8 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     override fun createStartCloudUser(user: String): Result<Boolean> {
         return Result(startCloudInterfaceService.createStartCloudUser(user))
     }
+
+    override fun syncStartCloudResourceList(): Result<Boolean> {
+        return Result(startCloudInterfaceService.syncStartCloudResourceList())
+    }
 }

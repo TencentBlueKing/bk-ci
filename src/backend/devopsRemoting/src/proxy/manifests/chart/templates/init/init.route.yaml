@@ -1,4 +1,3 @@
-{{- if eq .Values.proxy.type "child"}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -43,6 +42,9 @@ spec:
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {
                   "uri": "/*",
+                  {{- if .Values.proxy.initroute.apisixDashboardHost }}
+                  "host": "{{ .Values.proxy.initroute.apisixDashboardHost }}",
+                  {{- end }}
                   "name": "apisix-proxy-dashboard",
                   "vars": [
                       [
@@ -76,7 +78,10 @@ spec:
                           "http_x_forwarded_proto",
                           "==",
                           "http"
-                      ]
+                      ],
+                      {{- if .Values.proxy.initroute.wsproxyHttpvars }}
+                      {{- .Values.proxy.initroute.wsproxyHttpvars | nindent 22}}
+                      {{- end}}
                   ],
                   "upstream": {
                       "nodes": {
@@ -133,7 +138,10 @@ spec:
                           "host",
                           "~~",
                           "\\d*[-\\w]*\\w+[-\\w]*-[a-zA-Z0-9]{16}\\.{{ .Values.proxy.domain }}"
-                      ]
+                      ],
+                      {{- if .Values.proxy.initroute.wsproxyHttpvars }}
+                      {{- .Values.proxy.initroute.wsproxyHttpvars | nindent 22}}
+                      {{- end}}
                   ],
                   "upstream": {
                       "nodes": {
@@ -174,7 +182,7 @@ spec:
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/stream_routes/1  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {
                   "name": "wsproxy-ssh",
-                  "server_port": 2200,
+                  "server_port": {{ .Values.proxy.initroute.wsproxysshPort }},
                   "upstream": {
                       "nodes": {
                           "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:22": 1
@@ -187,7 +195,7 @@ spec:
               curl -i http://{{ include "proxy.apisix.admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9180/apisix/admin/routes/4  -H 'X-API-KEY: {{ .Values.apisix.admin.credentials.admin }}' -X PUT -d '
               {
                   "uri": "/*",
-                  "host": "regbcs.{{ .Values.proxy.domain }}",
+                  "host": "{{ .Values.proxy.initroute.registryfacadeHostPrefix }}.{{ .Values.proxy.domain }}",
                   "name": "registry-facade",
                   "enable_websocket": false,
                   "vars": [
@@ -201,10 +209,21 @@ spec:
                       "nodes": {
                           "{{ .Values.proxy.registryFacadeName }}.{{ .Release.Namespace }}.svc.cluster.local:9000": 1
                       },
+                      "timeout": {
+                          "send": 300,
+                          "connect": 300,
+                          "read": 300
+                      },
+                      "keepalive_pool": {
+                          "size": 320,
+                          "idle_timeout": 300,
+                          "requests": 1000
+                      },
                       "scheme": "https",
                       "type": "roundrobin"
                   }
               }'
+              {{ .Values.proxy.initroute.extraRoutes | nindent 14}}
 
       restartPolicy: OnFailure
-{{- end }}
+
