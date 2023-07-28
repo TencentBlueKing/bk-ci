@@ -22,6 +22,16 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface Oauth2EndpointResource {
     @GET
+    @Path("/getHtml")
+    @ApiOperation("获取授权界面")
+    @Produces("text/html")
+    fun getHtml(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String
+    ): String
+
+    @GET
     @Path("/getAuthorizationCode")
     @ApiOperation("获取授权码")
     fun getAuthorizationCode(
