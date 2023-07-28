@@ -98,4 +98,12 @@ interface OpAuthMigrateResource {
         @QueryParam("projectCreator")
         projectCreator: String
     ): Result<Boolean>
+
+    @POST
+    @Path("/grantGroupAdditionalAuthorization")
+    @ApiOperation("授予项目下自定义用户组RBAC新增的权限")
+    fun grantGroupAdditionalAuthorization(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

@@ -35,6 +35,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.StoreEnvVarDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
@@ -84,7 +85,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val storeType = StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte()
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeEnvVarRequest.storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -140,8 +142,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val storeType = StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte()
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeEnvVarRequest.storeCode)
             )
         }
         // 查询该环境变量在数据库中最大的版本的一行记录
@@ -255,8 +258,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             )
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         storeEnvVarDao.batchDelete(
@@ -289,8 +293,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             )
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         val latestEnvVarRecords = storeEnvVarDao.getLatestEnvVarList(
@@ -344,8 +349,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
             )
         }
         val storeEnvVarRecords = storeEnvVarDao.getEnvVarList(
