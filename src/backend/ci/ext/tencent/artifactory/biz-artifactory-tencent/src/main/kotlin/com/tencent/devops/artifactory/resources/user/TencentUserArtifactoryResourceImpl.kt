@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.user
 
-import com.tencent.devops.artifactory.api.user.ExtUserArtifactoryResource
+import com.tencent.devops.artifactory.api.user.TencentUserArtifactoryResource
 import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -56,11 +56,11 @@ import kotlin.math.ceil
 
 @Primary
 @RestResource
-class ExtUserArtifactoryResourceImpl @Autowired constructor(
+class TencentUserArtifactoryResourceImpl @Autowired constructor(
     val bkRepoService: BkRepoService,
     val bkRepoSearchService: BkRepoSearchService,
     val bkRepoDownloadService: BkRepoDownloadService
-) : ExtUserArtifactoryResource, UserArtifactoryResource {
+) : TencentUserArtifactoryResource, UserArtifactoryResource {
     override fun checkDevnetGateway(userId: String): Result<Boolean> {
         return Result(true)
     }

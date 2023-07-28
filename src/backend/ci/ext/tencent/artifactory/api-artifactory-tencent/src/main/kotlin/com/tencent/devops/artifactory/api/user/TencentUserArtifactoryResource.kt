@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExtUserArtifactoryResource : UserArtifactoryResource {
+interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @ApiOperation("获取目录列表")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/list")
     @Path("/{projectId}/{artifactoryType}/list")

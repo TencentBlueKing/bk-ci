@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExtBuildArtifactoryResource: BuildArtifactoryResource {
+interface TencentBuildArtifactoryResource: BuildArtifactoryResource {
 
     @ApiOperation("获取文件元数据")
     @Path("/properties")

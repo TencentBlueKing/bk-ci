@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.resources.builds
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryResource
-import com.tencent.devops.artifactory.api.builds.ExtBuildArtifactoryResource
+import com.tencent.devops.artifactory.api.builds.TencentBuildArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -52,12 +52,12 @@ import org.springframework.context.annotation.Primary
 
 @Primary
 @RestResource
-class ExtBuildArtifactoryResourceImpl @Autowired constructor(
+class TencentBuildArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val shortUrlService: ShortUrlService,
     private val client: Client
-) : ExtBuildArtifactoryResource, BuildArtifactoryResource {
+) : TencentBuildArtifactoryResource, BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
         val result = bkRepoService.getOwnFileList(userId, projectId, 0, -1)
