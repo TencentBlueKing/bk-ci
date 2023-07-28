@@ -11,20 +11,32 @@ import com.tencent.devops.common.web.RestResource
 class Oauth2EndpointResourceImpl constructor(
     private val endpointService: Oauth2EndpointService
 ) : Oauth2EndpointResource {
-    override fun getHtml(userId: String): String {
+    override fun getAuthorizationHtml(
+        clientId: String,
+        redirectUri: String
+    ): String {
         return """
             <!DOCTYPE html>
             <html>
             <head>
-              <title>OAuth2授权</title>
+              <title>OAuth2 授权</title>
             </head>
             <body>
               <h1>授权信息：是否授权“行云”访问您在蓝盾的制品库</h1>
               <button onclick="authorize()">授权</button>
-
+            
               <script>
                 function authorize() {
-                  window.location.href = "https://dev.devops.woa.com/ms/auth/api/user/oauth2/endpoint/getAuthorizationCode?clientId=test1&redirectUri=https://www.baidu.com/";
+                  // 调用接口获取授权码
+                  fetch('/ms/auth/api/user/oauth2/endpoint/getAuthorizationCode?clientId=$clientId&redirectUri=$redirectUri')
+                    .then(response => response.json())
+                    .then(data => {
+                      // 取出授权码并进行页面跳转
+                      const authorizationCode = data.data;
+                      console.log(authorizationCode);
+                      window.location.href = authorizationCode;
+                    })
+                    .catch(error => console.error(error));
                 }
               </script>
             </body>

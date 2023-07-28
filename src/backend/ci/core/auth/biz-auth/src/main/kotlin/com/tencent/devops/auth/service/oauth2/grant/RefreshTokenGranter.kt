@@ -5,11 +5,11 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPI
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.utils.AuthUtils
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,13 +17,9 @@ class RefreshTokenGranter(
     private val accessTokenService: Oauth2AccessTokenService,
     private val refreshTokenService: Oauth2RefreshTokenService
 ) : AbstractTokenGranter(
-    grantType = GRANT_TYPE,
+    grantType = Oauth2GrantType.REFRESH_TOKEN.grantType,
     accessTokenService = accessTokenService
 ) {
-    companion object {
-        private const val GRANT_TYPE = "refresh_token"
-    }
-
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo

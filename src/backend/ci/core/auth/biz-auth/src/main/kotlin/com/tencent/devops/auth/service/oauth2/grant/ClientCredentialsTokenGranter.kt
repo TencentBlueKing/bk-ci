@@ -3,8 +3,8 @@ package com.tencent.devops.auth.service.oauth2.grant
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -15,7 +15,7 @@ class ClientCredentialsTokenGranter constructor(
     accessTokenService = accessTokenService
 ) {
     companion object {
-        private const val GRANT_TYPE = "client_credentials"
+        private val GRANT_TYPE = Oauth2GrantType.CLIENT_CREDENTIALS.grantType
     }
 
     override fun getAccessToken(

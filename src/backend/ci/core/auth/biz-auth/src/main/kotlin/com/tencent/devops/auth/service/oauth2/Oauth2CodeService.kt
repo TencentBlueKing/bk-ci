@@ -40,7 +40,8 @@ class Oauth2CodeService constructor(
     fun create(
         userId: String,
         code: String,
-        clientId: String
+        clientId: String,
+        codeValiditySeconds: Long
     ) {
         authOauth2CodeDao.create(
             dslContext = dslContext,
@@ -68,9 +69,5 @@ class Oauth2CodeService constructor(
             )
         }
         return true
-    }
-
-    companion object {
-        private const val codeValiditySeconds = 300L
     }
 }

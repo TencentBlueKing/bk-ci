@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.service.oauth2.grant.TokenGranter
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -15,7 +16,7 @@ class Oauth2EndpointService constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(Oauth2EndpointService::class.java)
-        private const val AUTHORIZATION_CODE_TYPE = "authorization_code"
+        private const val codeValiditySeconds = 300L
     }
 
     fun getAuthorizationCode(
@@ -30,7 +31,7 @@ class Oauth2EndpointService constructor(
         clientService.verifyClientInformation(
             clientId = clientId,
             redirectUri = redirectUri,
-            grantType = AUTHORIZATION_CODE_TYPE,
+            grantType = Oauth2GrantType.AUTHORIZATION_CODE.grantType,
             clientDetails = clientDetails
         )
         // 3、生成授权码并存储数据库，授权码有效期为5分钟
@@ -39,6 +40,7 @@ class Oauth2EndpointService constructor(
             userId = userId,
             code = code,
             clientId = clientId,
+            codeValiditySeconds = codeValiditySeconds
         )
         // 4、返回跳转链接及授权码
         return "$redirectUri?code=$code"

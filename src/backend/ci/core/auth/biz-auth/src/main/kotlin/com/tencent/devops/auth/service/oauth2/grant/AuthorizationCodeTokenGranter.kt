@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service.oauth2.grant
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.auth.service.oauth2.Oauth2CodeService
 import com.tencent.devops.auth.service.oauth2.Oauth2RefreshTokenService
@@ -18,13 +19,9 @@ class AuthorizationCodeTokenGranter constructor(
     private val accessTokenService: Oauth2AccessTokenService,
     private val refreshTokenService: Oauth2RefreshTokenService
 ) : AbstractTokenGranter(
-    grantType = GRANT_TYPE,
+    grantType = Oauth2GrantType.AUTHORIZATION_CODE.grantType,
     accessTokenService = accessTokenService
 ) {
-    companion object {
-        private const val GRANT_TYPE = "authorization_code"
-    }
-
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo

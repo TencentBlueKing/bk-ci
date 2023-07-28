@@ -22,13 +22,16 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface Oauth2EndpointResource {
     @GET
-    @Path("/getHtml")
+    @Path("/getAuthorizationHtml")
     @ApiOperation("获取授权界面")
     @Produces("text/html")
-    fun getHtml(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待校验用户ID", required = true)
-        userId: String
+    fun getAuthorizationHtml(
+        @QueryParam("clientId")
+        @ApiParam("客户端ID", required = true)
+        clientId: String,
+        @QueryParam("redirectUri")
+        @ApiParam("跳转链接", required = true)
+        redirectUri: String
     ): String
 
     @GET
