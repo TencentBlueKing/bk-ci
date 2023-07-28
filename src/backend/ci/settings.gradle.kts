@@ -146,9 +146,7 @@ include(":core:environment:model-environment")
 
 include(":core:artifactory")
 include(":core:artifactory:api-artifactory")
-include(":core:artifactory:api-artifactory-sample")
 include(":core:artifactory:biz-artifactory")
-include(":core:artifactory:biz-artifactory-sample")
 include(":core:artifactory:boot-artifactory")
 include(":core:artifactory:model-artifactory")
 
