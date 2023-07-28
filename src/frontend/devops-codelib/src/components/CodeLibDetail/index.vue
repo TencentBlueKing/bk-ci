@@ -332,6 +332,7 @@
     ::v-deep {
         .bk-tab {
             height: calc(100% - 48px);
+            background-color: #fff;
         }
         .bk-tab-section {
             height: calc(100% - 50px);

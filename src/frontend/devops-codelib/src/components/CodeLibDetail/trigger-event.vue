@@ -33,7 +33,9 @@
                 <li class="timeline-dot">
                     <div class="timeline-section">
                         <div class="timeline-title">{{ triggerType }}timeline-title</div>
-                        <div class="timeline-content"> timeline-content</div>
+                        <div class="timeline-content">
+                            <TimelineCollapse />
+                        </div>
                     </div>
                 </li>
             </ul>
@@ -47,7 +49,6 @@
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
-        
     </section>
 </template>
 <script>
@@ -55,11 +56,13 @@
         mapActions
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
+    import TimelineCollapse from './timeline-collapse.vue'
 
     export default {
         name: 'basicSetting',
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            TimelineCollapse
         },
         props: {
             curRepo: {
@@ -232,7 +235,6 @@
                 this.searchValue.forEach(i => {
                     params[`${i.id}`] = (i.values && i.values[0].id) || i.name
                 })
-                console.log(params.triggerType || this.triggerType, 'params.triggerType || this.triggerType,')
                 
                 this.fetchTriggerEventList({
                     projectId: this.projectId,
@@ -274,7 +276,7 @@
             min-width: 200px;
         }
         .search-select {
-            width: 80%;
+            width: 100%;
         }
         .timeline-warpper {
             height: calc(100% - 32px);
@@ -317,7 +319,7 @@
         }
         .timeline-section {
             position: relative;
-            top: -16px;
+            top: -15px;
         }
         .timeline-title {
             font-size: 14px;
@@ -354,7 +356,7 @@
             color: #C4C6CC;
         }
         ::v-deep .bk-loading {
-            background-color: #fafbfd !important;
+            background-color: #fff !important;
         }
     }
 </style>
