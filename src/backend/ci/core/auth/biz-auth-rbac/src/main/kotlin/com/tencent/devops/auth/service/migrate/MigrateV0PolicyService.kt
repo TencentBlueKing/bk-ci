@@ -108,7 +108,7 @@ class MigrateV0PolicyService constructor(
             "dev_image", "prod_image", "custom_dir", "gs-apk_task",
             "cluster_test", "cluster_prod", "namespace", "templates",
             "metric", "job_template", "script", "scan_task", "wetest_task",
-            "email_group", "xinghai_all", "android", "ios", "macos",
+            "email_group", "xinghai_all", "android", "ios", "macos"
         )
 
         private val oldResourceTypeMappingNewResourceType = mapOf(
