@@ -30,9 +30,7 @@ package com.tencent.devops.artifactory.resources
 import com.tencent.devops.artifactory.api.user.UserLogFileResource
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 
-@RestResource
 class UserLogFileResourceImpl : UserLogFileResource {
 
     override fun getPluginLogUrl(
