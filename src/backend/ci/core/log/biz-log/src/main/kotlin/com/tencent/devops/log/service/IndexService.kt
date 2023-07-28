@@ -119,11 +119,17 @@ class IndexService @Autowired constructor(
             }
             logger.warn("[$buildId|$size] Got from db, lastLineNum: $lastLineNum")
             lineNum = lastLineNum + size.toLong()
-            redisOperation.setIfAbsent(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
-        } else {
-            lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
-            redisOperation.expire(getLineNumRedisKey(buildId), TimeUnit.DAYS.toSeconds(2))
+            // 如果设置失败说明已被另一个并发任务写入，继续执行行号自增
+            val success = redisOperation.setIfAbsent(
+                getLineNumRedisKey(buildId = buildId),
+                lineNum.toString(),
+                TimeUnit.DAYS.toSeconds(2)
+            )
+            if (success) return lineNum - size
         }
+        // 自增并刷新过期时间
+        lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
+        redisOperation.expire(getLineNumRedisKey(buildId), TimeUnit.DAYS.toSeconds(2))
         return lineNum!! - size
     }
 
