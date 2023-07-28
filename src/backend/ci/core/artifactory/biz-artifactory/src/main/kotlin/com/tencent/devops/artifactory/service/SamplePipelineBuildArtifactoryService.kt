@@ -46,7 +46,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-//@Suppress("ALL")
 class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao,
