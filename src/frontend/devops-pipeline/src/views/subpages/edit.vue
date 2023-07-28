@@ -24,7 +24,8 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import MiniMap from '@/components/MiniMap'
+    import { BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
     import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
@@ -158,6 +159,7 @@
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
                     this.hasNoPermission = true
                     this.removeLeaveListenr()
