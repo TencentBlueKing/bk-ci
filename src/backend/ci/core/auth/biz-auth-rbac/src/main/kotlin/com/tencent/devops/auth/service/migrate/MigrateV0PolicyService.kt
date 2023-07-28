@@ -211,7 +211,7 @@ class MigrateV0PolicyService constructor(
      * action替换或移除
      */
     private fun fillNewActions(actions: List<String>): List<String> {
-        // 若action为空或该类型资源不需要迁移到新版本，则直接返回
+        // 若action为空或该类型资源的action不需要迁移到新版本，则直接返回
         val actionResourceType = actions.firstOrNull()?.substringBeforeLast("_")
         if (actions.isEmpty() || skipResourceTypes.contains(actionResourceType)) {
             return emptyList()
