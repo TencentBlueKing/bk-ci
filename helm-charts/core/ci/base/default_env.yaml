@@ -46,3 +46,4 @@ bkCiEsHttps: false
 bkCiFrontendIndex: "rewrite .* /$subsystem/index.html break"
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
+bkEsbEnabled: false
