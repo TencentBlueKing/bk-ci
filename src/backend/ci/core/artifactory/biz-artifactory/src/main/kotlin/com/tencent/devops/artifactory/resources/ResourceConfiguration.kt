@@ -12,6 +12,16 @@ class ResourceConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    fun userArtifactoryResource(@Autowired archiveFileService: ArchiveFileService) =
+        UserArtifactoryResourceImpl(archiveFileService)
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun userFileResource(@Autowired archiveFileService: ArchiveFileService) =
+        UserFileResourceImpl(archiveFileService)
+
+    @Bean
+    @ConditionalOnMissingBean
     fun serviceArtifactoryResource(@Autowired archiveFileService: ArchiveFileService) =
         ServiceArtifactoryResourceImpl(archiveFileService)
 
