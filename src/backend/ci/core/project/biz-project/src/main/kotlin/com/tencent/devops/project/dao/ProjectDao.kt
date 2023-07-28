@@ -609,6 +609,7 @@ class ProjectDao {
                 .set(KIND, projectInfoRequest.kind)
                 .set(ENABLED, projectInfoRequest.enabled)
                 .set(PIPELINE_LIMIT, projectInfoRequest.pipelineLimit)
+                .set(PROPERTIES, projectInfoRequest.properties?.let { JsonUtil.toJson(it, false) })
 
             if (projectInfoRequest.hybridCCAppId != null) {
                 step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)

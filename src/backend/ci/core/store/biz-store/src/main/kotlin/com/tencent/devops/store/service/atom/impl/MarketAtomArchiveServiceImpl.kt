@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -130,7 +131,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             )
             if (!flag) {
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PERMISSION_DENIED,
+                    errorCode = GET_INFO_NO_PERMISSION,
                     params = arrayOf(atomCode)
                 )
             }
