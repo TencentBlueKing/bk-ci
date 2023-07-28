@@ -1,132 +1,97 @@
-{
-  "type": "group_web_policy",
-  "project_id": "mht",
-  "subject": {
-    "type": "group",
-    "id": 219,
-    "name": "用户组迁移"
-  },
-  "permissions": [
-    {
-      "actions": [
-        {
-          "id": "pipeline_view"
-        }
-      ],
-      "resources": [
-        {
-          "type": "pipeline",
-          "paths": [
-            [
-              {
-                "id": "p-665e332fa3bf4df29037de2de0a29f81",
-                "name": "mingshew_event_mr_dev",
-                "system_id": "bk_ci",
-                "type": "pipeline"
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "actions": [
-        {
-          "id": "credential_view"
-        }
-      ],
-      "resources": [
-        {
-          "type": "credential",
-          "paths": [
-            [
-              {
-                "id": "code_git_token",
-                "name": "code_git_token",
-                "system_id": "bk_ci",
-                "type": "credential"
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "actions": [
-        {
-          "id": "cert_edit"
-        }
-      ],
-      "resources": [
-        {
-          "type": "cert",
-          "paths": [
-
-          ]
-        }
-      ]
-    },{
-      "actions": [
-        {
-          "id": "env_node_use"
-        },
-        {
-          "id": "env_node_edit"
-        }
-      ],
-      "resources": [
-        {
-          "type": "env_node",
-          "paths": [
-
-          ]
-        }
-      ]
-    },
-    {
-      "actions": [
-        {
-          "id": "repertory_view"
-        }
-      ],
-      "resources": [
-        {
-          "type": "repertory",
-          "paths": [
-            [
-              {
-                "id": "2984",
-                "name": "mingshewhe/webhook_test",
-                "system_id": "bk_ci",
-                "type": "repertory"
-              }
-            ]
-          ]
-        }
-      ]
-    },{
-      "actions": [
-        {
-          "id": "artifactory_view"
-        },
-        {
-          "id": "artifactory_list"
-        }
-      ],
-      "resources": [
-        {
-          "type": "artifactory",
-          "paths": [
-
-          ]
-        }
-      ]
-    }
-  ],
-  "members": [
-    {
-      "type": "user",
-      "id": "345"
-    }
-  ]
-}
+[ {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "pipeline_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "pipeline",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    }, {
+      "system" : "bk_ci_rbac",
+      "type" : "pipeline",
+      "id" : "p-665e332fa3bf4df29037de2de0a29f81",
+      "name" : "mingshew_event_mr_dev"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "credential_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "credential",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    }, {
+      "system" : "bk_ci_rbac",
+      "type" : "credential",
+      "id" : "code_git_token",
+      "name" : "code_git_token"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "cert_edit"
+  },{
+    "id" : "cert_view"
+  }],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "cert",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "env_node_use"
+  },{
+    "id" : "env_node_edit"
+  },{
+    "id" : "env_node_view"
+  }],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "env_node",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "repertory_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "repertory",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    }, {
+      "system" : "bk_ci_rbac",
+      "type" : "repertory",
+      "id" : "2984",
+      "name" : "mingshewhe/webhook_test"
+    } ] ]
+  } ]
+} ]

@@ -105,8 +105,10 @@ class MigrateV0PolicyService constructor(
 
         // v0有的资源，但是在rbac没有,需要跳过
         private val skipResourceTypes = listOf(
-            "artifactory", "bcs", "gs-apk", "job",
-            "vs", "wetest", "xinghai"
+            "dev_image", "prod_image", "custom_dir", "gs-apk_task",
+            "cluster_test", "cluster_prod", "namespace", "templates",
+            "metric", "job_template", "script", "scan_task", "wetest_task",
+            "email_group", "xinghai_all", "android", "ios", "macos",
         )
 
         private val oldResourceTypeMappingNewResourceType = mapOf(
@@ -150,6 +152,10 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
+            // 如果发现资源类型是跳过的,则跳过
+            if (skipResourceTypes.contains(permission.resources[0].type)) {
+                return@permission
+            }
             val (resourceCreateActions, resourceActions) = buildRbacActions(
                 actions = permission.actions.map { it.id }
             )
@@ -211,11 +217,6 @@ class MigrateV0PolicyService constructor(
      * action替换或移除
      */
     private fun fillNewActions(actions: List<String>): List<String> {
-        // 若action为空或该类型资源的action不需要迁移到新版本，则直接返回
-        val actionResourceType = actions.firstOrNull()?.substringBeforeLast("_")
-        if (actions.isEmpty() || skipResourceTypes.contains(actionResourceType)) {
-            return emptyList()
-        }
         val rbacActions = actions.toMutableList()
         actions.forEach action@{ action ->
             when {
