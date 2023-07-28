@@ -28,7 +28,6 @@
 package com.tencent.devops.artifactory.api.user
 
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
-import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.FilePipelineInfo
@@ -57,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserArtifactoryResource {
+interface ExtUserArtifactoryResource : UserArtifactoryResource {
     @ApiOperation("获取目录列表")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/list")
     @Path("/{projectId}/{artifactoryType}/list")
@@ -96,27 +95,6 @@ interface UserArtifactoryResource {
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
 
-    @ApiOperation("根据元数据获取文件")
-    // @Path("/projects/{projectId}/search")
-    @Path("/{projectId}/search")
-    @POST
-    fun search(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: SearchProps
-    ): Result<FileInfoPage<FileInfo>>
-
     @ApiOperation("根据元数据获取文件和属性")
     @Path("/{projectId}/searchFileAndProperty")
     @POST
@@ -130,24 +108,6 @@ interface UserArtifactoryResource {
         @ApiParam("元数据", required = true)
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>>
-
-    @ApiOperation("获取文件信息")
-    @Path("/{projectId}/{artifactoryType}/show")
-    @GET
-    fun show(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<FileDetail>
 
     @ApiOperation("获取文件元数据")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
@@ -186,25 +146,6 @@ interface UserArtifactoryResource {
         @QueryParam("path")
         path: String
     ): Result<FolderSize>
-
-    @ApiOperation("创建下载链接")
-    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
-    @Path("/{projectId}/{artifactoryType}/downloadUrl")
-    @POST
-    fun downloadUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<Url>
 
     @ApiOperation("创建分享链接")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/shareUrl")

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.user
 
+import com.tencent.devops.artifactory.api.user.ExtUserArtifactoryResource
 import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -43,21 +44,23 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.RestResource
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
+import org.springframework.context.annotation.Primary
 import javax.ws.rs.BadRequestException
+import kotlin.math.ceil
 
+@Primary
 @RestResource
-class UserArtifactoryResourceImpl @Autowired constructor(
+class ExtUserArtifactoryResourceImpl @Autowired constructor(
     val bkRepoService: BkRepoService,
     val bkRepoSearchService: BkRepoSearchService,
     val bkRepoDownloadService: BkRepoDownloadService
-) : UserArtifactoryResource {
+) : ExtUserArtifactoryResource, UserArtifactoryResource {
     override fun checkDevnetGateway(userId: String): Result<Boolean> {
         return Result(true)
     }
@@ -93,18 +96,20 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
-    ): Result<FileInfoPage<FileInfo>> {
+    ): Result<Page<FileInfo>> {
         checkParameters(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
         val result = bkRepoSearchService.search(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-        return Result(FileInfoPage(
-            count = result.first,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            records = result.second,
-            timestamp = LocalDateTime.now().timestamp()
-        ))
+        return Result(
+            Page(
+                count = result.first,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                records = result.second,
+                totalPages = ceil(result.first / pageSizeNotNull.toDouble()).toInt()
+            )
+        )
     }
 
     override fun searchFileAndProperty(
@@ -196,11 +201,13 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        return Result(bkRepoDownloadService.getExternalUrl(
-            userId = userId,
-            projectId = projectId,
-            artifactoryType = artifactoryType,
-            argPath = path)
+        return Result(
+            bkRepoDownloadService.getExternalUrl(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path
+            )
         )
     }
 

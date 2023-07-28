@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildArtifactoryResource {
+interface ExtBuildArtifactoryResource: BuildArtifactoryResource {
 
     @ApiOperation("获取文件元数据")
     @Path("/properties")
@@ -212,30 +212,6 @@ interface BuildArtifactoryResource {
         @QueryParam("path")
         path: String
     ): Result<Boolean>
-
-    @ApiOperation("跨项目拷贝文件")
-    @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
-    @GET
-    fun acrossProjectCopy(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam("X-DEVOPS-PROJECT-ID")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String,
-        @ApiParam("目标项目", required = true)
-        @QueryParam("targetProjectId")
-        targetProjectId: String,
-        @ApiParam("目标路径", required = true)
-        @QueryParam("targetPath")
-        targetPath: String
-    ): Result<Count>
 
     @ApiOperation("检查项目是否灰度仓库")
     @Path("/checkRepoGray")
