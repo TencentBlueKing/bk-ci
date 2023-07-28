@@ -17,10 +17,12 @@ class Oauth2CodeService constructor(
     fun get(
         code: String?
     ): TAuthOauth2CodeRecord {
-        code ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.INVALID_AUTHORIZATION_CODE,
-            defaultMessage = "The authorization code must be provided"
-        )
+        if (code == null) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.INVALID_AUTHORIZATION_CODE,
+                defaultMessage = "The authorization code must be provided"
+            )
+        }
         return authOauth2CodeDao.get(
             dslContext = dslContext,
             code = code

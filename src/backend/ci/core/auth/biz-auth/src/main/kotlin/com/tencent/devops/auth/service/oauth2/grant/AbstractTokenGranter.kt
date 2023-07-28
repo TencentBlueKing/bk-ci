@@ -42,6 +42,7 @@ abstract class AbstractTokenGranter(
         val accessToken = accessTokenDTO.accessToken
         val refreshToken = accessTokenDTO.refreshToken
 
+        // 若access_token为空或者已过期，则重新生成access_token
         if (accessToken == null || AuthUtils.isExpired(accessTokenDTO.expiredTime!!)) {
             val newAccessToken = UUIDUtil.generate()
             val accessTokenValidity = clientDetails.accessTokenValidity
