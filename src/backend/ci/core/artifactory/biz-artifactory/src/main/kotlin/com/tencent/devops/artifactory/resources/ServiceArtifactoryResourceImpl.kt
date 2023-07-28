@@ -41,7 +41,6 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL", "UNUSED")

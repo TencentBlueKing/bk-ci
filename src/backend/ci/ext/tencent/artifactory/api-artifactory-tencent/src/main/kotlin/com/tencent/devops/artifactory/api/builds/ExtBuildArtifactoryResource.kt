@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.api.builds
 
-import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
