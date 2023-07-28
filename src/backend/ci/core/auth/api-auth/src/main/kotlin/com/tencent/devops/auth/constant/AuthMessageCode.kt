@@ -110,7 +110,6 @@ object AuthMessageCode {
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121061" // 迁移项目{0}失败,权限策略对比失败
     const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人离职
     const val ERROR_RESOURCE_CREATE_FAIL = "2121063" // 资源创建失败
-
     const val ERROR_CLIENT_NOT_EXIST = "2121064" // 客户端{0}不存在
     const val INVALID_AUTHORIZATION_TYPE = "2121065" // 授权类型{0}不合法
     const val INVALID_REDIRECT_URI = "2121066" // 跳转链接{0}不合法

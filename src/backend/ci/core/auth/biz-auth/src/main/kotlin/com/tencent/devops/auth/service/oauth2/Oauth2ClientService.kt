@@ -56,7 +56,7 @@ class Oauth2ClientService constructor(
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_AUTHORIZATION_TYPE,
                 params = arrayOf(clientId),
-                defaultMessage = "The client($clientId) does not not support $grantType type"
+                defaultMessage = "The client($clientId) does not support $grantType type"
             )
         }
         if (redirectUri != null && redirectUri != clientDetails.redirectUri) {
@@ -64,7 +64,7 @@ class Oauth2ClientService constructor(
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REDIRECT_URI,
                 params = arrayOf(redirectUri),
-                defaultMessage = "The redirectUri($redirectUri) is invalid"
+                defaultMessage = "The redirect uri($redirectUri) is invalid"
             )
         }
         if (clientSecret != null && clientSecret != clientDetails.clientSecret) {
