@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -59,4 +60,16 @@ interface UserSoftwareManageResource {
         @QueryParam("project_id")
         projectId: String
     ): Result<List<ProjectSoftware>>
+
+    @ApiOperation("安装软件到用户")
+    @GET
+    @Path("/install")
+    fun installSoftwareToUser(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("software_list")
+        softwareList: List<UserSoftware>
+    ): Result<Boolean>
 }

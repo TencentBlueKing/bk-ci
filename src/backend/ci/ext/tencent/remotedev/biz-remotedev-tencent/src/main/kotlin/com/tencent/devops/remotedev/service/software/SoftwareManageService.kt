@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service.software
 
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,5 +69,11 @@ class SoftwareManageService @Autowired constructor(
             )
         }
         return result
+    }
+
+    // 安装软件至用户
+    fun installSoftwareToUser(softwareList: List<UserSoftware>): Boolean {
+        logger.info("SoftwareManageService|installSoftwareToUser|softwareList|$softwareList")
+
     }
 }

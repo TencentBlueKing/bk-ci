@@ -25,33 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.remotedev.pojo.software
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserSoftwareManageResource
-import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
-import com.tencent.devops.remotedev.pojo.software.UserSoftware
-import com.tencent.devops.remotedev.service.software.SoftwareManageService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-@Suppress("ALL")
-class UserSoftwareManageResourceImpl @Autowired constructor(
-    private val softwareManageService: SoftwareManageService
-) : UserSoftwareManageResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserSoftwareManageResourceImpl::class.java)!!
-    }
-
-    override fun getProjectSoftwareList(userId: String, projectId: String): Result<List<ProjectSoftware>> {
-        logger.info("UserSoftwareManageResourceImpl|getProjectSoftwareList|userId|$userId|projectId|$projectId")
-        return Result(softwareManageService.getProjectSoftwareList(projectId))
-    }
-
-    override fun installSoftwareToUser(userId: String, softwareList: List<UserSoftware>): Result<Boolean> {
-        logger.info("UserSoftwareManageResourceImpl|installSoftwareToUser|userId|$userId|softwareList|$softwareList")
-        return Result(softwareManageService.getProjectSoftwareList(projectId))
-    }
-}
+@ApiModel("工作空间模板配置")
+data class UserSoftware(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("用户")
+    val user: String,
+    @ApiModelProperty("软件ID")
+    val softwareId: Int
+)
