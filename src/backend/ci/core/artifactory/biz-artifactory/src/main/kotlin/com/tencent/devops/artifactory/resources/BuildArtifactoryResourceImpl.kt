@@ -6,12 +6,9 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("TooManyFunctions")
-@RestResource
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService,
     private val client: Client

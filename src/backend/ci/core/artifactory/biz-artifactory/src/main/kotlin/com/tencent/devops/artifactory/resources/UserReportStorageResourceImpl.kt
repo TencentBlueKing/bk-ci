@@ -29,10 +29,8 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserReportStorageResource
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
 class UserReportStorageResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserReportStorageResource {
