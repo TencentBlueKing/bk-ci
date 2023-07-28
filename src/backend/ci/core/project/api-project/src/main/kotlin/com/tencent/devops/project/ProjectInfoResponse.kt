@@ -28,6 +28,7 @@
 package com.tencent.devops.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.project.pojo.ProjectProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -121,5 +122,7 @@ data class ProjectInfoResponse(
     @ApiModelProperty("支持IDC构建机")
     val enableIdc: Boolean? = false,
     @ApiModelProperty("流水线数量上限")
-    val pipelineLimit: Int? = 500
+    val pipelineLimit: Int? = 500,
+    @ApiModelProperty("项目其他设置")
+    val properties: ProjectProperties?
 )
