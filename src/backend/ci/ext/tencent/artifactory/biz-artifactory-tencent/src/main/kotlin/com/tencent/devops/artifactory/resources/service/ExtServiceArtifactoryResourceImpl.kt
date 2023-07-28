@@ -58,7 +58,7 @@ import kotlin.math.ceil
 
 @Primary
 @RestResource
-class ServiceArtifactoryResourceImpl @Autowired constructor(
+class ExtServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
@@ -325,6 +325,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ServiceArtifactoryResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ExtServiceArtifactoryResourceImpl::class.java)
     }
 }
