@@ -27,29 +27,7 @@ class SoftwareManageDao {
     }
 
     // 安装软件至用户
-    fun installSoftwareToUser(
-        dslContext: DSLContext,
-        softwareList: List<UserSoftware>
-    ) {
-        if (softwareList.isEmpty()) {
-            return
-        }
-        dslContext.batch(softwareList.map {
-            with(TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    CREATOR,
-                    SOFTWARE_ID
-                ).values(
-                    it.projectId,
-                    it.user,
-                    it.softwareId
-                )
-            }
-        }).execute()
-    }
-    fun batchSave(dslContext: DSLContext, softwareList: List<UserSoftware>) {
+    fun installSoftwareToUser(dslContext: DSLContext, softwareList: List<UserSoftware>) {
         with(TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES) {
             dslContext.insertInto(
                 this,
@@ -65,9 +43,9 @@ class SoftwareManageDao {
                     )
                 }
             }.onDuplicateKeyUpdate()
-                .set(PROJECT_ID, org.jooq.util.mysql.MySQLDSL.values(PROJECT_ID))
-                .set(CREATOR, org.jooq.util.mysql.MySQLDSL.values(CREATOR))
-                .set(SOFTWARE_ID, org.jooq.util.mysql.MySQLDSL.values(SOFTWARE_ID))
+                .set(PROJECT_ID, MySQLDSL.values(PROJECT_ID))
+                .set(CREATOR, MySQLDSL.values(CREATOR))
+                .set(SOFTWARE_ID, MySQLDSL.values(SOFTWARE_ID))
                 .execute()
         }
     }
