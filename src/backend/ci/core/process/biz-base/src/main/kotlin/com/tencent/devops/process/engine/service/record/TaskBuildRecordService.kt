@@ -370,16 +370,16 @@ class TaskBuildRecordService(
                 }
                 val taskVar = mutableMapOf<String, Any>()
                 if (atomVersion != null) {
-                    when (recordTask.classType) {
-                        MarketBuildAtomElement.classType -> {
-                            taskVar[MarketBuildAtomElement::version.name] = atomVersion
-                        }
-                        MarketBuildLessAtomElement.classType -> {
-                            taskVar[MarketBuildLessAtomElement::version.name] = atomVersion
-                        }
-                        else -> {
-                            taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
-                        }
+                    // 将插件的执行版本刷新
+                    if (
+                        recordTask.classType == MarketBuildAtomElement.classType ||
+                        recordTask.originClassType == MarketBuildAtomElement.classType ||
+                        recordTask.classType == MarketBuildLessAtomElement.classType ||
+                        recordTask.originClassType == MarketBuildLessAtomElement.classType
+                    ) {
+                        taskVar[MarketBuildAtomElement::version.name] = atomVersion
+                    } else {
+                        taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
                     }
                 }
                 var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null

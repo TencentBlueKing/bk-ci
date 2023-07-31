@@ -25,36 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.api.service
+package com.tencent.devops.dispatch.startCloud.dao
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
+import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "START云桌面接口模块")
-@Path("/service/startCloud")
-@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceStartCloudResource {
-    @ApiOperation("创建START云桌面用户")
-    @GET
-    @Path("/startCloud/user/create")
-    fun createStartCloudUser(
-        @ApiParam("user", required = true)
-        @QueryParam("user")
-        user: String
-    ): Result<Boolean>
-    @ApiOperation("同步更新START云桌面的资源池")
-    @GET
-    @Path("/startCloud/resourece/list")
-    fun syncStartCloudResourceList(): Result<Boolean>
+@Repository
+class WindowsGpuResourceDao {
+
+    fun createOrUpdateResource(
+        dslContext: DSLContext,
+        resource: EnvironmentResourceDataRsp.EnvironmentResourceData
+    ) {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            dslContext.insertInto(
+                this,
+                ZONE_ID,
+                CGS_IP,
+                STATUS
+            )
+                .values(
+                    resource.zoneId,
+                    resource.cgsIp,
+                    resource.status
+                ).onDuplicateKeyUpdate()
+                .set(STATUS, resource.status)
+                .execute()
+        }
+    }
 }
