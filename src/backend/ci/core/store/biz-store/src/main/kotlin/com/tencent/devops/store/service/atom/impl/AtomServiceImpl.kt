@@ -563,7 +563,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         codeVersions.forEach {
             if (it.version.contains("*")) {
                 latestCodes.add(it.atomCode)
-            }else {
+            } else {
                 atomPostReqItems.add(AtomPostReqItem(it.atomCode, it.version))
             }
         }

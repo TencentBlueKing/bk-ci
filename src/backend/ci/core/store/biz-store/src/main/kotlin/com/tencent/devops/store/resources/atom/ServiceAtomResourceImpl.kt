@@ -58,7 +58,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
     }
 
     override fun getListAtomInfos(
-        codeVersions: Set<AtomPostReqItem>,
+        codeVersions: Set<AtomPostReqItem>
     ): Result<List<AtomListInfo>> {
         return atomService.getListAtomInfos(codeVersions = codeVersions)
     }

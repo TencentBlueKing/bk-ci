@@ -221,7 +221,6 @@ object AtomUtils {
                 )
             }
         }
-
     }
 
     fun checkModelAtoms(

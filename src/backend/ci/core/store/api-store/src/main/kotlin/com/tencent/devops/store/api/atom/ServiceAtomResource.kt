@@ -84,7 +84,7 @@ interface ServiceAtomResource {
     @Path("/list/atomInfos")
     fun getListAtomInfos(
         @ApiParam("插件代码版本集合", required = true)
-        codeVersions: Set<AtomPostReqItem>,
+        codeVersions: Set<AtomPostReqItem>
     ): Result<List<AtomListInfo>>
 
     @ApiOperation("获取插件真实版本号")

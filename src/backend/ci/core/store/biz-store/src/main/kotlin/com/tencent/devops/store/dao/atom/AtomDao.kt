@@ -289,11 +289,11 @@ class AtomDao : AtomBaseDao() {
     ): Result<TAtomRecord> {
         return with(TAtom.T_ATOM) {
             var condition: Condition? = null
-            codeVersions.forEach{
+            codeVersions.forEach {
                 if (condition == null) {
                     condition = ATOM_CODE.eq(it.atomCode)
                         .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
-                }else {
+                } else {
                     condition!!.or(
                         ATOM_CODE.eq(it.atomCode)
                             .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
