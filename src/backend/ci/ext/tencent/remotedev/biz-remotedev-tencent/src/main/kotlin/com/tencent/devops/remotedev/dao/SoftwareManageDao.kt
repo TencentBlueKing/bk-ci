@@ -50,4 +50,13 @@ class SoftwareManageDao {
             }
         }).execute()
     }
+    fun deleteTest(
+        dslContext: DSLContext
+    ){
+        with(TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES) {
+            dslContext.delete(this).execute()
+        }
+
+    }
+
 }
