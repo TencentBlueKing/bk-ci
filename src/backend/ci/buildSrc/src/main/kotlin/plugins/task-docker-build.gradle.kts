@@ -33,6 +33,7 @@ val toImageTag = System.getProperty("to.image.tag")
 var toImage = System.getProperty("jib.to.image")
 val serviceName = System.getProperty("serviceName")
 
+
 // 加这个判断 , 主要是为了编译kts时不报错
 if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNullOrBlank())) {
     val service = serviceName.takeUnless { it.isNullOrBlank() }
@@ -45,6 +46,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     val configNamespace = System.getProperty("config.namespace")
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
     val multiModelService = System.getProperty("devops.multi.from")
+    val multiDataSource = System.getProperty("devops.multi.datasource")
 
     val finalJvmFlags = mutableListOf(
         "-server",
@@ -53,7 +55,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:+PrintTenuringDistribution",
         "-XX:+PrintGCDetails",
         "-XX:+PrintGCDateStamps",
-        "-XX:MaxGCPauseMillis=200",
+        "-XX:MaxGCPauseMillis=100",
         "-XX:+UseG1GC",
         "-XX:NativeMemoryTracking=summary",
         "-XX:+HeapDumpOnOutOfMemoryError",
@@ -83,6 +85,9 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     ).also {
         if (multiModelService != null) {
             it.add("-Ddevops.multi.from=$multiModelService")
+        }
+        if (multiDataSource != null) {
+            it.add("-Ddevops.multi.datasource=$multiDataSource")
         }
     }
 
