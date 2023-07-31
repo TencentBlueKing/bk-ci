@@ -75,10 +75,8 @@ class PipelinePauseValueDao {
                 .set(NEW_VALUE, pipelinePauseValue.newValue)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(EXECUTE_COUNT, pipelinePauseValue.executeCount)
-                .onDuplicateKeyUpdate()
-                .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
-                .set(NEW_VALUE, pipelinePauseValue.newValue)
-                .set(CREATE_TIME, LocalDateTime.now()).execute()
+                .set(CREATE_TIME, LocalDateTime.now())
+                .execute()
         }
     }
 
