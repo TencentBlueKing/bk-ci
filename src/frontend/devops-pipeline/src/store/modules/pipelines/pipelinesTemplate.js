@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
@@ -38,7 +38,7 @@ const mutations = {
 }
 
 const actions = {
-    requestInstallTemplate (_, params) {
+    installPipelineTemplate (_, params) {
         return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
             return response.data
         })

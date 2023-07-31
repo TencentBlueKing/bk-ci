@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
@@ -28,21 +28,15 @@ const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
-        currentPage: 1,
-        scrollTop: 0,
-        queryStr: false,
-        hasNext: false,
+        queryStr: '',
         isQuerying: false,
-        queryMap: {
-            query: {
-                status: [],
-                materialAlias: [],
-                materialBranch: [],
-                dateTimeRange: []
-            },
-            searchKey: []
+        count: 0,
+        dateTimeRange: [],
+        query: {
+            page: 1,
+            pageSize: 20
         },
-        pageSize: 24
+        searchKey: []
     }
 }
 
@@ -79,33 +73,35 @@ const mutations = {
             ...state.historyPageStatus,
             ...status
         }
-    },
-    updateCurrentRouterQuery (state, queryStr) {
-        state.historyPageStatus = {
-            ...state.historyPageStatus,
-            ...queryStr
-        }
     }
 }
 
 const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
+        if ((newStatus.query || newStatus.searchKey) && !newStatus.queryStr) {
+            const newQuery = newStatus.query ?? state.historyPageStatus.query
+            const newSearchKey = newStatus.searchKey ?? state.historyPageStatus.searchKey
+            newStatus.queryStr = generateQueryString({
+                ...state.historyPageStatus.query,
+                ...newQuery,
+                ...flatSearchKey([
+                    ...newSearchKey,
+                    ...state.historyPageStatus.searchKey
+                ])
+            })
+        }
         commit('updateHistoryPageStatus', newStatus)
-    },
-    setRouterQuery ({ commit, state }, query) {
-        commit('updateCurrentRouterQuery', query)
     },
     resetHistoryFilterCondition ({ commit }) {
         commit('updateHistoryPageStatus', {
-            queryMap: {
-                query: {
-                    status: [],
-                    materialAlias: [],
-                    materialBranch: [],
-                    dateTimeRange: []
-                },
-                searchKey: []
-            }
+            count: 0,
+            dateTimeRange: [],
+            query: {
+                page: 1,
+                pageSize: 20
+            },
+            searchKey: [],
+            queryStr: ''
         })
     },
     /**
@@ -191,20 +187,14 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, page, pageSize }) {
-        const { historyPageStatus: { queryMap } } = state
-        const filterStr = generateQueryString({
-            ...queryMap.query,
-            ...flatSearchKey(queryMap.searchKey)
-        })
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId }) {
+        const { historyPageStatus: { queryStr } } = state
+        debugger
         dispatch('setHistoryPageStatus', {
-            isQuerying: !!filterStr
-        })
-        dispatch('setRouterQuery', {
-            queryStr: filterStr
+            isQuerying: !!queryStr
         })
 
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?page=${page}&pageSize=${pageSize}&${filterStr}`).then(response => {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryStr}`).then(response => {
             return response.data
         })
     },

@@ -61,13 +61,13 @@
                 return this.isEditing && !this.saveBtnDisabled
             },
             canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
+                return this.curPipeline?.canManualStartup ?? false
             },
             pipelineStatus () {
                 return this.canManualStartup ? 'ready' : 'disable'
             },
             isTemplatePipeline () {
-                return this.curPipeline && this.curPipeline.instanceFromTemplate
+                return this.curPipeline?.model?.instanceFromTemplate ?? false
             }
         },
         methods: {
@@ -77,7 +77,10 @@
                 'setSaveStatus',
                 'updateContainer'
             ]),
-            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
+            ...mapMutations('pipelines', [
+                'updateCurPipelineByKeyValue',
+                'updateCurPipelineInfoByKeyValue'
+            ]),
             async saveAndExec () {
                 if (this.isSaveAndRun) {
                     await this.save()
@@ -200,7 +203,7 @@
                     ) {
                         ++this.pipeline.latestVersion
                         this.updateCurPipelineByKeyValue({
-                            key: 'pipelineVersion',
+                            key: 'version',
                             value: this.pipeline.latestVersion
                         })
                     }
@@ -209,7 +212,7 @@
                         this.pipelineSetting
                         && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName
                     ) {
-                        this.updateCurPipelineByKeyValue({
+                        this.updateCurPipelineInfoByKeyValue({
                             key: 'pipelineName',
                             value: this.pipelineSetting.pipelineName
                         })

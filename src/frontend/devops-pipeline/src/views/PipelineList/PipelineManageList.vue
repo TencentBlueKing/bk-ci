@@ -187,7 +187,12 @@
                 activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
-                    action: this.toggleTemplatePopup
+                    action: () => {
+                        console.log(1111)
+                        this.$router.push({
+                            name: 'createPipeline'
+                        })
+                    }
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup

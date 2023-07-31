@@ -56,6 +56,7 @@
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
+    import CopyIcon from '@/components/copyIcon'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     export default {
@@ -65,7 +66,9 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RenameDialog,
-            RemoveConfirmDialog
+            RemoveConfirmDialog,
+            // eslint-disable-next-line vue/no-unused-components
+            CopyIcon
         },
         mixins: [pipelineActionMixin],
         data () {
@@ -82,7 +85,7 @@
                 curPipeline: 'pipelines/getCurPipeline'
             }),
             isTemplatePipeline () {
-                return this.curPipeline?.instanceFromTemplate ?? false
+                return this.curPipeline?.model?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
                 const pipeline = {
@@ -124,6 +127,12 @@
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
+                        }
+                    ],
+                    [
+                        {
+                            label: 'disable',
+                            handler: () => this.disablePipeline(pipeline)
                         },
                         {
                             label: 'delete',
@@ -136,13 +145,13 @@
         methods: {
             ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
             ...mapActions('pipelines', ['setPipelineSetting', 'requestToggleCollect']),
-            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
+            ...mapMutations('pipelines', ['updateCurPipelineInfoByKeyValue']),
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
             renameDone (name) {
                 this.$nextTick(() => {
-                    this.updateCurPipelineByKeyValue({
+                    this.updateCurPipelineInfoByKeyValue({
                         key: 'pipelineName',
                         value: name
                     })
@@ -159,6 +168,43 @@
             exportPipeline () {
                 this.showExportDialog = true
             },
+            disablePipeline (pipeline) {
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('disablePipelineConfirmTips'),
+                    subHeader: this.$createElement('div', {
+                    }, [
+                        this.$createElement(
+                            'p',
+                            {},
+                            this.$t(pipeline.enablePac ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc')
+                        ),
+                        this.$createElement(
+                            'pre',
+                            {
+                                class: 'disable-pac-code'
+                            },
+                            [
+                                this.$t('codeConfig'),
+                                this.$createElement(CopyIcon, {
+                                    props: {
+                                        value: 'abc'
+                                    }
+                                })
+                            ]
+                        )
+                    ]),
+                    confirmFn (vm) {
+                        console.warn(vm)
+                    },
+                    cancelFn (vm) {
+                        console.warn(vm)
+                    },
+                    afterLeaveFn (vm) {
+                        console.log(vm)
+                    }
+                })
+            },
             importModifyPipeline () {
                 this.showImportDialog = true
             },
@@ -166,9 +212,8 @@
                 this.showImportDialog = false
                 this.setEditFrom(true)
                 this.$nextTick(() => {
-                    console.log('this.curPipeline', this.curPipeline)
-                    const pipelineVersion = this.curPipeline.pipelineVersion
-                    const pipelineName = this.curPipeline.pipelineName
+                    const pipelineVersion = this.curPipeline?.version
+                    const pipelineName = this.curPipeline?.pipelineName
                     this.setPipelineSetting({
                         ...result.setting,
                         pipelineName,
@@ -198,7 +243,7 @@
                         ...this.curPipeline,
                         isCollect
                     })
-                    this.updateCurPipelineByKeyValue({
+                    this.updateCurPipelineInfoByKeyValue({
                         key: 'hasCollect',
                         value: isCollect
                     })
@@ -254,6 +299,9 @@
     &:first-child {
       border-bottom: 1px solid #dcdee5;
     }
+    &:last-child {
+      border-top: 1px solid #dcdee5;
+    }
     > li {
       font-size: 12px;
       line-height: 32px;
@@ -269,5 +317,17 @@
       }
     }
   }
+}
+.disable-pac-code {
+    position: relative;
+    background: #F0F1F5;
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px 0;
+    .icon-clipboard {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
 }
 </style>

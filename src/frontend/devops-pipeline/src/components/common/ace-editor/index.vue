@@ -135,10 +135,11 @@
                 return langMap[lang] || lang
             },
             calcSize (size) {
+                console.log(size, size.toString().match(/^[0-9]{1,2}%$/))
                 const _size = size.toString()
 
                 if (_size.match(/^\d*$/)) return `${size}px`
-                if (_size.match(/^[0-9]?%$/)) return _size
+                if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
             }

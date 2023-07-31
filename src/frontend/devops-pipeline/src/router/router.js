@@ -19,6 +19,7 @@
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
+const CreatePipeline = () => import(/* webpackChunkName: "pipelines" */'../views/CreatePipeline.vue')
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
@@ -42,7 +43,7 @@ const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../
 
 // 客户端流水线任务历史 - history
 const HistoryHeader = () => import(/* webpackChunkName: "pipelinesHistory" */'../components/PipelineHeader/HistoryHeader.vue')
-const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/history.vue')
+const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/History.vue')
 // 客户端流水线任务详情 - detail
 const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/ExecDetail.vue')
 const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../components/PipelineHeader/DetailHeader.vue')
@@ -69,6 +70,11 @@ const routes = [
             name: 'pipelineListEntry'
         },
         children: [
+            {
+                path: 'create',
+                component: CreatePipeline,
+                name: 'createPipeline'
+            },
             {
                 path: 'list',
                 component: pipelineListEntry,

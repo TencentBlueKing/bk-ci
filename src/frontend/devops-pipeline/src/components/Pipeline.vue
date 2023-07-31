@@ -12,7 +12,6 @@
             <div class="scroll-wraper">
                 <bk-pipeline
                     v-if="pipeline"
-
                     :pipeline="pipeline"
                     :user-name="userName"
                     :editable="pipelineEditable"

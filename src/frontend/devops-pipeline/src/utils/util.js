@@ -611,9 +611,21 @@ export function getQueryParamList (arr = [], key) {
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
-    } else if (arr && typeof arr === 'string') {
+    } else if (typeof arr !== 'undefined') {
         return `${key}=${encodeURIComponent(arr)}`
     }
+}
+
+// 将vue-router的query参数转换成字符串
+export function getQueryParamString (query) {
+    const params = []
+    for (const key in query) {
+        if (Object.prototype.hasOwnProperty.call(query, key)) {
+            const value = query[key].indexOf(',') > -1 ? query[key].split(',') : query[key]
+            params.push(getQueryParamList(value, key))
+        }
+    }
+    return params.join('&')
 }
 
 export function getParamsValuesMap (params = []) {

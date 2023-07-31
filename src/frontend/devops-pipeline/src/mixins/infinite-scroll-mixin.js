@@ -157,10 +157,12 @@ export default {
                     pageSize: pageLen
                 })
 
-                this.buildList = page === 1 ? res.records : [
-                    ...this.buildList,
-                    ...res.records
-                ]
+                this.buildList = page === 1
+                    ? res.records
+                    : [
+                        ...this.buildList,
+                        ...res.records
+                    ]
                 const currentPage = Math.ceil(this.buildList.length / defaultPageSize)
                 this.setHistoryPageStatus({
                     currentPage,

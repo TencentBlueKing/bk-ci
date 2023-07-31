@@ -48,8 +48,7 @@
             },
 
             pipelineName () {
-                const pipeline = this.curPipeline || {}
-                return pipeline.pipelineName
+                return this.curPipeline?.pipelineName ?? '--'
             },
 
             exportList () {

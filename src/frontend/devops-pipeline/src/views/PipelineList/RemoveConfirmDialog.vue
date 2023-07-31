@@ -96,6 +96,7 @@
                 type: String,
                 default: 'remove'
             },
+            isPacEnable: Boolean,
             groupName: {
                 type: String,
                 required: true

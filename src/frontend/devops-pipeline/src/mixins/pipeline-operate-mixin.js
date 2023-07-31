@@ -17,12 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapGetters, mapState } from 'vuex'
 import {
-    HttpError,
-    convertTime
+    HttpError
 } from '@/utils/util'
-import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
+import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+import { AUTH_URL_PREFIX, PROCESS_API_URL_PREFIX } from '../store/constants'
 
 export default {
     computed: {
@@ -46,7 +45,7 @@ export default {
             'saveStatus'
         ]),
         isTemplatePipeline () {
-            return this.curPipeline && this.curPipeline.instanceFromTemplate
+            return this.curPipeline?.model?.instanceFromTemplate ?? false
         }
     },
     methods: {
@@ -67,6 +66,10 @@ export default {
             'setPipeline',
             'updateContainer'
         ]),
+        ...mapMutations('pipelines', [
+            'updateCurPipelineByKeyValue',
+            'updateCurPipelineInfoByKeyValue'
+        ]),
         async fetchPipelineList (searchName) {
             try {
                 const { projectId, pipelineId } = this.$route.params
@@ -75,13 +78,13 @@ export default {
                         projectId,
                         searchName
                     }),
-                    this.updateCurPipeline({
+                    this.requestPipelineDetail({
                         projectId,
                         pipelineId
                     })
                 ])
 
-                this.setBreadCrumbPipelineList(list, curPipeline)
+                this.setBreadCrumbPipelineList(list, curPipeline.pipelineResource)
             } catch (err) {
                 console.log(err)
                 this.$showTips({
@@ -101,14 +104,6 @@ export default {
                 ]
             }
             this.$store.commit('pipelines/updatePipelineList', list)
-        },
-        async updateCurPipeline ({ projectId, pipelineId }) {
-            const curPipeline = await this.requestPipelineDetail({
-                projectId,
-                pipelineId
-            })
-            this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-            return curPipeline
         },
         /**
              *  终止任务
@@ -161,7 +156,6 @@ export default {
                 if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
-                    this.$store.commit('pipelines/updateCurAtomPrams', null)
                     this.setExecuteStatus(false)
                     if (goDetail) {
                         this.$router.push({
@@ -179,13 +173,12 @@ export default {
                 }
             } catch (err) {
                 this.setExecuteStatus(false)
-                this.$store.commit('pipelines/updateCurAtomPrams', null)
                 this.handleError(err, [{
                     actionId: this.$permissionActionMap.execute,
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
                         id: pipelineId,
-                        name: this.curPipeline.pipelineName
+                        name: this.curPipeline?.pipelineName ?? '--'
                     }],
                     projectId
                 }])
@@ -286,7 +279,7 @@ export default {
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
                         id: pipelineId,
-                        name: this.curPipeline.pipelineName
+                        name: this.curPipeline?.pipelineName ?? '--'
                     }],
                     projectId
                 }])
@@ -322,7 +315,7 @@ export default {
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
                         id: this.curPipeline.pipelineId,
-                        name: this.curPipeline.pipelineName
+                        name: this.curPipeline?.pipelineName ?? '--'
                     }],
                     projectId: this.$route.params.projectId
                 }])
@@ -385,12 +378,11 @@ export default {
 
                 if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
                     ++this.pipeline.latestVersion
-                    this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
-                    this.updateCurPipelineByKeyValue('deploymentTime', convertTime(new Date()))
+                    this.updateCurPipelineByKeyValue('version', this.pipeline.latestVersion)
                 }
 
-                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
-                    this.updateCurPipelineByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
+                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline?.pipelineName) {
+                    this.updateCurPipelineInfoByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
                 }
 
                 return {
@@ -441,12 +433,6 @@ export default {
                     projectId
                 }])
             }
-        },
-        updateCurPipelineByKeyValue (key, value) {
-            this.$store.commit('pipelines/updateCurPipelineByKeyValue', {
-                key,
-                value
-            })
         },
         changeProject () {
             this.$toggleProjectMenu(true)

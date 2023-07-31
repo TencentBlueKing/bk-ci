@@ -81,9 +81,6 @@
             }
         },
         computed: {
-            ...mapGetters({
-                curParamList: 'pipelines/getCurAtomPrams'
-            }),
             ...mapGetters('atom', [
                 'getAllElements'
             ]),
@@ -133,7 +130,6 @@
             this.togglePropertyPanel({
                 isShow: false
             })
-            this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipelineEditing(false)
             this.setPipeline(null)
         },
@@ -165,17 +161,12 @@
                 this.isLoading = true
                 try {
                     this.requestPipeline(this.$route.params)
-                    if (!this.curParamList) {
-                        const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId
-                        })
+                    const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId
+                    })
 
-                        this.curPipelineInfo = res
-                    } else {
-                        this.curPipelineInfo = this.curParamList
-                    }
-                    console.log(this.curPipelineInfo)
+                    this.curPipelineInfo = res
                     if (this.curPipelineInfo.canManualStartup) {
                         if (this.curPipelineInfo.buildNo) {
                             this.buildNo = this.curPipelineInfo.buildNo

@@ -25,7 +25,7 @@
                             {{props.row.version}}
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('restore.createTime')" prop="createTime">
+                    <bk-table-column :label="$t('createTime')" prop="createTime">
                         <template slot-scope="props">
                             <span>{{ convertTime(props.row.createTime) }}</span>
                         </template>
@@ -77,9 +77,8 @@
             },
             // 最新的流水线版本信息
             latestPipelineVersionInfo () {
-                console.log(this.currentPipeline)
                 return this.currentPipeline
-                    ? this.$t('editPage.pipelineVersionSaveAt', [this.currentPipeline.pipelineVersion, this.currentPipeline.deploymentTime])
+                    ? this.$t('editPage.pipelineVersionSaveAt', [this.currentPipeline.versionName, this.currentPipeline.createTime])
                     : this.$t('pipelinesEdit')
             }
         },

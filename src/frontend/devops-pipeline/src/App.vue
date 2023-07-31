@@ -145,11 +145,6 @@
         flex: 1;
         background: #fafbfd;
     }
-    .text-link {
-        font-size: 14px;
-        cursor: pointer;
-        color: $primaryColor;
-    }
 
     .bkdevops-radio {
         > input[type=radio] {

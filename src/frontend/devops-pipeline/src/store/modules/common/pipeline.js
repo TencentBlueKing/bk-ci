@@ -49,7 +49,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
 export const state = {
     templateCategory: null,
     refreshLoading: false,
-    pipelineTemplate: null,
+    pipelineTemplateMap: null,
     storeTemplate: null,
     template: null,
     reposList: null,
@@ -74,9 +74,9 @@ export const mutations = {
             templateCategory: [customCategory, ...categoryList, storeCategory]
         })
     },
-    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplate }) => {
+    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplateMap }) => {
         return Object.assign(state, {
-            pipelineTemplate
+            pipelineTemplateMap
         })
     },
     [STORE_TEMPLATE_MUTATION]: (state, { storeTemplate }) => {
@@ -156,7 +156,7 @@ export const actions = {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
             commit(PIPELINE_TEMPLATE_MUTATION, {
-                pipelineTemplate: (response.data || {}).templates
+                pipelineTemplateMap: (response.data || {}).templates
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -243,8 +243,14 @@ export const actions = {
         })
     },
     requestOutputs: async ({ commit }, { projectId, pipelineId, buildId, ...params }) => {
-        const res = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${buildId}/search`, params)
-        return res.data
+        const hasBuildId = !!buildId
+        const { data } = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${hasBuildId ? `${buildId}/` : ''}search`, params)
+        return {
+            page: 1,
+            pageSize: data.pageSize ?? data.length,
+            count: data.count ?? data.length,
+            records: data.records ?? data
+        }
     },
     requestExternalUrl: async ({ commit }, { projectId, type, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {

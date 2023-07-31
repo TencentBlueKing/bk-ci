@@ -27,9 +27,7 @@
 .bkdevops-history-subpage {
   min-height: 100%;
   flex-direction: column;
-  .bk-exception {
-    position: absolute;
-  }
+  background: #F5F7FA;
   .pipeline-subpages-header {
     display: flex;
     align-items: center;

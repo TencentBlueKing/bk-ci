@@ -87,11 +87,11 @@
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
             <bk-table-column width="200" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column width="200" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column width="200" sortable="custom" :label="$t('createTime')" prop="createTime" :formatter="formatTime" />
             <bk-table-column width="200" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column key="createTime" :label="$t('createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
             <bk-table-column key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
             <bk-table-column key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>

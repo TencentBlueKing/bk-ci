@@ -42,10 +42,8 @@
                 }, {
                     paramId: 'pipelineId',
                     paramName: 'pipelineName',
-                    selectedValue: this.curPipeline?.pipelineName || '--',
-                    records: [
-                        ...this.pipelineList
-                    ],
+                    selectedValue: this.curPipeline?.pipelineName ?? '--',
+                    records: this.pipelineList,
                     showTips: true,
                     tipsName: 'switch_pipeline_hint',
                     tipsContent: this.$t('subpage.switchPipelineTooltips'),
@@ -78,13 +76,13 @@
                             projectId,
                             searchName
                         }),
-                        this.updateCurPipeline({
+                        this.requestPipelineDetail({
                             projectId,
                             pipelineId
                         })
                     ])
 
-                    this.setBreadCrumbPipelineList(list, curPipeline)
+                    this.setBreadCrumbPipelineList(list, curPipeline.pipelineResource)
                 } catch (err) {
                     console.log(err)
                     this.$showTips({
@@ -98,30 +96,23 @@
                     list = [
                         {
                             pipelineId: pipeline.pipelineId,
-                            pipelineName: pipeline.pipelineName
+                            pipelineName: pipeline.model.name
                         },
                         ...list
                     ]
                 }
+
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
-            async updateCurPipeline ({ projectId, pipelineId }) {
-                const curPipeline = await this.requestPipelineDetail({
-                    projectId,
-                    pipelineId
-                })
-                this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-                return curPipeline
-            },
             doSelectPipeline (pipelineId, cur) {
-                const { projectId, $route } = this
-                this.updateCurPipeline({
+                const { $route } = this
+                this.requestPipelineDetail({
                     pipelineId,
-                    projectId
+                    projectId: $route.params.projectId
                 })
                 // 清空搜索
                 this.searchPipelineList({
-                    projectId
+                    projectId: $route.params.projectId
                 }).then((list) => {
                     this.setBreadCrumbPipelineList(list, {
                         pipelineId,
@@ -133,7 +124,7 @@
                 this.$router.push({
                     name,
                     params: {
-                        projectId,
+                        projectId: $route.params.projectId,
                         pipelineId
                     }
                 })
@@ -149,5 +140,5 @@
 </script>
 
 <style lang="scss">
-    
+
 </style>

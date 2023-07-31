@@ -1,17 +1,8 @@
 <template>
     <div class="pipeline-exec-outputs">
-
         <aside :class="['pipeline-exec-outputs-aside', {
             'pipeline-exec-outputs-aside-collapse': asideCollpased
         }]">
-            <div class="pipeline-exec-outputs-filter-input">
-                <bk-input
-                    clearable
-                    right-icon="bk-icon icon-search"
-                    :placeholder="$t('outputsFilterPlaceholder')"
-                    v-model="keyWord"
-                />
-            </div>
             <ul class="pipeline-exec-output-classify-tab">
                 <li
                     v-for="classify in outputClassifyList"
@@ -24,36 +15,47 @@
                     {{ classify.label }}
                 </li>
             </ul>
-            <!-- <div class="pipeline-exec-outputs-filter">
+            <div :class="['pipeline-exec-outputs-filter', {
+                'filter-active': filterConditionLength
+            }]" @click="showOutputsFilterAside">
                 <i class="devops-icon icon-filter"></i>
                 {{ $t('条件查询') }}
-                <bk-tag class="output-filter-condition-count">2</bk-tag>
-            </div> -->
-            <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
-                <li
-                    v-for="output in visibleOutputs"
-                    :key="output.id"
-                    :class="{
-                        active: output.id === activeOutput.id
-                    }"
-                    @click="setActiveOutput(output)"
+                <bk-tag
+                    v-if="filterConditionLength > 0"
+                    class="output-filter-condition-count"
+                    theme="info"
                 >
-                    <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                    <span :title="output.name">{{ output.name }}</span>
-                    <output-qrcode
-                        v-if="output.isApp"
-                        class="output-hover-icon"
-                        :output="output"
-                    />
-                    <i
-                        v-else-if="output.downloadable"
-                        class="output-hover-icon devops-icon icon-download"
-                        @click.stop="downloadArtifact(output)"
-                    />
-                </li>
-            </ul>
+                    {{ filterConditionLength }}
+                </bk-tag>
+            </div>
+            <template v-if="outputs.length > 0 && !asideCollpased">
+                <ArtifactsList v-if="!$route.params.buildNo" :outputs="outputs" />
+                <ul v-else class="pipeline-exec-outputs-list">
+                    <li
+                        v-for="output in visibleOutputs"
+                        :key="output.id"
+                        :class="{
+                            active: output.id === activeOutput.id
+                        }"
+                        @click="setActiveOutput(output)"
+                    >
+                        <i :class="['devops-icon', `icon-${output.icon}`]"></i>
+                        <span :title="output.name">{{ output.name }}</span>
+                        <output-qrcode
+                            v-if="output.isApp"
+                            class="output-hover-icon"
+                            :output="output"
+                        />
+                        <i
+                            v-else-if="output.downloadable"
+                            class="output-hover-icon devops-icon icon-download"
+                            @click.stop="downloadArtifact(output)"
+                        />
+                    </li>
+                </ul>
+            </template>
 
-            <div v-else class="no-outputs-placeholder">
+            <div v-else-if="!asideCollpased" class="no-outputs-placeholder">
                 <logo name="empty" size="180" />
                 <span>{{ $t("empty") }}</span>
             </div>
@@ -129,6 +131,40 @@
             </div>
         </section>
         <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
+        <aside :class="['pipeline-outputs-filter-aside', {
+            'pipeline-outputs-filter-aside-show': outputsFilterAsideVisible
+        }]">
+            <header>
+                {{$t('条件查询')}}
+                <i class="devops-icon icon-close" @click="closeOutputsFilterAside"></i>
+            </header>
+            <section class="pipeline-outputs-filter-conditions">
+                <bk-form form-type="vertical" :model="filterConditionMap">
+                    <bk-form-item
+                        v-for="condition in conditions"
+                        :key="condition.id"
+                        :label="condition.label"
+                    >
+                        <component :is="condition.component" v-bind="condition.props" v-on="condition.listeners" />
+                    </bk-form-item>
+                </bk-form>
+            </section>
+            <footer>
+                <bk-button
+                    size="large"
+                    theme="primary"
+                    @click="submitFilter"
+                >
+                    {{$t('查询')}}
+                </bk-button>
+                <bk-button
+                    size="large"
+                    @click="closeOutputsFilterAside(true)"
+                >
+                    {{$t('history.reset')}}
+                </bk-button>
+            </footer>
+        </aside>
     </div>
 </template>
 
@@ -142,6 +178,7 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import ArtifactsList from './ArtifactsList'
 
     export default {
         components: {
@@ -150,50 +187,58 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
-            OutputQrcode
+            OutputQrcode,
+            ArtifactsList
         },
         data () {
             return {
-                keyWord: '',
                 isCopyDialogShow: false,
                 isCopying: false,
-                currentTab: 'all',
+                currentTab: '',
                 outputs: [],
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
                 isLoading: false,
-                asideCollpased: false
+                asideCollpased: false,
+                outputsFilterAsideVisible: false,
+                pagination: {
+                    page: 1,
+                    count: 0,
+                    pageSize: 20
+                },
+                filtering: false,
+                filterConditionMap: {
+                    timeRange: [],
+                    buildNo: '',
+                    filename: '',
+                    creator: '',
+                    property: null
+                }
             }
         },
         computed: {
             outputClassifyList () {
                 return [
                     {
-                        key: 'all',
+                        key: '',
                         label: this.$t('editPage.all')
                     },
                     {
-                        key: 'artifact',
+                        key: 'ARTIFACT',
                         label: this.$t('details.artifact')
                     },
                     {
-                        key: 'report',
+                        key: 'REPORT',
                         label: this.$t('details.report')
                     }
                 ]
             },
-            reports () {
-                return this.outputs.filter(
-                    (item) =>
-                        item.artifactoryType === 'REPORT' && !this.isThirdReport(item.reportType)
-                )
-            },
-            artifacts () {
-                return this.outputs.filter((item) => this.isArtifact(item.artifactoryType))
-            },
             thirdPartyReportList () {
                 return this.outputs.filter((report) => this.isThirdReport(report.reportType))
+            },
+            hasNext () {
+                return this.pagination.count < this.outputs.length
             },
             visibleOutputs () {
                 const thirdReportList
@@ -208,19 +253,10 @@
                             }
                         ]
                         : []
-                let visibleOutputs = [
+                return [
                     ...this.outputs.filter((output) => !this.isThirdReport(output.reportType)),
                     ...thirdReportList
                 ]
-                switch (this.currentTab) {
-                    case 'artifact':
-                        visibleOutputs = this.artifacts
-                        break
-                    case 'report':
-                        visibleOutputs = [...this.reports, ...thirdReportList]
-                        break
-                }
-                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase()))
             },
             isActiveThirdReport () {
                 return this.isThirdReport(this.activeOutput?.reportType)
@@ -293,7 +329,7 @@
                     { key: 'name', name: this.$t('details.name') },
                     { key: 'fullName', name: this.$t('details.filePath') },
                     { key: 'size', name: this.$t('details.size') },
-                    { key: 'createdTime', name: this.$t('details.created') },
+                    { key: 'createdTime', name: this.$t('createdTime') },
                     { key: 'modifiedTime', name: this.$t('details.lastModified') }
                 ]
             },
@@ -302,6 +338,119 @@
                     { key: 'sha256', name: 'SHA256' },
                     { key: 'sha1', name: 'SHA1' },
                     { key: 'md5', name: 'MD5' }
+                ]
+            },
+            filterConditionLength () {
+                if (!this.filtering) return 0
+                return Object.keys(this.filterConditionMap).filter(key => {
+                    if (Array.isArray(this.filterConditionMap[key])) {
+                        return this.filterConditionMap[key].length > 0
+                    }
+                    return !!this.filterConditionMap[key]
+                }).length
+            },
+            conditions () {
+                return [
+                    {
+                        id: 'triggerTime',
+                        label: this.$t('details.triggerTime'),
+                        component: 'bk-date-picker',
+                        props: {
+                            type: 'datetimerange',
+                            shortcuts: this.shortcuts,
+                            value: this.filterConditionMap.timeRange
+                        },
+                        listeners: {
+                            change: (range) => {
+                                this.filterConditionMap.timeRange = range
+                            }
+                        }
+                    },
+                    {
+                        id: 'buildNo',
+                        label: this.$t('构建号'),
+                        component: 'bk-input',
+                        props: {
+                            value: this.filterConditionMap.buildNo
+                        },
+                        listeners: {
+                            change: (buildNo) => {
+                                this.filterConditionMap.buildNo = buildNo
+                            }
+                        }
+                    },
+                    {
+                        id: 'filename',
+                        label: this.$t('文件名'),
+                        component: 'bk-input',
+                        props: {
+                            value: this.filterConditionMap.filename
+                        },
+                        listeners: {
+                            change: (filename) => {
+                                this.filterConditionMap.filename = filename
+                            }
+                        }
+                    },
+                    {
+                        id: 'creator',
+                        label: this.$t('触发人'),
+                        component: 'bk-input',
+                        props: {
+                            value: this.filterConditionMap.creator
+                        },
+                        listeners: {
+                            change: (creator) => {
+                                this.filterConditionMap.creator = creator
+                            }
+                        }
+                    },
+                    {
+                        id: 'property',
+                        label: this.$t('元数据'),
+                        component: 'bk-input',
+                        props: {
+                            value: this.filterConditionMap.property
+                        },
+                        listeners: {
+                            change: (property) => {
+                                this.filterConditionMap.property = property
+                            }
+                        }
+                    }
+                ]
+            },
+            shortcuts () {
+                return [
+                    {
+                        text: '今天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+                            return [start, end]
+                        },
+                        onClick: picker => {
+                            console.log(picker)
+                        }
+                    },
+                    {
+                        text: '近7天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date()
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+                            return [start, end]
+                        }
+                    },
+                    {
+                        text: '近15天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date()
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
+                            return [start, end]
+                        }
+                    }
                 ]
             }
         },
@@ -313,7 +462,7 @@
                     this.activeOutputDetail = null
                 }
             },
-            '$route.params.buildNo': function () {
+            currentTab: function () {
                 this.$nextTick(this.init)
             }
         },
@@ -332,24 +481,51 @@
                 console.log(this.asideCollpased)
                 this.asideCollpased = !this.asideCollpased
             },
+            closeOutputsFilterAside (reset = false) {
+                this.outputsFilterAsideVisible = false
+                if (reset) {
+                    this.filtering = false
+                    this.filterConditionMap = {
+                        timeRange: [],
+                        buildNo: '',
+                        filename: '',
+                        creator: '',
+                        property: null
+                    }
+                }
+            },
+            showOutputsFilterAside () {
+                this.outputsFilterAsideVisible = true
+            },
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
 
                 try {
                     this.isLoading = true
-                    const [hasPermission, res] = await Promise.all([
+                    const [hasPermission, outputsResponse] = await Promise.all([
                         this.requestHasPermission(),
                         this.requestOutputs({
                             projectId,
                             pipelineId,
-                            buildId
+                            buildId,
+                            pipelineOutputType: this.currentTab,
+                            ...(Object.keys(this.filterConditionMap).filter(key => !!this.filterConditionMap[key]).reduce((result, key) => {
+                                result[key] = this.filterConditionMap[key]
+                                return result
+                            }, {})),
+                            ...this.pagination
                         })
                     ])
-
-                    this.outputs = res.map((item) => {
+                    const { records, page, pageSize, count } = outputsResponse
+                    this.pagination = {
+                        page,
+                        pageSize,
+                        count
+                    }
+                    this.outputs = records.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
                         const icon = isReportOutput ? 'order' : extForFile(item.name)
-                        const id = isReportOutput ? item.createTime : item.fullPath
+                        const id = isReportOutput ? (item.createTime + item.indexFileUrl) : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
                             type,
@@ -360,11 +536,72 @@
                             downloadable: hasPermission && this.isArtifact(item.artifactoryType) && item.artifactoryType !== 'IMAGE'
                         }
                     })
+                    console.log(this.outputs)
                 } catch (err) {
                     this.$showTips({
                         message: err.message ? err.message : err,
                         theme: 'error'
                     })
+                    this.outputs = [
+                        {
+                            name: 'output1',
+                            createTime: '2022-07-06',
+                            buildNum: '22'
+                        },
+                        {
+                            name: 'output2',
+                            createTime: '2022-07-06',
+                            buildNum: '22'
+                        },
+                        {
+                            name: 'output3',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output4',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output5',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output6',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output7',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output8',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output9',
+                            createTime: '2022-07-03',
+                            buildNum: '19'
+                        },
+                        {
+                            name: 'output10',
+                            createTime: '2022-07-03',
+                            buildNum: '19'
+                        }, {
+                            name: 'output11',
+                            createTime: '2022-07-02',
+                            buildNum: '18'
+                        }, {
+                            name: 'output12',
+                            createTime: '2022-07-01',
+                            buildNum: '17'
+                        }
+                    ]
                 } finally {
                     this.isLoading = false
                 }
@@ -388,6 +625,7 @@
                     })
                 }
             },
+
             async showDetail (output) {
                 const { projectId } = this.$route.params
                 try {
@@ -430,6 +668,13 @@
                         break
                 }
             },
+            async submitFilter () {
+                console.log(this.filterConditionMap)
+                this.filtering = true
+                await this.init()
+                this.closeOutputsFilterAside(false)
+            },
+
             switchTab (tab) {
                 this.currentTab = tab
             },
@@ -487,7 +732,8 @@
     &.pipeline-exec-outputs-aside-collapse {
         width: 0;
         padding: 0;
-        .pipeline-exec-output-classify-tab {
+        .pipeline-exec-output-classify-tab,
+        .pipeline-exec-outputs-filter {
             display: none;
         }
         .aside-collapse-icon {
@@ -549,12 +795,9 @@
         }
       }
     }
-    .pipeline-exec-outputs-filter-input {
-        margin: 12px 0;
-    }
     .pipeline-exec-outputs-filter {
       position: relative;
-      margin: 16px 0 21px 0;
+      margin: 16px 0 6px 0;
       width: 100%;
       display: flex;
       align-items: center;
@@ -565,6 +808,10 @@
       border-radius: 2px;
       font-size: 14px;
       cursor: pointer;
+      &.filter-active {
+        color: $primaryColor;
+        border-color: $primaryColor;
+      }
       .output-filter-condition-count {
         margin: 0;
         position: absolute;
@@ -668,6 +915,42 @@
           }
         }
       }
+    }
+  }
+  .pipeline-outputs-filter-aside {
+    width: 480px;
+    background: white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    border: 1px solid #DCDEE5;
+    display: grid;
+    grid-template-rows: 52px 1fr 48px;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    &.pipeline-outputs-filter-aside-show {
+        transform: translateX(0);
+    }
+    > header {
+        padding: 0 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #FFFFFF;
+        box-shadow: inset 0 -1px 0 0 #DCDEE5;
+        color: #313238;
+    }
+    .pipeline-outputs-filter-conditions {
+        padding: 16px 24px;
+    }
+    > footer {
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        grid-gap: 8px;
+        background: #FAFBFD;
+        box-shadow: 0 -1px 0 0 #DCDEE5;
     }
   }
 }

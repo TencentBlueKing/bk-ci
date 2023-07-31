@@ -5,9 +5,7 @@
         }"
     >
         <pipeline-header>
-            <span class="default-subheader-icon" slot="logo">
-                <logo size="32" name="pipeline" />
-            </span>
+            <logo size="24" name="pipeline" slot="logo" />
             <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
@@ -57,7 +55,6 @@
                     </li>
 
                 </ul>
-
             </bk-dropdown-menu>
         </pipeline-header>
         <router-view></router-view>

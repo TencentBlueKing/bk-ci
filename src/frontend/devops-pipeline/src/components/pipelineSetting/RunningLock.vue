@@ -7,7 +7,7 @@
         form-type="vertical"
         :label-width="300"
     >
-        <bk-form-item :label="$t('settings.parallelSetting')">
+        <bk-form-item :label="$t('parallelSetting')">
             <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
                 <div class="run-lock-radio-item">
                     <bk-radio

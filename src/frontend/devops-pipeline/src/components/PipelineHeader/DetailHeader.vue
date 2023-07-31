@@ -54,7 +54,7 @@
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
             canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
+                return this.curPipeline?.canManualStartup ?? false
             },
             pipelineStatus () {
                 return this.canManualStartup ? 'ready' : 'disable'

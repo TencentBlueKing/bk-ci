@@ -1,92 +1,176 @@
 <template>
-    <div class="bkdevops-pipeline-history pb20">
-        <bk-tab :active.sync="currentTab" @tab-change="switchTab" :before-toggle="beforeSwitch" class="bkdevops-pipeline-tab-card" type="unborder-card">
-            <div class="bkdevops-pipeline-tab-card-setting" slot="setting">
-                <i @click.stop="toggleFilterBar" class="devops-icon icon-filter-shape" :class="{ 'active': showFilterBar }"></i>
-                <i @click.stop="toggleColumnsSelectPopup(true)" class="setting-icon devops-icon icon-cog-shape" :class="{ 'active': isColumnsSelectPopupVisible }"></i>
-            </div>
-            <bk-tab-panel
-                v-for="panel in panels"
-                tab-change="tab"
-                render-directive="if"
-                v-bind="{ name: panel.name, label: panel.label }"
-                :key="panel.name">
-                <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
-            </bk-tab-panel>
-        </bk-tab>
+    <div class="pipeline-detail-entry">
+        <aside class="pipeline-detail-entry-aside">
+            <ul v-for="(item, index) in asideNav" :key="index">
+                <li class="nav-item-title">
+                    {{ item.title }}
+                    <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
+                        <logo :name="item.link.icon" size="16"></logo>
+                        {{ item.link.title }}
+                    </span>
+                </li>
+                <ul class="nav-child-list" v-for="(child, cIndex) in item.children" :key="cIndex">
+                    <li @click="switchType(child)" :class="['nav-child-title', {
+                        active: child.active
+                    }]">{{ child.title }}</li>
+                </ul>
+            </ul>
+        </aside>
+        <main class="pipeline-detail-entry-main">
+            <component
+                :is="activeChild.component"
+                v-bind="activeChild.bindData"
+            />
+        </main>
     </div>
 </template>
 
 <script>
-    import BuildHistoryTab from '@/components/BuildHistoryTab'
-    import { mapGetters } from 'vuex'
-    import showTooltip from '@/components/common/showTooltip'
-
+    import { mapActions } from 'vuex'
+    import Logo from '@/components/Logo'
+    import {
+        BuildHistoryTab,
+        TriggerEvent,
+        PipelineConfig,
+        PermissionConfig,
+        VersionHistory,
+        ChangeLog
+    } from '@/components/PipelineDetailTabs'
+    import Artifactory from '@/components/Outputs'
     export default {
         components: {
             BuildHistoryTab,
-            showTooltip
+            TriggerEvent,
+            Artifactory,
+            PipelineConfig,
+            PermissionConfig,
+            VersionHistory,
+            ChangeLog,
+            Logo
         },
 
         props: {
             execHandler: Function
         },
-
-        data () {
-            return {
-                isColumnsSelectPopupVisible: false,
-                showFilterBar: false
+        computed: {
+            activeMenuItem () {
+                return this.$route.params.type || 'history'
+            },
+            activeChild () {
+                return this.getNavComponent(this.activeMenuItem)
+            },
+            asideNav () {
+                return [{
+                    title: this.$t('执行信息'),
+                    children: [{
+                        title: this.$t('执行历史'),
+                        name: 'history'
+                    }, {
+                        title: this.$t('触发事件'),
+                        name: 'triggerEvent'
+                    }, {
+                        title: this.$t('产出物'),
+                        name: 'artifactory'
+                    }].map(child => ({
+                        ...child,
+                        active: this.activeMenuItem === child.name
+                    }))
+                }, {
+                    title: this.$t('流水线配置'),
+                    link: {
+                        handler: () => {
+                            this.$router.push({
+                                name: 'pipelinesEdit'
+                            })
+                        },
+                        icon: 'edit-conf',
+                        title: this.$t('编辑流水线')
+                    },
+                    children: [{
+                        title: this.$t('流水线编排'),
+                        name: 'pipelineModel'
+                    }, {
+                        title: this.$t('触发器配置'),
+                        name: 'triggerConf'
+                    }, {
+                        title: this.$t('通知配置'),
+                        name: 'notification'
+                    }, {
+                        title: this.$t('基础配置'),
+                        name: 'baseInfo'
+                    }].map(child => ({
+                        ...child,
+                        active: this.activeMenuItem === child.name
+                    }))
+                }, {
+                    title: this.$t('更多'),
+                    children: [{
+                        title: this.$t('权限设置'),
+                        name: 'permission'
+                    }, {
+                        title: this.$t('版本历史'),
+                        name: 'versionHistory'
+                    }, {
+                        title: this.$t('操作日志'),
+                        name: 'changeLog'
+                    }].map(child => ({
+                        ...child,
+                        active: this.activeMenuItem === child.name
+                    }))
+                }]
             }
         },
-
-        computed: {
-            ...mapGetters('pipelines', {
-                statusMap: 'getStatusMap',
-                hisPageStatus: 'getHisPageStatus'
-            }),
-            projectId () {
-                return this.$route.params.projectId
-            },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
-            panels () {
-                return [{
-                    name: 'history',
-                    label: this.$t('pipelinesHistory'),
-                    component: 'BuildHistoryTab',
-                    bindData: {
-                        isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
-                        showFilterBar: this.showFilterBar,
-                        toggleFilterBar: this.toggleFilterBar
-                    }
-                }
-                ]
-            },
-            currentTab () {
-                return this.$route.params.type || 'history'
-            }
+        beforeDestroy () {
+            console.log('destory history')
+            this.resetHistoryFilterCondition()
         },
         methods: {
-            switchTab (tabType = '') {
+            ...mapActions('pipelines', [
+                'resetHistoryFilterCondition'
+            ]),
+            getNavComponent (type) {
+                switch (type) {
+                    case 'history':
+                        return {
+                            component: 'BuildHistoryTab'
+                        }
+                    case 'triggerEvent':
+                        return {
+                            component: 'TriggerEvent'
+                        }
+                    case 'artifactory':
+                        return {
+                            component: 'Artifactory'
+                        }
+                    case 'pipelineModel':
+                    case 'triggerConf':
+                    case 'notification':
+                    case 'baseInfo':
+                        return {
+                            component: 'PipelineConfig'
+                        }
+                    case 'permission':
+                        return {
+                            component: 'PermissionConfig'
+                        }
+                    case 'versionHistory':
+                        return {
+                            component: 'VersionHistory'
+                        }
+                    case 'changeLog':
+                        return {
+                            component: 'ChangeLog'
+                        }
+                }
+            },
+            switchType (child) {
                 this.$router.push({
                     name: 'pipelinesHistory',
                     params: {
                         ...this.$route.params,
-                        type: tabType !== 'history' ? tabType : undefined
+                        type: child.name
                     }
                 })
-            },
-            toggleColumnsSelectPopup (isShow = false) {
-                this.isColumnsSelectPopupVisible = isShow
-            },
-            toggleFilterBar () {
-                this.showFilterBar = !this.showFilterBar
-            },
-            beforeSwitch (tabName) {
-                const tab = this.panels.find(panel => panel.name === tabName)
-                const isDisabled = tab ? tab.disabled : false
-                return !isDisabled
             }
         }
     }
@@ -95,22 +179,67 @@
 <style lang="scss">
     @import './../../scss/conf';
 
-    .bkdevops-pipeline-history.biz-content {
-        padding: 7px 25px 0 25px;
+    .pipeline-detail-entry.biz-content {
+        margin: 24px;
         height: 100%;
-        overflow: auto;
-        .bk-picker-panel-body.bk-picker-panel-body-date {
-            width: 530px;
-        }
-        .bk-date-picker-prev-btn-arrow-double {
-            margin-left: 0px;
-        }
-        .bkdevops-pipeline-tab-card {
-            height: 100%;
-            .bk-tab-section {
-                height: calc(100% - 60px);
-                padding-bottom: 10px;
+        overflow: hidden;
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: 220px 1fr;
+        box-shadow: 0 2px 2px 0 #00000026;
+        background: #f6f7fa;
+        .pipeline-detail-entry-aside {
+            background: #FAFBFD;
+            border-right: 1px solid #DCDEE5;
+            padding: 4px 0;
+            .nav-item-title {
+                padding: 0 16px 0 22px;
+                color: #C4C6CC;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 12px;
+                .nav-item-link {
+                    color: #3A84FF;
+                    cursor: pointer;
+                    display: grid;
+                    align-items: center;
+                    grid-gap: 4px;
+                    grid-auto-flow: column;
+                    &:hover {
+                        color: #699df4;
+                    }
+                }
             }
+            .nav-item-title,
+            .nav-child-title {
+                line-height: 40px;
+            }
+            .nav-child-list {
+                margin-bottom: 8px;
+            }
+            .nav-child-title {
+                position: relative;
+                padding-left: 32px;
+                cursor: pointer;
+                font-size: 14px;
+                &:hover,
+                &.active {
+                    background: #E1ECFF;
+                    &:after {
+                        content: '';
+                        position: absolute;
+                        width: 2.75px;
+                        height: 40px;
+                        background: #3A84FF;
+                        right: 0;
+                    }
+                }
+            }
+        }
+        .pipeline-detail-entry-main {
+            background: #fff;
+            overflow: hidden;
         }
     }
 </style>

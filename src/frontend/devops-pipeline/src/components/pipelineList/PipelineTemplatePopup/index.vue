@@ -89,14 +89,14 @@
                                 </div>
                                 <div class="detail-form-item">
                                     <label class="info-label">{{ $t('type') }}：</label>
-                                    <div class="info-value template-type">
-                                        <bk-radio-group v-model="templateType">
-                                            <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
-                                                <bk-radio :value="entry.value" class="form-radio"><span class="radio-lable">{{ entry.label }}</span></bk-radio>
-                                                <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
-                                            </bk-popover>
-                                        </bk-radio-group>
-                                    </div>
+
+                                    <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
+                                        <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
+                                            <bk-radio :value="entry.value" class="form-radio"><span class="radio-lable">{{ entry.label }}</span></bk-radio>
+                                            <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
+                                        </bk-popover>
+                                    </bk-radio-group>
+
                                     <section class="new-pipeline-group-selector" v-if="activeTemp.templateType === 'PUBLIC'">
                                         <PipelineGroupSelector
                                             v-model="groupValue"
@@ -308,7 +308,7 @@
                 'setPipeline'
             ]),
             ...mapActions('pipelines', [
-                'requestInstallTemplate'
+                'installPipelineTemplate'
             ]),
 
             scrollLoadMore (event) {
@@ -334,7 +334,7 @@
                     templateCode: temp.code
                 }
                 this.isLoading = true
-                this.requestInstallTemplate(postData).then((res) => {
+                this.installPipelineTemplate(postData).then((res) => {
                     return this.requestPipelineTemplate({
                         projectId: this.projectId
                     }).then(() => {
