@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.store.config
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+/**
+ * 研发商店仓库配置
+ */
+@Component
+class BkRepoStoreConfig {
+
+    // 蓝盾新仓库研发商店项目名称
+    @Value("\${bkrepo.store.projectName:bk-store}")
+    val bkrepoStoreProjectName: String = "bk-store"
+
+    // 蓝盾新仓库研发商店用户名
+    @Value("\${bkrepo.store.userName:g_bkstore}")
+    val bkrepoStoreUserName: String = "g_bkstore"
+
+    // 蓝盾新仓库研发商店密码
+    @Value("\${bkrepo.store.password:}")
+    val bkrepoStorePassword: String = ""
+
+    // 蓝盾新仓库微扩展项目名称
+    @Value("\${bkrepo.extService.projectName:bk-extension}")
+    val bkrepoExtServiceProjectName: String = "bk-extension"
+
+    // 蓝盾新仓库微扩展用户名
+    @Value("\${bkrepo.extService.userName:bk_extension}")
+    val bkrepoExtServiceUserName: String = "bk_extension"
+
+    // 蓝盾新仓库微扩展密码
+    @Value("\${bkrepo.extService.password:}")
+    val bkrepoExtServicePassword: String = ""
 }

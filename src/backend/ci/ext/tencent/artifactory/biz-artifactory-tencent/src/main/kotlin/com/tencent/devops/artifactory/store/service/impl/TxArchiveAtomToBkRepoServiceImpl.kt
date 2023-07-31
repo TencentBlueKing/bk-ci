@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.store.service.impl
+
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
+
+@Primary
+@Service
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
+class TxArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
+
+    @Autowired
+    private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+
+    override fun getBkRepoProjectId(): String {
+        return bkRepoStoreConfig.bkrepoStoreProjectName
+    }
+
+    override fun getBkRepoName(): String {
+        return BkRepoEnum.PLUGIN.repoName
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(
+            userId = bkRepoStoreConfig.bkrepoStoreUserName,
+            projectId = bkRepoStoreConfig.bkrepoStoreProjectName,
+            repoName = BkRepoEnum.PLUGIN.repoName,
+            path = atomCode
+        )
+    }
 }

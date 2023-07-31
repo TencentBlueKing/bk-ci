@@ -25,17 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.store.resources
+
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.store.service.ArchiveAtomService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceArchiveAtomResourceImpl @Autowired constructor(
+    private val archiveAtomService: ArchiveAtomService
+) : ServiceArchiveAtomResource {
+
+    override fun getAtomFileContent(filePath: String): Result<String> {
+        return Result(archiveAtomService.getAtomFileContent(filePath))
+    }
+
+    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
+        return Result(true)
+    }
+
+    override fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Result<Boolean> {
+        return Result(
+            archiveAtomService.updateArchiveFile(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                fileName = fileName,
+                content = content
+            )
+        )
+    }
 }
