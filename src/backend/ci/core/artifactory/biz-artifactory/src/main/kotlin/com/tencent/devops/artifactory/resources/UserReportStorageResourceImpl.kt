@@ -25,17 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.resources
+
+import com.tencent.devops.artifactory.api.user.UserReportStorageResource
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import org.springframework.beans.factory.annotation.Autowired
+
+class UserReportStorageResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : UserReportStorageResource {
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    ) {
+        return archiveFileService.downloadReport(userId, projectId, pipelineId, buildId, elementId, path)
+    }
 }

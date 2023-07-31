@@ -25,17 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.store.resources
+
+import com.tencent.devops.artifactory.api.BuildArchiveStoreFileResource
+import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
+
+@RestResource
+class BuildArchiveStoreFileResourceImpl @Autowired constructor(
+    private val archiveStoreFileService: ArchiveStoreFileService
+) : BuildArchiveStoreFileResource {
+
+    override fun archiveFile(
+        userId: String,
+        repoName: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        destPath: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
+        return archiveStoreFileService.archiveFile(
+            userId = userId,
+            repoName = repoName,
+            projectId = projectId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

@@ -25,17 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
+package com.tencent.devops.artifactory.store.service
+
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
+import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
+import com.tencent.devops.common.api.pojo.Result
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
+
+interface ArchiveAtomService {
+
+    /**
+     * 归档插件
+     */
+    fun archiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveAtomRequest: ArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
+
+    /**
+     * 重新归档插件
+     */
+    fun reArchiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        reArchiveAtomRequest: ReArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
+
+    /**
+     * 获取插件相关文件内容
+     */
+    fun getAtomFileContent(filePath: String): String
+
+    /**
+     * 删除插件
+     */
+    fun deleteAtom(userId: String, projectCode: String, atomCode: String)
+
+    /**
+     * 更新插件相关文件内容
+     */
+    fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean
 }
