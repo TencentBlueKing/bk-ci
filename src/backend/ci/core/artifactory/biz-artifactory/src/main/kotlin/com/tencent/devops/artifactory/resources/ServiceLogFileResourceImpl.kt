@@ -25,13 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api("com.tencent.bk.repo:api-generic")
-    api("com.tencent.bk.repo:api-repository")
-}
+package com.tencent.devops.artifactory.resources
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.common.api.pojo.Result
+
+class ServiceLogFileResourceImpl : ServiceLogFileResource {
+
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        TODO("not implemented")
+    }
 }

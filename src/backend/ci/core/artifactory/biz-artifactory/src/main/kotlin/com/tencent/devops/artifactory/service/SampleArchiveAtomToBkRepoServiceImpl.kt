@@ -25,13 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api("com.tencent.bk.repo:api-generic")
-    api("com.tencent.bk.repo:api-repository")
-}
+package com.tencent.devops.artifactory.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.artifactory.store.service.impl.ArchiveAtomToBkRepoServiceImpl
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+
+@Service
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
+class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
+
+    override fun getBkRepoProjectId(): String {
+        return BKREPO_STORE_PROJECT_ID
+    }
+
+    override fun getBkRepoName(): String {
+        return REPO_NAME_PLUGIN
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
+    }
 }
