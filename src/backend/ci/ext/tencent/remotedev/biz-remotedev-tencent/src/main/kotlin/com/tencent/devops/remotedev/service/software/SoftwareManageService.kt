@@ -55,13 +55,13 @@ class SoftwareManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val softwareManageDao: SoftwareManageDao
 ) {
-    @Value("\${bkGPT.bk_app_secret:}")
-    val appSecret = ""
-
-    @Value("\${bkGPT.bk_app_code:}")
+    @Value("\${remoteDev.appCode:}")
     val appCode = ""
 
-    @Value("\${compile.software_group_url:}")
+    @Value("\${remoteDev.appToken:}")
+    val appSecret = ""
+
+    @Value("\${compileApigw.software_group_url:}")
     val software_group_url = ""
 
     companion object {
