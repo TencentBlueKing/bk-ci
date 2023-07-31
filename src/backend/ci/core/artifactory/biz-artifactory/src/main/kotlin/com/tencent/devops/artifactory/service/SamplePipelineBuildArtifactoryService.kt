@@ -41,11 +41,9 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Service
 class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao,
