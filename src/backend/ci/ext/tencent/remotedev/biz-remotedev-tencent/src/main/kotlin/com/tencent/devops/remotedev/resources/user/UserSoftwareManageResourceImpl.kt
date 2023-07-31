@@ -67,4 +67,8 @@ class UserSoftwareManageResourceImpl @Autowired constructor(
         logger.info("installSoftwareToUser|userId|$userId|projectId|$projectId|user|$user|workspaceName|$workspaceName|status|$status")
         return Result(softwareManageService.getUserSoftwareInstalledRecord(projectId, user, workspaceName, status))
     }
+
+    override fun getSoftwareGroupInfo(userId: String): Result<Any> {
+        return Result(softwareManageService.getSoftwareGroupInfo())
+    }
 }

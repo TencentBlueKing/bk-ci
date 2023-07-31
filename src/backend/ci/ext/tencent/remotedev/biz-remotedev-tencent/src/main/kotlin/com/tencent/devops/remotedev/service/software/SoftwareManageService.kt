@@ -27,21 +27,42 @@
 
 package com.tencent.devops.remotedev.service.software
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
+import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
+import com.tencent.devops.remotedev.service.WatermarkService
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.SocketTimeoutException
+import javax.ws.rs.core.Response
 
 @Service
 class SoftwareManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val softwareManageDao: SoftwareManageDao
 ) {
+    @Value("\${bkGPT.bk_app_secret:}")
+    val appSecret = ""
+
+    @Value("\${bkGPT.bk_app_code:}")
+    val appCode = ""
+
+    @Value("\${compile.software_group_url:}")
+    val software_group_url = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
@@ -106,5 +127,35 @@ class SoftwareManageService @Autowired constructor(
             )
         }
         return result
+    }
+
+    fun getSoftwareGroupInfo(): Any {
+        val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+            .replace("\\s".toRegex(), "")
+        val request = Request.Builder()
+            .url(software_group_url)
+            .addHeader("x-bkapi-authorization", headerStr)
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
+                    )
+                }
+                val data = JsonUtil.to(response.body!!.string(), Any::class.java)
+                logger.info("getWatermark|response code|${response.code}|content|$data")
+                return data
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get software group failed.", e)
+            // 接口超时失败
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
+            )
+        }
     }
 }

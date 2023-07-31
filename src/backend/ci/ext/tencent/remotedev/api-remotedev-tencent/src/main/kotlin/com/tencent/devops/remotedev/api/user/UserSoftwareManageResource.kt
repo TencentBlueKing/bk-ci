@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
@@ -95,4 +96,13 @@ interface UserSoftwareManageResource {
         @QueryParam("status")
         status: SoftwareInstallStatus?
     ): Result<List<UserSoftwareInstalledRecord>>
+
+    @ApiOperation("获取行云软件分组")
+    @GET
+    @Path("/group")
+    fun getSoftwareGroupInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Any>
 }

@@ -120,6 +120,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132022",
         formatErrorMessage = "windows resource {0} not available"
+    ),
+    GET_SOFTWARE_GROUP_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2132023",
+        formatErrorMessage = "get software group fail."
     );
 
     fun getErrorMessage(): String {
