@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
@@ -197,28 +198,30 @@ object AtomUtils {
     }
 
     fun checkTemplateAtoms(
-        atomCode: String,
-        version: String,
+        codeVersions: Set<AtomPostReqItem>,
+        userId: String,
         client: Client
     ) {
-        val atom = client.get(ServiceAtomResource::class)
-            .getAtomVersionInfo(
-                atomCode, version
+        val atomInfos = client.get(ServiceAtomResource::class)
+            .getListAtomInfos(
+                codeVersions = codeVersions
             ).data!!
-        val atomStatus = atom.atomStatus
         val atomStatusList = listOf(
             AtomStatusEnum.TESTING.name,
             AtomStatusEnum.UNDERCARRIAGED.name
         )
-        if (atomStatus in atomStatusList) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_UPDATE,
-                params = arrayOf(
-                    atom.name,
-                    AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage())
+        atomInfos.forEach {
+            if (it.atomStatus in atomStatusList) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,
+                    params = arrayOf(
+                        it.name,
+                        AtomStatusEnum.valueOf(it.atomStatus).getI18n(I18nUtil.getLanguage(userId))
+                    )
                 )
-            )
+            }
         }
+
     }
 
     fun checkModelAtoms(
@@ -226,8 +229,7 @@ object AtomUtils {
         atomVersions: Set<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         inputTypeConfigMap: Map<String, Int>,
-        client: Client/*,
-        checkTemplateFlag: Boolean = false*/
+        client: Client
     ): Boolean {
         if (atomVersions.isEmpty()) {
             return true
@@ -243,13 +245,6 @@ object AtomUtils {
             val version = storeParam.version
             val atomName = storeParam.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-            /*if (checkTemplateFlag) {
-                checkTemplateAtoms(
-                    atomCode = atomCode,
-                    version = version,
-                    client = client
-                )
-            }*/
             if (atomRunInfo != null) {
                 validateAtomParam(
                     atomParamDataMap = storeParam.inputParam,

@@ -151,8 +151,7 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
-                    client = client/*,
-                    checkTemplateFlag = true*/
+                    client = client
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)

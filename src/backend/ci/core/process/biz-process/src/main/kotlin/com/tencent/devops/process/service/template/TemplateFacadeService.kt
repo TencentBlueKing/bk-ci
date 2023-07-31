@@ -54,8 +54,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -125,6 +123,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -300,8 +299,8 @@ class TemplateFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-        /*val templateModel: Model = objectMapper.readValue(template)
-        checkTemplateAtoms(templateModel)*/
+        val templateModel: Model = objectMapper.readValue(template)
+        checkTemplateAtoms(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -460,6 +459,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
+        checkTemplateAtoms(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1538,9 +1538,11 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+        val templateModel: Model = objectMapper.readValue(template.template)
+        checkTemplateAtoms(templateModel, userId, true)
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
-            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
@@ -1962,19 +1964,27 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件
      */
-    fun checkTemplateAtoms(template: Model) {
+    fun checkTemplateAtoms(template: Model, userId: String, flag: Boolean? = false) {
+        val codeVersions = mutableSetOf<AtomPostReqItem>()
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-                        AtomUtils.checkTemplateAtoms(
-                            atomCode = element.getAtomCode(),
-                            version = element.version,
-                            client = client
-                        )
+                container.elements.forEach nextElement@{ element ->
+                    val atomCode = element.getAtomCode()
+                    val version = element.version
+                    // 更新实例要求明确版本号
+                    if (flag == true && version.contains("*")) {
+                        return@nextElement
                     }
+                    codeVersions.add(AtomPostReqItem(atomCode, version))
                 }
             }
+        }
+        if (codeVersions.isNotEmpty()) {
+            AtomUtils.checkTemplateAtoms(
+                codeVersions = codeVersions,
+                userId = userId,
+                client = client
+            )
         }
     }
 

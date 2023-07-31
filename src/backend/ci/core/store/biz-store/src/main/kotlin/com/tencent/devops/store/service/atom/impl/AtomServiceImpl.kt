@@ -54,6 +54,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -70,6 +71,8 @@ import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
+import com.tencent.devops.store.pojo.atom.AtomListInfo
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
@@ -546,6 +549,49 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
         }
         return atomResult
+    }
+
+    /**
+     * 根据插件代码和版本号集合批量获取插件信息
+     */
+    override fun getListAtomInfos(
+        codeVersions: Set<AtomPostReqItem>
+    ): Result<List<AtomListInfo>> {
+        val atomListInfos = mutableListOf<AtomListInfo>()
+        val latestCodes = mutableListOf<String>()
+        val atomPostReqItems = mutableListOf<AtomPostReqItem>()
+        codeVersions.forEach {
+            if (it.version.contains("*")) {
+                latestCodes.add(it.atomCode)
+            }else {
+                atomPostReqItems.add(AtomPostReqItem(it.atomCode, it.version))
+            }
+        }
+        var noLatestAtomRecords = mutableListOf<TAtomRecord>()
+        if (atomPostReqItems.isNotEmpty()) {
+            noLatestAtomRecords = atomDao.getAtomInfos(
+                dslContext = dslContext,
+                codeVersions = atomPostReqItems
+            )
+        }
+        val latestAtomRecords = atomDao.getLatestAtomListByCodes(
+            dslContext = dslContext,
+            atomCodes = latestCodes
+        )
+        val atomRecords: List<TAtomRecord> = (noLatestAtomRecords + latestAtomRecords) as List<TAtomRecord>
+        atomRecords.forEach {
+            atomListInfos.add(
+                AtomListInfo(
+                    atomCode = it.atomCode,
+                    name = it.name,
+                    version = it.version,
+                    atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
+                    creator = it.creator,
+                    createTime = DateTimeUtil.toDateTime(it.createTime)
+                )
+            )
+        }
+        return Result(atomListInfos)
     }
 
     /**

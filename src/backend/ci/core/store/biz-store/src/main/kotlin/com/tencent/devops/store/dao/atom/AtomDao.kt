@@ -49,6 +49,7 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -279,6 +280,29 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getAtomInfos(
+        dslContext: DSLContext,
+        codeVersions: List<AtomPostReqItem>
+    ): Result<TAtomRecord> {
+        return with(TAtom.T_ATOM) {
+            var condition: Condition? = null
+            codeVersions.forEach{
+                if (condition == null) {
+                    condition = ATOM_CODE.eq(it.atomCode)
+                        .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
+                }else {
+                    condition!!.or(
+                        ATOM_CODE.eq(it.atomCode)
+                            .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
+                    )
+                }
+            }
+            dslContext.selectFrom(this)
+                .where(condition)
+                .fetch()
         }
     }
 
