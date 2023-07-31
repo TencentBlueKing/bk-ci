@@ -225,7 +225,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 pipelineContextService.buildContext(
                                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                                     stageId = s.id!!, containerId = c.id!!, taskId = null,
-                                    variables = variables, model = model
+                                    variables = variables, model = model, executeCount = buildInfo.executeCount
                                 )
                             ).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
@@ -850,6 +850,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         taskId = result.taskId,
                         buildId = buildId
                     ) -> {
+                        // 将当前重试 task id 做记录
+                        pipelineTaskService.taskRetryRecordSet(
+                            projectId = buildInfo.projectId,
+                            taskId = taskId,
+                            buildId = buildId,
+                            pipelineId = buildInfo.pipelineId,
+                            containerId = vmSeqId,
+                            executeCount = buildInfo.executeCount ?: 1
+                        )
                         BuildStatus.RETRY
                     }
                     else -> { // 记录错误插件信息

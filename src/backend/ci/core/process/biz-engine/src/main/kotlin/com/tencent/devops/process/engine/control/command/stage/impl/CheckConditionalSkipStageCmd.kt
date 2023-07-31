@@ -106,7 +106,8 @@ class CheckConditionalSkipStageCmd constructor(
                 stageId = stage.stageId,
                 containerId = null,
                 taskId = null,
-                variables = variables
+                variables = variables,
+                executeCount = commandContext.executeCount
             )
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
