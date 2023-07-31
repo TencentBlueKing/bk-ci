@@ -16,7 +16,7 @@ class ResourceConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun samplePipelineBuildArtifactoryService(
+    fun pipelineBuildArtifactoryService(
         @Autowired dslContext: DSLContext,
         @Autowired fileDao: FileDao,
         @Autowired bkRepoClient: BkRepoClient
