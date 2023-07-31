@@ -61,7 +61,7 @@ class SoftwareManageService @Autowired constructor(
     @Value("\${remoteDev.appToken:}")
     val appSecret = ""
 
-    @Value("\${compileApigw.software_group_url:}")
+    @Value("\${xingyun.software_group_url:}")
     val software_group_url = ""
 
     companion object {
