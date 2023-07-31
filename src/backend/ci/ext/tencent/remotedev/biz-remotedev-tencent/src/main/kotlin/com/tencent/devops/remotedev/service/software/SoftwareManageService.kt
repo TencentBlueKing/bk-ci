@@ -62,7 +62,7 @@ class SoftwareManageService @Autowired constructor(
     val appSecret = ""
 
     @Value("\${xingyun.software_group_url:}")
-    val software_group_url = ""
+    val softwareGroupUrl = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
@@ -133,7 +133,7 @@ class SoftwareManageService @Autowired constructor(
         val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val request = Request.Builder()
-            .url(software_group_url)
+            .url(softwareGroupUrl)
             .addHeader("x-bkapi-authorization", headerStr)
             .get()
             .build()
