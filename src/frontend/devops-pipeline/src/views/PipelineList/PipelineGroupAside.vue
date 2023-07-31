@@ -253,8 +253,6 @@
                 projectViewList: true
             }
 
-            console.log(this.showClassify)
-
             this.refreshPipelineGroup()
         },
         methods: {

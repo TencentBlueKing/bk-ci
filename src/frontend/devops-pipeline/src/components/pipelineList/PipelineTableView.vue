@@ -97,7 +97,7 @@
             <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :width="tableWidthMap.latestExec" :label="$t('latestExec')" props="latestExec">
+            <bk-table-column :width="tableWidthMap.latestExec" :label="$t('latestExec')" prop="latestExec">
                 <span v-if="props.row.delete" slot-scope="props">
                     {{$t('deleteAlready')}}
                 </span>
@@ -338,7 +338,7 @@
                 creator: 200,
                 updateTime: 200,
                 lastModifyUser: '',
-                latestExec: '',
+                latestExec: 180,
                 pipelineId: 150
             }
             this.requestList()
@@ -463,6 +463,7 @@
                 }, {})
             },
             handelHeaderDragend (newWidth, oldWidth, column) {
+                console.log(column.property, 'column.property')
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             }
