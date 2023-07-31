@@ -194,7 +194,7 @@ object ProcessMessageCode {
     const val BUILD_QUEUE_FOR_CONCURRENCY = "2101105" // 排队中: 当前构建正在并发组({0})排队中
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101106" // 安装插件失败
 
-    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101107" // 暂停的流水线已开始运行
+    const val ERROR_PAUSE_PIPELINE_IS_RUNNING = "2101107" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
