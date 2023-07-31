@@ -255,7 +255,8 @@ class PipelinePauseBuildFacadeService(
                 buildId = buildId,
                 taskId = taskId,
                 newValue = newElementStr,
-                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
+                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false),
+                executeCount = taskRecord.executeCount
             ))
         }
     }
