@@ -47,7 +47,8 @@ class PipelineBuildExtServiceImpl @Autowired constructor(
             stageId = task.stageId,
             containerId = task.containerId,
             taskId = null,
-            variables = variables
+            variables = variables,
+            executeCount = task.executeCount
         )
     }
 

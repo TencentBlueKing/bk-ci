@@ -316,7 +316,8 @@ class WorkspaceService @Autowired constructor(
                 } else {
                     0
                 }
-            }
+            },
+            winUsageTimeLeft = remoteDevSettingService.userWinTimeLeft(userId)
         )
     }
 
@@ -378,7 +379,7 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        workspaceCommon.checkWorkspaceAvailability(userId, workspace)
+        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
         val detail = redisCache.getWorkspaceDetail(workspaceName)
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
@@ -483,14 +484,9 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getUnavailableWorkspace(): List<String> {
-        val now = LocalDateTime.now()
-        return workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.RUNNING, mountType = WorkspaceMountType.START
-        )?.asSequence()
-            ?.filter {
-                val usageTime = it.usageTime + Duration.between(it.lastStatusUpdateTime, now).seconds
-                remoteDevSettingService.startCloudExperienceDuration(it.creator) * 60 * 60 < usageTime
-            }?.map { it.name }?.toList() ?: emptyList()
+        return workspaceDao.fetchNotUsageTimeWinWorkspace(
+            dslContext, status = WorkspaceStatus.RUNNING
+        )?.map { it.name } ?: emptyList()
     }
 
     fun sendNotification(workspaceMap: Map<String, List<TWorkspaceRecord>>, templateCode: String) {
@@ -556,6 +552,7 @@ class WorkspaceService @Autowired constructor(
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
     }
+
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
         logger.info("get all shared workspace")
         return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
