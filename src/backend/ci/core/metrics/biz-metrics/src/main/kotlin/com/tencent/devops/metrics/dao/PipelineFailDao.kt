@@ -220,8 +220,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
                     .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions)
-//                .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
-                .orderBy(START_TIME.desc())
+                .orderBy(START_TIME.desc(), ID)
                 .offset((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize)
                 .limit(queryPipelineFailQo.pageSize)
                 .fetchInto(PipelineFailDetailDataPO::class.java)
@@ -260,20 +259,20 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))
-        if (!baseQuery.pipelineIds.isNullOrEmpty()) {
-            conditions.add(this.PIPELINE_ID.`in`(baseQuery.pipelineIds))
-        }
         val startDateTime =
             DateTimeUtil.stringToLocalDate(baseQuery.startTime!!)!!.atStartOfDay()
         val endDateTime =
             DateTimeUtil.stringToLocalDate(baseQuery.endTime!!)!!.atStartOfDay()
-        if (!baseQuery.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQuery.pipelineLabelIds))
-        }
         if (startDateTime.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
             conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
+        if (!baseQuery.pipelineIds.isNullOrEmpty()) {
+            conditions.add(this.PIPELINE_ID.`in`(baseQuery.pipelineIds))
+        }
+        if (!baseQuery.pipelineLabelIds.isNullOrEmpty()) {
+            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQuery.pipelineLabelIds))
         }
         return conditions
     }
@@ -286,18 +285,19 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(PROJECT_ID.eq(projectId))
-        if (!pipelineIds.isNullOrEmpty()) {
-            conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
-        }
-        if (!baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQueryReq.pipelineLabelIds))
-        }
+
         val startDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
         val endDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
         if (startDateTime.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
             conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
+        if (!pipelineIds.isNullOrEmpty()) {
+            conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
+        }
+        if (!baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQueryReq.pipelineLabelIds))
         }
         return conditions
     }

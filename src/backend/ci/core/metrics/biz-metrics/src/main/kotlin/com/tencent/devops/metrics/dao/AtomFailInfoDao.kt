@@ -50,7 +50,6 @@ import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
-import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -218,15 +217,6 @@ class AtomFailInfoDao {
         }
     }
 
-    fun limitAtomCodes(dslContext: DSLContext, projectIds: List<String>): List<String> {
-        with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            return dslContext.select(ATOM_CODE)
-                .from(this)
-                .where(PROJECT_ID.`in`(projectIds))
-                .fetchInto(String::class.java).distinct()
-        }
-    }
-
     fun getAtomErrorInfos(dslContext: DSLContext, projectId: String): Result<Record4<String, Int, Int, String>> {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             return dslContext.select(
@@ -237,7 +227,7 @@ class AtomFailInfoDao {
             )
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .groupBy(ATOM_CODE, ERROR_CODE, ERROR_TYPE)
+                .groupBy(ATOM_CODE, ERROR_TYPE, ERROR_CODE)
                 .fetch()
         }
     }

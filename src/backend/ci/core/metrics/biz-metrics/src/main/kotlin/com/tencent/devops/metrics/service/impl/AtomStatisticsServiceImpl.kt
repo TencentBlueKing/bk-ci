@@ -185,6 +185,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomExecuteStatisticsInfo(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
+        val headerInfo = getHeaderInfo()
         val stopWatch = StopWatch()
         stopWatch.start("getQueryAtom")
         val atomCodes = getDefaultAtomCodes(queryAtomTrendInfoDTO)
@@ -207,6 +208,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 )
             )
         stopWatch.stop()
+        logger.info("query atom executeStatisticsInfo Count: $queryAtomExecuteStatisticsCount")
         // 查询记录过多，提醒用户缩小查询范围
         if (queryAtomExecuteStatisticsCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
@@ -214,7 +216,13 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
-        logger.info("query atom executeStatisticsInfo Count: $queryAtomExecuteStatisticsCount")
+        if (queryAtomExecuteStatisticsCount == 0L) return ListPageVO(
+            count = queryAtomExecuteStatisticsCount,
+            page = queryAtomTrendInfoDTO.page,
+            pageSize = queryAtomTrendInfoDTO.pageSize,
+            headerInfo = headerInfo,
+            records = emptyList()
+        )
         stopWatch.start("queryAtomExecuteStatisticsInfo")
         val atomStatisticResult = atomStatisticsDao.queryAtomExecuteStatisticsInfo(
             dslContext,
@@ -251,7 +259,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         stopWatch.stop()
         stopWatch.start("editAtomExecutionStatisticsInfos")
         // 获取表头固定字段
-        val headerInfo = getHeaderInfo()
         val atomFailInfos = mutableMapOf<String, MutableMap<String, String>>()
         queryAtomFailStatisticsInfo.map {
             val atomCode = it[BK_ATOM_CODE].toString()

@@ -51,7 +51,6 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record5
@@ -233,19 +232,6 @@ class AtomStatisticsDao {
             ).from(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
-                .fetchOne()
-        }
-    }
-
-    fun queryMetricsLatestProjectAtomName(
-        dslContext: DSLContext,
-        projectId: String,
-        atomCode: String
-    ): Record1<String>? {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            return dslContext.select(ATOM_NAME).from(this)
-                .where(PROJECT_ID.eq(projectId).and(ATOM_CODE.eq(atomCode)))
-                .orderBy(CREATE_TIME.desc())
                 .fetchOne()
         }
     }
