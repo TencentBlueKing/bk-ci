@@ -25,13 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api("com.tencent.bk.repo:api-generic")
-    api("com.tencent.bk.repo:api-repository")
-}
+package com.tencent.devops.artifactory
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.artifactory.constant.REALM_LOCAL
+import com.tencent.devops.common.api.constant.STATIC
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
+@Configuration
+@ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_LOCAL) // 本地服务器存储时才生效
+class WebMvcConfig : WebMvcConfigurer {
+
+    private val logger = LoggerFactory.getLogger(WebMvcConfig::class.java)
+
+    @Value("\${artifactory.archiveLocalBasePath:/data/bkce/public/ci/artifactory}")
+    private lateinit var archiveLocalBasePath: String
+
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        logger.info("init local plugin storage mapping")
+        // 把自定义插件UI文件目录映射成服务器静态资源
+        val bkPluginFeDir = "$archiveLocalBasePath/$STATIC/"
+        registry.addResourceHandler("/resource/**").addResourceLocations("file:$bkPluginFeDir")
+    }
 }
