@@ -29,6 +29,8 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TRemoteDevBilling
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.impl.DSL
@@ -110,6 +112,21 @@ class RemoteDevBillingDao {
         with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
             return dslContext.select(START_TIME).from(this).where(USER.eq(userId)).and(END_TIME.isNull)
                 .fetch(START_TIME)
+        }
+    }
+
+    fun fetchBillings(
+        dslContext: DSLContext,
+        type: WorkspaceSystemType,
+        userId: String?
+    ): List<Triple<String, LocalDateTime, Int?>> {
+        val ws = TWorkspace.T_WORKSPACE
+        with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
+            return dslContext.select(this.USER, this.START_TIME, this.USAGE_TIME).from(this).leftJoin(ws)
+                .on(ws.NAME.eq(this.WORKSPACE_NAME))
+                .where(ws.SYSTEM_TYPE.eq(type.name))
+                .let { if (userId != null) it.and(this.USER.eq(userId)) else it }
+                .fetch().map { Triple(it.value1(), it.value2(), it.value3()) }
         }
     }
 

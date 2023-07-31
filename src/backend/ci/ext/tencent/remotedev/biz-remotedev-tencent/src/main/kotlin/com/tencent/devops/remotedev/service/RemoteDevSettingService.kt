@@ -30,11 +30,13 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GithubTransferService
@@ -44,6 +46,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
@@ -51,6 +55,7 @@ class RemoteDevSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevFileDao: RemoteDevFileDao,
+    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
     private val redisCacheService: RedisCacheService
@@ -83,6 +88,32 @@ class RemoteDevSettingService @Autowired constructor(
         )
     }
 
+    fun computeWinUsageTime(userId: String? = null) {
+        logger.info("computeWinUsageTime|$userId")
+        val workingSpace = remoteDevBillingDao.fetchBillings(dslContext, WorkspaceSystemType.WINDOWS_GPU, userId)
+        val winUsageTime = workingSpace.associateBy({ it.first }) { 0 }.toMutableMap()
+        if (winUsageTime.isEmpty()) return
+        val now = LocalDateTime.now()
+        workingSpace.forEach { (userId, startTime, usageTime) ->
+            val use = winUsageTime[userId] ?: return@forEach
+            winUsageTime[userId] = use + (usageTime ?: Duration.between(startTime, now).seconds.toInt())
+        }
+        val updateData = winUsageTime.map {
+            it.key to kotlin.run {
+                val userLimit = startCloudExperienceDuration(it.key) * 60 * 60
+                userLimit - it.value
+            }
+        }
+        logger.info("computeWinUsageTime ready to update $updateData")
+        remoteDevSettingDao.batchUpdateWinUsageRemainingTime(dslContext, updateData)
+    }
+
+    fun userWinTimeLeft(userId: String): Int {
+        val time = remoteDevSettingDao.fetchSingleUserWinTimeLeft(dslContext, userId)
+        logger.info("get user Win time left $time")
+        return time ?: (startCloudExperienceDuration(userId) * 60 * 60)
+    }
+
     fun updateRemoteDevSettings(userId: String, setting: RemoteDevSettings): Boolean {
         logger.info("$userId get remote dev setting")
         remoteDevSettingDao.createOrUpdateSetting(dslContext, setting, userId)
@@ -110,6 +141,7 @@ class RemoteDevSettingService @Autowired constructor(
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
+        computeWinUsageTime(data.userId)
     }
 
     fun getUserSetting(userId: String): RemoteDevUserSettings {
@@ -121,6 +153,7 @@ class RemoteDevSettingService @Autowired constructor(
         return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId).startCloudExperienceDuration
             ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
+
     fun getAllUserSetting4Op(queryUser: String?): List<RemoteDevUserSettings> {
         logger.info("Start to getAllUserSetting4Op")
         val settings = remoteDevSettingDao.fetchAllUserSettings(dslContext, queryUser)

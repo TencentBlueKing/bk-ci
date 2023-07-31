@@ -322,15 +322,14 @@ class WorkspaceCommon @Autowired constructor(
 
     fun checkWorkspaceAvailability(
         userId: String,
-        workspace: TWorkspaceRecord
+        type: String
     ) {
-        when (workspace.workspaceMountType) {
+        when (type) {
             WorkspaceMountType.START.name -> {
-                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
-                if (duration * 60 * 60 < workspace.usageTime) {
+                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+                if (timeLeft <= 0) {
                     throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
-                        params = arrayOf(workspace.name, duration.toString())
+                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
                     )
                 }
             }
