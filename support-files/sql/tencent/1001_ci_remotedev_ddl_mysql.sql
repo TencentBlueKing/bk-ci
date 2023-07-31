@@ -219,6 +219,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_IMAGES` (
     `PATH` varchar(128) NOT NULL DEFAULT '' COMMENT '路径',
     `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '镜像大小，单位G',
     `ZONE` varchar(10) NOT NULL DEFAULT '' COMMENT '区域：深圳等',
+    `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '镜像状态,0-building,1-success,2-failure',
     `CREATOR` varchar(32) NOT NULL DEFAULT '' COMMENT '创建人',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`ID`),

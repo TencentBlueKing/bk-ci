@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
+import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -72,4 +74,25 @@ interface UserSoftwareManageResource {
         @ApiParam("软件安装列表", required = true)
         softwareList: List<UserSoftware>
     ): Result<Boolean>
+
+    @ApiOperation("获取用户的安装软件记录")
+    @GET
+    @Path("/install/history")
+    fun getUserSoftwareInstalledRecord(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("project_id")
+        projectId: String,
+        @ApiParam("用户", required = false)
+        @QueryParam("user")
+        user: String?,
+        @ApiParam("云桌面", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: SoftwareInstallStatus?
+    ): Result<List<UserSoftwareInstalledRecord>>
 }

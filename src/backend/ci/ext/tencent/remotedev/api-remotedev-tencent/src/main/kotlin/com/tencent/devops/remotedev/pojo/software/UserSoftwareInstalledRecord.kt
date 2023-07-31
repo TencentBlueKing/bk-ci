@@ -25,29 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.image
+package com.tencent.devops.remotedev.pojo.software
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工作空间模板配置")
-data class ProjectImage(
-    @ApiModelProperty("ID")
-    val id: Long,
+data class UserSoftwareInstalledRecord(
     @ApiModelProperty("项目ID")
     val projectId: String,
-    @ApiModelProperty("镜像名称")
-    val imageName: String,
-    @ApiModelProperty("版本")
-    val version: String,
-    @ApiModelProperty("路径")
-    val path: String,
-    @ApiModelProperty("size")
-    val size: String,
-    @ApiModelProperty("区域")
-    val zone: String,
-    @ApiModelProperty("状态")
-    val status: ImageStatus,
-    @ApiModelProperty("创建人")
-    val creator: String
+    @ApiModelProperty("用户")
+    val user: String,
+    @ApiModelProperty("软件ID")
+    val softwareId: String,
+    @ApiModelProperty("云桌面ID")
+    val workspaceName: String,
+    @ApiModelProperty("安装状态")
+    val status: SoftwareInstallStatus,
+    @ApiModelProperty("安装时间")
+    val installTime: String
 )

@@ -25,29 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.image
+package com.tencent.devops.remotedev.pojo.software
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("工作空间模板配置")
-data class ProjectImage(
-    @ApiModelProperty("ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("镜像名称")
-    val imageName: String,
-    @ApiModelProperty("版本")
-    val version: String,
-    @ApiModelProperty("路径")
-    val path: String,
-    @ApiModelProperty("size")
-    val size: String,
-    @ApiModelProperty("区域")
-    val zone: String,
-    @ApiModelProperty("状态")
-    val status: ImageStatus,
-    @ApiModelProperty("创建人")
-    val creator: String
-)
+/**
+ * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
+ */
+enum class SoftwareInstallStatus {
+    SUCCESS,
+    FAILURE;
+}

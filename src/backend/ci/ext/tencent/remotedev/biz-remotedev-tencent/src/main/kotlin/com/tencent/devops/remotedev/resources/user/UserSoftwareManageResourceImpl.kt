@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserSoftwareManageResource
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
+import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,5 +55,16 @@ class UserSoftwareManageResourceImpl @Autowired constructor(
     override fun installSoftwareToUser(userId: String, softwareList: List<UserSoftware>): Result<Boolean> {
         logger.info("UserSoftwareManageResourceImpl|installSoftwareToUser|userId|$userId|softwareList|$softwareList")
         return Result(softwareManageService.batchInstallSoftwareToUser(softwareList))
+    }
+
+    override fun getUserSoftwareInstalledRecord(
+        userId: String,
+        projectId: String,
+        user: String?,
+        workspaceName: String?,
+        status: SoftwareInstallStatus?
+    ): Result<List<UserSoftwareInstalledRecord>> {
+        logger.info("installSoftwareToUser|userId|$userId|projectId|$projectId|user|$user|workspaceName|$workspaceName|status|$status")
+        return Result(softwareManageService.getUserSoftwareInstalledRecord(projectId, user, workspaceName, status))
     }
 }

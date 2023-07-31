@@ -29,7 +29,9 @@ package com.tencent.devops.remotedev.service.software
 
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
+import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,5 +78,33 @@ class SoftwareManageService @Autowired constructor(
         logger.info("SoftwareManageService|installSoftwareToUser|softwareList|$softwareList")
         softwareManageDao.batchInstallSoftwareToUser(dslContext, softwareList)
         return true
+    }
+    fun getUserSoftwareInstalledRecord(
+        projectId: String,
+        user: String?,
+        workspaceName: String?,
+        status: SoftwareInstallStatus?
+    ): List<UserSoftwareInstalledRecord> {
+        logger.info("SoftwareManageService|getUserSoftwareInstalledRecord|projectId|$projectId")
+        val result = mutableListOf<UserSoftwareInstalledRecord>()
+        softwareManageDao.queryUserSoftwareInstalledRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            user = user,
+            workspaceName = workspaceName,
+            status = status
+        ).forEach {
+            result.add(
+                UserSoftwareInstalledRecord(
+                    projectId = it.projectId,
+                    user = it.creator,
+                    softwareId = it.softwareId,
+                    workspaceName = it.workspaceName,
+                    status = SoftwareInstallStatus.values()[it.status],
+                    installTime = it.createTime.toString()
+                )
+            )
+        }
+        return result
     }
 }
