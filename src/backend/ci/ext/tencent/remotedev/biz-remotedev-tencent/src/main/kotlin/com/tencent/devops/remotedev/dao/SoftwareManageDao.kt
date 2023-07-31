@@ -79,12 +79,4 @@ class SoftwareManageDao {
             return dsl.fetch()
         }
     }
-
-    fun deleteTest(
-        dslContext: DSLContext
-    ) {
-        with(TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES) {
-            dslContext.delete(this).execute()
-        }
-    }
 }
