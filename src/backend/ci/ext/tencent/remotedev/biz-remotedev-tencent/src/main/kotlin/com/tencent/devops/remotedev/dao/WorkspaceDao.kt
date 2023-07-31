@@ -433,6 +433,8 @@ class WorkspaceDao {
                 .greaterOrEqual(timeOutDays))
 
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+            // TODO
+            // condition.add(OWNER_TYPE.eq(PERSONAL))
 
             if (workspaceMountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))

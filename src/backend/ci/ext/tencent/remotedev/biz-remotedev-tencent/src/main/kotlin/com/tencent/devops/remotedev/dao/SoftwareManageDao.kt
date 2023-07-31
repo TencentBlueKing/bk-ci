@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.Condition
 import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 
@@ -63,20 +64,22 @@ class SoftwareManageDao {
         status: SoftwareInstallStatus?
     ): Result<TUserInstalledRecordsRecord> {
         with(TUserInstalledRecords.T_USER_INSTALLED_RECORDS) {
-            val dsl = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+            val condition = mutableListOf<Condition>()
+            condition.add(PROJECT_ID.eq(projectId))
 
-            if (!user.isNullOrBlank()) {
-                dsl.and(CREATOR.eq(user))
+            user?.let {
+                condition.add(CREATOR.eq(user))
             }
-            if (!workspaceName.isNullOrBlank()) {
-                dsl.and(WORKSPACE_NAME.eq(workspaceName))
+            workspaceName?.let {
+                condition.add(WORKSPACE_NAME.eq(workspaceName))
             }
-            if (status != null) {
-                dsl.and(STATUS.eq(status.ordinal))
+            status?.let {
+                condition.add(STATUS.eq(status.ordinal))
             }
 
-            return dsl.fetch()
+            return dslContext.selectFrom(this)
+                .where(condition)
+                .fetch()
         }
     }
 }
