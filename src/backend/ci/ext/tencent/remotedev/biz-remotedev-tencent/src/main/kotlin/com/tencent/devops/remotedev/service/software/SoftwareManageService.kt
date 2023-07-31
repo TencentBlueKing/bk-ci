@@ -72,8 +72,9 @@ class SoftwareManageService @Autowired constructor(
     }
 
     // 安装软件至用户
-    fun installSoftwareToUser(softwareList: List<UserSoftware>): Boolean {
+    fun batchInstallSoftwareToUser(softwareList: List<UserSoftware>): Boolean {
         logger.info("SoftwareManageService|installSoftwareToUser|softwareList|$softwareList")
-
+        softwareManageDao.batchInstallSoftwareToUser(dslContext, softwareList)
+        return true
     }
 }

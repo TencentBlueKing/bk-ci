@@ -37,5 +37,5 @@ data class UserSoftware(
     @ApiModelProperty("用户")
     val user: String,
     @ApiModelProperty("软件ID")
-    val softwareId: Int
+    val softwareId: String
 )
