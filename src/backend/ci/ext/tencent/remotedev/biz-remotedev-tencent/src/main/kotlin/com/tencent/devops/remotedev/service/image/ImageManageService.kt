@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.image
 
 import com.tencent.devops.remotedev.dao.ImageManageDao
+import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,7 +62,8 @@ class ImageManageService @Autowired constructor(
                     path = it.path,
                     size = it.size,
                     zone = it.zone,
-                    creator = it.creator
+                    creator = it.creator,
+                    status = ImageStatus.values()[it.status]
                 )
             )
         }
