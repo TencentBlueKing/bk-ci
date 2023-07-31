@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
@@ -536,6 +537,43 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 ids = listOf(id),
                 projectId = projectId
             ).firstOrNull()
+        )
+    }
+
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        permission: Permission,
+        excludePipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
+        checkParam(userId, projectId)
+        val bkAuthPermission = when (permission) {
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
+        }
+        val result = pipelineListFacadeService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            authPermission = bkAuthPermission,
+            excludePipelineId = excludePipelineId,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(
+            data = Page(
+                page = page ?: 0,
+                pageSize = pageSize ?: -1,
+                count = result.count,
+                records = result.records
+            )
         )
     }
 

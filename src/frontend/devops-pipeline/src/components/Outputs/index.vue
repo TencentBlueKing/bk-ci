@@ -1,62 +1,64 @@
 <template>
     <div class="pipeline-exec-outputs">
-
+        
         <aside :class="['pipeline-exec-outputs-aside', {
             'pipeline-exec-outputs-aside-collapse': asideCollpased
         }]">
-            <div class="pipeline-exec-outputs-filter-input">
-                <bk-input
-                    clearable
-                    right-icon="bk-icon icon-search"
-                    :placeholder="$t('outputsFilterPlaceholder')"
-                    v-model="keyWord"
-                />
-            </div>
-            <ul class="pipeline-exec-output-classify-tab">
-                <li
-                    v-for="classify in outputClassifyList"
-                    :key="classify.key"
-                    :class="{
-                        active: currentTab === classify.key
-                    }"
-                    @click="switchTab(classify.key)"
-                >
-                    {{ classify.label }}
-                </li>
-            </ul>
-            <!-- <div class="pipeline-exec-outputs-filter">
-                <i class="devops-icon icon-filter"></i>
-                {{ $t('条件查询') }}
-                <bk-tag class="output-filter-condition-count">2</bk-tag>
-            </div> -->
-            <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
-                <li
-                    v-for="output in visibleOutputs"
-                    :key="output.id"
-                    :class="{
-                        active: output.id === activeOutput.id
-                    }"
-                    @click="setActiveOutput(output)"
-                >
-                    <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                    <span :title="output.name">{{ output.name }}</span>
-                    <output-qrcode
-                        v-if="output.isApp"
-                        class="output-hover-icon"
-                        :output="output"
+            <template v-if="!asideCollpased">
+                <div class="pipeline-exec-outputs-filter-input">
+                    <bk-input
+                        clearable
+                        right-icon="bk-icon icon-search"
+                        :placeholder="$t('outputsFilterPlaceholder')"
+                        v-model="keyWord"
                     />
-                    <i
-                        v-else-if="output.downloadable"
-                        class="output-hover-icon devops-icon icon-download"
-                        @click.stop="downloadArtifact(output)"
-                    />
-                </li>
-            </ul>
-
-            <div v-else class="no-outputs-placeholder">
-                <logo name="empty" size="180" />
-                <span>{{ $t("empty") }}</span>
-            </div>
+                </div>
+                <ul class="pipeline-exec-output-classify-tab">
+                    <li
+                        v-for="classify in outputClassifyList"
+                        :key="classify.key"
+                        :class="{
+                            active: currentTab === classify.key
+                        }"
+                        @click="switchTab(classify.key)"
+                    >
+                        {{ classify.label }}
+                    </li>
+                </ul>
+                <!-- <div class="pipeline-exec-outputs-filter">
+                    <i class="devops-icon icon-filter"></i>
+                    {{ $t('条件查询') }}
+                    <bk-tag class="output-filter-condition-count">2</bk-tag>
+                </div> -->
+                <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
+                    <li
+                        v-for="output in visibleOutputs"
+                        :key="output.id"
+                        :class="{
+                            active: output.id === activeOutput.id
+                        }"
+                        @click="setActiveOutput(output)"
+                    >
+                        <i :class="['devops-icon', `icon-${output.icon}`]"></i>
+                        <span :title="output.name">{{ output.name }}</span>
+                        <output-qrcode
+                            v-if="output.isApp"
+                            class="output-hover-icon"
+                            :output="output"
+                        />
+                        <i
+                            v-else-if="output.downloadable"
+                            class="output-hover-icon devops-icon icon-download"
+                            @click.stop="downloadArtifact(output)"
+                        />
+                    </li>
+                </ul>
+    
+                <div v-else class="no-outputs-placeholder">
+                    <logo name="empty" size="180" />
+                    <span>{{ $t("empty") }}</span>
+                </div>
+            </template>
             <div @click="toggleCollapseAside" class="collapse-handler">
                 <i class="aside-collapse-icon devops-icon icon-angle-double-left"></i>
             </div>
@@ -136,8 +138,8 @@
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
-    import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import OutputQrcode from '@/components/Outputs/OutputQrcode'
+    import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'

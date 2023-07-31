@@ -58,6 +58,7 @@
                     this.$router.push({
                         name: 'pipelinesDetail',
                         params: {
+                            type: 'executeDetail',
                             ...this.$route.params,
                             buildNo: response.data.id,
                             executeCount: undefined

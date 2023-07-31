@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
@@ -57,7 +56,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -93,6 +91,8 @@ abstract class AbMigratePolicyService(
 
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
+
+        const val RBAC_QC_GROUP_NAME = "质管人员"
     }
 
     fun migrateGroupPolicy(
@@ -141,6 +141,23 @@ abstract class AbMigratePolicyService(
         } finally {
             watcher.stop()
             logger.info("migrate group policy|$projectCode|$watcher")
+        }
+    }
+
+    fun grantGroupAdditionalAuthorization(projectCode: String) {
+        authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).filter { it.groupCode == CUSTOM_GROUP_CODE }.forEach { groupInfo ->
+            val authorizationScopeList = buildAdditionalAuthorizationScope(
+                projectCode = groupInfo.resourceCode,
+                projectName = groupInfo.resourceName
+            )
+            authorizationScopeList.forEach { authorizationScope ->
+                v2ManagerService.grantRoleGroupV2(groupInfo.relationId.toInt(), authorizationScope)
+            }
         }
     }
 
@@ -224,17 +241,17 @@ abstract class AbMigratePolicyService(
                 )
                 Pair(false, rbacGroupId)
             }
-
-            // 用户组授权
-            rbacAuthorizationScopeList.forEach { authorizationScope ->
-                v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
-            }
-            // 迁移的用户组默认都添加project_visit权限
-            val projectVisitScope = buildProjectVisitAuthorizationScope(
+            // 迁移组默认需要添加rbac新增的权限控制
+            val additionalScopes = buildAdditionalAuthorizationScope(
                 projectCode = projectCode,
                 projectName = projectName
             )
-            v2ManagerService.grantRoleGroupV2(groupId, projectVisitScope)
+            val finalAuthorizationScopeList = rbacAuthorizationScopeList.toMutableList()
+                .apply { addAll(additionalScopes) }
+            // 用户组授权
+            finalAuthorizationScopeList.forEach { authorizationScope ->
+                v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
+            }
             // 往用户组添加成员
             batchAddGroupMember(groupId = groupId, defaultGroup = defaultGroup, members = result.members)
         }
@@ -380,6 +397,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         actions: List<String>
     ): Int? {
+        logger.info("match min resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有资源actions权限
         val hasPermission = permissionService.batchValidateUserResourcePermission(
             userId = userId,
@@ -418,6 +436,7 @@ abstract class AbMigratePolicyService(
         actions: List<String>,
         gradeManagerId: Int
     ): Int? {
+        logger.info("match or create project resource group|$userId|$resourceType|$actions")
         // 判断用户是否已有项目任意资源actions权限
         val hasPermission = actions.all { action ->
             permissionService.validateUserResourcePermission(
@@ -582,28 +601,30 @@ abstract class AbMigratePolicyService(
     }
 
     /**
-     * 迁移的组都需要添加project_visit权限
+     * 迁移的组都需要添加rbac新增的权限
      */
-    private fun buildProjectVisitAuthorizationScope(
+    private fun buildAdditionalAuthorizationScope(
         projectCode: String,
         projectName: String
-    ): AuthorizationScopes {
-        val projectVisit = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT)
-        val projectPath = ManagerPath().apply {
-            system = iamConfiguration.systemId
-            id = projectCode
-            name = projectName
-            type = AuthResourceType.PROJECT.value
+    ): List<AuthorizationScopes> {
+        val additionalAction = RbacAuthUtils.getAdditionalAction()
+        return additionalAction.map { (resourceType, actionList) ->
+            val projectPath = ManagerPath().apply {
+                system = iamConfiguration.systemId
+                id = projectCode
+                name = projectName
+                type = AuthResourceType.PROJECT.value
+            }
+            val resources = ManagerResources.builder()
+                .system(iamConfiguration.systemId)
+                .type(resourceType)
+                .paths(listOf(listOf(projectPath)))
+                .build()
+            AuthorizationScopes.builder()
+                .system(iamConfiguration.systemId)
+                .actions(actionList)
+                .resources(listOf(resources))
+                .build()
         }
-        val projectManagerResource = ManagerResources.builder()
-            .system(iamConfiguration.systemId)
-            .type(AuthResourceType.PROJECT.value)
-            .paths(listOf(listOf(projectPath)))
-            .build()
-        return AuthorizationScopes.builder()
-            .system(iamConfiguration.systemId)
-            .actions(listOf(Action(projectVisit)))
-            .resources(listOf(projectManagerResource))
-            .build()
     }
 }

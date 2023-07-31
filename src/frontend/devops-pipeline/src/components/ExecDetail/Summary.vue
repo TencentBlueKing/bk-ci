@@ -1,6 +1,6 @@
 <template>
     <header class="exec-detail-summary">
-        <div class="exec-detail-summary-info">
+        <div v-if="visible" class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
@@ -32,7 +32,7 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li v-for="material in visibleMaterial" :key="material.newCommitId">
+                        <li v-for="(material, index) in visibleMaterial" :key="index">
                             <material-item :material="material" />
                         </li>
                     </ul>
@@ -76,7 +76,18 @@
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
-                    <span class="exec-remark" v-else>{{ remark || "--" }}</span>
+                    <span
+                        v-else
+                        v-bk-tooltips="{
+                            content: remark,
+                            disabled: !remark,
+                            allowHTML: false,
+                            delay: [300, 0]
+                        }"
+                        class="exec-remark"
+                    >
+                        {{ remark || "--" }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -92,7 +103,7 @@
             MaterialItem
         },
         props: {
-            showInfoRow: {
+            visible: {
                 type: Boolean,
                 default: true
             },
@@ -188,7 +199,8 @@
 
 .exec-detail-summary {
   background: white;
-  padding: 0 24px 18px 24px;
+  position: relative;
+  padding: 0 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   &-info {
     display: grid;
@@ -196,6 +208,7 @@
     grid-template-columns: 8fr 8fr 3fr minmax(168px, 4fr);
     font-size: 12px;
     grid-gap: 100px;
+    padding-top: 18px;
 
     > div {
       display: flex;
@@ -221,7 +234,7 @@
           padding: 0 8px;
           .all-exec-material-list {
             position: absolute;
-            z-index: 9;
+            z-index: 11;
             width: 100%;
             border: 1px solid #dcdee5;
             border-radius: 2px;
@@ -334,11 +347,8 @@
       .exec-remark {
         width: 100%;
         align-items: center;
-        overflow: hidden;
-        display: -webkit-box;
-        text-overflow: ellipsis;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        display: inline-block;
+        @include ellipsis();
 
         .bk-form-textarea,
         .bk-textarea-wrapper {
