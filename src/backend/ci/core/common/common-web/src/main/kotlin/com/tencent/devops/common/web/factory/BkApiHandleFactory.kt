@@ -24,47 +24,37 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.common.web.annotation.BuildApiPermission
-import com.tencent.devops.common.web.factory.BuildApiHandleFactory
-import org.aspectj.lang.JoinPoint
-import org.aspectj.lang.annotation.Aspect
-import org.aspectj.lang.annotation.Before
-import org.aspectj.lang.annotation.Pointcut
-import org.aspectj.lang.reflect.MethodSignature
-import org.slf4j.LoggerFactory
+package com.tencent.devops.common.web.factory
 
-@Aspect
-class BuildApiAspect {
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.common.web.service.BkApiHandleService
+import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
+import java.util.concurrent.ConcurrentHashMap
 
-    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
-    fun pointCut() = Unit
+object BkApiHandleFactory {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildApiAspect::class.java)
-    }
+    private val bkApiHandleMap = ConcurrentHashMap<String, BkApiHandleService>()
 
-    /**
-     * 前置增强：目标方法执行之前执行
-     *
-     * @param jp
-     */
-    @Before("pointCut()")
-    fun doBefore(jp: JoinPoint) {
-        val method = (jp.signature as MethodSignature).method
-        val methodName: String = method.name
-        val types = method.getAnnotation(BuildApiPermission::class.java)?.types?.toList()
-        logger.info("[doBefore] the method 【$methodName】 types$types")
-        // 参数value
-        val parameterValue = jp.args
-        // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
-        types?.forEach { type ->
-            BuildApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
-                parameterNames,
-                parameterValue
-            )
+    fun createBuildApiHandleService(
+        type: BkApiHandleType
+    ): BkApiHandleService {
+        var bkApiHandleService = bkApiHandleMap[type.name]
+        when (type) {
+            BkApiHandleType.BUILD_API_AUTH_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleBuildAuthServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
+            BkApiHandleType.PROJECT_API_ACCESS_LIMIT -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleProjectAccessServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
         }
+        return bkApiHandleService
     }
 }

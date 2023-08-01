@@ -178,7 +178,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 ShardingRoutingRuleBroadCastEvent(
                     routingName = key,
                     routingRule = shardingRoutingRule.routingRule,
-                    actionType = CrudEnum.DELETE
+                    actionType = CrudEnum.UPDATE
                 )
             )
         } finally {

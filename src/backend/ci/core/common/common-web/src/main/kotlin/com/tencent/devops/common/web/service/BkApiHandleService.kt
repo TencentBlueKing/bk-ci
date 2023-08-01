@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.web.service
 
-interface BuildApiHandleService {
+interface BkApiHandleService {
 
     /**
      * 处理build接口切面逻辑

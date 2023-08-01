@@ -25,29 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.factory
+package com.tencent.devops.common.web
 
-import com.tencent.devops.common.web.constant.BuildApiHandleType
-import com.tencent.devops.common.web.service.BuildApiHandleService
-import com.tencent.devops.common.web.service.impl.BuildApiHandleAuthServiceImpl
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.web.aop.BkApiAspect
+import org.springframework.beans.factory.annotation.Configurable
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.core.Ordered
 
-object BuildApiHandleFactory {
+@Configurable
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkApiAutoConfiguration {
 
-    private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
-
-    fun createBuildApiHandleService(
-        type: BuildApiHandleType
-    ): BuildApiHandleService {
-        var buildApiHandleMapService = buildApiHandleMap[type.name]
-        when (type) {
-            BuildApiHandleType.AUTH_CHECK -> {
-                if (buildApiHandleMapService == null) {
-                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl()
-                    buildApiHandleMap[type.name] = buildApiHandleMapService
-                }
-            }
-        }
-        return buildApiHandleMapService
-    }
+    @Bean
+    fun buildApiAspect() = BkApiAspect()
 }

@@ -27,8 +27,9 @@
 
 package com.tencent.devops.common.db.config
 
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.listener.BkShardingRoutingRuleListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.service.utils.CommonUtils
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -36,16 +37,16 @@ import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import java.text.MessageFormat
 
 @Configuration
-@ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@AutoConfigureAfter(BkShardingRoutingRuleListener::class)
 class BkShardingMQConfiguration {
 
     @Bean
@@ -59,8 +60,8 @@ class BkShardingMQConfiguration {
      * @return 动态MQ队列名称
      */
     private fun getDynamicMqQueue(queueTemplate: String): String {
-        // 用uuid字符串替换占位符
-        return MessageFormat(queueTemplate).format(arrayOf(UUIDUtil.generate()))
+        // 用服务器IP替换占位符
+        return MessageFormat(queueTemplate).format(arrayOf(CommonUtils.getInnerIP()))
     }
 
     @Bean
@@ -77,8 +78,5 @@ class BkShardingMQConfiguration {
     fun shardingRoutingRuleQueueBind(
         @Autowired shardingRoutingRuleQueue: Queue,
         @Autowired shardingRoutingRuleExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(shardingRoutingRuleQueue)
-        .to(shardingRoutingRuleExchange)
-
-
+    ): Binding = BindingBuilder.bind(shardingRoutingRuleQueue).to(shardingRoutingRuleExchange)
 }
