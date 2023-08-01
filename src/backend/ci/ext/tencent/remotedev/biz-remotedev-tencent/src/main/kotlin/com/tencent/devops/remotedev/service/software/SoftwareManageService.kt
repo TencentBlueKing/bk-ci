@@ -174,16 +174,19 @@ class SoftwareManageService @Autowired constructor(
     fun installSoftwareFromXingyun(
         userId: String,
         ip: String
-    ): InstallSoftwareRes {
+    ): InstallSoftwareRes? {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
         val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
+        if (userSoftwareInfoList.isNullOrEmpty()) {
+            return null
+        }
         val softwareInfoList = mutableListOf<SoftwareInfo>()
-        userSoftwareInfoList?.forEach {
+        userSoftwareInfoList.forEach {
             softwareInfoList.add(
                 SoftwareInfo(
-                name = it["NAME"] as String,
-                version = it["VERSION"] as String
-            ))
+                    name = it["NAME"] as String,
+                    version = it["VERSION"] as String
+                ))
         }
         val softwareCreate = SoftwareCreate(
             ip = ip,

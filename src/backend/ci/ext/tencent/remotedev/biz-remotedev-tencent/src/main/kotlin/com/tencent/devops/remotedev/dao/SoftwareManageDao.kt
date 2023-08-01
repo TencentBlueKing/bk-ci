@@ -68,7 +68,7 @@ class SoftwareManageDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(t1.CREATOR.eq(user))
         return dslContext.select(t2.NAME, t2.VERSION)
-            .from(t1).leftJoin(t2).on(t1.SOFTWARE_ID.eq(t2.ID.toString()))
+            .from(t1).leftJoin(t2).on(t1.SOFTWARE_ID.eq(t2.ID))
             .where(conditions)
             .fetch()
     }
