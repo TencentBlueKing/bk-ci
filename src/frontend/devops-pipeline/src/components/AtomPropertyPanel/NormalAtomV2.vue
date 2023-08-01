@@ -24,6 +24,32 @@
                 </div>
             </accordion>
         </template>
+        <form-field v-if="Object.keys(customTriggerControlModel).length">
+            <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
+                <header class="var-header" style="height: 16px;" slot="header">
+                    <span>
+                        {{ $t('editPage.customTriggerControl') }}
+                        <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('editPage.customTriggerControlTips')"></i>
+                        <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('editPage.customTriggerLinkDesc') }}</a>
+                    </span>
+                    <input class="accordion-checkbox" :disabled="disabled" :checked="enableThirdFilter" type="checkbox" @click.stop @change="toggleEnableThirdFilter" />
+                </header>
+                <div slot="content" class="bk-form bk-form-vertical" v-if="enableThirdFilter">
+                    <template v-for="(obj, key) in customTriggerControlModel">
+                        <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                            <component
+                                :is="obj.component"
+                                :name="key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                                :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
+                                :value="element[key]"
+                                v-bind="obj">
+                            </component>
+                        </form-field>
+                    </template>
+                </div>
+            </accordion>
+        </form-field>
         <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
     </section>
     <section v-else>
@@ -61,6 +87,13 @@
             AtomOutput
         },
         mixins: [atomMixin, validMixins],
+        data () {
+            return {
+                customTriggerControlModel: {},
+                enableThirdFilter: false,
+                customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
+            }
+        },
         computed: {
             appIdProps () {
                 let appIdProps
@@ -151,6 +184,17 @@
                 }
             }
         },
+        created () {
+            this.enableThirdFilter = this.element.enableThirdFilter || false
+            this.customTriggerControlModel = {}
+            const { thirdUrl, thirdSecretToken } = this.atomPropsModel && this.atomPropsModel.input
+            if (thirdUrl && thirdSecretToken) {
+                this.customTriggerControlModel.thirdUrl = thirdUrl
+                this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
+                this.atomPropsModel.input.thirdUrl.hidden = true
+                this.atomPropsModel.input.thirdSecretToken.hidden = true
+            }
+        },
         updated () {
             if (this.appIdPropsKey && this.atomValue[this.appIdPropsName] !== this.appId) {
                 this.handleUpdateAtomInput(this.appIdPropsName, this.appId)
@@ -159,6 +203,10 @@
         methods: {
             getAtomKeyModal (key) {
                 return this.inputProps[key] || null
+            },
+            toggleEnableThirdFilter () {
+                this.enableThirdFilter = !this.enableThirdFilter
+                this.handleUpdateElement('enableThirdFilter', this.enableThirdFilter)
             }
         }
     }
