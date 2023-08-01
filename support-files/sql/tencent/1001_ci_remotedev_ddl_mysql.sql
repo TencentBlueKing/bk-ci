@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`PRECI_AGENT_ID` varchar(32) NULL COMMENT 'preci go-agent id',
 	`WORKSPACE_MOUNT_TYPE` varchar(32) default 'DEVCLOUD' not null comment '挂载平台（DEVCLOUD、BCS、START）',
 	`SYSTEM_TYPE` varchar(32) default 'LINUX' not null comment '系统类型（LINUX、WINDOWS-GPU）',
+	`OWNER_TYPE` varchar(32) default 'PERSONAL' not null comment '工作空间所属（PERSONAL、PROJECT）',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -127,6 +128,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
     `SHARED_USER` varchar(64) NOT NULL DEFAULT '' COMMENT '被共享的用户',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+	`ASSIGN_TYPE` varchar(32) NOT NULL DEFAULT 'VIEWER' COMMENT '分享人所属类型（OWNER、VIEWER）',
     PRIMARY KEY (`ID`),
     KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
