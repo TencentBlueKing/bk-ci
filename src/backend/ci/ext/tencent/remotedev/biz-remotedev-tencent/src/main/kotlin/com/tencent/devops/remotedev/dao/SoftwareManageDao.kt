@@ -11,6 +11,7 @@ import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.Condition
+import org.jooq.Record
 import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -55,6 +56,21 @@ class SoftwareManageDao {
                     .set(SOFTWARE_ID, MySQLDSL.values(SOFTWARE_ID))
             }
         }).execute()
+    }
+
+    // 获取用户安装的软件列表
+    fun getUserInstalledSoftwareList(
+        dslContext: DSLContext,
+        user: String
+    ): Result<out Record>? {
+        val t1 = TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES.`as`("t1")
+        val t2 = TProjectSoftwares.T_PROJECT_SOFTWARES.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.CREATOR.eq(user))
+        return dslContext.select(t2.NAME, t2.VERSION)
+            .from(t1).leftJoin(t2).on(t1.SOFTWARE_ID.eq(t2.ID.toString()))
+            .where(conditions)
+            .fetch()
     }
 
     // 导入软件到项目中

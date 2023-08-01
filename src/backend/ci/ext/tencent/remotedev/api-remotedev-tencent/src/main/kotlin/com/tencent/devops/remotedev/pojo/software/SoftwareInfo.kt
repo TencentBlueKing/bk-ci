@@ -30,26 +30,10 @@ package com.tencent.devops.remotedev.pojo.software
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("项目下软件信息")
-data class ProjectSoftware(
-    @ApiModelProperty("ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
+@ApiModel("安装软件信息")
+data class SoftwareInfo(
     @ApiModelProperty("软件名称")
     val name: String,
-    @ApiModelProperty("软件logo")
-    val logo: String,
     @ApiModelProperty("版本")
-    val version: String,
-    @ApiModelProperty("来源")
-    val source: String,
-    @ApiModelProperty("状态")
-    val status: Int,
-    @ApiModelProperty("分类")
-    val classification: String,
-    @ApiModelProperty("安装方式")
-    val installMethod: String,
-    @ApiModelProperty("创建人")
-    val creator: String
+    val version: String
 )

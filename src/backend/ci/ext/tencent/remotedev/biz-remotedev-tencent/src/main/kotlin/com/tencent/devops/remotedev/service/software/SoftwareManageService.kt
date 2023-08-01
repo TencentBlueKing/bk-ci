@@ -35,9 +35,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
-import com.tencent.devops.remotedev.pojo.software.CreateSoftwareRes
+import com.tencent.devops.remotedev.pojo.software.InstallSoftwareRes
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
+import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
@@ -171,8 +172,23 @@ class SoftwareManageService @Autowired constructor(
 
     // 调用行云接口安装指定云桌面的软件
     fun installSoftwareFromXingyun(
-        softwareCreate: SoftwareCreate
-    ): CreateSoftwareRes {
+        userId: String,
+        ip: String
+    ): InstallSoftwareRes {
+        // 先获取userId安装的软件列表，封装成SoftwareCreate
+        val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
+        val softwareInfoList = mutableListOf<SoftwareInfo>()
+        userSoftwareInfoList?.forEach {
+            softwareInfoList.add(
+                SoftwareInfo(
+                name = it["NAME"] as String,
+                version = it["VERSION"] as String
+            ))
+        }
+        val softwareCreate = SoftwareCreate(
+            ip = ip,
+            softwareInfo = softwareInfoList
+        )
         val body = JsonUtil.toJson(softwareCreate, false)
         val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
@@ -190,7 +206,7 @@ class SoftwareManageService @Autowired constructor(
                     )
                 }
                 val responseContent = response.body!!.string()
-                val createSoftwareRes: CreateSoftwareRes = jacksonObjectMapper().readValue(responseContent)
+                val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
                 logger.info("getWatermark|response code|${response.code}|createSoftwareRes|$createSoftwareRes")
                 return createSoftwareRes
             }

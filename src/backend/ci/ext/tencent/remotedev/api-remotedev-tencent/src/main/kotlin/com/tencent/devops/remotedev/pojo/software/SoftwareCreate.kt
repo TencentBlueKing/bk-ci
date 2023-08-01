@@ -8,5 +8,5 @@ data class SoftwareCreate(
     @JsonProperty("ip")
     val ip: String,
     @JsonProperty("software_information")
-    val softwareInfor: List<ProjectSoftware>
+    val softwareInfo: List<SoftwareInfo>
 )
