@@ -72,7 +72,6 @@ interface UserSoftwareManageResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("导入软件信息", required = true)
-        @QueryParam("software")
         software: ProjectSoftware
     ): Result<Boolean>
 
