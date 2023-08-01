@@ -64,7 +64,7 @@ class RtxServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
-        message.sendTo(streamBridge, QUEUE_NOTIFY_RTX)
+        message.sendTo(streamBridge)
     }
 
     /**
@@ -141,7 +141,7 @@ class RtxServiceImpl @Autowired constructor(
         if (delayTime > 0) {
             rtxNotifyMessageWithOperation.delayMills = delayTime
         }
-        rtxNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_RTX)
+        rtxNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateRtxNotifyPost(rtxNotifyMessage: RtxNotifyMessage): List<RtxNotifyPost> {

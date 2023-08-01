@@ -65,7 +65,7 @@ class SmsServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
-        message.sendTo(streamBridge, QUEUE_NOTIFY_SMS)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -156,7 +156,7 @@ class SmsServiceImpl @Autowired constructor(
         if (delayTime > 0) {
             smsNotifyMessageWithOperation.delayMills = delayTime
         }
-        smsNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_SMS)
+        smsNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateSmsNotifyPost(smsNotifyMessage: SmsNotifyMessage): List<SmsNotifyPost> {

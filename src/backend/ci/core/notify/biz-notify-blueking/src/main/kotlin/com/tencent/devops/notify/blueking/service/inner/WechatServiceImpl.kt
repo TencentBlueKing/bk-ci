@@ -63,7 +63,7 @@ class WechatServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
-        message.sendTo(streamBridge, QUEUE_NOTIFY_WECHAT)
+        message.sendTo(streamBridge)
     }
 
     /**
@@ -145,7 +145,7 @@ class WechatServiceImpl @Autowired constructor(
         if (delayTime > 0) {
             wechatNotifyMessageWithOperation.delayMills = delayTime
         }
-        wechatNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_WECHAT)
+        wechatNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {

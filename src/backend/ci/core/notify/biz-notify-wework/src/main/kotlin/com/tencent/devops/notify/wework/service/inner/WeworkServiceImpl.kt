@@ -35,7 +35,6 @@ import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
@@ -83,7 +82,7 @@ class WeworkServiceImpl(
     }
 
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
-        message.sendTo(streamBridge, QUEUE_NOTIFY_WEWORK)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {

@@ -35,10 +35,9 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
-import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
-import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.EMAIL_URL
 import com.tencent.devops.notify.dao.EmailNotifyDao
@@ -63,7 +62,7 @@ class EmailServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
-        message.sendTo(streamBridge, QUEUE_NOTIFY_EMAIL)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
@@ -80,11 +79,13 @@ class EmailServiceImpl @Autowired constructor(
             EMAIL_URL, emailNotifyPost, tofConfs!!)
         if (result.Ret == 0) {
             // 成功
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(true, emailNotifyMessageWithOperation.source, id,
+            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
+                true, emailNotifyMessageWithOperation.source, id,
                 retryCount, null, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
                 emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
                 emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], emailNotifyPost.fromSysId)
+                tofConfs["sys-id"], emailNotifyPost.fromSysId
+            )
         } else {
             // 写入失败记录
             emailNotifyDao.insertOrUpdateEmailNotifyRecord(
@@ -148,7 +149,7 @@ class EmailServiceImpl @Autowired constructor(
         if (delayTime > 0) {
             emailNotifyMessageWithOperation.delayMills = delayTime
         }
-        emailNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_EMAIL)
+        emailNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
@@ -263,7 +264,8 @@ class EmailServiceImpl @Autowired constructor(
             addAllBccs(bcc)
         }
 
-        return NotificationResponse(id = record.id, success = record.success,
+        return NotificationResponse(
+            id = record.id, success = record.success,
             createdTime = if (record.createdTime == null) {
                 null
             } else {
@@ -274,6 +276,7 @@ class EmailServiceImpl @Autowired constructor(
             } else {
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
             },
-            contentMD5 = record.contentMd5, notificationMessage = message)
+            contentMD5 = record.contentMd5, notificationMessage = message
+        )
     }
 }
