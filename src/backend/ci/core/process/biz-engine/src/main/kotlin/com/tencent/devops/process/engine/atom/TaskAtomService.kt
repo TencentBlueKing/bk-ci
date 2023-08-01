@@ -185,6 +185,7 @@ class TaskAtomService @Autowired(required = false) constructor(
      * 插件任务[task]结束时做的业务处理，启动时间[startTime]毫秒，
      */
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
+        logger.info("TaskAtomService taskEnd")
         try {
             // 更新状态
             pipelineTaskService.updateTaskStatus(
@@ -256,7 +257,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 task.endTime?.let {
                     monitorDataMap[KEY_END_TIME] = it.timestampmilli()
                 }
-                logger.debug("TaskAtomService measureService:$measureService")
+                logger.info("TaskAtomService measureService:$measureService")
                 measureService?.postTaskData(
                     task = task,
                     startTime = task.startTime?.timestampmilli() ?: startTime,

@@ -954,6 +954,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     taskId = result.taskId
                 )!!
             }
+            logger.info("EngineVMBuildService measureService:$measureService")
             measureService?.postTaskData(
                 task = task,
                 startTime = task.startTime?.timestampmilli() ?: 0L,
