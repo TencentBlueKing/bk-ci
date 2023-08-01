@@ -24,7 +24,7 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column :width="tableWidthMap.pipelineName" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
@@ -44,7 +44,7 @@
                 <span v-else>{{props.row.pipelineName}}</span>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" :width="tableWidthMap.viewNames" :label="$t('ownGroupName')" prop="viewNames">
+        <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
             <div :ref="`belongsGroupBox_${props.$index}`" class="pipeline-group-box-cell" slot-scope="props">
                 <template v-if="pipelineGroups[props.$index].visibleGroups">
                     <bk-tag
@@ -97,7 +97,7 @@
             <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :width="tableWidthMap.latestExec" :label="$t('latestExec')" prop="latestExec">
+            <bk-table-column v-if="allRenderColumnMap.latestExec" :width="tableWidthMap.latestExec" min-width="180" :label="$t('latestExec')" prop="latestExec">
                 <span v-if="props.row.delete" slot-scope="props">
                     {{$t('deleteAlready')}}
                 </span>
@@ -133,21 +133,27 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
+            <bk-table-column v-if="allRenderColumnMap.lastExecTime" :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
                 <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </div>
             </bk-table-column>
-            <bk-table-column :width="tableWidthMap.updateTime" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
+            <bk-table-column v-if="allRenderColumnMap.lastModify" :width="tableWidthMap.updateTime" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
                 <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
                 </div>
             </bk-table-column>
+            <bk-table-column v-if="allRenderColumnMap.creator" :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
+            <bk-table-column v-if="allRenderColumnMap.created" :width="tableWidthMap.created" :label="$t('created')" prop="createTime">
+                <template slot-scope="props">
+                    {{ prettyDateTimeFormat(props.row.createTime) }}
+                </template>
+            </bk-table-column>
         </template>
-        <bk-table-column v-if="!isPatchView" :width="tableWidthMap.pipelineId" :label="$t('operate')" prop="pipelineId">
+        <bk-table-column v-if="!isPatchView" :width="tableWidthMap.pipelineId" fixed="right" :label="$t('operate')" prop="pipelineId">
             <div class="pipeline-operation-cell" slot-scope="props">
                 <bk-button
                     v-if="isDeleteView"
@@ -205,6 +211,16 @@
                 </template>
             </div>
         </bk-table-column>
+        <bk-table-column
+            v-if="!isPatchView && !isDeleteView"
+            type="setting">
+            <bk-table-setting-content
+                :fields="tableColumn"
+                :selected="selectedTableColumn"
+                :size="tableSize"
+                @setting-change="handleSettingChange"
+            />
+        </bk-table-column>
     </bk-table>
 </template>
 
@@ -218,10 +234,11 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID,
         RECENT_USED_VIEW_ID,
-        CACHE_PIPELINE_TABLE_WIDTH_MAP
+        CACHE_PIPELINE_TABLE_WIDTH_MAP,
+        TABLE_COLUMN_CACHE
     } from '@/store/constants'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { convertTime, isShallowEqual } from '@/utils/util'
+    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -250,7 +267,10 @@
                     count: 0
                 },
                 visibleTagCountList: {},
-                tableWidthMap: {}
+                tableWidthMap: {},
+                tableSize: 'small',
+                tableColumn: [],
+                selectedTableColumn: []
             }
         },
         computed: {
@@ -301,6 +321,12 @@
                     prop: this.getkeyByValue(PIPELINE_SORT_FILED, prop),
                     order: this.getkeyByValue(ORDER_ENUM, order)
                 }
+            },
+            allRenderColumnMap () {
+                return this.selectedTableColumn.reduce((result, item) => {
+                    result[item.id] = true
+                    return result
+                }, {})
             }
         },
 
@@ -326,24 +352,92 @@
                         page: 1
                     })
                 }
+            },
+            isAllPipelineView (val) {
+                this.setTableColumn(val)
+            },
+            isPatchView (val) {
+                this.setTableColumn(val)
+            },
+            isDeleteView (val) {
+                this.setTableColumn(val)
             }
         },
         mounted () {
+            this.tableColumn = [
+                {
+                    id: 'pipelineName',
+                    label: this.$t('pipelineName'),
+                    disabled: true
+                },
+                {
+                    id: 'ownGroupName',
+                    label: this.$t('ownGroupName')
+                },
+                {
+                    id: 'latestExec',
+                    label: this.$t('latestExec')
+                },
+                {
+                    id: 'lastExecTime',
+                    label: this.$t('lastExecTime')
+                },
+                {
+                    id: 'lastModify',
+                    label: this.$t('lastModify')
+                },
+                {
+                    id: 'creator',
+                    label: this.$t('creator')
+                },
+                {
+                    id: 'created',
+                    label: this.$t('created')
+                },
+                {
+                    id: 'operate',
+                    label: this.$t('operate'),
+                    disabled: true
+                }
+            ]
+            const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
+            if (columnsCache) {
+                this.selectedTableColumn = columnsCache.columns
+                this.tableSize = columnsCache.size
+            } else {
+                this.selectedTableColumn = [
+                    { id: 'pipelineName' },
+                    { id: 'ownGroupName' },
+                    { id: 'latestExec' },
+                    { id: 'lastExecTime' },
+                    { id: 'lastModify' },
+                    { id: 'creator' },
+                    { id: 'created' },
+                    { id: 'operate' }
+                ]
+            }
+
+            if (!(this.isAllPipelineView)) {
+                this.tableColumn.splice(1, 1)
+            }
             this.tableWidthMap = JSON.parse(localStorage.getItem(CACHE_PIPELINE_TABLE_WIDTH_MAP)) || {
                 pipelineName: 250,
                 viewNames: 350,
                 latestBuildNum: 150,
                 latestBuildStartDate: 200,
                 createTime: 200,
+                deleteTime: 200,
                 creator: 200,
                 updateTime: 200,
                 lastModifyUser: '',
                 latestExec: 180,
+                created: 180,
                 pipelineId: 150
             }
             this.requestList()
         },
         methods: {
+            prettyDateTimeFormat,
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -463,9 +557,26 @@
                 }, {})
             },
             handelHeaderDragend (newWidth, oldWidth, column) {
-                console.log(column.property, 'column.property')
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
+            },
+            setTableColumn (val) {
+                if (val) {
+                    this.tableColumn.splice(1, 0, {
+                        id: 'ownGroupName',
+                        label: this.$t('ownGroupName')
+                    })
+                } else {
+                    this.tableColumn.splice(1, 1)
+                }
+            },
+            handleSettingChange ({ fields, size }) {
+                this.selectedTableColumn = fields
+                this.tableSize = size
+                localStorage.setItem(TABLE_COLUMN_CACHE, JSON.stringify({
+                    columns: fields,
+                    size
+                }))
             }
         }
     }

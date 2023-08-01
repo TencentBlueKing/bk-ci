@@ -42,3 +42,4 @@ export const RECENT_USED_VIEW_ID = 'recentUse'
 
 export const CACHE_PIPELINE_GROUP_NAV_STATUS = 'cache_pipeline_group_nav_status'
 export const CACHE_PIPELINE_TABLE_WIDTH_MAP = 'cache_pipeline_table_width_map'
+export const TABLE_COLUMN_CACHE = 'table_column_cache'
