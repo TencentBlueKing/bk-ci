@@ -193,7 +193,7 @@ class SoftwareManageService @Autowired constructor(
             softwareInfo = softwareInfoList
         )
         val body = JsonUtil.toJson(softwareCreate, false)
-        logger.info("installSoftwareFromXingyun|body|$body")
+        logger.info("installSoftwareFromXingyun|installSoftwareUrl|$installSoftwareUrl|body|$body")
         val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val request = Request.Builder()
