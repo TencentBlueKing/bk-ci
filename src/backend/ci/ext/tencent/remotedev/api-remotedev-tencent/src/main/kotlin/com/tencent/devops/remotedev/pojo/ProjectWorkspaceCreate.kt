@@ -25,47 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.external
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["EXTERNAL_REMOTE_DEV"], description = "External-remoteDev")
-@Path("/external/remotedev/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalResource {
-    @ApiOperation("获取默认的devfile文件内容")
-    @GET
-    @Path("/devfile")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun getDevfile(): Response
-
-    @ApiOperation("job回调")
-    @GET
-    @Path("/job_callback")
-    fun jobCallback(
-        @QueryParam("key")
-        key: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
-    @ApiOperation("job回调")
-    @GET
-    @Path("/software_install_callback")
-    fun softwareInstallCallback(
-        @QueryParam("key")
-        key: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-}
+@ApiModel("工作空间信息-创建")
+data class ProjectWorkspaceCreate(
+    @ApiModelProperty("windows 配置id")
+    val windowsResourceConfigId: Long,
+    @ApiModelProperty("基础镜像Id")
+    val baseImageId: Int,
+    @ApiModelProperty("创建实例的数量")
+    val count: Int,
+)

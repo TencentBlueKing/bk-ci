@@ -68,6 +68,8 @@ data class Workspace(
     val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
     val workspaceSystemType: WorkspaceSystemType,
+    @ApiModelProperty("工作空间归属")
+    val ownerType: WorkspaceOwnerType,
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,

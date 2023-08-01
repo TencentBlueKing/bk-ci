@@ -97,7 +97,7 @@ class StartControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,

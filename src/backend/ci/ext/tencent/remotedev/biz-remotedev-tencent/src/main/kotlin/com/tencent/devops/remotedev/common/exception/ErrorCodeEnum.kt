@@ -130,6 +130,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132024",
         formatErrorMessage = "install software fail."
+    ),
+    PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER(
+        errorType = ErrorType.USER,
+        errorCode = "2132025",
+        formatErrorMessage = "The current workspace has an assigned owner"
     );
 
     fun getErrorMessage(): String {

@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("devfile 定义处")
 data class Devfile(
     @ApiModelProperty("定义devfile的版本")
-    val version: String,
+    val version: String = "",
     @ApiModelProperty("定义在工作区的git配置键值对。")
     val envs: Map<String, String>? = null,
     @JsonProperty("runs-on")

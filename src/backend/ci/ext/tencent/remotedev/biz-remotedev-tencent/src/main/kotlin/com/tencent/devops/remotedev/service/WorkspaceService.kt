@@ -57,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
@@ -118,7 +119,7 @@ class WorkspaceService @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:$workspaceName",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -143,7 +144,7 @@ class WorkspaceService @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -165,7 +166,8 @@ class WorkspaceService @Autowired constructor(
                 id = null,
                 workspaceName = workspaceName,
                 operator = userId,
-                sharedUser = sharedUser
+                sharedUser = sharedUser,
+                type = WorkspaceShared.AssignType.VIEWER
             )
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
@@ -193,6 +195,55 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    fun getProjectWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<Workspace> {
+        logger.info("$userId get project $projectId workspace list")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val count = workspaceDao.countUserWorkspace(
+            dslContext = dslContext,
+            creator = projectId,
+            ownerType = WorkspaceOwnerType.PROJECT
+        )
+        val result = workspaceDao.limitFetchUserWorkspace(
+            dslContext = dslContext,
+            creator = userId,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        ) ?: emptyList()
+
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = result.map {
+                val status = WorkspaceStatus.values()[it.status]
+                parsingWorkspace(it, status)
+            }
+        )
+    }
+
+    private fun parsingWorkspace(
+        it: TWorkspaceRecord,
+        status: WorkspaceStatus
+    ) = Workspace(
+        workspaceId = it.id,
+        workspaceName = it.name,
+        projectId = it.projectId,
+        displayName = it.displayName,
+        repositoryUrl = it.url,
+        branch = it.branch,
+        devFilePath = it.yamlPath,
+        yaml = it.yaml,
+        wsTemplateId = it.templateId,
+        status = status,
+        lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
+        sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+        createUserId = it.creator,
+        workPath = it.workPath,
+        workspaceFolder = it.workspaceFolder,
+        hostName = it.hostName,
+        workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
+        workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
+        ownerType = WorkspaceOwnerType.valueOf(it.ownerType)
+    )
+
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
@@ -200,7 +251,7 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countUserWorkspace(dslContext, userId)
         val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
-            userId = userId,
+            creator = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -222,26 +273,7 @@ class WorkspaceService @Autowired constructor(
                         )
                     }
                 }
-                Workspace(
-                    workspaceId = it.id,
-                    workspaceName = it.name,
-                    projectId = it.projectId,
-                    displayName = it.displayName,
-                    repositoryUrl = it.url,
-                    branch = it.branch,
-                    devFilePath = it.yamlPath,
-                    yaml = it.yaml,
-                    wsTemplateId = it.templateId,
-                    status = status,
-                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
-                    sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
-                    createUserId = it.creator,
-                    workPath = it.workPath,
-                    workspaceFolder = it.workspaceFolder,
-                    hostName = it.hostName,
-                    workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
-                    workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType)
-                )
+                parsingWorkspace(it, status)
             }
         )
     }
@@ -560,10 +592,11 @@ class WorkspaceService @Autowired constructor(
         logger.info("get all shared workspace")
         return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
             WorkspaceShared(
-                it.id,
-                it.workspaceName,
-                it.operator,
-                it.sharedUser
+                id = it.id,
+                workspaceName = it.workspaceName,
+                operator = it.operator,
+                sharedUser = it.sharedUser,
+                type = WorkspaceShared.AssignType.valueOf(it.assignType)
             )
         } ?: emptyList()
     }

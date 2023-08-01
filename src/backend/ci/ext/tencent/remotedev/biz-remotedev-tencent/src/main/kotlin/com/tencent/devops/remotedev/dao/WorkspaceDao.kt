@@ -32,9 +32,9 @@ import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.Condition
@@ -51,10 +51,12 @@ import java.time.LocalDateTime
 class WorkspaceDao {
 
     fun createWorkspace(
-        userId: String,
         workspace: Workspace,
         workspaceStatus: WorkspaceStatus,
-        userInfo: UserDeptDetail?,
+        bgName: String?,
+        deptName: String?,
+        centerName: String?,
+        groupName: String?,
         dslContext: DSLContext
     ): Long {
         return with(TWorkspace.T_WORKSPACE) {
@@ -106,10 +108,10 @@ class WorkspaceDao {
                     workspace.yaml,
                     "",
                     workspace.createUserId,
-                    userInfo?.bgName ?: "",
-                    userInfo?.deptName ?: "",
-                    userInfo?.centerName ?: "",
-                    userInfo?.groupName ?: "",
+                    bgName ?: "",
+                    deptName ?: "",
+                    centerName ?: "",
+                    groupName ?: "",
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name
                 )
@@ -142,15 +144,16 @@ class WorkspaceDao {
      */
     fun countUserWorkspace(
         dslContext: DSLContext,
-        userId: String,
+        creator: String,
         unionShared: Boolean = true,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .where(CREATOR.eq(userId))
+                .where(CREATOR.eq(creator))
                 .let {
                     if (status.isNullOrEmpty()) {
                         it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
@@ -159,17 +162,19 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
+                .and(OWNER_TYPE.eq(ownerType.name))
                 .let {
                     if (unionShared) it.unionAll(
                         DSL.selectCount().from(this).where(
                             NAME.`in`(
                                 DSL.select(shared.WORKSPACE_NAME).from(shared).where(
                                     shared.SHARED_USER.eq(
-                                        userId
+                                        creator
                                     )
                                 )
                             )
                         ).let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+                            .and(OWNER_TYPE.eq(ownerType.name))
                     ) else it
                 }
                 .fetch(0, Long::class.java).sum()
@@ -182,23 +187,26 @@ class WorkspaceDao {
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
-        userId: String
+        creator: String,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
     ): Result<TWorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(CREATOR.eq(userId))
+                .where(CREATOR.eq(creator))
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .and(OWNER_TYPE.eq(ownerType.name))
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
                             DSL.select(shared.WORKSPACE_NAME).from(shared).where(
                                 shared.SHARED_USER.eq(
-                                    userId
+                                    creator
                                 )
                             )
                         )
-                    )
+                    ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                        .and(OWNER_TYPE.eq(ownerType.name))
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
@@ -429,8 +437,10 @@ class WorkspaceDao {
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mutableListOf<Condition>()
-            condition.add(timestampDiff(DatePart.DAY, LAST_STATUS_UPDATE_TIME.cast(java.sql.Timestamp::class.java))
-                .greaterOrEqual(timeOutDays))
+            condition.add(
+                timestampDiff(DatePart.DAY, LAST_STATUS_UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                    .greaterOrEqual(timeOutDays)
+            )
 
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
             // TODO
