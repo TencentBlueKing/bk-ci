@@ -111,23 +111,26 @@ class CreateControl @Autowired constructor(
         userId: String,
         bkTicket: String,
         projectId: String,
-        workspace: ProjectWorkspaceCreate
+        workspaceCreate: ProjectWorkspaceCreate
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val windowsConfig = windowsResourceConfigService.getConfig(workspace.windowsResourceConfigId)
+        val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId)
             ?: throw throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspace.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
 
         if (windowsConfig.available == false) {
             throw throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspace.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
         }
-        for (i in 0 until workspace.count) {
+        // 检查配额
+        projectWinCreateCheck(projectId, workspaceCreate.count)
+
+        for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = generateWorkspaceName(projectId)
             val ws = Workspace(
@@ -472,13 +475,13 @@ class CreateControl @Autowired constructor(
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId!!)
-            ?: throw throw ErrorCodeException(
+            ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
 
         if (windowsConfig.available == false) {
-            throw throw ErrorCodeException(
+            throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
                 params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
@@ -548,6 +551,16 @@ class CreateControl @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU
             )
         )
+    }
+
+    private fun projectWinCreateCheck(projectId: String, createCount: Int) {
+        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 0 }
+        if (resourceCount < createCount) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(resourceCount.toString())
+            )
+        }
     }
 
     private fun doPreparing(workspace: Workspace) {

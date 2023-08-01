@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.startCloud.dao
 
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -37,7 +37,7 @@ class WindowsGpuResourceDao {
 
     fun createOrUpdateResource(
         dslContext: DSLContext,
-        resourceList: List<EnvironmentResourceDataRsp.EnvironmentResourceData>
+        resourceList: List<EnvironmentResourceData>
     ) {
         if (resourceList.isEmpty()) {
             return

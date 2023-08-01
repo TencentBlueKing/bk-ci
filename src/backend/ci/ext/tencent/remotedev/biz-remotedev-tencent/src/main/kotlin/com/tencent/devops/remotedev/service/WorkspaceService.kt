@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -589,6 +590,7 @@ class WorkspaceService @Autowired constructor(
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
     }
+
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
         logger.info("get all shared workspace")
         return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
@@ -608,15 +610,5 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext
         )
         return true
-    }
-
-    fun syncStartCloudResourceList() {
-        try {
-            client.get(ServiceStartCloudResource::class)
-                .syncStartCloudResourceList()
-        } catch (e: Throwable) {
-            // 处理异常
-            println("Error syncing start cloud resource list: ${e.message}")
-        }
     }
 }

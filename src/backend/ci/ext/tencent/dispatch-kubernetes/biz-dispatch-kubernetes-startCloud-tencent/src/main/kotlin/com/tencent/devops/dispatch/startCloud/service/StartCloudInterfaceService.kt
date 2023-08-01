@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
@@ -46,6 +47,7 @@ class StartCloudInterfaceService @Autowired constructor(
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
+
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
     }
@@ -63,11 +65,11 @@ class StartCloudInterfaceService @Autowired constructor(
     }
 
     // 同步更新云桌面资源池列表
-    fun syncStartCloudResourceList(): Boolean {
+    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         val resourceList = workspaceClient.getResourceList()
         logger.info("syncStartCloudResourceList|resourceList|$resourceList")
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
-        return true
+        return resourceList
     }
 }

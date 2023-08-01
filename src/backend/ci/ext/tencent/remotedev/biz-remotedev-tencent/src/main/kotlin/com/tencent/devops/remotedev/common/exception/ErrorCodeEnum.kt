@@ -135,6 +135,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132025",
         formatErrorMessage = "The current workspace has an assigned owner"
+    ),
+    DESKTOP_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132026",
+        formatErrorMessage = "The cloud desktop resources are insufficient, currently {0}"
     );
 
     fun getErrorMessage(): String {

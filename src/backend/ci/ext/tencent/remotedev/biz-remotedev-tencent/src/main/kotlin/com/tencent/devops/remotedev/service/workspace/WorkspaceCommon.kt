@@ -36,7 +36,9 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -55,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -338,6 +341,15 @@ class WorkspaceCommon @Autowired constructor(
                 }
             }
         }
+    }
+
+    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .syncStartCloudResourceList().data
+        }.onFailure {
+            logger.warn("Error syncing start cloud resource list: ${it.message}")
+        }.getOrNull() ?: emptyList()
     }
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {

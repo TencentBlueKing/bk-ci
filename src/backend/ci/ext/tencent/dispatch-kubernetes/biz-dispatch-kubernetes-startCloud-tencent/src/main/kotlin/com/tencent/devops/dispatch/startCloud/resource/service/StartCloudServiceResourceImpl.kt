@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.startCloud.resource.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.service.StartCloudInterfaceService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,7 +43,7 @@ class StartCloudServiceResourceImpl @Autowired constructor(
         return Result(startCloudInterfaceService.createStartCloudUser(user))
     }
 
-    override fun syncStartCloudResourceList(): Result<Boolean> {
+    override fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>> {
         return Result(startCloudInterfaceService.syncStartCloudResourceList())
     }
 }
