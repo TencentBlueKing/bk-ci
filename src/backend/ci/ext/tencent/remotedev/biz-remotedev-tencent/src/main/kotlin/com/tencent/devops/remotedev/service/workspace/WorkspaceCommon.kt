@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -103,7 +104,8 @@ class WorkspaceCommon @Autowired constructor(
         status: Boolean?,
         action: WorkspaceAction,
         systemType: WorkspaceSystemType,
-        workspaceMountType: WorkspaceMountType
+        workspaceMountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -115,7 +117,8 @@ class WorkspaceCommon @Autowired constructor(
                     status = action,
                     errorMsg = errorMsg,
                     systemType = systemType,
-                    workspaceMountType = workspaceMountType
+                    workspaceMountType = workspaceMountType,
+                    ownerType = ownerType
                 ),
                 projectId = "",
                 userIds = getWebSocketUsers(userId, workspaceName),

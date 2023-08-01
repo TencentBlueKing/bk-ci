@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -179,7 +180,8 @@ class StartControl @Autowired constructor(
                         status = true,
                         action = WorkspaceAction.STARTING,
                         systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                        ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
                     )
                     return WorkspaceResponse(
                         workspaceName = workspace.name,
@@ -339,7 +341,8 @@ class StartControl @Autowired constructor(
             status = status,
             action = WorkspaceAction.START,
             systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
         )
     }
 }

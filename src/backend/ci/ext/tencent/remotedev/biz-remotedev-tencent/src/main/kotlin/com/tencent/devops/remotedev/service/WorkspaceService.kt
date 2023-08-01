@@ -397,7 +397,8 @@ class WorkspaceService @Autowired constructor(
                 disk = disk,
                 yaml = yaml,
                 systemType = WorkspaceSystemType.valueOf(systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(ownerType)
             )
         }
     }

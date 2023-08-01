@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
@@ -136,7 +137,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -249,7 +251,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -338,7 +341,8 @@ class SleepControl @Autowired constructor(
             status = status,
             action = WorkspaceAction.SLEEP,
             systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
         )
     }
 }

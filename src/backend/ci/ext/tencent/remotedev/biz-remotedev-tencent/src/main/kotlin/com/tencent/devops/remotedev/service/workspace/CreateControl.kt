@@ -97,7 +97,8 @@ class CreateControl @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val commonConfig: RemoteDevCommonConfig,
     private val workspaceCommon: WorkspaceCommon,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val deliverControl: DeliverControl
 ) {
 
     companion object {
@@ -189,7 +190,8 @@ class CreateControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = true,
             action = WorkspaceAction.PREPARING,
-            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType
         )
 
         return WorkspaceResponse(
@@ -294,6 +296,10 @@ class CreateControl @Autowired constructor(
                 }
             }
 
+            if (ownerType == WorkspaceOwnerType.PROJECT) {
+                deliverControl.safeInitialization(event.userId, event.workspaceName)
+            }
+
             // websocket 通知成功
         } else {
             // 创建失败
@@ -311,7 +317,8 @@ class CreateControl @Autowired constructor(
             status = event.status,
             action = WorkspaceAction.START,
             systemType = WorkspaceSystemType.valueOf(ws.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(ws.ownerType)
         )
     }
 

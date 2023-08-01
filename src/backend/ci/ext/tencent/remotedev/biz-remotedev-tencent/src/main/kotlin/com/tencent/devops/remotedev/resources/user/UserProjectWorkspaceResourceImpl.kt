@@ -34,33 +34,19 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
-import com.tencent.devops.remotedev.service.workspace.SleepControl
-import com.tencent.devops.remotedev.service.workspace.StartControl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class UserProjectWorkspaceResourceImpl @Autowired constructor(
-    private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
-    private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService,
-    private val repositoryService: RepositoryService,
-    private val bkTicketService: BkTicketService,
     private val createControl: CreateControl,
-    private val deliverControl: DeliverControl,
-    private val startControl: StartControl,
-    private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deliverControl: DeliverControl
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
