@@ -3,6 +3,7 @@ package com.tencent.devops.notify.tencentcloud.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("LongParameterList")
 @ApiModel("腾讯云签名配置信息")
 open class TencentCloudSignatureConfig(
     @ApiModelProperty("接口请求方法")

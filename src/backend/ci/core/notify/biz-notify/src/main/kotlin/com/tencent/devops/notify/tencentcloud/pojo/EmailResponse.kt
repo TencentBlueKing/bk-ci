@@ -13,7 +13,7 @@ data class Response(
     @JsonProperty("MessageId")
     val messageId: String?,
     @JsonProperty("RequestId")
-    val requestId: String // e5cba6d5-b16f-4b06-b5c6-a550f0746d56
+    val requestId: String // 随机uuid e5cba6d5-b16f-4b06-b5c6-a550f0746d56
 )
 
 data class Error(

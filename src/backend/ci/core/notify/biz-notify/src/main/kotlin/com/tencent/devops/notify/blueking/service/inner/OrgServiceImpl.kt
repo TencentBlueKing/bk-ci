@@ -24,23 +24,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.service.inner
 
-package com.tencent.devops.notify.blueking.sdk
+import com.tencent.devops.notify.service.OrgService
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+@Suppress("ALL")
+class OrgServiceImpl : OrgService {
 
-/**
- * 蓝鲸关键配置项
- */
-@Component
-class Properties {
-
-    @Value("\${esb.code:#{null}}")
-    val appCode: String? = null
-    @Value("\${esb.secret:#{null}}")
-    val appSecret: String? = null
-
-    @Value("\${bk.paas.host:#{null}}")
-    val bkHost: String? = null
+    override fun parseStaff(staffs: Set<String>): Set<String> {
+        val result = LinkedHashSet<String>()
+        val staffIds = LinkedHashSet<Int>()
+        if (staffs.isNotEmpty()) {
+            staffs.forEach { staff ->
+                try {
+                    val staffId = Integer.parseInt(staff, 10)
+                    if (staffId > 10) {
+                        staffIds.add(staffId)
+                    }
+                } catch (ignore: NumberFormatException) {
+                    result.add(staff)
+                }
+            }
+        }
+        return result
+    }
 }

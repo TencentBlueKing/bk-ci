@@ -45,9 +45,7 @@ import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_NOTIFY_MESSAGES
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 class CMSApi @Autowired constructor(
     private val notifyUtils: NotifyUtils
 ) {

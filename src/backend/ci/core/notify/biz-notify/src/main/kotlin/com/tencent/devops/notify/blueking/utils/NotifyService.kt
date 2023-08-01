@@ -31,14 +31,9 @@ import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.notify.blueking.sdk.CMSApi
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
-
-@Service
 
 @Suppress("ALL")
-class NotifyService @Autowired constructor(private val cmsApi: CMSApi) {
+class NotifyService(private val cmsApi: CMSApi) {
 
     companion object {
         const val EMAIL_URL = "/api/c/compapi/cmsi/send_mail/"
@@ -55,15 +50,19 @@ class NotifyService @Autowired constructor(private val cmsApi: CMSApi) {
                 val enp = postData as EmailNotifyPost
                 cmsApi.sendMail(enp)
             }
+
             RTX_URL -> {
                 cmsApi.sendQyWeixin(postData as RtxNotifyPost)
             }
+
             SMS_URL -> {
                 cmsApi.sendSms(postData as SmsNotifyPost)
             }
+
             WECHAT_URL -> {
                 cmsApi.sendWeixin(postData as WechatNotifyPost)
             }
+
             else -> {
                 throw IllegalArgumentException("Unknown message type")
             }

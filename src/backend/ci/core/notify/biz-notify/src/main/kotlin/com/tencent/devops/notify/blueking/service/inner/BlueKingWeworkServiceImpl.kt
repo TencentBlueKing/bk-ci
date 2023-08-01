@@ -26,28 +26,20 @@
  */
 package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.service.OrgService
-import org.springframework.stereotype.Service
+import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.service.WeworkService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 
-@Service
-@Suppress("ALL")
-class OrgServiceImpl : OrgService {
+class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
 
-    override fun parseStaff(staffs: Set<String>): Set<String> {
-        val result = LinkedHashSet<String>()
-        val staffIds = LinkedHashSet<Int>()
-        if (staffs.isNotEmpty()) {
-            staffs.forEach { staff ->
-                try {
-                    val staffId = Integer.parseInt(staff, 10)
-                    if (staffId > 10) {
-                        staffIds.add(staffId)
-                    }
-                } catch (ignore: NumberFormatException) {
-                    result.add(staff)
-                }
-            }
-        }
-        return result
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        TODO("Not yet implemented")
+    }
+
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
+        TODO("Not yet implemented")
     }
 }

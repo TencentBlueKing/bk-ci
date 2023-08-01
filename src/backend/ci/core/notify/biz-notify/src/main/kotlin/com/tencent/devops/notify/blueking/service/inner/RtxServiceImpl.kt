@@ -34,8 +34,8 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_RTX
@@ -50,11 +50,9 @@ import com.tencent.devops.notify.service.RtxService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
 
-@Service
 @Suppress("ALL")
 class RtxServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,

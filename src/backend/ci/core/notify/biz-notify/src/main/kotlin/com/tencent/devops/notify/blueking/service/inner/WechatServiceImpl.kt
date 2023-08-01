@@ -30,29 +30,27 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.utils.Configuration
-import com.tencent.devops.notify.blueking.utils.NotifyService
-import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
+import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyWechatRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WECHAT
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
 import com.tencent.devops.notify.dao.WechatNotifyDao
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
-import com.tencent.devops.notify.service.WechatService
-import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.service.WechatService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
-@Service
 @Suppress("ALL")
 class WechatServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,

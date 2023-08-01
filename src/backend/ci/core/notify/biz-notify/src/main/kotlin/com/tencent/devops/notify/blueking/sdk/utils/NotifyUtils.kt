@@ -35,8 +35,8 @@ import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_FA
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -45,8 +45,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 @Suppress("ALL")
-@Component
-class NotifyUtils constructor(
+class NotifyUtils(
     notifyProperties: NotifyProperties
 ) {
     private val logger = LoggerFactory.getLogger(NotifyUtils::class.java)
@@ -61,11 +60,11 @@ class NotifyUtils constructor(
         body.bk_app_code = appCode
         body.bk_app_secret = appSecret
 
-        val jsonbody = ObjectMapper().writeValueAsString(body)
-        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
+        val jsonBody = ObjectMapper().writeValueAsString(body)
+        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val url = host + uri
         logger.info("notify post url: $url")
-        logger.info("notify post body: $jsonbody")
+//        logger.info("notify post body: $jsonBody")
 
         val request = Request.Builder()
             .url(url)
