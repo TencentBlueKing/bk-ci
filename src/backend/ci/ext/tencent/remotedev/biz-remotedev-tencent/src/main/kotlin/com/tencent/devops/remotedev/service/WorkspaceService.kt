@@ -206,7 +206,7 @@ class WorkspaceService @Autowired constructor(
         )
         val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
-            creator = userId,
+            creator = projectId,
             ownerType = WorkspaceOwnerType.PROJECT,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()

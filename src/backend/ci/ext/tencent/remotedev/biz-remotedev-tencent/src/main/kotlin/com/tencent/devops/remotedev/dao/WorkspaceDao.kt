@@ -87,7 +87,8 @@ class WorkspaceDao {
                 CREATOR_CENTER_NAME,
                 CREATOR_GROUP_NAME,
                 WORKSPACE_MOUNT_TYPE,
-                SYSTEM_TYPE
+                SYSTEM_TYPE,
+                OWNER_TYPE
             )
                 .values(
                     workspace.projectId,
@@ -114,7 +115,8 @@ class WorkspaceDao {
                     centerName ?: "",
                     groupName ?: "",
                     workspace.workspaceMountType.name,
-                    workspace.workspaceSystemType.name
+                    workspace.workspaceSystemType.name,
+                    workspace.ownerType.name
                 )
                 .returning(ID)
                 .fetchOne()!!.id
