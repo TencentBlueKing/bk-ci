@@ -190,6 +190,7 @@ class SoftwareManageService @Autowired constructor(
         }
         val softwareCreate = SoftwareCreate(
             ip = ip,
+            username = userId,
             softwareInfo = softwareInfoList
         )
         val body = JsonUtil.toJson(softwareCreate, false)

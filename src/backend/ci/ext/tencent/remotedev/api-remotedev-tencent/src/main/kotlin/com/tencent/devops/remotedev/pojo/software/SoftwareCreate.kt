@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class SoftwareCreate(
     @JsonProperty("ip")
     val ip: String,
+    @JsonProperty("username")
+    val username: String,
     @JsonProperty("software_information")
     val softwareInfo: List<SoftwareInfo>
 )
