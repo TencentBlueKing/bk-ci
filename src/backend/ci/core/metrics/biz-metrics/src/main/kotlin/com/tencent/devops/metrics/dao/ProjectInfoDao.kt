@@ -63,6 +63,7 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE, ATOM_NAME)
                 .from(this)
                 .where(conditions)
+                .orderBy(ATOM_CODE, ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(AtomBaseInfoDO::class.java)
         }
