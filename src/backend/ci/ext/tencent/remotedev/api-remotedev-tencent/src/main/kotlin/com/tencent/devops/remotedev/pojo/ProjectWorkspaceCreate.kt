@@ -37,5 +37,5 @@ data class ProjectWorkspaceCreate(
     @ApiModelProperty("基础镜像Id")
     val baseImageId: Int,
     @ApiModelProperty("创建实例的数量")
-    val count: Int,
+    val count: Int
 )

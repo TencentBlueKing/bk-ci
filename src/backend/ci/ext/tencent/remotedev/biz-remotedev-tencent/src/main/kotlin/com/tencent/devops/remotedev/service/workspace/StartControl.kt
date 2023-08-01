@@ -148,7 +148,7 @@ class StartControl @Autowired constructor(
                         workspaceName,
                         WorkspaceMountType.valueOf(workspace.workspaceMountType)
                     )
-                    workspaceCommon.checkWorkspaceAvailability(userId, workspace)
+                    workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.name, status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()

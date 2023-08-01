@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -278,6 +279,25 @@ class WorkspaceDao {
                 .fetch()
         }
     }
+
+    /**
+     * 获取没有使用时长的工作空间
+     */
+    fun fetchNotUsageTimeWinWorkspace(
+        dslContext: DSLContext,
+        status: WorkspaceStatus
+    ): Result<TWorkspaceRecord>? {
+        val setting = TRemoteDevSettings.T_REMOTE_DEV_SETTINGS
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(
+                CREATOR.`in`(
+                    DSL.select(setting.USER_ID).from(setting).where(setting.WIN_USAGE_REMAINING_TIME.le(0))
+                )
+            ).and(STATUS.eq(status.ordinal)).and(WORKSPACE_MOUNT_TYPE.eq(WorkspaceMountType.START.name))
+                .fetch()
+        }
+    }
+
     fun fetchSharedWorkspace(
         dslContext: DSLContext,
         workspaceName: String? = null
@@ -443,8 +463,7 @@ class WorkspaceDao {
             )
 
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
-            // TODO
-            // condition.add(OWNER_TYPE.eq(PERSONAL))
+            condition.add(OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
 
             if (workspaceMountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))

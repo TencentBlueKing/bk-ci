@@ -99,5 +99,7 @@ data class OpProjectUpdateInfoRequest(
     @ApiModelProperty(value = "支持IDC构建机", required = false)
     val enableIdc: Boolean? = false,
     @ApiModelProperty(value = "流水线数量上限", required = false)
-    val pipelineLimit: Int? = 500
+    val pipelineLimit: Int? = 500,
+    @ApiModelProperty("项目相关配置")
+    val properties: ProjectProperties? = null
 )

@@ -34,8 +34,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
@@ -46,6 +48,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,6 +58,7 @@ import org.springframework.stereotype.Service
 @Suppress("ReturnCount", "LongParameterList", "LongMethod")
 class PipelineRetryFacadeService @Autowired constructor(
     val dslContext: DSLContext,
+    val redisOperation: RedisOperation,
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
@@ -96,16 +100,19 @@ class PipelineRetryFacadeService @Autowired constructor(
         // 校验当前job的关机事件是否有完成
         checkStopTask(projectId, buildId, containerInfo!!)
         // 刷新当前job的开关机以及job状态， container状态， detail数据, record数据
-        refreshTaskAndJob(
-            userId = userId,
-            projectId = projectId,
-            buildId = buildId,
-            executeCount = executeCount,
-            resourceVersion = resourceVersion,
-            taskId = taskId,
-            containerInfo = containerInfo,
-            skipFailedTask = skipFailedTask
-        )
+        ContainerIdLock(redisOperation, buildId, containerInfo.containerId).use {
+            it.lock()
+            refreshTaskAndJob(
+                userId = userId,
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = executeCount,
+                resourceVersion = resourceVersion,
+                taskId = taskId,
+                containerInfo = containerInfo,
+                skipFailedTask = skipFailedTask
+            )
+        }
         // 发送container Refresh事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
         buildLogPrinter.addYellowLine(
@@ -208,6 +215,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             containerVar.remove(Container::startVMStatus.name)
             containerVar.remove(Container::startEpoch.name)
             containerVar.remove(BuildRecordTimeLine::class.java.simpleName)
+            // 将当前重试 task id 做记录
+            containerVar[JOB_RETRY_TASK_ID] = taskId
             lastContainerRecord.copy(
                 status = BuildStatus.QUEUE.name, containerVar = containerVar,
                 executeCount = executeCount, timestamps = mapOf()

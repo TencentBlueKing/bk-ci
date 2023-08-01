@@ -54,6 +54,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
@@ -83,6 +84,7 @@ class DeleteControl @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon
 ) {
 
@@ -168,7 +170,7 @@ class DeleteControl @Autowired constructor(
             }
         }
         val now = LocalDateTime.now()
-        workspaceDao.fetchWorkspace(dslContext, status = WorkspaceStatus.SLEEP, mountType = WorkspaceMountType.START)
+        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.SLEEP)
             ?.parallelStream()?.forEach {
                 MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
@@ -314,6 +316,10 @@ class DeleteControl @Autowired constructor(
                     WorkspaceStatus.EXCEPTION.name
                 )
             )
+        }
+
+        if (workspace.systemType == WorkspaceSystemType.WINDOWS_GPU.name) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.creator)
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)

@@ -106,10 +106,10 @@ enum class ErrorCodeEnum(
         errorCode = "2132019",
         formatErrorMessage = "Not allowed to create in the current environment."
     ),
-    WORKSPACE_UNAVAILABLE(
+    WORKSPACE_UNAVAILABLE_WIN_GPU(
         errorType = ErrorType.USER,
         errorCode = "2132020",
-        formatErrorMessage = "The usage time of the current workspace [{0}] has reached the user limit [{1}h]"
+        formatErrorMessage = "The windows gpu cloud desktop has reached the maximum usage time, please renew."
     ),
     WINDOWS_CONFIG_NOT_FIND(
         errorType = ErrorType.USER,
