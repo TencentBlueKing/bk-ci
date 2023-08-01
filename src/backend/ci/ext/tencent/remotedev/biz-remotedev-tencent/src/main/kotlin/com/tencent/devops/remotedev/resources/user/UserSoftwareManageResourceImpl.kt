@@ -52,6 +52,11 @@ class UserSoftwareManageResourceImpl @Autowired constructor(
         return Result(softwareManageService.getProjectSoftwareList(projectId))
     }
 
+    override fun importSoftwareToProject(userId: String, software: ProjectSoftware): Result<Boolean> {
+        logger.info("UserSoftwareManageResourceImpl|getProjectSoftwareList|userId|$userId|software|$software")
+        return Result(softwareManageService.importSoftwareToProject(software))
+    }
+
     override fun installSoftwareToUser(userId: String, softwareList: List<UserSoftware>): Result<Boolean> {
         logger.info("UserSoftwareManageResourceImpl|installSoftwareToUser|userId|$userId|softwareList|$softwareList")
         return Result(softwareManageService.batchInstallSoftwareToUser(softwareList))

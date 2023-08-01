@@ -158,4 +158,10 @@ class SoftwareManageService @Autowired constructor(
             )
         }
     }
+
+    // 导入软件到项目中
+    fun importSoftwareToProject(software: ProjectSoftware): Boolean {
+        logger.info("SoftwareManageService|installSoftwareToUser|software|$software")
+        return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
+    }
 }

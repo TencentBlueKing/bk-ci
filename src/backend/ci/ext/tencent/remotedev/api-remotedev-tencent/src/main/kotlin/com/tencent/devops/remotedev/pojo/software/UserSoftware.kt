@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo.software
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间模板配置")
+@ApiModel("用户安装软件")
 data class UserSoftware(
     @ApiModelProperty("项目ID")
     val projectId: String,

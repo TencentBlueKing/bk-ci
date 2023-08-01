@@ -65,6 +65,18 @@ interface UserSoftwareManageResource {
         projectId: String
     ): Result<List<ProjectSoftware>>
 
+    @ApiOperation("导入软件到项目列表")
+    @POST
+    @Path("/list")
+    fun importSoftwareToProject(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("导入软件信息", required = true)
+        @QueryParam("software")
+        software: ProjectSoftware
+    ): Result<Boolean>
+
     @ApiOperation("安装软件到用户")
     @POST
     @Path("/install")
