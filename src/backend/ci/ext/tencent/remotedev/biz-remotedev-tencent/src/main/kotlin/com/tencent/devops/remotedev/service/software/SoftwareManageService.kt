@@ -28,16 +28,22 @@
 package com.tencent.devops.remotedev.service.software
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
+import com.tencent.devops.remotedev.pojo.software.CreateSoftwareRes
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,6 +65,8 @@ class SoftwareManageService @Autowired constructor(
 
     @Value("\${xingyun.software_group_url:}")
     val softwareGroupUrl = ""
+    @Value("\${xingyun.install_software_url:}")
+    val installSoftwareUrl = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
@@ -159,5 +167,40 @@ class SoftwareManageService @Autowired constructor(
     fun importSoftwareToProject(software: ProjectSoftware): Boolean {
         logger.info("SoftwareManageService|installSoftwareToUser|software|$software")
         return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
+    }
+
+    // 调用行云接口安装指定云桌面的软件
+    fun installSoftwareFromXingyun(
+        softwareCreate: SoftwareCreate
+    ): CreateSoftwareRes {
+        val body = JsonUtil.toJson(softwareCreate, false)
+        val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+            .replace("\\s".toRegex(), "")
+        val request = Request.Builder()
+            .url(installSoftwareUrl)
+            .addHeader("x-bkapi-authorization", headerStr)
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode
+                    )
+                }
+                val responseContent = response.body!!.string()
+                val createSoftwareRes: CreateSoftwareRes = jacksonObjectMapper().readValue(responseContent)
+                logger.info("getWatermark|response code|${response.code}|createSoftwareRes|$createSoftwareRes")
+                return createSoftwareRes
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get software group failed.", e)
+            // 接口超时失败
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode
+            )
+        }
     }
 }

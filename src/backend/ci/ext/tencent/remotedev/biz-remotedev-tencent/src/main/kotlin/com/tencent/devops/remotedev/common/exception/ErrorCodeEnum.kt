@@ -125,6 +125,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132023",
         formatErrorMessage = "get software group fail."
+    ),
+    INSTALL_SOFTWARE_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2132024",
+        formatErrorMessage = "install software fail."
     );
 
     fun getErrorMessage(): String {
