@@ -2,8 +2,6 @@ package com.tencent.devops.remotedev.pojo.software
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.json.JSONPropertyIgnore
-import org.json.JSONPropertyName
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateSoftwareRes(
