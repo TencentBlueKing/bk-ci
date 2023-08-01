@@ -140,6 +140,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132026",
         formatErrorMessage = "The cloud desktop resources are insufficient, currently {0}"
+    ),
+    PROJECT_DESKTOP_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132027",
+        formatErrorMessage = "The cloud desktop resources under the current project are insufficient, currently {0}"
     );
 
     fun getErrorMessage(): String {

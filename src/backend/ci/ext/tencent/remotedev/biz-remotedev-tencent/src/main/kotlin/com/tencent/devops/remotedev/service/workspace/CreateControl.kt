@@ -37,6 +37,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -116,19 +118,26 @@ class CreateControl @Autowired constructor(
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId)
-            ?: throw throw ErrorCodeException(
+            ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
 
         if (windowsConfig.available == false) {
-            throw throw ErrorCodeException(
+            throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
                 params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
             )
         }
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = PROJECT_NOT_EXIST
+        )
+
         // 检查配额
-        projectWinCreateCheck(projectId, workspaceCreate.count)
+        projectWinCreateCheck(projectInfo, workspaceCreate.count)
 
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
@@ -147,7 +156,16 @@ class CreateControl @Autowired constructor(
                 memory = windowsConfig.memory,
                 disk = windowsConfig.disk
             )
-            doPreparing(ws)
+
+            workspaceDao.createWorkspace(
+                workspace = ws,
+                workspaceStatus = WorkspaceStatus.PREPARING,
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                groupName = null,
+                dslContext = dslContext
+            )
 
             val bizId = MDC.get(TraceTag.BIZID)
             // 发送给k8s
@@ -555,7 +573,7 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun projectWinCreateCheck(projectId: String, createCount: Int) {
+    private fun projectWinCreateCheck(projectInfo: ProjectVO, createCount: Int) {
         val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 0 }
         if (resourceCount < createCount) {
             throw ErrorCodeException(
@@ -563,43 +581,38 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(resourceCount.toString())
             )
         }
+        val projectLimit = projectInfo.properties?.cloudDesktopNum
+            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
+            ?: 20
+        val count = workspaceDao.countUserWorkspace(
+            dslContext = dslContext,
+            creator = projectInfo.englishName,
+            ownerType = WorkspaceOwnerType.PROJECT,
+            unionShared = false
+        )
+        if (count + createCount > projectLimit) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(projectLimit.toString())
+            )
+        }
     }
 
     private fun doPreparing(workspace: Workspace) {
-        when (workspace.ownerType) {
-            WorkspaceOwnerType.PERSONAL -> {
-                val userInfo = kotlin.runCatching {
-                    client.get(ServiceTxUserResource::class).get(workspace.createUserId)
-                }.onFailure { logger.warn("get user ${workspace.createUserId} info error|${it.message}") }
-                    .getOrElse { null }?.data
+        val userInfo = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(workspace.createUserId)
+        }.onFailure { logger.warn("get user ${workspace.createUserId} info error|${it.message}") }
+            .getOrElse { null }?.data
 
-                workspaceDao.createWorkspace(
-                    workspace = workspace,
-                    workspaceStatus = WorkspaceStatus.PREPARING,
-                    bgName = userInfo?.bgName,
-                    deptName = userInfo?.deptName,
-                    centerName = userInfo?.centerName,
-                    groupName = userInfo?.groupName,
-                    dslContext = dslContext
-                )
-            }
-            WorkspaceOwnerType.PROJECT -> {
-                val projectInfo = kotlin.runCatching {
-                    client.get(ServiceProjectResource::class).get(workspace.createUserId)
-                }.onFailure { logger.warn("get project ${workspace.createUserId} info error|${it.message}") }
-                    .getOrElse { null }?.data
-
-                workspaceDao.createWorkspace(
-                    workspace = workspace,
-                    workspaceStatus = WorkspaceStatus.PREPARING,
-                    bgName = projectInfo?.bgName,
-                    deptName = projectInfo?.deptName,
-                    centerName = projectInfo?.centerName,
-                    groupName = null,
-                    dslContext = dslContext
-                )
-            }
-        }
+        workspaceDao.createWorkspace(
+            workspace = workspace,
+            workspaceStatus = WorkspaceStatus.PREPARING,
+            bgName = userInfo?.bgName,
+            deptName = userInfo?.deptName,
+            centerName = userInfo?.centerName,
+            groupName = userInfo?.groupName,
+            dslContext = dslContext
+        )
     }
 
     private fun generateWorkspaceName(userId: String): String {
