@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -151,14 +151,19 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         projectName: String,
         repositoryType: String
-    ): Result<Record2<String, String>>? {
+    ): List<PipelineWebhookSubscriber>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .where(PROJECT_NAME.eq(projectName))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .groupBy(PROJECT_ID, PIPELINE_ID)
-                .fetch()
+                .fetch().map {
+                    PipelineWebhookSubscriber(
+                        projectId = it.value1(),
+                        pipelineId = it.value2()
+                    )
+                }
         }
     }
 

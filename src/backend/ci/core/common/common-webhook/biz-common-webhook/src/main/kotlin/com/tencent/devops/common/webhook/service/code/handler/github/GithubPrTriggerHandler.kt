@@ -78,9 +78,11 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -138,12 +140,12 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.base.repo.cloneUrl
     }
 
-    override fun preMatch(event: GithubPullRequestEvent): ScmWebhookMatcher.MatchResult {
+    override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
         if (!(event.action == "opened" || event.action == "reopened" || event.action == "synchronize")) {
             logger.info("Github pull request no open or update")
-            return ScmWebhookMatcher.MatchResult(false)
+            return WebhookMatchResult(false)
         }
-        return ScmWebhookMatcher.MatchResult(true)
+        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(
@@ -153,7 +155,27 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        return emptyList()
+        with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = "on.push.users trigger user($userId) not match",
+                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+            )
+            val targetBranch = getBranchName(event)
+            val targetBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = getBranchName(event),
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName),
+                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
+                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+            )
+            return listOf(userFilter, targetBranchFilter)
+        }
     }
 
     override fun retrieveParams(

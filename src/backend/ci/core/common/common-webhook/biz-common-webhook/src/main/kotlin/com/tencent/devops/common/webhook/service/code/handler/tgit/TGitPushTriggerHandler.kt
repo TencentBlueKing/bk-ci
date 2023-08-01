@@ -56,14 +56,16 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
@@ -125,7 +127,15 @@ class TGitPushTriggerHandler(
         }
     }
 
-    override fun preMatch(event: GitPushEvent): ScmWebhookMatcher.MatchResult {
+    override fun getEventDesc(event: GitPushEvent): String {
+        return "${getBranchName(event)} commit ${event.checkout_sha} pushed by ${event.user_name}"
+    }
+
+    override fun getExternalId(event: GitPushEvent): String {
+        return event.project_id.toString()
+    }
+
+    override fun preMatch(event: GitPushEvent): WebhookMatchResult {
         val isMatch = when {
             event.total_commits_count <= 0 -> {
                 logger.info("Git web hook no commit(${event.total_commits_count})")
@@ -138,7 +148,7 @@ class TGitPushTriggerHandler(
             else ->
                 true
         }
-        return ScmWebhookMatcher.MatchResult(isMatch)
+        return WebhookMatchResult(isMatch)
     }
 
     override fun getEventFilters(
@@ -149,6 +159,24 @@ class TGitPushTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = convert(includeUsers),
+                excludedUsers = convert(excludeUsers),
+                includedFailedReason = "on.push.users trigger user($userId) not match",
+                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+            )
+            val triggerOnBranchName = getBranchName(event)
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = getBranchName(event),
+                includedBranches = convert(branchName),
+                excludedBranches = convert(excludeBranchName),
+                includedFailedReason = "on.push.branches branch($triggerOnBranchName) not match",
+                excludedFailedReason = "on.push.branches-ignore branch($triggerOnBranchName) match"
+            )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
@@ -183,7 +211,9 @@ class TGitPushTriggerHandler(
                             pipelineId = pipelineId,
                             triggerOnPath = eventPaths.toList(),
                             includedPaths = convert(includePaths),
-                            excludedPaths = convert(excludePaths)
+                            excludedPaths = convert(excludePaths),
+                            includedFailedReason = "on.push.paths change path($includePaths) not match",
+                            excludedFailedReason = "on.push.paths-ignore change path($excludePaths) match"
                         )
                     ).doFilter(response)
                 }
@@ -204,7 +234,10 @@ class TGitPushTriggerHandler(
                 gitScmService = gitScmService,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
-            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter, thirdFilter)
+            return listOf(
+                userFilter, branchFilter, skipCiFilter,
+                pathFilter, commitMessageFilter, pushKindFilter, thirdFilter
+            )
         }
     }
 

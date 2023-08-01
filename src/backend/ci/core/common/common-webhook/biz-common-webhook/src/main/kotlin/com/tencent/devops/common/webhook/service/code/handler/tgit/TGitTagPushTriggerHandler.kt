@@ -154,23 +154,36 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 triggerOnEventType = getEventType(),
                 eventType = eventType
             )
+            val eventTag = getBranchName(event)
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = eventTag,
                 includedBranches = WebhookUtils.convert(tagName),
-                excludedBranches = WebhookUtils.convert(excludeTagName)
+                excludedBranches = WebhookUtils.convert(excludeTagName),
+                includedFailedReason = "on.tag.tags tag($eventTag) not match",
+                excludedFailedReason = "on.tag.tags-ignore tag($eventTag) match"
             )
+            val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
                 triggerOnUser = getUsername(event),
                 includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = "on.tag.users trigger user($userId) not match",
+                excludedFailedReason = "on.tag.users-ignore trigger user($userId) match"
             )
+            val fromBranch = event.create_from
             val fromBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = event.create_from ?: "",
                 includedBranches = WebhookUtils.convert(fromBranches),
-                excludedBranches = emptyList()
+                excludedBranches = emptyList(),
+                includedFailedReason = if (fromBranch.isNullOrBlank()) {
+                    "on.tag.from-branches client push tag not support from-branches"
+                } else {
+                    "on.tag.from-branches tag from branch($fromBranch) not match"
+                },
+                excludedFailedReason = ""
             )
             return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
         }

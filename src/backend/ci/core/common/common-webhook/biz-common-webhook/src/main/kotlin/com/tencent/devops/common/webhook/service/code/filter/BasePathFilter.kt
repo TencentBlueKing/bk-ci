@@ -35,6 +35,10 @@ abstract class BasePathFilter(
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String,
+    // 排除过滤失败原因
+    private val excludedFailedReason: String,
     private val caseSensitive: Boolean = true
 ) : WebhookFilter {
 
@@ -90,8 +94,16 @@ abstract class BasePathFilter(
         // 1. 包含不为空，过滤为空,判断matchIncludePaths是否为空
         // 2. 包含为空，过滤不为空,matchIncludePaths与triggerOnPath相同,判断matchIncludePaths与matchExcludedPaths大小
         return when {
-            excludedPaths.isEmpty() && includedPaths.isNotEmpty() && matchIncludePaths.isEmpty() -> false
-            matchIncludePaths.size == matchExcludedPaths.size -> false
+            excludedPaths.isEmpty() && includedPaths.isNotEmpty() && matchIncludePaths.isEmpty() -> {
+                response.failedReason = includedFailedReason
+                false
+            }
+
+            matchIncludePaths.size == matchExcludedPaths.size -> {
+                response.failedReason = excludedFailedReason
+                false
+            }
+
             else -> true
         }
     }

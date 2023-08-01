@@ -64,6 +64,7 @@ import com.tencent.devops.process.engine.pojo.WebhookElementParams
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -207,7 +208,11 @@ class PipelineWebhookService @Autowired constructor(
             redisLock.lock()
             return when (pipelineWebhook.repositoryType) {
                 ScmType.CODE_GIT ->
-                    scmProxyService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                    scmProxyService.addGitWebhook(
+                        projectId = pipelineWebhook.projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    ).projectName
                 ScmType.CODE_SVN ->
                     scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
@@ -278,43 +283,13 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getWebhookPipelines(name: String, type: String): Set<Pair<String, String>> {
-        val records = pipelineWebhookDao.getByProjectNameAndType(
+    fun getWebhookPipelines(name: String, repositoryType: String): List<PipelineWebhookSubscriber> {
+        return pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
-            repositoryType = getWebhookScmType(type).name
-        )
-        val pipelineWebhookSet = mutableSetOf<Pair<String, String>>()
-        records?.forEach {
-            pipelineWebhookSet.add(Pair(it.value1(), it.value2()))
-        }
-        return pipelineWebhookSet
+            repositoryType = repositoryType
+        ) ?: emptyList()
     }
-
-    fun getWebhookScmType(type: String) =
-        when (type) {
-            CodeGitWebHookTriggerElement.classType -> {
-                ScmType.CODE_GIT
-            }
-            CodeSVNWebHookTriggerElement.classType -> {
-                ScmType.CODE_SVN
-            }
-            CodeGitlabWebHookTriggerElement.classType -> {
-                ScmType.CODE_GITLAB
-            }
-            CodeGithubWebHookTriggerElement.classType -> {
-                ScmType.GITHUB
-            }
-            CodeTGitWebHookTriggerElement.classType -> {
-                ScmType.CODE_TGIT
-            }
-            CodeP4WebHookTriggerElement.classType -> {
-                ScmType.CODE_P4
-            }
-            else -> {
-                throw IllegalArgumentException("Unknown web hook type($type)")
-            }
-        }
 
     fun getProjectName(projectName: String): String {
         // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b

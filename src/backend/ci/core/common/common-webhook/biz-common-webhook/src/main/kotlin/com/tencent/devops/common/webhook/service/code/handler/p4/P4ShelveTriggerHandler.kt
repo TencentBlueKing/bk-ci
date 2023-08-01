@@ -137,7 +137,9 @@ class P4ShelveTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
-                            caseSensitive = caseSensitive
+                            caseSensitive = caseSensitive,
+                            includedFailedReason = "on.shelve-commit.paths change path($includePaths) not match",
+                            excludedFailedReason = "on.shelve-commit.paths-ignore change path($excludePaths) match"
                         )
                     ).doFilter(response)
                 }

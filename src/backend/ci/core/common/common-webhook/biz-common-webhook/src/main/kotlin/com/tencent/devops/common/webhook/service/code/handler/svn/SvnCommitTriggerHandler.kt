@@ -92,11 +92,14 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 projectName = repository.projectName,
                 triggerOnProjectName = event.rep_name
             )
+            val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
-                triggerOnUser = getUsername(event),
+                triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = "on.post-commit.users trigger user($userId) not match",
+                excludedFailedReason = "on.post-commit.users-ignore trigger user($userId) match"
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
             val pathFilter = PathFilterFactory.newPathFilter(
@@ -110,7 +113,9 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = getIncludePaths(projectRelativePath)
+                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedFailedReason = "on.post-commit.paths change path($includePaths) not match",
+                    excludedFailedReason = "on.post-commit.paths-ignore change path($excludePaths) match"
                 )
             )
             return listOf(projectNameFilter, userFilter, pathFilter)

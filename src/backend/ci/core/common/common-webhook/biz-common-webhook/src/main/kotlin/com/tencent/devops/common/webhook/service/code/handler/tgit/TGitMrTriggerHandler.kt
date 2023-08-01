@@ -78,10 +78,11 @@ import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
@@ -164,7 +165,7 @@ class TGitMrTriggerHandler(
         )
     }
 
-    override fun preMatch(event: GitMergeRequestEvent): ScmWebhookMatcher.MatchResult {
+    override fun preMatch(event: GitMergeRequestEvent): WebhookMatchResult {
         if (event.object_attributes.action == "close" ||
             (
                 event.object_attributes.action == "update" &&
@@ -172,9 +173,9 @@ class TGitMrTriggerHandler(
                 )
         ) {
             logger.info("Git web hook is ${event.object_attributes.action} merge request")
-            return ScmWebhookMatcher.MatchResult(false)
+            return WebhookMatchResult(false)
         }
-        return ScmWebhookMatcher.MatchResult(true)
+        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(
@@ -185,11 +186,32 @@ class TGitMrTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = getUsername(event),
+                includedUsers = convert(includeUsers),
+                excludedUsers = convert(excludeUsers),
+                includedFailedReason = "on.mr.users trigger user($userId) not match",
+                excludedFailedReason = "on.mr.users-ignore trigger user($userId) match"
+            )
+            val targetBranch = getBranchName(event)
+            val targetBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = getBranchName(event),
+                includedBranches = convert(branchName),
+                excludedBranches = convert(excludeBranchName),
+                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
+                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+            )
+            val sourceBranch = getBranch(event.object_attributes.source_branch)
             val sourceBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranch(event.object_attributes.source_branch),
+                triggerOnBranchName = sourceBranch,
                 includedBranches = convert(includeSourceBranchName),
-                excludedBranches = convert(excludeSourceBranchName)
+                excludedBranches = convert(excludeSourceBranchName),
+                includedFailedReason = "on.mr.source-branches source branch($sourceBranch) not match",
+                excludedFailedReason = "on.mr.source-branches-ignore source branch($sourceBranch) match"
             )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
@@ -224,7 +246,9 @@ class TGitMrTriggerHandler(
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
                             includedPaths = convert(includePaths),
-                            excludedPaths = convert(excludePaths)
+                            excludedPaths = convert(excludePaths),
+                            includedFailedReason = "on.mr.paths change path($includePaths) not match",
+                            excludedFailedReason = "on.mr.paths-ignore change path($excludePaths) match"
                         )
                     ).doFilter(response)
                 }
@@ -246,7 +270,11 @@ class TGitMrTriggerHandler(
                 gitScmService = gitScmService,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter, thirdFilter)
+            return listOf(
+                userFilter, targetBranchFilter,
+                sourceBranchFilter, skipCiFilter, pathFilter,
+                commitMessageFilter, actionFilter, thirdFilter
+            )
         }
     }
 

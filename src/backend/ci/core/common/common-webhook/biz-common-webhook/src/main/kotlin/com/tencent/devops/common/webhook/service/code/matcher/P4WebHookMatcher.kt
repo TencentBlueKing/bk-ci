@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
@@ -47,10 +48,10 @@ class P4WebHookMatcher(
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
+    ): WebhookMatchResult {
         if (repository !is CodeP4Repository) {
             logger.warn("$pipelineId|The repo($repository) is not code p4 repo for p4 web hook")
-            return ScmWebhookMatcher.MatchResult(isMatch = false)
+            return WebhookMatchResult(isMatch = false)
         }
         return eventHandler.isMatch(
             event = event,
