@@ -62,7 +62,7 @@ class SoftwareManageDao {
         dslContext: DSLContext,
         software: ProjectSoftware
     ): Int {
-       return with(TProjectSoftwares.T_PROJECT_SOFTWARES) {
+        return with(TProjectSoftwares.T_PROJECT_SOFTWARES) {
             dslContext.insertInto(
                     this,
                     PROJECT_ID,
