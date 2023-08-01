@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -42,7 +43,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -55,6 +55,8 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
@@ -63,6 +65,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import org.jooq.DSLContext
@@ -97,6 +100,8 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelinePauseExtService: PipelinePauseExtService
 ) {
 
@@ -374,7 +379,8 @@ class PipelineTaskService @Autowired constructor(
                     taskId = updateTaskInfo.taskId,
                     additionalOptions = taskRecord?.additionalOptions,
                     executeCount = taskRecord?.executeCount
-                )) {
+                )
+            ) {
                 // 如果是自动重试则不重置task的时间
                 updateTaskInfo.startTime = LocalDateTime.now()
                 if (!userId.isNullOrBlank()) {
@@ -482,6 +488,31 @@ class PipelineTaskService @Autowired constructor(
             )
         }
         return isRry
+    }
+
+    fun taskRetryRecordSet(
+        projectId: String,
+        taskId: String,
+        buildId: String,
+        pipelineId: String,
+        containerId: String,
+        executeCount: Int
+    ) {
+        val lastContainerRecord = containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+        )
+        if (lastContainerRecord != null) {
+            lastContainerRecord.containerVar[JOB_RETRY_TASK_ID] = taskId
+            pipelineBuildRecordService.batchSave(
+                transactionContext = null, model = null, stageList = null,
+                containerList = listOf(lastContainerRecord), taskList = null
+            )
+        }
     }
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {

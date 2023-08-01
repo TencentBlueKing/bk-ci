@@ -51,6 +51,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
@@ -75,6 +76,7 @@ class SleepControl @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon
 ) {
@@ -324,6 +326,10 @@ class SleepControl @Autowired constructor(
                     WorkspaceStatus.EXCEPTION.name
                 )
             )
+        }
+
+        if (workspace.systemType == WorkspaceSystemType.WINDOWS_GPU.name) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.creator)
         }
 
         dslContext.transaction { configuration ->
