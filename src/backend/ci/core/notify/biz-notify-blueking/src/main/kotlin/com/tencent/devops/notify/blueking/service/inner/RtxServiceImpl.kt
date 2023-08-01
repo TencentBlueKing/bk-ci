@@ -37,7 +37,6 @@ import com.tencent.devops.common.notify.utils.ChineseStringUtil
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
-import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.dao.RtxNotifyDao

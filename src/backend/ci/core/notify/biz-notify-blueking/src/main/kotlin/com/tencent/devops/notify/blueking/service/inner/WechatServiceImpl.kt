@@ -41,7 +41,6 @@ import com.tencent.devops.notify.dao.WechatNotifyDao
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
-import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage

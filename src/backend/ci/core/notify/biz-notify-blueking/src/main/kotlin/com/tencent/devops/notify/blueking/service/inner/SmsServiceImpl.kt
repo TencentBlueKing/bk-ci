@@ -45,7 +45,6 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.common.notify.utils.Configuration
-import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
