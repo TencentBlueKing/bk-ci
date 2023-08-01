@@ -63,7 +63,6 @@ import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.WebhookElementParams
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
-import com.tencent.devops.process.pojo.webhook.PipelineTriggerTask
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -256,33 +255,6 @@ class PipelineWebhookService @Autowired constructor(
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/edit"
 
-    fun save(
-        projectId: String,
-        pipelineId: String,
-        repositoryType: String,
-        repoType: String,
-        repoHashId: String?,
-        repoName: String?,
-        projectName: String,
-        taskId: String,
-        eventSource: String,
-        eventType: String
-    ) {
-        pipelineWebhookDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            repositoryType = repositoryType,
-            repoType = repoType,
-            repoHashId = repoHashId,
-            repoName = repoName,
-            projectName = projectName,
-            taskId = taskId,
-            eventSource = eventSource,
-            eventType = eventType
-        )
-    }
-
     fun deleteWebhook(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
         logger.info("delete $pipelineId webhook by $userId")
         pipelineWebhookDao.deleteByPipelineId(dslContext, projectId, pipelineId)
@@ -318,31 +290,6 @@ class PipelineWebhookService @Autowired constructor(
             repositoryType = repositoryType
         ) ?: emptyList()
     }
-
-    fun getWebhookScmType(type: String) =
-        when (type) {
-            CodeGitWebHookTriggerElement.classType -> {
-                ScmType.CODE_GIT
-            }
-            CodeSVNWebHookTriggerElement.classType -> {
-                ScmType.CODE_SVN
-            }
-            CodeGitlabWebHookTriggerElement.classType -> {
-                ScmType.CODE_GITLAB
-            }
-            CodeGithubWebHookTriggerElement.classType -> {
-                ScmType.GITHUB
-            }
-            CodeTGitWebHookTriggerElement.classType -> {
-                ScmType.CODE_TGIT
-            }
-            CodeP4WebHookTriggerElement.classType -> {
-                ScmType.CODE_P4
-            }
-            else -> {
-                throw IllegalArgumentException("Unknown web hook type($type)")
-            }
-        }
 
     fun getProjectName(projectName: String): String {
         // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
@@ -647,17 +594,6 @@ class PipelineWebhookService @Autowired constructor(
             }
             start += 100
         }
-    }
-
-    fun getSubscriber(
-        eventSource: String,
-        eventType: String
-    ): List<PipelineTriggerTask> {
-        return pipelineWebhookDao.getSubscriber(
-            dslContext = dslContext,
-            eventSource = eventSource,
-            eventType = eventType
-        )
     }
 
     private fun PipelineWebhook.doUpdateWebhookSecret(

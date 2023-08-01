@@ -31,14 +31,12 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
-import com.tencent.devops.process.pojo.webhook.PipelineTriggerTask
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -225,81 +223,6 @@ class PipelineWebhookDao {
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }
-    }
-
-    fun save(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        repositoryType: String,
-        repoType: String,
-        repoHashId: String?,
-        repoName: String?,
-        projectName: String,
-        taskId: String,
-        eventSource: String,
-        eventType: String
-    ): Int {
-        val now = LocalDateTime.now()
-        return with(T_PIPELINE_WEBHOOK) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                REPOSITORY_TYPE,
-                REPO_TYPE,
-                REPO_HASH_ID,
-                REPO_NAME,
-                PROJECT_NAME,
-                TASK_ID,
-                EVENT_SOURCE,
-                EVENT_TYPE,
-                CREATE_TIME,
-                UPDATE_TIME
-            )
-                .values(
-                    projectId,
-                    pipelineId,
-                    repositoryType,
-                    repoType,
-                    repoHashId,
-                    repoName,
-                    projectName,
-                    taskId,
-                    eventSource,
-                    eventType,
-                    now,
-                    now
-                )
-                .onDuplicateKeyUpdate()
-                .set(REPO_TYPE, repoType)
-                .set(REPO_HASH_ID, repoHashId)
-                .set(REPO_NAME, repoName)
-                .set(PROJECT_NAME, projectName)
-                .set(EVENT_SOURCE, eventSource)
-                .set(EVENT_TYPE, eventType)
-                .set(UPDATE_TIME, now)
-                .execute()
-        }
-    }
-
-    fun getSubscriber(
-        dslContext: DSLContext,
-        eventSource: String,
-        eventType: String
-    ): List<PipelineTriggerTask> {
-        return with(T_PIPELINE_WEBHOOK) {
-            dslContext.select(PROJECT_ID, PIPELINE_ID, TASK_ID).from(this)
-                .where(EVENT_SOURCE.eq(eventSource))
-                .and(EVENT_TYPE.eq(eventType))
-                .fetch {
-                    PipelineTriggerTask(
-                        projectId = it.value1(),
-                        pipelineId = it.value2(),
-                        taskId = it.value3()
-                    )
-                }
-        }
     }
 
     companion object {

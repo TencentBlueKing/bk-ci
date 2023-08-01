@@ -17,7 +17,7 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 object GitActionCommon {
 
