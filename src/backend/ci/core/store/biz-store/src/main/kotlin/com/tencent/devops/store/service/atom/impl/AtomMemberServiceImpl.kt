@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -62,8 +63,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(atomCode)
             )
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
@@ -73,8 +73,8 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
             )
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(atomCode)
             )
         }
         val repositoryHashId = atomRecord.repositoryHashId
@@ -114,14 +114,12 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(storeCode)
             )
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(id),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(id)
             )
         // 如果删除的是管理员，只剩一个管理员则不允许删除
         if ((memberRecord.type).toInt() == 0) {

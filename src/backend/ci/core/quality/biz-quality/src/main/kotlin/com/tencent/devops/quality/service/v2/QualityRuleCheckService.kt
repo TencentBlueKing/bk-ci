@@ -62,11 +62,11 @@ import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.constant.BK_BLOCKED
 import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TERMINATED
 import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TO_BE_REVIEWED
+import com.tencent.devops.quality.constant.BK_CURRENT_VALUE
 import com.tencent.devops.quality.constant.BK_INTERCEPTION_METRICS
 import com.tencent.devops.quality.constant.BK_INTERCEPTION_RULES
 import com.tencent.devops.quality.constant.BK_NO_TOOL_OR_RULE_ENABLED
 import com.tencent.devops.quality.constant.BK_PASSED
-import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
@@ -520,9 +520,13 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             } else {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataListCopy
-                        .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                        .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
+                    listOf(
+                        metadataListCopy.filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+                        .find {
+                            indicator.enName == it.enName &&
+                                    it.taskName.startsWith(indicator.taskName ?: "")
+                        }
+                    )
                 } else {
                     metadataListCopy.filter {
                         it.taskName.startsWith(indicator.taskName ?: "") &&
@@ -676,7 +680,7 @@ class QualityRuleCheckService @Autowired constructor(
             Triple(
                 sb.append(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = BK_VALIDATION_PASSED,
+                        messageCode = BK_CURRENT_VALUE,
                         params = arrayOf(
                             it.indicatorName,
                             "${it.actualValue}",
@@ -976,7 +980,9 @@ class QualityRuleCheckService @Autowired constructor(
                     // 脚本及三方插件可直接用指标英文名判断，并对结果元数据和指标taskName添加标识后缀
                     if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
                         indicatorsCopy.remove(indicator)
-                        metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
+                        metadataListCopy.filter {
+                            it.enName == indicator.enName
+                        }.forEachIndexed { index, metadata ->
                             handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
                         }
                     }

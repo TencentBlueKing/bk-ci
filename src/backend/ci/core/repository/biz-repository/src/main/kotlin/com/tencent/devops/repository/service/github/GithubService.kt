@@ -357,8 +357,8 @@ class GithubService @Autowired constructor(
             else -> "GitHub platform $operation fail"
         }
         throw GithubApiException(
-            code,
-            I18nUtil.getCodeLanMessage(messageCode = msg, params = arrayOf(operation))
+            code = code,
+            message = msg
         )
     }
 

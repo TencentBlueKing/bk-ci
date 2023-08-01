@@ -161,6 +161,16 @@ object CommonMessageCode {
     const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
     const val SERVICE_PROVIDER_NOT_FOUND = "2100111" // 找不到任何有效的{0}【{1}】服务提供者
     const val ILLEGAL_JOB_TYPE = "2100112" // 非法的job类型!
+    const val ERROR_YAML_FORMAT_EXCEPTION = "2100113" // {0} 中 {1} 格式有误,应为 {2}, error message:{3}
+    const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2100114" // 请核对Stage标签是否正确
+    const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2100115" // "{0} job.id 超过长度限制64 {1}}"
+    const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2100116" // {0} 中的step必须包含uses或run或checkout!
+    const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2100117" // STREAM Service镜像格式非法
+    const val ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS = "2100118" // 请确保step.id唯一性!({0})
+    const val BUILD_RESOURCE_NOT_EXIST = "2100119" // {0}构建资源不存在，请检查yml配置.
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2100120" // {0}配置Env数量超过100限制!
+    // {0}Env单变量{1}长度超过{2}字符!({3})
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
@@ -183,7 +193,7 @@ object CommonMessageCode {
     const val BK_CREATE_SERVICE = "bkCreateService" // 创建{0}服务
     const val BK_SESSION_ID = "bkSessionId" // 会话ID
     const val BK_GROUP_ID = "bkGroupId" // 群ID
-    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID={0}。PS:群ID可用于蓝盾平台上任意企业微信群通知。
     const val BK_MISSING_RESOURCE_DEPENDENCY = "bkMissingResourceDependency" // 依赖的资源不存在
 
     const val BK_REQUEST_TIMED_OUT = "bkRequestTimedOut" // 请求超时
@@ -196,7 +206,7 @@ object CommonMessageCode {
     const val BK_QUERY_PARAM_REQUEST_EMPTY = "bkQueryParamRequestEmpty" // 请求的参数内容为空
     const val BK_QUERY_PARAM_TYPE_ERROR = "bkQueryParamTypeError" // 查询参数类型错误
     // 你没有权限进行该操作
-    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION"
+    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "bkNotHavePermissionPerformThisOperation"
     // 访问后台数据失败，已通知产品、开发，请稍后重试
     const val BK_FAILED_ACCESS_BACKGROUND_DATA = "bkFailedAccessBackgroundData"
     // 未授权访问的资源
@@ -231,4 +241,9 @@ object CommonMessageCode {
     const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
+    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+
+    const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
+    const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
+    const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
 }

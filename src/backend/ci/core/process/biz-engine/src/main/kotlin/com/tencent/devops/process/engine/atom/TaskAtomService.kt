@@ -234,6 +234,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,
+                            executeCount = task.executeCount ?: 1,
                             taskId = updateTaskStatusInfo.taskId,
                             taskStatus = updateTaskStatusInfo.buildStatus
                         )
@@ -291,8 +292,12 @@ class TaskAtomService @Autowired(required = false) constructor(
      */
     fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
         val startTime = System.currentTimeMillis()
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-
+        // #8879 被动终止的插件应该设为取消状态
+        var atomResponse = if (actionType.isTerminate()) {
+            AtomResponse(BuildStatus.CANCELED)
+        } else {
+            AtomResponse(BuildStatus.FAILED)
+        }
         try {
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑

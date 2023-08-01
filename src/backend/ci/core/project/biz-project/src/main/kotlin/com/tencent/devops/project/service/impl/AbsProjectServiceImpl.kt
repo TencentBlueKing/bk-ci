@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -68,6 +69,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -293,7 +295,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultProjectId = projectCode,
             createExtInfo = projectCreateExtInfo
         )
-        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
+        updateProjectProperties(
+            userId = userId,
+            projectCode = projectCode,
+            properties = projectCreateInfo.properties
+                ?: ProjectProperties(PipelineAsCodeSettings(true))
+        )
         return getByEnglishName(projectCode)
     }
 
@@ -738,17 +745,32 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listMigrateProjects(
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectWithPermission> {
+        return projectDao.listMigrateProjects(
+            dslContext = dslContext,
+            migrateProjectConditionDTO = migrateProjectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map {
+            ProjectWithPermission(
+                projectName = it.projectName,
+                englishName = it.englishName,
+                permission = true,
+                routerTag = buildRouterTag(it.routerTag)
+            )
+        }
+    }
+
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(
-                dslContext = dslContext,
-                limit = limit,
-                offset = offset,
-                enabled = true
-            ).map {
+            projectDao.list(dslContext, limit, offset).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)
@@ -825,6 +847,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): Result<ProjectLogo> {
         logger.info("Update the logo of project : englishName = $englishName")
+        val verify = validatePermission(englishName, userId, AuthPermission.EDIT)
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+            throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
         val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
         if (projectRecord != null) {
             var logoFile: File? = null
@@ -1102,6 +1129,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean {
+        logger.info("update project create start | $projectUpdateCreatorDtoList")
+        projectUpdateCreatorDtoList.forEach {
+            projectDao.getByEnglishName(
+                dslContext = dslContext,
+                englishName = it.projectCode
+            ) ?: throw NotFoundException("project - ${it.projectCode} is not exist!")
+            projectDao.updateCreatorByCode(
+                dslContext = dslContext,
+                projectCode = it.projectCode,
+                creator = it.creator
+            )
+        }
+        return true
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -1137,11 +1180,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCode: String
     )
 
-    abstract fun buildRouterTag(routerTag: String?): String?
-
     abstract fun updateProjectRouterTag(englishName: String)
 
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
+
+    abstract fun buildRouterTag(routerTag: String?): String?
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

@@ -137,21 +137,7 @@
 
                     res = res.data || {}
                     if (res.status !== 0) {
-                        let errMessage
-                        switch (res.status) {
-                            case 1:
-                                errMessage = this.$t('history.logEmpty')
-                                break
-                            case 2:
-                                errMessage = this.$t('history.logClear')
-                                break
-                            case 3:
-                                errMessage = this.$t('history.logClose')
-                                break
-                            default:
-                                errMessage = this.$t('history.logErr')
-                                break
-                        }
+                        const errMessage = res.message ?? this.$t('history.logErr')
                         ref.handleApiErr(errMessage, id)
                         return
                     }

@@ -208,7 +208,8 @@ class QualityRuleBuildHisService constructor(
                     indicator
                 },
                 controlPoint = QualityRule.RuleControlPoint(
-                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                    "", "", "",
+                    ControlPointPosition.create(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
                 range = if (it.pipelineRange.isNullOrBlank()) {
                     listOf()
@@ -418,7 +419,8 @@ class QualityRuleBuildHisService constructor(
                 desc = it.ruleDesc,
                 indicators = listOf(),
                 controlPoint = QualityRule.RuleControlPoint(
-                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                    "", "", "",
+                    ControlPointPosition.create(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
                 range = if (it.pipelineRange.isNullOrBlank()) {
                     listOf()

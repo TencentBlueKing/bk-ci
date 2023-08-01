@@ -40,13 +40,17 @@ import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
+import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 
 @RestResource
 @Suppress("ALL")
 class BuildAgentBuildResourceImpl constructor(
-    private val thirdPartyAgentBuildService: ThirdPartyAgentService
+    private val thirdPartyAgentBuildService: ThirdPartyAgentService,
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) : BuildAgentBuildResource {
 
     override fun startBuild(
@@ -110,6 +114,36 @@ class BuildAgentBuildResourceImpl constructor(
         checkParam(projectId, agentId, secretKey)
         thirdPartyAgentBuildService.workerBuildFinish(projectId, agentId, secretKey, buildInfo)
         return Result(true)
+    }
+
+    override fun dockerStartDebug(
+        projectId: String,
+        agentId: String,
+        secretKey: String
+    ): AgentResult<ThirdPartyDockerDebugInfo?> {
+        checkParam(projectId, agentId, secretKey)
+        return thirdPartyAgentDockerService.startDockerDebug(projectId, agentId, secretKey)
+    }
+
+    override fun dockerStartDebugDone(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        debugInfo: ThirdPartyDockerDebugDoneInfo
+    ): Result<Boolean> {
+        checkParam(projectId, agentId, secretKey)
+        thirdPartyAgentDockerService.startDockerDebugDone(projectId, agentId, secretKey, debugInfo)
+        return Result(true)
+    }
+
+    override fun dockerDebugStatus(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        debugId: Long
+    ): Result<String?> {
+        checkParam(projectId, agentId, secretKey)
+        return Result(thirdPartyAgentDockerService.fetchDebugStatus(debugId))
     }
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {

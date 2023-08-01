@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +51,8 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val authResourceNameConverter: AuthResourceNameConverter
 ) {
 
     companion object {
@@ -82,8 +82,9 @@ class PermissionSubsetManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
-        val name = IamGroupUtils.buildSubsetManagerGroupName(
+        val name = authResourceNameConverter.generateIamName(
             resourceType = resourceType,
+            resourceCode = resourceCode,
             resourceName = resourceName
         )
         val description = managerGroupConfig.description
@@ -131,8 +132,9 @@ class PermissionSubsetManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
-        val name = IamGroupUtils.buildSubsetManagerGroupName(
+        val name = authResourceNameConverter.generateIamName(
             resourceType = resourceType,
+            resourceCode = resourceCode,
             resourceName = resourceName
         )
 

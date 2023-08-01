@@ -30,7 +30,7 @@ package com.tencent.devops.plugin.codecc.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -198,9 +198,9 @@ class CodeccService @Autowired constructor(
                 val body = response.body!!.string()
                 logger.info("codecc blueShield response: $body")
                 if (!response.isSuccessful) {
-                    throw ErrorCodeException(
-                        errorCode = response.code.toString(),
-                        defaultMessage = "get codecc blueShield response fail $body"
+                    throw RemoteServiceException(
+                        errorCode = response.code,
+                        errorMessage = "get codecc blueShield response fail $body"
                     )
                 }
                 return objectMapper.readValue(body, BlueShieldResponse::class.java)

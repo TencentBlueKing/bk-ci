@@ -41,6 +41,7 @@ import (
 	"strings"
 	"sync"
 
+	languageUtil "golang.org/x/text/language"
 	"gopkg.in/ini.v1"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
@@ -66,9 +67,11 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
-	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
-	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
-	keyEnableDockerBuild = "devops.docker.enable"
+	KeyJdkDirPath          = "devops.agent.jdk.dir.path"
+	KeyDockerTaskCount     = "devops.docker.parallel.task.count"
+	keyEnableDockerBuild   = "devops.docker.enable"
+	KeyLanguage            = "devops.language"
+	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 )
 
 // AgentConfig Agent 配置
@@ -91,6 +94,8 @@ type AgentConfig struct {
 	JdkDirPath              string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
+	Language                string
+	ImageDebugPortRange     string
 }
 
 // AgentEnv Agent 环境配置
@@ -214,19 +219,19 @@ func parseWorkerVersion(output string) string {
 			}
 			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
 			if matchWorkerVersion(line) {
-				logs.Info("worker version: ", line)
+				logs.Info("match worker version: ", line)
 				return line
 			} else {
 				if versionRegexp != nil {
 					if versionRegexp.MatchString(line) {
-						logs.Info("worker version: ", line)
+						logs.Info("regexp worker version: ", line)
 						return line
 					} else {
 						continue
 					}
 				} else {
 					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-					logs.Info("worker version: ", line)
+					logs.Info("regexp nil worker version: ", line)
 					return line
 				}
 			}
@@ -382,7 +387,19 @@ func LoadAgentConfig() error {
 		}
 	}
 
+	language := DEFAULT_LANGUAGE_TYPE
+	if conf.Section("").HasKey(KeyLanguage) {
+		language = conf.Section("").Key(KeyLanguage).String()
+		_, err := languageUtil.Parse(language)
+		if err != nil {
+			logs.Errorf("not support language %s", language)
+			language = DEFAULT_LANGUAGE_TYPE
+		}
+	}
+
 	enableDocker := conf.Section("").Key(keyEnableDockerBuild).MustBool(false)
+
+	imageDebugPortRange := conf.Section("").Key(KeyImageDebugPortRange).MustString(DEFAULT_IMAGE_DEBUG_PORT_RANGE)
 
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
@@ -423,6 +440,10 @@ func LoadAgentConfig() error {
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 	GAgentConfig.EnableDockerBuild = enableDocker
 	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
+	GAgentConfig.Language = language
+	logs.Info("Language:", GAgentConfig.Language)
+	GAgentConfig.ImageDebugPortRange = imageDebugPortRange
+	logs.Info("ImageDebugPortRange: ", GAgentConfig.ImageDebugPortRange)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -455,6 +476,8 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
+	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
+	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 
 	err := os.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -490,7 +513,7 @@ func SaveJdkDir(dir string) {
 	GAgentConfig.JdkDirPath = dir
 	err := GAgentConfig.SaveConfig()
 	if err != nil {
-		logs.Error("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
+		logs.Errorf("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
 		return
 	}
 }
@@ -533,14 +556,14 @@ func initCert() {
 	// Load client cert
 	caCert, err := os.ReadFile(AbsCertFilePath)
 	if err != nil {
-		logs.Warn("Reading server certificate: %s", err)
+		logs.Warnf("Reading server certificate: %s", err)
 		return
 	}
-	logs.Info("Cert content is: %s", string(caCert))
+	logs.Infof("Cert content is: %s", string(caCert))
 	caCertPool, err := x509.SystemCertPool()
 	// Windows 下 SystemCertPool 返回 nil
 	if err != nil || caCertPool == nil {
-		logs.Warn("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err)
+		logs.Warnf("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err.Error())
 		caCertPool = x509.NewCertPool()
 	}
 	caCertPool.AppendCertsFromPEM(caCert)

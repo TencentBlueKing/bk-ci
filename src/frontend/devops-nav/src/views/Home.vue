@@ -66,7 +66,9 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >{{ item.label }}</span>
+                    >
+                        {{ item.label }}
+                    </span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"
@@ -241,7 +243,11 @@
 <style lang="scss">
     @import '../assets/scss/conf';
     .devops-home-page {
-        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        width: 100%;
     }
     .devops-home-content {
         display: flex;
@@ -249,7 +255,6 @@
         justify-content: center;
         width: 1280px;
         padding: 30px 0 100px 0;
-        overflow: auto;
 
         > section {
             width: 800px;

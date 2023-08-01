@@ -78,11 +78,11 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.Arrays
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
@@ -102,7 +102,7 @@ class PermissionGradeManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionGradeManagerService::class.java)
         private const val DEPARTMENT = "department"
-        private const val CANCEL_CREATE_APPLICATION = "WITHDRAW"
+        private const val CANCEL_ITSM_APPLICATION_ACTION = "WITHDRAW"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -374,7 +374,10 @@ class PermissionGradeManagerService @Autowired constructor(
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
-            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+                .groups(listOf(managerRoleGroup))
+                .createAttributes(false)
+                .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
             authResourceGroupDao.create(
                 dslContext = dslContext,
@@ -493,7 +496,7 @@ class PermissionGradeManagerService @Autowired constructor(
             ItsmCancelApplicationInfo(
                 sn = callbackRecord.sn,
                 operator = userId,
-                actionType = CANCEL_CREATE_APPLICATION
+                actionType = CANCEL_ITSM_APPLICATION_ACTION
             )
         )
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
@@ -502,13 +505,13 @@ class PermissionGradeManagerService @Autowired constructor(
 
     fun listGroup(
         gradeManagerId: String,
+        searchGroupDTO: SearchGroupDTO,
         page: Int,
         pageSize: Int
     ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = page
         pageInfoDTO.pageSize = pageSize
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
             searchGroupDTO,

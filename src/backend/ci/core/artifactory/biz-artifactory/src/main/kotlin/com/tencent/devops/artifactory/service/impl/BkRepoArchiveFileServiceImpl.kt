@@ -356,37 +356,37 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         )
         return getFileDownloadUrls(
             userId = userId,
-            filePath = "$projectId/${BkRepoUtils.getRepoName(artifactoryType)}/$filePath",
+            projectId = projectId,
+            filePath = "/$filePath",
             artifactoryType = artifactoryType,
             fileChannelType = fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
         userId: String,
+        projectId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,
         fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
-        logger.info("getFileDownloadUrls, userId: $userId, filePath: $filePath, artifactoryType, $artifactoryType, " +
-            "fileChannelType, $fileChannelType")
+        logger.info("getFileDownloadUrls, userId: $userId, projectId: $projectId, filePath: $filePath, " +
+            "artifactoryType, $artifactoryType, fileChannelType, $fileChannelType")
         if (filePath.contains("..")) {
             logger.warn("getFileDownloadUrls, path contains '..'")
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
-        val artifactoryInfo = BkRepoUtils.parseArtifactoryInfo(filePath)
-        logger.debug("getFileDownloadUrls, artifactoryInfo, $artifactoryInfo")
         val repoName = BkRepoUtils.getRepoName(artifactoryType)
         val fileUrls = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
             userId = userId,
-            projectId = artifactoryInfo.projectId,
+            projectId = projectId,
             repoNames = listOf(repoName),
-            pathNamePairs = listOf(BkRepoUtils.parsePathNamePair(artifactoryInfo.artifactUri)),
+            pathNamePairs = listOf(BkRepoUtils.parsePathNamePair(filePath)),
             metadata = mapOf(),
             page = 1,
             pageSize = DOWNLOAD_FILE_URL_LIMIT
         ).records.map {
-            generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}", fullUrl)
+            generateFileDownloadUrl(fileChannelType, "$projectId/$repoName/${it.fullPath}", fullUrl)
         }
         if (fileUrls.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))

@@ -92,8 +92,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = PageUtil.getValidPageSize(pageSize)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
+            val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
             permissionGradeManagerService.listGroup(
                 gradeManagerId = resourceInfo.relationId,
+                searchGroupDTO = searchGroupDTO,
                 page = validPage,
                 pageSize = validPageSize
             )
@@ -336,7 +338,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
         val gradeManagerRoleGroupList =
             iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
-        if (gradeManagerRoleGroupList.results.isNotEmpty()) {
+        if (gradeManagerRoleGroupList.results.isNotEmpty() &&
+            gradeManagerRoleGroupList.results.map { it.name }.contains(groupName)
+        ) {
             throw ErrorCodeException(
                 errorCode = GROUP_EXIST,
                 defaultMessage = "group name already exists"

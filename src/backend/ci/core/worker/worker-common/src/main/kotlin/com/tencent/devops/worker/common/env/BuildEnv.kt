@@ -47,6 +47,10 @@ object BuildEnv {
         return BuildType.valueOf(buildType!!)
     }
 
+    fun setBuildType(value: BuildType) {
+        this.buildType = value.name
+    }
+
     fun isThirdParty() = getBuildType() == BuildType.AGENT
 
     fun getBuildId() = System.getProperty(BUILD_ID)

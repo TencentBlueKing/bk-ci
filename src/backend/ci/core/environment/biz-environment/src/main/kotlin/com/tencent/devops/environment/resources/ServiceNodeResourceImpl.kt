@@ -119,4 +119,25 @@ class ServiceNodeResourceImpl @Autowired constructor(
         nodeService.deleteNodeByAgentId(userId, projectId, agentId)
         return Result(true)
     }
+
+    override fun thirdPartyEnv2Nodes(
+        userId: String,
+        projectId: String,
+        envHashId: String?,
+        envName: String?
+    ): Result<List<NodeWithPermission>> {
+        if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("envHashId")
+            )
+        }
+        val envId = envHashId ?: envName?.let {
+            envService.getByName(projectId, it)?.envHashId
+        } ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+            params = arrayOf("envName")
+        )
+        return Result(envService.thirdPartyEnv2Nodes(userId, projectId, envId))
+    }
 }

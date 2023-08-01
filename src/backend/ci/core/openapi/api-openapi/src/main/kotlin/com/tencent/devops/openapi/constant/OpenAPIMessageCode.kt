@@ -69,7 +69,7 @@ object OpenAPIMessageCode {
     const val BK_PARAM_TYPE = "bkParamType" // 参数类型
     const val BK_PARAM_ILLUSTRATE = "bkParamIllustrate" // 参数说明
     const val BK_HAVE_TO = "bkHaveTo" // 必须
-    const val BK_ILLUSTRATE = "BK_ILLUSTRATE" // 说明
+    const val BK_ILLUSTRATE = "bkIllustrate" // 说明
     const val BK_DEFAULT_VALUE = "bkDefaultValue" // 默认值
     const val BK_APPLICATION_STATE_REQUIRED = "bkApplicationStateRequired" // 应用态必填、用户态不填
     const val BK_USER_NAME = "bkUserName" // 用户名

@@ -32,6 +32,8 @@ import (
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/cron"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/heartbeat"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/pipeline"
@@ -40,6 +42,9 @@ import (
 
 func Run(isDebug bool) {
 	config.Init(isDebug)
+
+	// 初始化国际化
+	i18n.InitAgentI18n()
 
 	_, err := job.AgentStartup()
 	if err != nil {
@@ -60,6 +65,10 @@ func Run(isDebug bool) {
 
 	// 定期清理
 	go cron.CleanJob()
+	go cron.CleanDebugContainer()
+
+	// 登录调试任务
+	go imagedebug.DoPullAndDebug()
 
 	job.DoPollAndBuild()
 }
