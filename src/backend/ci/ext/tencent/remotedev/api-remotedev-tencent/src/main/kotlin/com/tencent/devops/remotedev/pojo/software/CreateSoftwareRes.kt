@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateSoftwareRes(
-    val result: String,
+    val result: Boolean,
     val message: String,
     val data: DataRes
 )
