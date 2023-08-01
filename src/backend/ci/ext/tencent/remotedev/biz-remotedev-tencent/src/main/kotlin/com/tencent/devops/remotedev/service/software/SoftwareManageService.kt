@@ -199,15 +199,17 @@ class SoftwareManageService @Autowired constructor(
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("installSoftwareFromXingyun|response code" +
+                                "|${response.code}|responseContent|$responseContent")
                 if (!response.isSuccessful) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                         errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode
                     )
                 }
-                val responseContent = response.body!!.string()
                 val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
-                logger.info("getWatermark|response code|${response.code}|createSoftwareRes|$createSoftwareRes")
+                logger.info("installSoftwareFromXingyun|createSoftwareRes|$createSoftwareRes")
                 return createSoftwareRes
             }
         } catch (e: SocketTimeoutException) {
