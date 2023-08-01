@@ -31,8 +31,7 @@ dependencies {
     implementation(project(":core:common:common-auth:common-auth-v3"))
     implementation(project(":core:common:common-archive"))
 
-    implementation(project(":core:artifactory:biz-artifactory-store"))
-    implementation(project(":core:artifactory:biz-artifactory-sample"))
+    implementation(project(":core:artifactory:biz-artifactory"))
     implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
     implementation(project(":core:dispatch-docker:biz-dispatch-docker-sample"))

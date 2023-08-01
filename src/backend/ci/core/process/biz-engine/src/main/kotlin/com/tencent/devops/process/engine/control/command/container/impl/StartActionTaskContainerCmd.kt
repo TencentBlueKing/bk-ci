@@ -214,7 +214,8 @@ class StartActionTaskContainerCmd(
                             stageId = containerContext.container.stageId,
                             containerId = containerContext.container.containerId,
                             taskId = t.taskId,
-                            variables = containerContext.variables
+                            variables = containerContext.variables,
+                            executeCount = containerContext.executeCount
                         )
                     )
                 )
