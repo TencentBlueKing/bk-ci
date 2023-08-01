@@ -40,8 +40,10 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -57,7 +59,9 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val softwareManageService: SoftwareManageService,
+    private val redisCache: RedisCacheService
 ) {
 
     companion object {
@@ -128,8 +132,12 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspace.name, "status is $status, can't assign user now")
                 )
             }
-
-            // todo 用户软件安装
+            val detail = redisCache.getWorkspaceDetail(workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            softwareManageService.installSoftwareFromXingyun(userId, detail.environmentIP)
         }
 
         val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
