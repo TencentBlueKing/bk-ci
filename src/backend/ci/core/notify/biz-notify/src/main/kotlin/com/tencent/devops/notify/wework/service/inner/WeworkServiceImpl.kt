@@ -56,8 +56,6 @@ import com.tencent.devops.notify.wework.pojo.VideoSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.VoiceSendMessageRequest
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -65,8 +63,6 @@ import java.nio.file.StandardCopyOption
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
-@Configuration
-@ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkAgent")
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class WeworkServiceImpl(
     private val weWorkConfiguration: WeworkConfiguration,

@@ -27,5 +27,4 @@
 
 dependencies {
     api(project(":core:notify:biz-notify"))
-    implementation(project(":core:notify:biz-notify-wework")) // 对接企业微信实现
 }
