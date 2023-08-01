@@ -69,13 +69,13 @@
     background: #ffffff;
     box-shadow: 0 4px 20px #5576a21a;
     color: #0009;
-    font-size: 16px;
+    font-size: 12px;
     z-index: 15;
     .consult-item {
         display: inherit;
         text-align: center;
         border-radius: 2px;
-        padding: 20px 15px;
+        padding: 20px 12px;
         cursor: pointer;
         border-bottom: 1px solid rgba(227, 230, 235, 1);
         &:last-child {
