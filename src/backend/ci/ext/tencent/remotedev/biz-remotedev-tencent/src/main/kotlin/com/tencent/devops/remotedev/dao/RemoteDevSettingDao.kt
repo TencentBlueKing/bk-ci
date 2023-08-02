@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
@@ -114,17 +115,34 @@ class RemoteDevSettingDao {
 
     fun fetchAllUserSettings(
         dslContext: DSLContext,
-        queryUser: String?
+        queryUser: String?,
+        limit: SQLLimit
     ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             val condition = mutableListOf<Condition>()
             condition.add(USER_SETTING.isNotNull)
             if (!queryUser.isNullOrBlank()) {
-                condition.add(USER_ID.eq(queryUser))
+                condition.add(USER_ID.like("%$queryUser%"))
             }
             return dslContext.selectFrom(this)
                 .where(condition)
+                .limit(limit.limit).offset(limit.offset)
                 .fetch()
+        }
+    }
+    fun countAllUserSettings(
+        dslContext: DSLContext,
+        queryUser: String?
+    ): Long {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            val condition = mutableListOf<Condition>()
+            condition.add(USER_SETTING.isNotNull)
+            if (!queryUser.isNullOrBlank()) {
+                condition.add(USER_ID.like("%$queryUser%"))
+            }
+            return dslContext.selectCount().from(this)
+                .where(condition)
+                .fetch(0, Long::class.java).sum()
         }
     }
 

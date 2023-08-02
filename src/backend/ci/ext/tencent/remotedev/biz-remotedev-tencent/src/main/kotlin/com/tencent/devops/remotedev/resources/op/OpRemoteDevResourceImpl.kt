@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
@@ -69,8 +70,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
-    override fun getAllUserSettings(userId: String, queryUser: String?): Result<List<RemoteDevUserSettings>> {
-        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser))
+    override fun getAllUserSettings(
+        userId: String,
+        queryUser: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RemoteDevUserSettings>> {
+        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser, page, pageSize))
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
