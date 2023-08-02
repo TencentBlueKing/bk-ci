@@ -134,7 +134,7 @@ class CodeSvnScmImpl constructor(
             // 检查用户名密码时privateKey为用户名，passphrase为密码
             // 参考：com.tencent.devops.repository.service.scm.ScmService.checkUsernameAndPassword
             username = privateKey
-            privateKey = "$passphrase"
+            privateKey = passphrase!!
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
