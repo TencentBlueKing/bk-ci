@@ -235,7 +235,7 @@ class WorkspaceService @Autowired constructor(
                     hostName = detail?.hostIP,
                     workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
-                    winConfig = allConfig[it.winConfigId.toLong()],
+                    winConfig = it.winConfigId?.toLong()?.let { i -> allConfig[i] },
                     owner = owners[it.name],
                     viewers = viewers[it.name]
                 )
