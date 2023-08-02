@@ -36,16 +36,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
-import java.net.URLEncoder
-import javax.ws.rs.HttpMethod
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
 
 @Suppress("ALL")
-open class CodeccApi constructor(
+class CodeccApi(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
     private val codeccHost: String,
@@ -66,9 +66,7 @@ open class CodeccApi constructor(
         method: String = "GET"
     ): String {
         val jsonBody = objectMapper.writeValueAsString(body)
-        val requestBody = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(), jsonBody
-        )
+        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
         val builder = Request.Builder()
             .url(getExecUrl(path))
@@ -76,18 +74,21 @@ open class CodeccApi constructor(
         when (method) {
             "GET" -> {
             }
+
             "POST" -> {
                 builder.post(requestBody)
             }
+
             "DELETE" -> {
                 builder.delete(requestBody)
             }
+
             "PUT" -> {
                 builder.put(requestBody)
             }
         }
 
-        if (headers != null && headers.isNotEmpty()) {
+        if (!headers.isNullOrEmpty()) {
             headers.forEach { (t, u) ->
                 builder.addHeader(t, u)
             }

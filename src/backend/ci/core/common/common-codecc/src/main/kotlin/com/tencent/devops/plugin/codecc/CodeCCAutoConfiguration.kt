@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,3 +24,37 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.plugin.codecc
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+@Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class CodeCCAutoConfiguration {
+
+    @Bean
+    fun coverityApi(
+        @Value("\${codeccGateway.gateway:}")
+        codeccApiGateWay: String = "",
+
+        @Value("\${codeccGateway.proxy:}")
+        codeccApiProxyGateWay: String = "",
+
+        @Value("\${codecc.host:}")
+        codeccHost: String = "",
+
+        @Value("\${codecc.gray.projectId:}")
+        codeccGrayProjectId: String? = null
+    ): CodeccApi =
+        CodeccApi(
+            codeccApiUrl = codeccApiGateWay,
+            codeccApiProxyUrl = codeccApiProxyGateWay,
+            codeccHost = codeccHost,
+            codeccGrayProjectId = codeccGrayProjectId
+        )
+}
