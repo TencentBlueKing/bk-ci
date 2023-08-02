@@ -101,7 +101,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val buildId = buildEndPipelineMetricsData.buildId
-        val syncProjectAtomFlag = projectInfoDao.projectAtomRelationCount(dslContext, projectId) <= 0
+        val syncProjectAtomFlag = projectInfoDao.projectAtomRelationCountByNotInAtomCodes(dslContext, projectId) <= 0
         logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
@@ -189,6 +189,12 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
                 }
                 if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    // 同步项目插件关联信息
+                    if (syncProjectAtomFlag) {
+                        projectInfoManageService.syncProjectAtomData(
+                            projectId, saveProjectAtomRelationPOs.map { it.atomCode }
+                        )
+                    }
                     projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
                 }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
@@ -205,12 +211,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
                     }
                 }
-            }
-            // 同步项目插件关联信息
-            if (syncProjectAtomFlag) {
-                projectInfoManageService.syncProjectAtomData(
-                    projectId, saveProjectAtomRelationPOs.map { it.atomCode }
-                )
             }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {

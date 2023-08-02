@@ -241,7 +241,7 @@ class ProjectInfoDao {
         }
     }
 
-    fun projectAtomRelationCount(
+    fun projectAtomRelationCountByNotInAtomCodes(
         dslContext: DSLContext,
         projectId: String,
         atomCodes: List<String> = emptyList()

@@ -86,11 +86,37 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private val atomDisplayConfigDao: AtomDisplayConfigDao,
     private val metricsConfig: MetricsConfig
 ) : AtomStatisticsManageService {
+
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
         val stopWatch = StopWatch()
         stopWatch.start("getQueryAtom")
         val atomCodes = getDefaultAtomCodes(queryAtomTrendInfoDTO)
         stopWatch.stop()
+        // 查询符合查询条件的记录数
+        stopWatch.start("queryAtomTrendInfoCount")
+        val queryAtomTrendInfoCount =
+            atomStatisticsDao.queryAtomTrendInfoCount(
+                dslContext = dslContext,
+                queryCondition = QueryAtomStatisticsQO(
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    baseQueryReq = BaseQueryReqVO(
+                        pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                        pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                        startTime = queryAtomTrendInfoDTO.startTime,
+                        endTime = queryAtomTrendInfoDTO.endTime
+                    ),
+                    errorTypes = queryAtomTrendInfoDTO.errorTypes,
+                    atomCodes = atomCodes ?: emptyList()
+                )
+            )
+        stopWatch.stop()
+        // 查询记录过多，提醒用户缩小查询范围
+        if (queryAtomTrendInfoCount > metricsConfig.queryCountMax) {
+            throw ErrorCodeException(
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
+            )
+        }
         //  查询插件趋势信息
         stopWatch.start("queryAtomTrendInfo")
         val result = atomStatisticsDao.queryAtomTrendInfo(
@@ -104,21 +130,11 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     endTime = queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                atomCodes = atomCodes ?: emptyList(),
-                pageSize = metricsConfig.queryCountMax
+                atomCodes = atomCodes ?: emptyList()
             )
         )
         stopWatch.stop()
         stopWatch.start("disposeAtomTrendInfo")
-        result?.let {
-            // 查询记录过多，提醒用户缩小查询范围
-            if (it.size >= metricsConfig.queryCountMax) {
-                throw ErrorCodeException(
-                    errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
-                    params = arrayOf("${metricsConfig.queryCountMax}")
-                )
-            }
-        }
         val atomBaseTrendInfoMap = mutableMapOf<String, MutableMap<String, AtomBaseTrendInfoDO>>()
         val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>()
         //  查询的时间区间

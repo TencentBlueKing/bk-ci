@@ -85,8 +85,28 @@ class AtomStatisticsDao {
             }
             return step.where(conditions)
                 .groupBy(ATOM_CODE, STATISTICS_TIME)
-                .limit(queryCondition.pageSize)
                 .fetch()
+        }
+    }
+
+    fun queryAtomTrendInfoCount(
+        dslContext: DSLContext,
+        queryCondition: QueryAtomStatisticsQO
+    ): Int {
+        val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
+            getAtomCodesByErrorType(dslContext, queryCondition)
+        } else queryCondition.atomCodes
+        if (atomCodes.isNullOrEmpty()) return 0
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
+            val step = dslContext.selectCount().from(this)
+            if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                step.leftJoin(tProjectPipelineLabelInfo)
+                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+            }
+            return step.where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
