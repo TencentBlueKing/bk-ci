@@ -126,7 +126,7 @@
                 }
             },
             async doSelectPipeline (pipelineId, cur) {
-                const { projectId } = this.$route.params
+                const { projectId, buildNo } = this.$route.params
                 const result = await this.updateCurPipeline({
                     pipelineId,
                     projectId
@@ -141,7 +141,7 @@
                     pipelineName: cur.pipelineName
                 })
 
-                const name = this.$route.params.buildNo ? 'pipelinesHistory' : this.$route.name
+                const name = buildNo ? 'pipelinesHistory' : this.$route.name
                 this.$router.push({
                     name,
                     params: {
