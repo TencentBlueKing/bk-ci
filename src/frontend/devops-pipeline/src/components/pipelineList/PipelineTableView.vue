@@ -1,5 +1,6 @@
 <template>
     <bk-table
+        ext-cls="pipeline-list-table"
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         row-key="pipelineId"
@@ -13,6 +14,8 @@
         :default-sort="sortField"
         @selection-change="handleSelectChange"
         @header-dragend="handelHeaderDragend"
+        @row-mouse-enter="handleRowMouseEnter"
+        @row-mouse-leave="handleRowMouseLeave"
         :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
@@ -23,7 +26,22 @@
                 {{$t('clearSelection')}}
             </bk-button>
         </div>
-        <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
+        <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
+            <template slot-scope="{ row, $index }">
+                <bk-button
+                    v-show="showCollectIndex === $index || row.hasCollect"
+                    text
+                    :theme="row.hasCollect ? 'warning' : ''"
+                    @click="collectHandler(row)">
+                    <i :class="{
+                        'devops-icon': true,
+                        'icon-star': !row.hasCollect,
+                        'icon-star-shape': row.hasCollect
+                    }" />
+                </bk-button>
+            </template>
+        </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
@@ -181,32 +199,18 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <bk-button
-                        text
-                        theme=""
-                        class="pipeline-exec-btn"
-                        :disabled="props.row.disabled"
-                        @click="execPipeline(props.row)"
-                    >
-                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
-                            <logo v-if="props.row.lock" name="minus-circle"></logo>
-                            <logo
-                                v-else
-                                name="play"
-                            />
-                        </span>
-                    </bk-button>
-                    <bk-button
-                        text
-                        :theme="props.row.hasCollect ? 'warning' : ''"
-                        class="pipeline-collect-btn"
-                        @click="collectHandler(props.row)">
-                        <i :class="{
-                            'devops-icon': true,
-                            'icon-star': !props.row.hasCollect,
-                            'icon-star-shape': props.row.hasCollect
-                        }" />
-                    </bk-button>
+                    <span v-bk-tooltips="props.row.tooltips">
+                        <bk-button
+                            text
+                            theme="primary"
+                            class="mr20"
+                            :disabled="props.row.disabled || props.row.lock"
+                            
+                            @click="execPipeline(props.row)"
+                        >
+                            {{ props.row.lock ? $t('disabled') : $t('exec') }}
+                        </bk-button>
+                    </span>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
                 </template>
             </div>
@@ -270,7 +274,8 @@
                 tableWidthMap: {},
                 tableSize: 'small',
                 tableColumn: [],
-                selectedTableColumn: []
+                selectedTableColumn: [],
+                showCollectIndex: -1
             }
         },
         computed: {
@@ -432,7 +437,7 @@
                 lastModifyUser: '',
                 latestExec: 484,
                 created: 154,
-                pipelineId: 80
+                pipelineId: 60
             }
             this.requestList()
         },
@@ -560,6 +565,12 @@
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
+            handleRowMouseEnter (index) {
+                this.showCollectIndex = index
+            },
+            handleRowMouseLeave (index) {
+                this.showCollectIndex = -1
+            },
             setTableColumn (val) {
                 if (val) {
                     this.tableColumn.splice(1, 0, {
@@ -607,5 +618,20 @@
     .latest-build-multiple-row {
         display: flex;
         flex-direction: column;
+    }
+    .pipeline-list-table {
+        .bk-table-fixed-right {
+            right: 6px !important;
+        }
+        ::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
+            background-color: white;
+        }
+        ::-webkit-scrollbar-thumb {
+            height: 6px;
+            border-radius: 20px;
+            background-color: #DCDEE5 !important;
+        }
     }
 </style>
