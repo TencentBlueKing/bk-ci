@@ -2,6 +2,7 @@ package com.tencent.devops.notify.wework.config
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.dao.WeworkNotifyDao
+import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.wework.service.inner.WeworkServiceImpl
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,6 +66,6 @@ class WeworkBeanConfiguration {
         @Autowired weworkNotifyDao: WeworkNotifyDao,
         @Autowired rabbitTemplate: RabbitTemplate,
         @Autowired redisOperation: RedisOperation
-    ) =
+    ): WeworkService =
         WeworkServiceImpl(weworkConfiguration, weworkNotifyDao, rabbitTemplate, redisOperation)
 }
