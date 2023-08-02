@@ -88,7 +88,6 @@ class WorkspaceSharedDao {
         }
     }
 
-
     fun batchFetchWorkspaceSharedInfo(
         dslContext: DSLContext,
         workspaceNames: List<String>
