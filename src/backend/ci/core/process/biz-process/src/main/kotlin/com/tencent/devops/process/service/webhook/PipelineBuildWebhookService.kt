@@ -233,7 +233,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             watcher.start("getWebhookPipelines")
             logger.info("startProcessByWebhook|repo(${matcher.getRepoName()})|type($codeRepositoryType)")
             // 社区版工蜂【评审事件】未推送代码库信息，导致无法溯源事件的源代码库
-            if (matcher.getRepoName().isBlank()){
+            if (matcher.getRepoName().isBlank()) {
                 logger.warn("startProcessByWebhook fail|cannot start the pipeline because repoName is blank")
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
