@@ -21,10 +21,6 @@ BEGIN
         ADD COLUMN `POST_INFO` text DEFAULT NULL COMMENT '市场插件的POST关联信息';
     END IF;
 
-    DECLARE db VARCHAR(100);
-    SET AUTOCOMMIT = 0;
-    SELECT DATABASE() INTO db;
-
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
