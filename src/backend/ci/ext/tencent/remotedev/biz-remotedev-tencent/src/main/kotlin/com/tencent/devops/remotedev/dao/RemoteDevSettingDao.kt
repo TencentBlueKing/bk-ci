@@ -120,7 +120,7 @@ class RemoteDevSettingDao {
     ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             val condition = mutableListOf<Condition>()
-            condition.add(USER_SETTING.isNotNull)
+            condition.add(USER_SETTING.ne(""))
             if (!queryUser.isNullOrBlank()) {
                 condition.add(USER_ID.like("%$queryUser%"))
             }
@@ -136,7 +136,7 @@ class RemoteDevSettingDao {
     ): Long {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             val condition = mutableListOf<Condition>()
-            condition.add(USER_SETTING.isNotNull)
+            condition.add(USER_SETTING.ne(""))
             if (!queryUser.isNullOrBlank()) {
                 condition.add(USER_ID.like("%$queryUser%"))
             }
