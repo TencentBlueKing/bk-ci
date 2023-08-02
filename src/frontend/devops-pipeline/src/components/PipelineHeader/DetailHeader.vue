@@ -26,9 +26,9 @@
                 key="reBuild"
                 v-perm="{
                     permissionData: {
-                        projectId: projectId,
+                        projectId: $route.params.projectId,
                         resourceType: 'pipeline',
-                        resourceCode: pipelineId,
+                        resourceCode: $route.params.pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
