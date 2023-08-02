@@ -2,7 +2,6 @@ package com.tencent.devops.notify.blueking.config
 
 import com.tencent.devops.notify.blueking.sdk.CMSApi
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
-import com.tencent.devops.notify.blueking.sdk.utils.NotifyUtils
 import com.tencent.devops.notify.blueking.service.inner.BlueKingWeworkServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.EmailServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.OrgServiceImpl
@@ -46,11 +45,7 @@ class BluekingNotifyConfiguration {
         NotifyProperties(appCode = appCode, appSecret = appSecret, bkHost = bkHost)
 
     @Bean
-    fun notifyUtils(notifyProperties: NotifyProperties): NotifyUtils =
-        NotifyUtils(notifyProperties)
-
-    @Bean
-    fun cms(notifyUtils: NotifyUtils): CMSApi = CMSApi(notifyUtils)
+    fun cms(notifyProperties: NotifyProperties): CMSApi = CMSApi(notifyProperties)
 
     @Bean
     fun configuration() = com.tencent.devops.common.notify.utils.Configuration()

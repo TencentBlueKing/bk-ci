@@ -26,7 +26,6 @@ class TencentCloudEmailConfiguration {
     ) =
         TencentCloudConfiguration(secretId, secretKey, emailRegion, emailSender)
 
-
     @Bean
     fun emailService(
         @Autowired emailNotifyDao: EmailNotifyDao,
