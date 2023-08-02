@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api.oauth2
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
+import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -22,19 +23,18 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface Oauth2EndpointResource {
     @GET
-    @Path("/getAuthorizationHtml")
-    @ApiOperation("获取授权界面")
-    @Produces("text/html")
-    fun getAuthorizationHtml(
+    @Path("/getAuthorizationInformation")
+    @ApiOperation("获取授权信息")
+    fun getAuthorizationInformation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
         @QueryParam("clientId")
         @ApiParam("客户端ID", required = true)
-        clientId: String,
-        @QueryParam("redirectUri")
-        @ApiParam("跳转链接", required = true)
-        redirectUri: String
-    ): String
+        clientId: String
+    ): Result<Oauth2AuthorizationInfoVo>
 
-    @GET
+    @POST
     @Path("/getAuthorizationCode")
     @ApiOperation("获取授权码")
     fun getAuthorizationCode(

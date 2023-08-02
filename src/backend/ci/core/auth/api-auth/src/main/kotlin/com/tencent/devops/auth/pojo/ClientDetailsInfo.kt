@@ -9,6 +9,8 @@ data class ClientDetailsInfo(
     val clientId: String,
     @ApiModelProperty("客户端密钥", required = true)
     val clientSecret: String,
+    @ApiModelProperty("客户端名称", required = true)
+    val clientName: String,
     @ApiModelProperty("授权类型", required = true)
     val authorizedGrantTypes: String,
     @ApiModelProperty("跳转链接", required = true)

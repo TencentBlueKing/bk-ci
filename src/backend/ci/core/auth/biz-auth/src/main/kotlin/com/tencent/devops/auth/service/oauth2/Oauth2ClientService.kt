@@ -34,6 +34,7 @@ class Oauth2ClientService constructor(
         return ClientDetailsInfo(
             clientId = clientId,
             clientSecret = clientSecret,
+            clientName = clientName,
             scope = scope,
             authorizedGrantTypes = authorizedGrantTypes,
             redirectUri = webServerRedirectUri,
