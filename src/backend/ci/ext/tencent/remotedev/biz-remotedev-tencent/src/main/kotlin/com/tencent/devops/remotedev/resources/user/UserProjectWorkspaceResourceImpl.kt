@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -63,7 +63,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<Workspace>> {
+    ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
     }
 

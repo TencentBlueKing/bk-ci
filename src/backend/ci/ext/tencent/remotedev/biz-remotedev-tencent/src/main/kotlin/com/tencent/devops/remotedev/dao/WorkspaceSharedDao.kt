@@ -88,6 +88,24 @@ class WorkspaceSharedDao {
         }
     }
 
+
+    fun batchFetchWorkspaceSharedInfo(
+        dslContext: DSLContext,
+        workspaceNames: List<String>
+    ): List<WorkspaceShared> {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch().map {
+                WorkspaceShared(
+                    id = it.id,
+                    workspaceName = it.workspaceName,
+                    operator = it.operator,
+                    sharedUser = it.sharedUser,
+                    type = WorkspaceShared.AssignType.valueOf(it.assignType)
+                )
+            }
+        }
+    }
+
     fun batchSelectAssignType(
         dslContext: DSLContext,
         userId: String,

@@ -168,28 +168,35 @@ class WorkspaceDao {
                 .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .let {
                     if (unionShared) it.unionAll(
-                        DSL.selectCount().from(this).where(
-                            NAME.`in`(
-                                DSL.select(shared.WORKSPACE_NAME).from(shared).where(
-                                    shared.SHARED_USER.eq(
-                                        creator
-                                    )
-                                )
-                            )
-                        ).let { i ->
-                            if (status.isNullOrEmpty()) {
-                                i.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                            } else {
-                                i.and(STATUS.`in`(status.map { s -> s.ordinal }))
-                            }
-                        }
-                            .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
-                            .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
+                        unionSelect(shared, creator, status, systemType, ownerType)
                     ) else it
                 }
                 .fetch(0, Long::class.java).sum()
         }
     }
+
+    private fun TWorkspace.unionSelect(
+        shared: TWorkspaceShared,
+        creator: String,
+        status: Set<WorkspaceStatus>?,
+        systemType: WorkspaceSystemType?,
+        ownerType: WorkspaceOwnerType?
+    ) = DSL.selectCount().from(this).where(
+        NAME.`in`(
+            DSL.select(shared.WORKSPACE_NAME).from(shared).where(
+                shared.SHARED_USER.eq(
+                    creator
+                )
+            )
+        )
+    ).let { i ->
+        if (status.isNullOrEmpty()) {
+            i.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+        } else {
+            i.and(STATUS.`in`(status.map { s -> s.ordinal }))
+        }
+    }.let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+        .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
 
     /**
      * 获得用户所拥有工作空间列表

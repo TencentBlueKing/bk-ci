@@ -30,20 +30,38 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间信息-创建")
-data class WorkspaceCreate(
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    var devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("是否使用官方devfile")
-    val useOfficialDevfile: Boolean?,
-    @ApiModelProperty("当前运行客户端的OS")
-    val currentOS: String?,
-    @ApiModelProperty("windows 配置id")
-    val windowsResourceConfigId: Int?
+@ApiModel("工作空间信息")
+data class ProjectWorkspace(
+    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val workspaceId: Long?,
+    @ApiModelProperty("工作空间名称")
+    val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String?,
+    @ApiModelProperty("工作空间备注名称")
+    val displayName: String? = null,
+    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val status: WorkspaceStatus? = null,
+    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val lastStatusUpdateTime: Long? = null,
+    @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val sleepingTime: Long? = null,
+    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val createUserId: String,
+    @ApiModelProperty("工作空间对应的IP")
+    val hostName: String? = null,
+    @ApiModelProperty("挂载平台类型")
+    val workspaceMountType: WorkspaceMountType,
+    @ApiModelProperty("操作系统类型")
+    val workspaceSystemType: WorkspaceSystemType,
+    @ApiModelProperty("windows 资源配置")
+    val winConfig: WindowsResourceConfig? = null,
+    @ApiModelProperty("拥有者")
+    val owner: String? = null,
+    @ApiModelProperty("查看者")
+    val viewers: List<String>? = emptyList(),
+    val gpu: Int = 0,
+    val cpu: Int = 8,
+    val memory: Int = 32,
+    val disk: Int = 100
 )

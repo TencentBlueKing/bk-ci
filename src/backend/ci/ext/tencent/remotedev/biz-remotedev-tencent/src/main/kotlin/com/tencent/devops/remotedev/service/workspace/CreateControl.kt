@@ -154,7 +154,8 @@ class CreateControl @Autowired constructor(
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
-                disk = windowsConfig.disk
+                disk = windowsConfig.disk,
+                winConfigId = workspaceCreate.windowsResourceConfigId
             )
 
             workspaceDao.createWorkspace(
@@ -523,7 +524,8 @@ class CreateControl @Autowired constructor(
             gpu = windowsConfig.gpu,
             cpu = windowsConfig.cpu,
             memory = windowsConfig.memory,
-            disk = windowsConfig.disk
+            disk = windowsConfig.disk,
+            winConfigId = workspaceCreate.windowsResourceConfigId
         )
 
         doPreparing(workspace)

@@ -50,6 +50,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -98,6 +99,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
+    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon
@@ -115,17 +117,6 @@ class WorkspaceService @Autowired constructor(
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
         permissionService.checkPermission(userId, workspaceName)
-        RedisCallLimit(
-            redisOperation,
-            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:$workspaceName",
-            expiredTimeInSeconds
-        ).tryLock().use {
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
-        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -195,7 +186,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun getProjectWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<Workspace> {
+    fun getProjectWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<ProjectWorkspace> {
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
@@ -211,11 +202,43 @@ class WorkspaceService @Autowired constructor(
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
+        val owners = mutableMapOf<String, String>()
+        val viewers = mutableMapOf<String, MutableList<String>>()
+
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, result.map { it.name }).forEach {
+            when (it.type) {
+                WorkspaceShared.AssignType.OWNER -> {
+                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
+                }
+                WorkspaceShared.AssignType.VIEWER -> {
+                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
+                }
+            }
+        }
+
+        val allConfig = windowsResourceConfigService.getAllConfig().associateBy { it.id!! }
+
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
+                val detail = redisCache.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
-                parsingWorkspace(it, status, WorkspaceShared.AssignType.OWNER)
+                ProjectWorkspace(
+                    workspaceId = it.id,
+                    workspaceName = it.name,
+                    projectId = it.projectId,
+                    displayName = it.displayName,
+                    status = status,
+                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
+                    sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+                    createUserId = it.creator,
+                    hostName = detail?.hostIP,
+                    workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
+                    workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
+                    winConfig = allConfig[it.winConfigId.toLong()],
+                    owner = owners[it.name],
+                    viewers = viewers[it.name]
+                )
             }
         )
     }
@@ -244,7 +267,8 @@ class WorkspaceService @Autowired constructor(
         workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
         workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
         ownerType = WorkspaceOwnerType.valueOf(it.ownerType),
-        assignType = assignType
+        assignType = assignType,
+        winConfigId = it.winConfigId
     )
 
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {

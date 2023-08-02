@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.Workspace
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -86,7 +86,7 @@ interface UserProjectWorkspaceResource {
         @ApiParam("每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<Workspace>>
+    ): Result<Page<ProjectWorkspace>>
 
     @ApiOperation("分配工作空间实例")
     @POST
