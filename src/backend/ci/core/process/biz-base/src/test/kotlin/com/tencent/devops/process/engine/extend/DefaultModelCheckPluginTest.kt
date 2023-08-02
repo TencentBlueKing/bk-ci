@@ -49,10 +49,8 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstalledAtom
-import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import io.mockk.every
 import io.mockk.mockk
@@ -137,16 +135,6 @@ class DefaultModelCheckPluginTest : TestBase() {
         } returns (
             Result(genInstallAtomInfo())
             )
-        every {
-            client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode = atomCode, version = "1.*")
-        } returns (
-                Result(genAtomVersionInfo())
-                )
-        every {
-            client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode = "manualTrigger", version = "1.*")
-        } returns (
-                Result(genAtomVersionInfo())
-                )
         every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
         every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
@@ -204,45 +192,6 @@ class DefaultModelCheckPluginTest : TestBase() {
                 pipelineCnt = 0,
                 hasPermission = true
             )
-        )
-    }
-
-    private fun genAtomVersionInfo(): PipelineAtom {
-        return PipelineAtom(
-            id = "id",
-            name = "atomName",
-            atomCode = atomCode,
-            version = "1.0.10",
-            classType = "classType",
-            logoUrl = "logoUrl",
-            icon = "icon",
-            summary = "summary",
-            serviceScope = null,
-            jobType = JobTypeEnum.AGENT_LESS.name,
-            os = null,
-            classifyId = "classifyId",
-            classifyCode = "classifyCode",
-            classifyName = "classifyName",
-            docsLink = "docsLink",
-            category = "category",
-            atomType = "atomType",
-            atomStatus = "RELEASED",
-            description = "description",
-            versionList = listOf(VersionInfo("version", "1")),
-            atomLabelList = null,
-            creator = "creator",
-            defaultFlag = false,
-            latestFlag = true,
-            htmlTemplateVersion = "htmlTemplateVersion",
-            buildLessRunFlag = false,
-            weight = 1,
-            props = null,
-            data = null,
-            recommendFlag = null,
-            frontendType = null,
-            createTime = 100800,
-            updateTime = 100800
-
         )
     }
 

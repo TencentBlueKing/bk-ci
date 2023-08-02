@@ -557,7 +557,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getListAtomInfos(
         codeVersions: Set<AtomPostReqItem>
     ): Result<List<AtomListInfo>> {
-        logger.info("getListAtomInfos codeVersions: $codeVersions")
         val atomListInfos = mutableListOf<AtomListInfo>()
         val latestCodes = mutableListOf<String>()
         val atomPostReqItems = mutableListOf<AtomPostReqItem>()
@@ -568,28 +567,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomPostReqItems.add(AtomPostReqItem(it.atomCode, it.version))
             }
         }
-        logger.info("latestCodes: $latestCodes")
-        logger.info("atomPostReqItems: $atomPostReqItems")
         var noLatestAtomRecords = mutableListOf<TAtomRecord>()
         if (atomPostReqItems.isNotEmpty()) {
-            logger.info("atomPostReqItems : $atomPostReqItems")
             noLatestAtomRecords = atomDao.getAtomInfos(
                 dslContext = dslContext,
                 codeVersions = atomPostReqItems
             )
         }
-        noLatestAtomRecords.forEach {
-            logger.info("noLatestAtomRecords atomCode: id: ${it.id} |${it.atomCode} version: |${it.version} |${it.atomStatus} |${it.name}")
-        }
         val latestAtomRecords = atomDao.getLatestAtomListByCodes(
             dslContext = dslContext,
             atomCodes = latestCodes
         )
-        if (latestAtomRecords.isNotEmpty) {
-            latestAtomRecords.forEach {
-                logger.info("latestAtomRecords atomCode: id: ${it!!.id} |${it.atomCode} version: |${it.version} |${it.atomStatus} |${it.name}")
-            }
-        }
         val atomRecords: List<TAtomRecord> = (noLatestAtomRecords + latestAtomRecords) as List<TAtomRecord>
         atomRecords.forEach {
             atomListInfos.add(
