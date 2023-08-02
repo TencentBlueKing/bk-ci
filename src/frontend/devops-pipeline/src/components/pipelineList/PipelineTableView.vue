@@ -421,18 +421,18 @@
                 this.tableColumn.splice(1, 1)
             }
             this.tableWidthMap = JSON.parse(localStorage.getItem(CACHE_PIPELINE_TABLE_WIDTH_MAP)) || {
-                pipelineName: 250,
-                viewNames: 350,
+                pipelineName: 192,
+                viewNames: 192,
                 latestBuildNum: 150,
-                latestBuildStartDate: 200,
-                createTime: 200,
-                deleteTime: 200,
-                creator: 200,
-                updateTime: 200,
+                latestBuildStartDate: 154,
+                createTime: 154,
+                deleteTime: 154,
+                creator: 154,
+                updateTime: 154,
                 lastModifyUser: '',
-                latestExec: 180,
-                created: 180,
-                pipelineId: 90
+                latestExec: 484,
+                created: 154,
+                pipelineId: 80
             }
             this.requestList()
         },
