@@ -133,7 +133,7 @@ interface UserPipelineTriggerEventResource {
 
     @ApiOperation("获取代码库webhook事件触发详情")
     @GET
-    @Path("/{projectId}/{repoHashId}/listRepoWebhookEvent")
+    @Path("/{projectId}/{repoHashId}/listRepoWebhookEventDetail")
     fun listRepoWebhookEventDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -148,7 +148,7 @@ interface UserPipelineTriggerEventResource {
         @QueryParam("eventId")
         eventId: Long,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
