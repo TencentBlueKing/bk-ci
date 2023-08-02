@@ -172,16 +172,6 @@ class BkRepoService @Autowired constructor(
         return FolderSize(sizeInfo.size)
     }
 
-    override fun setDockerProperties(
-        projectId: String,
-        imageName: String,
-        tag: String,
-        properties: Map<String, String>
-    ) {
-        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String, properties: $properties")
-        throw OperationException("not supported")
-    }
-
     override fun setProperties(
         userId: String,
         projectId: String,
