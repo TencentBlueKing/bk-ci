@@ -264,12 +264,13 @@ class WorkspaceCommon @Autowired constructor(
      * 如果已经销毁，直接返回false
      */
     fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
+        val status = WorkspaceStatus.values()[workspace.status]
         return (
-            WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+            status.notOk2doNextAction() && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME
-            ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
+            ) || status.checkDeleted() || status.workspaceInitializing()
     }
 
     fun updateLastHistory(

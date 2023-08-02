@@ -149,7 +149,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         creator: String,
         unionShared: Boolean = true,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
+        ownerType: WorkspaceOwnerType? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
@@ -165,7 +165,7 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .and(OWNER_TYPE.eq(ownerType.name))
+                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .let {
                     if (unionShared) it.unionAll(
                         DSL.selectCount().from(this).where(
@@ -177,7 +177,7 @@ class WorkspaceDao {
                                 )
                             )
                         ).let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
-                            .and(OWNER_TYPE.eq(ownerType.name))
+                            .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                     ) else it
                 }
                 .fetch(0, Long::class.java).sum()
