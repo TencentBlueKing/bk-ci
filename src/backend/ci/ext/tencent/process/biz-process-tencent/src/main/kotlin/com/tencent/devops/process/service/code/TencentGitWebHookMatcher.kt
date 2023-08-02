@@ -30,7 +30,7 @@ package com.tencent.devops.process.service.code
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.Repository
 
 class TencentGitWebHookMatcher(
@@ -45,7 +45,7 @@ class TencentGitWebHookMatcher(
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
+    ): WebhookMatchResult {
         webHookParams.includeHost = gitIncludeHost
         val matchResult = super.isMatch(projectId, pipelineId, repository, webHookParams)
         if (matchResult.isMatch) {
