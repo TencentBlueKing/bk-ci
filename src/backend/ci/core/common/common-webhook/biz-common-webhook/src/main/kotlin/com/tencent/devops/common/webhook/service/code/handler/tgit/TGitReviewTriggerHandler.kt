@@ -69,7 +69,7 @@ class TGitReviewTriggerHandler(
     }
 
     override fun getUrl(event: GitReviewEvent): String {
-        return event.repository.git_http_url
+        return event.repository?.git_http_url ?: ""
     }
 
     override fun getUsername(event: GitReviewEvent): String {
@@ -81,7 +81,9 @@ class TGitReviewTriggerHandler(
     }
 
     override fun getRepoName(event: GitReviewEvent): String {
-        return GitUtils.getProjectName(event.repository.git_ssh_url)
+        return event.repository?.let {
+            GitUtils.getProjectName(it.git_ssh_url)
+        } ?: ""
     }
 
     override fun getBranchName(event: GitReviewEvent): String {
@@ -118,7 +120,9 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_OWNER] = event.author.username
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
-        startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
+        event.repository?.let {
+            startParams[PIPELINE_GIT_EVENT_URL] = "${it.homepage}/reviews/${event.iid}"
+        }
         if (event.reviewableType == "merge_request" &&
             event.reviewableId != null &&
             projectId != null &&
@@ -134,14 +138,14 @@ class TGitReviewTriggerHandler(
                     mrInfo = mrInfo,
                     reviewInfo = reviewInfo,
                     mrRequestId = event.reviewableId!!,
-                    homepage = event.repository.homepage
+                    homepage = event.repository?.homepage
                 )
             )
         }
 
         // 兼容stream变量
         startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
-        startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository?.git_http_url ?: ""
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
                 eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)

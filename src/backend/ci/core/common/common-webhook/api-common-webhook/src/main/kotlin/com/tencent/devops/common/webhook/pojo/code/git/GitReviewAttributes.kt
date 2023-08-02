@@ -51,7 +51,7 @@ data class GitReviewAttributes(
     val assigneeId: String?,
     val title: String,
     @JsonProperty("commit_check_state")
-    val commitCheckState: String,
+    val commitCheckState: String?,
     @JsonProperty("updated_by_id")
     val updatedById: String?,
     @JsonProperty("created_at")

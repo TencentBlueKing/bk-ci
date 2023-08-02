@@ -249,7 +249,9 @@ object GitRequestEventHandle {
             description = "",
             mrTitle = "",
             gitEvent = gitReviewEvent,
-            gitProjectName = GitUtils.getProjectName(gitReviewEvent.repository.homepage)
+            gitProjectName = gitReviewEvent.repository?.let {
+                GitUtils.getProjectName(it.homepage)
+            }
         )
     }
 

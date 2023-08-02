@@ -42,7 +42,7 @@ data class GitReviewEvent(
     val author: GitUser,
     val reviewer: Reviewer? = null,
     val reviewers: List<Reviewer>,
-    val repository: GitCommitRepository,
+    val repository: GitCommitRepository?,
     @JsonProperty("project_id")
     val projectId: Long,
     @JsonProperty("author_id")

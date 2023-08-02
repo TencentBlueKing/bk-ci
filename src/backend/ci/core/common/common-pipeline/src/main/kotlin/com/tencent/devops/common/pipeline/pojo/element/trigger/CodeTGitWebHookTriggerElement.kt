@@ -98,5 +98,25 @@ data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
     @ApiModelProperty("code review 状态", required = false)
-    val includeCrState: List<String>? = null
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("是否启用回写")
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("mr事件action")
+    val includeMrAction: List<String>? = null,
+    @ApiModelProperty("push事件action")
+    val includePushAction: List<String>? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false,
+    @ApiModelProperty("是否启用第三方过滤")
+    val enableThirdFilter: Boolean? = false,
+    @ApiModelProperty("第三方应用地址")
+    val thirdUrl: String? = null,
+    @ApiModelProperty("第三方应用鉴权token")
+    val thirdSecretToken: String? = null
 )
