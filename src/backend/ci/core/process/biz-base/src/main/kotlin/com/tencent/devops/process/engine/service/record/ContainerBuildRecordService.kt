@@ -373,6 +373,7 @@ class ContainerBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)"
         ) {
+            logger.info("saveBuildVmInfo debug 20230802")
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val recordContainer = recordContainerDao.getRecord(
