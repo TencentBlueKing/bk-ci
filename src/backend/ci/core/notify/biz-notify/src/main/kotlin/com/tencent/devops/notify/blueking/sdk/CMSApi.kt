@@ -26,29 +26,40 @@
  */
 package com.tencent.devops.notify.blueking.sdk
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.notify.blueking.sdk.pojo.ApiReq
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiResp
 import com.tencent.devops.notify.blueking.sdk.pojo.NocNoticeReq
+import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.blueking.sdk.pojo.SendMailReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendQyWxReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendSmsReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendWxReq
-import com.tencent.devops.notify.blueking.sdk.utils.NotifyUtils
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.EMAIL_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.NOC_NOTICE_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
+import com.tencent.devops.notify.constant.NotifyMessageCode
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_NOTIFY_MESSAGES
-import org.springframework.beans.factory.annotation.Autowired
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
+import java.security.cert.CertificateException
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
-class CMSApi @Autowired constructor(
-    private val notifyUtils: NotifyUtils
-) {
+class CMSApi(private val notifyProperties: NotifyProperties) {
 
     /**
      * 发送邮件
@@ -56,13 +67,20 @@ class CMSApi @Autowired constructor(
     fun sendMail(email: EmailNotifyPost): ApiResp {
         val mailReq = with(email) {
             SendMailReq(
-                    null, title, content, null, to, null, cc,
-                    if (bodyFormat == 0) "Text" else "Html", null,
-                    bk_username = from
+                sender = null,
+                title = title,
+                content = content,
+                receiver = null,
+                receiver__username = to,
+                cc = null,
+                cc__username = cc,
+                body_format = if (bodyFormat == 0) "Text" else "Html",
+                is_content_base64 = null,
+                bk_username = from
             )
         }
 
-        return notifyUtils.doPostRequest(EMAIL_URL, mailReq)
+        return doPostRequest(EMAIL_URL, mailReq)
     }
 
     /**
@@ -71,12 +89,15 @@ class CMSApi @Autowired constructor(
     fun sendSms(smsNotifyPost: SmsNotifyPost): ApiResp {
         val smsReq = with(smsNotifyPost) {
             SendSmsReq(
-                    msgInfo, null, receiver, null,
-                    bk_username = sender
+                content = msgInfo,
+                receiver = null,
+                receiver__username = receiver,
+                is_content_base64 = null,
+                bk_username = sender
             )
         }
 
-        return notifyUtils.doPostRequest(SMS_URL, smsReq)
+        return doPostRequest(SMS_URL, smsReq)
     }
 
     /**
@@ -85,7 +106,7 @@ class CMSApi @Autowired constructor(
     @Suppress("UNUSED")
     fun nocNotice(esbReq: NocNoticeReq): ApiResp {
 
-        return notifyUtils.doPostRequest(NOC_NOTICE_URL, esbReq)
+        return doPostRequest(NOC_NOTICE_URL, esbReq)
     }
 
     /**
@@ -93,9 +114,9 @@ class CMSApi @Autowired constructor(
      */
     fun sendQyWeixin(rtxNotifyPost: RtxNotifyPost): ApiResp {
         val rtxReq = with(rtxNotifyPost) {
-            SendQyWxReq(msgInfo, receiver, bk_username = sender)
+            SendQyWxReq(content = msgInfo, receiver = receiver, bk_username = sender)
         }
-        return notifyUtils.doPostRequest(RTX_URL, rtxReq)
+        return doPostRequest(RTX_URL, rtxReq)
     }
 
     /**
@@ -104,17 +125,111 @@ class CMSApi @Autowired constructor(
     fun sendWeixin(wechatNotifyPost: WechatNotifyPost): ApiResp {
         val wechatReq = with(wechatNotifyPost) {
             SendWxReq(
-                    null, receiver,
-                    SendWxReq.Data(
-                        heading = I18nUtil.getCodeLanMessage(
-                            messageCode = BK_NOTIFY_MESSAGES,
-                            language = I18nUtil.getLanguage(wechatNotifyPost.receiver)
-                        ),
-                        message = msgInfo
+                receiver = null,
+                receiver__username = receiver,
+                data = SendWxReq.Data(
+                    heading = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_NOTIFY_MESSAGES,
+                        language = I18nUtil.getLanguage(wechatNotifyPost.receiver)
                     ),
-                    bk_username = sender
+                    message = msgInfo
+                ),
+                bk_username = sender
             )
         }
-        return notifyUtils.doPostRequest(WECHAT_URL, wechatReq)
+        return doPostRequest(WECHAT_URL, wechatReq)
+    }
+
+    private val logger = LoggerFactory.getLogger(CMSApi::class.java)
+
+    /**
+     * 执行post请求
+     */
+    private fun doPostRequest(uri: String, body: ApiReq): ApiResp {
+        body.bk_app_code = notifyProperties.appCode!!
+        body.bk_app_secret = notifyProperties.appSecret!!
+
+        val jsonBody = ObjectMapper().writeValueAsString(body)
+        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val url = notifyProperties.bkHost!! + uri
+        logger.info("notify post url: $url")
+//        logger.info("notify post body: $jsonBody")
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+        val result = this.doRequest(request)
+        logger.info("notify post request result: $result")
+
+        return result
+    }
+
+    // 处理请求结果
+    private fun doRequest(request: Request): ApiResp {
+        var resultBean = ApiResp()
+        try {
+            val response = okHttpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val responseStr = response.body!!.string()
+                logger.info("notify response: $responseStr")
+                resultBean = ObjectMapper().readValue(responseStr, ApiResp::class.java)
+            } else {
+                logger.error("NOTIFY_REQUEST_FAILED|url=${request.url.toUrl()}|response=($response)")
+            }
+            if (!resultBean.result!!) {
+                logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url.toUrl()}|message=${resultBean.message}")
+            }
+            return resultBean
+        } catch (ignore: Exception) {
+            logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url.toUrl()}|message=${ignore.message}", ignore)
+            throw ErrorCodeException(
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_SEND_FAIL,
+                defaultMessage = "notify send msg failed: ${ignore.message}"
+            )
+        }
+    }
+
+    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+        @Throws(CertificateException::class)
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
+
+        @Throws(CertificateException::class)
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
+
+        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+            return arrayOf()
+        }
+    })
+
+    @Suppress("MagicNumber")
+    private val okHttpClient = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(5L, TimeUnit.SECONDS)
+        .readTimeout(30L, TimeUnit.SECONDS)
+        .writeTimeout(30L, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
+    private fun sslSocketFactory(): SSLSocketFactory {
+        val trustAllCerts = arrayOf<TrustManager>(DefaultX509TrustManager())
+
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+        return sslContext.socketFactory
+    }
+
+    private class DefaultX509TrustManager : X509TrustManager {
+        @Throws(CertificateException::class)
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) =
+            Unit
+
+        @Throws(CertificateException::class)
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) =
+            Unit
+
+        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+            return arrayOf()
+        }
     }
 }
