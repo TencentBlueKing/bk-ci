@@ -549,7 +549,6 @@ class DevCloudBuildListener @Autowired constructor(
             }
         }
 
-
         // overlayfs代码拉取优化
         if (overlayFsLabel in atoms.keys) {
             containerLabels[overlayFsLabel] = "true"
