@@ -10,10 +10,10 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { debounce } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -114,14 +114,14 @@
                 return curPipeline
             },
             doSelectPipeline (pipelineId, cur) {
-                const { projectId, $route } = this
+                const { $route } = this
                 this.updateCurPipeline({
                     pipelineId,
-                    projectId
+                    projectId: $route.params.projectId
                 })
                 // 清空搜索
                 this.searchPipelineList({
-                    projectId
+                    projectId: $route.params.projectId
                 }).then((list) => {
                     this.setBreadCrumbPipelineList(list, {
                         pipelineId,
@@ -133,7 +133,7 @@
                 this.$router.push({
                     name,
                     params: {
-                        projectId,
+                        projectId: $route.params.projectId,
                         pipelineId
                     }
                 })

@@ -1,10 +1,13 @@
 <template>
-    <div class="pipeline-exec-outputs">
-        
-        <aside :class="['pipeline-exec-outputs-aside', {
-            'pipeline-exec-outputs-aside-collapse': asideCollpased
-        }]">
-            <template v-if="!asideCollpased">
+    <div style="height: 100%;width: 100%;">
+        <bk-resize-layout
+            :collapsible="true"
+            class="pipeline-exec-outputs"
+            initial-divide="30%"
+            :min="260"
+            :max="800"
+        >
+            <aside slot="aside" class="pipeline-exec-outputs-aside">
                 <div class="pipeline-exec-outputs-filter-input">
                     <bk-input
                         clearable
@@ -41,16 +44,17 @@
                     >
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
-                        <output-qrcode
-                            v-if="output.isApp"
-                            class="output-hover-icon"
-                            :output="output"
-                        />
-                        <i
-                            v-else-if="output.downloadable"
-                            class="output-hover-icon devops-icon icon-download"
-                            @click.stop="downloadArtifact(output)"
-                        />
+                        <p class="output-hover-icon-box">
+                            <output-qrcode
+                                v-if="output.isApp"
+                                :output="output"
+                            />
+                            <i
+                                v-if="output.downloadable"
+                                class="devops-icon icon-download"
+                                @click.stop="downloadArtifact(output)"
+                            />
+                        </p>
                     </li>
                 </ul>
     
@@ -58,78 +62,76 @@
                     <logo name="empty" size="180" />
                     <span>{{ $t("empty") }}</span>
                 </div>
-            </template>
-            <div @click="toggleCollapseAside" class="collapse-handler">
-                <i class="aside-collapse-icon devops-icon icon-angle-double-left"></i>
-            </div>
-        </aside>
-        <section v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
-            <iframe-report
-                v-if="isCustomizeReport"
-                :report-name="activeOutput.name"
-                :index-file-url="activeOutput.indexFileUrl"
-            />
-            <third-party-report
-                v-else-if="isActiveThirdReport"
-                :report-list="thirdPartyReportList"
-            />
-            <template v-else-if="activeOutputDetail">
-                <div class="pipeline-exec-output-header">
-                    <span class="pipeline-exec-output-header-name">
-                        <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
-                        {{ activeOutputDetail.name }}
-                    </span>
-                    <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
-                    <p class="pipeline-exec-output-actions">
-                        <bk-button
-                            text
-                            theme="primary"
-                            v-for="btn in btns"
-                            :key="btn.text"
-                            @click="btn.handler"
-                        >
-                            {{ btn.text }}
-                        </bk-button>
-                        <output-qrcode
-                            :output="activeOutput"
-                            v-if="activeOutputDetail.isApp"
-                        />
+            
+            </aside>
+            <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
+                <iframe-report
+                    v-if="isCustomizeReport"
+                    :report-name="activeOutput.name"
+                    :index-file-url="activeOutput.indexFileUrl"
+                />
+                <third-party-report
+                    v-else-if="isActiveThirdReport"
+                    :report-list="thirdPartyReportList"
+                />
+                <template v-else-if="activeOutputDetail">
+                    <div class="pipeline-exec-output-header">
+                        <span class="pipeline-exec-output-header-name">
+                            <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
+                            {{ activeOutputDetail.name }}
+                        </span>
+                        <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
+                        <p class="pipeline-exec-output-actions">
+                            <bk-button
+                                text
+                                theme="primary"
+                                v-for="btn in btns"
+                                :key="btn.text"
+                                @click="btn.handler"
+                            >
+                                {{ btn.text }}
+                            </bk-button>
+                            <output-qrcode
+                                :output="activeOutput"
+                                v-if="activeOutputDetail.isApp"
+                            />
 
-                        <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
-                    </p>
-                </div>
-                <div class="pipeline-exec-output-artifact">
-                    <div
-                        v-for="block in infoBlocks"
-                        :key="block.title"
-                        class="pipeline-exec-output-block"
-                    >
-                        <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
-                        <bk-table v-if="block.key === 'meta'" :data="block.value">
-                            <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
-                            <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
-                            <bk-table-column :label="$t('desc')" prop="description">
-                                <template slot-scope="scope">
-                                    <span>{{ scope.row.description || '--' }}</span>
-                                </template>
-                            </bk-table-column>
-                        </bk-table>
-                        <ul v-else slot="content" class="pipeline-exec-output-block-content">
-                            <li v-for="row in block.block" :key="row.key">
-                                <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
-                                <span class="pipeline-exec-output-block-row-value">
-                                    {{ block.value[row.key] || "--" }}
-                                </span>
-                            </li>
-                        </ul>
+                            <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
+                        </p>
                     </div>
+                    <div class="pipeline-exec-output-artifact">
+                        <div
+                            v-for="block in infoBlocks"
+                            :key="block.title"
+                            class="pipeline-exec-output-block"
+                        >
+                            <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
+                            <bk-table v-if="block.key === 'meta'" :data="block.value">
+                                <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
+                                <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
+                                <bk-table-column :label="$t('desc')" prop="description">
+                                    <template slot-scope="scope">
+                                        <span>{{ scope.row.description || '--' }}</span>
+                                    </template>
+                                </bk-table-column>
+                            </bk-table>
+                            <ul v-else slot="content" class="pipeline-exec-output-block-content">
+                                <li v-for="row in block.block" :key="row.key">
+                                    <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
+                                    <span class="pipeline-exec-output-block-row-value">
+                                        {{ block.value[row.key] || "--" }}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </template>
+                <div v-else class="no-outputs-placeholder">
+                    <logo name="empty" size="180" />
+                    <span>{{ $t("empty") }}</span>
                 </div>
-            </template>
-            <div v-else class="no-outputs-placeholder">
-                <logo name="empty" size="180" />
-                <span>{{ $t("empty") }}</span>
-            </div>
-        </section>
+            </section>
+        </bk-resize-layout>
         <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
     </div>
 </template>
@@ -144,7 +146,7 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
-
+    
     export default {
         components: {
             Logo,
@@ -165,7 +167,9 @@
                 activeOutputDetail: null,
                 hasPermission: false,
                 isLoading: false,
-                asideCollpased: false
+                asideCollpased: false,
+                startX: 0,
+                startWidth: 0
             }
         },
         computed: {
@@ -330,10 +334,7 @@
                 'requestExternalUrl',
                 'requestDownloadUrl'
             ]),
-            toggleCollapseAside () {
-                console.log(this.asideCollpased)
-                this.asideCollpased = !this.asideCollpased
-            },
+            
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
 
@@ -478,45 +479,11 @@
   }
   .pipeline-exec-outputs-aside {
     position: relative;
-    width: 30vw;
+    height: 100%;
     flex-shrink: 0;
     padding: 16px 11px;
-    border-right: 1px solid #dcdee5;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s;
-
-    &.pipeline-exec-outputs-aside-collapse {
-        width: 0;
-        padding: 0;
-        .pipeline-exec-output-classify-tab {
-            display: none;
-        }
-        .aside-collapse-icon {
-            transform: rotate(180deg);
-        }
-    }
-    .collapse-handler {
-        position: absolute;
-        right: -16px;
-        top: 50%;
-        display: flex;
-        cursor: pointer;
-        align-items: center;
-        width: 16px;
-        height: 100px;
-        background: #DCDEE5;
-        border-radius: 0 4px 4px 0;
-        transform: translateY(-50px);
-        color: white;
-        font-size: 12px;
-        justify-content: center;
-        font-weight: 700;
-        z-index: 2;
-        .aside-collapse-icon {
-            transition: all 0.3s;
-        }
-    }
     .pipeline-exec-output-classify-tab {
       display: flex;
       align-items: center;
@@ -578,7 +545,6 @@
       flex: 1;
       padding-top: 10px;
       > li {
-        height: 32px;
         display: flex;
         align-items: center;
         padding: 10px 19px;
@@ -586,34 +552,38 @@
         border-radius: 2px;
         font-size: 12px;
         margin-bottom: 10px;
-        > .devops-icon,
-        .output-hover-icon {
+        grid-gap: 10px;
+        > .devops-icon {
           display: inline-flex;
           font-size: 16px;
-          margin-right: 4px;
           flex-shrink: 0;
+          align-items: center;
         }
-        .output-hover-icon {
-            font-size: 12px;
-            display: none;
+        .output-hover-icon-box {
+            display: flex;
+            align-items: center;
+            grid-gap: 6px;
+            :hover {
+                color:$primaryColor;
+            }
         }
         > span {
-          flex: 1;
-          @include ellipsis();
+            flex: 1;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            word-break: break-all;
         }
         &.active,
         &:hover {
-            color: $primaryColor;
             background: #f5f7fa;
-            .output-hover-icon  {
-                display: inline-flex;
-            }
         }
       }
     }
   }
   .pipeline-exec-outputs-section {
-    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;

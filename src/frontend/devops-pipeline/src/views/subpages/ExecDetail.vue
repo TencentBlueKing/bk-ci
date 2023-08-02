@@ -540,6 +540,7 @@
       .exec-detail-summary-header-build-msg {
         flex: 1;
         margin: 0 24px 0 8px;
+        font-size: 14px;
         @include ellipsis();
         color: #313238;
         min-width: auto;
