@@ -114,14 +114,14 @@
                 return curPipeline
             },
             doSelectPipeline (pipelineId, cur) {
-                const { $route } = this
+                const { projectId, buildNo } = this.$route.params
                 this.updateCurPipeline({
                     pipelineId,
-                    projectId: $route.params.projectId
+                    projectId
                 })
                 // 清空搜索
                 this.searchPipelineList({
-                    projectId: $route.params.projectId
+                    projectId
                 }).then((list) => {
                     this.setBreadCrumbPipelineList(list, {
                         pipelineId,
@@ -129,11 +129,11 @@
                     })
                 })
 
-                const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+                const name = buildNo ? 'pipelinesHistory' : this.$route.name
                 this.$router.push({
                     name,
                     params: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         pipelineId
                     }
                 })
