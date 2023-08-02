@@ -14,9 +14,16 @@ import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.notify.dao.SmsNotifyDao
 import com.tencent.devops.notify.dao.WechatNotifyDao
+import com.tencent.devops.notify.service.EmailService
+import com.tencent.devops.notify.service.OrgService
+import com.tencent.devops.notify.service.RtxService
+import com.tencent.devops.notify.service.SmsService
+import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.service.WeworkService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -52,6 +59,7 @@ class BluekingNotifyConfiguration {
     fun notifyService(@Autowired cmsApi: CMSApi) = NotifyService(cmsApi)
 
     @Bean
+    @ConditionalOnMissingBean(EmailService::class)
     fun emailService(
         @Autowired notifyService: NotifyService,
         @Autowired emailNotifyDao: EmailNotifyDao,
@@ -60,12 +68,15 @@ class BluekingNotifyConfiguration {
     ) = EmailServiceImpl(notifyService, emailNotifyDao, rabbitTemplate, configuration)
 
     @Bean
+    @ConditionalOnMissingBean(WeworkService::class)
     fun weworkService() = BlueKingWeworkServiceImpl()
 
     @Bean
+    @ConditionalOnMissingBean(OrgService::class)
     fun orgService() = OrgServiceImpl()
 
     @Bean
+    @ConditionalOnMissingBean(RtxService::class)
     fun rtxService(
         @Autowired notifyService: NotifyService,
         @Autowired rtxNotifyDao: RtxNotifyDao,
@@ -74,6 +85,7 @@ class BluekingNotifyConfiguration {
     ) = RtxServiceImpl(notifyService, rtxNotifyDao, rabbitTemplate, configuration)
 
     @Bean
+    @ConditionalOnMissingBean(SmsService::class)
     fun smsService(
         @Autowired notifyService: NotifyService,
         @Autowired smsNotifyDao: SmsNotifyDao,
@@ -82,6 +94,7 @@ class BluekingNotifyConfiguration {
     ) = SmsServiceImpl(notifyService, smsNotifyDao, rabbitTemplate, configuration)
 
     @Bean
+    @ConditionalOnMissingBean(WechatService::class)
     fun wechatService(
         @Autowired notifyService: NotifyService,
         @Autowired wechatNotifyDao: WechatNotifyDao,
