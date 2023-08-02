@@ -58,5 +58,5 @@ data class MessageTemplate(
     @ApiModelProperty("创建人", required = true)
     val creator: String,
     @ApiModelProperty("修改人", required = true)
-    val modifier: String
+    val modifior: String
 )

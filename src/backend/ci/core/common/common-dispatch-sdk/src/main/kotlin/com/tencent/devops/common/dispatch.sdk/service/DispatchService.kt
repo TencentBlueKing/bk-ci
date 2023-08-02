@@ -48,6 +48,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KE
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -145,7 +146,7 @@ class DispatchService constructor(
         // 当hash表为空时，redis会自动删除
     }
 
-    fun checkRunning(event: PipelineAgentStartupEvent) {
+    fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
         // 判断流水线当前container是否在运行中
         val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
             projectId = event.projectId,
@@ -167,6 +168,11 @@ class DispatchService constructor(
 
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
+            // dispatch主动发起的重试，当遇到流水线非运行状态时，主动停止消费
+            if (event.retryTime > 1) {
+                return false
+            }
+
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
@@ -175,6 +181,8 @@ class DispatchService constructor(
                 errorMessage = errorMessage
             )
         }
+
+        return true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
@@ -195,7 +203,7 @@ class DispatchService constructor(
         }
     }
 
-    fun redispatch(event: PipelineAgentStartupEvent) {
+    fun redispatch(event: IPipelineEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }

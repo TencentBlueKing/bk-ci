@@ -102,6 +102,8 @@ data class PipelineAtom(
     val recommendFlag: Boolean? = null,
     @ApiModelProperty(value = "前端UI渲染方式", required = false)
     val frontendType: FrontendTypeEnum?,
+    @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源", required = false)
+    val visibilityLevel: String? = null,
     @ApiModelProperty("插件创建时间", required = true)
     val createTime: Long,
     @ApiModelProperty("插件最后修改时间", required = true)

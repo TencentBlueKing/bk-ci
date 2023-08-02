@@ -43,7 +43,6 @@ import {
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
-    SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
     SET_PIPELINE_EXEC_DETAIL,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -70,7 +69,8 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_ATOM_PAGE_OVER,
     CLEAR_ATOM_DATA,
-    SET_COMMEND_ATOM_PAGE_OVER
+    SET_COMMEND_ATOM_PAGE_OVER,
+    SET_HIDE_SKIP_EXEC_TASK
 } from './constants'
 import {
     getAtomModalKey,
@@ -354,22 +354,21 @@ export default {
             editingElementPos
         })
     },
-    [SET_BUILD_PARAM]: (state, { buildParams, buildId }) => {
-        return Object.assign(state, {
-            buildParamsMap: {
-                ...state.buildParamsMap,
-                [buildId]: buildParams
-            }
-        })
-    },
     [DELETE_ATOM_PROP]: (state, { element, propKey }) => {
         delete element[propKey]
         return state
     },
     [SET_PIPELINE_EXEC_DETAIL]: (state, execDetail = null) => {
+        if (execDetail?.model?.stages) {
+            execDetail.model.stages = execDetail.model.stages.slice(1)
+        }
         Object.assign(state, {
             execDetail
         })
+    },
+    [SET_HIDE_SKIP_EXEC_TASK]: (state, hideSkipExecTask) => {
+        Vue.set(state, 'hideSkipExecTask', hideSkipExecTask)
+        return state
     },
     [SET_REMOTE_TRIGGER_TOKEN]: (state, { atom, token }) => {
         Vue.set(atom, 'remoteToken', token)

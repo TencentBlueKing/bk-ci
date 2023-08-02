@@ -36,6 +36,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
+import java.net.URLDecoder
 
 object MessageUtil {
 
@@ -56,7 +57,8 @@ object MessageUtil {
         language: String,
         params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME,
-        defaultMessage: String? = null
+        defaultMessage: String? = null,
+        checkUrlDecoder: Boolean = false
     ): String {
         var message: String? = null
         try {
@@ -71,14 +73,15 @@ object MessageUtil {
             // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
         } catch (ignored: Throwable) {
-            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)
+            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]")
         }
         if (null != params && null != message) {
             val mf = MessageFormat(message)
             // 根据参数动态替换状态码描述里的占位符
             message = mf.format(params)
         }
-        return message ?: defaultMessage ?: ""
+        val res = message ?: defaultMessage ?: ""
+        return if (checkUrlDecoder) URLDecoder.decode(res, Charsets.UTF_8.name()) else res
     }
 
     /**

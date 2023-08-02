@@ -196,25 +196,6 @@ open class MarketAtomTask : ITask() {
         val inputTemplate = props["input"]?.let { it as Map<String, Map<String, Any>> } ?: mutableMapOf()
         val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
-        // 解析并打印插件执行传入的所有参数
-        val inputParams = map["input"]?.let { input ->
-            parseInputParams(
-                inputMap = input as Map<String, Any>,
-                variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
-                acrossInfo = acrossInfo,
-                asCodeEnabled = asCodeEnabled
-            )
-        } ?: emptyMap()
-        printInput(atomData, inputParams, inputTemplate)
-
-        if (atomData.target?.isBlank() == true) {
-            throw TaskExecuteException(
-                errorMsg = "can not found any plugin cmd",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-            )
-        }
-
         // 插件SDK输入 = 所有变量 + 预置变量 + 敏感信息 + 处理后的插件参数
         // 增加插件名称和任务名称变量，设置是否是测试版本的标识
         val bkWorkspacePath = if (buildTask.containerType != VMBuildContainer.classType) {
@@ -235,6 +216,26 @@ open class MarketAtomTask : ITask() {
                 LOCALE_LANGUAGE to (AgentEnv.getLocaleLanguage())
             )
         )
+
+        // 解析并打印插件执行传入的所有参数
+        val inputParams = map["input"]?.let { input ->
+            parseInputParams(
+                inputMap = input as Map<String, Any>,
+                variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
+                acrossInfo = acrossInfo,
+                asCodeEnabled = asCodeEnabled
+            )
+        } ?: emptyMap()
+        printInput(atomData, inputParams, inputTemplate)
+
+        if (atomData.target?.isBlank() == true) {
+            throw TaskExecuteException(
+                errorMsg = "can not found any plugin cmd",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+            )
+        }
+
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
         val inputVariables = variables.plus(inputParams).toMutableMap<String, Any>()
@@ -264,9 +265,8 @@ open class MarketAtomTask : ITask() {
             atomExecuteFile = downloadAtomExecuteFile(
                 projectId = buildVariables.projectId,
                 atomFilePath = atomData.pkgPath!!,
-                atomCreateTime = atomData.createTime,
                 workspace = atomTmpSpace,
-                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                authFlag = atomData.authFlag ?: true
             )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -509,7 +509,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS -> {
+            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS, BuildType.MACOS_NEW -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,
@@ -951,9 +951,8 @@ open class MarketAtomTask : ITask() {
     private fun downloadAtomExecuteFile(
         projectId: String,
         atomFilePath: String,
-        atomCreateTime: Long,
         workspace: File,
-        isVmBuildEnv: Boolean
+        authFlag: Boolean
     ): File {
         try {
             // 取插件文件名
@@ -966,9 +965,8 @@ open class MarketAtomTask : ITask() {
             atomApi.downloadAtom(
                 projectId = projectId,
                 atomFilePath = atomFilePath,
-                atomCreateTime = atomCreateTime,
                 file = file,
-                isVmBuildEnv = isVmBuildEnv
+                authFlag = authFlag
             )
             return file
         } catch (t: Throwable) {

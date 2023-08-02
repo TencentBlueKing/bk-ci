@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.collect.Maps
+import com.tencent.devops.common.api.constant.DEVELOP
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
@@ -37,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
@@ -80,6 +82,9 @@ import com.tencent.devops.quality.constant.BK_TOOL_NAME_STANDARD
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_STYLECOP
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_WOODPECKER_SENSITIVE
 import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_DESC_KEY
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_ELEMENT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_NAME_KEY
 import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_CHINESE_NAME_EXISTS
 import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_ENGLISH_NAME_EXISTS
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
@@ -89,6 +94,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import java.io.File
 import java.util.Base64
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
@@ -108,7 +114,8 @@ class QualityIndicatorService @Autowired constructor(
     private val indicatorDao: QualityIndicatorDao,
     private val metadataService: QualityMetadataService,
     private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
 
     private val encoder = Base64.getEncoder()
@@ -121,18 +128,20 @@ class QualityIndicatorService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality indicator")
                     val classPathResource = ClassPathResource(
-                        "indicator_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}indicator_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                     val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
                     indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
                     logger.info("init quality indicator end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality indicator fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
@@ -200,12 +209,16 @@ class QualityIndicatorService @Autowired constructor(
                     val detailHashId = encoder.encodeToString(elementDetail.toByteArray())
                     IndicatorStageGroup.IndicatorDetailGroup(detailHashId,
                         detailCnName,
-                        codeccToolDescMap[elementDetail]
-                            ?: "",
-                        indicatorList)
+                        codeccToolDescMap[elementDetail] ?: "",
+                        indicatorList
+                    )
                 }
-                IndicatorStageGroup.IndicatorControlPointGroup(encoder.encodeToString(controlPoint.key.toByteArray()),
-                    elementType, ElementUtils.getElementCnName(elementType, projectId), detailGroups)
+                IndicatorStageGroup.IndicatorControlPointGroup(
+                    hashId = encoder.encodeToString(controlPoint.key.toByteArray()),
+                    controlPoint = elementType,
+                    controlPointName = ElementUtils.getElementCnName(elementType, projectId),
+                    details = detailGroups
+                )
             }
             IndicatorStageGroup(
                 hashId = encoder.encodeToString(stage.key.toByteArray()),
@@ -321,7 +334,7 @@ class QualityIndicatorService @Autowired constructor(
                 thresholdType = it.thresholdType,
                 desc = it.desc,
                 readOnly = it.indicatorReadOnly,
-                stage = it.stage,
+                stage = I18nUtil.getCodeLanMessage(messageCode = it.stage, defaultMessage = it.stage),
                 range = it.indicatorRange,
                 type = it.type,
                 tag = it.tag,
@@ -337,7 +350,11 @@ class QualityIndicatorService @Autowired constructor(
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
             return Msg(0, I18nUtil.getCodeLanMessage(BK_CREATE_SUCCESS), true)
         }
-        return Msg(-1, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = userId), false)
+        return Msg(
+            -1,
+            I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = I18nUtil.getLanguage(userId)),
+            false
+        )
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
@@ -441,15 +458,24 @@ class QualityIndicatorService @Autowired constructor(
                 val item = IndicatorListResponse.IndicatorListItem(
                     hashId = HashUtil.encodeLongId(indicator.id),
                     name = indicator.enName,
-                    cnName = indicator.cnName,
+                    cnName = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_NAME_KEY.format(indicator.id),
+                        defaultMessage = indicator.cnName
+                    ),
                     elementType = indicator.elementType,
-                    elementName = indicator.elementName,
+                    elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_ELEMENT_NAME_KEY.format(indicator.id),
+                        defaultMessage = indicator.elementName
+                    ),
                     elementDetail = if (indicatorCnName.isNullOrBlank()) indicator.elementDetail else indicatorCnName,
                     metadatas = metadata,
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc ?: "",
+                    desc = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_DESC_KEY.format(indicator.id),
+                        defaultMessage = indicator.desc ?: ""
+                    ),
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
@@ -636,8 +662,14 @@ class QualityIndicatorService @Autowired constructor(
             elementType = indicator.elementType,
             elementDetail = indicator.elementDetail ?: "",
             enName = indicator.enName,
-            cnName = indicator.cnName,
-            stage = indicator.stage ?: "",
+            cnName = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_NAME_KEY.format(indicator.id),
+                defaultMessage = indicator.cnName
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = indicator.stage,
+                defaultMessage = indicator.stage ?: ""
+            ),
             operation = QualityOperation.valueOf(indicator.defaultOperation),
             operationList = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
             threshold = indicator.threshold,
@@ -646,7 +678,10 @@ class QualityIndicatorService @Autowired constructor(
             type = indicator.type,
             tag = indicator.tag,
             metadataList = metadata,
-            desc = indicator.desc,
+            desc = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_DESC_KEY.format(indicator.id),
+                defaultMessage = indicator.desc
+            ),
             logPrompt = indicator.logPrompt,
             enable = indicator.enable ?: false,
             range = indicator.indicatorRange
@@ -754,7 +789,7 @@ class QualityIndicatorService @Autowired constructor(
             thresholdType = indicatorCreate.dataType.name,
             desc = indicatorCreate.desc,
             readOnly = false,
-            stage = "开发",
+            stage = DEVELOP,
             range = projectId,
             tag = "",
             enable = true,

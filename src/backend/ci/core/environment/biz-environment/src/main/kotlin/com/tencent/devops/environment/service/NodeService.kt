@@ -53,16 +53,17 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -131,11 +132,26 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
+        return formatNodeWithPermissions(userId, projectId, nodeRecordList)
+    }
+
+    fun formatNodeWithPermissions(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>
+    ): List<NodeWithPermission> {
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId = userId, projectId = projectId,
+            userId = userId,
+            projectId = projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-
         val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
@@ -158,14 +174,6 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)

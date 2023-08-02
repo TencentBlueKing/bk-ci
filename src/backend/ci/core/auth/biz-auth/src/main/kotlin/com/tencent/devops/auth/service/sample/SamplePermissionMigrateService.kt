@@ -28,19 +28,39 @@
 
 package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         return true
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
         return true
     }
 
     override fun allToRbacAuth(): Boolean {
+        return true
+    }
+
+    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        return true
+    }
+
+    override fun compareResult(projectCode: String): Boolean {
+        return true
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean {
+        return true
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         return true
     }
 }

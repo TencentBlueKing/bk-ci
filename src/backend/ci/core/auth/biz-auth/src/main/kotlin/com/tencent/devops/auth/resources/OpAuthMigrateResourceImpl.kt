@@ -29,9 +29,9 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,15 +40,45 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     private val permissionMigrateService: PermissionMigrateService
 ) : OpAuthMigrateResource {
 
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v3ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v3ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v3ToRbacAuth(projectCodes = projectCodes))
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v0ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v0ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v0ToRbacAuth(projectCodes = projectCodes))
     }
 
     override fun allToRbacAuth(): Result<Boolean> {
         return Result(permissionMigrateService.allToRbacAuth())
+    }
+
+    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.toRbacAuthByCondition(
+                migrateProjectConditionDTO = migrateProjectConditionDTO
+            )
+        )
+    }
+
+    override fun compareResult(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.compareResult(projectCode = projectCode))
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateResource(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                projectCreator
+            )
+        )
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
     }
 }

@@ -42,6 +42,10 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
@@ -58,7 +62,9 @@ import org.springframework.stereotype.Service
 )
 @Service
 class PipelineContextService @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
@@ -70,12 +76,21 @@ class PipelineContextService @Autowired constructor(
         containerId: String?,
         taskId: String?,
         variables: Map<String, String>,
-        model: Model? = null
+        model: Model? = null,
+        executeCount: Int? = 1
     ): MutableMap<String, String> {
         val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return mutableMapOf()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
+        if (containerId != null) {
+            jobRetryTaskId(
+                projectId, buildId, pipelineId, containerId, executeCount, variables
+            )?.let {
+                contextMap[JOB_RETRY_TASK_ID] = it
+            }
+        }
+
         try {
             modelDetail.stages.forEach { stage ->
                 if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
@@ -216,6 +231,41 @@ class PipelineContextService @Autowired constructor(
         }
     }
 
+    // 获取当前job下重试的插件。如果没有则为null
+    private fun jobRetryTaskId(
+        projectId: String,
+        buildId: String,
+        pipelineId: String,
+        containerId: String?,
+        executeCount: Int?,
+        variables: Map<String, String>
+    ): String? {
+        if (containerId == null || executeCount == null) return null
+        return containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+        )?.containerVar?.getOrDefault(JOB_RETRY_TASK_ID, null)?.toString() ?: kotlin.run {
+            // 兼容通过BK_CI_RETRY_TASK_ID的老方式，如果 BK_CI_RETRY_TASK_ID 有值
+            // 并且其对应的container id是当前运行的，就正常返回
+            val taskId = variables[PIPELINE_RETRY_START_TASK_ID]
+            if (taskId != null && taskBuildRecordService.getTaskInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount
+                )?.containerId == containerId
+            ) {
+                return taskId
+            }
+            return null
+        }
+    }
+
     private fun buildJobContext(
         stage: Stage,
         c: Container,
@@ -233,7 +283,7 @@ class PipelineContextService @Autowired constructor(
             c.jobId?.let { contextMap["job.id"] = it }
             contextMap["job.name"] = c.name
             contextMap["job.status"] = statusStr
-            contextMap["job.outcome"] = statusStr
+            c.status?.let { contextMap["job.outcome"] = it }
             getNetWork(c)?.let { contextMap["job.container.network"] = it }
             stage.id?.let { contextMap["job.stage_id"] = it }
             stage.name?.let { contextMap["job.stage_name"] = it }
@@ -245,7 +295,7 @@ class PipelineContextService @Autowired constructor(
         contextMap["jobs.$jobId.id"] = jobId
         contextMap["jobs.$jobId.name"] = c.name
         contextMap["jobs.$jobId.status"] = statusStr
-        contextMap["jobs.$jobId.outcome"] = statusStr
+        c.status?.let { contextMap["jobs.$jobId.outcome"] = it }
         getNetWork(c)?.let { contextMap["jobs.$jobId.container.network"] = it }
         stage.id?.let { contextMap["jobs.$jobId.stage_id"] = it }
         stage.name?.let { contextMap["jobs.$jobId.stage_name"] = it }
@@ -289,7 +339,7 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.name"] = e.name
                 e.id?.let { contextMap["step.id"] = it }
                 contextMap["step.status"] = statusStr
-                contextMap["step.outcome"] = statusStr
+                e.status?.let { contextMap["step.outcome"] = it }
                 contextMap["step.atom_version"] = e.version
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
@@ -299,13 +349,13 @@ class PipelineContextService @Autowired constructor(
                 contextMap["steps.$stepId.name"] = e.name
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
                 contextMap["steps.$stepId.status"] = statusStr
-                contextMap["steps.$stepId.outcome"] = statusStr
+                e.status?.let { contextMap["steps.$stepId.outcome"] = it }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
             e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
             contextMap["jobs.$jobId.steps.$stepId.status"] = statusStr
-            contextMap["jobs.$jobId.steps.$stepId.outcome"] = statusStr
+            e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
                     jobPrefix = "jobs.$jobId.",

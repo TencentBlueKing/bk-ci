@@ -32,6 +32,7 @@ import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.SystemEnums
@@ -79,6 +80,12 @@ class OPProjectResourceImpl @Autowired constructor(
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int> {
         return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
+    }
+
+    override fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Result<Boolean> {
+        return Result(
+            projectService.updateProjectCreator(projectUpdateCreatorDtoList = projectUpdateCreatorDtoList)
+        )
     }
 
     override fun getProjectList(
