@@ -193,7 +193,7 @@ object CommonMessageCode {
     const val BK_CREATE_SERVICE = "bkCreateService" // 创建{0}服务
     const val BK_SESSION_ID = "bkSessionId" // 会话ID
     const val BK_GROUP_ID = "bkGroupId" // 群ID
-    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID={0}。PS:群ID可用于蓝盾平台上任意企业微信群通知。
     const val BK_MISSING_RESOURCE_DEPENDENCY = "bkMissingResourceDependency" // 依赖的资源不存在
 
     const val BK_REQUEST_TIMED_OUT = "bkRequestTimedOut" // 请求超时
@@ -241,7 +241,9 @@ object CommonMessageCode {
     const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
-    const val BK_BUILD_MSG_MANUAL = "bkBuildMsgManual" // 手动触发
-    const val BK_BUILD_MSG_TRIGGERS = "bkBuildMsgTriggers" // 构建触发
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+
+    const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
+    const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
+    const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
 }

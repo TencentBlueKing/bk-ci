@@ -41,11 +41,32 @@
 }, {
   "system" : "bk_ci_rbac",
   "actions" : [ {
+    "id" : "cert_edit"
+  },{
     "id" : "cert_view"
-  } ],
+  }],
   "resources" : [ {
     "system" : "bk_ci_rbac",
     "type" : "cert",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "env_node_use"
+  },{
+    "id" : "env_node_edit"
+  },{
+    "id" : "env_node_view"
+  }],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "env_node",
     "paths" : [ [ {
       "system" : "bk_ci_rbac",
       "type" : "project",

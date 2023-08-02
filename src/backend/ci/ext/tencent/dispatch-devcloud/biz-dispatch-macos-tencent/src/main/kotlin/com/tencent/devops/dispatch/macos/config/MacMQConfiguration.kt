@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.macos.config
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.dispatch.macos.constant.Constant
 import com.tencent.devops.dispatch.macos.listener.MacBuildListener
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
@@ -199,12 +200,12 @@ class MacMQConfiguration @Autowired constructor() {
     companion object {
         private val logger = LoggerFactory.getLogger(MacMQConfiguration::class.java)
 
-        private const val demoteQueueConcurrency = 2
+        private const val demoteQueueConcurrency = Constant.MAX_DEMOTE_STARTUP_CONCURRENCY
 
-        private const val demoteQueueMaxConcurrency = 2
+        private const val demoteQueueMaxConcurrency = Constant.MAX_DEMOTE_STARTUP_CONCURRENCY
 
         private const val agentStartQueueConcurrency = 20
 
-        private const val agentStartQueueMaxConcurrency = 30
+        private const val agentStartQueueMaxConcurrency = Constant.MAX_STARTUP_CONCURRENCY
     }
 }

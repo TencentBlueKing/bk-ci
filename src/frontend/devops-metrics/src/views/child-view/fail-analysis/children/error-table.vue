@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  computed,
   h,
 } from 'vue';
 import http from '@/http/api';
@@ -15,7 +16,8 @@ import {
 import { useI18n } from "vue-i18n";
 
 import useFilter from '@/composables/use-filter';
-const emit = defineEmits(['change']);
+import EmptyTableStatus from '@/components/empty-table-status.vue'
+const emit = defineEmits(['change', 'clear']);
 const { t } = useI18n();
 
 const {
@@ -28,6 +30,7 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    showOverflowTooltip: true,
     render ({ cell, row }) {
       return h(
         'span',
@@ -62,35 +65,37 @@ const columns = [
   {
     label: t('Branch'),
     field: 'branch',
+    showOverflowTooltip: true,
   },
   {
     label: t('Start Time'),
     field: 'startTime',
+    showOverflowTooltip: true,
   },
   {
     label: t('Username'),
     field: 'startUser',
+    showOverflowTooltip: true,
   },
   {
     label: t('Error Type'),
     field: 'errorTypeName',
+    showOverflowTooltip: true,
   },
   {
     label: t('Error Code'),
     field: 'errorCode',
+    showOverflowTooltip: true,
   },
   {
     label: t('Error Message'),
-    field: 'errorMsg',
+    field: 'errorMsg', 
+    showOverflowTooltip: true,
     render ({ cell, row }) {
       return h(
         'span',
-        {
-          title: row.errorMsg, 
-        },
         [
-          cell,
-          row.errorMsg
+          cell
         ]
       );
     },
@@ -103,6 +108,28 @@ const pagination = ref({
   limit: 10,
 });
 
+const emptyType = computed(() => {
+  return (
+    props.status.pipelineIds.length
+    ||  props.status.pipelineLabelIds.length
+    ||  props.status.errorTypes.length
+    ||  props.status.startTime
+    ||  props.status.endTime
+  )
+    ? 'search-empty'
+    : 'empty'
+
+})
+
+const handleClear = () => {
+  emit('clear', {
+    pipelineIds: [],
+    pipelineLabelIds: [],
+    startTime: '',
+    endTime: '',
+    errorTypes: [],
+  })
+}
 const goToPipelineDetail = (row) => {
   console.log(row, arguments);
 }
@@ -134,7 +161,7 @@ const getData = () => {
     })
     .finally(() => {
       isLoading.value = false;
-      handleChange(false)
+      handleChange(false);
     });
 };
 
@@ -161,6 +188,9 @@ onMounted(getData);
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
     >
+      <template #empty>
+        <EmptyTableStatus :type="emptyType" @clear="handleClear" />
+      </template>
     </bk-table>
   </bk-loading>
 </template>

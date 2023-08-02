@@ -125,11 +125,12 @@
                 return Math.max(...executeCountList)
             },
             activeErorr () {
-                try {
-                    return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id && !error.taskId)
-                } catch (error) {
-                    return null
-                }
+                return null
+                // try {
+                //     return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id && !error.taskId)
+                // } catch (error) {
+                //     return null
+                // }
             }
         },
         methods: {

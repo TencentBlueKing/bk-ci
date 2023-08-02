@@ -28,7 +28,10 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -55,6 +58,8 @@ data class BuildRecordTask(
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
     var taskVar: MutableMap<String, Any>,
+    @ApiModelProperty("插件post信息", required = false)
+    val elementPostInfo: ElementPostInfo? = null,
     @ApiModelProperty("插件类型标识", required = true)
     val classType: String,
     @ApiModelProperty("市场插件标识", required = true)
@@ -69,4 +74,28 @@ data class BuildRecordTask(
     var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
-)
+) {
+    companion object {
+        fun MutableList<BuildRecordTask>.addRecords(
+            buildTaskList: MutableList<PipelineBuildTask>,
+            resourceVersion: Int
+        ) {
+            buildTaskList.forEach {
+                // 自动填充的构建机控制插件，不需要存入Record
+                if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
+                this.add(
+                    BuildRecordTask(
+                        projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
+                        stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
+                        taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
+                        executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
+                        taskVar = mutableMapOf(), timestamps = mapOf(),
+                        elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
+                            info.parentElementId != it.taskId
+                        }
+                    )
+                )
+            }
+        }
+    }
+}

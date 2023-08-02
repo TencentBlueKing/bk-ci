@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.tof.TOFService
@@ -37,10 +38,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectOrganizationServiceImpl @Autowired constructor(private val tofService: TOFService) : ProjectOrganizationService {
+class ProjectOrganizationServiceImpl @Autowired constructor(private val tofService: TOFService) :
+    ProjectOrganizationService {
 
     override fun getDeptInfo(userId: String?, id: Int): DeptInfo {
         return tofService.getDeptInfo(userId ?: "", id)
+    }
+
+    override fun getDeptStaffsWithLevel(deptId: String, level: Int): List<StaffInfo> {
+        return tofService.getDeptStaffsWithLevel(deptId, level)
     }
 
     override fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo> {

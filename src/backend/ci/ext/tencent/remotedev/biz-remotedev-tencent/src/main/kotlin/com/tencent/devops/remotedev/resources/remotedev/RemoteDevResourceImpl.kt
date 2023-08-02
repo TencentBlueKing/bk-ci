@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.RsaUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,8 @@ class RemoteDevResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val redisHeartBeat: RedisHeartBeat,
     private val workspaceService: WorkspaceService,
-    private val workspaceImageService: WorkspaceImageService
+    private val workspaceImageService: WorkspaceImageService,
+    private val workspaceCommon: WorkspaceCommon
 ) : RemoteDevResource {
 
     @Value("\${remoteDev.callBackSignSecret:}")
@@ -88,14 +90,18 @@ class RemoteDevResourceImpl @Autowired constructor(
         if (!checkSignature(signature, workspaceName, timestamp)) {
             return Result(403, "Forbidden request", false)
         }
-        workspaceService.dispatchWebsocketPushEvent(
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = Constansts.ADMIN_NAME, workspaceName = workspaceName, checkPermission = false
+        ) ?: return Result(false)
+        workspaceCommon.dispatchWebsocketPushEvent(
             userId = Constansts.ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,
             errorMsg = null,
             type = type ?: WebSocketActionType.WORKSPACE_CREATE,
             status = true,
-            action = WorkspaceAction.COMPLETE_PULL_CODE
+            action = WorkspaceAction.COMPLETE_PULL_CODE,
+            systemType = ws.systemType, workspaceMountType = ws.workspaceMountType
         )
         return Result(true)
     }

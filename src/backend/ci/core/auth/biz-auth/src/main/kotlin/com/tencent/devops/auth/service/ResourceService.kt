@@ -93,7 +93,8 @@ class ResourceService @Autowired constructor(
             path = resourceInfo.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
             gateway = resourceInfo.gateway,
-            token = token
+            token = token,
+            system = resourceInfo.system
         )
         val response = authHttpClientService.request(
             request,

@@ -232,6 +232,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,
+                            executeCount = task.executeCount ?: 1,
                             taskId = updateTaskStatusInfo.taskId,
                             taskStatus = updateTaskStatusInfo.buildStatus
                         )

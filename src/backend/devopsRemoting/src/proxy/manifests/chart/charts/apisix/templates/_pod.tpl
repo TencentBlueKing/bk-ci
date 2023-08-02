@@ -194,6 +194,8 @@ spec:
       {{ else }}
       command: ['sh', '-c', "until nc -z {{ .Release.Name }}-etcd.{{ .Release.Namespace }}.svc.{{ .Values.etcd.clusterDomain }} {{ .Values.etcd.service.port }}; do echo waiting for etcd `date`; sleep 2; done;"]
       {{- end }}
+      resources: 
+      {{- toYaml .Values.apisix.waitEtcd.resources | nindent 8 }}
     {{- end }}
     {{- if .Values.extraInitContainers }}
     {{- toYaml .Values.extraInitContainers | nindent 4 }}

@@ -164,7 +164,7 @@ class ProjectUserRefreshService @Autowired constructor(
             centerName = tofDeptInfo.centerName,
             deptId = tofDeptInfo.deptId.toInt(),
             deptName = tofDeptInfo.deptName,
-            name = staffInfo.ChineseName,
+            name = staffInfo.chineseName,
             userId = userId
         )
         return tofDeptInfo

@@ -50,6 +50,7 @@
 
 <style lang="scss">
     .error-log-summary{
+        position: relative;
         padding: 12px;
         display: flex;
         flex-direction: column;
@@ -82,10 +83,17 @@
             }
         }
         &-content {
-            flex: 1;
-            padding: 8px 20px;
+            padding: 8px 34px;
             margin: 0;
+            position: absolute;
             color: white;
+            top: 40px;
+            left: 0;
+            background: #404145;
+            width: 100%;
+            overflow: auto;
+            z-index: 1;
+            max-height: 360px;
             a {
                 color: #3c96ff;
                 &:visited {

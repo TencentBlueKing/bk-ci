@@ -8,6 +8,10 @@ import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
+import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
+import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -31,14 +35,15 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -292,7 +297,9 @@ class RbacPermissionApplyService @Autowired constructor(
             buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
+                name = I18nUtil.getCodeLanMessage(
+                    relatedResourceTypesDTO.type + RESOURCE_TYPE_NAME_SUFFIX
+                ),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             GroupPermissionDetailVo(
@@ -329,7 +336,10 @@ class RbacPermissionApplyService @Autowired constructor(
         // 判断action是否为空
         val actionInfo = if (action != null) rbacCacheService.getActionInfo(action) else null
         val iamRelatedResourceType = actionInfo?.relatedResourceType ?: resourceType
-        val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
+        val resourceTypeName = I18nUtil.getCodeLanMessage(
+            messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
+            defaultMessage = rbacCacheService.getResourceTypeInfo(resourceType).name
+        )
 
         val projectInfo = authResourceService.get(
             projectCode = projectId,
@@ -372,7 +382,12 @@ class RbacPermissionApplyService @Autowired constructor(
             auth = isEnablePermission,
             resourceTypeName = resourceTypeName,
             resourceName = resourceName,
-            actionName = actionInfo?.actionName,
+            actionName = actionInfo?.let {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${it.action}$ACTION_NAME_SUFFIX",
+                    defaultMessage = it.actionName
+                )
+            },
             groupInfoList = groupInfoList
         )
     }
@@ -390,25 +405,33 @@ class RbacPermissionApplyService @Autowired constructor(
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
+        // 若动作是挂在项目下，返回的资源类型必须是project
+        val finalResourceType =
+            if (action?.substringBeforeLast("_") == AuthResourceType.PROJECT.value) {
+                AuthResourceType.PROJECT.value
+            } else {
+                resourceType
+            }
+        logger.info("buildRedirectGroupInfoResult|finalResourceType:$finalResourceType")
         if (action == null || iamRelatedResourceType == AuthResourceType.PROJECT.value) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectName, resourceType,
+                        authApplyRedirectUrl, projectId, projectName, finalResourceType,
                         resourceName, iamResourceCode, action ?: "", "", ""
                     )
                 )
             )
         } else {
             if (isEnablePermission) {
-                rbacCacheService.getGroupConfigAction(resourceType).forEach {
+                rbacCacheService.getGroupConfigAction(finalResourceType).forEach {
                     if (it.actions.contains(action)) {
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
                             projectInfo = projectInfo,
                             resourceName = resourceName,
                             action = action,
-                            resourceType = resourceType,
+                            resourceType = finalResourceType,
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
                             iamResourceCode = iamResourceCode
@@ -421,7 +444,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     projectInfo = projectInfo,
                     resourceName = resourceName,
                     action = action,
-                    resourceType = resourceType,
+                    resourceType = finalResourceType,
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode
@@ -456,7 +479,11 @@ class RbacPermissionApplyService @Autowired constructor(
                         authApplyRedirectUrl, projectId, projectName, resourceType,
                         resourceName, iamResourceCode, action, resourceGroup.groupName, resourceGroup.relationId
                     ),
-                    groupName = resourceGroup.groupName
+                    groupName = I18nUtil.getCodeLanMessage(
+                        messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                            AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                        defaultMessage = resourceGroup.groupName
+                    )
                 )
             )
         }

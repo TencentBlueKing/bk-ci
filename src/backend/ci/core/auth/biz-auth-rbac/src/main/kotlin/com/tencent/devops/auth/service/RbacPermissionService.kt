@@ -40,11 +40,14 @@ import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
@@ -56,7 +59,8 @@ class RbacPermissionService constructor(
     private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionSuperManagerService: PermissionSuperManagerService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val client: Client
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -76,20 +80,36 @@ class RbacPermissionService constructor(
         }
     }
 
+    /**
+     * 如果没有具体资源,则校验是否有项目下任意资源权限
+     */
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        return validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = action,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            relationResourceType = null
-        )
+        val actionInfo = rbacCacheService.getActionInfo(action)
+        // 如果action关联的资源是项目,则直接查询项目的权限
+        return if (actionInfo.relatedResourceType == AuthResourceType.PROJECT.value) {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                relationResourceType = null
+            )
+        } else {
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType!!,
+                resourceCode = "*",
+                relationResourceType = null
+            )
+        }
     }
 
     override fun validateUserResourcePermissionByRelation(
@@ -100,22 +120,12 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        } else {
-            val projectResourceInstance = AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                parents = listOf(projectResourceInstance)
-            )
-        }
+        val resource = buildAuthResourceInstance(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType
+        )
         return validateUserResourcePermissionByInstance(
             userId = userId,
             action = action,
@@ -124,7 +134,7 @@ class RbacPermissionService constructor(
         )
     }
 
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -152,11 +162,15 @@ class RbacPermissionService constructor(
             ) {
                 return true
             }
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resource.resourceType,
-                resourceCode = resource.resourceCode
-            ) ?: return false
+            val iamResourceCode = if (resource.resourceCode == "*") {
+                resource.resourceCode
+            } else {
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
+            } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
                 .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
@@ -208,22 +222,12 @@ class RbacPermissionService constructor(
         resourceCode: String,
         resourceType: String
     ): Map<String, Boolean> {
-        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        } else {
-            val projectResourceInstance = AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                parents = listOf(projectResourceInstance)
-            )
-        }
+        val resource = buildAuthResourceInstance(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType
+        )
 
         return batchValidateUserResourcePermissionByInstance(
             userId = userId,
@@ -316,7 +320,13 @@ class RbacPermissionService constructor(
                     resourceType = resourceType
                 )
             }
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+            val useAction = if (!action.contains("_")) {
+                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+            } else {
+                action
+            }
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
@@ -424,7 +434,7 @@ class RbacPermissionService constructor(
             if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associate {
                     val authPermission = it.substringAfterLast("_")
-                    AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+                    AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
             val instanceList = resources.map { resource ->
@@ -452,12 +462,23 @@ class RbacPermissionService constructor(
             actions.parallelStream().forEach { action ->
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    iamResourceCodes = iamResourceCodes
-                )
+                // 具有action管理员权限,那么有所有资源权限
+                if (permissionSuperManagerService.reviewManagerCheck(
+                        userId = userId,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        action = action
+                    )
+                ) {
+                    permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
+                } else {
+                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                    permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = iamResourceCodes
+                    )
+                }
             }
             return permissionMap
         } finally {
@@ -465,6 +486,52 @@ class RbacPermissionService constructor(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
                     "$userId|$actions|$projectCode|$resourceType"
             )
+        }
+    }
+
+    private fun buildAuthResourceInstance(
+        userId: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): AuthResourceInstance {
+        val projectResourceInstance = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        return when (resourceType) {
+            AuthResourceType.PROJECT.value ->
+                projectResourceInstance
+            // 流水线鉴权,需要添加关联的流水线组
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
+                val parents = mutableListOf<AuthResourceInstance>()
+                parents.add(projectResourceInstance)
+                client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = resourceCode
+                ).data?.forEach { viewId ->
+                    parents.add(
+                        AuthResourceInstance(
+                            resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                            resourceCode = HashUtil.encodeLongId(viewId),
+                            parents = listOf(projectResourceInstance)
+                        )
+                    )
+                }
+                AuthResourceInstance(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    parents = parents
+                )
+            }
+            else -> {
+                AuthResourceInstance(
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    parents = listOf(projectResourceInstance)
+                )
+            }
         }
     }
 

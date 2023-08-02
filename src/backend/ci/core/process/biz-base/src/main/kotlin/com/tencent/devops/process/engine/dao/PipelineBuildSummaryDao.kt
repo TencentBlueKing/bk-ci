@@ -471,9 +471,15 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .let {
                         if (executeCount == 1) {
-                            // 只有首次才写入LATEST_BUILD_ID和LATEST_STATUS，重试不写入
+                            // 只有首次才写入LATEST_BUILD_ID
                             it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
-                        } else it
+                        } else {
+                            // 重试时只有最新的构建才能刷新LATEST_STATUS
+                            it.set(
+                                LATEST_STATUS,
+                                DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                            )
+                        }
                     }
                     .set(LATEST_TASK_COUNT, taskCount)
                     .set(LATEST_START_USER, userId)

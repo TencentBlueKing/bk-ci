@@ -49,6 +49,7 @@ Vue.prototype.$bkMessage = function (config) {
     bkMessage(config)
 }
 
+window.changeFlag = false
 window.mainComponent = new Vue({
     el: '#app',
     router,

@@ -99,3 +99,30 @@ func Test_parseWorkerVersion(t *testing.T) {
 	}
 
 }
+
+func Test_matchWorkerVersion(t *testing.T) {
+	type args struct {
+		line string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "normal",
+			args: args{
+				line: "v1.10.0-beta.55",
+			},
+			want: true,
+		},
+	}
+	logs.UNTestDebugInit()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := matchWorkerVersion(tt.args.line); got != tt.want {
+				t.Errorf("matchWorkerVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

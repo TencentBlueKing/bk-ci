@@ -47,5 +47,12 @@ interface PermissionProjectService {
 
     fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean
 
+    fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean
+
     fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }

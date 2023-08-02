@@ -27,11 +27,17 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.StartType.MANUAL
+import com.tencent.devops.common.pipeline.enums.StartType.PIPELINE
+import com.tencent.devops.common.pipeline.enums.StartType.REMOTE
+import com.tencent.devops.common.pipeline.enums.StartType.SERVICE
+import com.tencent.devops.common.pipeline.enums.StartType.TIME_TRIGGER
+import com.tencent.devops.common.pipeline.enums.StartType.WEB_HOOK
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_SERVICE
@@ -42,15 +48,13 @@ object BuildMsgUtils {
 
     private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
-            StartType.MANUAL ->
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL)
-            StartType.TIME_TRIGGER ->
+            MANUAL ->
+                I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER)
+            TIME_TRIGGER ->
                 I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME)
-            StartType.WEB_HOOK ->
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
-            StartType.REMOTE ->
+            REMOTE ->
                 I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_REMOTE)
-            StartType.SERVICE ->
+            SERVICE ->
                 if (channelCode != null) {
                     val trigger = I18nUtil.getCodeLanMessage(BK_TRIGGER)
                     if (channelCode == ChannelCode.BS) {
@@ -61,8 +65,8 @@ object BuildMsgUtils {
                 } else {
                     I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)
                 }
-            StartType.PIPELINE ->
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
+            PIPELINE -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
+            WEB_HOOK -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
         }
     }
 

@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -85,7 +84,8 @@ import kotlin.math.min
     "ReturnCount",
     "NestedBlockDepth",
     "ThrowsCount",
-    "LongParameterList"
+    "LongParameterList",
+    "LargeClass"
 )
 @Service
 class InitializeMatrixGroupStageCmd(
@@ -333,11 +333,13 @@ class InitializeMatrixGroupStageCmd(
                     recordContainer?.let {
                         val containerVar = mutableMapOf<String, Any>(
                             "@type" to newContainer.getClassType(),
-                            Container::containerHashId.name to (newContainer.containerHashId ?: ""),
-                            Container::name.name to (newContainer.name)
+                            newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            newContainer::name.name to (newContainer.name),
+                            newContainer::matrixGroupId.name to matrixGroupId,
+                            newContainer::matrixContext.name to contextCase
                         )
                         modelContainer.mutexGroup?.let {
-                            containerVar[VMBuildContainer::mutexGroup.name] = it
+                            containerVar[newContainer::mutexGroup.name] = it
                         }
                         recordContainerList.add(
                             BuildRecordContainer(
@@ -445,11 +447,13 @@ class InitializeMatrixGroupStageCmd(
                     recordContainer?.let {
                         val containerVar = mutableMapOf<String, Any>(
                             "@type" to newContainer.getClassType(),
-                            Container::containerHashId.name to (newContainer.containerHashId ?: ""),
-                            Container::name.name to (newContainer.name)
+                            newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
+                            newContainer::name.name to (newContainer.name),
+                            newContainer::matrixGroupId.name to matrixGroupId,
+                            newContainer::matrixContext.name to contextCase
                         )
                         modelContainer.mutexGroup?.let {
-                            containerVar[VMBuildContainer::mutexGroup.name] = it
+                            containerVar[newContainer::mutexGroup.name] = it
                         }
                         recordContainerList.add(
                             BuildRecordContainer(

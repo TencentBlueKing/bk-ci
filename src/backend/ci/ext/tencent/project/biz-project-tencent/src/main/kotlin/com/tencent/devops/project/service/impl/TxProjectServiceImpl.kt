@@ -132,9 +132,6 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
 
-    @Value("\${tag.v3:#{null}}")
-    private var v3Tag: String = ""
-
     @Value("\${tag.rbac:#{null}}")
     private var rbacTag: String = ""
 
@@ -425,24 +422,18 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getIamUserProject(userId: String): List<String> {
-        if (v3Tag.isBlank() && rbacTag.isBlank()) {
+        if (rbacTag.isBlank()) {
             return emptyList()
         }
-        logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
+        logger.info("getUserProject tag: rbacTag=$rbacTag")
         val projectList = mutableListOf<String>()
         try {
-            getIamProjectList(
-                tag = v3Tag,
-                projectList = projectList,
-                userId = userId
-            )
-            logger.info("get v3 Project $projectList")
             getIamProjectList(
                 tag = rbacTag,
                 projectList = projectList,
                 userId = userId
             )
-            logger.info("get rbac+v3 Project $projectList")
+            logger.info("get rbac Project $projectList")
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")

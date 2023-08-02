@@ -105,7 +105,7 @@ open class BaseBuildRecordService(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount
             ) ?: run {
-                message = "Will not update"
+                message = "Model record is empty"
                 return
             }
             startUser = record.startUser
@@ -117,7 +117,7 @@ open class BaseBuildRecordService(
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (!change && cancelUser.isNullOrBlank()) {
-                message = "Will not update"
+                message = "Build status did not change"
                 return
             }
             buildRecordModelDao.updateRecord(
@@ -176,8 +176,13 @@ open class BaseBuildRecordService(
         return try {
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+            // 为model填充质量红线element
+            pipelineElementService.fillElementWhenNewBuild(
+                model = fullModel,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                handlePostFlag = false
+            )
             val baseModelMap = JsonUtil.toMutableMap(fullModel)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
@@ -194,10 +199,11 @@ open class BaseBuildRecordService(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+        } catch (ignore: Throwable) {
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
         } finally {
@@ -230,7 +236,7 @@ open class BaseBuildRecordService(
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,

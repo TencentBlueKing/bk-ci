@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.process.config
+
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.bean.GitCIPipelineUrlBeanImpl
@@ -36,6 +37,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 /**
@@ -50,6 +52,7 @@ import org.springframework.core.Ordered
 class TxPipelineUrlBeanConfiguration {
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun pipelineUrlBeanGitCI(
         @Autowired commonConfig: CommonConfig,
@@ -57,6 +60,7 @@ class TxPipelineUrlBeanConfiguration {
     ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
     fun pipelineUrlBean(
         @Autowired commonConfig: CommonConfig,

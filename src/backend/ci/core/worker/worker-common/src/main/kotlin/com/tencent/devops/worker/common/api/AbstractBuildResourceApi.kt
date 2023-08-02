@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -285,28 +284,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private fun initBuildArgs(): Map<String, String> {
             val buildType = BuildEnv.getBuildType()
             val map = mutableMapOf<String, String>()
-
-            AgentEnv.getBkTag()?.let {
-                map[AUTH_HEADER_GATEWAY_TAG] = it
-            }
-
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
-                BuildType.AGENT -> {
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-//                    map[AUTH_HEADER_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                }
-
-                BuildType.DOCKER -> {
+                BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS, BuildType.MACOS_NEW -> {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
-
                 else -> Unit
             }
             logger.info("Get the request header - $map")

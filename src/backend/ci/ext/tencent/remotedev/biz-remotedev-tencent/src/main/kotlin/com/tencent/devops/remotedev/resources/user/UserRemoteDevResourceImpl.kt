@@ -32,9 +32,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Watermark
+import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.StartCloudService
+import com.tencent.devops.remotedev.service.WatermarkService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
@@ -48,7 +52,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val bkgptService: BKGPTService,
     private val workspaceService: WorkspaceService,
-    private val startCloudService: StartCloudService
+    private val watermarkService: WatermarkService,
+    private val startCloudService: StartCloudService,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -89,6 +95,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return output
     }
 
+    override fun getWatermark(userId: String, watermark: Watermark): Result<Any> {
+        return Result(watermarkService.getWatermark(userId, watermark))
+    }
+
     override fun preCiAgent(
         userId: String,
         workspaceName: String,
@@ -99,5 +109,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun afterStartCloudInit(userId: String, workspaceName: String?, agentId: String): Result<Boolean> {
         return Result(startCloudService.afterStartCloudInit(userId, workspaceName, agentId))
+    }
+
+    override fun getUser(userId: String): Result<String> {
+        return Result(userId)
+    }
+
+    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceConfig>> {
+        logger.info("getAllWindowsResourceConfig|$userId")
+        return Result(windowsResourceConfigService.getAllConfig())
     }
 }

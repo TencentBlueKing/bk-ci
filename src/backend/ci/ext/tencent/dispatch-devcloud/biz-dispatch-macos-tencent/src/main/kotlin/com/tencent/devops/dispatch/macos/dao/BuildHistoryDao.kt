@@ -12,34 +12,57 @@ import java.time.LocalDateTime
 @Repository
 class BuildHistoryDao {
 
-    fun saveBuildHistory(dslContext: DSLContext, rec: TBuildHistoryRecord): Int {
+    fun saveBuildHistory(dslContext: DSLContext, rec: TBuildHistoryRecord): Long {
         with(TBuildHistory.T_BUILD_HISTORY) {
             return dslContext.insertInto(this).set(rec).set(START_TIME, LocalDateTime.now())
                 .set(VM_IP, rec.vmIp)
-                .execute()
+                .returning(ID)
+                .fetchOne()!!.id
         }
     }
 
-    fun findByBuildIdAndVmSeqId(
+    fun getBuildHistory(
         dslContext: DSLContext,
         buildId: String,
-        vmSeqId: String?
+        vmSeqId: String,
+        executeCount: Int
     ): Result<TBuildHistoryRecord>? {
         with(TBuildHistory.T_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(BUILD_ID.eq(buildId))
-            // 当vmSeqId=null的时候，说明是整条流水线停止，只关掉正在运行中的。
-            if (!vmSeqId.isNullOrBlank()) {
-                conditions.add(VM_SEQ_ID.eq(vmSeqId))
-            }
+            conditions.add(VM_SEQ_ID.eq(vmSeqId))
+            conditions.add(EXECUTE_COUNT.eq(executeCount))
             return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
-    fun endStatus(dslContext: DSLContext, status: String, buildHistoryId: Long): Boolean {
+    fun updateVmIP(
+        vmIp: String,
+        vmId: Int,
+        buildHistoryId: Long,
+        dslContext: DSLContext
+    ) {
         with(TBuildHistory.T_BUILD_HISTORY) {
-            return dslContext.update(this).set(STATUS, status).set(END_TIME, LocalDateTime.now())
-                .where(ID.eq(buildHistoryId)).execute() > 0
+            dslContext.update(this)
+                .set(STATUS, MacJobStatus.Running.title)
+                .set(VM_IP, vmIp)
+                .set(VM_ID, vmId)
+                .where(ID.eq(buildHistoryId))
+                .execute()
+        }
+    }
+
+    fun updateBuildHistoryStatus(
+        dslContext: DSLContext,
+        status: String,
+        buildHistoryId: Long
+    ): Boolean {
+        with(TBuildHistory.T_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(STATUS, status)
+                .set(END_TIME, LocalDateTime.now())
+                .where(ID.eq(buildHistoryId))
+                .execute() > 0
         }
     }
 

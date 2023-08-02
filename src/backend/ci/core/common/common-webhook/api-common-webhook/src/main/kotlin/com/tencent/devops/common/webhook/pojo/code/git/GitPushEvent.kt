@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 
@@ -46,7 +47,9 @@ data class GitPushEvent(
     val operation_kind: String?,
     val action_kind: String?,
     val push_options: Map<String, String>?,
-    val create_and_update: Boolean?
+    val create_and_update: Boolean?,
+    @JsonProperty("diff_files")
+    val diffFiles: List<GitDiffFile>?
 ) : GitEvent() {
     companion object {
         const val classType = "push"

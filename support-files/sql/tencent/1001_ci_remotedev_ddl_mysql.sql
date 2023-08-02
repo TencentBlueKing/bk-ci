@@ -11,16 +11,17 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '项目ID',
     `NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
     `DISPLAY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间备注名称',
-    `TEMPLATE_ID` int(11) NOT NULL DEFAULT 16 COMMENT '模板ID',
-    `URL` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目URL',
-    `BRANCH` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目分支',
-    `YAML` longtext NOT NULL COMMENT '配置yaml内容',
-    `YAML_PATH` varchar(1024) DEFAULT ''  COMMENT '配置yaml路径',
+    `TEMPLATE_ID` int(11) NULL DEFAULT 16 COMMENT '模板ID',
+    `URL` varchar(1024) NULL DEFAULT '' COMMENT '工蜂项目URL',
+    `BRANCH` varchar(1024) NULL DEFAULT '' COMMENT '工蜂项目分支',
+    `YAML` longtext NULL COMMENT '配置yaml内容',
+    `YAML_PATH` varchar(1024) DEFAULT '' NULL  COMMENT '配置yaml路径',
     `DOCKERFILE` longtext NOT NULL COMMENT '依赖镜像的DockerFile内容',
     `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
-    `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',
-    `WORKSPACE_FOLDER` varchar(256) NOT NULL DEFAULT '' COMMENT '指定用户在连接到容器时应打开的默认路径',
+    `WORK_PATH` varchar(256) NULL DEFAULT '' COMMENT '工作区路径',
+    `WORKSPACE_FOLDER` varchar(256) NULL DEFAULT '' COMMENT '指定用户在连接到容器时应打开的默认路径',
     `HOST_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '工作空间对应的IP',
+    `GPU` int(11) NOT NULL DEFAULT 0 COMMENT 'GPU',
     `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
     `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
     `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间,单位:s（容器结束时更新）',
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 -- 工作空间模板信息表
 -- ----------------------------
 
-CREATE TABLE `T_WORKSPACE_TEMPLATE`  (
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_TEMPLATE`  (
                                          `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
                                          `NAME` varchar(64) NOT NULL COMMENT '模板名称',
                                          `IMAGE` varchar(256) NOT NULL DEFAULT ''  COMMENT '模板镜像',
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `ENVS_FOR_VARIABLE` mediumtext NOT NULL COMMENT '远程开发环境变量配置',
     `CUMULATIVE_USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '当月累计使用时间(月初清空)',
     `CUMULATIVE_BILLING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '用户累计计费时间(当月计费数据暂不统计)',
+    `WIN_USAGE_REMAINING_TIME` int(11) NULL COMMENT '云桌面使用剩余时间(分钟)',
     `WORKSPACE_MAX_RUNNING_COUNT` int(11) NULL COMMENT '最大运行数',
     `WORKSPACE_MAX_HAVING_COUNT` int(11) NULL COMMENT '最大创建个数(每人拥有的运行中+已休眠的开发环境)',
     `IN_GRAY` boolean NOT NULL DEFAULT 0 COMMENT '是否灰度',
@@ -188,4 +190,22 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
   PRIMARY KEY (`ID`)
 );
 
+-- ----------------------------
+-- Table structure for T_WINDOWS_RESOURCE_CONFIG WINDOWS硬件资源配置
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_CONFIG` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
+    `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
+    `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
+    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
+    `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
+    `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
+    `DISK` int(11) NOT NULL DEFAULT '100' COMMENT 'SSD磁盘',
+    `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
+    `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='WINDOWS GPU资源配置表';
 SET FOREIGN_KEY_CHECKS = 1;

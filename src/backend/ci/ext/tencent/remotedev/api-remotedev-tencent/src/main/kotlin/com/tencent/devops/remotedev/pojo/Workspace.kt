@@ -36,34 +36,40 @@ data class Workspace(
     val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String?,
     @ApiModelProperty("工作空间备注名称")
-    val displayName: String?,
+    val displayName: String? = null,
     @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
+    val repositoryUrl: String? = null,
     @ApiModelProperty("仓库分支")
-    val branch: String,
+    val branch: String? = null,
     @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
+    val devFilePath: String? = null,
     @ApiModelProperty("devfile 内容")
-    val yaml: String?,
+    val yaml: String? = null,
     @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
+    val wsTemplateId: Int? = null,
     @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val status: WorkspaceStatus?,
+    val status: WorkspaceStatus? = null,
     @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val lastStatusUpdateTime: Long?,
+    val lastStatusUpdateTime: Long? = null,
     @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val sleepingTime: Long?,
+    val sleepingTime: Long? = null,
     @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val createUserId: String,
     @ApiModelProperty("工作空间操作路径")
-    val workPath: String?,
+    val workPath: String? = null,
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
-    val workspaceFolder: String?,
+    val workspaceFolder: String? = null,
     @ApiModelProperty("工作空间对应的IP")
-    val hostName: String?,
+    val hostName: String? = null,
     @ApiModelProperty("挂载平台类型")
     val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
-    val workspaceSystemType: WorkspaceSystemType
+    val workspaceSystemType: WorkspaceSystemType,
+    val gpu: Int = 0,
+    val cpu: Int = 8,
+    val memory: Int = 32,
+    val disk: Int = 100
 )

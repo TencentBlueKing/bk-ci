@@ -30,6 +30,8 @@ func init() {
 		{
 			ID: "DockerContainerLog", Other: "Docker container log is: \n"},
 		{
+			ID: "DockerImageDebugError", Other: "Failed to start docker image debug: {{.err}}"},
+		{
 			ID: "DockerOnlySupportLinux", Other: "currently only supports linux system to use docker build machine."},
 		{
 			ID: "DownloadDockerInitScriptError", Other: "failed to download docker build machine init script|{{.err}}"},
@@ -87,6 +89,8 @@ func init() {
 			ID: "CreateTmpDirectoryFailed", Other: "创建临时目录失败: {{.err}}"},
 		{
 			ID: "DockerContainerLog", Other: "Docker容器日志为: \n"},
+		{
+			ID: "DockerImageDebugError", Other: "启动docker登录调试失败: {{.err}}"},
 		{
 			ID: "DockerOnlySupportLinux", Other: "目前仅支持linux系统使用docker构建机"},
 		{

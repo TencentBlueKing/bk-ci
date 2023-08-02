@@ -47,7 +47,7 @@
             </p>
             <span class="atom-execounter" v-if="isExecuting">{{ execTime }}</span>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
-            <bk-popover v-else-if="atom.isReviewing" placement="top">
+            <bk-popover :delay="[300, 0]" v-else-if="atom.isReviewing" placement="top">
                 <span
                     @click.stop="reviewAtom"
                     class="atom-reviewing-tips atom-operate-area"
@@ -59,14 +59,14 @@
                     <p>{{ t("checkUser") }}{{ atom.computedReviewers.join(";") }}</p>
                 </template>
             </bk-popover>
-            <bk-popover v-else-if="isReviewAbort" placement="top">
+            <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
                 <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
                 <template slot="content">
                     <p>{{ t("abortTips") }}{{ t("checkUser") }}{{ reactiveData.cancelUserId }}</p>
                 </template>
             </bk-popover>
             <template v-else-if="atom.status === 'PAUSE'">
-                <bk-popover placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
+                <bk-popover :delay="[300, 0]" placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
                     <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
                         {{ t("resume") }}
                     </span>
@@ -95,6 +95,7 @@
                             !isExecuting &&
                             !reactiveData.editable
                     "
+                    :delay="[300, 0]"
                     placement="top"
                     :disabled="!atom.timeCost.executeCost"
                 >
@@ -138,6 +139,8 @@
 
 <script>
     import { bkCheckbox, bkPopover } from 'bk-magic-vue'
+    import Logo from './Logo'
+    import StatusIcon from './StatusIcon'
     import {
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
@@ -151,8 +154,6 @@
         STATUS_MAP
     } from './constants'
     import { localeMixins } from './locale'
-    import Logo from './Logo'
-    import StatusIcon from './StatusIcon'
     import {
         convertMStoString,
         eventBus,

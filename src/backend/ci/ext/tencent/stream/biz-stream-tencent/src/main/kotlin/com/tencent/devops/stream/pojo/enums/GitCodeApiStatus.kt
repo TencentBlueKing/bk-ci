@@ -47,12 +47,12 @@ enum class GitCodeApiStatus(
     CREATED(201, "created"), // 创建成功
     BAD_REQUEST(400, "badRequest"), // 参数错误，或是参数格式错误
     UNAUTHORIZED(401, "unauthorized"), // 认证失败
-    FORBIDDEN(403, "forbidden"), // 帐号并没有该操作的权限或者项目设置不允许该操作
-    NOT_FOUND(404, "notFound"), // 资源不存在，也可能是帐号没有该项目的权限（为防止黑客撞库获取库列表）
+    FORBIDDEN(403, "forbidden"), // 账号并没有该操作的权限或者项目设置不允许该操作
+    NOT_FOUND(404, "notFound"), // 资源不存在，也可能是账号没有该项目的权限（为防止黑客撞库获取库列表）
     METHOD_NOT_ALLOWED(405, "methodNotAllowed"), // 没有该接口
     CONFLICT(409, "conflict"), // 与已存在的对象/内容冲突或者操作行为与规则相冲突
     UNPROCESSABLE(422, "unprocessable"), // 操作不能进行
-    LOCKED(423, "locked"), // 帐号被锁定，或api请求频率超限
+    LOCKED(423, "locked"), // 账号被锁定，或api请求频率超限
     TOO_MANY_REQUESTS(429, "tooManyRequests"), // 请求被限流
     SERVER_ERROR(500, "serverError"); // 服务器出错
 

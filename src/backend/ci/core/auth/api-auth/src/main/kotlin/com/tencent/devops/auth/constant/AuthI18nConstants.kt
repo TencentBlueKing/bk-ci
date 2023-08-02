@@ -1,6 +1,11 @@
 package com.tencent.devops.auth.constant
 
 object AuthI18nConstants {
+    const val RESOURCE_TYPE_NAME_SUFFIX = ".resourceType.name"
+    const val RESOURCE_TYPE_DESC_SUFFIX = ".resourceType.desc"
+    const val AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX = ".authResourceGroupConfig.groupName"
+    const val AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX = ".authResourceGroupConfig.description"
+    const val ACTION_NAME_SUFFIX = ".actionName"
     const val BK_AGREE_RENEW = "bkAgreeRenew" // 同意续期
     const val BK_YOU_AGREE_RENEW = "bkYouAgreeRenew" // 你已选择同意用户续期
     const val BK_REFUSE_RENEW = "bkRefuseRenew" // 拒绝续期

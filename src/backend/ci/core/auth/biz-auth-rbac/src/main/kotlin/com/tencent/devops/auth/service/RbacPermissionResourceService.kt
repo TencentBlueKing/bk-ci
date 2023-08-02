@@ -162,13 +162,13 @@ class RbacPermissionResourceService(
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
-        } catch (exception: Exception) {
+        } catch (ignore: Exception) {
             if (resourceType == AuthResourceType.PROJECT.value) {
                 iamV2ManagerService.deleteManagerV2(managerId.toString())
             } else {
                 iamV2ManagerService.deleteSubsetManager(managerId.toString())
             }
-            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName", exception)
+            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName", ignore)
             throw ErrorCodeException(
                 errorCode = ERROR_RESOURCE_CREATE_FAIL,
                 defaultMessage = "create resource failed|$userId|$projectCode|$resourceType|$resourceName"

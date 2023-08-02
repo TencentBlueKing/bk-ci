@@ -169,3 +169,6 @@ const val BK_ATOM_SLA = "bkAtomSla" // 插件SLA
 const val BK_NO_FAIL_DATA = "bkNoFailData" // 近一月无执行失败数据
 const val BK_COMPLIANCE_RATE = "bkComplianceRate" // 错误码合规率
 const val BK_CODE_QUALITY = "bkCodeQuality" // codecc代码质量
+const val BK_TRUSTWORTHY = "bkTrustworthy" // 可信插件
+const val BK_TRIGGER = "bkTrigger" // 触发器
+const val BK_NORMAL = "bkNormal" // 无编译环境

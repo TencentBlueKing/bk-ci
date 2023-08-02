@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -148,4 +150,54 @@ interface BuildAgentBuildResource {
         @ApiParam("构建信息", required = true)
         buildInfo: ThirdPartyBuildWithStatus
     ): Result<Boolean>
+
+    @ApiOperation("尝试启动Docker登录调试")
+    @GET
+    @Path("/docker/startupDebug")
+    fun dockerStartDebug(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String
+    ): AgentResult<ThirdPartyDockerDebugInfo?>
+
+    @ApiOperation("启动Docker登录完成")
+    @POST
+    @Path("/docker/startupDebug")
+    fun dockerStartDebugDone(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("构建信息", required = true)
+        debugInfo: ThirdPartyDockerDebugDoneInfo
+    ): Result<Boolean>
+
+    @ApiOperation("获取登录调试任务状态")
+    @GET
+    @Path("/docker/debug/status")
+    fun dockerDebugStatus(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("debugId", required = true)
+        @QueryParam("debugId")
+        debugId: Long
+    ): Result<String?>
 }

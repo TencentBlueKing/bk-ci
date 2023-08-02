@@ -17,7 +17,8 @@
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
             <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
-            <plugin-log :id="currentElement.id"
+            <plugin-log
+                :id="currentElement.id"
                 :key="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
@@ -140,11 +141,12 @@
             },
 
             activeErorr () {
-                try {
-                    return this.execDetail.errorInfoList.find(error => error.taskId === this.currentElement.id)
-                } catch (error) {
-                    return null
-                }
+                return null
+                // try {
+                //     return this.execDetail.errorInfoList.find(error => error.taskId === this.currentElement.id)
+                // } catch (error) {
+                //     return null
+                // }
             },
 
             showTab () {

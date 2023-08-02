@@ -113,7 +113,7 @@ class MigrateIamApiService {
      * @param projectCodes v0项目ID
      */
     fun startV0MigrateTask(projectCodes: List<String>): Int {
-        logger.info("start v3 migrate task $projectCodes")
+        logger.info("start v0 migrate task $projectCodes")
         val data = JsonUtil.toJson(projectCodes).toRequestBody(mediaType)
         val request = Request.Builder()
             .url("$iamWebHost/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")
@@ -166,7 +166,7 @@ class MigrateIamApiService {
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("request ${request.url} response|$responseContent")
+            logger.info("request iam migrate api ${request.url} response|$responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Failed to request(${request.url}), code ${response.code}, content: $responseContent")
                 throw RemoteServiceException(operation)

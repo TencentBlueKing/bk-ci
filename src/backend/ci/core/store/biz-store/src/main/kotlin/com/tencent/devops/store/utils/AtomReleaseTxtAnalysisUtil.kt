@@ -197,7 +197,6 @@ object AtomReleaseTxtAnalysisUtil {
     fun serviceArchiveAtomFile(
         userId: String,
         projectCode: String,
-        atomId: String,
         atomCode: String,
         serviceUrlPrefix: String,
         releaseType: String,
@@ -206,8 +205,8 @@ object AtomReleaseTxtAnalysisUtil {
         os: String
     ): Result<Boolean?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/archiveAtom" +
-                "?userId=$userId&projectCode=$projectCode&atomId=$atomId&atomCode=$atomCode" +
-                "&version=$version&releaseType=$releaseType&os=$os"
+            "?userId=$userId&projectCode=$projectCode&atomCode=$atomCode" +
+            "&version=$version&releaseType=$releaseType&os=$os"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {

@@ -38,6 +38,27 @@ interface OpPipelineBuildResource {
         buildIds: List<String>?
     ): Result<Int>
 
+    @ApiOperation("修复流水线构建状态(将某几次的构建状态进行手动转换，如果从running -> finish or queue -> finish 需要同步修改summary)")
+    @PUT
+    @Path("/fix_build_history")
+    fun fixPipelineBuildHistory(
+        @ApiParam("项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("转换前的状态码", required = true)
+        @QueryParam("statusFrom")
+        statusFrom: Int,
+        @ApiParam("转换到的状态码", required = true)
+        @QueryParam("statusTo")
+        statusTo: Int,
+        @ApiParam("构建号", required = false)
+        @QueryParam("buildIds")
+        buildIds: List<String>?
+    ): Result<Int>
+
     @ApiOperation("修复流水线summary count计数信息)")
     @PUT
     @Path("/fix_summary_count")

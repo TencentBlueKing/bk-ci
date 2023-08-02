@@ -7,6 +7,7 @@ import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -31,6 +32,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("listResourceTypes")
     @ApiOperation("资源类型列表")
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].resourceType}"])
     fun listResourceTypes(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -40,6 +42,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("listActions")
     @ApiOperation("展示动作列表")
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].action}"])
     fun listActions(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -77,6 +80,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("{groupId}/getGroupPermissionDetail")
     @ApiOperation("查询用户组权限详情")
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}"])
     fun getGroupPermissionDetail(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

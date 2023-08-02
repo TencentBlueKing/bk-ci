@@ -311,6 +311,27 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildRecordByBuildNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNum: Int
+    ): Result<ModelRecord> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildNum <= 0) {
+            throw ParamBlankException("Invalid buildNo")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecordByBuildNum(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNum,
+                channelCode = ChannelCode.BS
+            )
+        )
+    }
+
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
         return pipelineBuildFacadeService.goToLatestFinishedBuild(
