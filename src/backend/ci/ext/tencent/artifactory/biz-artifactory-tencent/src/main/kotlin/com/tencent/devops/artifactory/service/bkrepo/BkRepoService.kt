@@ -371,7 +371,6 @@ class BkRepoService @Autowired constructor(
             ).records
 
             val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
-            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
             val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
             return fileInfoList.map {
@@ -416,9 +415,7 @@ class BkRepoService @Autowired constructor(
                 var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
-                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID &&
-                            pipelineCanDownloadList.contains(property.value)
-                        ) {
+                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID) {
                             canDownload = true
                         }
 
