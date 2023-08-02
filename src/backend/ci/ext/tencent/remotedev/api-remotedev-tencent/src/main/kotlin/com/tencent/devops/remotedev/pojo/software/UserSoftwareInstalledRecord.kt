@@ -37,7 +37,7 @@ data class UserSoftwareInstalledRecord(
     @ApiModelProperty("用户")
     val user: String,
     @ApiModelProperty("软件ID")
-    val softwareId: String,
+    val softwareId: Long,
     @ApiModelProperty("云桌面ID")
     val workspaceName: String,
     @ApiModelProperty("安装状态")
