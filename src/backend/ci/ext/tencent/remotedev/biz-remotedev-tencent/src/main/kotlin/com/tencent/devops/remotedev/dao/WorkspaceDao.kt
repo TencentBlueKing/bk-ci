@@ -191,14 +191,14 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         creator: String,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        ownerType: WorkspaceOwnerType? = null
     ): Result<TWorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .where(CREATOR.eq(creator))
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                .and(OWNER_TYPE.eq(ownerType.name))
+                .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
@@ -209,7 +209,7 @@ class WorkspaceDao {
                             )
                         )
                     ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                        .and(OWNER_TYPE.eq(ownerType.name))
+                        .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
