@@ -35,7 +35,7 @@ jobs:
         export MYSQL_PWD=root
         runsql() {
           sql_file=$1
-          if [[ -f $sql_file ]];
+          if [[ -f $sql_file ]] && [[ "${sql_file##*.}"x = "sql"x ]] ;
           then
             echo "import $sql_file"
             mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $sql_file
