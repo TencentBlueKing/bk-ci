@@ -215,14 +215,15 @@ class WorkspaceService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
                 val status = WorkspaceStatus.values()[it.status]
-                parsingWorkspace(it, status)
+                parsingWorkspace(it, status, WorkspaceShared.AssignType.OWNER)
             }
         )
     }
 
     private fun parsingWorkspace(
         it: TWorkspaceRecord,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        assignType: WorkspaceShared.AssignType
     ) = Workspace(
         workspaceId = it.id,
         workspaceName = it.name,
@@ -242,7 +243,8 @@ class WorkspaceService @Autowired constructor(
         hostName = it.hostName,
         workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
         workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
-        ownerType = WorkspaceOwnerType.valueOf(it.ownerType)
+        ownerType = WorkspaceOwnerType.valueOf(it.ownerType),
+        assignType = assignType
     )
 
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
@@ -255,6 +257,10 @@ class WorkspaceService @Autowired constructor(
             creator = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
+
+        val sharedWorkspace = result.filter { it.creator != userId }.ifEmpty { null }?.let {
+            workspaceSharedDao.batchSelectAssignType(dslContext, userId, it.map { i -> i.name })
+        } ?: emptyMap()
 
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
@@ -274,7 +280,7 @@ class WorkspaceService @Autowired constructor(
                         )
                     }
                 }
-                parsingWorkspace(it, status)
+                parsingWorkspace(it, status, sharedWorkspace.getOrElse(it.name) { WorkspaceShared.AssignType.OWNER })
             }
         )
     }

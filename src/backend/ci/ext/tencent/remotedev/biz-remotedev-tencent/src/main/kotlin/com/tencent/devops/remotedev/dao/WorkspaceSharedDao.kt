@@ -88,6 +88,18 @@ class WorkspaceSharedDao {
         }
     }
 
+    fun batchSelectAssignType(
+        dslContext: DSLContext,
+        userId: String,
+        workspaceNames: List<String>
+    ): Map<String, WorkspaceShared.AssignType> {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.select(WORKSPACE_NAME, ASSIGN_TYPE).from(this).where(SHARED_USER.eq(userId))
+                .and(WORKSPACE_NAME.`in`(workspaceNames)).fetch()
+                .associateBy({ it.value1() }, { WorkspaceShared.AssignType.valueOf(it.value2()) })
+        }
+    }
+
     // 删除工作空间共享记录
     fun deleteWorkspaceSharedInfo(
         workspaceName: String,
