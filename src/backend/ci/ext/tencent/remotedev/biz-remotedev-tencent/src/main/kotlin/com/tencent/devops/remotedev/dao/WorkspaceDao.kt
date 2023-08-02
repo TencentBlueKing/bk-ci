@@ -176,7 +176,14 @@ class WorkspaceDao {
                                     )
                                 )
                             )
-                        ).let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+                        ).let { i ->
+                            if (status.isNullOrEmpty()) {
+                                i.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                            } else {
+                                i.and(STATUS.`in`(status.map { s -> s.ordinal }))
+                            }
+                        }
+                            .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
                             .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                     ) else it
                 }
