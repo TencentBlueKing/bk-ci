@@ -54,6 +54,11 @@
                                 class="devops-icon icon-download"
                                 @click.stop="downloadArtifact(output)"
                             />
+                            <i
+                                v-if="output.isReportOutput"
+                                class="devops-icon icon-full-screen"
+                                @click.stop="fullScreenViewReport(output)"
+                            />
                         </p>
                     </li>
                 </ul>
@@ -67,6 +72,7 @@
             <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
                 <iframe-report
                     v-if="isCustomizeReport"
+                    ref="iframeReport"
                     :report-name="activeOutput.name"
                     :index-file-url="activeOutput.indexFileUrl"
                 />
@@ -359,6 +365,7 @@
                             ...item,
                             id,
                             icon,
+                            isReportOutput,
                             isApp: ['ipafile', 'apkfile'].includes(icon),
                             downloadable: hasPermission && this.isArtifact(item.artifactoryType) && item.artifactoryType !== 'IMAGE'
                         }
@@ -454,6 +461,12 @@
                 } catch (error) {
                     console.error(error)
                 }
+            },
+            fullScreenViewReport (output) {
+                this.setActiveOutput(output)
+                this.$nextTick(() => {
+                    this.$refs.iframeReport?.toggleFullScreen?.()
+                })
             }
         }
     }
