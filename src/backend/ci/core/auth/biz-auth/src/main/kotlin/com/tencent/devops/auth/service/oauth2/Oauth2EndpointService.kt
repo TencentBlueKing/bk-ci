@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Service
 class Oauth2EndpointService constructor(
     private val tokenGranter: TokenGranter,
     private val clientService: Oauth2ClientService,
