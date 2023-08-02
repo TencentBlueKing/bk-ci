@@ -237,7 +237,11 @@ class WorkspaceService @Autowired constructor(
                     workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
                     winConfig = it.winConfigId?.toLong()?.let { i -> allConfig[i] },
                     owner = owners[it.name],
-                    viewers = viewers[it.name]
+                    viewers = viewers[it.name],
+                    gpu = it.gpu,
+                    cpu = it.cpu,
+                    memory = it.memory,
+                    disk = it.memory
                 )
             }
         )
@@ -268,7 +272,11 @@ class WorkspaceService @Autowired constructor(
         workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
         ownerType = WorkspaceOwnerType.valueOf(it.ownerType),
         assignType = assignType,
-        winConfigId = it.winConfigId
+        winConfigId = it.winConfigId,
+        gpu = it.gpu,
+        cpu = it.cpu,
+        memory = it.memory,
+        disk = it.memory
     )
 
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
