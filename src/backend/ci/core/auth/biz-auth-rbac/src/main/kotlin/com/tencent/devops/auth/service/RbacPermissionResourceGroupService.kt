@@ -115,19 +115,23 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         ).associateBy { it.relationId.toInt() }
         val iamGroupInfoVoList = iamGroupInfoList.map {
             val resourceGroup = resourceGroupMap[it.id]
-            val groupName = resourceGroup?.let {
+            val defaultGroup = resourceGroup?.defaultGroup ?: false
+            // 默认组名需要支持国际化
+            val groupName = if (defaultGroup) {
                 I18nUtil.getCodeLanMessage(
-                    messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                    messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
                             AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                     defaultMessage = resourceGroup.groupName
                 )
-            } ?: it.name
+            } else {
+                it.name
+            }
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
-                defaultGroup = resourceGroup?.defaultGroup ?: false,
+                defaultGroup = defaultGroup,
                 groupId = it.id,
-                name = it.name,
-                displayName = groupName,
+                name = groupName,
+                displayName = it.name,
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )
