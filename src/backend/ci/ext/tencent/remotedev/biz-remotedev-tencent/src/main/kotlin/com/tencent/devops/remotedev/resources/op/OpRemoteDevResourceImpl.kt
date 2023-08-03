@@ -1,7 +1,7 @@
 package com.tencent.devops.remotedev.resources.op
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
@@ -110,7 +110,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace(
-                userId = userId, workspaceName = workspaceName, needPermission = false
+                userId = userId, workspaceName = workspaceName, needPermission = false,
+                checkDeleteImmediately = true
             )
         )
     }
@@ -122,6 +123,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             )
         )
     }
+
     override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
         return Result(windowsResourceConfigService.getAllConfig())
     }
@@ -143,10 +145,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceShared): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(
-            workspaceShared.operator,
-            workspaceShared.workspaceName,
-            workspaceShared.sharedUser
+        return Result(
+            workspaceService.shareWorkspace(
+                workspaceShared.operator,
+                workspaceShared.workspaceName,
+                workspaceShared.sharedUser
             )
         )
     }

@@ -93,7 +93,12 @@ class DeleteControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
+    fun deleteWorkspace(
+        userId: String,
+        workspaceName: String,
+        needPermission: Boolean = true,
+        checkDeleteImmediately: Boolean? = null
+    ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
         if (needPermission) {
             permissionService.checkPermission(userId, workspaceName)
@@ -111,7 +116,7 @@ class DeleteControl @Autowired constructor(
                 )
 
             // 校验状态以及处理异常的情况
-            val deleteImmediately = checkWorkspaceStatusForDelete(workspace, userId)
+            val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
 
             // 创建操作历史记录
             createDeleteOperationHistoryRecord(workspace, userId)
