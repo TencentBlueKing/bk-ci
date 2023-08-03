@@ -1,6 +1,6 @@
 <template>
     <div class="exec-pipeline-wrapper">
-        <div ref="scrollViewPort" class="scroll-viewport">
+        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
             <p></p>
         </div>
         <div class="pipeline-exec-summary">
@@ -194,8 +194,9 @@
             </footer>
         </section>
         <mini-map
-            ref="miniMap"
             v-if="Array.isArray(curPipeline.stages)"
+            ref="miniMap"
+            class="exec-pipeline-mini-map"
             :stages="curPipeline.stages"
             :scroll-class="scrollElement"
         />
@@ -492,7 +493,7 @@
                 
                 viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
                 viewportContent.style.height = `${parent?.scrollHeight}px`
-                this.scrollElement = '.scroll-viewport'
+                this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
             })
         },
@@ -1181,7 +1182,10 @@
         }
     }
 }
-.scroll-viewport {
+.exec-pipeline-mini-map {
+    bottom: 56px;
+}
+.pipeline-model-scroll-viewport {
     left: 0;
     top: 0;
     width: 100%;

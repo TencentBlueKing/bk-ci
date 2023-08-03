@@ -288,16 +288,17 @@
                         value: this.activeOutputDetail
                     },
                     {
+                        key: 'meta',
+                        title: this.$t('metaData'),
+                        value: this.activeOutputDetail.nodeMetadata
+                    },
+                    {
                         key: 'checkSum',
                         title: this.$t('details.checkSum'),
                         block: this.checkSumRows,
                         value: this.activeOutputDetail.checksums
-                    },
-                    {
-                        key: 'meta',
-                        title: this.$t('metaData'),
-                        value: this.activeOutputDetail.nodeMetadata
                     }
+                    
                 ]
             },
             baseInfoRows () {
