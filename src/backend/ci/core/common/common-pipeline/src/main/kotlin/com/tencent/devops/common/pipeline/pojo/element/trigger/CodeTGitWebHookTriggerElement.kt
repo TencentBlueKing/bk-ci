@@ -79,6 +79,8 @@ data class CodeTGitWebHookTriggerInput(
     val includePaths: String?,
     @ApiModelProperty("用于排除的路径", required = false)
     val excludePaths: String?,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @ApiModelProperty("事件类型", required = false)
@@ -97,6 +99,8 @@ data class CodeTGitWebHookTriggerInput(
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
+    @ApiModelProperty("tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
     @ApiModelProperty("code review 状态", required = false)
     val includeCrState: List<String>? = null,
     @ApiModelProperty("code note comment", required = false)

@@ -57,6 +57,11 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
             }
+            params.includeUsers = if (includeUsers == null || includeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
+            }
             if (branchName == null) {
                 return null
             }
@@ -77,7 +82,23 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 includeCrState!!.joinToString(",")
             }
+            params.fromBranches = EnvUtils.parseEnv(fromBranches ?: "", variables)
+            params.webhookQueue = webhookQueue ?: false
+            params.includeIssueAction = joinToString(includeIssueAction)
+            params.includeNoteComment = includeNoteComment
+            params.includeNoteTypes = joinToString(includeNoteTypes)
+            params.enableThirdFilter = enableThirdFilter
+            params.thirdUrl = EnvUtils.parseEnv(thirdUrl ?: "", variables)
+            params.thirdSecretToken = EnvUtils.parseEnv(thirdSecretToken ?: "", variables)
             return params
+        }
+    }
+
+    private fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
+            ""
+        } else {
+            list.joinToString(",")
         }
     }
 }
