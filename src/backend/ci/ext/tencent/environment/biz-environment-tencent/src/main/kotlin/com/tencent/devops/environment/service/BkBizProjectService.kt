@@ -25,15 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
+package com.tencent.devops.environment.service
+
+import com.tencent.devops.environment.dao.BkBizProjectDao
+import com.tencent.devops.environment.pojo.BizProjectItem
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class BkBizProjectService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val bizProjectDao: BkBizProjectDao
+) {
+    fun addBizProjects(
+        bizProjects: List<BizProjectItem>
+    ): Boolean {
+        return if (bizProjects.isEmpty()) {
+            false
+        } else if (bizProjects.size == 1) {
+            bizProjectDao.add(
+                dslContext = dslContext,
+                bizId = bizProjects.first().bkBizId,
+                projectId = bizProjects.first().projectId
+            )
+        } else {
+            bizProjectDao.batchAdd(
+                dslContext,
+                bizProjects
+            )
+        }
+    }
+
+    fun deleteBizProject(
+        id: Long
+    ): Boolean {
+        return bizProjectDao.delete(dslContext, id)
+    }
 }
