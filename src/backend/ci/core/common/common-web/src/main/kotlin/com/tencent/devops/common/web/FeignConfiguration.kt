@@ -105,6 +105,11 @@ class FeignConfiguration @Autowired constructor(
             if (!userId.isNullOrBlank()) {
                 requestTemplate.header(AUTH_HEADER_USER_ID, userId)
             }
+            // 设置项目ID
+            val projectId = request.getHeader(AUTH_HEADER_PROJECT_ID)
+            if (!projectId.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_PROJECT_ID, projectId)
+            }
             // 设置请求渠道信息
             val requestChannel =
                 (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()

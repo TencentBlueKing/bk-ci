@@ -55,7 +55,6 @@ class BkApiHandleProjectAccessServiceImpl : BkApiHandleService {
             val requestURI = request.requestURI
             logger.info("Project[$projectId] does not have access permission for interface[$requestURI]")
             throw ErrorCodeException(
-                statusCode = 401,
                 errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
                 params = arrayOf(projectId, requestURI)
             )
