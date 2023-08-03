@@ -66,5 +66,5 @@ interface ProjectInfoManageService {
     /**
      * 同步项目插件关联信息
      */
-    fun syncProjectAtomData(projectId: String, excludeAtomCodes: List<String>): Boolean
+    fun syncSingleProjectAtomData(projectId: String): Boolean
 }

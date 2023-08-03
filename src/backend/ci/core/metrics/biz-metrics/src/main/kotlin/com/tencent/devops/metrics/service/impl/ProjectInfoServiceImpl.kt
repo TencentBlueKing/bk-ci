@@ -208,11 +208,10 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun syncProjectAtomData(projectId: String, excludeAtomCodes: List<String>): Boolean {
+    override fun syncSingleProjectAtomData(projectId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin syncProjectAtomData")
-            if (projectInfoDao.projectAtomRelationCountByNotInAtomCodes(dslContext, projectId, excludeAtomCodes) <= 0 &&
-                    projectInfoDao.projectAtomCount(dslContext, projectId, excludeAtomCodes) > 0) {
+            if (projectInfoDao.projectAtomCount(dslContext, projectId) > 0) {
                 saveProjectAtomInfo(listOf(projectId))
             }
             logger.info("end syncProjectAtomData")

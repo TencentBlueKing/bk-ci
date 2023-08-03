@@ -101,7 +101,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val buildId = buildEndPipelineMetricsData.buildId
-        val syncProjectAtomFlag = projectInfoDao.projectAtomRelationCountByNotInAtomCodes(dslContext, projectId) <= 0
+        val syncProjectAtomFlag = getSyncProjectAtomFlag(projectId)
+        // 同步项目插件关联信息
+        if (syncProjectAtomFlag) {
+            projectInfoManageService.syncSingleProjectAtomData(projectId)
+        }
         logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
@@ -189,12 +193,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
                 }
                 if (saveProjectAtomRelationPOs.isNotEmpty()) {
-                    // 同步项目插件关联信息
-                    if (syncProjectAtomFlag) {
-                        projectInfoManageService.syncProjectAtomData(
-                            projectId, saveProjectAtomRelationPOs.map { it.atomCode }
-                        )
-                    }
                     projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
                 }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
@@ -984,5 +982,17 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).data!!
+    }
+
+    private fun getSyncProjectAtomFlag(projectId: String): Boolean {
+        val lock = RedisLock(redisOperation, "SyncProjectAtomFlag:$projectId", 120)
+        try {
+            if (lock.tryLock()) {
+                return projectInfoDao.projectAtomRelationCountByNotInAtomCodes(dslContext, projectId) <= 0
+            }
+        } finally {
+            lock.unlock()
+        }
+        return false
     }
 }
