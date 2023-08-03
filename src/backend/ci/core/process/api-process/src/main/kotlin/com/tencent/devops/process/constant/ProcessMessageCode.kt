@@ -194,7 +194,7 @@ object ProcessMessageCode {
     const val BUILD_QUEUE_FOR_CONCURRENCY = "2101105" // 排队中: 当前构建正在并发组({0})排队中
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101106" // 安装插件失败
 
-    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101107" // 暂停的流水线已开始运行
+    const val ERROR_PAUSE_PIPELINE_IS_RUNNING = "2101107" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
@@ -278,6 +278,7 @@ object ProcessMessageCode {
     const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101177" // 流水线编排数量非法
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
+    const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

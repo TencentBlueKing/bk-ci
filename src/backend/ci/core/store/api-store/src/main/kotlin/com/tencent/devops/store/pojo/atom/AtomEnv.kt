@@ -88,5 +88,7 @@ data class AtomEnv(
     @ApiModelProperty("运行时版本", required = false)
     val runtimeVersion: String? = null,
     @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
-    val finishKillFlag: Boolean? = null
+    val finishKillFlag: Boolean? = null,
+    @ApiModelProperty("插件是否需要鉴权（开源插件无需鉴权）", required = false)
+    val authFlag: Boolean? = null
 )

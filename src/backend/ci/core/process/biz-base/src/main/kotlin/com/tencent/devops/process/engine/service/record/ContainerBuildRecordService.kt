@@ -386,7 +386,7 @@ class ContainerBuildRecordService(
                 }
                 val containerVar = mutableMapOf<String, Any>()
                 if (recordContainer.containerType == VMBuildContainer.classType &&
-                    containerVar[VMBuildContainer::showBuildResource.name] == true
+                    recordContainer.containerVar[VMBuildContainer::showBuildResource.name] == true
                 ) {
                     containerVar[VMBuildContainer::name.name] = vmInfo.name
                 }
