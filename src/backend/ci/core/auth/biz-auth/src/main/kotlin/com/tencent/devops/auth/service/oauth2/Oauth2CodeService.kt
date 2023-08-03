@@ -43,6 +43,7 @@ class Oauth2CodeService constructor(
         userId: String,
         code: String,
         clientId: String,
+        scopeId: Int,
         codeValiditySeconds: Long
     ) {
         authOauth2CodeDao.create(
@@ -50,6 +51,7 @@ class Oauth2CodeService constructor(
             code = code,
             userId = userId,
             clientId = clientId,
+            scopeId = scopeId,
             expiredTime = DateTimeUtil.getFutureTimestamp(codeValiditySeconds)
         )
     }

@@ -119,4 +119,8 @@ object AuthMessageCode {
     const val ERROR_REFRESH_TOKEN_NOT_FOUND = "2121070" // refresh_token不能为空
     const val INVALID_REFRESH_TOKEN = "2121071" // refresh_token不合法
     const val ERROR_REFRESH_TOKEN_EXPIRED = "2121072" // refresh token已过期
+    const val ERROR_ACCESS_TOKEN_NOT_FOUND = "2121073" // access token不能为空
+    const val INVALID_ACCESS_TOKEN = "2121074" // access token不合法
+    const val ERROR_ACCESS_TOKEN_EXPIRED = "2121075" // access token已过期
+    const val INVALID_SCOPE = "2121076" // scope不合法
 }

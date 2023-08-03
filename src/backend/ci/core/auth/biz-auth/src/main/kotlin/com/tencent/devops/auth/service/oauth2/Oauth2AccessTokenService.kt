@@ -32,7 +32,8 @@ class Oauth2AccessTokenService constructor(
         grantType: String,
         accessToken: String,
         refreshToken: String?,
-        expiredTime: Long
+        expiredTime: Long,
+        scopeId: Int
     ) {
         oauth2AccessTokenDao.create(
             dslContext = dslContext,
@@ -41,7 +42,8 @@ class Oauth2AccessTokenService constructor(
             grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
-            expiredTime = expiredTime
+            expiredTime = expiredTime,
+            scopeId = scopeId
         )
     }
 
@@ -49,6 +51,17 @@ class Oauth2AccessTokenService constructor(
         oauth2AccessTokenDao.delete(
             dslContext = dslContext,
             accessToken = accessToken
+        )
+    }
+
+    fun update(
+        accessToken: String,
+        scopeId: Int
+    ){
+        oauth2AccessTokenDao.update(
+            dslContext = dslContext,
+            accessToken = accessToken,
+            scopeId = scopeId
         )
     }
 }

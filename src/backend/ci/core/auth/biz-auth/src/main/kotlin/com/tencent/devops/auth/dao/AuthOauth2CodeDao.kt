@@ -17,11 +17,13 @@ class AuthOauth2CodeDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun create(
         dslContext: DSLContext,
         code: String,
         userId: String,
         clientId: String,
+        scopeId: Int,
         expiredTime: Long
     ): Int {
         return with(TAuthOauth2Code.T_AUTH_OAUTH2_CODE) {
@@ -29,11 +31,13 @@ class AuthOauth2CodeDao {
                 this,
                 CLIENT_ID,
                 CODE,
+                SCOPE_ID,
                 USER_NAME,
                 EXPIRED_TIME
             ).values(
                 clientId,
                 code,
+                scopeId,
                 userId,
                 expiredTime
             ).execute()

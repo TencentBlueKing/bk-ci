@@ -18,23 +18,11 @@ class AuthOauth2AccessTokenDao {
             dslContext.selectFrom(this).where(
                 CLIENT_ID.eq(clientId)
             ).let {
-                if (userName != null) {
-                    it.and(USER_NAME.eq(userName))
-                } else {
-                    it
-                }
+                if (userName != null) { it.and(USER_NAME.eq(userName)) } else { it }
             }.let {
-                if (grantType != null) {
-                    it.and(GRANT_TYPE.eq(grantType))
-                } else {
-                    it
-                }
+                if (grantType != null) { it.and(GRANT_TYPE.eq(grantType)) } else { it }
             }.let {
-                if (refreshToken != null) {
-                    it.and(REFRESH_TOKEN.eq(refreshToken))
-                } else {
-                    it
-                }
+                if (refreshToken != null) { it.and(REFRESH_TOKEN.eq(refreshToken)) } else { it }
             }.fetchOne()
         }
     }
@@ -58,7 +46,8 @@ class AuthOauth2AccessTokenDao {
         grantType: String,
         accessToken: String,
         refreshToken: String? = null,
-        expiredTime: Long
+        expiredTime: Long,
+        scopeId: Int
     ): Int {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.insertInto(
@@ -69,14 +58,29 @@ class AuthOauth2AccessTokenDao {
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 EXPIRED_TIME,
+                SCOPE_ID
             ).values(
                 clientId,
                 userName,
                 grantType,
                 accessToken,
                 refreshToken,
-                expiredTime
+                expiredTime,
+                scopeId
             ).execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        accessToken: String,
+        scopeId: Int
+    ){
+        return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
+            dslContext.update(this)
+                .set(SCOPE_ID, scopeId)
+                .where(ACCESS_TOKEN.eq(accessToken))
+                .execute()
         }
     }
 }

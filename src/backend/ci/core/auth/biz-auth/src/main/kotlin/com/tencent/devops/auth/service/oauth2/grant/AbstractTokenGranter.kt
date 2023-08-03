@@ -41,7 +41,6 @@ abstract class AbstractTokenGranter(
         val clientId = accessTokenRequest.clientId
         val accessToken = accessTokenDTO.accessToken
         val refreshToken = accessTokenDTO.refreshToken
-
         // 若access_token为空或者已过期，则重新生成access_token
         if (accessToken == null || AuthUtils.isExpired(accessTokenDTO.expiredTime!!)) {
             val newAccessToken = UUIDUtil.generate()
@@ -58,10 +57,16 @@ abstract class AbstractTokenGranter(
                 grantType = grantType,
                 accessToken = newAccessToken,
                 refreshToken = refreshToken,
-                expiredTime = accessTokenExpiredTime
+                expiredTime = accessTokenExpiredTime,
+                scopeId = accessTokenDTO.scopeId
             )
             return Oauth2AccessTokenVo(newAccessToken, accessTokenExpiredTime, refreshToken)
         } else {
+            // scope可能会变化，需要更新
+            accessTokenService.update(
+                accessToken = accessToken,
+                scopeId = accessTokenDTO.scopeId
+            )
             // 返回未过期的 access_token
             return Oauth2AccessTokenVo(accessToken, accessTokenDTO.expiredTime!!, refreshToken)
         }

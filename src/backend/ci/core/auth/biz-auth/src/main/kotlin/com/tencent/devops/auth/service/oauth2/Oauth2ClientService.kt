@@ -43,13 +43,14 @@ class Oauth2ClientService constructor(
         )
     }
 
-    @Suppress("ThrowsCount")
+    @Suppress("ThrowsCount", "LongParameterList")
     fun verifyClientInformation(
         clientId: String,
         clientDetails: ClientDetailsInfo,
         clientSecret: String? = null,
         redirectUri: String? = null,
         grantType: String? = null,
+        scope: List<String>? = null
     ): Boolean {
         val authorizedGrantTypes = clientDetails.authorizedGrantTypes.split(",")
         if (grantType != null && !authorizedGrantTypes.contains(grantType)) {
@@ -74,6 +75,14 @@ class Oauth2ClientService constructor(
                 errorCode = AuthMessageCode.INVALID_CLIENT_SECRET,
                 params = arrayOf(clientId),
                 defaultMessage = "The client($clientId) secret is invalid"
+            )
+        }
+        if (scope != null && !clientDetails.scope.split(",").containsAll(scope)) {
+            logger.warn("The client($clientId) scope is invalid")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.INVALID_SCOPE,
+                params = arrayOf(clientId),
+                defaultMessage = "The client($clientId) scope is invalid"
             )
         }
         return true

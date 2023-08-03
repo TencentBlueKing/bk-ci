@@ -59,7 +59,8 @@ class RefreshTokenGranter(
         }
         return Oauth2AccessTokenDTO(
             userName = accessTokenInfo.userName,
-            refreshToken = refreshToken
+            refreshToken = refreshToken,
+            scopeId = accessTokenInfo.scopeId,
         )
     }
 }

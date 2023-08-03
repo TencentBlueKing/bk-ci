@@ -10,5 +10,5 @@ data class Oauth2AuthorizationInfoVo(
     @ApiModelProperty("客户端名称", required = true)
     val clientName: String,
     @ApiModelProperty("授权范围", required = true)
-    val scope: Map<String/*授权名称*/, String/*授权ID*/>
+    val scope: Map<String/*授权范围Id*/, String/*授权范围名称*/>
 )

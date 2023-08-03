@@ -15,11 +15,10 @@ import org.springframework.context.annotation.Configuration
 class Oauth2Config constructor(
     private val oauth2ClientService: Oauth2ClientService,
     private val codeService: Oauth2CodeService,
+    private val scopeService: Oauth2ScopeService,
     private val clientCredentialsTokenGranter: ClientCredentialsTokenGranter,
     private val authorizationCodeTokenGranter: AuthorizationCodeTokenGranter,
-    private val refreshTokenGranter: RefreshTokenGranter,
-    private val dslContext: DSLContext,
-    private val authActionDao: AuthActionDao
+    private val refreshTokenGranter: RefreshTokenGranter
 ) {
     @Bean
     fun oauth2EndpointService(): Oauth2EndpointService {
@@ -27,8 +26,7 @@ class Oauth2Config constructor(
             tokenGranter = compositeTokenGranter(),
             clientService = oauth2ClientService,
             codeService = codeService,
-            dslContext = dslContext,
-            authActionDao = authActionDao
+            scopeService = scopeService
         )
     }
 

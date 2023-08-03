@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.api.oauth2
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -18,7 +19,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OAUTH2_ENDPOINT"], description = "oauth2相关")
-@Path("desktop/oauth2/endpoint")
+@Path("user/oauth2/endpoint")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface Oauth2EndpointResource {
@@ -46,7 +47,9 @@ interface Oauth2EndpointResource {
         clientId: String,
         @QueryParam("redirectUri")
         @ApiParam("跳转链接", required = true)
-        redirectUri: String
+        redirectUri: String,
+        @ApiParam("oauth2获取授权码请求报文体", required = true)
+        authorizationCodeDTO: Oauth2AuthorizationCodeDTO
     ): Result<String>
 
     @POST

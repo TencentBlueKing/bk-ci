@@ -12,5 +12,7 @@ data class Oauth2AccessTokenDTO(
     @ApiModelProperty("accessToken过期时间", required = true)
     val expiredTime: Long? = null,
     @ApiModelProperty("accessToken绑定的用户名称", required = true)
-    val userName: String? = null
+    val userName: String? = null,
+    @ApiModelProperty("授权范围Id", required = true)
+    val scopeId: Int
 )
