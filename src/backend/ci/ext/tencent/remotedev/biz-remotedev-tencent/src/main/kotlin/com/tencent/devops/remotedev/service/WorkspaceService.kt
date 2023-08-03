@@ -629,11 +629,11 @@ class WorkspaceService @Autowired constructor(
         logger.info("get all shared workspace")
         return workspaceDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
             WorkspaceShared(
-                id = it.id,
-                workspaceName = it.workspaceName,
-                operator = it.operator,
-                sharedUser = it.sharedUser,
-                type = WorkspaceShared.AssignType.valueOf(it.assignType)
+                id = it["ID"] as Long,
+                workspaceName = it["WORKSPACE_NAME"] as String,
+                operator = it["OPERATOR"] as String,
+                sharedUser = it["SHARED_USER"] as String,
+                type = WorkspaceShared.AssignType.valueOf(it["ASSIGN_TYPE"] as String)
             )
         } ?: emptyList()
     }

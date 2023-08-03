@@ -32,7 +32,6 @@ import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -42,6 +41,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -321,18 +321,18 @@ class WorkspaceDao {
     fun fetchSharedWorkspace(
         dslContext: DSLContext,
         workspaceName: String? = null
-    ): Result<TWorkspaceSharedRecord>? {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            val condition = mutableListOf<Condition>()
-            if (!workspaceName.isNullOrBlank()) {
-                condition.add(WORKSPACE_NAME.eq(workspaceName))
-            }
-            val query = dslContext.selectFrom(this)
-            if (condition.isNotEmpty()) {
-                query.where(condition)
-            }
-            return query.fetch()
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
+        if (!workspaceName.isNullOrBlank()) {
+            conditions.add(t2.WORKSPACE_NAME.like("%workspaceName%"))
         }
+        return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE)
+            .from(t1).leftJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .fetch()
     }
 
     fun deleteSharedWorkspace(
