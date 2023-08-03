@@ -328,9 +328,7 @@ include(":ext:tencent:quality:biz-quality-tencent")
 include(":ext:tencent:quality:boot-quality-tencent")
 
 include(":ext:tencent:environment")
-include(":ext:tencent:environment:api-environment-op")
 include(":ext:tencent:environment:api-environment-tencent")
-include(":ext:tencent:environment:biz-environment-op")
 include(":ext:tencent:environment:biz-environment-tencent")
 include(":ext:tencent:environment:boot-environment-tencent")
 

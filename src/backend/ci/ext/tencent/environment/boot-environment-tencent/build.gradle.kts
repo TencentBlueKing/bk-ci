@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:environment:biz-environment-op"))
     api(project(":ext:tencent:environment:biz-environment-tencent"))
     api(project(":core:common:common-auth:common-auth-rbac"))
 }
