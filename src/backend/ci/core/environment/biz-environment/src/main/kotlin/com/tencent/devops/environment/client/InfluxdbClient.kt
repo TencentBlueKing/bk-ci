@@ -29,6 +29,12 @@ package com.tencent.devops.environment.client
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_disk_total
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_mem_total
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_system_n_cpus
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_disk
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_mem
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_system
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.utils.NumberUtils
@@ -87,12 +93,12 @@ class InfluxdbClient {
 
     private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
         val queryStr =
-            "SELECT last(\"n_cpus\") FROM \"system\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND time >= now() - 7d and time <= now() - 30s; " +
-                "SELECT last(\"total\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND time >= now() - 7d and time <= now() - 30s; " +
-                "SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "and time >= now() - 7d and time <= now() - 30s"
+            "SELECT last(\"$f_system_n_cpus\") FROM \"$t_system\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND time >= now() - 7d and time <= now() - 30s; " +
+                    "SELECT last(\"$f_mem_total\") FROM \"$t_mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND time >= now() - 7d and time <= now() - 30s; " +
+                    "SELECT max(\"$f_disk_total\") FROM \"$t_disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "and time >= now() - 7d and time <= now() - 30s"
 
         val queryResult = try {
             getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyInfo

@@ -29,6 +29,9 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_diskio_read_bytes
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_diskio_write_bytes
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_diskio
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,10 +53,12 @@ class LinuxDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClie
         val timeGroupBy = getTimeGroupBy(timeRange)
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT non_negative_derivative(mean(\"read_bytes\"), $timeGroupBy) as \"read\" FROM \"diskio\" " +
-                "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); " +
-                "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy)  as \"write\" FROM \"diskio\" " +
-                "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
+            "SELECT non_negative_derivative(mean(\"$f_diskio_read_bytes\"), $timeGroupBy) as \"read\" " +
+                    "FROM \"$t_diskio\" " +
+                    "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); " +
+                    "SELECT non_negative_derivative(mean(\"$f_diskio_write_bytes\"), $timeGroupBy)  as \"write\" " +
+                    "FROM \"$t_diskio\" " +
+                    "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics
