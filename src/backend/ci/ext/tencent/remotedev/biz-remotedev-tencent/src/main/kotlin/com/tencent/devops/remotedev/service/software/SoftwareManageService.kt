@@ -177,6 +177,7 @@ class SoftwareManageService @Autowired constructor(
     ): InstallSoftwareRes? {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
         val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
+        logger.info("installSoftwareFromXingyun|userSoftwareInfoList|$userSoftwareInfoList")
         if (userSoftwareInfoList.isNullOrEmpty()) {
             return null
         }

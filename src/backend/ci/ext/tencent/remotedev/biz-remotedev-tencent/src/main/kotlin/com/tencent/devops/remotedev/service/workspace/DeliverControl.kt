@@ -137,7 +137,8 @@ class DeliverControl @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                     params = arrayOf(workspaceName)
                 )
-            softwareManageService.installSoftwareFromXingyun(userId, detail.environmentIP.substringAfter("."))
+            logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
+            softwareManageService.installSoftwareFromXingyun(assign2Owner.userId, detail.environmentIP.substringAfter("."))
         }
 
         val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
