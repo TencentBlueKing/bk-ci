@@ -41,6 +41,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
         return CodeTGitWebHookTriggerElement::class.java
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
