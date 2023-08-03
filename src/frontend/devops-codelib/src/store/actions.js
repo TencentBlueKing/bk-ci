@@ -441,7 +441,7 @@ const actions = {
         startTimeEndTime = '',
         endTimeStartTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/triggerEvent/${projectId}/${repositoryHashId}/byRepoHashId?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoWebhookEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
     }
 }
 

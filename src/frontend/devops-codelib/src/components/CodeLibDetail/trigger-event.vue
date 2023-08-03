@@ -189,9 +189,9 @@
             }
         },
         watch: {
-            repoId (id) {
+            async repoId (id) {
+                await this.resetFilter()
                 this.catchRepoId = id
-                this.resetFilter()
             },
             daterange () {
                 this.page = 1
@@ -237,8 +237,10 @@
                 })
                 
                 this.fetchTriggerEventList({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoId,
+                    projectId: 'mht',
+                    repositoryHashId: 'NJDD',
+                    // projectId: this.projectId,
+                    // repositoryHashId: this.repoId,
                     page: this.page,
                     pageSize: this.pageSize,
                     ...params,
@@ -255,6 +257,7 @@
                 })
             },
             resetFilter () {
+                this.catchRepoId = ''
                 this.daterange = []
                 this.searchValue = []
                 this.page = 1
