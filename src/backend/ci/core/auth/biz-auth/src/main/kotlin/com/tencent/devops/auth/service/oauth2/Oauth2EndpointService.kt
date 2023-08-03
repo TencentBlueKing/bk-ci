@@ -93,7 +93,7 @@ class Oauth2EndpointService constructor(
         private val logger = LoggerFactory.getLogger(Oauth2EndpointService::class.java)
         private const val codeValiditySeconds = 600L
         private val SCOPE = mutableMapOf(
-            "project_list" to "获取你有权限的项目列表",
+            "project_visit" to "获取你有权限的项目列表",
             "pipeline_list" to "获取你有权限的流水线列表",
             "pipeline_download" to "下载你有权限的制品",
         )
