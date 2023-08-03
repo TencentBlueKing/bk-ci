@@ -127,6 +127,7 @@ class ReportArchiveTask : ITask() {
             indexFileContent = indexFile.readText()
             // pdf文件即使变量不存在，重新写入文件，虽然文件md5不变，但是会无法正常显示
             if (!indexFile.name.endsWith(".pdf")) {
+                logger.info("index file name: ${indexFile.name}")
                 indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
                 indexFile.writeText(indexFileContent)
             }
