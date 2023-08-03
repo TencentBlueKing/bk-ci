@@ -32,14 +32,13 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
-import com.tencent.devops.model.environment.tables.TEnvNode
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import org.jooq.impl.DSL
 
 @Repository
 @Suppress("ALL")
@@ -66,19 +65,6 @@ class EnvDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .fetchOne()
-        }
-    }
-
-    fun getEnvNameByNodeId(dslContext: DSLContext, projectId: String, nodeId: Long): String? {
-        with(TEnv.T_ENV) {
-            val tEnvNode = TEnvNode.T_ENV_NODE
-            return dslContext.select(this.ENV_NAME).from(this)
-                .leftJoin(tEnvNode)
-                .on(this.ENV_ID.eq(tEnvNode.ENV_ID))
-                .where(tEnvNode.NODE_ID.eq(nodeId))
-                .and(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
-                .fetchOne(0, String::class.java)
         }
     }
 
