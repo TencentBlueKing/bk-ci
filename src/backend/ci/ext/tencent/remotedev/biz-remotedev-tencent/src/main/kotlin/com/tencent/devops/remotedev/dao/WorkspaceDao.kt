@@ -88,7 +88,8 @@ class WorkspaceDao {
                 CREATOR_GROUP_NAME,
                 WORKSPACE_MOUNT_TYPE,
                 SYSTEM_TYPE,
-                OWNER_TYPE
+                OWNER_TYPE,
+                WIN_CONFIG_ID
             )
                 .values(
                     workspace.projectId,
@@ -116,7 +117,8 @@ class WorkspaceDao {
                     groupName ?: "",
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
-                    workspace.ownerType.name
+                    workspace.ownerType.name,
+                    workspace.winConfigId
                 )
                 .returning(ID)
                 .fetchOne()!!.id
