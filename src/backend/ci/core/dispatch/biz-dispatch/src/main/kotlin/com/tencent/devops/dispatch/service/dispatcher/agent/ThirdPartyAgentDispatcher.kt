@@ -344,7 +344,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             pipelineId = event.pipelineId,
             buildId = event.buildId,
             vmSeqId = event.vmSeqId,
-            vmInfo = VmInfo(ip = agent.ip, name = agent.ip)
+            vmInfo = VmInfo(ip = agent.ip, name = agent.envName ?: agent.ip)
         )
     }
 

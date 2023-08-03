@@ -55,11 +55,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "MagicNumber", "LongMethod", "ComplexMethod")
 @Service
@@ -386,7 +386,7 @@ class ContainerBuildRecordService(
                 }
                 val containerVar = mutableMapOf<String, Any>()
                 if (recordContainer.containerType == VMBuildContainer.classType &&
-                    containerVar[VMBuildContainer::showBuildResource.name] == true
+                    recordContainer.containerVar[VMBuildContainer::showBuildResource.name] == true
                 ) {
                     containerVar[VMBuildContainer::name.name] = vmInfo.name
                 }
