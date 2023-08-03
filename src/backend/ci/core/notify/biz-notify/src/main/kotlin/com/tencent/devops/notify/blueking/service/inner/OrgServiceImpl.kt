@@ -24,7 +24,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.service.inner
 
-dependencies {
-    api(project(":core:notify:biz-notify"))
+import com.tencent.devops.notify.service.OrgService
+
+@Suppress("ALL")
+class OrgServiceImpl : OrgService {
+
+    override fun parseStaff(staffs: Set<String>): Set<String> {
+        val result = LinkedHashSet<String>()
+        val staffIds = LinkedHashSet<Int>()
+        if (staffs.isNotEmpty()) {
+            staffs.forEach { staff ->
+                try {
+                    val staffId = Integer.parseInt(staff, 10)
+                    if (staffId > 10) {
+                        staffIds.add(staffId)
+                    }
+                } catch (ignore: NumberFormatException) {
+                    result.add(staff)
+                }
+            }
+        }
+        return result
+    }
 }

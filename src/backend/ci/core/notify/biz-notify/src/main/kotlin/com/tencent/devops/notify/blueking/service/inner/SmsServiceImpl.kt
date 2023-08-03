@@ -24,7 +24,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service.inner
+package com.tencent.devops.notify.blueking.service.inner
 
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -34,13 +34,13 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
-import com.tencent.devops.common.notify.utils.TOFConfiguration
-import com.tencent.devops.common.notify.utils.TOFService
-import com.tencent.devops.common.notify.utils.TOFService.Companion.SMS_URL
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_SMS
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
 import com.tencent.devops.notify.dao.SmsNotifyDao
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.NotificationResponse
@@ -50,33 +50,21 @@ import com.tencent.devops.notify.service.SmsService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
 
-@Suppress("NestedBlockDepth")
-@Primary
-@Service
+@Suppress("ALL")
 class SmsServiceImpl @Autowired constructor(
-    private val tofService: TOFService,
+    private val notifyService: NotifyService,
     private val smsNotifyDao: SmsNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val tofConfiguration: TOFConfiguration
+    private val configuration: Configuration
 ) : SmsService {
 
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
 
-    @Value("\${tof.defaultSystem.default-sms-sender}")
-    private lateinit var defaultSmsSender: String
-
     override fun sendMqMsg(message: SmsNotifyMessage) {
-        logger.info("sms channel has been closed , message is $message")
-        return
-        // 短信渠道下架
-        // 后续容器化之后 , 不会再有这份代码
-        // rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
+        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
     }
 
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -88,12 +76,11 @@ class SmsServiceImpl @Autowired constructor(
 
         val retryCount = smsNotifyMessageWithOperation.retryCount
         val batchId = smsNotifyMessageWithOperation.batchId ?: UUIDUtil.generate()
-        val tofConfs = tofConfiguration.getConfigurations(smsNotifyMessageWithOperation.tofSysId)
+        val tofConfs = configuration.getConfigurations(smsNotifyMessageWithOperation.tofSysId)
         for (notifyPost in smsNotifyPosts) {
             val id = smsNotifyMessageWithOperation.id ?: UUIDUtil.generate()
-            val result = tofService.post(
-                SMS_URL, notifyPost, tofConfs!!
-            )
+            val result = notifyService.post(
+                SMS_URL, notifyPost, tofConfs!!)
             if (result.Ret == 0) {
                 // 成功
                 smsNotifyDao.insertOrUpdateSmsNotifyRecord(
@@ -132,13 +119,7 @@ class SmsServiceImpl @Autowired constructor(
                 )
                 if (retryCount < 3) {
                     // 开始重试
-                    reSendMessage(
-                        post = notifyPost,
-                        source = smsNotifyMessageWithOperation.source,
-                        retryCount = retryCount + 1,
-                        id = id,
-                        batchId = batchId
-                    )
+                    reSendMessage(notifyPost, smsNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
                 }
             }
         }
@@ -184,23 +165,14 @@ class SmsServiceImpl @Autowired constructor(
         val bodyList = ChineseStringUtil.split(smsNotifyMessage.body, 220) ?: return list
         for (i in bodyList.indices) {
             val body = if (bodyList.size > 1) {
-                String.format(
-                    "%s(%d/%d)",
-                    bodyList[i],
-                    i + 1,
-                    bodyList.size
-                )
+                String.format("%s(%d/%d)", bodyList[i], i + 1, bodyList.size)
             } else {
                 bodyList[i]
             }
 
             val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", body)
-            val receivers = Lists.newArrayList(
-                filterReceivers(
-                    receivers = smsNotifyMessage.getReceivers(),
-                    contentMd5 = contentMd5,
-                    frequencyLimit = smsNotifyMessage.frequencyLimit
-                )
+            val receivers = Lists.newArrayList(filterReceivers(
+                smsNotifyMessage.getReceivers(), contentMd5, smsNotifyMessage.frequencyLimit)
             )
             if (receivers == null || receivers.isEmpty()) {
                 continue
@@ -218,7 +190,7 @@ class SmsServiceImpl @Autowired constructor(
                     receiver = subReceivers.joinToString(",")
                     msgInfo = body
                     priority = smsNotifyMessage.priority.getValue()
-                    sender = smsNotifyMessage.sender.ifEmpty { defaultSmsSender }
+                    sender = smsNotifyMessage.sender
                     this.contentMd5 = contentMd5
                     frequencyLimit = smsNotifyMessage.frequencyLimit
                     tofSysId = smsNotifyMessage.tofSysId
@@ -246,7 +218,6 @@ class SmsServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }
@@ -262,29 +233,19 @@ class SmsServiceImpl @Autowired constructor(
         val result: List<NotificationResponse<SmsNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
         } else {
-            val emailRecords = smsNotifyDao.list(
-                page = page,
-                pageSize = pageSize,
-                success = success,
-                fromSysId = fromSysId,
-                createdTimeSortOrder = createdTimeSortOrder
-            )
+            val emailRecords = smsNotifyDao.list(page, pageSize, success, fromSysId, createdTimeSortOrder)
             emailRecords.stream().map(this::parseFromTNotifySmsToResponse)?.collect(Collectors.toList()) ?: listOf()
         }
-        return NotificationResponseWithPage(
-            count = count,
-            page = page,
-            pageSize = pageSize,
-            data = result
-        )
+        return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
     private fun parseFromTNotifySmsToResponse(
         record: TNotifySmsRecord
     ): NotificationResponse<SmsNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.receivers.isNullOrEmpty())
+        if (!record.receivers.isNullOrEmpty()) {
             receivers.addAll(record.receivers.split(";"))
+        }
 
         val message = SmsNotifyMessageWithOperation()
         message.apply {
@@ -301,14 +262,18 @@ class SmsServiceImpl @Autowired constructor(
         }
 
         return NotificationResponse(
-            record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message
+            id = record.id,
+            success = record.success,
+            createdTime = if (record.createdTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5,
+            notificationMessage = message
         )
     }
 }
