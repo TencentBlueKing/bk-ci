@@ -267,8 +267,8 @@
                 }
                 .bk-pipeline-card-collect-btn {
                     position: absolute;
-                    top: -36px;
-                    left: -6px;
+                    top: -34px;
+                    left: -5px;
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
