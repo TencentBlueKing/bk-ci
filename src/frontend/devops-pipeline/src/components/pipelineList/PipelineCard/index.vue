@@ -272,7 +272,7 @@
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
-                    font-size: 16px;
+                    font-size: 12px;
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
