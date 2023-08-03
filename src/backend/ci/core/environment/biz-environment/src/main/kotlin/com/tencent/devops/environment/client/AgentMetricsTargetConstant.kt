@@ -25,15 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
+package com.tencent.devops.environment.client
+
+// Agent 监控指标别名常量，用到的所有指标名都在这里修改方便使用
+// 开头 t 表名 f 字段名
+object AgentMetricsTargetConstant {
+    const val t_system = "load"
+    const val f_system_n_cpus = "n_cpus"
+
+    const val t_mem = "mem"
+    const val f_mem_used_percent = "pct_used"
+    const val f_mem_total = "total"
+
+    const val t_cpu = "cpu_detail"
+    const val f_cpu_usage_idle = "idle"
+    const val f_cpu_usage_iowait = "iowait"
+    const val f_cpu_usage_user = "user"
+    const val f_cpu_usage_system = "system"
+    // 目前仅有windows有
+    const val f_cpu_usage_interrupt = "Percent_Interrupt_Time"
+
+    const val t_disk = "disk"
+    const val f_disk_total = "total"
+
+    const val t_diskio = "io"
+    const val f_diskio_read_bytes = "rkb_s"
+    const val f_diskio_write_bytes = "wkb_s"
+
+    const val t_net = "net"
+    const val f_net_bytes_recv = "speed_recv"
+    const val f_net_bytes_sent = "speed_sent"
 }

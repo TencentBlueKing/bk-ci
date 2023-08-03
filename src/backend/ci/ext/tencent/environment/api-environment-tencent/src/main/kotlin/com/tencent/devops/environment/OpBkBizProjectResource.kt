@@ -25,15 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
+package com.tencent.devops.environment
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.BizProjectItem
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Path("/op/bkBizProject")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpBkBizProjectResource {
+
+    @ApiOperation("新增bizProject项")
+    @POST
+    @Path("")
+    fun addBizProject(
+        bizProjects: List<BizProjectItem>
+    ): Result<Boolean>
+
+    @ApiOperation("删除bizProject项")
+    @DELETE
+    @Path("/{id}")
+    fun deleteBizProject(
+        @PathParam("id")
+        id: Long
+    ): Result<Boolean>
 }
