@@ -865,4 +865,19 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线指定Job的构建状态")
+    @GET
+    @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}")
+    fun getContainerBuildStatus(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("containerId")
+        containerId: String
+    ): Result<BuildStatus?>
 }
