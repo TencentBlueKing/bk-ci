@@ -33,6 +33,7 @@
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
