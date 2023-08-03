@@ -367,13 +367,12 @@ class ContainerBuildRecordService(
             containerId = containerId,
             vmInfo = vmInfo
         )
-        logger.info("ENGINE|$buildId|saveBuildVmInfo|containerId=$containerId|$vmInfo|executeCount:$executeCount")
+        logger.info("ENGINE|$buildId|saveBuildVmInfo|containerId=$containerId|$vmInfo")
         if (executeCount == null) return
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)"
         ) {
-            logger.info("saveBuildVmInfo debug 20230802")
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val recordContainer = recordContainerDao.getRecord(
@@ -391,6 +390,7 @@ class ContainerBuildRecordService(
                 ) {
                     containerVar[VMBuildContainer::name.name] = vmInfo.name
                 }
+                logger.info("ENGINE|containerVar:$containerVar|containerType:${recordContainer.containerType}")
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,

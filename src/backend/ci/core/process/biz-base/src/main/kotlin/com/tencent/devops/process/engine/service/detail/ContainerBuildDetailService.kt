@@ -264,7 +264,6 @@ class ContainerBuildDetailService(
                 var update = false
 
                 override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                    logger.info("saveBuildVmInfo debug 20230802")
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer != null) {
                         if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
