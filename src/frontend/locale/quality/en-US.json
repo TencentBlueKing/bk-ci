@@ -244,5 +244,6 @@
     "流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。": "Behind the execution control point {0}, The pipeline needs to meet the threshold condition of {1} ，otherwise it will stop at the Redine position.",
     "流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。": "Before the execution control point {0}, The pipeline needs to meet the threshold condition of {1} ，otherwise it will stop at the Redine position.",
     "请选择": "Please select",
-    "等待中": "Waited"
+    "等待中": "Waited",
+    "操作建议": "Action Suggest"
 }
