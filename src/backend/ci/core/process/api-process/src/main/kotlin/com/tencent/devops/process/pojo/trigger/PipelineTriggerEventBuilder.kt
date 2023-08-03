@@ -28,18 +28,9 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookEvent
-import java.time.LocalDateTime
-
 class PipelineTriggerEventBuilder {
     private lateinit var projectId: String
     private var eventId: Long? = null
-    private lateinit var triggerType: String
-    private lateinit var eventType: String
-    private lateinit var triggerUser: String
-    private lateinit var eventMessage: String
-    private lateinit var eventDesc: String
-    private lateinit var eventTime: LocalDateTime
     private var eventSource: String? = null
     private var status: String = ""
     private var pipelineId: String? = null
@@ -49,18 +40,12 @@ class PipelineTriggerEventBuilder {
     private var reason: String? = null
     private var reasonDetailList: MutableList<String>? = null
 
-    fun webhookEvent(webhookEvent: PipelineWebhookEvent) = apply {
-        this.eventId = webhookEvent.eventId
-        this.eventType = webhookEvent.eventType
-        this.triggerUser = webhookEvent.triggerUser
-        this.eventMessage = webhookEvent.eventMessage
-        this.eventDesc = webhookEvent.eventDesc
-        this.eventTime = webhookEvent.eventTime
-        this.triggerType = webhookEvent.triggerType
-    }
-
     fun projectId(projectId: String) = apply {
         this.projectId = projectId
+    }
+
+    fun eventId(eventId: Long) = apply {
+        this.eventId = eventId
     }
 
     fun pipelineId(pipelineId: String) = apply {
@@ -76,6 +61,10 @@ class PipelineTriggerEventBuilder {
     }
 
     fun getEventSource() = eventSource
+
+    fun status(status: String) = apply {
+        this.status = status
+    }
 
     fun buildId(buildId: String) = apply {
         this.buildId = buildId
@@ -93,17 +82,10 @@ class PipelineTriggerEventBuilder {
         }
     }
 
-    fun build(): PipelineTriggerEvent {
-        return PipelineTriggerEvent(
+    fun build(): PipelineTriggerDetail {
+        return PipelineTriggerDetail(
             projectId = projectId,
             eventId = eventId!!,
-            triggerType = triggerType,
-            eventSource = eventSource,
-            eventType = eventType,
-            triggerUser = triggerUser,
-            eventMessage = eventMessage,
-            eventDesc = eventDesc,
-            eventTime = eventTime,
             status = status,
             pipelineId = pipelineId,
             pipelineName = pipelineName,

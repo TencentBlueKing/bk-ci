@@ -48,9 +48,10 @@ import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -100,7 +101,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
     fun dispatchPipelineSubscribers(
         matcher: ScmWebhookMatcher,
-        webhookEvent: PipelineWebhookEvent,
+        triggerEvent: PipelineTriggerEvent,
         subscribers: List<PipelineWebhookSubscriber>
     ): Boolean {
         try {
@@ -112,13 +113,14 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
 
             EventCacheUtil.initEventCache()
+            // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
+            val repoEventIdMap = mutableMapOf<String, Long>()
             subscribers.forEach outside@{ subscriber ->
                 val projectId = subscriber.projectId
                 val pipelineId = subscriber.pipelineId
                 try {
                     logger.info("pipelineId is $pipelineId")
                     val builder = PipelineTriggerEventBuilder()
-                        .webhookEvent(webhookEvent)
                         .projectId(projectId)
                         .pipelineId(pipelineId)
 
@@ -128,14 +130,12 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         matcher = matcher,
                         builder = builder
                     )
-                    if (!builder.getEventSource().isNullOrBlank()) {
-                        webhookEvent.eventSource = builder.getEventSource()
-                        webhookEvent.projectId = projectId
-                        pipelineTriggerEventService.saveEvent(
-                            webhookEvent = webhookEvent,
-                            triggerEvent = builder.build()
-                        )
-                    }
+                    saveTriggerEvent(
+                        projectId = projectId,
+                        builder = builder,
+                        triggerEvent = triggerEvent,
+                        repoEventIdMap = repoEventIdMap
+                    )
                 } catch (e: Throwable) {
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
@@ -156,6 +156,29 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 )
             }
             EventCacheUtil.remove()
+        }
+    }
+
+    private fun saveTriggerEvent(
+        projectId: String,
+        builder: PipelineTriggerEventBuilder,
+        triggerEvent: PipelineTriggerEvent,
+        repoEventIdMap: MutableMap<String, Long>
+    ) {
+        if (!builder.getEventSource().isNullOrBlank()) {
+            triggerEvent.eventSource = builder.getEventSource()
+            triggerEvent.projectId = projectId
+            val eventId = repoEventIdMap[builder.getEventSource()] ?: run {
+                val eventId = pipelineTriggerEventService.getEventId()
+                repoEventIdMap[builder.getEventSource()!!] = eventId
+                eventId
+            }
+            triggerEvent.eventId = eventId
+            builder.eventId(eventId)
+            pipelineTriggerEventService.saveEvent(
+                triggerEvent = triggerEvent,
+                triggerDetail = builder.build()
+            )
         }
     }
 
@@ -246,6 +269,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             repo = repo
                         )
                         builder.buildId(buildId)
+                            .status(PipelineTriggerStatus.SUCCEED.name)
                             .eventSource(eventSource = repo.repoHashId!!)
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
                     }
@@ -266,7 +290,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
         // 历史原因,webhook表没有记录eventType,所以查找出来的订阅者可能因为事件类型不匹配,事件不需要记录
         if (!builder.getEventSource().isNullOrBlank()) {
-            builder.reason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
+            builder.status(PipelineTriggerStatus.FAILED.name).reason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
         }
         return false
     }

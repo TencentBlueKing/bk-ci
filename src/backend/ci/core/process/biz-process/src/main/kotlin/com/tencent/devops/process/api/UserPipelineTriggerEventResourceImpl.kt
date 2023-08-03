@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.webhook.RepoWebhookEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
 
 @RestResource
@@ -51,7 +51,7 @@ class UserPipelineTriggerEventResourceImpl(
         endTime: Long?,
         page: Int?,
         pageSize: Int?
-    ): Result<SQLPage<PipelineTriggerEvent>> {
+    ): Result<SQLPage<PipelineTriggerEventVo>> {
         return Result(
             pipelineTriggerEventService.listTriggerEvent(
                 projectId = projectId,
@@ -80,9 +80,9 @@ class UserPipelineTriggerEventResourceImpl(
         endTime: Long?,
         page: Int?,
         pageSize: Int?
-    ): Result<SQLPage<RepoWebhookEvent>> {
+    ): Result<SQLPage<RepoTriggerEventVo>> {
         return Result(
-            pipelineTriggerEventService.listRepoWebhookEvent(
+            pipelineTriggerEventService.listRepoTriggerEvent(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 triggerType = triggerType,
@@ -106,9 +106,9 @@ class UserPipelineTriggerEventResourceImpl(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<SQLPage<PipelineTriggerEvent>> {
+    ): Result<SQLPage<PipelineTriggerEventVo>> {
         return Result(
-            pipelineTriggerEventService.listRepoWebhookEventDetail(
+            pipelineTriggerEventService.listRepoTriggerEventDetail(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 eventId = eventId,
@@ -119,12 +119,15 @@ class UserPipelineTriggerEventResourceImpl(
         )
     }
 
-    override fun replay(userId: String, projectId: String, id: Long): Result<Boolean> {
+    override fun replay(
+        userId: String,
+        projectId: String, detailId: Long
+    ): Result<Boolean> {
         return Result(
             pipelineTriggerEventService.replay(
                 userId = userId,
                 projectId = projectId,
-                id = id
+                detailId = detailId
             )
         )
     }
@@ -132,14 +135,12 @@ class UserPipelineTriggerEventResourceImpl(
     override fun replayAll(
         userId: String,
         projectId: String,
-        repoHashId: String,
         eventId: Long
     ): Result<Boolean> {
         return Result(
             pipelineTriggerEventService.replayAll(
                 userId = userId,
                 projectId = projectId,
-                repoHashId = repoHashId,
                 eventId = eventId
             )
         )

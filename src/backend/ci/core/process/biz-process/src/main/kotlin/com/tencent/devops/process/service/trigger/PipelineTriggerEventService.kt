@@ -28,17 +28,19 @@
 
 package com.tencent.devops.process.service.trigger
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.webhook.pojo.ReplayWebhookRequest
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
-import com.tencent.devops.process.dao.PipelineWebhookEventDao
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookEvent
-import com.tencent.devops.process.pojo.webhook.RepoWebhookEvent
-import com.tencent.devops.process.webhook.listener.WebhookRequestService
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
+import com.tencent.devops.process.webhook.listener.PipelineTriggerRequestService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -52,38 +54,37 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val pipelineWebhookEventDao: PipelineWebhookEventDao,
-    private val webhookRequestService: WebhookRequestService
+    private val pipelineTriggerRequestService: PipelineTriggerRequestService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTriggerEventService::class.java)
-        private const val PIPELINE_WEBHOOK_EVENT_BIZ_ID = "PIPELINE_WEBHOOK_EVENT"
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
+        private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
     }
 
-    fun getWebhookEventId(): Long {
-        return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_WEBHOOK_EVENT_BIZ_ID).data ?: 0
+    fun getDetailId(): Long {
+        return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_DETAIL_BIZ_ID).data ?: 0
     }
 
-    fun getTriggerEventId(): Long {
+    fun getEventId(): Long {
         return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_EVENT_BIZ_ID).data ?: 0
     }
 
     fun saveEvent(
-        webhookEvent: PipelineWebhookEvent,
-        triggerEvent: PipelineTriggerEvent
+        triggerEvent: PipelineTriggerEvent,
+        triggerDetail: PipelineTriggerDetail
     ) {
-        triggerEvent.id = getTriggerEventId()
+        triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            pipelineWebhookEventDao.save(
-                dslContext = transactionContext,
-                webhookEvent = webhookEvent
-            )
             pipelineTriggerEventDao.save(
                 dslContext = transactionContext,
                 triggerEvent = triggerEvent
+            )
+            pipelineTriggerEventDao.saveDetail(
+                dslContext = transactionContext,
+                triggerDetail = triggerDetail
             )
         }
     }
@@ -98,7 +99,7 @@ class PipelineTriggerEventService @Autowired constructor(
         endTime: Long?,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineTriggerEvent> {
+    ): SQLPage<PipelineTriggerEventVo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
@@ -123,11 +124,11 @@ class PipelineTriggerEventService @Autowired constructor(
             endTime = endTime,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        ).map { pipelineTriggerEventDao.convert(it) }
+        )
         return SQLPage(count = count, records = records)
     }
 
-    fun listRepoWebhookEvent(
+    fun listRepoTriggerEvent(
         projectId: String,
         repoHashId: String,
         triggerType: String?,
@@ -139,11 +140,11 @@ class PipelineTriggerEventService @Autowired constructor(
         endTime: Long?,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<RepoWebhookEvent> {
+    ): SQLPage<RepoTriggerEventVo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineTriggerEventDao.countRepoWebhookEvent(
+        val count = pipelineTriggerEventDao.countRepoTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
             eventSource = repoHashId,
@@ -155,7 +156,7 @@ class PipelineTriggerEventService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
-        val records = pipelineTriggerEventDao.listRepoWebhookEvent(
+        val records = pipelineTriggerEventDao.listRepoTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
             eventSource = repoHashId,
@@ -172,14 +173,14 @@ class PipelineTriggerEventService @Autowired constructor(
         return SQLPage(count = count, records = records)
     }
 
-    fun listRepoWebhookEventDetail(
+    fun listRepoTriggerEventDetail(
         projectId: String,
         repoHashId: String,
         eventId: Long,
         pipelineId: String?,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineTriggerEvent> {
+    ): SQLPage<PipelineTriggerEventVo> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
@@ -197,9 +198,7 @@ class PipelineTriggerEventService @Autowired constructor(
             pipelineId = pipelineId,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        ).map {
-            pipelineTriggerEventDao.convert(it)
-        }
+        )
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
@@ -213,55 +212,41 @@ class PipelineTriggerEventService @Autowired constructor(
     fun replay(
         userId: String,
         projectId: String,
-        id: Long
+        detailId: Long
     ): Boolean {
-        val pipelineTriggerEvent = pipelineTriggerEventDao.get(dslContext = dslContext, id = id) ?: return false
-        val eventId = pipelineTriggerEvent.eventId
-        val repoHashId = pipelineTriggerEvent.eventSource!!
-        val webhookEvent = pipelineWebhookEventDao.get(
+        logger.info("replay pipeline trigger event|$userId|$projectId|$detailId")
+        val triggerDetail = pipelineTriggerEventDao.getTriggerDetail(
             dslContext = dslContext,
-            eventId = eventId,
-            eventSource = repoHashId
-        ) ?: return false
-
-        val replayWebhookRequest = with(webhookEvent) {
-            ReplayWebhookRequest(
-                taskAtom = webhookEvent.taskAtom,
-                userId = userId,
-                projectId = projectId,
-                eventId = webhookEvent.eventId,
-                requestId = requestId,
-                eventSource = eventSource!!,
-                pipelineId = pipelineTriggerEvent.pipelineId!!
-            )
-        }
-        webhookRequestService.handleReplayRequest(request = replayWebhookRequest)
+            projectId = projectId,
+            detailId = detailId
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_TRIGGER_DETAIL_NOT_FOUND,
+            params = arrayOf(detailId.toString())
+        )
+        val pipelineId = triggerDetail.pipelineId  ?: throw ErrorCodeException(
+            errorCode = ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY,
+            params = arrayOf(detailId.toString())
+        )
+        pipelineTriggerRequestService.handleReplayRequest(
+            userId = userId,
+            projectId = projectId,
+            eventId = triggerDetail.eventId,
+            pipelineId = pipelineId
+        )
         return true
     }
 
     fun replayAll(
         userId: String,
         projectId: String,
-        repoHashId: String,
         eventId: Long
     ): Boolean {
-        val webhookEvent = pipelineWebhookEventDao.get(
-            dslContext = dslContext,
-            eventId = eventId,
-            eventSource = repoHashId
-        ) ?: return false
-
-        val replayWebhookRequest = with(webhookEvent) {
-            ReplayWebhookRequest(
-                taskAtom = taskAtom,
-                userId = userId,
-                projectId = projectId,
-                eventId = eventId,
-                requestId = requestId,
-                eventSource = repoHashId
-            )
-        }
-        webhookRequestService.handleReplayRequest(request = replayWebhookRequest)
+        logger.info("replay all pipeline trigger event|$userId|$projectId|$eventId")
+        pipelineTriggerRequestService.handleReplayRequest(
+            userId = userId,
+            projectId = projectId,
+            eventId = eventId
+        )
         return true
     }
 }

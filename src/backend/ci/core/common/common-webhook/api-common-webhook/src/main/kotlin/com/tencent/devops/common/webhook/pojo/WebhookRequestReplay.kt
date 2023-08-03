@@ -26,25 +26,19 @@
  *
  */
 
-package com.tencent.devops.process.pojo.webhook
+package com.tencent.devops.common.webhook.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("代码库webhook事件记录")
-data class RepoWebhookEvent(
+@ApiModel
+class WebhookRequestReplay(
+    @ApiModelProperty("用户ID")
+    val userId: String,
     @ApiModelProperty("项目ID")
     val projectId: String,
-    @ApiModelProperty("事件ID")
-    val eventId: Long,
-    @ApiModelProperty("代码库ID", required = false)
-    val repoHashId: String,
-    @ApiModelProperty("事件描述")
-    val eventDesc: String,
-    @ApiModelProperty("触发时间")
-    val eventTime: Long,
-    @ApiModelProperty("总流水线数")
-    val total: Int,
-    @ApiModelProperty("成功的流水线数")
-    val success: Int
+    @ApiModelProperty("webhook请求ID")
+    val hookRequestId: Long,
+    @ApiModelProperty("重试流水线ID")
+    val pipelineId: String? = null
 )

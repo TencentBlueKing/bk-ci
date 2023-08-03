@@ -26,25 +26,32 @@
  *
  */
 
-package com.tencent.devops.common.webhook.pojo
+package com.tencent.devops.process.pojo.trigger
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel
-class ReplayWebhookRequest(
-    @ApiModelProperty("事件处理类")
-    val taskAtom: String,
-    @ApiModelProperty("用户ID")
-    val userId: String,
-    @ApiModelProperty("项目ID")
+@ApiModel("流水线触发详情")
+data class PipelineTriggerDetail(
+    var detailId: Long? = null,
+    @ApiModelProperty("蓝盾项目ID")
     val projectId: String,
     @ApiModelProperty("事件ID")
     val eventId: Long,
-    @ApiModelProperty("请求ID")
-    val requestId: Long,
-    @ApiModelProperty("事件源")
-    val eventSource: String,
-    @ApiModelProperty("重试流水线ID")
-    val pipelineId: String? = null
+    @ApiModelProperty("触发状态")
+    var status: String,
+    @ApiModelProperty("流水线Id")
+    var pipelineId: String? = null,
+    @ApiModelProperty("流水线名称")
+    var pipelineName: String? = null,
+    @ApiModelProperty("构建Id")
+    var buildId: String? = null,
+    @ApiModelProperty("构建编号")
+    var buildNum: String? = null,
+    @ApiModelProperty("原因")
+    var reason: String? = null,
+    @ApiModelProperty("原因详情", required = false)
+    var reasonDetailList: List<String>? = null,
+    @ApiModelProperty("创建时间", required = false)
+    val createTime: Long? = null
 )

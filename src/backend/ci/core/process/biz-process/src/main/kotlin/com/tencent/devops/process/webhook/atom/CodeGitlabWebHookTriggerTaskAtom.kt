@@ -30,16 +30,17 @@ package com.tencent.devops.process.webhook.atom
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.atom.IWebhookAtomTask
-import com.tencent.devops.common.webhook.pojo.ReplayWebhookRequest
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookEvent
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
-import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,6 @@ class CodeGitlabWebHookTriggerTaskAtom @Autowired constructor(
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val webhookTriggerTaskAtomService: WebhookTriggerTaskAtomService
 ) : IWebhookAtomTask {
 
@@ -74,15 +74,12 @@ class CodeGitlabWebHookTriggerTaskAtom @Autowired constructor(
             eventTime = eventTime,
             scmType = ScmType.CODE_GITLAB
         )
-        val webhookEvent = PipelineWebhookEvent(
-            taskAtom = request.taskAtom,
-            requestId = requestId,
-            eventId = pipelineTriggerEventService.getWebhookEventId(),
+        val triggerEvent = PipelineTriggerEvent(
             triggerType = PipelineTriggerType.CODE_GITLAB.name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventMessage = matcher.getMessage() ?: "",
             eventDesc = matcher.getEventDesc(),
+            hookRequestId = requestId,
             eventTime = eventTime
         )
         val subscribers = pipelineWebhookService.getWebhookPipelines(
@@ -91,32 +88,32 @@ class CodeGitlabWebHookTriggerTaskAtom @Autowired constructor(
         )
         pipelineBuildWebhookService.dispatchPipelineSubscribers(
             matcher = matcher,
-            webhookEvent = webhookEvent,
+            triggerEvent = triggerEvent,
             subscribers = subscribers
         )
     }
 
-    override fun replay(request: ReplayWebhookRequest) {
-        val repoWebhookRequest =
-            webhookTriggerTaskAtomService.getRepoWebhookRequest(requestId = request.requestId) ?: return
+    override fun replay(request: WebhookRequestReplay) {
+        val repoWebhookRequest = webhookTriggerTaskAtomService.getRepoWebhookRequest(
+            requestId = request.hookRequestId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND,
+            params = arrayOf(request.hookRequestId.toString())
+        )
         val event = getEvent(
             request = WebhookRequest(
-                taskAtom = request.taskAtom,
                 headers = repoWebhookRequest.requestHeader,
                 body = repoWebhookRequest.requestBody
             )
         ) ?: return
         val matcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
         val eventTime = LocalDateTime.now()
-        val webhookEvent = PipelineWebhookEvent(
-            taskAtom = request.taskAtom,
-            requestId = request.requestId,
-            eventId = pipelineTriggerEventService.getWebhookEventId(),
-            triggerType = PipelineTriggerType.CODE_GIT.name,
+        val triggerEvent = PipelineTriggerEvent(
+            triggerType = PipelineTriggerType.CODE_GITLAB.name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventMessage = matcher.getMessage() ?: "",
             eventDesc = matcher.getEventDesc(),
+            hookRequestId = request.hookRequestId,
             eventTime = eventTime
         )
         val subscribers = request.pipelineId?.let {
@@ -134,7 +131,7 @@ class CodeGitlabWebHookTriggerTaskAtom @Autowired constructor(
         }
         pipelineBuildWebhookService.dispatchPipelineSubscribers(
             matcher = matcher,
-            webhookEvent = webhookEvent,
+            triggerEvent = triggerEvent,
             subscribers = subscribers
         )
     }

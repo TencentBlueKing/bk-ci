@@ -31,23 +31,24 @@ package com.tencent.devops.process.webhook.atom
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.webhook.atom.IWebhookAtomTask
-import com.tencent.devops.common.webhook.pojo.ReplayWebhookRequest
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookEvent
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
-import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -59,7 +60,6 @@ class CodeGithubWebHookTriggerTaskAtom(
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val webhookTriggerTaskAtomService: WebhookTriggerTaskAtomService,
     private val client: Client
 ) : IWebhookAtomTask {
@@ -85,15 +85,12 @@ class CodeGithubWebHookTriggerTaskAtom(
             eventTime = eventTime,
             scmType = ScmType.GITHUB
         )
-        val webhookEvent = PipelineWebhookEvent(
-            taskAtom = request.taskAtom,
-            requestId = requestId,
-            eventId = pipelineTriggerEventService.getWebhookEventId(),
+        val webhookEvent = PipelineTriggerEvent(
             triggerType = PipelineTriggerType.GITHUB.name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventMessage = matcher.getMessage() ?: "",
             eventDesc = matcher.getEventDesc(),
+            hookRequestId = requestId,
             eventTime = eventTime
         )
         val subscribers = pipelineWebhookService.getWebhookPipelines(
@@ -102,32 +99,32 @@ class CodeGithubWebHookTriggerTaskAtom(
         )
         pipelineBuildWebhookService.dispatchPipelineSubscribers(
             matcher = matcher,
-            webhookEvent = webhookEvent,
+            triggerEvent = webhookEvent,
             subscribers = subscribers
         )
     }
 
-    override fun replay(request: ReplayWebhookRequest) {
-        val webhookRequest =
-            webhookTriggerTaskAtomService.getRepoWebhookRequest(requestId = request.requestId) ?: return
+    override fun replay(request: WebhookRequestReplay) {
+        val repoWebhookRequest = webhookTriggerTaskAtomService.getRepoWebhookRequest(
+            requestId = request.hookRequestId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND,
+            params = arrayOf(request.hookRequestId.toString())
+        )
         val event = getEvent(
             request = WebhookRequest(
-                taskAtom = request.taskAtom,
-                headers = webhookRequest.requestHeader,
-                body = webhookRequest.requestBody
+                headers = repoWebhookRequest.requestHeader,
+                body = repoWebhookRequest.requestBody
             )
         ) ?: return
         val matcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
         val eventTime = LocalDateTime.now()
-        val webhookEvent = PipelineWebhookEvent(
-            taskAtom = request.taskAtom,
-            requestId = request.requestId,
-            eventId = pipelineTriggerEventService.getWebhookEventId(),
+        val triggerEvent = PipelineTriggerEvent(
             triggerType = PipelineTriggerType.GITHUB.name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventMessage = matcher.getMessage() ?: "",
             eventDesc = matcher.getEventDesc(),
+            hookRequestId = request.hookRequestId,
             eventTime = eventTime
         )
         val subscribers = request.pipelineId?.let {
@@ -145,7 +142,7 @@ class CodeGithubWebHookTriggerTaskAtom(
         }
         pipelineBuildWebhookService.dispatchPipelineSubscribers(
             matcher = matcher,
-            webhookEvent = webhookEvent,
+            triggerEvent = triggerEvent,
             subscribers = subscribers
         )
     }
