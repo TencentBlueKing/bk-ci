@@ -14,7 +14,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 1
+      maxUnavailable: 0
     type: RollingUpdate
   selector:
     matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
