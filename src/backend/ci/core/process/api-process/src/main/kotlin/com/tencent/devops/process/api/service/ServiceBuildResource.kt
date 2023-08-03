@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -48,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
@@ -869,7 +871,7 @@ interface ServiceBuildResource {
     @ApiOperation("获取流水线指定Job的构建状态")
     @GET
     @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}")
-    fun getContainerBuildStatus(
+    fun getBuildContainer(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -879,5 +881,5 @@ interface ServiceBuildResource {
         @ApiParam("任务ID", required = true)
         @PathParam("containerId")
         containerId: String
-    ): Result<BuildStatus?>
+    ): Result<PipelineBuildContainer?>
 }
