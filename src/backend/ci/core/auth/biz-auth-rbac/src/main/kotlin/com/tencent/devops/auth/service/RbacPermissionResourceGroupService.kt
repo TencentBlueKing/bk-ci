@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
@@ -113,12 +114,20 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
         val iamGroupInfoVoList = iamGroupInfoList.map {
+            val resourceGroup = resourceGroupMap[it.id]
+            val groupName = resourceGroup?.let {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                            AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                    defaultMessage = resourceGroup.groupName
+                )
+            } ?: it.name
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
-                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
+                defaultGroup = resourceGroup?.defaultGroup ?: false,
                 groupId = it.id,
                 name = it.name,
-                displayName = it.name,
+                displayName = groupName,
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )
