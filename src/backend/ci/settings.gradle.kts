@@ -139,7 +139,6 @@ include(":core:dockerhost:plugin-dockerhost-codecc")
 include(":core:environment")
 include(":core:environment:api-environment")
 include(":core:environment:biz-environment")
-include(":core:environment:biz-environment-sample")
 include(":core:environment:boot-environment")
 include(":core:environment:model-environment")
 
