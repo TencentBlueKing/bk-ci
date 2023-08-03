@@ -138,7 +138,10 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-            softwareManageService.installSoftwareFromXingyun(assign2Owner.userId, detail.environmentIP.substringAfter("."))
+            softwareManageService.installSoftwareFromXingyun(
+                assign2Owner.userId,
+                detail.environmentIP.substringAfter(".")
+            )
         }
 
         val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
