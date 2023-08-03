@@ -417,7 +417,7 @@ class ContainerBuildRecordService(
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ) ?: run {
                 logger.warn(
-                    "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
+                    "ENGINE|$buildId|updateContainerRecord| get container($containerId) record failed."
                 )
                 return@transaction
             }
