@@ -99,15 +99,15 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import java.time.LocalDateTime
-import java.util.Date
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -547,11 +547,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return AgentResult(0, null, null, null)
         }
         val node = nodes[0]
-        val envName = envDao.getEnvNameByNodeId(
-            dslContext = dslContext,
-            projectId = projectId,
-            nodeId = node.nodeId
-        )
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, node.nodeId, projectId)
         if (agentRecord == null) {
             logger.warn("[$projectId|$displayName|${node.nodeId}] Fail to get the agent")
@@ -572,8 +567,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                envName = envName
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -592,11 +586,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         } else {
             null
         }
-        val envName = envDao.getEnvNameByNodeId(
-            dslContext = dslContext,
-            projectId = projectId,
-            nodeId = agentRecord.nodeId
-        )
         return AgentResult(
             status = status,
             data = ThirdPartyAgent(
@@ -611,8 +600,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                envName = envName
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -815,11 +803,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             } else {
                 null
             }
-            val envName = envDao.getEnvNameByNodeId(
-                dslContext = dslContext,
-                projectId = projectId,
-                nodeId = it.nodeId
-            )
             ThirdPartyAgent(
                 agentId = HashUtil.encodeLongId(it.id),
                 projectId = projectId,
@@ -832,8 +815,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = it.createdUser,
                 createTime = it.createdTime.timestamp(),
                 parallelTaskCount = it.parallelTaskCount,
-                dockerParallelTaskCount = it.dockerParallelTaskCount,
-                envName = envName
+                dockerParallelTaskCount = it.dockerParallelTaskCount
             )
         }.plus(sharedThridPartyAgentList)
     }
