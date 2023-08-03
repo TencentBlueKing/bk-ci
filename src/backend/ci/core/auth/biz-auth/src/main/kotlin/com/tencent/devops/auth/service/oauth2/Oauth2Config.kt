@@ -1,12 +1,10 @@
 package com.tencent.devops.auth.service.oauth2
 
-import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.service.oauth2.grant.AuthorizationCodeTokenGranter
 import com.tencent.devops.auth.service.oauth2.grant.ClientCredentialsTokenGranter
 import com.tencent.devops.auth.service.oauth2.grant.CompositeTokenGranter
 import com.tencent.devops.auth.service.oauth2.grant.RefreshTokenGranter
 import com.tencent.devops.auth.service.oauth2.grant.TokenGranter
-import org.jooq.DSLContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
