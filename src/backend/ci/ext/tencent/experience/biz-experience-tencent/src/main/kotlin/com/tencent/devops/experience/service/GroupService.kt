@@ -96,15 +96,13 @@ class GroupService @Autowired constructor(
     private val experiencePermissionService: ExperiencePermissionService,
     private val experienceService: ExperienceService
 ) {
-
-    private val resourceType = AuthResourceType.EXPERIENCE_GROUP
-
     fun list(
         userId: String,
         projectId: String,
         offset: Int,
         limit: Int,
-        returnPublic: Boolean
+        returnPublic: Boolean,
+        isRestrictListPermission: Boolean = false
     ): Pair<Long, List<GroupSummaryWithPermission>> {
         val groupPermissionListMap = experiencePermissionService.filterGroup(
             user = userId,
@@ -117,12 +115,16 @@ class GroupService @Autowired constructor(
         val finalLimit = if (limit == -1) count.toInt() else limit
 
         val allGroupIds = groupDao.list(dslContext, projectId).map { it.value1() }
-        val canListGroupIds = experiencePermissionService.filterCanListGroup(
-            user = userId,
-            projectId = projectId,
-            groupRecordIds = allGroupIds
-        )
-
+        // 仅对web界面进行列表权限的限制
+        val canListGroupIds = if (isRestrictListPermission) {
+            experiencePermissionService.filterCanListGroup(
+                user = userId,
+                projectId = projectId,
+                groupRecordIds = allGroupIds
+            )
+        } else {
+            allGroupIds
+        }
         val groupListResult = groupDao.list(
             dslContext = dslContext,
             projectId = projectId,

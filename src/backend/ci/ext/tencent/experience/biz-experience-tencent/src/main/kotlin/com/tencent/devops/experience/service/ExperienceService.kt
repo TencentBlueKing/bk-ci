@@ -223,13 +223,6 @@ class ExperienceService @Autowired constructor(
 
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-        experiencePermissionService.validateTaskPermission(
-            user = userId,
-            projectId = experienceRecord.projectId,
-            experienceId = experienceId,
-            authPermission = AuthPermission.VIEW,
-            message = I18nUtil.getCodeLanMessage(USER_NEED_VIEW_EXP_PERMISSION)
-        )
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
@@ -811,13 +804,6 @@ class ExperienceService @Autowired constructor(
         artifactoryPath: String,
         artifactoryType: ArtifactoryType
     ) {
-        // Rbac 得校验是否有创建体验的权限。
-        if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_PERMISSION,
-                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        }
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
             val permissionMsg = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId))
             throw ErrorCodeException(
