@@ -788,7 +788,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getBuildContainer(projectId: String, buildId: String, containerId: String): Result<PipelineBuildContainer?> {
+    override fun getBuildContainer(
+        projectId: String,
+        buildId: String,
+        containerId: String
+    ): Result<PipelineBuildContainer?> {
         return Result(
             pipelineContainerService.getContainer(
                 projectId = projectId,
