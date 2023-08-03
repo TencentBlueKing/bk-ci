@@ -29,6 +29,8 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_mem_used_percent
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_mem
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,8 +52,8 @@ class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
     }
 
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
-        val queryStr = "SELECT mean(\"$k_used_percent\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-            " and ${getTimePart(timeRange)} fill(null)"
+        val queryStr = "SELECT mean(\"$f_mem_used_percent\") FROM \"$t_mem\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                " and ${getTimePart(timeRange)} fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyMemoryMetrics

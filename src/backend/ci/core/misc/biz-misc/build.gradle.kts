@@ -28,7 +28,6 @@
 dependencies {
     api(project(":core:misc:model-misc"))
     api(project(":core:common:common-web"))
-    api(project(":core:common:common-environment-thirdpartyagent"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-auth:common-auth-api"))
