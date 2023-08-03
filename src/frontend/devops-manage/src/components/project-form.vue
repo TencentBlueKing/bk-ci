@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
-        :maxlength="64"
+        :maxlength="32"
         @change="handleChangeForm"
       ></bk-input>
       <div class="error-tips" v-if="validateProjectNameTips">
