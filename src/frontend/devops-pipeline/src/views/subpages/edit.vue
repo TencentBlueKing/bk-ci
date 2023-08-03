@@ -25,16 +25,14 @@
 
 <script>
     import MiniMap from '@/components/MiniMap'
-    import { BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
     import emptyTips from '@/components/devops/emptyTips'
-    import MiniMap from '@/components/MiniMap'
-    import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab, AuthorityTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { navConfirm } from '@/utils/util'
 
     export default {
         components: {
