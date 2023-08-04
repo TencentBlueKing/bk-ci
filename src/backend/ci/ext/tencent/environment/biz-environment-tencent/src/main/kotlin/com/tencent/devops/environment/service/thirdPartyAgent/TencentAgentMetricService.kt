@@ -230,7 +230,7 @@ class TencentAgentMetricService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         if (!checkAgentProject(projectId)) {
-            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
+            return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
         }
         if (!checkAgentVersion(agentRecord.masterVersion)) {
             return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
@@ -256,7 +256,7 @@ class TencentAgentMetricService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         if (!checkAgentProject(projectId)) {
-            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
+            return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
         }
         if (!checkAgentVersion(agentRecord.masterVersion)) {
             return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
@@ -283,7 +283,7 @@ class TencentAgentMetricService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         if (!checkAgentProject(projectId)) {
-            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
+            return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
         }
         if (!checkAgentVersion(agentRecord.masterVersion)) {
             return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
