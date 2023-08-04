@@ -125,7 +125,6 @@ class PipelineTriggerEventDao {
     fun listTriggerEvent(
         dslContext: DSLContext,
         projectId: String,
-        eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
         triggerType: String? = null,
@@ -142,7 +141,6 @@ class PipelineTriggerEventDao {
             t1 = t1,
             t2 = t2,
             projectId = projectId,
-            eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
             triggerUser = triggerUser,
@@ -199,7 +197,6 @@ class PipelineTriggerEventDao {
     fun countTriggerEvent(
         dslContext: DSLContext,
         projectId: String,
-        eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
         triggerType: String? = null,
@@ -214,7 +211,6 @@ class PipelineTriggerEventDao {
             t1 = t1,
             t2 = t2,
             projectId = projectId,
-            eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
             triggerUser = triggerUser,

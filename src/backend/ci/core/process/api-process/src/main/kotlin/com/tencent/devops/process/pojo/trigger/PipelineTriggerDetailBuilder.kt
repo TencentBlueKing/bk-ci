@@ -28,7 +28,7 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-class PipelineTriggerEventBuilder {
+class PipelineTriggerDetailBuilder {
     private lateinit var projectId: String
     private var eventId: Long? = null
     private var eventSource: String? = null

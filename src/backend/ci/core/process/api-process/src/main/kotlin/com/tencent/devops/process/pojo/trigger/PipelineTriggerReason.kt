@@ -30,5 +30,6 @@ package com.tencent.devops.process.pojo.trigger
 
 enum class PipelineTriggerReason(val detail: String) {
     TRIGGER_SUCCESS("Trigger success"),
+    TRIGGER_FAILED("Trigger failed"),
     TRIGGER_NOT_MATCH("Does not meet the trigger condition :%s")
 }

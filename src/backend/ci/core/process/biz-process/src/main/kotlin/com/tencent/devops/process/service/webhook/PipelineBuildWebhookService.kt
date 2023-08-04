@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
@@ -120,7 +120,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 val pipelineId = subscriber.pipelineId
                 try {
                     logger.info("pipelineId is $pipelineId")
-                    val builder = PipelineTriggerEventBuilder()
+                    val builder = PipelineTriggerDetailBuilder()
                         .projectId(projectId)
                         .pipelineId(pipelineId)
 
@@ -161,7 +161,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
     private fun saveTriggerEvent(
         projectId: String,
-        builder: PipelineTriggerEventBuilder,
+        builder: PipelineTriggerDetailBuilder,
         triggerEvent: PipelineTriggerEvent,
         repoEventIdMap: MutableMap<String, Long>
     ) {
@@ -186,7 +186,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         projectId: String,
         pipelineId: String,
         matcher: ScmWebhookMatcher,
-        builder: PipelineTriggerEventBuilder
+        builder: PipelineTriggerDetailBuilder
     ): Boolean {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return false

@@ -175,7 +175,6 @@ class PipelineTriggerEventService @Autowired constructor(
 
     fun listRepoTriggerEventDetail(
         projectId: String,
-        repoHashId: String,
         eventId: Long,
         pipelineId: String?,
         page: Int?,
@@ -184,16 +183,12 @@ class PipelineTriggerEventService @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
-        if (repoHashId.isBlank()) {
-            throw ParamBlankException("Invalid repoHashId")
-        }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val records = pipelineTriggerEventDao.listTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
-            eventSource = repoHashId,
             eventId = eventId,
             pipelineId = pipelineId,
             limit = sqlLimit.limit,
@@ -202,7 +197,6 @@ class PipelineTriggerEventService @Autowired constructor(
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
-            eventSource = repoHashId,
             eventId = eventId,
             pipelineId = pipelineId
         )

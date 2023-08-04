@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,4 +67,19 @@ enum class PipelineTriggerType {
     // 远程触发
     @ApiModelProperty("远程触发")
     REMOTE;
+
+    companion object {
+
+        fun toMap(): List<IdValue> {
+            return PipelineTriggerType.values().map {
+                IdValue(
+                    id = it.name,
+                    value = I18nUtil.getCodeLanMessage(
+                        messageCode = "TRIGGER_TYPE_${it.name}",
+                        defaultMessage = it.name
+                    )
+                )
+            }
+        }
+    }
 }

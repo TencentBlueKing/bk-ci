@@ -31,6 +31,7 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
@@ -53,10 +54,20 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineTriggerEventResource {
 
+    @ApiOperation("获取触发类型")
+    @GET
+    @Path("listTriggerType")
+    fun listTriggerType(): Result<List<IdValue>>
+
+    @ApiOperation("获取事件类型")
+    @GET
+    @Path("listEventType")
+    fun listEventType(): Result<List<IdValue>>
+
     @ApiOperation("获取流水线触发事件列表")
     @GET
-    @Path("/{projectId}/{pipelineId}/listTriggerEvent")
-    fun listTriggerEvent(
+    @Path("/{projectId}/{pipelineId}/listPipelineTriggerEvent")
+    fun listPipelineTriggerEvent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -91,8 +102,8 @@ interface UserPipelineTriggerEventResource {
 
     @ApiOperation("获取代码库webhook事件列表")
     @GET
-    @Path("/{projectId}/{repoHashId}/listRepoWebhookEvent")
-    fun listRepoWebhookEvent(
+    @Path("/{projectId}/{repoHashId}/listRepoTriggerEvent")
+    fun listRepoTriggerEvent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -131,25 +142,22 @@ interface UserPipelineTriggerEventResource {
         pageSize: Int?
     ): Result<SQLPage<RepoTriggerEventVo>>
 
-    @ApiOperation("获取代码库webhook事件触发详情")
+    @ApiOperation("获取触发事件详情")
     @GET
-    @Path("/{projectId}/{repoHashId}/listRepoWebhookEventDetail")
-    fun listRepoWebhookEventDetail(
+    @Path("/{projectId}/{eventId}/listEventDetail")
+    fun listEventDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
         @ApiParam("事件ID", required = true)
-        @QueryParam("eventId")
+        @PathParam("eventId")
         eventId: Long,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
-        pipelineId: String,
+        pipelineId: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
