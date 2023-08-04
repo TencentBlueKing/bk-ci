@@ -47,7 +47,7 @@ dependencies {
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process-sample"))
     implementation(project(":core:project:biz-project-sample"))
-    implementation(project(":core:quality:biz-quality-sample"))
+    implementation(project(":core:quality:biz-quality"))
     implementation(project(":core:repository:biz-repository-sample"))
     implementation(project(":core:store:biz-store-sample"))
     implementation(project(":core:store:biz-store-image-sample"))

@@ -26,6 +26,9 @@
  */
 
 dependencies {
-    api(project(":core:quality:biz-quality"))
-    api(project(":core:auth:api-auth"))
+    api(project(":core:common:common-api"))
+}
+
+plugins {
+    `task-deploy-to-maven`
 }
