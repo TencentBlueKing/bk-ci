@@ -25,21 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.plugin
+dependencies {
+    api(project(":core:common:common-api"))
+}
 
-import com.tencent.devops.misc.dao.plugin.TxPluginDataClearDao
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class TxPluginDataClearServiceImpl @Autowired constructor(
-    dslContext: DSLContext,
-    private val txPluginDataClearDao: TxPluginDataClearDao
-) : PluginDataClearService(dslContext) {
-
-    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
-        txPluginDataClearDao.deletePluginJingangByBuildId(dslContext, buildId)
-        txPluginDataClearDao.deletePluginJingangResultByBuildId(dslContext, buildId)
-    }
+plugins {
+    `task-deploy-to-maven`
 }

@@ -40,7 +40,6 @@ dependencies {
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
 
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))

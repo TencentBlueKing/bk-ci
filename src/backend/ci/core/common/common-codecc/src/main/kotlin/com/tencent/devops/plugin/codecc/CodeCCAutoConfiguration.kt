@@ -25,21 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.plugin
+package com.tencent.devops.plugin.codecc
 
-import com.tencent.devops.misc.dao.plugin.TxPluginDataClearDao
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-@Service
-class TxPluginDataClearServiceImpl @Autowired constructor(
-    dslContext: DSLContext,
-    private val txPluginDataClearDao: TxPluginDataClearDao
-) : PluginDataClearService(dslContext) {
+@Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class CodeCCAutoConfiguration {
 
-    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
-        txPluginDataClearDao.deletePluginJingangByBuildId(dslContext, buildId)
-        txPluginDataClearDao.deletePluginJingangResultByBuildId(dslContext, buildId)
-    }
+    @Bean
+    fun coverityApi(
+        @Value("\${codeccGateway.gateway:}")
+        codeccApiGateWay: String = "",
+
+        @Value("\${codeccGateway.proxy:}")
+        codeccApiProxyGateWay: String = "",
+
+        @Value("\${codecc.host:}")
+        codeccHost: String = "",
+
+        @Value("\${codecc.gray.projectId:}")
+        codeccGrayProjectId: String? = null
+    ): CodeccApi =
+        CodeccApi(
+            codeccApiUrl = codeccApiGateWay,
+            codeccApiProxyUrl = codeccApiProxyGateWay,
+            codeccHost = codeccHost,
+            codeccGrayProjectId = codeccGrayProjectId
+        )
 }

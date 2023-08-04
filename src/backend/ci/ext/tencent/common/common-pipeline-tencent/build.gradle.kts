@@ -30,7 +30,7 @@ dependencies {
     api(project(":core:common:common-notify"))
     api(project(":core:common:common-pipeline"))
     api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-codecc"))
     api("org.apache.ant:ant")
     api("org.apache.commons:commons-text")
     api("org.yaml:snakeyaml")
