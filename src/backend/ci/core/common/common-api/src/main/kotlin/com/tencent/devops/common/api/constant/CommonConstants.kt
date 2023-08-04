@@ -150,6 +150,7 @@ const val KEY_VERSION = "version"
 const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
 const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
+const val KEY_PROJECT_ID = "projectId"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

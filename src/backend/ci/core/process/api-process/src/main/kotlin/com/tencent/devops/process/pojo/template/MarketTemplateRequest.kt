@@ -30,8 +30,8 @@ package com.tencent.devops.process.pojo.template
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("模板市场-安装模板请求报文体")
-data class AddMarketTemplateRequest(
+@ApiModel("模板市场-模板请求报文体")
+data class MarketTemplateRequest(
     @ApiModelProperty("项目列表", required = true)
     val projectCodeList: ArrayList<String>,
     @ApiModelProperty("模板代码", required = true)

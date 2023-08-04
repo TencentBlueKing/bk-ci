@@ -25,50 +25,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.service.impl
+package com.tencent.devops.common.web.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.service.BkApiHandleService
+import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import org.springframework.beans.factory.annotation.Value
+import javax.ws.rs.HttpMethod
+import javax.ws.rs.container.ContainerRequestContext
+import javax.ws.rs.container.ContainerRequestFilter
+import javax.ws.rs.container.PreMatching
+import javax.ws.rs.ext.Provider
 
-class BkApiHandleProjectAccessServiceImpl : BkApiHandleService {
+@Provider
+@PreMatching
+@RequestFilter
+class RequestProjectPermissionFilter : ContainerRequestFilter {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BkApiHandleProjectAccessServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(RequestProjectPermissionFilter::class.java)
     }
 
-    override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return
-        val request = attributes.request
-        // 从请求头中取出项目信息
-        var projectId = request.getHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        if (projectId.isNullOrBlank() && parameterNames.contains(KEY_PROJECT_ID)) {
-            for (index in parameterValue.indices) {
-                if (parameterNames[index] == KEY_PROJECT_ID) {
-                    projectId = parameterValue[index].toString()
-                    break
-                }
-            }
-        }
-        if (projectId.isNullOrBlank()) {
+    @Value("\${api.project.permission.switch:false}")
+    private val apiProjectPermissionSwitch: Boolean = false
+
+    override fun filter(requestContext: ContainerRequestContext) {
+        // 判断项目的api权限校验开关是否打开，如果是get请求或者是build接口无需做权限校验（存量构建需要调build接口才能完成）
+        if (!apiProjectPermissionSwitch || requestContext.method.uppercase() == HttpMethod.GET ||
+            I18nUtil.getRequestChannel() == RequestChannelTypeEnum.BUILD.name
+        ) {
             return
         }
+        val uriInfo = requestContext.uriInfo
+        val projectId =
+            (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters[KEY_PROJECT_ID]
+            ?: uriInfo.queryParameters[KEY_PROJECT_ID])?.toString() ?: return
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
         // 判断项目是否在限制接口访问的列表中
         if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
-            val requestURI = request.requestURI
-            logger.info("Project[$projectId] does not have access permission for interface[$requestURI]")
+            val path = uriInfo.requestUri.path
+            logger.info("Project[$projectId] does not have access permission for interface[$path]")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
-                params = arrayOf(projectId, requestURI)
+                params = arrayOf(projectId, path)
             )
         }
     }
