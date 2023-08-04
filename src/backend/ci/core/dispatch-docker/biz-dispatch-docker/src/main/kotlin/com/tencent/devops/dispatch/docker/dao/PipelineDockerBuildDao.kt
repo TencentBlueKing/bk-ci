@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.dao
 
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
@@ -35,12 +36,13 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class PipelineDockerBuildDao {
-
     fun saveBuildHistory(
         dslContext: DSLContext,
         projectId: String,
@@ -59,7 +61,8 @@ class PipelineDockerBuildDao {
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
-                dslContext.update(this).set(SECRET_KEY, SecurityUtil.encrypt(secretKey))
+                dslContext.update(this).set(
+                    SECRET_KEY, BkCryptoUtil.encryptSm4ButOther(secretKey) { SecurityUtil.encrypt(it) })
                     .set(STATUS, status.status)
                     .set(CREATED_TIME, now)
                     .set(UPDATED_TIME, now)
@@ -90,7 +93,7 @@ class PipelineDockerBuildDao {
                     pipelineId,
                     buildId,
                     vmSeqId,
-                    SecurityUtil.encrypt(secretKey),
+                    BkCryptoUtil.encryptSm4ButOther(secretKey) { SecurityUtil.encrypt(it) },
                     status.status,
                     now,
                     now,
@@ -211,8 +214,10 @@ class PipelineDockerBuildDao {
     }
 
     fun timestampSubDay(day: Long): Field<LocalDateTime> {
-        return DSL.field("date_sub(NOW(), interval $day day)",
-            LocalDateTime::class.java)
+        return DSL.field(
+            "date_sub(NOW(), interval $day day)",
+            LocalDateTime::class.java
+        )
     }
 }
 

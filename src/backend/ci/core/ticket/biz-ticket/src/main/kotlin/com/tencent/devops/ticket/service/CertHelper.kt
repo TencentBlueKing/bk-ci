@@ -29,6 +29,7 @@ package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
 import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import sun.security.x509.X500Name
@@ -44,6 +45,9 @@ class CertHelper {
 
     @Value("\${cert.aes-key}")
     private val aesKey = "d/R%3{?OS}IeGT21"
+
+    @Value("\${cert.sm4-key:}")
+    private val sm4Key: String = "d/R%3{?OS}IeGT21"
 
     companion object {
         private const val JKS = "JKS"
@@ -134,13 +138,13 @@ class CertHelper {
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.encrypt(aesKey, bytes)
+            BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, bytes)
         } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.decrypt(aesKey, bytes)
+            BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, bytes)
         } else null
     }
 

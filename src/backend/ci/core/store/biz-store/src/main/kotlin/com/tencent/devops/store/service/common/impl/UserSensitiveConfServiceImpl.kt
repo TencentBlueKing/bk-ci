@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -67,6 +68,9 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
 
     @Value("\${aes.aesKey}")
     private lateinit var aesKey: String
+
+    @Value("\${sm4.sm4Key}")
+    private lateinit var sm4Key: String
 
     @Value("\${aes.aesMock}")
     private lateinit var aesMock: String
@@ -119,7 +123,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         val fieldType = sensitiveConfReq.fieldType
         val finalFieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
             // 字段如果只是给后端使用需要对字段值进行加密
-            AESUtil.encrypt(aesKey, fieldValue)
+            BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, fieldValue)
         } else {
             fieldValue
         }
@@ -179,13 +183,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             val dbFieldType = sensitiveConfRecord.fieldType
             if (dbFieldType == FieldTypeEnum.BACKEND.name && dbFieldType != fieldType) {
                 // 如果字段类型由BACKEND改为其它，需把数据库里字段内容解密存储
-                AESUtil.decrypt(aesKey, sensitiveConfRecord.fieldValue)
+                BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, sensitiveConfRecord.fieldValue)
             } else {
                 null
             }
         } else {
             if (fieldType == FieldTypeEnum.BACKEND.name) {
-                AESUtil.encrypt(aesKey, fieldValue)
+                BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, fieldValue)
             } else {
                 fieldValue
             }
@@ -213,10 +217,12 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("deleteSensitiveConf params: [$userId | $storeType | $storeCode | $ids]")
         checkUserAuthority(userId, storeCode, storeType)
-        sensitiveConfDao.batchDelete(dslContext = dslContext,
+        sensitiveConfDao.batchDelete(
+            dslContext = dslContext,
             storeType = storeType.type.toByte(),
             storeCode = storeCode,
-            idList = ids.split(","))
+            idList = ids.split(",")
+        )
         return Result(true)
     }
 
@@ -231,22 +237,24 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     ): Result<SensitiveConfResp?> {
         checkUserAuthority(userId, storeCode, storeType)
         val record = sensitiveConfDao.getById(dslContext, id)
-        return Result(if (null != record) {
-            val fieldType = record.fieldType
-            SensitiveConfResp(
-                fieldId = record.id,
-                fieldName = record.fieldName,
-                fieldType = fieldType,
-                fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) aesMock else record.fieldValue,
-                fieldDesc = record.fieldDesc,
-                creator = record.creator,
-                modifier = record.modifier,
-                createTime = DateTimeUtil.toDateTime(record.createTime),
-                updateTime = DateTimeUtil.toDateTime(record.updateTime)
-            )
-        } else {
-            null
-        })
+        return Result(
+            if (null != record) {
+                val fieldType = record.fieldType
+                SensitiveConfResp(
+                    fieldId = record.id,
+                    fieldName = record.fieldName,
+                    fieldType = fieldType,
+                    fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) aesMock else record.fieldValue,
+                    fieldDesc = record.fieldDesc,
+                    creator = record.creator,
+                    modifier = record.modifier,
+                    createTime = DateTimeUtil.toDateTime(record.createTime),
+                    updateTime = DateTimeUtil.toDateTime(record.updateTime)
+                )
+            } else {
+                null
+            }
+        )
     }
 
     /**
@@ -269,7 +277,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         records?.forEach {
             val fieldType = it.fieldType
             val fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
-                if (isDecrypt) AESUtil.decrypt(aesKey, it.fieldValue) else aesMock
+                if (isDecrypt) BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, it.fieldValue) else aesMock
             } else {
                 it.fieldValue
             }
@@ -319,7 +327,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = storeType.type.toByte())
+                storeType = storeType.type.toByte()
+            )
         ) {
             throw ErrorCodeException(
                 errorCode = GET_INFO_NO_PERMISSION,

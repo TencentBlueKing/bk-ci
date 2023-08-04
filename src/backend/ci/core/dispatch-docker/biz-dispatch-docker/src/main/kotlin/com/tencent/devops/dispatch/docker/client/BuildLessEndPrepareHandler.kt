@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.client
 
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
@@ -51,7 +52,7 @@ class BuildLessEndPrepareHandler @Autowired constructor(
     override fun handlerRequest(handlerContext: BuildLessEndHandlerContext) {
         with(handlerContext) {
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|" +
-                "${event.vmSeqId}|${event.executeCount}"
+                    "${event.vmSeqId}|${event.executeCount}"
 
             logger.info("$buildLogKey Start to finish the pipeline build($event)")
             if (event.vmSeqId.isNullOrBlank()) {
@@ -97,9 +98,9 @@ class BuildLessEndPrepareHandler @Autowired constructor(
             logger.warn("${record.buildId}|${record.vmSeqId} Finish buildless error.", e)
         } finally {
             // 无编译环境清除redisAuth
-            val decryptSecretKey = SecurityUtil.decrypt(record.secretKey)
+            val decryptSecretKey = BkCryptoUtil.decryptSm4ButOther(record.secretKey) { SecurityUtil.decrypt(it) }
             logger.info("${record.buildId}|${record.vmSeqId} delete dockerBuildKey ${record.id}|$decryptSecretKey")
-            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            redisUtils.deleteDockerBuild(record.id, decryptSecretKey)
         }
     }
 }

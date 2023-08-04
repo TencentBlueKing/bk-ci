@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -279,8 +278,8 @@ class GitOauthService @Autowired constructor(
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
         val token = gitService.refreshToken(userId, gitToken)
         saveAccessToken(userId, token)
-        token.accessToken = AESUtil.decrypt(aesKey, token.accessToken)
-        token.refreshToken = AESUtil.decrypt(aesKey, token.refreshToken)
+        token.accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, token.accessToken)
+        token.refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, token.refreshToken)
         return token
     }
 
