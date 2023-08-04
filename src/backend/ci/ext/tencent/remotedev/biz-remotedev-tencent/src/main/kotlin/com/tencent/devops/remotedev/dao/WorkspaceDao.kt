@@ -330,7 +330,7 @@ class WorkspaceDao {
             conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
         }
         return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE)
-            .from(t1).leftJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .fetch()
     }
