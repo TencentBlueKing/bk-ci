@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -247,6 +248,16 @@ class WorkspaceDao {
                         shared.WORKSPACE_NAME.eq(workspaceName)
                     )
                 ).fetch(0, String::class.java)
+        }
+    }
+
+    fun fetchCreators(
+        dslContext: DSLContext,
+        status: WorkspaceStatus
+    ): List<Record2<String, String>> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(CREATOR, NAME).from(this)
+                .where(STATUS.eq(status.ordinal)).fetch()
         }
     }
 
@@ -473,7 +484,7 @@ class WorkspaceDao {
     fun getTimeOutInactivityWorkspace(
         dslContext: DSLContext,
         timeOutDays: Int,
-        workspaceMountType: WorkspaceMountType?,
+        systemType: WorkspaceSystemType?,
         ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
@@ -486,8 +497,8 @@ class WorkspaceDao {
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
             condition.add(OWNER_TYPE.eq(ownerType.name))
 
-            if (workspaceMountType != null) {
-                condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))
+            if (systemType != null) {
+                condition.add(SYSTEM_TYPE.eq(systemType.name))
             }
             return dslContext.selectFrom(this)
                 .where(condition)

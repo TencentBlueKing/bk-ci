@@ -47,6 +47,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
+        private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
     }
 
     /**
@@ -61,6 +62,16 @@ class WorkspaceCheckJob @Autowired constructor(
         computeAllUserWinUsageTime()
         // win-gpu无可用时长休眠
         checkUnavailableWorkspace()
+        // win-gpu提取
+    }
+
+    private fun notifyWinBeforeSleep() {
+        val redisLock = RedisLock(redisOperation, notifyWinBeforeSleep, 60L)
+        val lockSuccess = redisLock.tryLock()
+        if (lockSuccess) {
+            kotlin.runCatching { workspaceService.notifyWinBeforeSleep() }
+                .onFailure { logger.warn("computeAllUserWinUsageTime fail", it) }
+        }
     }
 
     private fun computeAllUserWinUsageTime() {
