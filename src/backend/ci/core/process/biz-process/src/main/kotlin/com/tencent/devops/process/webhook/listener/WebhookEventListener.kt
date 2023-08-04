@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component
 @Component
 class WebhookEventListener constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val webhookRequestService: WebhookRequestService
+    private val pipelineTriggerRequestService: PipelineTriggerRequestService
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
@@ -69,44 +69,54 @@ class WebhookEventListener constructor(
             when (event.commitEventType) {
                 CommitEventType.SVN -> {
                     val request = WebhookRequest(
-                        taskAtom = CodeSVNWebHookTriggerElement.taskAtom,
                         body = event.requestContent
                     )
-                    webhookRequestService.handleRequest(request)
+                    pipelineTriggerRequestService.handleRequest(
+                        taskAtom = CodeSVNWebHookTriggerElement.taskAtom,
+                        request = request
+                    )
                 }
                 CommitEventType.GIT -> {
                     val request = WebhookRequest(
-                        taskAtom = CodeGitWebHookTriggerElement.taskAtom,
                         headers = mapOf(
                             "X-Event" to event.event!!,
                         ),
                         body = event.requestContent
                     )
-                    webhookRequestService.handleRequest(request)
+                    pipelineTriggerRequestService.handleRequest(
+                        taskAtom = CodeGitWebHookTriggerElement.taskAtom,
+                        request = request
+                    )
                 }
                 CommitEventType.GITLAB -> {
                     val request = WebhookRequest(
-                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
                         body = event.requestContent
                     )
-                    webhookRequestService.handleRequest(request)
+                    pipelineTriggerRequestService.handleRequest(
+                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
+                        request = request
+                    )
                 }
                 CommitEventType.TGIT -> {
                     val request = WebhookRequest(
-                        taskAtom = CodeTGitWebHookTriggerElement.taskAtom,
                         headers = mapOf(
                             "X-Event" to event.event!!,
                         ),
                         body = event.requestContent
                     )
-                    webhookRequestService.handleRequest(request)
+                    pipelineTriggerRequestService.handleRequest(
+                        taskAtom = CodeTGitWebHookTriggerElement.taskAtom,
+                        request = request
+                    )
                 }
                 CommitEventType.P4 -> {
                     val request = WebhookRequest(
-                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
                         body = event.requestContent
                     )
-                    webhookRequestService.handleRequest(request)
+                    pipelineTriggerRequestService.handleRequest(
+                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
+                        request = request
+                    )
                 }
             }
             result = true
@@ -187,7 +197,6 @@ class WebhookEventListener constructor(
         try {
             val request = with(thisGithubWebhook) {
                 WebhookRequest(
-                    taskAtom = CodeGithubWebHookTriggerElement.taskAtom,
                     headers = mapOf(
                         "X-GitHub-Event" to thisGithubWebhook.event,
                         "X-Github-Delivery" to guid,
@@ -196,7 +205,10 @@ class WebhookEventListener constructor(
                     body = thisGithubWebhook.body
                 )
             }
-            webhookRequestService.handleRequest(request)
+            pipelineTriggerRequestService.handleRequest(
+                taskAtom = CodeGithubWebHookTriggerElement.taskAtom,
+                request = request
+            )
 
             result = true
         } catch (ignore: Throwable) {

@@ -280,6 +280,12 @@ object ProcessMessageCode {
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
 
+    const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
+    const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
+    const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
+    const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
+    const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

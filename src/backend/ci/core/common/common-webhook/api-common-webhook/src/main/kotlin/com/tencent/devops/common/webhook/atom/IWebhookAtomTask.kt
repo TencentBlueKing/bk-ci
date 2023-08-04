@@ -28,7 +28,7 @@
 
 package com.tencent.devops.common.webhook.atom
 
-import com.tencent.devops.common.webhook.pojo.ReplayWebhookRequest
+import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 
 /**
@@ -43,5 +43,5 @@ interface IWebhookAtomTask {
     /**
      * webhook事件重放
      */
-    fun replay(request: ReplayWebhookRequest)
+    fun replay(request: WebhookRequestReplay)
 }

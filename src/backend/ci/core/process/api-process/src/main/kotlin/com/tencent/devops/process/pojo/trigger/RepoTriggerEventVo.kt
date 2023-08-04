@@ -26,22 +26,25 @@
  *
  */
 
-package com.tencent.devops.process.webhook.listener
+package com.tencent.devops.process.pojo.trigger
 
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.webhook.atom.IWebhookAtomTask
-import com.tencent.devops.common.webhook.pojo.ReplayWebhookRequest
-import com.tencent.devops.common.webhook.pojo.WebhookRequest
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class WebhookRequestService {
-
-    fun handleRequest(request: WebhookRequest) {
-        SpringContextUtil.getBean(IWebhookAtomTask::class.java, request.taskAtom).request(request = request)
-    }
-
-    fun handleReplayRequest(request: ReplayWebhookRequest) {
-        SpringContextUtil.getBean(IWebhookAtomTask::class.java, request.taskAtom).replay(request = request)
-    }
-}
+@ApiModel("代码库webhook事件记录")
+data class RepoTriggerEventVo(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("事件ID")
+    val eventId: Long,
+    @ApiModelProperty("代码库ID", required = false)
+    val repoHashId: String,
+    @ApiModelProperty("事件描述")
+    val eventDesc: String,
+    @ApiModelProperty("触发时间")
+    val eventTime: Long,
+    @ApiModelProperty("总流水线数")
+    val total: Int,
+    @ApiModelProperty("成功的流水线数")
+    val success: Int
+)

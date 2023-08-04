@@ -56,7 +56,7 @@ interface ServiceRepositoryWebhookResource {
 
     @ApiOperation("获取代码库事件请求")
     @GET
-    @Path("/{eventId}")
+    @Path("/{requestId}")
     fun getWebhookRequest(
         @ApiParam(value = "事件ID", required = true)
         @PathParam("requestId")

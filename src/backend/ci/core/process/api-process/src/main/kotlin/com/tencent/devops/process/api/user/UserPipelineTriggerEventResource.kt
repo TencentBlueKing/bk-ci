@@ -31,9 +31,10 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.webhook.RepoWebhookEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -53,10 +54,20 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineTriggerEventResource {
 
+    @ApiOperation("获取触发类型")
+    @GET
+    @Path("listTriggerType")
+    fun listTriggerType(): Result<List<IdValue>>
+
+    @ApiOperation("获取事件类型")
+    @GET
+    @Path("listEventType")
+    fun listEventType(): Result<List<IdValue>>
+
     @ApiOperation("获取流水线触发事件列表")
     @GET
-    @Path("/{projectId}/{pipelineId}/listTriggerEvent")
-    fun listTriggerEvent(
+    @Path("/{projectId}/{pipelineId}/listPipelineTriggerEvent")
+    fun listPipelineTriggerEvent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -79,7 +90,7 @@ interface UserPipelineTriggerEventResource {
         @QueryParam("startTime")
         startTime: Long?,
         @ApiParam("结束", required = false)
-        @QueryParam("startTime")
+        @QueryParam("endTime")
         endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
@@ -87,12 +98,12 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<PipelineTriggerEvent>>
+    ): Result<SQLPage<PipelineTriggerEventVo>>
 
     @ApiOperation("获取代码库webhook事件列表")
     @GET
-    @Path("/{projectId}/{repoHashId}/listRepoWebhookEvent")
-    fun listRepoWebhookEvent(
+    @Path("/{projectId}/{repoHashId}/listRepoTriggerEvent")
+    fun listRepoTriggerEvent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -121,7 +132,7 @@ interface UserPipelineTriggerEventResource {
         @QueryParam("startTime")
         startTime: Long?,
         @ApiParam("结束", required = false)
-        @QueryParam("startTime")
+        @QueryParam("endTime")
         endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
@@ -129,38 +140,35 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<RepoWebhookEvent>>
+    ): Result<SQLPage<RepoTriggerEventVo>>
 
-    @ApiOperation("获取代码库webhook事件触发详情")
+    @ApiOperation("获取触发事件详情")
     @GET
-    @Path("/{projectId}/{repoHashId}/listRepoWebhookEvent")
-    fun listRepoWebhookEventDetail(
+    @Path("/{projectId}/{eventId}/listEventDetail")
+    fun listEventDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
         @ApiParam("事件ID", required = true)
-        @QueryParam("eventId")
+        @PathParam("eventId")
         eventId: Long,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-    ): Result<SQLPage<PipelineTriggerEvent>>
+    ): Result<SQLPage<PipelineTriggerEventVo>>
 
     @ApiOperation("重新触发")
     @POST
-    @Path("/{projectId}/{id}/replay")
+    @Path("/{projectId}/{detailId}/replay")
     fun replay(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -168,14 +176,14 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("触发ID", required = true)
-        @PathParam("id")
-        id: Long
+        @ApiParam("触发详情ID", required = true)
+        @PathParam("detailId")
+        detailId: Long
     ): Result<Boolean>
 
     @ApiOperation("一键重新触发")
     @POST
-    @Path("/{projectId}/{repoHashId}/{eventId}/replayAll")
+    @Path("/{projectId}/{eventId}/replayAll")
     fun replayAll(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -183,10 +191,7 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库ID", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @ApiParam("触发ID", required = true)
+        @ApiParam("事件ID", required = true)
         @PathParam("eventId")
         eventId: Long
     ): Result<Boolean>

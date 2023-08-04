@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -61,7 +61,7 @@ class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
         projectId: String,
         pipelineId: String,
         matcher: ScmWebhookMatcher,
-        builder: PipelineTriggerEventBuilder
+        builder: PipelineTriggerDetailBuilder
     ): Boolean {
         return super.webhookTriggerPipelineBuild(
             projectId = projectId,

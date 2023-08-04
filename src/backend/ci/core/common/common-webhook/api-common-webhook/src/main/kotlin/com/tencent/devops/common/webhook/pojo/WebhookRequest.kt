@@ -29,7 +29,6 @@
 package com.tencent.devops.common.webhook.pojo
 
 data class WebhookRequest(
-   val taskAtom: String,
    val headers: Map<String, String>? = null,
    val queryParams: Map<String, String>? = null,
    val body: String
