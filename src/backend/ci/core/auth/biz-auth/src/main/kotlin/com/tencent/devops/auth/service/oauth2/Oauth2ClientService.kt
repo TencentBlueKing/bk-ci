@@ -39,7 +39,7 @@ class Oauth2ClientService constructor(
             authorizedGrantTypes = authorizedGrantTypes,
             redirectUri = webServerRedirectUri,
             accessTokenValidity = accessTokenValidity,
-            refreshTokenValidity = refreshTokenValidity,
+            refreshTokenValidity = refreshTokenValidity
         )
     }
 

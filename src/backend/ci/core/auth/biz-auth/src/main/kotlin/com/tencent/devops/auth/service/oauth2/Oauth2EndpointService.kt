@@ -127,7 +127,7 @@ class Oauth2EndpointService constructor(
         private val SCOPE = mutableMapOf(
             "project_visit" to "获取你有权限的项目列表",
             "pipeline_list" to "获取你有权限的流水线列表",
-            "pipeline_download" to "下载你有权限的制品",
+            "pipeline_download" to "下载你有权限的制品"
         )
         private const val OAUTH2_SCHEME = "Bearer "
     }
