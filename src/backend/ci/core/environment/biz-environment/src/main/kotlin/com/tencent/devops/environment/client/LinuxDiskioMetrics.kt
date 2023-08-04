@@ -51,9 +51,9 @@ class LinuxDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClie
         val timePart = getTimePart(timeRange)
         val queryStr =
             "SELECT non_negative_derivative(mean(\"read_bytes\"), $timeGroupBy) as \"read\" FROM \"diskio\" " +
-                    "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); " +
-                    "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy)  as \"write\" FROM \"diskio\" " +
-                    "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
+                "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); " +
+                "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy) as \"write\" FROM \"diskio\" " +
+                "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics

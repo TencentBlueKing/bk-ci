@@ -49,9 +49,9 @@ class WindowsDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
         val queryStr = "select mean(\"Disk_Write_Bytes_persec\") as \"write\" from \"win_diskio\"" +
-                " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); " +
-                "select mean(\"Disk_Read_Bytes_persec\") as \"read\"  from \"win_diskio\"" +
-                " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
+            " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); " +
+            "select mean(\"Disk_Read_Bytes_persec\") as \"read\"  from \"win_diskio\"" +
+            " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics

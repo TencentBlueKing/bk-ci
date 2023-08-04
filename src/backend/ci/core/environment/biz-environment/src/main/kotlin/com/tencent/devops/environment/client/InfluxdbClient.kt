@@ -88,11 +88,11 @@ class InfluxdbClient {
     private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
         val queryStr =
             "SELECT last(\"n_cpus\") FROM \"system\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND time >= now() - 7d and time <= now() - 30s; " +
-                    "SELECT last(\"total\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND time >= now() - 7d and time <= now() - 30s; " +
-                    "SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "and time >= now() - 7d and time <= now() - 30s"
+                "AND time >= now() - 7d and time <= now() - 30s; " +
+                "SELECT last(\"total\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "AND time >= now() - 7d and time <= now() - 30s; " +
+                "SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "and time >= now() - 7d and time <= now() - 30s"
 
         val queryResult = try {
             getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyInfo

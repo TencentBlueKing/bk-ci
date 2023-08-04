@@ -67,13 +67,13 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         val timePart = getTimePart(timeRange)
         val queryStr =
             "SELECT mean(\"$k_usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                    " AND $timePart fill(null); " +
-                    "SELECT mean(\"$k_usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND $timePart fill(null); " +
-                    "SELECT mean(\"$k_usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND $timePart fill(null); " +
-                    "SELECT mean(\"$k_usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                    " AND $timePart fill(null)"
+                " AND $timePart fill(null); " +
+                "SELECT mean(\"$k_usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "AND $timePart fill(null); " +
+                "SELECT mean(\"$k_usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "AND $timePart fill(null); " +
+                "SELECT mean(\"$k_usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                " AND $timePart fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics

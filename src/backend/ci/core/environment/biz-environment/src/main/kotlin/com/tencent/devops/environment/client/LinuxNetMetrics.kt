@@ -51,9 +51,9 @@ class LinuxNetMetrics @Autowired constructor(val influxdbClient: InfluxdbClient)
         val timePart = getTimePart(timeRange)
         val queryStr =
             "SELECT non_negative_derivative(mean(\"bytes_recv\"), $timeGroupBy) as \"IN\" FROM \"net\"" +
-                    " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null); " +
-                    "SELECT non_negative_derivative(mean(\"bytes_sent\"), $timeGroupBy)  as \"OUT\" FROM \"net\"" +
-                    " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null)"
+                " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null); " +
+                "SELECT non_negative_derivative(mean(\"bytes_sent\"), $timeGroupBy)  as \"OUT\" FROM \"net\"" +
+                " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyNetMetrics
