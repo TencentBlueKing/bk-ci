@@ -171,7 +171,7 @@ class DispatchService constructor(
             statusResult.data!!.executeCount == event.executeCount) {
             return true
         } else {
-            logger.warn("Event($event) containerId: ${statusResult.data!!.containerId} is not QUEUE or PREPARE_ENV")
+            logger.warn("Container: ${statusResult.data} is not QUEUE or PREPARE_ENV")
             // dispatch主动发起的重试，当遇到流水线非运行状态时，主动停止消费
             if (event.retryTime > 1) {
                 return false
