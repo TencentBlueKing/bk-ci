@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +19,7 @@ import java.time.Duration
  * 检查Agent是否安排升级[checkCanUpgrade] 第3优先级
  * 设置安排升级的AgentID[setCanUpgradeAgents]
  */
+@Suppress("TooManyFunctions")
 @Component
 class AgentScope @Autowired constructor(private val redisOperation: RedisOperation) {
 

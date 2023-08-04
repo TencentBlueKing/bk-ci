@@ -25,17 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent
+package com.tencent.devops.environment.utils
 
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
-class ThirdPartyAgentHeartbeatUtils constructor(
+@Component
+class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -71,13 +74,14 @@ class ThirdPartyAgentHeartbeatUtils constructor(
     }
 
     fun getNewHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo? {
-        val build = redisOperation.get(getNewHeartbeatKey(projectId, agentId)) ?: return null
-        try {
-            return JsonUtil.to(build, NewHeartbeatInfo::class.java)
-        } catch (ignored: Throwable) {
-            logger.warn("parse newHeartbeatInfo failed", ignored)
+        return redisOperation.get(getNewHeartbeatKey(projectId, agentId))?.let { build ->
+            try {
+                JsonUtil.to(build, NewHeartbeatInfo::class.java)
+            } catch (ignored: Throwable) {
+                logger.warn("[${getNewHeartbeatKey(projectId, agentId)}] parse newHeartbeatInfo failed", ignored)
+                null
+            }
         }
-        return null
     }
 
     private fun getNewHeartbeatKey(projectId: String, agentId: Long): String {
