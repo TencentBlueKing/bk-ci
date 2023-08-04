@@ -8,11 +8,10 @@ import com.tencent.devops.model.remotedev.tables.records.TUserInstalledRecordsRe
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
-import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.Condition
+import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.util.mysql.MySQLDSL
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -77,29 +76,29 @@ class SoftwareManageDao {
     ): Int {
         return with(TProjectSoftwares.T_PROJECT_SOFTWARES) {
             dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    LOGO,
-                    NAME,
-                    VERSION,
-                    SOURCE,
-                    STATUS,
-                    CLASSIFICATION,
-                    INSTALL_METHOD,
-                    CREATOR,
-                    CREATE_TIME
-                ).values(
-                    software.projectId,
-                    software.logo,
-                    software.name,
-                    software.version,
-                    software.source,
-                    software.status,
-                    software.classification,
-                    software.installMethod,
-                    software.creator,
-                    LocalDateTime.now()
-                ).execute()
+                this,
+                PROJECT_ID,
+                LOGO,
+                NAME,
+                VERSION,
+                SOURCE,
+                STATUS,
+                CLASSIFICATION,
+                INSTALL_METHOD,
+                CREATOR,
+                CREATE_TIME
+            ).values(
+                software.projectId,
+                software.logo,
+                software.name,
+                software.version,
+                software.source,
+                software.status,
+                software.classification,
+                software.installMethod,
+                software.creator,
+                LocalDateTime.now()
+            ).execute()
         }
     }
 
