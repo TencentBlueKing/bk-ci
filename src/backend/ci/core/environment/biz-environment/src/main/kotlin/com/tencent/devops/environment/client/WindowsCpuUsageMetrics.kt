@@ -29,10 +29,6 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_interrupt
-import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_system
-import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_user
-import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_cpu
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,11 +63,11 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT mean(\"$f_cpu_usage_system\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+            "SELECT mean(\"Percent_Privileged_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                     "AND $timePart fill(null); " +
-                    "SELECT mean(\"$f_cpu_usage_user\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "SELECT mean(\"Percent_User_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                     "AND $timePart fill(null); " +
-                    "SELECT mean(\"$f_cpu_usage_interrupt\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "SELECT mean(\"Percent_Interrupt_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                     "AND $timePart fill(null)"
 
         val queryResult = try {
@@ -90,8 +86,7 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
         resultData[k_usage_privileged] = loadSerialData(queryResult.results[usage_privileged_idx], k_usage_privileged)
         resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
-        resultData[k_usage_interrupt] =
-            loadSerialData(queryResult.results[usage_interrupt_idx], k_usage_interrupt)
+        resultData[k_usage_interrupt] = loadSerialData(queryResult.results[usage_interrupt_idx], k_usage_interrupt)
         return resultData
     }
 }

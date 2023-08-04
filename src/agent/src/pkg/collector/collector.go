@@ -79,7 +79,7 @@ func DoAgentCollect() {
 	}
 
 	if err := writeTelegrafConfig(); err != nil {
-		logs.Error("writeTelegrafConfig error")
+		logs.WithError(err).Error("writeTelegrafConfig error")
 		return
 	}
 
