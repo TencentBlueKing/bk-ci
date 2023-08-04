@@ -7,23 +7,23 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class AuthOauth2AccessTokenDao {
+    @Suppress("LongParameterList")
     fun get(
         dslContext: DSLContext,
         clientId: String,
-        refreshToken: String?,
-        userName: String?,
-        grantType: String?
+        accessToken: String? = null,
+        refreshToken: String? = null,
+        userName: String? = null,
+        grantType: String? = null
     ): TAuthOauth2AccessTokenRecord? {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
-            dslContext.selectFrom(this).where(
-                CLIENT_ID.eq(clientId)
-            ).let {
-                if (userName != null) { it.and(USER_NAME.eq(userName)) } else { it }
-            }.let {
-                if (grantType != null) { it.and(GRANT_TYPE.eq(grantType)) } else { it }
-            }.let {
-                if (refreshToken != null) { it.and(REFRESH_TOKEN.eq(refreshToken)) } else { it }
-            }.fetchOne()
+            dslContext.selectFrom(this)
+                .where(CLIENT_ID.eq(clientId))
+                .apply { accessToken?.let { and(ACCESS_TOKEN.eq(it)) } }
+                .apply { userName?.let { and(USER_NAME.eq(it)) } }
+                .apply { grantType?.let { and(GRANT_TYPE.eq(it)) } }
+                .apply { refreshToken?.let { and(REFRESH_TOKEN.eq(it)) } }
+                .fetchOne()
         }
     }
 
@@ -75,7 +75,7 @@ class AuthOauth2AccessTokenDao {
         dslContext: DSLContext,
         accessToken: String,
         scopeId: Int
-    ){
+    ) {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.update(this)
                 .set(SCOPE_ID, scopeId)

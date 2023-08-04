@@ -30,7 +30,7 @@ class RefreshTokenGranter(
             refreshToken = refreshToken
         )!!
         // 2.校验refresh_token是否跟client_id匹配
-        if (refreshTokenInfo.clientId != accessTokenRequest.clientId) {
+        if (refreshTokenInfo.clientId != clientDetails.clientId) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REFRESH_TOKEN,
                 defaultMessage = "The refresh token invalid"
@@ -38,7 +38,7 @@ class RefreshTokenGranter(
         }
         // 3.根据refresh_token获取access_token，获取access_token中的user_name
         val accessTokenInfo = accessTokenService.get(
-            clientId = accessTokenRequest.clientId,
+            clientId = clientDetails.clientId,
             refreshToken = accessTokenRequest.refreshToken
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.INVALID_REFRESH_TOKEN,

@@ -1,19 +1,23 @@
 package com.tencent.devops.auth.service.oauth2
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
 import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.auth.service.oauth2.grant.TokenGranter
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 
 class Oauth2EndpointService constructor(
     private val tokenGranter: TokenGranter,
     private val clientService: Oauth2ClientService,
     private val codeService: Oauth2CodeService,
-    private val scopeService: Oauth2ScopeService
+    private val scopeService: Oauth2ScopeService,
+    private val accessTokenService: Oauth2AccessTokenService
 ) {
     fun getAuthorizationInformation(
         userId: String,
@@ -68,17 +72,18 @@ class Oauth2EndpointService constructor(
     }
 
     fun getAccessToken(
+        clientId: String,
+        clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
     ): Oauth2AccessTokenVo? {
         val grantType = accessTokenRequest.grantType
-        val clientId = accessTokenRequest.clientId
         logger.info("get access token:$clientId|$grantType|$accessTokenRequest")
         val clientDetails = clientService.getClientDetails(
             clientId = clientId
         )
         clientService.verifyClientInformation(
             clientId = clientId,
-            clientSecret = accessTokenRequest.clientSecret,
+            clientSecret = clientSecret,
             grantType = grantType,
             clientDetails = clientDetails
         )
@@ -87,6 +92,33 @@ class Oauth2EndpointService constructor(
             clientDetails = clientDetails,
             accessTokenRequest = accessTokenRequest
         )
+    }
+
+    fun verifyAccessToken(
+        clientId: String,
+        clientSecret: String,
+        accessToken: String
+    ): String {
+        val clientDetails = clientService.getClientDetails(
+            clientId = clientId
+        )
+        clientService.verifyClientInformation(
+            clientId = clientId,
+            clientSecret = clientSecret,
+            clientDetails = clientDetails
+        )
+        val accessTokenInfo = accessTokenService.get(
+            clientId = clientId,
+            accessToken = accessToken
+        )
+        if (AuthUtils.isExpired(accessTokenInfo.expiredTime)) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_ACCESS_TOKEN_EXPIRED,
+                params = arrayOf(clientId),
+                defaultMessage = "The access token has expired!"
+            )
+        }
+        return accessTokenInfo.userName
     }
 
     companion object {

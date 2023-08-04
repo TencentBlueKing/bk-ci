@@ -8,7 +8,6 @@ import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.utils.AuthUtils
-import org.slf4j.LoggerFactory
 
 abstract class AbstractTokenGranter(
     private val grantType: String,
@@ -38,7 +37,7 @@ abstract class AbstractTokenGranter(
         accessTokenDTO: Oauth2AccessTokenDTO,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenVo {
-        val clientId = accessTokenRequest.clientId
+        val clientId = clientDetails.clientId
         val accessToken = accessTokenDTO.accessToken
         val refreshToken = accessTokenDTO.refreshToken
         // 若access_token为空或者已过期，则重新生成access_token

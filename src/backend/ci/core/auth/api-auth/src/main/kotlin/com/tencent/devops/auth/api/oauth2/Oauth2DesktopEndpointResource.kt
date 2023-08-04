@@ -1,8 +1,6 @@
 package com.tencent.devops.auth.api.oauth2
 
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
-import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -19,10 +17,10 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OAUTH2_ENDPOINT"], description = "oauth2相关")
-@Path("user/oauth2/endpoint")
+@Path("/desktop/oauth2/endpoint")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface Oauth2EndpointResource {
+interface Oauth2DesktopEndpointResource {
     @GET
     @Path("/getAuthorizationInformation")
     @ApiOperation("获取授权信息")
@@ -51,12 +49,4 @@ interface Oauth2EndpointResource {
         @ApiParam("oauth2获取授权码请求报文体", required = true)
         authorizationCodeDTO: Oauth2AuthorizationCodeDTO
     ): Result<String>
-
-    @POST
-    @Path("/getAccessToken")
-    @ApiOperation("获取accessToken")
-    fun getAccessToken(
-        @ApiParam("oauth2获取token请求报文体", required = true)
-        accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?>
 }
