@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_AUTHORIZATION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -169,9 +170,10 @@ class TencentApigwApiFilter(
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == ApiType.USER) {
-                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Request don't has user's access_token.")
-                        .build()
+                    requestContext.abortWith(
+                        Response.status(Response.Status.BAD_REQUEST)
+                            .entity("Request don't has user's access_token.")
+                            .build()
                     )
                     return false
                 }
@@ -202,7 +204,6 @@ class TencentApigwApiFilter(
                     accessToken = oauth2AccessToken[0]
                 ).data
                 logger.info("handleOauth2Authorization|$username|$clientId")
-                // todo 直接覆盖？
                 requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                 if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
@@ -211,19 +212,13 @@ class TencentApigwApiFilter(
                 }
             }
         } catch (e: ErrorCodeException) {
-            logger.warn("handleOauth2Authorization|${e.errorCode}|${e.message}")
-            requestContext.abortWith(
-                Response.status(e.errorCode.toInt())
-                    .entity(e.defaultMessage)
-                    .build()
+            throw e
+        } catch (ignore: RemoteServiceException) {
+            throw  ErrorCodeException(
+                errorCode = ignore.errorCode.toString(),
+                defaultMessage = ignore.errorMessage
             )
-            return false
-        } catch (e: Exception) {
-            requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Devops OpenAPI Oauth2 authorization fail")
-                    .build()
-            )
+        } catch (ignore: Exception) {
             return false
         }
         return true
