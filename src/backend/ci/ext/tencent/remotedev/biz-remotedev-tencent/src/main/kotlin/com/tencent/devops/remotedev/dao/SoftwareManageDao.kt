@@ -50,10 +50,7 @@ class SoftwareManageDao {
                     it.projectId,
                     it.user,
                     it.softwareId
-                ).onDuplicateKeyUpdate()
-                    .set(PROJECT_ID, MySQLDSL.values(PROJECT_ID))
-                    .set(CREATOR, MySQLDSL.values(CREATOR))
-                    .set(SOFTWARE_ID, MySQLDSL.values(SOFTWARE_ID))
+                ).onDuplicateKeyIgnore()
             }
         }).execute()
     }
