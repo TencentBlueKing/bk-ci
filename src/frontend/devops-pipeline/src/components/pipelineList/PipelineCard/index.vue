@@ -259,6 +259,7 @@
                 position: absolute;
                 left: 0;
                 top: 0;
+                z-index: 99;
                 border-width: 36px 36px 0 0;
                 border-style: solid;
                 border-color: #f0f1f5 transparent transparent transparent;
