@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
@@ -142,8 +143,14 @@ interface OpRemoteDevResource {
         userId: String,
         @ApiParam(value = "指定查询的用户", required = false)
         @QueryParam("queryUser")
-        queryUser: String?
-    ): Result<List<RemoteDevUserSettings>>
+        queryUser: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<RemoteDevUserSettings>>
 
     @ApiOperation("更新用户组织架构")
     @POST

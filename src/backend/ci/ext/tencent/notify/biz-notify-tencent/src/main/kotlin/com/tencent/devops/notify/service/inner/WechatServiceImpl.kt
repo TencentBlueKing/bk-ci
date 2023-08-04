@@ -50,9 +50,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
+@Suppress("NestedBlockDepth")
+@Primary
 @Service
 class WechatServiceImpl @Autowired constructor(
     private val tofService: TOFService,
@@ -77,7 +80,7 @@ class WechatServiceImpl @Autowired constructor(
     override fun sendMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         val wechatNotifyPost = generateWechatNotifyPost(wechatNotifyMessageWithOperation)
         if (wechatNotifyPost == null) {
-            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: $wechatNotifyMessageWithOperation")
+            logger.warn("WechatNotifyPost is empty after being processed, $wechatNotifyMessageWithOperation")
             return
         }
 
@@ -187,11 +190,7 @@ class WechatServiceImpl @Autowired constructor(
             receiver = wechatNotifyMessage.getReceivers().joinToString(",")
             msgInfo = wechatNotifyMessage.body
             priority = wechatNotifyMessage.priority.getValue()
-            sender = if (wechatNotifyMessage.sender.isEmpty()) {
-                defaultWechatSender
-            } else {
-                wechatNotifyMessage.sender
-            }
+            sender = wechatNotifyMessage.sender.ifEmpty { defaultWechatSender }
             this.contentMd5 = contentMd5
             frequencyLimit = wechatNotifyMessage.frequencyLimit
             tofSysId = wechatNotifyMessage.tofSysId
@@ -250,7 +249,9 @@ class WechatServiceImpl @Autowired constructor(
         )
     }
 
-    private fun parseFromTNotifyWechatToResponse(record: TNotifyWechatRecord): NotificationResponse<WechatNotifyMessageWithOperation> {
+    private fun parseFromTNotifyWechatToResponse(
+        record: TNotifyWechatRecord
+    ): NotificationResponse<WechatNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
         if (!record.receivers.isNullOrEmpty())
             receivers.addAll(record.receivers.split(";"))
@@ -269,13 +270,15 @@ class WechatServiceImpl @Autowired constructor(
             addAllReceivers(receivers)
         }
 
-        return NotificationResponse(record.id, record.success,
+        return NotificationResponse(
+            record.id, record.success,
             if (record.createdTime == null) null
             else
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
             if (record.updatedTime == null) null
             else
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+            record.contentMd5, message
+        )
     }
 }

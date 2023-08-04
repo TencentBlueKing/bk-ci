@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
@@ -238,7 +239,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
-    fun getResourceList(): List<EnvironmentResourceDataRsp.EnvironmentResourceData> {
+    fun getResourceList(): List<EnvironmentResourceData> {
         val url = "$apiUrl/openapi/resource/list"
         val body = JsonUtil.toJson(mapOf("AppName" to appName), false)
         logger.info("getResourceList request url: $url, body: $body")
