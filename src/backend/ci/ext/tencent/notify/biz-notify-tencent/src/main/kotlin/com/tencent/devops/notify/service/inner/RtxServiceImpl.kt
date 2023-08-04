@@ -54,10 +54,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
 
+@Primary
 @Service
 class RtxServiceImpl @Autowired constructor(
     private val tofService: TOFService,
@@ -70,9 +72,6 @@ class RtxServiceImpl @Autowired constructor(
 
     @Value("\${tof.defaultSystem.default-rtx-sender}")
     private lateinit var defaultRtxSender: String
-
-    private var tof4Host: String? = tofConfiguration.getDefaultSystem()?.get("host-tof4")
-    private var tof4EncryptKey: String? = tofConfiguration.getDefaultSystem()?.get("encrypt-key-tof4")
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)

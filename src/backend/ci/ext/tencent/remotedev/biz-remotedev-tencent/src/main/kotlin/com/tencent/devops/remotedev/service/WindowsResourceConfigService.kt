@@ -70,7 +70,7 @@ class WindowsResourceConfigService @Autowired constructor(
         }
     }
 
-    fun getConfig(id: Long): WindowsResourceConfig? {
+    fun getConfig(id: Int): WindowsResourceConfig? {
         logger.info("get windows resource config $id")
         return windowsResourceConfigDao.fetchAny(dslContext, id)?.let {
             WindowsResourceConfig(

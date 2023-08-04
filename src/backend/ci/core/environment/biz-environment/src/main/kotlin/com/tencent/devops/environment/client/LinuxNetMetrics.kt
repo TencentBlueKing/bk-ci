@@ -29,6 +29,9 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_net
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_net_bytes_recv
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_net_bytes_sent
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,10 +53,12 @@ class LinuxNetMetrics @Autowired constructor(val influxdbClient: InfluxdbClient)
         val timeGroupBy = getTimeGroupBy(timeRange)
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT non_negative_derivative(mean(\"bytes_recv\"), $timeGroupBy) as \"IN\" FROM \"net\"" +
-                " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null); " +
-                "SELECT non_negative_derivative(mean(\"bytes_sent\"), $timeGroupBy)  as \"OUT\" FROM \"net\"" +
-                " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null)"
+            "SELECT non_negative_derivative(mean(\"$f_net_bytes_recv\"), $timeGroupBy) as \"IN\" " +
+                    "FROM \"$t_net\"" +
+                    " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null); " +
+                    "SELECT non_negative_derivative(mean(\"$f_net_bytes_sent\"), $timeGroupBy)  as \"OUT\" " +
+                    "FROM \"$t_net\"" +
+                    " WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyNetMetrics

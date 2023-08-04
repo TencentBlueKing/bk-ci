@@ -46,7 +46,7 @@ function start()
     chmod +x devopsAgent
     chmod +x *.sh
 
-    nohup ${workspace}/devopsDaemon > /dev/null 2>&1 &
+    nohup ${workspace}/devopsDaemon $1> /dev/null 2>&1 &
     echo "agent starts"
 
     sleep 2s
@@ -59,4 +59,4 @@ function start()
   fi
 }
 
-start
+start $1

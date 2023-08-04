@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartb
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentMetricService
 import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
@@ -56,7 +57,8 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val importService: ImportService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val agentMetricService: AgentMetricService
 ) : BuildAgentThirdPartyAgentResource {
 
     override fun agentStartup(
@@ -192,6 +194,15 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(projectId, agentId, secretKey)
         return Result(thirdPartyAgentPipelineService.updatePipelineStatus(projectId, agentId, secretKey, response))
+    }
+
+    override fun reportAgentMetrics(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        data: String
+    ): Result<Boolean> {
+        return Result(agentMetricService.reportAgentMetrics(data))
     }
 
     private fun checkParam(
