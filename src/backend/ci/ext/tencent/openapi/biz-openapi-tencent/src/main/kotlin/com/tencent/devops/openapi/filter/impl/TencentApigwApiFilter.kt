@@ -140,6 +140,7 @@ class TencentApigwApiFilter(
                             return false
                         }
                     }
+                    logger.info("verifyJWT|$appCode|$verified|${requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]}")
                 }
             }
         }
@@ -180,6 +181,7 @@ class TencentApigwApiFilter(
         if (oauth2AccessToken != null) {
             val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
             val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
+            logger.info("handleOauth2Authorization|$oauth2AccessToken|$clientId")
             if (clientId == null || clientSecret == null) {
                 return false
             }
@@ -188,6 +190,7 @@ class TencentApigwApiFilter(
                 clientSecret = clientSecret[0],
                 accessToken = oauth2AccessToken[0]
             ).data ?: return false
+            logger.info("handleOauth2Authorization|$username|$clientId")
             // todo 直接覆盖？
             requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
             if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
