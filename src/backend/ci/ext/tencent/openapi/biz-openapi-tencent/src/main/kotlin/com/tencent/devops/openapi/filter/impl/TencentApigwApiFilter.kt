@@ -26,11 +26,16 @@
  */
 package com.tencent.devops.openapi.filter.impl
 
+import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_SECRET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_AUTHORIZATION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
@@ -55,7 +60,8 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @Suppress("UNUSED")
 class TencentApigwApiFilter(
-    private val apiGatewayUtil: ApiGatewayUtil
+    private val apiGatewayUtil: ApiGatewayUtil,
+    private val client: Client
 ) : ApiFilter {
 
     companion object {
@@ -127,6 +133,12 @@ class TencentApigwApiFilter(
                         } else {
                             requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
                         }
+                        val verifyOauth2Result = handleOauth2Authorization(
+                            requestContext = requestContext
+                        )
+                        if (!verifyOauth2Result) {
+                            return false
+                        }
                     }
                 }
             }
@@ -155,6 +167,33 @@ class TencentApigwApiFilter(
                     )
                     return false
                 }
+            }
+        }
+        return true
+    }
+
+    fun handleOauth2Authorization(
+        requestContext: ContainerRequestContext
+    ): Boolean {
+        // 若appcode方式，携带请求头AUTH_HEADER_OAUTH2_AUTHORIZATION，则进行oauth2认证
+        val oauth2AccessToken = requestContext.headers[AUTH_HEADER_OAUTH2_AUTHORIZATION]
+        if (oauth2AccessToken != null) {
+            val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
+            val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
+            if (clientId == null || clientSecret == null) {
+                return false
+            }
+            val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                clientId = clientId[0],
+                clientSecret = clientSecret[0],
+                accessToken = oauth2AccessToken[0]
+            ).data ?: return false
+            // todo 直接覆盖？
+            requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
+            if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
+                requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
+            } else {
+                requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
             }
         }
         return true
