@@ -142,7 +142,7 @@ class RemoteDevSettingDao {
             }
             return dslContext.selectCount().from(this)
                 .where(condition)
-                .fetch(0, Long::class.java).sum()
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
