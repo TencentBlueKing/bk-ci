@@ -24,32 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service.inner
 
-import com.tencent.devops.notify.service.OrgService
-import org.springframework.stereotype.Service
+package com.tencent.devops.environment.pojo
 
-@Service
-class OrgServiceImpl : OrgService {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-    override fun parseStaff(staffs: Set<String>): Set<String> {
-        val result = LinkedHashSet<String>()
-        val staffIds = LinkedHashSet<Int>()
-        if (staffs.isNotEmpty()) {
-            staffs.forEach { staff ->
-                try {
-                    val staffId = Integer.parseInt(staff, 10)
-                    if (staffId > 10) {
-                        staffIds.add(staffId)
-                    }
-                } catch (ignore: NumberFormatException) {
-                    result.add(staff)
-                }
-            }
-        }
-        if (staffIds.isNotEmpty()) {
-            // TODO: 转换数字用户ID为rtx名
-        }
-        return result
-    }
-}
+/**
+ * 上报给数据平台数据类型
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AgentTelegrafData(
+    val metrics: Map<String, Any>?,
+    val dimensions: Map<String, String>?,
+    val time: Long?
+)
+
+/**
+ * telegraf json 单个数据类型
+ * https://github.com/influxdata/telegraf/tree/master/plugins/serializers/json
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TelegrafStandData(
+    val fields: Map<String, Any>?,
+    val name: String?,
+    val tags: Map<String, Any>?,
+    val timestamp: Long?
+)
+
+/**
+ * telegraf json 多个数据类型
+ * https://github.com/influxdata/telegraf/tree/master/plugins/serializers/json
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TelegrafMulData(
+    val metrics: List<TelegrafStandData>?
+)

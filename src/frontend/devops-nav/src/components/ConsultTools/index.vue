@@ -3,7 +3,7 @@
         <a
             v-for="(entry, index) in consultTypeList"
             :key="index"
-            :class="{ 'consult-item': true, 'default-hover': index === 0 }"
+            class="consult-item"
             :href="entry.href"
             :id="entry.id"
             :target="entry.target"
@@ -13,13 +13,11 @@
                 :name="entry.icon"
                 size="13"
             />
-            <div
-                class="custom-panel trans-fadeout"
-                @click.stop.prevent=""
-            >
-                <div class="panel-arrow" />
-                <p>{{ entry.label }}</p>
-            </div>
+            <p v-if="entry.id === 'contactUs'">
+                O2000
+                <br />
+            </p>
+            <p>{{ entry.label }}</p>
         </a>
     </div>
 </template>
@@ -35,37 +33,28 @@
         get consultTypeList () {
             return [
                 {
-                    icon: 'service',
+                    icon: 'customer',
                     label: this.$t('contactUs'),
-                    href: 'wxwork://message?username=DevOps-helper',
+                    href: 'wxwork://message?uin=8444250473321980',
                     id: 'contactUs',
                     target: ''
+                },
+                {
+                    icon: 'help',
+                    label: this.$t('documentation'),
+                    href: this.BKCI_DOCS.BKCI_DOC,
+                    id: 'documentation',
+                    target: '_blank'
                 },
                 {
                     icon: 'feedback',
                     id: 'feedback',
                     label: this.$t('feedback'),
-                    href: '//tapd.oa.com/PaaS/prong/stories/stories_list',
+                    href: 'https://mk.woa.com/q/new?coterie=346',
                     target: '_blank'
                 }
             ]
         }
-    // mounted () {
-    //     // 参数说明
-    //     // sign：公司渠道唯一标识，复制即可，无需改动
-    //     // uid：用户唯一标识，如果没有则不填写，默认为空
-    //     // data：用于传递用户信息，最多支持5个，参数名分别为c1,c2,c3,c4,c5；默认为空
-    //     // selector：css选择器(document.querySelector, 如#btnid .chat-btn等)，用于替换默认的常驻客服入口
-    //     // callback(type, data): 回调函数,type表示事件类型， data表示事件相关数据
-    //     // type支持的类型：newmsg有新消息，error云智服页面发生错误， close聊天窗口关闭
-    //     // @ts-ignore
-    //     window.yzf && window.yzf.init({
-    //         sign: '37ef9b97d1210ac42416cce84db7b56b934ef302f69e6f6494d847d943e00fa4c8c24c7fbff6003642099e2260e29aeaecbfe7',
-    //         uid: this.user ? this.user.username : '',
-    //         selector: '#contactUs',
-    //         callback: function () {}
-    //     })
-    // }
     }
 </script>
 
@@ -73,73 +62,32 @@
 @import "../../assets/scss/conf";
 .consult-tools {
     position: fixed;
-    right: 12px;
-    top: 66%;
-    .custom-panel {
-        position: absolute;
-        top: -6px;
-        right: 30px;
-        padding: 8px 10px;
-        white-space: nowrap;
-        background: rgba(255, 255, 255, 1);
-        box-shadow: 0px 2px 4px 0px rgba(195, 205, 215, 0.4);
-        border: 1px solid #c3cdd7;
-        visibility: hidden;
-        opacity: 0;
-        cursor: default;
-        p {
-            color: #737987;
-            font-size: 14px;
-        }
-        .panel-arrow {
-            padding-top: 4px;
-            position: absolute;
-            top: 13px;
-            right: -4px;
-            width: 8px;
-            height: 8px;
-            border: 1px solid #c3cdd7;
-            border-right-color: transparent;
-            border-bottom-color: transparent;
-            background-color: #fff;
-            transform: rotate(135deg);
-        }
-    }
-    .trans-fadeout {
-        -webkit-transition: all 0.1s linear;
-        -moz-transition: all 0.1s linear;
-        -ms-transition: all 0.1s linear;
-        -o-transition: all 0.1s linear;
-        transition: all 0.1s linear;
-    }
+    right: 1%;
+    top: 60%;
+    border-radius: 4px;
+    border: 1px solid #e3e6eb;
+    background: #ffffff;
+    box-shadow: 0 4px 20px #5576a21a;
+    color: #0009;
+    font-size: 12px;
+    z-index: 15;
     .consult-item {
         display: inherit;
-        position: relative;
-        margin-bottom: 5px;
-        width: 24px;
-        height: 24px;
         text-align: center;
-        background: rgba(51, 60, 72, 0.9);
-        box-shadow: 0px 2px 4px 0px rgba(115, 121, 135, 0.3);
         border-radius: 2px;
+        padding: 20px 12px;
         cursor: pointer;
-        color: #fff;
-        &:hover {
-            background: rgba(51, 60, 72, 0.8);
-            .custom-panel {
-                visibility: visible;
-                opacity: 1;
-            }
+        border-bottom: 1px solid rgba(227, 230, 235, 1);
+        &:last-child {
+            border-bottom: none;
         }
         .devops-icon {
             display: inline-block;
-            margin-top: 6px;
+            width: 24px;
+            height: 24px;
             color: #fff;
             font-size: 13px;
         }
-    }
-    .default-hover:hover {
-        cursor: default;
     }
 }
 </style>

@@ -25,15 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-}
+package com.tencent.devops.environment.pojo
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class BkMonitorRequestBody(
+    @JsonProperty("bk_biz_id")
+    val bkBizId: Long,
+    @JsonProperty("query_configs")
+    val queryConfigs: List<BkMonitorRequestBodyQueryConfigs>,
+    val expression: String,
+//    val alias: String,
+    @JsonProperty("start_time")
+    val startTime: Long,
+    @JsonProperty("end_time")
+    val endTime: Long,
+    val slimit: Int,
+    @JsonProperty("down_sample_range")
+    val downSampleRange: String
+)
+
+data class BkMonitorRequestBodyQueryConfigs(
+    @JsonProperty("data_source_label")
+    val dataSourceLabel: String,
+    @JsonProperty("data_type_label")
+    val dataTypeLabel: String,
+    val promql: String,
+    val interval: Int,
+    val alias: String
+)

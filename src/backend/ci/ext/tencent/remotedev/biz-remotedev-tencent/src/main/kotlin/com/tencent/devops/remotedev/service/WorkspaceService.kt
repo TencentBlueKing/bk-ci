@@ -158,7 +158,7 @@ class WorkspaceService @Autowired constructor(
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START.name) {
                 client.get(ServiceStartCloudResource::class)
-                    .createStartCloudUser(userId)
+                    .createStartCloudUser(sharedUser)
             }
 
             val shareInfo = WorkspaceShared(

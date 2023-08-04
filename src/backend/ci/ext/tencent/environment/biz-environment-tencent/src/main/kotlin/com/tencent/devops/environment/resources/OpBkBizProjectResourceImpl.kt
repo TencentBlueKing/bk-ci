@@ -25,15 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
+package com.tencent.devops.environment.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.OpBkBizProjectResource
+import com.tencent.devops.environment.pojo.BizProjectItem
+import com.tencent.devops.environment.service.BkBizProjectService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpBkBizProjectResourceImpl @Autowired constructor(
+    private val bkBizProjectService: BkBizProjectService
+) : OpBkBizProjectResource {
+    override fun addBizProject(bizProjects: List<BizProjectItem>): Result<Boolean> {
+        return Result(bkBizProjectService.addBizProjects(bizProjects))
+    }
+
+    override fun deleteBizProject(id: Long): Result<Boolean> {
+        return Result(bkBizProjectService.deleteBizProject(id))
+    }
 }
