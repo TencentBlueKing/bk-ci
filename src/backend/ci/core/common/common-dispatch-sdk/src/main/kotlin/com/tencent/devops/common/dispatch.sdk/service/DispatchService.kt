@@ -149,15 +149,19 @@ class DispatchService constructor(
 
     fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
         // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
             projectId = event.projectId,
             buildId = event.buildId,
+            containerId = event.containerId,
             taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline task is running " +
-                            "because of ${statusResult.message}")
+        val startBuildTask = statusResult.data?.startBuildTask
+        val buildContainer = statusResult.data?.buildContainer
+        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                    "because of statusResult(${statusResult.message})"
+            )
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
@@ -167,13 +171,18 @@ class DispatchService constructor(
             )
         }
 
-        if (!statusResult.data!!.isRunning()) {
+        return if (event.retryTime > 1 || event.executeCount != startBuildTask.executeCount) {
+            // 如果已经重试过或执行次数不匹配则直接丢弃
+            false
+        } else if (startBuildTask.status.isReadyToRun()) {
+            // 如果启动插件待执行则直接开始启动
+            true
+        } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
+            // 如果Job已经启动在运行或则直接丢弃
+            false
+        } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
+            // 如果Job已经结束或为在启动中，则dispatch主动发起的重试
             logger.warn("The build event($event) is not running")
-            // dispatch主动发起的重试，当遇到流水线非运行状态时，主动停止消费
-            if (event.retryTime > 1) {
-                return false
-            }
-
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
@@ -181,9 +190,7 @@ class DispatchService constructor(
                 formatErrorMessage = errorMessage,
                 errorMessage = errorMessage
             )
-        }
-
-        return true
+        } else true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {

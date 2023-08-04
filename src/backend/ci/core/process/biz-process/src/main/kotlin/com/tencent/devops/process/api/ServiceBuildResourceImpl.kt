@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -784,21 +783,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildIds = buildIds
-            )
-        )
-    }
-
-    override fun getBuildContainer(
-        projectId: String,
-        buildId: String,
-        containerId: String
-    ): Result<PipelineBuildContainer?> {
-        return Result(
-            pipelineContainerService.getContainer(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = null,
-                containerId = containerId
             )
         )
     }

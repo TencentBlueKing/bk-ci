@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -866,19 +865,4 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>
-
-    @ApiOperation("获取流水线指定Job的构建状态")
-    @GET
-    @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}")
-    fun getBuildContainer(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("任务ID", required = true)
-        @PathParam("containerId")
-        containerId: String
-    ): Result<PipelineBuildContainer?>
 }
