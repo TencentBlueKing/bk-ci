@@ -39,7 +39,7 @@ import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
-import com.tencent.devops.plugin.api.ServiceCodeccResource
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
@@ -53,13 +53,13 @@ import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
 import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
 import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Service
 class TxStoreIndexCronService(
@@ -68,6 +68,7 @@ class TxStoreIndexCronService(
     private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val atomDao: AtomDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
+    private val codeccApi: CodeccApi,
     private val client: Client
 ) {
 
@@ -388,8 +389,7 @@ class TxStoreIndexCronService(
     private fun getCodeccOpensourceMeasurement(atomCode: String): Double {
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
-            val result = (client.get(ServiceCodeccResource::class)
-                .getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore"))
+            val result = codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0
