@@ -21,7 +21,7 @@
                     {{ $t('条件查询') }}
                     <bk-tag class="output-filter-condition-count">2</bk-tag>
                 </div> -->
-                <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
+                <ul v-if="visibleOutputs.length > 0" class="pipeline-exec-outputs-list">
                     <li
                         v-for="output in visibleOutputs"
                         :key="output.id"
