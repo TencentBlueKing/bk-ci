@@ -173,7 +173,7 @@ class WorkspaceDao {
                         unionSelect(shared, creator, status, systemType, ownerType)
                     ) else it
                 }
-                .fetch(0, Long::class.java).sum()
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
