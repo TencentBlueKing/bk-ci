@@ -122,7 +122,7 @@ class TGitNoteTriggerHandler(
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        with(webHookParams){
+        with(webHookParams) {
             val urlFilter = GitUrlFilter(
                 pipelineId = pipelineId,
                 triggerOnUrl = getUrl(event),
