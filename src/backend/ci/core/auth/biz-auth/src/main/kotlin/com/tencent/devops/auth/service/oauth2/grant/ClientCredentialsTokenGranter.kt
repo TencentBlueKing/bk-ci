@@ -25,7 +25,7 @@ class ClientCredentialsTokenGranter constructor(
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
         val accessTokenInfo = accessTokenService.get(
-            clientId = accessTokenRequest.clientId,
+            clientId = clientDetails.clientId,
             grantType = GRANT_TYPE
         )
         val scopeId = oauth2ScopeService.create(

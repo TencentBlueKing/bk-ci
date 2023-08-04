@@ -27,7 +27,7 @@ class AuthorizationCodeTokenGranter constructor(
         accessTokenRequest: Oauth2AccessTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
-        val clientId = accessTokenRequest.clientId
+        val clientId = clientDetails.clientId
         val code = accessTokenRequest.code
         val codeDetails = handleAuthorizationCode(
             code = code,

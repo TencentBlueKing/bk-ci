@@ -1,18 +1,16 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.oauth2.Oauth2EndpointResource
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.api.oauth2.Oauth2DesktopEndpointResource
 import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
-import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.auth.service.oauth2.Oauth2EndpointService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class Oauth2EndpointResourceImpl constructor(
+class Oauth2DesktopEndpointResourceImpl constructor(
     private val endpointService: Oauth2EndpointService
-) : Oauth2EndpointResource {
+) : Oauth2DesktopEndpointResource {
     override fun getAuthorizationInformation(
         userId: String,
         clientId: String
@@ -37,16 +35,6 @@ class Oauth2EndpointResourceImpl constructor(
                 clientId = clientId,
                 redirectUri = redirectUri,
                 authorizationCodeDTO = authorizationCodeDTO
-            )
-        )
-    }
-
-    override fun getAccessToken(
-        accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?> {
-        return Result(
-            endpointService.getAccessToken(
-                accessTokenRequest = accessTokenRequest
             )
         )
     }
