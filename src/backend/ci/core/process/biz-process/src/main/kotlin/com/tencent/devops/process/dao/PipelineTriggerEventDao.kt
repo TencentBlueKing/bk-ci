@@ -61,7 +61,6 @@ class PipelineTriggerEventDao {
         with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
             dslContext.insertInto(
                 this,
-            ).values(
                 PROJECT_ID,
                 EVENT_ID,
                 TRIGGER_TYPE,
@@ -73,7 +72,6 @@ class PipelineTriggerEventDao {
                 REQUEST_PARAMS,
                 EVENT_TIME
             ).values(
-                triggerEvent.eventId,
                 triggerEvent.projectId,
                 triggerEvent.eventId,
                 triggerEvent.triggerType,
@@ -82,7 +80,7 @@ class PipelineTriggerEventDao {
                 triggerEvent.triggerUser,
                 triggerEvent.eventDesc,
                 triggerEvent.hookRequestId,
-                triggerEvent.requestParams,
+                triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
                 triggerEvent.eventTime
             ).onDuplicateKeyIgnore().execute()
         }
