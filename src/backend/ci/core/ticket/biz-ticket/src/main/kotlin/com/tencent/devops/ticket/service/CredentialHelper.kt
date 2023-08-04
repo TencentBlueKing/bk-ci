@@ -27,8 +27,8 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -40,8 +40,10 @@ import java.util.Base64
 @Component
 class CredentialHelper {
     companion object {
-        private val SSH_PRIVATE_REGEX = Regex("^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----)[\\s\\S]*" +
-            "(-----END (RSA|OPENSSH) PRIVATE KEY-----)\$")
+        private val SSH_PRIVATE_REGEX = Regex(
+            "^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----)[\\s\\S]*" +
+                    "(-----END (RSA|OPENSSH) PRIVATE KEY-----)\$"
+        )
     }
 
     @Value("\${credential.mixer}")
@@ -49,6 +51,9 @@ class CredentialHelper {
 
     @Value("\${credential.aes-key}")
     private val aesKey = "C/R%3{?OS}IeGT21"
+
+    @Value("\${credential.sm4-key:}")
+    private val sm4Key: String = ""
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
@@ -72,22 +77,28 @@ class CredentialHelper {
             CredentialType.PASSWORD -> {
                 true
             }
+
             CredentialType.ACCESSTOKEN -> {
                 true
             }
+
             CredentialType.OAUTHTOKEN -> {
                 true
             }
+
             CredentialType.USERNAME_PASSWORD -> {
                 true
             }
+
             CredentialType.SECRETKEY -> {
                 true
             }
+
             CredentialType.APPID_SECRETKEY -> {
                 v2 ?: return false
                 true
             }
+
             CredentialType.SSH_PRIVATEKEY -> {
                 if (!SSH_PRIVATE_REGEX.matches(v1)) {
                     update && v1 == credentialMixer
@@ -95,6 +106,7 @@ class CredentialHelper {
                     true
                 }
             }
+
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
                 v2 ?: return false
                 if (!SSH_PRIVATE_REGEX.matches(v2)) {
@@ -103,12 +115,15 @@ class CredentialHelper {
                     true
                 }
             }
+
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
                 true
             }
+
             CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
                 true
             }
+
             CredentialType.MULTI_LINE_PASSWORD -> {
                 true
             }
@@ -125,7 +140,7 @@ class CredentialHelper {
             return null
         }
         try {
-            val credential = AESUtil.decrypt(aesKey, aesEncryptedCredential!!)
+            val credential = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, aesEncryptedCredential)
             val credentialEncryptedContent =
                 DHUtil.encrypt(credential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
             return String(Base64.getEncoder().encode(credentialEncryptedContent))
@@ -138,13 +153,13 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return AESUtil.decrypt(aesKey, aesCredential!!)
+        return BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, aesCredential)
     }
 
     fun encryptCredential(credential: String?): String? {
         if (credential.isNullOrBlank() || credential == credentialMixer) {
             return null
         }
-        return AESUtil.encrypt(aesKey, credential!!)
+        return BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, credential)
     }
 }
