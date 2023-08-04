@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron.environment
+package com.tencent.devops.environment.cron
 
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
-import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
-import com.tencent.devops.misc.service.MiscNodeWebsocketService
+import com.tencent.devops.environment.service.NodeWebsocketService
+import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -47,39 +47,37 @@ import org.springframework.stereotype.Component
 
 @Component
 @Suppress("ALL", "UNUSED")
-class ThirdPartyAgentHeartBeat @Autowired constructor(
+class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     private val dslContext: DSLContext,
-    private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
-    private val environmentNodeDao: EnvironmentNodeDao,
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val nodeDao: NodeDao,
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val miscNodeWebsocketService: MiscNodeWebsocketService
+    private val nodeWebsocketService: NodeWebsocketService
 ) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 3000)
     fun heartbeat() {
-        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
-        try {
+        RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600).use { lock ->
+
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.info("get heartbeat lock failed, skip")
                 return
             }
             checkOKAgent()
 
             checkExceptionAgent()
 
-            checkUnimportAgent()
-        } catch (t: Throwable) {
-            logger.warn("Fail to check the third party agent heartbeat", t)
-        } finally {
-            lock.unlock()
+            checkUnImportAgent()
         }
     }
 
     private fun checkOKAgent() {
-        val nodeRecords = environmentThirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_OK))
+        val nodeRecords = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.IMPORT_OK)
+        )
         if (nodeRecords.isEmpty()) {
             return
         }
@@ -91,14 +89,14 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    environmentThirdPartyAgentDao.updateStatus(
+                    thirdPartyAgentDao.updateStatus(
                         dslContext = context,
                         id = record.id,
                         nodeId = null,
                         projectId = record.projectId,
                         status = AgentStatus.IMPORT_EXCEPTION
                     )
-                    environmentThirdPartyAgentDao.addAgentAction(
+                    thirdPartyAgentDao.addAgentAction(
                         dslContext = context,
                         projectId = record.projectId,
                         agentId = record.id,
@@ -108,22 +106,24 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
                         logger.info("[${record.projectId}|${record.id}|${record.ip}] The node id is null")
                         return@transaction
                     }
-                    val nodeRecord = environmentNodeDao.get(context, record.projectId, record.nodeId)
+                    val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
                     if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                         deleteAgent(context, record.projectId, record.id)
                     }
-                    environmentNodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
+                    nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
                 }
                 webSocketDispatcher.dispatch(
-                        miscNodeWebsocketService.buildDetailMessage(record.projectId, "")
+                    nodeWebsocketService.buildDetailMessage(record.projectId, "")
                 )
             }
         }
     }
 
-    private fun checkUnimportAgent() {
-        val nodeRecords = environmentThirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.UN_IMPORT_OK))
+    private fun checkUnImportAgent() {
+        val nodeRecords = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.UN_IMPORT_OK)
+        )
         if (nodeRecords.isEmpty()) {
             return
         }
@@ -134,7 +134,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             if (escape > 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    environmentThirdPartyAgentDao.updateStatus(
+                    thirdPartyAgentDao.updateStatus(
                         dslContext = context,
                         id = record.id,
                         nodeId = null,
@@ -149,8 +149,10 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     private fun checkExceptionAgent() {
         // Trying to delete the third party agents
-        val exceptionRecord = environmentThirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_EXCEPTION))
+        val exceptionRecord = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.IMPORT_EXCEPTION)
+        )
         if (exceptionRecord.isEmpty()) {
             return
         }
@@ -159,7 +161,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             if (record.nodeId == null) {
                 return@forEach
             }
-            val nodeRecord = environmentNodeDao.get(dslContext, record.projectId, record.nodeId)
+            val nodeRecord = nodeDao.get(dslContext, record.projectId, record.nodeId)
             if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                 deleteAgent(dslContext, record.projectId, record.id)
             }
@@ -168,11 +170,11 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     private fun deleteAgent(dslContext: DSLContext, projectId: String, agentId: Long) {
         logger.info("Trying to delete the agent($agentId) of project($projectId)")
-        environmentThirdPartyAgentDao.delete(dslContext, agentId, projectId)
+        thirdPartyAgentDao.delete(dslContext, agentId, projectId)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeat::class.java)
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeatJob::class.java)
         private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
     }
 }

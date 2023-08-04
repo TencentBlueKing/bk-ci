@@ -1,4 +1,4 @@
-package com.tencent.devops.common.environment.agent
+package com.tencent.devops.environment.pojo
 
 enum class AgentUpgradeType {
     WORKER, GO_AGENT, JDK, DOCKER_INIT_FILE;

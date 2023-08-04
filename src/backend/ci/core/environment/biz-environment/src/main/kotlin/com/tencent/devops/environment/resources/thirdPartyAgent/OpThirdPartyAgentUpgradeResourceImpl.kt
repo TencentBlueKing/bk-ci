@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentUpgradeResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.JDKInfo
@@ -37,10 +37,7 @@ import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentScope
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.ProjectScope
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2018/5/9
- */
+@Suppress("TooManyFunctions")
 @RestResource
 class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
     private val agentPropsScope: AgentPropsScope,

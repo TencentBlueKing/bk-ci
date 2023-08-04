@@ -48,13 +48,11 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
@@ -95,6 +93,7 @@ import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentProps
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -125,7 +124,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val agentPropsScope: AgentPropsScope,
