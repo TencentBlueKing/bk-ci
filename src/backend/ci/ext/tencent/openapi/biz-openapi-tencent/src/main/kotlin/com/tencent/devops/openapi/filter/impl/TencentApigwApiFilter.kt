@@ -27,6 +27,7 @@
 package com.tencent.devops.openapi.filter.impl
 
 import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_SECRET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -104,9 +105,10 @@ class TencentApigwApiFilter(
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                .entity("Request bkapi jwt is empty.")
-                .build()
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Request bkapi jwt is empty.")
+                    .build()
             )
             return false
         }
@@ -123,6 +125,11 @@ class TencentApigwApiFilter(
                 val appCode = app[appCodeHeader]?.toString()
                 val verified = app["verified"].toString().toBoolean()
                 if (apiType == ApiType.APP && (appCode.isNullOrEmpty() || !verified)) {
+                    requestContext.abortWith(
+                        Response.status(Response.Status.BAD_REQUEST)
+                            .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                            .build()
+                    )
                     return false
                 } else {
                     if (!appCode.isNullOrBlank()) {
@@ -133,7 +140,7 @@ class TencentApigwApiFilter(
                         } else {
                             requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
                         }
-                        val verifyOauth2Result = handleOauth2Authorization(
+                        val verifyOauth2Result = verifyOauth2Authorization(
                             requestContext = requestContext
                         )
                         if (!verifyOauth2Result) {
@@ -173,31 +180,51 @@ class TencentApigwApiFilter(
         return true
     }
 
-    fun handleOauth2Authorization(
+    fun verifyOauth2Authorization(
         requestContext: ContainerRequestContext
     ): Boolean {
         // 若appcode方式，携带请求头AUTH_HEADER_OAUTH2_AUTHORIZATION，则进行oauth2认证
         val oauth2AccessToken = requestContext.headers[AUTH_HEADER_OAUTH2_AUTHORIZATION]
-        if (oauth2AccessToken != null) {
-            val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
-            val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
-            logger.info("handleOauth2Authorization|$oauth2AccessToken|$clientId")
-            if (clientId == null || clientSecret == null) {
-                return false
+        try {
+            if (oauth2AccessToken != null) {
+                val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
+                val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
+                logger.info("handleOauth2Authorization|$oauth2AccessToken|$clientId")
+                if (clientId == null || clientSecret == null) {
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
+                        defaultMessage = "The client id or client secret cannot be empty!"
+                    )
+                }
+                val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                    clientId = clientId[0],
+                    clientSecret = clientSecret[0],
+                    accessToken = oauth2AccessToken[0]
+                ).data
+                logger.info("handleOauth2Authorization|$username|$clientId")
+                // todo 直接覆盖？
+                requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
+                if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
+                    requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
+                } else {
+                    requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
+                }
             }
-            val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
-                clientId = clientId[0],
-                clientSecret = clientSecret[0],
-                accessToken = oauth2AccessToken[0]
-            ).data ?: return false
-            logger.info("handleOauth2Authorization|$username|$clientId")
-            // todo 直接覆盖？
-            requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
-            if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
-                requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
-            } else {
-                requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
-            }
+        } catch (e: ErrorCodeException) {
+            logger.warn("handleOauth2Authorization|${e.errorCode}|${e.message}")
+            requestContext.abortWith(
+                Response.status(e.errorCode.toInt())
+                    .entity(e.defaultMessage)
+                    .build()
+            )
+            return false
+        } catch (e: Exception) {
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Devops OpenAPI Oauth2 authorization fail")
+                    .build()
+            )
+            return false
         }
         return true
     }
@@ -209,11 +236,6 @@ class TencentApigwApiFilter(
         } else {
             // 验证通过
             if (!verifyJWT(requestContext)) {
-                requestContext.abortWith(
-                    Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                        .build()
-                )
                 return
             }
         }
