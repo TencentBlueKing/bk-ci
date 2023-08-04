@@ -126,11 +126,6 @@ class TencentApigwApiFilter(
                 val appCode = app[appCodeHeader]?.toString()
                 val verified = app["verified"].toString().toBoolean()
                 if (apiType == ApiType.APP && (appCode.isNullOrEmpty() || !verified)) {
-                    requestContext.abortWith(
-                        Response.status(Response.Status.BAD_REQUEST)
-                            .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                            .build()
-                    )
                     return false
                 } else {
                     if (!appCode.isNullOrBlank()) {
@@ -148,7 +143,6 @@ class TencentApigwApiFilter(
                             return false
                         }
                     }
-                    logger.info("verifyJWT|$appCode|$verified|${requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]}")
                 }
             }
         }
@@ -185,13 +179,11 @@ class TencentApigwApiFilter(
     fun verifyOauth2Authorization(
         requestContext: ContainerRequestContext
     ): Boolean {
-        // 若appcode方式，携带请求头AUTH_HEADER_OAUTH2_AUTHORIZATION，则进行oauth2认证
         val oauth2AccessToken = requestContext.headers[AUTH_HEADER_OAUTH2_AUTHORIZATION]
         try {
             if (oauth2AccessToken != null) {
                 val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
                 val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
-                logger.info("handleOauth2Authorization|$oauth2AccessToken|$clientId")
                 if (clientId == null || clientSecret == null) {
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
@@ -203,7 +195,6 @@ class TencentApigwApiFilter(
                     clientSecret = clientSecret[0],
                     accessToken = oauth2AccessToken[0]
                 ).data
-                logger.info("handleOauth2Authorization|$username|$clientId")
                 requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                 if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
@@ -211,12 +202,12 @@ class TencentApigwApiFilter(
                     requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                 }
             }
-        } catch (e: ErrorCodeException) {
-            throw e
-        } catch (ignore: RemoteServiceException) {
+        } catch (ex: ErrorCodeException) {
+            throw  ex
+        } catch (ex: RemoteServiceException) {
             throw  ErrorCodeException(
-                errorCode = ignore.errorCode.toString(),
-                defaultMessage = ignore.errorMessage
+                errorCode = ex.errorCode.toString(),
+                defaultMessage = ex.errorMessage
             )
         } catch (ignore: Exception) {
             return false
@@ -231,6 +222,11 @@ class TencentApigwApiFilter(
         } else {
             // 验证通过
             if (!verifyJWT(requestContext)) {
+                requestContext.abortWith(
+                    Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                        .build()
+                )
                 return
             }
         }
