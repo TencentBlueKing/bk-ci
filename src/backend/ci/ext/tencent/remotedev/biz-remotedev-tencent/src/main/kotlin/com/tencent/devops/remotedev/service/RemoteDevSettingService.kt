@@ -27,7 +27,9 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
@@ -154,15 +156,28 @@ class RemoteDevSettingService @Autowired constructor(
             ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
 
-    fun getAllUserSetting4Op(queryUser: String?): List<RemoteDevUserSettings> {
+    fun getAllUserSetting4Op(queryUser: String?, page: Int?, pageSize: Int?): Page<RemoteDevUserSettings> {
         logger.info("Start to getAllUserSetting4Op")
-        val settings = remoteDevSettingDao.fetchAllUserSettings(dslContext, queryUser)
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val count = remoteDevSettingDao.countAllUserSettings(
+            dslContext = dslContext,
+            queryUser = queryUser
+        )
+        val settings = remoteDevSettingDao.fetchAllUserSettings(
+            dslContext = dslContext,
+            queryUser = queryUser,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        )
             .mapNotNull {
                 JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.apply {
                     userId = it.userId
                 }
             }
         logger.info("getAllUserSetting4Op|result|$settings")
-        return settings
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = settings
+        )
     }
 }

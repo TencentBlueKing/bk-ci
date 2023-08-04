@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service.redis
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -52,9 +51,9 @@ open class RedisCallLimit(
      *
      *
      * @return 该 lock 需要放在 finally 外
-     * @throws CustomException 已经存在 key ，说明是重复请求
+     * @throws ErrorCodeException 已经存在 key ，说明是重复请求, 直接抛错
      */
-    fun lock(): RedisCallLimit {
+    fun tryLock(): RedisCallLimit {
         val result = redisLock.tryLock()
         if (!result) {
             logger.warn("$lockKey call duplicate, reject it.")
@@ -63,6 +62,11 @@ open class RedisCallLimit(
                 defaultMessage = ErrorCodeEnum.REPEAT_REQUEST.formatErrorMessage
             )
         }
+        return this
+    }
+
+    fun lock(): RedisCallLimit {
+        redisLock.lock()
         return this
     }
 

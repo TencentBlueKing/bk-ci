@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.api.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -56,5 +57,5 @@ interface ServiceStartCloudResource {
     @ApiOperation("同步更新START云桌面的资源池")
     @GET
     @Path("/startCloud/resourece/list")
-    fun syncStartCloudResourceList(): Result<Boolean>
+    fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
 }
