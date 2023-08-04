@@ -171,16 +171,19 @@ class DispatchService constructor(
             )
         }
 
-        return if (event.retryTime > 1 || event.executeCount != startBuildTask.executeCount) {
+        var needStart = true
+        if (event.executeCount != startBuildTask.executeCount) {
             // 如果已经重试过或执行次数不匹配则直接丢弃
-            false
-        } else if (startBuildTask.status.isReadyToRun()) {
-            // 如果启动插件待执行则直接开始启动
-            true
+            needStart = false
         } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
             // 如果Job已经启动在运行或则直接丢弃
-            false
+            needStart = false
         } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
+            needStart = false
+        }
+
+        if (!needStart) {
+            if (event.retryTime > 1) return false
             // 如果Job已经结束或为在启动中，则dispatch主动发起的重试
             logger.warn("The build event($event) is not running")
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
@@ -190,7 +193,8 @@ class DispatchService constructor(
                 formatErrorMessage = errorMessage,
                 errorMessage = errorMessage
             )
-        } else true
+        }
+        return true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
