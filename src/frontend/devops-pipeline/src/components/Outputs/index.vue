@@ -3,7 +3,7 @@
         <bk-resize-layout
             :collapsible="true"
             class="pipeline-exec-outputs"
-            initial-divide="30%"
+            :initial-divide="initWidth"
             :min="260"
             :max="800"
         >
@@ -12,22 +12,10 @@
                     <bk-input
                         clearable
                         right-icon="bk-icon icon-search"
-                        :placeholder="$t('outputsFilterPlaceholder')"
+                        :placeholder="filterPlaceholder"
                         v-model="keyWord"
                     />
                 </div>
-                <ul class="pipeline-exec-output-classify-tab">
-                    <li
-                        v-for="classify in outputClassifyList"
-                        :key="classify.key"
-                        :class="{
-                            active: currentTab === classify.key
-                        }"
-                        @click="switchTab(classify.key)"
-                    >
-                        {{ classify.label }}
-                    </li>
-                </ul>
                 <!-- <div class="pipeline-exec-outputs-filter">
                     <i class="devops-icon icon-filter"></i>
                     {{ $t('条件查询') }}
@@ -162,38 +150,30 @@
             CopyToCustomRepoDialog,
             OutputQrcode
         },
+        props: {
+            currentTab: {
+                type: String,
+                default: 'artifacts'
+            }
+        },
         data () {
             return {
                 keyWord: '',
                 isCopyDialogShow: false,
                 isCopying: false,
-                currentTab: 'all',
                 outputs: [],
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false,
-                asideCollpased: false,
-                startX: 0,
-                startWidth: 0
+                isLoading: false
             }
         },
         computed: {
-            outputClassifyList () {
-                return [
-                    {
-                        key: 'all',
-                        label: this.$t('editPage.all')
-                    },
-                    {
-                        key: 'artifact',
-                        label: this.$t('details.artifact')
-                    },
-                    {
-                        key: 'report',
-                        label: this.$t('details.report')
-                    }
-                ]
+            initWidth () {
+                return this.currentTab === 'reports' ? '300px' : '40%'
+            },
+            filterPlaceholder () {
+                return this.$t(`${this.currentTab}FilterPlaceholder`)
             },
             reports () {
                 return this.outputs.filter(
@@ -225,10 +205,10 @@
                     ...thirdReportList
                 ]
                 switch (this.currentTab) {
-                    case 'artifact':
+                    case 'artifacts':
                         visibleOutputs = this.artifacts
                         break
-                    case 'report':
+                    case 'reports':
                         visibleOutputs = [...this.reports, ...thirdReportList]
                         break
                 }
@@ -441,9 +421,6 @@
                         break
                 }
             },
-            switchTab (tab) {
-                this.currentTab = tab
-            },
             isArtifact (artifactoryType) {
                 return ['PIPELINE', 'CUSTOM_DIR', 'IMAGE'].includes(artifactoryType)
             },
@@ -498,40 +475,6 @@
     padding: 16px 11px;
     display: flex;
     flex-direction: column;
-    .pipeline-exec-output-classify-tab {
-      display: flex;
-      align-items: center;
-      background: #f0f1f5;
-      border-radius: 2px;
-      padding: 4px;
-      flex-shrink: 0;
-      > li {
-        position: relative;
-        flex: 1;
-        text-align: center;
-        border-radius: 2px;
-        cursor: pointer;
-        transition: all 0.5s ease;
-        font-size: 12px;
-        line-height: 24px;
-        &.active {
-          background: white;
-          color: $primaryColor;
-          &:after {
-            display: none;
-          }
-        }
-        &:not(:last-child):after {
-          content: "";
-          position: absolute;
-          width: 1px;
-          height: 12px;
-          top: 6px;
-          right: 0;
-          background: #dcdee5;
-        }
-      }
-    }
     .pipeline-exec-outputs-filter-input {
         margin: 12px 0;
     }

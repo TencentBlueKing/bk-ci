@@ -238,10 +238,21 @@
                     },
                     {
                         name: 'outputs',
-                        label: this.$t('details.outputs'),
+                        label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
-                        bindData: {}
+                        bindData: {
+                            currentTab: 'artifacts'
+                        }
+                    },
+                    {
+                        name: 'reports',
+                        label: this.$t('details.report'),
+                        className: '',
+                        component: 'outputs',
+                        bindData: {
+                            currentTab: 'reports'
+                        }
                     },
                     {
                         name: 'codeRecords',
