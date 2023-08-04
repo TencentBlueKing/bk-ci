@@ -69,7 +69,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     @Value("\${aes.aesKey}")
     private lateinit var aesKey: String
 
-    @Value("\${sm4.sm4Key}")
+    @Value("\${sm4.sm4Key:}")
     private lateinit var sm4Key: String
 
     @Value("\${aes.aesMock}")
