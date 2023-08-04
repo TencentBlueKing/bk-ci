@@ -57,7 +57,24 @@ const TelegrafConf = `
   database = "agentMetrix"
   skip_database_creation = true
   ###{tls_ca}###
+
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.kernel]]
+[[inputs.mem]]
+[[inputs.processes]]
+# [[inputs.swap]]
+[[inputs.system]]
+[[inputs.net]]
+
 {{ else }}
+
 [[outputs.http]]
   url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
   # timeout = "5s"
@@ -69,7 +86,7 @@ const TelegrafConf = `
     X-DEVOPS-PROJECT-ID = "###{projectId}###"
     X-DEVOPS-AGENT-ID = "###{agentId}###"
     X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
-{{ end }}
+
 [[inputs.cpu]]
   percpu = true
   totalcpu = true
@@ -85,7 +102,6 @@ const TelegrafConf = `
 [[inputs.swap]]
 [[inputs.kernel]]
 
-{{ if ne . "stream" }}
 [[processors.rename]]
   # cpu
   [[processors.rename.replace]]
@@ -185,5 +201,6 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "used_percent"
     dest = "in_use"
+
 {{ end }}
 `
