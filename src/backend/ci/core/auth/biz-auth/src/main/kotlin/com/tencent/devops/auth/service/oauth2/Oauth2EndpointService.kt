@@ -109,7 +109,7 @@ class Oauth2EndpointService constructor(
         )
         val accessTokenInfo = accessTokenService.get(
             clientId = clientId,
-            accessToken = accessToken
+            accessToken = accessToken.substringAfter(OAUTH2_SCHEME).trim()
         )
         if (AuthUtils.isExpired(accessTokenInfo.expiredTime)) {
             throw ErrorCodeException(
@@ -129,5 +129,6 @@ class Oauth2EndpointService constructor(
             "pipeline_list" to "获取你有权限的流水线列表",
             "pipeline_download" to "下载你有权限的制品",
         )
+        private const val OAUTH2_SCHEME = "Bearer "
     }
 }
