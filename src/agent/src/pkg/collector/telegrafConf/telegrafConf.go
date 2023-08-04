@@ -54,7 +54,7 @@ const TelegrafConf = `
 {{ if eq . "stream" }}
 [[outputs.influxdb]]
   urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetric"
+  database = "agentMetrix"
   skip_database_creation = true
   ###{tls_ca}###
 {{ else }}
@@ -85,6 +85,7 @@ const TelegrafConf = `
 [[inputs.swap]]
 [[inputs.kernel]]
 
+{{ if ne . "stream" }}
 [[processors.rename]]
   # cpu
   [[processors.rename.replace]]
@@ -184,5 +185,5 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "used_percent"
     dest = "in_use"
-
+{{ end }}
 `
