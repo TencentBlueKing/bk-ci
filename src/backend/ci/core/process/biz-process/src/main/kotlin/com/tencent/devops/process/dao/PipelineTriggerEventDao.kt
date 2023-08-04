@@ -71,7 +71,7 @@ class PipelineTriggerEventDao {
                 EVENT_DESC,
                 HOOK_REQUEST_ID,
                 REQUEST_PARAMS,
-                EVENT_TIME,
+                EVENT_TIME
             ).values(
                 triggerEvent.eventId,
                 triggerEvent.projectId,
@@ -83,7 +83,7 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventDesc,
                 triggerEvent.hookRequestId,
                 triggerEvent.requestParams,
-                triggerEvent.eventTime,
+                triggerEvent.eventTime
             ).onDuplicateKeyIgnore().execute()
         }
     }
