@@ -51,9 +51,9 @@ class WindowsNetMetrics @Autowired constructor(val influxdbClient: InfluxdbClien
         val timePart = getTimePart(timeRange)
         val queryStr =
             "SELECT non_negative_derivative(mean(\"Bytes_Received_persec\"), $timeGroupBy) as \"received\"" +
-                    " FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null); " +
-                    "SELECT non_negative_derivative(mean(\"Bytes_Sent_persec\"), $timeGroupBy) as \"sent\"" +
-                    " FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null)"
+                " FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null); " +
+                "SELECT non_negative_derivative(mean(\"Bytes_Sent_persec\"), $timeGroupBy) as \"sent\"" +
+                " FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyNetMetrics

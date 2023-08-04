@@ -64,11 +64,11 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         val timePart = getTimePart(timeRange)
         val queryStr =
             "SELECT mean(\"Percent_Privileged_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND $timePart fill(null); " +
-                    "SELECT mean(\"Percent_User_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND $timePart fill(null); " +
-                    "SELECT mean(\"Percent_Interrupt_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                    "AND $timePart fill(null)"
+                "AND $timePart fill(null); " +
+                "SELECT mean(\"Percent_User_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "AND $timePart fill(null); " +
+                "SELECT mean(\"Percent_Interrupt_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "AND $timePart fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics

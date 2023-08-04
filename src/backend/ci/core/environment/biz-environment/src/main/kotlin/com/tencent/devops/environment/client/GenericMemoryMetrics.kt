@@ -51,7 +51,7 @@ class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
 
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val queryStr = "SELECT mean(\"$k_used_percent\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                " and ${getTimePart(timeRange)} fill(null)"
+            " and ${getTimePart(timeRange)} fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyMemoryMetrics
