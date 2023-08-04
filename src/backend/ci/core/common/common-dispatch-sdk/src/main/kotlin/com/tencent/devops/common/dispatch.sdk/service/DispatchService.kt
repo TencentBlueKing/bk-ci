@@ -57,13 +57,12 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import org.slf4j.LoggerFactory
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import org.slf4j.LoggerFactory
 
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
@@ -148,14 +147,14 @@ class DispatchService constructor(
 
     fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
         // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+        val statusResult = client.get(ServiceBuildResource::class).getBuildContainer(
             projectId = event.projectId,
             buildId = event.buildId,
-            taskId = VMUtils.genStartVMTaskId(event.containerId)
+            containerId = event.containerId
         )
 
         if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline task is running " +
+            logger.warn("Event($event) fail to check running " +
                             "because of ${statusResult.message}")
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
@@ -166,8 +165,13 @@ class DispatchService constructor(
             )
         }
 
-        if (!statusResult.data!!.isRunning()) {
-            logger.warn("The build event($event) is not running")
+        // container状态为QUEUE or PREPARE_ENV并且executeCount相同，则认为试一次合法的事件
+        val buildStatus = statusResult.data!!.status
+        if ((buildStatus == BuildStatus.PREPARE_ENV || buildStatus == BuildStatus.QUEUE) &&
+            statusResult.data!!.executeCount == event.executeCount) {
+            return true
+        } else {
+            logger.warn("Event($event) containerId: ${statusResult.data!!.containerId} is not QUEUE or PREPARE_ENV")
             // dispatch主动发起的重试，当遇到流水线非运行状态时，主动停止消费
             if (event.retryTime > 1) {
                 return false
@@ -181,8 +185,6 @@ class DispatchService constructor(
                 errorMessage = errorMessage
             )
         }
-
-        return true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
