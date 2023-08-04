@@ -179,33 +179,29 @@ class TencentApigwApiFilter(
     fun verifyOauth2Authorization(
         requestContext: ContainerRequestContext
     ): Boolean {
-        val oauth2AccessToken = requestContext.headers[AUTH_HEADER_OAUTH2_AUTHORIZATION]
+        val oauth2AccessToken = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_AUTHORIZATION)
         try {
-            if (oauth2AccessToken != null) {
-                val clientId = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]
-                val clientSecret = requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]
-                if (clientId == null || clientSecret == null) {
-                    throw ErrorCodeException(
-                        errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
-                        defaultMessage = "The client id or client secret cannot be empty!"
-                    )
-                }
-                val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
-                    clientId = clientId[0],
-                    clientSecret = clientSecret[0],
-                    accessToken = oauth2AccessToken[0]
-                ).data
-                requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
-                if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
-                    requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
-                } else {
-                    requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
-                }
+            if (oauth2AccessToken == null) {
+                return true
             }
+            val clientId = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_ID)
+            val clientSecret = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
+            if (clientId == null || clientSecret == null) {
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
+                    defaultMessage = "The client id or client secret cannot be empty!"
+                )
+            }
+            val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                clientId = clientId,
+                clientSecret = clientSecret,
+                accessToken = oauth2AccessToken
+            ).data
+            requestContext.headers.putSingle(AUTH_HEADER_DEVOPS_USER_ID, username)
         } catch (ex: ErrorCodeException) {
-            throw  ex
+            throw ex
         } catch (ex: RemoteServiceException) {
-            throw  ErrorCodeException(
+            throw ErrorCodeException(
                 errorCode = ex.errorCode.toString(),
                 defaultMessage = ex.errorMessage
             )
