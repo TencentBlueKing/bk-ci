@@ -35,8 +35,6 @@ const TelegrafConf = `
   projectId = "###{projectId}###"
   agentId = "###{agentId}###"
   agentSecret = "###{agentSecret}###"
-  hostName = "###{hostName}###"
-  hostIp = "###{hostIp}###"
 [agent]
   interval = "1m"
   round_interval = true
@@ -64,11 +62,11 @@ const TelegrafConf = `
 [[inputs.disk]]
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
 [[inputs.diskio]]
-[[inputs.mem]]
-[[inputs.net]]
-[[inputs.system]]
-[[inputs.netstat]]
-[[inputs.swap]]
 [[inputs.kernel]]
+[[inputs.mem]]
+[[inputs.processes]]
+# [[inputs.swap]]
+[[inputs.system]]
+[[inputs.net]]
 
 `
