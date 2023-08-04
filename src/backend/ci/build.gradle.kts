@@ -65,6 +65,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
+            dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
