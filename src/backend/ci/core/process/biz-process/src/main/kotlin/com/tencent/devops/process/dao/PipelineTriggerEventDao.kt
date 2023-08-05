@@ -320,7 +320,7 @@ class PipelineTriggerEventDao {
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.select(DSL.countDistinct(t1.PROJECT_ID, t1.EVENT_ID, t1.EVENT_SOURCE))
+        return dslContext.select(DSL.countDistinct(t1.PROJECT_ID, t1.EVENT_ID))
             .from(t1)
             .leftJoin(t2)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
