@@ -203,7 +203,7 @@
                         <bk-button
                             text
                             theme="primary"
-                            class="mr20"
+                            class="exec-pipeline-btn"
                             :disabled="props.row.disabled || props.row.lock"
                             
                             @click="execPipeline(props.row)"
@@ -633,5 +633,9 @@
             border-radius: 20px;
             background-color: #DCDEE5 !important;
         }
+    }
+    .exec-pipeline-btn {
+        width: 24px;
+        margin-right: 20px;
     }
 </style>
