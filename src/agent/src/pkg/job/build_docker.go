@@ -457,16 +457,21 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logTy
 func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, error) {
 	var mounts []mount.Mount
 
-	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
-	if systemutil.IsLinux() {
-		javaDir := config.GAgentConfig.JdkDirPath
-		mounts = append(mounts, mount.Mount{
-			Type:     mount.TypeBind,
-			Source:   javaDir,
-			Target:   "/usr/local/jre",
-			ReadOnly: true,
-		})
-	}
+	// 默认绑定本机的java用来执行worker
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.GAgentConfig.JdkDirPath,
+		Target:   "/usr/local/jre",
+		ReadOnly: true,
+	})
+
+	// 默认绑定本机的 worker 用来执行
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.BuildAgentJarPath(),
+		Target:   "/data/worker-agent.jar",
+		ReadOnly: true,
+	})
 
 	// 挂载docker构建机初始化脚本
 	workDir := systemutil.GetWorkDir()
