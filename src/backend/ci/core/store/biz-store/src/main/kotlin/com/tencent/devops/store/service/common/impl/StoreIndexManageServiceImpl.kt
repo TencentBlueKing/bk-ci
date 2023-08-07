@@ -438,6 +438,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StoreIndexManageServiceImpl::class.java)
         private const val TRUSTWORTHY_INDEX_CODE = "storeTrustworthyIndex"
-        private const val TRUSTWORTHY_INDEX_LEVEL_NAME = "VERIFIED_COMPONENTS"
+        private const val TRUSTWORTHY_INDEX_LEVEL_NAME = "verifiedComponents"
     }
 }
