@@ -42,11 +42,9 @@ import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.HttpMethod
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
 import javax.ws.rs.ext.Provider
 
 @Provider
-@PreMatching
 @RequestFilter
 class RequestProjectPermissionFilter : ContainerRequestFilter {
 
@@ -58,7 +56,9 @@ class RequestProjectPermissionFilter : ContainerRequestFilter {
     private val apiProjectPermissionSwitch: Boolean = false
 
     override fun filter(requestContext: ContainerRequestContext) {
-        // 判断项目的api权限校验开关是否打开，如果是get请求或者是build接口无需做权限校验（存量构建需要调build接口才能完成）
+        // 判断项目的api权限校验开关是否打开，如果是get请求或者是build接口无需做权限校验（未结束的构建需要调build接口才能完成）
+        val url = requestContext.uriInfo.requestUri.path
+        logger.info("url[$url],channel[${I18nUtil.getRequestChannel()}]")
         if (!apiProjectPermissionSwitch || requestContext.method.uppercase() == HttpMethod.GET ||
             I18nUtil.getRequestChannel() == RequestChannelTypeEnum.BUILD.name
         ) {
@@ -66,8 +66,8 @@ class RequestProjectPermissionFilter : ContainerRequestFilter {
         }
         val uriInfo = requestContext.uriInfo
         val projectId =
-            (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters[KEY_PROJECT_ID]
-            ?: uriInfo.queryParameters[KEY_PROJECT_ID])?.toString() ?: return
+            (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters.getFirst(KEY_PROJECT_ID)
+            ?: uriInfo.queryParameters.getFirst(KEY_PROJECT_ID))?.toString() ?: return
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
         // 判断项目是否在限制接口访问的列表中
         if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
