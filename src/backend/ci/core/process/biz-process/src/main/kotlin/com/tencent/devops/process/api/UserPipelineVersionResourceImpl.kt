@@ -43,10 +43,12 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineOperationLog
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -56,7 +58,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
+    private val pipelineOperationLogService: PipelineOperationLogService
 ) : UserPipelineVersionResource {
 
     override fun savePipeline(
@@ -196,6 +199,34 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
+        )
+    }
+
+    override fun getPipelineOperationLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<PipelineOperationLog>> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineOperationLogService.getOperationLogs(userId, projectId, pipelineId)
         )
     }
 

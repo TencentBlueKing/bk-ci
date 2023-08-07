@@ -27,23 +27,29 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
+import com.tencent.devops.model.process.tables.records.TPipelineOperationLogRecord
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.DSLContext
+import org.jooq.RecordMapper
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
 @Suppress("LongParameterList")
-class OperationLogDao {
+class PipelineOperationLogDao {
 
     fun add(
         dslContext: DSLContext,
         id: Int,
         projectId: String,
         pipelineId: String,
+        version: Int,
         operator: String,
         operationLogType: OperationLogType,
+        params: String,
         description: String?
     ) {
         with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
@@ -52,6 +58,7 @@ class OperationLogDao {
                 ID,
                 PROJECT_ID,
                 PIPELINE_ID,
+                VERSION,
                 OPERATOR,
                 OPERATION_TYPE,
                 PARAMS,
@@ -60,9 +67,10 @@ class OperationLogDao {
                 id,
                 projectId,
                 pipelineId,
-                operator,
+                version,
                 operator,
                 operationLogType.name,
+                params,
                 description
             ).execute()
         }
@@ -79,22 +87,60 @@ class OperationLogDao {
                     ID,
                     PROJECT_ID,
                     PIPELINE_ID,
+                    VERSION,
                     OPERATOR,
                     OPERATION_TYPE,
                     PARAMS,
                     DESCRIPTION
+                ).values(
+                    it.id,
+                    it.pipelineId,
+                    it.pipelineId,
+                    it.version,
+                    it.operator,
+                    it.operationLogType.name,
+                    it.params,
+                    it.description
                 )
-                    .values(
-                        it.id,
-                        it.pipelineId,
-                        it.pipelineId,
-                        it.operator,
-                        it.operationLogType.name,
-                        it.params,
-                        it.description
-                    )
             }
             dslContext.batch(addStep).execute()
         }
+    }
+
+    fun getList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): List<PipelineOperationLog> {
+        return with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(CREATE_TIME.asc()).fetch(mapper)
+        }
+    }
+
+    class PipelineOperationLogJooqMapper : RecordMapper<TPipelineOperationLogRecord, PipelineOperationLog> {
+        override fun map(record: TPipelineOperationLogRecord?): PipelineOperationLog? {
+            return record?.run {
+                PipelineOperationLog(
+                    id = id,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    operator = operator,
+                    operationLogType = OperationLogType.parseType(operationType),
+                    params = params,
+                    description = description,
+                    operateTime = createTime.timestampmilli(),
+                    versionName = null,
+                    versionCreateTime = null
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val mapper = PipelineOperationLogJooqMapper()
+        private val logger = LoggerFactory.getLogger(PipelineOperationLogDao::class.java)
     }
 }

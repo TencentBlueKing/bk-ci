@@ -247,6 +247,41 @@ class PipelineResVersionDao {
         return list
     }
 
+    fun listPipelineVersionInList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: Set<Int>
+    ): List<PipelineVersionSimple> {
+        val list = mutableListOf<PipelineVersionSimple>()
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val result = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(VERSION.`in`(versions))
+                .fetch()
+            result.forEach { record ->
+                list.add(
+                    PipelineVersionSimple(
+                        pipelineId = pipelineId,
+                        creator = record.creator ?: "unknown",
+                        createTime = record.createTime?.timestampmilli() ?: 0,
+                        version = record.version ?: 1,
+                        versionName = record.versionName ?: "init",
+                        referFlag = record.referFlag,
+                        referCount = record.referCount,
+                        pipelineVersion = record.pipelineVersion,
+                        triggerVersion = record.triggerVersion,
+                        settingVersion = record.settingVersion,
+                        status = record.status?.let { VersionStatus.valueOf(it) },
+                        debugBuildId = record.debugBuildId,
+                        pacRefs = record.refs
+                    )
+                )
+            }
+        }
+        return list
+    }
+
     fun getVersionCreatorInPage(
         dslContext: DSLContext,
         projectId: String,

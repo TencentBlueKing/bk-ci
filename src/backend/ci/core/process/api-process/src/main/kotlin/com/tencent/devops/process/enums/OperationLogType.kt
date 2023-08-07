@@ -37,5 +37,17 @@ enum class OperationLogType(val description: String) {
     UNABLE_PIPELINE("禁用流水线时：「禁用了流水线」"),
     ADD_PIPELINE_OWNER("添加流水线成员时：「添加 xxx,yyy 为执行者」"),
     ADD_PIPELINE_TO_GROUP("将流水线添加到流水线组时：「添加到流水线组 a」"),
-    MOVE_PIPELINE_OUT_OF_GROUP("将流水线移出流水线组时：「从流水线组 a 中移出」");
+    MOVE_PIPELINE_OUT_OF_GROUP("将流水线移出流水线组时：「从流水线组 a 中移出」"),
+    NORMAL_SAVE_OPERATION("普通保存操作");
+
+    companion object {
+        fun parseType(type: String?): OperationLogType {
+            if (type.isNullOrBlank()) return NORMAL_SAVE_OPERATION
+            return try {
+                OperationLogType.valueOf(type)
+            } catch (ignore: Throwable) {
+                NORMAL_SAVE_OPERATION
+            }
+        }
+    }
 }
