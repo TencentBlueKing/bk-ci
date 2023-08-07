@@ -200,10 +200,10 @@ class TencentApigwApiFilter(
             requestContext.headers.putSingle(AUTH_HEADER_DEVOPS_USER_ID, username)
         } catch (ex: ErrorCodeException) {
             throw ex
-        } catch (ex: RemoteServiceException) {
+        } catch (ignore: RemoteServiceException) {
             throw ErrorCodeException(
-                errorCode = ex.errorCode.toString(),
-                defaultMessage = ex.errorMessage
+                errorCode = ignore.errorCode.toString(),
+                defaultMessage = ignore.errorMessage
             )
         } catch (ignore: Exception) {
             return false
