@@ -401,7 +401,12 @@ class OpAtomServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW) {
+        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = INIT_VERSION
+            ) == null
+        ) {
             // 新增插件
             val addMarketAtomResult = atomReleaseService.addMarketAtom(
                 userId,
