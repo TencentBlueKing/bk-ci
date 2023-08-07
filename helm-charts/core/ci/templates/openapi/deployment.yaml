@@ -11,6 +11,11 @@ metadata:
     app.kubernetes.io/component: microservice
     app.kubernetes.io/name: openapi
 spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
   selector:
     matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice

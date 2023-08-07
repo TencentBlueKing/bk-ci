@@ -13,7 +13,6 @@
         </div>
         <main class="g-scroll-pagination-table">
             <bk-table style="margin-top: 15px;"
-                :empty-text="$t('store.暂时没有镜像')"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -23,30 +22,30 @@
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.镜像名称')" width="200">
+                <bk-table-column :label="$t('store.镜像名称')" width="200" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="atom-name" :title="props.row.imageName" @click="goToImageDetail(props.row.imageCode)">{{ props.row.imageName }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.镜像来源')" prop="imageSourceType" :formatter="sourceTypeFormatter"></bk-table-column>
-                <bk-table-column :label="$t('store.镜像')" prop="imageRepoUrl">
+                <bk-table-column :label="$t('store.镜像来源')" prop="imageSourceType" :formatter="sourceTypeFormatter" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.镜像')" prop="imageRepoUrl" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span :title="(props.row.imageRepoUrl ? props.row.imageRepoUrl + '/' : '') + props.row.imageRepoName + ':' + props.row.imageTag">
                             {{ props.row.imageRepoUrl + props.row.imageRepoName + props.row.imageTag ? (props.row.imageRepoUrl ? props.row.imageRepoUrl + '/' : '') + props.row.imageRepoName + ':' + props.row.imageTag : '-' }}
                         </span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.镜像大小')" prop="imageSize">
+                <bk-table-column :label="$t('store.镜像大小')" prop="imageSize" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span>{{ props.row.imageSize || '-' }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.版本号')" prop="version">
+                <bk-table-column :label="$t('store.版本号')" prop="version" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span>{{ props.row.version || '-' }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.状态')">
+                <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                             v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)">
@@ -66,8 +65,8 @@
                         <span>{{ $t(imageStatusList[props.row.imageStatus]) }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
-                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="160" :formatter="timeFormatter"></bk-table-column>
+                <bk-table-column :label="$t('store.修改人')" prop="modifier" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="160" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
                     <template slot-scope="props">
                         <span class="shelf-btn"
@@ -90,13 +89,17 @@
                         <span @click="deleteImage(props.row.imageCode)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.imageStatus)"> {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+                </template>
             </bk-table>
         </main>
 
         <bk-sideslider :is-show.sync="relateImageData.show"
             :title="relateImageData.title"
             :quick-close="relateImageData.quickClose"
-            :width="relateImageData.width">
+            :width="relateImageData.width"
+            :before-close="cancelRelateImage">
             <template slot="content">
                 <bk-form ref="relateForm" class="relate-form" label-width="100" :model="relateImageData.form" v-bkloading="{ isLoading: relateImageData.isLoading }">
                     <bk-form-item :label="$t('store.镜像名称')"
@@ -106,9 +109,10 @@
                         :rules="[requireRule, nameRule]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;"></bk-input>
+                        <bk-input
+                            v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
                         <bk-popover placement="right" class="is-tooltips">
-                            <i class="devops-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle info-icon"></i>
                             <template slot="content">
                                 <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符') }} </p>
                             </template>
@@ -121,7 +125,7 @@
                         :rules="[requireRule, alpRule]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过30个字符')" style="width: 96%;"></bk-input>
+                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过30个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
                         <bk-popover placement="right" class="is-tooltips">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
@@ -130,7 +134,7 @@
                         </bk-popover>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
-                        <bk-radio-group v-model="relateImageData.form.imageSourceType" class="mt6">
+                        <bk-radio-group v-model="relateImageData.form.imageSourceType" @change="handleChangeForm" class="mt6">
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -279,6 +283,7 @@
 
         watch: {
             searchName () {
+                this.isLoading = true
                 debounce(this.search)
             }
         },
@@ -375,7 +380,15 @@
                         }
                         this.relateImageData.isLoading = true
                         this.$store.dispatch('store/requestRelImage', postData).then(() => {
-                            this.cancelRelateImage()
+                            this.relateImageData.form = {
+                                projectCode: '',
+                                imageName: '',
+                                imageSourceType: 'BKDEVOPS',
+                                ticketId: ''
+                            }
+                            setTimeout(() => {
+                                this.relateImageData.show = false
+                            })
                             this.requestList()
                         }).catch((err) => {
                             this.$bkMessage({ message: err.message || err, theme: 'error' })
@@ -387,16 +400,46 @@
             },
 
             cancelRelateImage () {
-                this.relateImageData.show = false
-                this.relateImageData.form = {
-                    projectCode: '',
-                    imageName: '',
-                    imageSourceType: 'BKDEVOPS',
-                    ticketId: ''
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            this.relateImageData.form = {
+                                projectCode: '',
+                                imageName: '',
+                                imageSourceType: 'BKDEVOPS',
+                                ticketId: ''
+                            }
+                            setTimeout(() => {
+                                this.relateImageData.show = false
+                            })
+                            return true
+                        }
+                    })
+                } else {
+                    this.relateImageData.show = false
+                    this.relateImageData.form = {
+                        projectCode: '',
+                        imageName: '',
+                        imageSourceType: 'BKDEVOPS',
+                        ticketId: ''
+                    }
                 }
             },
 
+            handleChangeForm () {
+                window.changeFlag = true
+            },
             toggleProjectList () {
+                this.handleChangeForm()
                 this.relateImageData.form.ticketId = ''
                 const projectCode = this.relateImageData.form.projectCode
                 if (!projectCode) return
@@ -443,6 +486,7 @@
             },
 
             relateImage () {
+                window.changeFlag = false
                 this.relateImageData.show = true
             },
 
@@ -476,6 +520,8 @@
         position: relative;
         .is-tooltips {
             position: absolute;
+            right: -5px;
+            top: 3px;
         }
     }
     .h32 {

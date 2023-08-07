@@ -41,7 +41,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["AUTH_THIRD_LOGIN"], description = "权限-第三方登陆")
+@Api(tags = ["AUTH_THIRD_LOGIN"], description = "权限-第三方登录")
 @Path("/external/third/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -58,7 +58,7 @@ interface ExternalThirdLoginResource {
         @ApiParam("用户ID")
         userId: String,
         @QueryParam("type")
-        @ApiParam("登陆类型")
+        @ApiParam("登录类型")
         type: String,
         @QueryParam("email")
         @ApiParam("邮箱")
