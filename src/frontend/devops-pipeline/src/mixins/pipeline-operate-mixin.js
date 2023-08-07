@@ -428,7 +428,7 @@ export default {
                     {
                         projectId,
                         resourceCode: pipelineId,
-                        action: this.$permissionResourceAction.EXECUTE
+                        action: this.$permissionResourceAction.EDIT
                     }
                 )
                 return {

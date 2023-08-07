@@ -45,14 +45,14 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
     import Pipeline from '@/components/Pipeline'
-    import { bus } from '@/utils/bus'
-    import { getParamsValuesMap } from '@/utils/util'
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {

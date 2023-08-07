@@ -19,8 +19,7 @@
 
 import {
     PROJECT_RESOURCE_ACTION,
-    RESOURCE_ACTION
-    ,
+    RESOURCE_ACTION,
     handleProjectNoPermission
 } from '@/utils/permission'
 import { statusAlias } from '@/utils/pipelineStatus'

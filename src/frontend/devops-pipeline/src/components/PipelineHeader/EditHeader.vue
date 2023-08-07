@@ -46,7 +46,6 @@
     import VersionSideslider from '@/components/VersionSideslider'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
-        handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
@@ -253,7 +252,7 @@
                         data: responses
                     }
                 } catch (e) {
-                    handlePipelineNoPermission({
+                    this.handleError(e, {
                         projectId,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
