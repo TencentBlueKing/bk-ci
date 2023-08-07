@@ -585,12 +585,15 @@
       .pipeline-exec-output-block-content {
         font-size: 12px;
         > li {
+            display: flex;
+            align-items: center;
           margin-bottom: 16px;
           .pipeline-exec-output-block-row-label {
             color: #979ba5;
             text-align: right;
             @include ellipsis();
             width: 100px;
+            flex-shrink: 0;
           }
           .pipeline-exec-output-block-row-value {
             @include ellipsis();
