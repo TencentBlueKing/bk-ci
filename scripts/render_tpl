@@ -1,5 +1,5 @@
 #!/bin/bash
-# ./render_tpl -m ci ../support-files/templates/*
+
 # 渲染蓝鲸的__VAR_NUM__ 类似的模板，通过环境变量自动替换它
 set -o nounset                              # Treat unset variables as an error
 

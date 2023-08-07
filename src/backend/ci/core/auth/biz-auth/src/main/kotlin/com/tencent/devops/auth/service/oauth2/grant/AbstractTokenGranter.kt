@@ -11,7 +11,7 @@ import com.tencent.devops.common.auth.utils.AuthUtils
 
 abstract class AbstractTokenGranter(
     private val grantType: String,
-    private val accessTokenService: Oauth2AccessTokenService,
+    private val accessTokenService: Oauth2AccessTokenService
 ) : TokenGranter {
     override fun grant(
         grantType: String,
