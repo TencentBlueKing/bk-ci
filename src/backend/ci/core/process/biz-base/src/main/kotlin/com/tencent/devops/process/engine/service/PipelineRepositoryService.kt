@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -86,6 +87,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -127,6 +129,7 @@ class PipelineRepositoryService constructor(
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val versionConfigure: VersionConfigure,
     private val pipelineInfoExtService: PipelineInfoExtService,
+    private val operationLogService: PipelineOperationLogService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation
@@ -191,7 +194,7 @@ class PipelineRepositoryService constructor(
         return if (!create) {
             val pipelineSetting = savedSetting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            update(
+            val result = update(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -206,8 +209,19 @@ class PipelineRepositoryService constructor(
                 saveDraft = saveDraft,
                 description = description
             )
+            // TODO 提供新接口
+            operationLogService.addOperationLog(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = result.version,
+                operationLogType = OperationLogType.NORMAL_SAVE_OPERATION,
+                params = result.versionName ?: "init",
+                description = null
+            )
+            result
         } else {
-            create(
+            val result = create(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
@@ -222,6 +236,16 @@ class PipelineRepositoryService constructor(
                 saveDraft = saveDraft,
                 description = description
             )
+            operationLogService.addOperationLog(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = result.version,
+                operationLogType = OperationLogType.NORMAL_SAVE_OPERATION,
+                params = result.versionName ?: "init",
+                description = null
+            )
+            result
         }
     }
 
@@ -513,6 +537,7 @@ class PipelineRepositoryService constructor(
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
+        var versionName: String? = null
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -596,6 +621,7 @@ class PipelineRepositoryService constructor(
                     }
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
+                versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion)
                 if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -603,7 +629,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
+                    versionName = versionName ?: "init",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
@@ -616,7 +642,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    versionName = getVersionName(modelVersion, triggerVersion, settingVersion),
+                    versionName = versionName ?: "init",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -648,7 +674,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = 1)
+        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = 1, versionName)
     }
 
     private fun update(
@@ -670,6 +696,7 @@ class PipelineRepositoryService constructor(
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$saveDraft")
+        var versionName: String? = null
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -733,6 +760,7 @@ class PipelineRepositoryService constructor(
                     if (!originTriggerJson.similar(triggerJson)) triggerVersion++
                     if (!originPipelineJson.similar(pipelineJson)) pipelineVersion++
                 }
+                versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion)
                 watcher.start("updatePipelineResource")
                 if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
@@ -741,7 +769,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
+                    versionName = versionName ?: "init",
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
@@ -753,7 +781,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion),
+                    versionName = versionName ?: "init",
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -839,7 +867,12 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = version)
+        return DeployPipelineResult(
+            pipelineId,
+            pipelineName = model.name,
+            version = version,
+            versionName = versionName
+        )
     }
 
     fun getPipelineInfo(

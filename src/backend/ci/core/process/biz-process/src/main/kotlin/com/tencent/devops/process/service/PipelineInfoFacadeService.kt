@@ -517,7 +517,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
-            return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
+            return DeployPipelineResult(
+                pipelineId = pipelineId,
+                pipelineName = model.name,
+                version = model.latestVersion,
+                versionName = null
+            )
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)

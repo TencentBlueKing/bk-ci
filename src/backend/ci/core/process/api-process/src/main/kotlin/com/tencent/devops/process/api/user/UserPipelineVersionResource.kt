@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -56,6 +57,23 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
+
+    @ApiOperation("新建流水线编排")
+    @POST
+    @Path("/projects/{projectId}/createPipeline")
+    fun createPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false,
+        @ApiParam(value = "流水线模型", required = true)
+        pipeline: Model
+    ): Result<PipelineId>
 
     @ApiOperation("保存流水线编排草稿")
     @POST
@@ -145,7 +163,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("获取流水线操作日志列表")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/log")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/operationLog")
     fun getPipelineOperationLogs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

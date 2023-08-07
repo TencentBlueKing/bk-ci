@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
@@ -43,7 +43,6 @@ class PipelineOperationLogDao {
 
     fun add(
         dslContext: DSLContext,
-        id: Int,
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -55,7 +54,6 @@ class PipelineOperationLogDao {
         with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
             dslContext.insertInto(
                 this,
-                ID,
                 PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
@@ -64,7 +62,6 @@ class PipelineOperationLogDao {
                 PARAMS,
                 DESCRIPTION
             ).values(
-                id,
                 projectId,
                 pipelineId,
                 version,

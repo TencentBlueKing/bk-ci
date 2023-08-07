@@ -43,6 +43,7 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -61,6 +62,36 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineOperationLogService: PipelineOperationLogService
 ) : UserPipelineVersionResource {
+
+    override fun createPipeline(
+        userId: String,
+        projectId: String,
+        useTemplateSettings: Boolean?,
+        pipeline: Model
+    ): Result<PipelineId> {
+        checkParam(userId, projectId)
+        val pipelineId = PipelineId(
+            id = pipelineInfoFacadeService.createPipeline(
+                userId = userId,
+                projectId = projectId,
+                model = pipeline,
+                channelCode = ChannelCode.BS,
+                useTemplateSettings = useTemplateSettings
+            )
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId.id,
+                resourceName = pipeline.name,
+                userId = userId,
+                action = "create",
+                actionContent = "Create",
+                projectId = projectId
+            )
+        )
+        return Result(pipelineId)
+    }
 
     override fun savePipeline(
         userId: String,

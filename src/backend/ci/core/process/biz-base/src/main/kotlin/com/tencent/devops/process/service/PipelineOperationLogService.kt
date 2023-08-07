@@ -27,8 +27,9 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.dao.PipelineOperationLogDao
+import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
@@ -36,11 +37,33 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class PipelineOperationLogService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineOperationLogDao: PipelineOperationLogDao,
     private val pipelineResVersionDao: PipelineResVersionDao
 ) {
+
+    fun addOperationLog(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        operationLogType: OperationLogType,
+        params: String,
+        description: String?
+    ) {
+        pipelineOperationLogDao.add(
+            dslContext = dslContext,
+            operator = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            operationLogType = operationLogType,
+            params = params,
+            description = description
+        )
+    }
 
     fun getOperationLogs(
         userId: String,
