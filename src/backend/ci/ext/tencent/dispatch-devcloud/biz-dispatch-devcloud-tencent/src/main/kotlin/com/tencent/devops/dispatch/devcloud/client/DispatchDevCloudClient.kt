@@ -61,20 +61,38 @@ class DispatchDevCloudClient {
     var memory: String = "65535M"
 
     fun createContainer(dispatchMessage: DispatchMessage, devCloudContainer: DevCloudContainer): Pair<String, String> {
+        return createContainer(
+            projectId = dispatchMessage.projectId,
+            pipelineId = dispatchMessage.pipelineId,
+            buildId = dispatchMessage.buildId,
+            vmSeqId = dispatchMessage.vmSeqId,
+            userId = dispatchMessage.userId,
+            devCloudContainer = devCloudContainer
+        )
+    }
+
+    fun createContainer(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        devCloudContainer: DevCloudContainer
+    ): Pair<String, String> {
         val url = devCloudUrl + "/api/v2.1/containers"
         val body = ObjectMapper().writeValueAsString(devCloudContainer)
-        logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request url: $url")
-        logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request body: $body")
+        logger.info("[$buildId]|[$vmSeqId] request url: $url")
+        logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
                 SmartProxyUtil.makeHeaders(
                     devCloudAppId,
                     devCloudToken,
-                    dispatchMessage.userId,
+                    userId,
                     smartProxyToken,
-                    dispatchMessage.projectId,
-                    dispatchMessage.pipelineId
+                    projectId,
+                    pipelineId
                 ).toHeaders()
             )
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
@@ -83,8 +101,7 @@ class DispatchDevCloudClient {
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] " +
-                                "http code is ${response.code}, $responseContent")
+                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
@@ -112,7 +129,7 @@ class DispatchDevCloudClient {
             }
         } catch (e: SocketTimeoutException) {
             logger.error(
-                "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] create container get SocketTimeoutException",
+                "[$buildId]|[$vmSeqId] create container get SocketTimeoutException",
                 e
             )
             throw BuildFailureException(

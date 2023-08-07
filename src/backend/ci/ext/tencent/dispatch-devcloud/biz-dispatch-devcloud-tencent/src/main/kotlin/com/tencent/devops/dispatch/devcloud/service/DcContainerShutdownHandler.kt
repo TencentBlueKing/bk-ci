@@ -1,0 +1,143 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.dispatch.devcloud.service
+
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
+import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
+import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
+import com.tencent.devops.dispatch.devcloud.pojo.Action
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
+import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
+import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class DcContainerShutdownHandler @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val devCloudBuildDao: DevCloudBuildDao,
+    private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
+    private val dispatchDevCloudClient: DispatchDevCloudClient,
+    private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
+) : Handler<DcShutdownHandlerContext>() {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DcContainerShutdownHandler::class.java)
+    }
+
+    override fun handlerRequest(handlerContext: DcShutdownHandlerContext) {
+        with(handlerContext) {
+            handlerContext.buildLogKey = "$pipelineId|$buildId|$vmSeqId|$executeCount"
+
+            // 有可能出现devcloud返回容器状态running了，但是其实流水线任务早已经执行完了，
+            // 导致shutdown消息先收到而redis和db还没有设置的情况，因此扔回队列，sleep等待30秒重新触发
+            val containerNameList = buildContainerPoolNoDao.getDevCloudBuildLastContainer(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1
+            )
+
+            if (containerNameList.none { it.second != null } && shutdownEvent.retryTime <= 3) {
+                logger.info(
+                    "$buildLogKey shutdown no containerName, sleep 10s and retry ${shutdownEvent.retryTime}. "
+                )
+                shutdownEvent.retryTime += 1
+                shutdownEvent.delayMills = 10000
+                pipelineEventDispatcher.dispatch(shutdownEvent)
+
+                return
+            }
+
+            containerNameList.filter { it.second != null }.forEach {
+                try {
+                    logger.info("$buildLogKey stop dev cloud container,vmSeqId: ${it.first}, " +
+                                    "containerName:${it.second}")
+                    val taskId = dispatchDevCloudClient.operateContainer(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId ?: "",
+                        userId = userId,
+                        name = it.second!!,
+                        action = Action.STOP
+                    )
+                    val opResult = dispatchDevCloudClient.waitTaskFinish(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = taskId
+                    )
+                    if (opResult.first == TaskStatus.SUCCEEDED) {
+                        logger.info("$buildLogKey stop dev cloud vm success.")
+                    } else {
+                        logger.info("$buildLogKey stop dev cloud vm failed, msg: ${opResult.second}")
+                    }
+                } catch (e: Exception) {
+                    logger.error(
+                        "$buildLogKey stop dev cloud vm failed. containerName: ${it.second}",
+                        e
+                    )
+                } finally {
+                    // 清除job创建记录
+                    devCloudJobRedisUtils.deleteJobCount(buildId, it.second!!)
+                }
+            }
+
+            val containerPoolList = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1
+            )
+            containerPoolList.filter { it.second != null }.forEach {
+                logger.info("$buildLogKey update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
+                devCloudBuildDao.updateStatus(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    vmSeqId = it.first,
+                    poolNo = it.second!!.toInt(),
+                    status = ContainerStatus.IDLE.status
+                )
+            }
+
+            logger.info("[$buildLogKey delete buildContainerPoolNo.")
+            buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1
+            )
+        }
+    }
+}

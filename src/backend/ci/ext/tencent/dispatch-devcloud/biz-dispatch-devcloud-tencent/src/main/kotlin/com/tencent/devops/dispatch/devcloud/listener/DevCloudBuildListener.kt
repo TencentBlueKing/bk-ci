@@ -48,6 +48,11 @@ import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
+import com.tencent.devops.dispatch.devcloud.service.DcContainerPrepareHandler
+import com.tencent.devops.dispatch.devcloud.service.DcContainerShutdownHandler
+import com.tencent.devops.dispatch.devcloud.service.DispatchDevcloudService
+import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
+import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
@@ -61,10 +66,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2019-03-26
- */
 @Component
 class DevCloudBuildListener @Autowired constructor(
     private val dispatchDevCloudClient: DispatchDevCloudClient,
@@ -79,7 +80,10 @@ class DevCloudBuildListener @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val commonConfig: CommonConfig,
     private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val dispatchDevcloudService: DispatchDevcloudService,
+    private val dcContainerPrepareHandler: DcContainerPrepareHandler,
+    private val dcContainerShutdownHandler: DcContainerShutdownHandler
 ) : BuildListener {
 
     @Value("\${registry.host}")
@@ -152,14 +156,21 @@ class DevCloudBuildListener @Autowired constructor(
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         if (event.source == "shutdownAllVMTaskAtom") {
-            // 入缓存，保证次流水线正在运行还未结束的job能够正常结束
-            // redisUtils.setShutdownCancelMessage(event.buildId, event)
-
             // 同一个buildId的多个shutdownAllVMTaskAtom事件一定在短时间内到达，300s足够
             val shutdownLock = RedisLock(redisOperation, shutdownLockBaseKey + event.buildId, 300L)
             try {
                 if (shutdownLock.tryLock()) {
-                    doShutdown(event)
+                    dcContainerShutdownHandler.handlerRequest(
+                        DcShutdownHandlerContext(
+                            userId = event.userId,
+                            projectId = event.projectId,
+                            pipelineId = event.pipelineId,
+                            buildId = event.buildId,
+                            vmSeqId = event.vmSeqId,
+                            executeCount = event.executeCount,
+                            shutdownEvent = event
+                        )
+                    )
                 } else {
                     logger.info("shutdownAllVMTaskAtom of {} already invoked, ignore", event.buildId)
                 }
@@ -169,36 +180,58 @@ class DevCloudBuildListener @Autowired constructor(
                 shutdownLock.unlock()
             }
         } else {
-            doShutdown(event)
+            dcContainerShutdownHandler.handlerRequest(
+                DcShutdownHandlerContext(
+                    userId = event.userId,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId,
+                    executeCount = event.executeCount,
+                    shutdownEvent = event
+                )
+            )
         }
     }
 
     private fun startUp(dispatchMessage: DispatchMessage) {
-        logger.info("On start up - ($dispatchMessage)")
-        printLogs(
-            dispatchMessage,
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE,
-                language = I18nUtil.getDefaultLocaleLanguage()
+        with(dispatchMessage) {
+            // 打印启动日志
+            printLogs(
+                this,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
-        )
 
-        val buildContainerPoolNo = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
-            dslContext,
-            dispatchMessage.buildId,
-            dispatchMessage.vmSeqId,
-            dispatchMessage.executeCount ?: 1
-        )
-        logger.info("buildContainerPoolNo: $buildContainerPoolNo")
-        if (buildContainerPoolNo.isNotEmpty() && buildContainerPoolNo[0].second != null) {
-            retry()
-        } else {
-            val tryTime = 0
-            createOrStartContainer(dispatchMessage, tryTime)
+            // 判断是否需要事件重试
+            if (dispatchDevcloudService.needRetry(buildId, vmSeqId, executeCount)) {
+                retry()
+            } else {
+                dcContainerPrepareHandler.handlerRequest(
+                    DcStartupHandlerContext(
+                        userId = dispatchMessage.userId,
+                        projectId = dispatchMessage.projectId,
+                        pipelineId = dispatchMessage.pipelineId,
+                        buildId = dispatchMessage.buildId,
+                        vmSeqId = dispatchMessage.vmSeqId,
+                        executeCount = dispatchMessage.executeCount,
+                        agentId = dispatchMessage.id,
+                        secretKey = dispatchMessage.secretKey,
+                        gateway = dispatchMessage.gateway,
+                        dispatchMessage = dispatchMessage.dispatchMessage,
+                        atoms = dispatchMessage.atoms,
+                        dispatchType = dispatchMessage.dispatchType,
+                        customBuildEnv = dispatchMessage.customBuildEnv,
+                        containerHashId = dispatchMessage.containerHashId
+                    )
+                )
+            }
         }
     }
 
-    private fun createOrStartContainer(dispatchMessage: DispatchMessage, tryTime: Int) {
+    private fun createOrStartContainer(dispatchMessage: DispatchMessage) {
         threadLocalCpu.set(cpu)
         threadLocalMemory.set(memory)
         threadLocalDisk.set(disk)
@@ -916,19 +949,14 @@ class DevCloudBuildListener @Autowired constructor(
     }
 
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
-        try {
-            log(
-                buildLogPrinter,
-                dispatchMessage.buildId,
-                dispatchMessage.containerHashId,
-                dispatchMessage.vmSeqId,
-                message,
-                dispatchMessage.executeCount
-            )
-        } catch (e: Throwable) {
-            // 日志有问题就不打日志了，不能影响正常流程
-            logger.error("", e)
-        }
+        log(
+            buildLogPrinter,
+            dispatchMessage.buildId,
+            dispatchMessage.containerHashId,
+            dispatchMessage.vmSeqId,
+            message,
+            dispatchMessage.executeCount
+        )
     }
 
     private fun generatePwd(): String {
