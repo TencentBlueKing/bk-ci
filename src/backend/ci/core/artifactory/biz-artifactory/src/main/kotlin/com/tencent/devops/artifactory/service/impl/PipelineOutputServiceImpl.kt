@@ -63,7 +63,7 @@ class PipelineOutputServiceImpl(
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
         return pipelineOutputList.sortedWith { o1, o2 ->
-            Collator.getInstance().compare(o1, o2)
+            Collator.getInstance().compare(o1.name, o2.name)
         }
     }
 }
