@@ -12,6 +12,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceReportResource
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.text.Collator
 
 @Primary
 @Service
@@ -63,6 +64,8 @@ class TxPipelineOutputService(
         pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
-        return pipelineOutputList.sortedBy { it.name }
+        return pipelineOutputList.sortedWith { o1, o2 ->
+            Collator.getInstance().compare(o1, o2)
+        }
     }
 }
