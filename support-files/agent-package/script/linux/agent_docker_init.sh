@@ -38,10 +38,17 @@ mkdir -p /data/logs
 
 ci_log "docker_init.sh was launched."
 
+ci_log "unset proxy"
+unset_proxy
+ci_log "git.code.oa.com certs update"
+cert_update
+
+yum clean all || echo no yum
+rm -rf /var/lib/rpm/__db*
+rpm --rebuilddb || echo no rpm
+
 export LANG="zh_CN.UTF-8"
 
-ci_log "download docker_init.sh success, start it..."
-ci_log $(cat docker_init.sh)
 ci_log "start to copy worker-agent.jat as the docker.jar..."
 
 cp /data/worker-agent.jar /data/devops/docker.jar
