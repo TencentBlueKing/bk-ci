@@ -326,6 +326,7 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val conditions = mutableListOf<Condition>()
         conditions.add(t1.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
+        conditions.add(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
         if (!workspaceName.isNullOrBlank()) {
             conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
         }
