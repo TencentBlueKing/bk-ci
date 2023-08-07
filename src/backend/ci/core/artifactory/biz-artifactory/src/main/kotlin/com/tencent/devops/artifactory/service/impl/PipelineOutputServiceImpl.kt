@@ -61,6 +61,6 @@ class PipelineOutputServiceImpl(
         pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
-        return pipelineOutputList.sortedByDescending { it.createTime }
+        return pipelineOutputList.sortedBy { it.name }
     }
 }
