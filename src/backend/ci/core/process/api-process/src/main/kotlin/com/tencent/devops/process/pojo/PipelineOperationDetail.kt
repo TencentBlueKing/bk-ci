@@ -27,12 +27,13 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.enums.OperationLogType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线操作日志")
-data class PipelineOperationLog(
+data class PipelineOperationDetail(
     @ApiModelProperty("唯一标识ID", required = true)
     val id: Int,
     @ApiModelProperty("项目ID", required = true)
@@ -45,10 +46,20 @@ data class PipelineOperationLog(
     val operator: String,
     @ApiModelProperty("操作类型", required = true)
     val operationLogType: OperationLogType,
+    @ApiModelProperty("操作类型文字（国际化后）", required = true)
+    val operationLogStr: String,
     @ApiModelProperty("操作参数", required = true)
     val params: String,
     @ApiModelProperty("操作时间", required = false)
     val operateTime: Long,
     @ApiModelProperty("操作内容", required = false)
-    val description: String?
+    val description: String?,
+    @ApiModelProperty("版本名称", required = false)
+    val versionName: String?,
+    @ApiModelProperty("版本创建时间", required = false)
+    val versionCreateTime: Long?,
+    @ApiModelProperty("草稿版本标识", required = false)
+    val status: VersionStatus? = null,
+    @ApiModelProperty("来源代码库标识（分支名）", required = false)
+    val pacRefs: String? = null
 )

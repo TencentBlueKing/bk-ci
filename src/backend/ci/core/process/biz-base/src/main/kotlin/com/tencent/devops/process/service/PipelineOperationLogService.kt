@@ -27,10 +27,11 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.enums.OperationLogType
-import com.tencent.devops.process.pojo.PipelineOperationLog
+import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +70,7 @@ class PipelineOperationLogService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): List<PipelineOperationLog> {
+    ): List<PipelineOperationDetail> {
         val opList = pipelineOperationLogDao.getList(
             dslContext = dslContext,
             projectId = projectId,
@@ -85,11 +86,23 @@ class PipelineOperationLogService @Autowired constructor(
             versions = versions
         ).forEach { versionMap[it.version] = it }
         return opList.map {
-            it.copy(
-                versionName = versionMap[it.version]?.versionName,
-                versionCreateTime = versionMap[it.version]?.createTime,
-                status = versionMap[it.version]?.status
-            )
+            with(it) {
+                PipelineOperationDetail(
+                    id = id,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    operator = operator,
+                    operationLogType = operationLogType,
+                    operationLogStr = operationLogType.getI18n(I18nUtil.getRequestUserLanguage()),
+                    params = params,
+                    description = description,
+                    operateTime = operateTime,
+                    versionName = versionMap[it.version]?.versionName,
+                    versionCreateTime = versionMap[it.version]?.createTime,
+                    status = versionMap[it.version]?.status
+                )
+            }
         }
     }
 }

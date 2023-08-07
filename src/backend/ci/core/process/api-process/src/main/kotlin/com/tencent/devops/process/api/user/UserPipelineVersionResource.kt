@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.PipelineOperationLog
+import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
@@ -174,5 +174,5 @@ interface UserPipelineVersionResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<List<PipelineOperationLog>>
+    ): Result<List<PipelineOperationDetail>>
 }

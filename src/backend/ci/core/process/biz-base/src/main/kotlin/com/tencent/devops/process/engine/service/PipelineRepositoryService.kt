@@ -215,7 +215,11 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = result.version,
-                operationLogType = OperationLogType.NORMAL_SAVE_OPERATION,
+                operationLogType = if (saveDraft == true) {
+                    OperationLogType.UPDATE_DRAFT_VERSION
+                } else {
+                    OperationLogType.NORMAL_SAVE_OPERATION
+                },
                 params = result.versionName ?: "init",
                 description = null
             )
@@ -241,7 +245,11 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = result.version,
-                operationLogType = OperationLogType.NORMAL_SAVE_OPERATION,
+                operationLogType = if (saveDraft == true) {
+                    OperationLogType.CREATE_PIPELINE_AND_DRAFT
+                } else {
+                    OperationLogType.NORMAL_SAVE_OPERATION
+                },
                 params = result.versionName ?: "init",
                 description = null
             )

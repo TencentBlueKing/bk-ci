@@ -128,9 +128,7 @@ class PipelineOperationLogDao {
                     operationLogType = OperationLogType.parseType(operationType),
                     params = params,
                     description = description,
-                    operateTime = createTime.timestampmilli(),
-                    versionName = null,
-                    versionCreateTime = null
+                    operateTime = createTime.timestampmilli()
                 )
             }
         }
