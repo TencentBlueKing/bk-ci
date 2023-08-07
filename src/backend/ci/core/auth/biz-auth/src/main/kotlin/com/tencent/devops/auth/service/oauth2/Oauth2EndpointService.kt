@@ -21,7 +21,8 @@ class Oauth2EndpointService constructor(
 ) {
     fun getAuthorizationInformation(
         userId: String,
-        clientId: String
+        clientId: String,
+        redirectUri: String
     ): Oauth2AuthorizationInfoVo {
         logger.info("get authorization information :$userId|$clientId")
         // 1、校验clientId是否存在
@@ -30,6 +31,7 @@ class Oauth2EndpointService constructor(
         clientService.verifyClientInformation(
             clientId = clientId,
             grantType = Oauth2GrantType.AUTHORIZATION_CODE.grantType,
+            redirectUri = redirectUri,
             clientDetails = clientDetails
         )
         return Oauth2AuthorizationInfoVo(
