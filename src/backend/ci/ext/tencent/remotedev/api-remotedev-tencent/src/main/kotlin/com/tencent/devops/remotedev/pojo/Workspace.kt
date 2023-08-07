@@ -68,6 +68,12 @@ data class Workspace(
     val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
     val workspaceSystemType: WorkspaceSystemType,
+    @ApiModelProperty("工作空间归属")
+    val ownerType: WorkspaceOwnerType,
+    @ApiModelProperty("当前用户在此工作空间分配的人员类型")
+    val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
+    @ApiModelProperty("windows资源配置id")
+    val winConfigId: Int? = null,
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,

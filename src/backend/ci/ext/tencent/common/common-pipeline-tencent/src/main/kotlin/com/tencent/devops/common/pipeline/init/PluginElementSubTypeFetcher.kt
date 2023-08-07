@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.element.SendWechatNotifyElement
 import com.tencent.devops.common.pipeline.element.SensitiveScanElement
-import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.element.store.AtomRunEnvPrepareElement
 import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
@@ -71,7 +70,6 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             BcsContainerOpElement.classType to BcsContainerOpElement::class.java,
             BcsContainerOpByNameElement.classType to BcsContainerOpByNameElement::class.java,
             AcrossProjectDistributionElement.classType to AcrossProjectDistributionElement::class.java,
-            ZhiyunPushFileElement.classType to ZhiyunPushFileElement::class.java,
             GcloudPufferElement.classType to GcloudPufferElement::class.java,
             PushImageToThirdRepoElement.classType to PushImageToThirdRepoElement::class.java,
             BuglyElement.classType to BuglyElement::class.java,

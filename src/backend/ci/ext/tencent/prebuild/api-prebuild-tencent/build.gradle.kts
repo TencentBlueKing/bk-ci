@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-codecc"))
     api(project(":core:common:common-api"))
     api(project(":core:common:common-api"))
     api(project(":core:common:common-event"))

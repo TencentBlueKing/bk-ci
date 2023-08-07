@@ -59,5 +59,7 @@ data class WorkspaceDetail(
     @ApiModelProperty("操作系统类型")
     val systemType: WorkspaceSystemType,
     @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType
+    val workspaceMountType: WorkspaceMountType,
+    @ApiModelProperty("工作空间归属")
+    val ownerType: WorkspaceOwnerType
 )
