@@ -344,3 +344,7 @@ wechatWork:
   token: __BK_CI_WECHATWORK_TOKEN__
   aesKey: __BK_CI_WECHATWORK_AESKEY__
   url: __BK_CI_WECHATWORK_URL__
+
+# 是否开启国密sm4算法
+sm4:
+  enabled: __BK_CI_SM4_ENABLED__

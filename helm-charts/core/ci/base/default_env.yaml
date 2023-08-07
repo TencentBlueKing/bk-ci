@@ -46,3 +46,5 @@ bkCiEsHttps: false
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
+bkCiSm4Key: s31^dDjd!3k
+bkCiSm4Enabled: false

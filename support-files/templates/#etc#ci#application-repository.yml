@@ -66,3 +66,6 @@ tapd:
 
 aes:
   git: __BK_CI_REPOSITORY_AES_GIT__
+sm4:
+  github: __BK_CI_SM4_KEY__
+  git: __BK_CI_SM4_KEY__
