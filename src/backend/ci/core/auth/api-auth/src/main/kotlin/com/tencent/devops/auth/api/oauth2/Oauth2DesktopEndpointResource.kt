@@ -30,7 +30,10 @@ interface Oauth2DesktopEndpointResource {
         userId: String,
         @QueryParam("clientId")
         @ApiParam("客户端ID", required = true)
-        clientId: String
+        clientId: String,
+        @QueryParam("redirectUri")
+        @ApiParam("跳转链接", required = true)
+        redirectUri: String
     ): Result<Oauth2AuthorizationInfoVo>
 
     @POST

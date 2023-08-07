@@ -13,12 +13,14 @@ class Oauth2DesktopEndpointResourceImpl constructor(
 ) : Oauth2DesktopEndpointResource {
     override fun getAuthorizationInformation(
         userId: String,
-        clientId: String
+        clientId: String,
+        redirectUri: String
     ): Result<Oauth2AuthorizationInfoVo> {
         return Result(
             endpointService.getAuthorizationInformation(
                 userId = userId,
-                clientId = clientId
+                clientId = clientId,
+                redirectUri = redirectUri
             )
         )
     }
