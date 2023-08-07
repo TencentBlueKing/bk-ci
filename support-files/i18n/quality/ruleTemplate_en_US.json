@@ -1,8 +1,8 @@
 [ {
   "id" : 2,
-  "name" : "Daily construction",
+  "name" : "Daily Building",
   "type" : "TEMPLATE",
-  "desc" : "Used to control the number of alerts for daily construction",
+  "desc" : "Number of Alerts for Daily BuildControl",
   "stage" : "Development",
   "controlPoint" : "CodeCCCheckAtom",
   "controlPointPosition" : "AFTER",
@@ -13,10 +13,10 @@
   "enable" : true
 }, {
   "id" : 3,
-  "name" : "Version retest",
+  "name" : "Version Testing and Migration",
   "type" : "TEMPLATE",
-  "desc" : "Quality control for version transfer testing",
-  "stage" : "Deploy the test environment",
+  "desc" : "Quality Control for Version Testing and Migration",
+  "stage" : "Deployment of Testing Environment",
   "controlPoint" : "CodeCCCheckAtom",
   "controlPointPosition" : "AFTER",
   "createUser" : "admin",
@@ -26,10 +26,10 @@
   "enable" : true
 }, {
   "id" : 4,
-  "name" : "Release and launch",
+  "name" : "Release and Deployment",
   "type" : "TEMPLATE",
-  "desc" : "Used for quality control when releasing versions",
-  "stage" : "Deploy a formal environment",
+  "desc" : "Quality Control for Release and Deployment of Versions",
+  "stage" : "Deployment of Production Environment",
   "controlPoint" : "CodeCCCheckAtom",
   "controlPointPosition" : "AFTER",
   "createUser" : "admin",
@@ -39,9 +39,9 @@
   "enable" : true
 }, {
   "id" : 5,
-  "name" : "Safety related",
+  "name" : "Security Related",
   "type" : "INDICATOR_SET",
-  "desc" : "Contains Coverity security rule packages and sensitive information alerts",
+  "desc" : "Includes Coverity Security Rule Set and Sensitive Information Alerts",
   "stage" : "",
   "createUser" : "admin",
   "updateUser" : "admin",
@@ -50,9 +50,9 @@
   "enable" : false
 }, {
   "id" : 6,
-  "name" : "Java tool specification",
+  "name" : "Java Tool Specification",
   "type" : "INDICATOR_SET",
-  "desc" : "CheckStyle tool specification",
+  "desc" : "CheckStyle Tool Specification",
   "stage" : "",
   "createUser" : "admin",
   "updateUser" : "admin",
