@@ -54,6 +54,7 @@
   "desc": "描述",
   "success": "成功",
   "creator": "创建人",
+  "created": "创建时间",
   "editSuc": "编辑成功",
   "saveSuc": "保存成功",
   "addSuc": "新建成功",
