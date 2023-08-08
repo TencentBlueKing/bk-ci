@@ -4,6 +4,7 @@
         @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
+        
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -242,10 +243,21 @@
                     },
                     {
                         name: 'outputs',
-                        label: this.$t('details.outputs'),
+                        label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
-                        bindData: {}
+                        bindData: {
+                            currentTab: 'artifacts'
+                        }
+                    },
+                    {
+                        name: 'reports',
+                        label: this.$t('details.report'),
+                        className: '',
+                        component: 'outputs',
+                        bindData: {
+                            currentTab: 'reports'
+                        }
                     },
                     {
                         name: 'codeRecords',
@@ -545,6 +557,7 @@
       .exec-detail-summary-header-build-msg {
         flex: 1;
         margin: 0 24px 0 8px;
+        font-size: 14px;
         @include ellipsis();
         color: #313238;
         min-width: auto;
