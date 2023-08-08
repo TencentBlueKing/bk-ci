@@ -653,6 +653,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchCreators(dslContext, WorkspaceStatus.RUNNING).forEach {
             viewers.putIfAbsent(it.value1(), mutableListOf(it.value2()))?.add(it.value2())
         }
+        logger.info("notifyWinBeforeSleep start check $viewers")
         viewers.forEach { (userId, workspaces) ->
             // 不重复提醒
             redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) ?: return@forEach
