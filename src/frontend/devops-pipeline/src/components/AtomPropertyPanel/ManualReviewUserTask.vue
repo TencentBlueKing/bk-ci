@@ -12,26 +12,24 @@
                     :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
             </form-field>
         </template>
-        <accordion v-bind="reminderTimeConfig">
+        <accordion show-checkbox>
             <header class="var-header" slot="header">
                 <span>{{ reminderTimeCom.label }}</span>
                 <i class="devops-icon icon-angle-down" style="display: block" />
             </header>
             <div slot="content">
-                <form-field class="review-remind" :label="reminderTimeCom.label" :desc="reminderTimeCom.desc">
+                <form-field class="review-remind" :label="reminderTimeCom.label" :desc="reminderTimeCom.desc" :is-error="errors.has('reminderTime')" :error-msg="errors.first('reminderTime')">
                     <div>
                         {{ $t('editPage.every') }}
-                        <bk-input
+                        <vuex-input
                             v-model="element.reminderTime"
                             class="remind-number-input"
+                            v-validate.initial="{ reminderTimeRule: true }"
                             name="reminderTime"
-                            type="number"
-                            :min="1"
-                            :max="168"
                             :placeholder="' '"
                             :disabled="disabled"
-                            @change="handleChangeReminderTime"
-                        ></bk-input>
+                            :handle-change="handleUpdateElement"
+                        />
                         {{ $t('editPage.remindTime') }}
                     </div>
                 </form-field>
@@ -89,17 +87,6 @@
             },
             reminderTimeCom () {
                 return this.atomPropsModel.reminderTime
-            },
-            reminderTimeConfig () {
-                if (this.element.reminderTime) {
-                    return {
-                        'show-content': true,
-                        'show-checkbox': true
-                    }
-                }
-                return {
-                    'show-checkbox': true
-                }
             }
         },
         watch: {
@@ -125,10 +112,6 @@
                 } else {
                     this.handleUpdateElement(name, value)
                 }
-            },
-
-            handleChangeReminderTime (val) {
-                this.handleUpdateElement('reminderTime', val)
             }
         }
     }
