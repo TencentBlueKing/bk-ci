@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TProjectSoftwares
+import com.tencent.devops.model.remotedev.tables.TSystemSoftwares
 import com.tencent.devops.model.remotedev.tables.TUserInstalledRecords
 import com.tencent.devops.model.remotedev.tables.TUserInstalledSoftwares
 import com.tencent.devops.model.remotedev.tables.records.TProjectSoftwaresRecord
+import com.tencent.devops.model.remotedev.tables.records.TSystemSoftwaresRecord
 import com.tencent.devops.model.remotedev.tables.records.TUserInstalledRecordsRecord
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
@@ -67,6 +69,16 @@ class SoftwareManageDao {
             .from(t1).leftJoin(t2).on(t1.SOFTWARE_ID.eq(t2.ID))
             .where(conditions)
             .fetch()
+    }
+
+    // 获取系统软件
+    fun getSystemSoftwareList(
+        dslContext: DSLContext
+    ): Result<out Record> {
+        with(TSystemSoftwares.T_SYSTEM_SOFTWARES) {
+            return dslContext.select(NAME, VERSION).from(this)
+                .fetch()
+        }
     }
 
     // 导入软件到项目中

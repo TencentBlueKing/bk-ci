@@ -27,13 +27,24 @@
 
 package com.tencent.devops.remotedev.pojo.software
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("安装软件信息")
 data class SoftwareInfo(
     @ApiModelProperty("软件名称")
     val name: String,
     @ApiModelProperty("版本")
-    val version: String
+    val version: String,
+    @ApiModelProperty("参数")
+    @JsonProperty("common_args")
+    val commonArgs: CommonArgs? = null
+)
+
+data class CommonArgs(
+    @ApiModelProperty("base64参数")
+    val base64: String
 )

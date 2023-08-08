@@ -318,7 +318,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ownerType == WorkspaceOwnerType.PROJECT) {
-                deliverControl.safeInitialization(event.userId, event.workspaceName)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
             // websocket 通知成功

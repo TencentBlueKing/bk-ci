@@ -69,7 +69,7 @@ class DeliverControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun safeInitialization(userId: String, workspaceName: String) {
+    fun safeInitialization(projectId: String, userId: String, workspaceName: String) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
             redisOperation,
@@ -94,6 +94,18 @@ class DeliverControl @Autowired constructor(
                     )
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     // todo job接口执行
+                    val detail = redisCache.getWorkspaceDetail(workspaceName)
+                        ?: throw ErrorCodeException(
+                            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                            params = arrayOf(workspaceName)
+                        )
+                    logger.info("safeInitialization|$userId|$userId|detail|$detail")
+                    softwareManageService.installSystemSoftwares(
+                        projectId,
+                        userId,
+                        regionId = detail.regionId.toString(),
+                        ip = detail.environmentIP
+                    )
                 }
 
                 else -> {
@@ -138,9 +150,9 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-            softwareManageService.installSoftwareFromXingyun(
+            softwareManageService.installUserSoftwares(
                 assign2Owner.userId,
-                detail.environmentIP.substringAfter(".")
+                detail.environmentIP
             )
         }
 

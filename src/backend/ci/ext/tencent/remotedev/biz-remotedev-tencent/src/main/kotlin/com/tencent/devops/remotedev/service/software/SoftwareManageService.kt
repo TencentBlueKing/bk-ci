@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
+import com.tencent.devops.remotedev.pojo.software.CommonArgs
 import com.tencent.devops.remotedev.pojo.software.InstallSoftwareRes
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
@@ -45,6 +46,7 @@ import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,6 +73,7 @@ class SoftwareManageService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
+        private const val IOANAME = "IOA"
     }
 
     // 获取工作空间模板
@@ -171,7 +174,7 @@ class SoftwareManageService @Autowired constructor(
     }
 
     // 调用行云接口安装指定云桌面的软件
-    fun installSoftwareFromXingyun(
+    fun installUserSoftwares(
         userId: String,
         ip: String
     ): InstallSoftwareRes? {
@@ -189,6 +192,45 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
+        return  installSoftwareFromXingyun(userId, ip.substringAfter("."), softwareInfoList)
+    }
+
+    /** 云桌面创建完成后安全初始化：安装ioa
+     * ioa安装的脚步严格安装以下格式字符串，转base64后传入。
+     * base64(-project_id "cmk-tke" -creator "raylzhang" -region_id "555" -inner_ip "SZ3.11.171.77.15")
+     */
+    fun installSystemSoftwares(
+        projectId: String,
+        creator: String,
+        regionId:String,
+        ip: String
+    ): InstallSoftwareRes? {
+        val params = "-project_id \"$projectId\" -creator \"$creator\" -region_id \"$regionId\" -inner_ip \"$ip\""
+        val base64Val = Base64Util.encode(params.toByteArray())
+        val systemSoftwareInfoList = softwareManageDao.getSystemSoftwareList(dslContext)
+        logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList")
+        if (systemSoftwareInfoList.isEmpty()) {
+            return null
+        }
+        val softwareInfoList = mutableListOf<SoftwareInfo>()
+        systemSoftwareInfoList.forEach {record ->
+            softwareInfoList.add(
+                SoftwareInfo(
+                    name = record["NAME"] as String,
+                    version = record["VERSION"] as String,
+                    commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
+                ))
+        }
+        return  installSoftwareFromXingyun(creator, ip.substringAfter("."), softwareInfoList)
+    }
+
+    // 调用行云接口执行软件安装
+    fun installSoftwareFromXingyun(
+        userId: String,
+        ip: String,
+        softwareInfoList: List<SoftwareInfo>
+    ): InstallSoftwareRes? {
+        // 先获取userId安装的软件列表，封装成SoftwareCreate
         val softwareCreate = SoftwareCreate(
             ip = ip,
             username = userId,
