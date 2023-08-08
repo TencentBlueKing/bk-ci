@@ -662,7 +662,7 @@ class WorkspaceService @Autowired constructor(
                 logger.info("start notify to user $userId")
                 workspaceCommon.dispatchWebsocketPushEvent(
                     userId = userId,
-                    workspaceName = "",
+                    workspaceName = workspaces.first(),
                     workspaceHost = null,
                     errorMsg = null, type = WebSocketActionType.WORKSPACE_NEED_RENEWAL,
                     status = true, action = WorkspaceAction.NEED_RENEWAL
