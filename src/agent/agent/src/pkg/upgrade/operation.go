@@ -34,15 +34,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 const DAEMON_EXIT_CODE = 88

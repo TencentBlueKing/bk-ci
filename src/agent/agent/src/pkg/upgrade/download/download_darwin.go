@@ -4,11 +4,12 @@
 package download
 
 import (
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/pkg/errors"
 	"runtime"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/pkg/errors"
 )
 
 func getServerFileArch() string {

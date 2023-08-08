@@ -31,8 +31,9 @@
 package command
 
 import (
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"os/exec"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func setUser(_ *exec.Cmd, runUser string) error {

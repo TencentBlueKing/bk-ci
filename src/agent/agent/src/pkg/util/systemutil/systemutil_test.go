@@ -30,7 +30,7 @@ package systemutil
 import (
 	"testing"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func TestGetAgentIp(t *testing.T) {

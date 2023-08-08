@@ -38,11 +38,12 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 
 	"github.com/gofrs/flock"
 )

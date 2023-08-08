@@ -39,8 +39,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
 
 type HttpClient struct {

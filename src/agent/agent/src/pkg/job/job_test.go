@@ -3,7 +3,7 @@ package job
 import (
 	"testing"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func Test_getUnixWorkerPrepareStartScriptFile(t *testing.T) {

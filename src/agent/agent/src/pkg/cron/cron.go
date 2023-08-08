@@ -35,16 +35,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/imagedebug"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func CleanJob() {

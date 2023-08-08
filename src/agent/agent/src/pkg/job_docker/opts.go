@@ -13,7 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
 	"github.com/docker/cli/cli/compose/loader"
 	"github.com/docker/cli/opts"
 	"github.com/docker/docker/api/types/container"

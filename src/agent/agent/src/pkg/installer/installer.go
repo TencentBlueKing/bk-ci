@@ -31,12 +31,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 
 	"github.com/gofrs/flock"
 )

@@ -1,8 +1,9 @@
-module github.com/TencentBlueKing/bk-ci/src/agent
+module github.com/TencentBlueKing/bk-ci/agent
 
 go 1.19
 
 require (
+	github.com/TencentBlueKing/bk-ci/agentcommon v0.0.0-00010101000000-000000000000
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/gofrs/flock v0.8.1
 	// 1.24 以上的版本引入了memcall和memguard会导致
@@ -12,10 +13,10 @@ require (
 	github.com/kardianos/service v1.2.2
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/text v0.7.0
 	gopkg.in/ini.v1 v1.67.0
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gotest.tools/v3 v3.0.3
 )
 
@@ -122,3 +123,5 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/spf13/pflag v1.0.5
 )
+
+replace github.com/TencentBlueKing/bk-ci/agentcommon => ../common

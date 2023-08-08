@@ -28,16 +28,17 @@
 package agent
 
 import (
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/collector"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/cron"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/heartbeat"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/imagedebug"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/pipeline"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/heartbeat"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 )
 
 func Run(isDebug bool) {

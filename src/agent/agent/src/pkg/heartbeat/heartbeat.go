@@ -32,13 +32,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func DoAgentHeartbeat() {

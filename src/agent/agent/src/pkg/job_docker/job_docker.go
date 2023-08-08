@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"

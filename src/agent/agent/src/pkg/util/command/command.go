@@ -33,7 +33,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func RunCommand(command string, args []string, workDir string, envMap map[string]string) (output []byte, err error) {

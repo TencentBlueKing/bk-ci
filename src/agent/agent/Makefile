@@ -3,8 +3,8 @@ CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
 AGENT_VERSION=v1.12.0-beta.36
-BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.BuildTime=$(BuildTime) \
--X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
+BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
+-X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
 # 编译外部出包版本时需要设置当前变量为out
 BUILD_OUT_TAG=out
@@ -21,7 +21,7 @@ test-unit:
 	GO111MODULE=on go test -tags=${BUILD_OUT_TAG} -run . ./...
 
 # 相对于代码生成器的位置
-I18N_DIR := "../../../../../support-files/i18n/agent/"
+I18N_DIR := "../../../../../../support-files/i18n/agent/"
 
 i18nfilegen: 
 	I18N_DIR=${I18N_DIR} go generate -x src/pkg/i18n/i18n.go
