@@ -1,5 +1,5 @@
-//go:build windows
-// +build windows
+//go:build windows && !out
+// +build windows,!out
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
