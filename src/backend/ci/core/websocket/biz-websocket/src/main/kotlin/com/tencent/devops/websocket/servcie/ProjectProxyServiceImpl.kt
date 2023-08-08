@@ -24,18 +24,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.service.impl
 
-import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.service.DispatchReportService
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
+package com.tencent.devops.websocket.servcie
 
-@Service
-@RefreshScope
-class DispatchReportServiceImpl : DispatchReportService {
-
-    override fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
+class ProjectProxyServiceImpl : ProjectProxyService {
+    override fun checkProject(projectId: String, userId: String): Boolean {
         return true
     }
 }
