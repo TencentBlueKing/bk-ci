@@ -31,14 +31,20 @@ package com.tencent.devops.process.service.trigger
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.webhook.listener.PipelineTriggerRequestService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -47,6 +53,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -75,6 +82,7 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
+        logger.info("save pipeline trigger event|event[$triggerEvent]|detail[$triggerDetail]")
         triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -242,5 +250,92 @@ class PipelineTriggerEventService @Autowired constructor(
             eventId = eventId
         )
         return true
+    }
+
+    /**
+     * 保存特殊触发事件
+     * 远程/手动/openApi
+     */
+    fun saveSpecificEvent(
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        requestParams: Map<String, String>?,
+        triggerType: String = PipelineTriggerType.MANUAL.name,
+        startAction: () -> BuildId
+    ): BuildId {
+        var buildNum: String? = null
+        var status = PipelineTriggerStatus.SUCCEED.name
+        var buildId: String? = null
+        try {
+            val buildInfo = startAction.invoke()
+            buildNum = buildInfo.num.toString()
+            buildId = buildInfo.id
+            return buildInfo
+        } catch (ignored: Exception) {
+            status = PipelineTriggerStatus.FAILED.name
+            throw ignored
+        } finally {
+            saveManualStartEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                status = status,
+                requestParams = requestParams,
+                userId = userId,
+                buildNum = buildNum,
+                triggerType = triggerType
+            )
+        }
+    }
+
+    /**
+     * 保存手动触发事件
+     */
+    private fun saveManualStartEvent(
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        buildNum: String?,
+        userId: String,
+        status: String,
+        triggerType: String,
+        requestParams: Map<String, String>?
+    ) {
+        val eventId = getEventId()
+        saveEvent(
+            triggerDetail = PipelineTriggerDetail(
+                eventId = eventId,
+                status = status,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                buildNum = buildNum
+            ),
+            triggerEvent = PipelineTriggerEvent(
+                eventId = eventId,
+                projectId = projectId,
+                eventDesc = JsonUtil.toJson(
+                    I18Variable(
+                        code = getI18Code(triggerType),
+                        params = listOf(userId)
+                    ),
+                    false
+                ),
+                triggerType = triggerType,
+                eventType = triggerType,
+                triggerUser = userId,
+                requestParams = requestParams,
+                eventTime = LocalDateTime.now(),
+                hookRequestId = null
+            )
+        )
+    }
+
+    private fun getI18Code(triggerType: String) = when (triggerType) {
+        PipelineTriggerType.MANUAL.name -> WebhookI18nConstants.MANUAL_START_EVENT_DESC
+        PipelineTriggerType.REMOTE.name -> WebhookI18nConstants.REMOTE_START_EVENT_DESC
+        PipelineTriggerType.SERVICE.name -> WebhookI18nConstants.SERVICE_START_EVENT_DESC
+        else -> ""
     }
 }

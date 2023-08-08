@@ -50,6 +50,7 @@ import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -60,7 +61,8 @@ class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineRecentUseService: PipelineRecentUseService
+    private val pipelineRecentUseService: PipelineRecentUseService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -94,15 +96,23 @@ class UserBuildResourceImpl @Autowired constructor(
         triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        val manualStartup = pipelineBuildFacadeService.buildManualStartup(
-            userId = userId,
-            startType = StartType.MANUAL,
+        val manualStartup = pipelineTriggerEventService.saveSpecificEvent(
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
-            channelCode = ChannelCode.BS,
-            buildNo = buildNo,
-            triggerReviewers = triggerReviewers
+            requestParams = values,
+            userId = userId,
+            startAction = {
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS,
+                    buildNo = buildNo,
+                    triggerReviewers = triggerReviewers
+                )
+            }
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(manualStartup)

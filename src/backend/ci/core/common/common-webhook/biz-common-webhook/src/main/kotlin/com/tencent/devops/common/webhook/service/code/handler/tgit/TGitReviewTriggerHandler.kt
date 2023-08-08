@@ -27,6 +27,10 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
@@ -36,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
@@ -94,6 +99,22 @@ class TGitReviewTriggerHandler(
 
     override fun getMessage(event: GitReviewEvent): String? {
         return ""
+    }
+
+    override fun getEventDesc(event: GitReviewEvent): String {
+        val i18Variable = I18Variable(
+            code = getI18Code(event),
+            params = listOf(
+                "${event.repository.homepage}/reviews/${event.iid}",
+                event.commitId ?: "",
+                getUsername(event)
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GitReviewEvent): String {
+        return event.projectId.toString()
     }
 
     @SuppressWarnings("ComplexMethod", "ComplexCondition")
@@ -189,5 +210,13 @@ class TGitReviewTriggerHandler(
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter, crTypeFilter)
         }
+    }
+
+    private fun getI18Code(event: GitReviewEvent) = when (event.reviewableType) {
+        GitReviewEvent.ACTION_APPROVED -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
+        GitReviewEvent.ACTION_APPROVING -> WebhookI18nConstants.TGIT_REVIEW_APPROVING_EVENT_DESC
+        GitReviewEvent.ACTION_CHANGE_DENIED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
+        GitReviewEvent.ACTION_CHANGE_REQUIRED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
+        else -> ""
     }
 }

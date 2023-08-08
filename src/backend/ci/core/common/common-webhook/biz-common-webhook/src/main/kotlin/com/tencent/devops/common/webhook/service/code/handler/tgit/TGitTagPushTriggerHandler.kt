@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
@@ -38,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
@@ -57,6 +60,7 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
@@ -99,6 +103,23 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         } else {
             event.commits!![0].message
         }
+    }
+
+    override fun getEventDesc(event: GitTagPushEvent): String {
+        val i18Variable = I18Variable(
+            code = WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC,
+            params = listOf(
+                "${event.create_from}",
+                "${event.repository.homepage}/-/tags/${getBranchName(event)}",
+                getBranchName(event),
+                getUsername(event)
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GitTagPushEvent): String {
+        return event.project_id.toString()
     }
 
     override fun retrieveParams(

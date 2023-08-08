@@ -27,6 +27,10 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -45,6 +49,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -87,6 +92,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -126,6 +132,24 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     override fun getMessage(event: GithubPullRequestEvent): String? {
         return ""
+    }
+
+    override fun getEventDesc(event: GithubPullRequestEvent): String {
+        val i18Variable = I18Variable(
+            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            params = listOf(
+                event.pullRequest.title,
+                event.pullRequest.url,
+                getUsername(event),
+                DateTimeUtil.formatMilliTime(event.pullRequest.updatedAt?.let {
+                    DateTimeUtil.zoneDateToTimestamp(it)
+                } ?: LocalDateTime.now().timestampmilli()))
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GithubPullRequestEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun getEnv(event: GithubPullRequestEvent): Map<String, Any> {

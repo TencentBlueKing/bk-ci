@@ -29,6 +29,71 @@
 package com.tencent.devops.common.webhook.enums
 
 object WebhookI18nConstants {
+    // 工蜂事件描述
     const val TGIT_PUSH_EVENT_DESC = "bkTgitPushEventDesc"
-
+    const val TGIT_ISSUE_CREATED_EVENT_DESC = "bkTgitIssueCreatedEventDesc"
+    const val TGIT_ISSUE_UPDATED_EVENT_DESC = "bkTgitIssueUpdatedEventDesc"
+    const val TGIT_ISSUE_CLOSED_EVENT_DESC = "bkTgitIssueClosedEventDesc"
+    const val TGIT_ISSUE_REOPENED_EVENT_DESC = "bkTgitIssueReopenedEventDesc"
+    const val TGIT_MR_CREATED_EVENT_DESC = "bkTgitMrCreatedEventDesc"
+    const val TGIT_MR_UPDATED_EVENT_DESC = "bkTgitMrUpdatedEventDesc"
+    const val TGIT_MR_CLOSED_EVENT_DESC = "bkTgitMrClosedEventDesc"
+    const val TGIT_MR_REOPENED_EVENT_DESC = "bkTgitMrReopenedEventDesc"
+    const val TGIT_MR_PUSH_UPDATED_EVENT_DESC = "bkTgitMrPushUpdatedEventDesc"
+    const val TGIT_MR_MERGED_EVENT_DESC = "bkTgitMrCreateEventDesc"
+    const val TGIT_NOTE_EVENT_DESC = "bkTgitNoteEventDesc"
+    const val TGIT_REVIEW_APPROVED_EVENT_DESC = "bkTgitReviewApprovedEventDesc"
+    const val TGIT_REVIEW_APPROVING_EVENT_DESC = "bkTgitReviewApprovingEventDesc"
+    const val TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC = "bkTgitReviewChangeDeniedEventDesc"
+    const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
+    const val TGIT_TAG_PUSH_EVENT_DESC = "bkTgitTagPushEventDesc"
+    // Github事件描述
+    const val GITHUB_PUSH_EVENT_DESC = "bkGithubPushEventDesc"
+    const val GITHUB_CREATE_EVENT_DESC = "bkGithubCreateEventDesc"
+    const val GITHUB_PR_EVENT_DESC = "bkGithubPrEventDesc"
+    // P4事件描述
+    const val P4_Change_EVENT_DESC = "bkP4CreateEventDesc"
+    const val P4_Shelve_EVENT_DESC = "bkP4ShelveEventDesc"
+    // SVN事件描述
+    const val SVN_COMMIT_EVENT_DESC = "bkSvnShelveEventDesc"
+    // 手动触发
+    const val MANUAL_START_EVENT_DESC = "bkManualStartEventDesc"
+    // 远程触发
+    const val REMOTE_START_EVENT_DESC = "bkManualStartEventDesc"
+    // openApi触发
+    const val SERVICE_START_EVENT_DESC = "bkManualStartEventDesc"
+    // 事件类型匹配
+    const val EVENT_TYPE_MATCHED="bkRepoTriggerEventTypeMatched"
+    // 事件类型不匹配
+    const val EVENT_TYPE_NOT_MATCH="bkRepoTriggerEventTypeNotMatch"
+    // 目标分支不匹配
+    const val TARGET_BRANCH_NOT_MATCH = "bkRepoTriggerTargetBranchNotMatch"
+    // 目标分支被排除
+    const val TARGET_BRANCH_IGNORED = "bkRepoTriggerTargetBranchIgnored"
+    // 源分支不匹配
+    const val SOURCE_BRANCH_NOT_MATCH = "bkRepoTriggerSourceBranchNotMatch"
+    // 源分支被排除
+    const val SOURCE_BRANCH_IGNORED = "bkRepoTriggerSourceBranchIgnored"
+    // 用户不匹配
+    const val USER_NOT_MATCH = "bkRepoTriggerUserNotMatch"
+    // 用户被排除
+    const val USER_IGNORED = "bkRepoTriggerUserIgnored"
+    // 路径不匹配
+    const val PATH_NOT_MATCH = "bkRepoTriggerPathNotMatch"
+    // 路径被排除
+    const val PATH_IGNORED = "bkRepoTriggerPathIgnored"
+    // Tag名称不匹配
+    const val TAG_NAME_NOT_MATCH = "bkRepoTriggerTagNameNotMatch"
+    // Tag名称被排除
+    const val TAG_NAME_IGNORED = "bkRepoTriggerTagNameIgnored"
+    // Tag来源分支不匹配
+    const val TAG_SOURCE_BRANCH_NOT_MATCH = "bkRepoTriggerTagSourceBranchNotMatch"
+    // 评论内容不匹配
+    const val NOTE_CONTENT_IGNORED = "bkRepoTriggerNoteContentNotMatch"
+    // 评论类型不匹配
+    const val NOTE_ACTION_IGNORED = "bkRepoTriggerNoteActionNotMatch"
+    // 评审操作类型不匹配
+    const val REVIEW_ACTION_IGNORED = "bkRepoTriggerReviewActionNotMatch"
+    // issues操作类型不匹配
+    const val ISSUES_ACTION_IGNORED = "bkRepoTriggerNoteActionNotMatch"
 }

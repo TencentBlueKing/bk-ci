@@ -27,9 +27,14 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -43,6 +48,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterRespon
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -78,6 +84,23 @@ class P4ChangeTriggerHandler(
     }
 
     override fun getMessage(event: P4ChangeEvent) = ""
+
+    override fun getEventDesc(event: P4ChangeEvent): String {
+        val i18Variable = I18Variable(
+            code = WebhookI18nConstants.P4_Change_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                "",
+                getUsername(event),
+                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: P4ChangeEvent): String {
+        return event.p4Port
+    }
 
     override fun getWebhookFilters(
         event: P4ChangeEvent,

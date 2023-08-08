@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
@@ -40,6 +42,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -115,6 +118,22 @@ class TGitNoteTriggerHandler(
 
     override fun getMessage(event: GitNoteEvent): String? {
         return event.objectAttributes.note
+    }
+
+    override fun getEventDesc(event: GitNoteEvent): String {
+        val i18Variable = I18Variable(
+            code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
+            params = listOf(
+                event.objectAttributes.url,
+                event.objectAttributes.note,
+                getUsername(event)
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GitNoteEvent): String {
+        return event.objectAttributes.projectId.toString()
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")

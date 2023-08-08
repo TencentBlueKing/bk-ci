@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
@@ -36,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
@@ -55,6 +58,7 @@ import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHand
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 class TGitIssueTriggerHandler(
@@ -91,6 +95,26 @@ class TGitIssueTriggerHandler(
 
     override fun getMessage(event: GitIssueEvent): String? {
         return event.objectAttributes.title
+    }
+
+    override fun getEventDesc(event: GitIssueEvent): String {
+        val i18Variable = I18Variable(
+            code = getI18Code(event),
+            params = listOf(
+                "${event.objectAttributes.url}",
+                event.objectAttributes.iid,
+                getUsername(event)
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GitIssueEvent): String {
+        return event.objectAttributes.projectId.toString()
+    }
+
+    override fun getAction(event: GitIssueEvent): String? {
+        return event.objectAttributes.action
     }
 
     override fun retrieveParams(event: GitIssueEvent, projectId: String?, repository: Repository?): Map<String, Any> {
@@ -138,5 +162,13 @@ class TGitIssueTriggerHandler(
             included = WebhookUtils.convert(webHookParams.includeIssueAction)
         )
         return listOf(actionFilter)
+    }
+
+    private fun getI18Code(event: GitIssueEvent) = when (getAction(event)) {
+        GitIssueEvent.ACTION_CREATED -> WebhookI18nConstants.TGIT_ISSUE_CREATED_EVENT_DESC
+        GitIssueEvent.ACTION_UPDATED -> WebhookI18nConstants.TGIT_ISSUE_UPDATED_EVENT_DESC
+        GitIssueEvent.ACTION_CLOSED -> WebhookI18nConstants.TGIT_ISSUE_CLOSED_EVENT_DESC
+        GitIssueEvent.ACTION_REOPENED -> WebhookI18nConstants.TGIT_ISSUE_REOPENED_EVENT_DESC
+        else -> ""
     }
 }

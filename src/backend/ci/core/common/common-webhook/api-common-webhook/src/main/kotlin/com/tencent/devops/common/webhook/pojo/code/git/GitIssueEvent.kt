@@ -39,6 +39,10 @@ data class GitIssueEvent(
 ) : GitEvent() {
     companion object {
         const val classType = "issue"
+        const val ACTION_CREATED = "open"
+        const val ACTION_UPDATED = "update"
+        const val ACTION_CLOSED = "close"
+        const val ACTION_REOPENED = "reopen"
     }
 }
 

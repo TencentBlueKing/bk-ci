@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -138,10 +137,9 @@ class TGitPushTriggerHandler(
             params = listOf(
                 getBranchName(event),
                 "${event.repository.homepage}/commit/${event.checkout_sha}",
-                event.user_name,
-                DateTimeUtil.formatMilliTime(event.pushTimestamp?.let {
-                    DateTimeUtil.zoneDateToTimestamp(it)
-                } ?: LocalDateTime.now().timestampmilli()))
+                "${event.checkout_sha}",
+                event.user_name
+            )
         )
         return JsonUtil.toJson(i18Variable)
     }

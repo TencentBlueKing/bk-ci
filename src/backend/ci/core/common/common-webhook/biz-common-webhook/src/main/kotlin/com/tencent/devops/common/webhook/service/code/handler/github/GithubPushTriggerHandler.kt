@@ -27,6 +27,10 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -37,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -52,6 +57,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -62,6 +68,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -101,6 +108,28 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
 
     override fun getMessage(event: GithubPushEvent): String? {
         return event.headCommit?.message ?: ""
+    }
+
+    override fun getEventDesc(event: GithubPushEvent): String {
+        val linkUrl = if (event.headCommit != null) {
+            "https://github.com/${event.repository.fullName}/commit/${event.headCommit?.id}"
+        } else {
+            "https://github.com/${event.repository.fullName}/commit/${getBranchName(event)}"
+        }
+        val i18Variable = I18Variable(
+            code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
+            params = listOf(
+                getBranchName(event),
+                linkUrl,
+                getUsername(event),
+                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+            )
+        )
+        return JsonUtil.toJson(i18Variable)
+    }
+
+    override fun getExternalId(event: GithubPushEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun preMatch(event: GithubPushEvent): WebhookMatchResult {
