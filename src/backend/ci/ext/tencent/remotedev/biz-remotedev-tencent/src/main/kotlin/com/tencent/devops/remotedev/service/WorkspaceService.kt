@@ -656,7 +656,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("notifyWinBeforeSleep start check $viewers")
         viewers.forEach { (userId, workspaces) ->
             // 不重复提醒
-            redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) ?: return@forEach
+            redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) ?: kotlin.run {
+                logger.info("$userId is notify yet. return")
+                return@forEach
+            }
             val duration = remoteDevSettingService.userWinTimeLeft(userId)
             val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
             if (duration < limit * 60) {
@@ -685,6 +688,8 @@ class WorkspaceService @Autowired constructor(
                     value = workspaces.joinToString(),
                     expiredInSecond = limit * 60
                 )
+            } else {
+                logger.info("no need to notify now|$duration|${limit * 60}")
             }
         }
     }
