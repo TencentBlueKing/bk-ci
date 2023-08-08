@@ -213,7 +213,7 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("sync START resource list get lock.")
-                workspaceService.syncStartCloudResourceList()
+                workspaceCommon.syncStartCloudResourceList()
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)

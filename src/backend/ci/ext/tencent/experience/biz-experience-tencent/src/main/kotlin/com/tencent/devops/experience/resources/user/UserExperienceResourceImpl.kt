@@ -27,11 +27,16 @@
 
 package com.tencent.devops.experience.resources.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.user.UserExperienceResource
+import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceCreate
@@ -43,6 +48,7 @@ import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceOuterService
+import com.tencent.devops.experience.service.ExperiencePermissionService
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,7 +57,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
-    private val experienceOuterService: ExperienceOuterService
+    private val experienceOuterService: ExperienceOuterService,
+    private val experiencePermissionService: ExperiencePermissionService
 ) : UserExperienceResource {
     override fun hasArtifactoryPermission(
         userId: String,
@@ -74,11 +81,24 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId, experienceHashId)
+        experiencePermissionService.validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = HashUtil.decodeIdToLong(experienceHashId),
+            authPermission = AuthPermission.VIEW,
+            message = I18nUtil.getCodeLanMessage(ExperienceMessageCode.USER_NEED_VIEW_EXP_PERMISSION)
+        )
         return Result(experienceService.get(userId, experienceHashId))
     }
 
     override fun create(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
         checkParam(userId, projectId)
+        if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_PERMISSION,
+                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        }
         experienceService.create(userId, projectId, experience)
         return Result(true)
     }

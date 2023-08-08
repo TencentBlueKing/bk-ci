@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
@@ -94,7 +95,7 @@ class SleepControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
 
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
@@ -138,7 +139,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -220,7 +222,7 @@ class SleepControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.id}",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspace.name,
@@ -251,7 +253,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -344,7 +347,8 @@ class SleepControl @Autowired constructor(
             status = status,
             action = WorkspaceAction.SLEEP,
             systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
         )
     }
 }

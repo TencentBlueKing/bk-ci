@@ -39,5 +39,5 @@ dependencies {
     api(project(":ext:tencent:image:api-image-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":core:common:common-archive"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
+    api(project(":core:common:common-codecc"))
 }

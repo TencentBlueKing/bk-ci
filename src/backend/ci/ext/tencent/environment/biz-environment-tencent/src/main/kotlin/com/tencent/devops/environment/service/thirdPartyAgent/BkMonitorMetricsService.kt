@@ -236,10 +236,18 @@ class BkMonitorMetricsService @Autowired constructor(
 
     private fun queryHostInfoImpl(projectId: String, agentHashId: String): AgentHostInfo {
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
-        val nCpu = searchMetrics(projectId, nCpuPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
+        val nCpu = searchMetrics(
+            projectId = projectId,
+            promql = nCpuPromql,
+            timeRange = TIME_RANGE_HOUR
+        )?.get(0)?.datapoints?.lastOrNull { it[0] != 0.0 }?.get(0)
 
         val memPromql = "$dataTableName:mem:total{agentId=\"$agentHashId\"}"
-        val nMem = searchMetrics(projectId, memPromql, TIME_RANGE_HOUR)?.get(0)?.datapoints?.lastOrNull()?.get(0)
+        val nMem = searchMetrics(
+            projectId = projectId,
+            promql = memPromql,
+            timeRange = TIME_RANGE_HOUR
+        )?.get(0)?.datapoints?.lastOrNull { it[0] != 0.0 }?.get(0)
         val memTotal = if (nMem != null) {
             NumberUtils.byteToString(nMem)
         } else {

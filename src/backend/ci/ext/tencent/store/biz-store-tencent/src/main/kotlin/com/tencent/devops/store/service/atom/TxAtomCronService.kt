@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.plugin.api.ServiceCodeccResource
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
@@ -47,7 +46,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxAtomCronService @Autowired constructor(
-    private val client: Client,
+    private val codeccApi: CodeccApi,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val marketAtomDao: MarketAtomDao,
@@ -87,7 +86,7 @@ class TxAtomCronService @Autowired constructor(
                 // 获取当次构建对应的buildId
                 val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
                 val repoId = "$pluginNameSpaceName/$atomCode"
-                val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
+                val codeccMeasureInfoResult = codeccApi.getCodeccMeasureInfo(
                     repoId = repoId,
                     buildId = buildId
                 )

@@ -30,7 +30,7 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -46,7 +46,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("UNUSED")
+@Suppress("UNUSED", "LongParameterList", "ReturnCount")
 class AgentUpgradeJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val agentPropsScope: AgentPropsScope,

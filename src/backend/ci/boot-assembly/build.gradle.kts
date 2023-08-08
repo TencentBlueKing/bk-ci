@@ -35,7 +35,7 @@ dependencies {
     implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
     implementation(project(":core:dispatch-docker:biz-dispatch-docker-sample"))
-    implementation(project(":core:environment:biz-environment-sample"))
+    implementation(project(":core:environment:biz-environment"))
     implementation(project(":core:image:biz-image"))
     implementation(project(":core:log:biz-log-sample"))
     implementation(project(":core:misc:biz-misc-sample"))
@@ -47,12 +47,12 @@ dependencies {
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process-sample"))
     implementation(project(":core:project:biz-project-sample"))
-    implementation(project(":core:quality:biz-quality-sample"))
+    implementation(project(":core:quality:biz-quality"))
     implementation(project(":core:repository:biz-repository-sample"))
     implementation(project(":core:store:biz-store-sample"))
     implementation(project(":core:store:biz-store-image-sample"))
     implementation(project(":core:ticket:biz-ticket-sample"))
-    implementation(project(":core:websocket:biz-websocket-blueking"))
+    implementation(project(":core:websocket:biz-websocket"))
 }
 
 configurations.all {

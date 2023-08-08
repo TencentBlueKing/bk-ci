@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PrePluginVersion
@@ -221,18 +220,6 @@ interface UserPreBuildResource {
         @QueryParam("debugLog")
         debugLog: Boolean?
     ): Result<QueryLogs>
-
-    @ApiOperation("获取报告")
-    @GET
-    @Path("/project/{preProjectId}/build/{buildId}/report")
-    fun getReport(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam(value = "buildId")
-        buildId: String
-    ): Result<CodeccCallback?>
 
     @ApiOperation("获取build蓝盾链接")
     @GET

@@ -59,12 +59,12 @@ import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import java.util.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.util.Random
 
 @Component
 class DevCloudBuildListener @Autowired constructor(
@@ -344,24 +344,6 @@ class DevCloudBuildListener @Autowired constructor(
         val password = containerPool.credential!!.password
 
         with(dispatchMessage) {
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
-
             val (devCloudTaskId, createName) = dispatchDevCloudClient.createContainer(
                 this,
                 DevCloudContainer(
@@ -379,7 +361,7 @@ class DevCloudBuildListener @Autowired constructor(
                     params = Params(
                         env = generateEnvs(this),
                         command = listOf("/bin/sh", entrypoint),
-                        labels = containerLabels,
+                        labels = initContainerLabels(),
                         ipEnabled = false
                     ),
                     clusterType = clusterType
@@ -477,24 +459,6 @@ class DevCloudBuildListener @Autowired constructor(
         poolNo: Int
     ) {
         with(dispatchMessage) {
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse和checkout插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
-
             val devCloudTaskId = dispatchDevCloudClient.operateContainer(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -506,7 +470,7 @@ class DevCloudBuildListener @Autowired constructor(
                 param = Params(
                     env = generateEnvs(this),
                     command = listOf("/bin/sh", entrypoint),
-                    labels = containerLabels,
+                    labels = initContainerLabels(),
                     ipEnabled = false
                 )
             )
@@ -599,6 +563,30 @@ class DevCloudBuildListener @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun DispatchMessage.initContainerLabels(): MutableMap<String, String> {
+        val containerLabels = mutableMapOf(
+            "projectId" to projectId,
+            "pipelineId" to pipelineId,
+            "buildId" to buildId,
+            "vmSeqId" to vmSeqId
+        )
+
+        // 针对fuse插件优化
+        fuseAtomCode?.split(",")?.forEach {
+            if (it in atoms.keys) {
+                val (key, value) = fuseContainerLabel!!.split(":")
+                containerLabels[key] = value
+                return@forEach
+            }
+        }
+
+        // overlayfs代码拉取优化
+        if (overlayFsLabel in atoms.keys) {
+            containerLabels[overlayFsLabel] = "true"
+        }
+        return containerLabels
     }
 
     private fun generateEnvs(dispatchMessage: DispatchMessage): Map<String, Any> {

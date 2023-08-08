@@ -78,11 +78,11 @@ class WindowsResourceConfigDao {
 
     fun fetchAny(
         dslContext: DSLContext,
-        id: Long
+        id: Int
     ): TWindowsResourceConfigRecord? {
         return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             dslContext.selectFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id.toLong()))
                 .fetchAny()
         }
     }

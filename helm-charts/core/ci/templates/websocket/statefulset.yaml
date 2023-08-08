@@ -52,6 +52,22 @@ spec:
       {{- if .Values.websocket.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.websocket.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}        
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              while ! mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}; do
+                echo "mysql connecting.."
+                sleep 3
+              done
+              echo "MySQL is available";
+      {{- end }}
       containers:
         - name: websocket
           image: {{ include "bkci-backend.image" . }}
