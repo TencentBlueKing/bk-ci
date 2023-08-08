@@ -43,14 +43,14 @@ data class GithubRepository(
     @ApiModelProperty("项目id", required = true)
     override val projectId: String = "",
     @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
+    override val repoHashId: String?,
+    @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
+    override val credentialId: String = ""
 ) : Repository {
     companion object {
         const val classType = "github"
     }
 
-    override val credentialId: String
-        get() = ""
 
     override fun getStartPrefix() = "https://github.com/"
 }

@@ -407,7 +407,16 @@ class RepoFileService @Autowired constructor(
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
-        return githubService.getFileContent(projectName!!, ref, filePath)
+        return githubService.getFileContent(
+            projectName = projectName!!,
+            ref = ref,
+            filePath = filePath,
+            token = if (repo.credentialId.isNotBlank()) {
+                getCredential(repo.projectId ?: "", repo).privateKey
+            } else {
+                ""
+            }
+        )
     }
 
     private fun getP4SingleFile(
