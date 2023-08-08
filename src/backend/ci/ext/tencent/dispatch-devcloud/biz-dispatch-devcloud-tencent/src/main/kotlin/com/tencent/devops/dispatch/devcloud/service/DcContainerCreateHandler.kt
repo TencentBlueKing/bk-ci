@@ -46,13 +46,12 @@ import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
-import com.tencent.devops.process.engine.common.VMUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Random
 
 @Service
 class DcContainerCreateHandler @Autowired constructor(
@@ -124,7 +123,7 @@ class DcContainerCreateHandler @Autowired constructor(
                     disk = disk,
                     replica = 1,
                     ports = emptyList(),
-                    password = generatePwd(),
+                    password = "",
                     params = Params(
                         env = generateEnvs(this),
                         command = listOf("/bin/sh", entrypoint),
@@ -218,16 +217,7 @@ class DcContainerCreateHandler @Autowired constructor(
         }
     }
 
-    private fun generatePwd(): String {
-        val secretSeed =
-            arrayOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz", "0123456789", "[()~!@#%&-+=_")
-
-        val random = Random()
-        val buf = StringBuffer()
-        for (i in 0 until 15) {
-            val num = random.nextInt(secretSeed[i / 4].length)
-            buf.append(secretSeed[i / 4][num])
-        }
-        return buf.toString()
+    private fun getPersistenceContainerLabel(): String {
+        return "${System.currentTimeMillis()}-" + RandomStringUtils.randomAlphanumeric(16)
     }
 }

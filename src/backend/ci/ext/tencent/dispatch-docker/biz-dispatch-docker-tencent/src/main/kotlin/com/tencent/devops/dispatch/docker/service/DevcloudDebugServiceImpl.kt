@@ -31,7 +31,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             buildId = buildId
         )
 
-        if (devCloudDebugResult.code != 0) {
+        if (devCloudDebugResult.status != 0) {
             val msg = devCloudDebugResult.message
             logger.error("[$pipelineId] get devcloud debugUrl failed, msg: $msg")
             throw DockerServiceException(
