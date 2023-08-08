@@ -41,7 +41,7 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                         <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
-                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="alias" v-model.trim="alias" data-vv-validate-on="blur" v-validate="{ required: true, max: 200, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('alias') }">
                             <span class="error-tips" v-if="errors.has('alias')">
                                 {{ errors.first('alias') }}
                             </span>

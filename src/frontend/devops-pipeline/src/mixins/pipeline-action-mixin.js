@@ -262,7 +262,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
-
+                pipeline.hasCollect = !pipeline.hasCollect
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
