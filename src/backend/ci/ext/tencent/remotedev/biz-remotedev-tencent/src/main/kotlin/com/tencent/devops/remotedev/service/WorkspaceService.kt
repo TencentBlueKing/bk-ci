@@ -689,7 +689,7 @@ class WorkspaceService @Autowired constructor(
                     expiredInSecond = limit * 60
                 )
             } else {
-                logger.info("no need to notify now|$duration|${limit * 60}")
+                logger.info("no need to notify now|$userId|$duration|${limit * 60}")
             }
         }
     }
