@@ -83,7 +83,7 @@ class CodeGitWebhookTriggerTaskAtom @Autowired constructor(
             triggerType = getScmType().name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventDesc = JsonUtil.toJson(matcher.getEventDesc()),
+            eventDesc = matcher.getEventDesc(),
             hookRequestId = requestId,
             eventTime = eventTime
         )
@@ -117,7 +117,7 @@ class CodeGitWebhookTriggerTaskAtom @Autowired constructor(
             triggerType = getScmType().name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventDesc = JsonUtil.toJson(matcher.getEventDesc()),
+            eventDesc = matcher.getEventDesc(),
             hookRequestId = request.hookRequestId,
             eventTime = eventTime
         )

@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -131,8 +132,8 @@ class TGitPushTriggerHandler(
         }
     }
 
-    override fun getEventDesc(event: GitPushEvent): I18Variable {
-        return I18Variable(
+    override fun getEventDesc(event: GitPushEvent): String {
+        val i18Variable = I18Variable(
             code = TGIT_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
@@ -142,6 +143,7 @@ class TGitPushTriggerHandler(
                     DateTimeUtil.zoneDateToTimestamp(it)
                 } ?: LocalDateTime.now().timestampmilli()))
         )
+        return JsonUtil.toJson(i18Variable)
     }
 
     override fun getExternalId(event: GitPushEvent): String {

@@ -84,7 +84,7 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
         return eventHandler.getMessage(event)
     }
 
-    override fun getEventDesc(): I18Variable {
+    override fun getEventDesc(): String {
         return eventHandler.getEventDesc(event)
     }
 

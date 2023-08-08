@@ -76,7 +76,7 @@ interface ScmWebhookMatcher {
     /**
      * 获取事件描述,根据不同的事件组织事件说明
      */
-    fun getEventDesc(): I18Variable
+    fun getEventDesc(): String = ""
 
     /**
      * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port
