@@ -148,18 +148,18 @@
 
 <script lang="ts">
     import Vue from 'vue'
-import { Component } from 'vue-property-decorator'
-import { Action, Getter, State } from 'vuex-class'
-import eventBus from '../../utils/eventBus'
-import { isAbsoluteUrl, urlJoin } from '../../utils/util'
-import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
-import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-import Logo from '../Logo/index.vue'
-import ProjectDialog from '../ProjectDialog/index.vue'
-import DevopsSelect from '../Select/index.vue'
-import User from '../User/index.vue'
-import NavMenu from './NavMenu.vue'
-import Qrcode from './Qrcode.vue'
+    import { Component } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
+    import eventBus from '../../utils/eventBus'
+    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
+    import User from '../User/index.vue'
+    import NavMenu from './NavMenu.vue'
+    import Qrcode from './Qrcode.vue'
 
     @Component({
         components: {
@@ -411,7 +411,7 @@ import Qrcode from './Qrcode.vue'
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 

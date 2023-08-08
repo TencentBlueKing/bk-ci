@@ -77,14 +77,14 @@
 
 <script lang="ts">
     import Vue from 'vue'
-import { Component } from 'vue-property-decorator'
-import { Action, Getter, State } from 'vuex-class'
-import { clickoutside } from '../../directives/index'
-import { getProjectId } from '../../router'
-import eventBus from '../../utils/eventBus'
-import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
-import Logo from '../Logo/index.vue'
-import NavBox from '../NavBox/index.vue'
+    import { Component } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
+    import { clickoutside } from '../../directives/index'
+    import { getProjectId } from '../../router'
+    import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import Logo from '../Logo/index.vue'
+    import NavBox from '../NavBox/index.vue'
 
     @Component({
         name: 'nav-menu',

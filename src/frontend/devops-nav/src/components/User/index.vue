@@ -39,10 +39,10 @@
 </template>
 <script lang="ts">
     import Vue from 'vue'
-import { Component, Prop, Watch } from 'vue-property-decorator'
-import { Action } from 'vuex-class'
-import { clickoutside } from '../../directives/index'
-import bkLogout from '../../utils/bklogout.js'
+    import { Component, Prop, Watch } from 'vue-property-decorator'
+    import { Action } from 'vuex-class'
+    import { clickoutside } from '../../directives/index'
+    import bkLogout from '../../utils/bklogout.js'
 
     const IS_HIDE_HINT = 'IS_HIDE_HINT'
 
