@@ -49,7 +49,7 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              sleep 1m;
+              sleep 60s;
       containers:
         - name: kubernetes-manager
           image: {{ .Values.kubernetesManager.image }}
