@@ -69,11 +69,6 @@
             }
         },
         methods: {
-            goEdit () {
-                this.$router.push({
-                    name: 'pipelinesEdit'
-                })
-            },
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'
