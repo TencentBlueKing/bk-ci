@@ -31,6 +31,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"text/template"
 	"time"
 
@@ -45,7 +46,6 @@ import (
 	"github.com/influxdata/telegraf/agent"
 	telegrafConfig "github.com/influxdata/telegraf/config"
 
-	"io/ioutil"
 	"strings"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
@@ -153,7 +153,7 @@ func writeTelegrafConfig() error {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
 	}
 
-	err = ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
+	err = os.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
 	if err != nil {
 		return errors.Wrap(err, "write telegraf config err")
 	}
