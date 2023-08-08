@@ -175,5 +175,19 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_CODE_P4` (
   PRIMARY KEY (`REPOSITORY_ID`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+create table T_REPOSITORY_TGIT_TOKEN
+(
+    `ID`            bigint auto_increment comment '主键ID'
+        primary key,
+    `USER_ID`       varchar(64)                        null comment '用户ID',
+    `ACCESS_TOKEN`  varchar(96)                        null comment '权限Token',
+    `REFRESH_TOKEN` varchar(96)                        null comment '刷新token',
+    `TOKEN_TYPE`    varchar(64)                        null comment 'token类型',
+    `EXPIRES_IN`    bigint                             null comment '过期时间',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP null comment 'token的创建时间',
+    `OAUTH_USER_ID` varchar(64)                        not null comment '账户实际名称',
+    constraint `USER_ID`
+        unique (`USER_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';
 
 SET FOREIGN_KEY_CHECKS = 1;
