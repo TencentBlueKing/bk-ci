@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.atom.IWebhookAtomTask
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
@@ -82,7 +83,7 @@ class CodeGitWebhookTriggerTaskAtom @Autowired constructor(
             triggerType = getScmType().name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventDesc = matcher.getEventDesc(),
+            eventDesc = JsonUtil.toJson(matcher.getEventDesc()),
             hookRequestId = requestId,
             eventTime = eventTime
         )
@@ -116,7 +117,7 @@ class CodeGitWebhookTriggerTaskAtom @Autowired constructor(
             triggerType = getScmType().name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventDesc = matcher.getEventDesc(),
+            eventDesc = JsonUtil.toJson(matcher.getEventDesc()),
             hookRequestId = request.hookRequestId,
             eventTime = eventTime
         )

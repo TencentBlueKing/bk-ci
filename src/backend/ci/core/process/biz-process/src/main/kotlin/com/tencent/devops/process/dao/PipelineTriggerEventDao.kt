@@ -80,7 +80,7 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventSource,
                 triggerEvent.eventType,
                 triggerEvent.triggerUser,
-                triggerEvent.eventDesc,
+                JsonUtil.toJson(triggerEvent.eventDesc),
                 triggerEvent.hookRequestId,
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
                 triggerEvent.eventTime

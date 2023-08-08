@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -75,7 +76,7 @@ interface ScmWebhookMatcher {
     /**
      * 获取事件描述,根据不同的事件组织事件说明
      */
-    fun getEventDesc(): String = ""
+    fun getEventDesc(): I18Variable
 
     /**
      * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port
