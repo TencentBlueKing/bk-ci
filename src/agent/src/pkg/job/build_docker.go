@@ -39,6 +39,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
@@ -497,7 +498,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   dataDir,
-		Target:   job_docker.DockerDataDir,
+		Target:   constant.DockerDataDir,
 		ReadOnly: false,
 	})
 
