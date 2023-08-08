@@ -265,8 +265,8 @@ class GitOauthService @Autowired constructor(
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
                 GitToken(
-                    accessToken = BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, it.accessToken),
-                    refreshToken = BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, it.refreshToken),
+                    accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.accessToken),
+                    refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.refreshToken),
                     tokenType = it.tokenType,
                     expiresIn = it.expiresIn,
                     createTime = it.createTime.timestampmilli()
