@@ -277,7 +277,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         records?.forEach {
             val fieldType = it.fieldType
             val fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
-                if (isDecrypt) BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, it.fieldValue) else aesMock
+                if (isDecrypt) BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.fieldValue) else aesMock
             } else {
                 it.fieldValue
             }
