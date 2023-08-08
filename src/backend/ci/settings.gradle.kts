@@ -243,12 +243,10 @@ include(":core:notify:boot-notify")
 include(":core:monitoring")
 include(":core:monitoring:api-monitoring")
 include(":core:monitoring:biz-monitoring")
-include(":core:monitoring:biz-monitoring-sample")
 include(":core:monitoring:boot-monitoring")
 
 include(":core:websocket")
 include(":core:websocket:biz-websocket")
-include(":core:websocket:biz-websocket-blueking")
 include(":core:websocket:api-websocket")
 include(":core:websocket:boot-websocket")
 
