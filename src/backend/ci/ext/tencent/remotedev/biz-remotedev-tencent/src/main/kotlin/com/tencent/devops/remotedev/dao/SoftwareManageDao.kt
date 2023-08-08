@@ -5,7 +5,6 @@ import com.tencent.devops.model.remotedev.tables.TSystemSoftwares
 import com.tencent.devops.model.remotedev.tables.TUserInstalledRecords
 import com.tencent.devops.model.remotedev.tables.TUserInstalledSoftwares
 import com.tencent.devops.model.remotedev.tables.records.TProjectSoftwaresRecord
-import com.tencent.devops.model.remotedev.tables.records.TSystemSoftwaresRecord
 import com.tencent.devops.model.remotedev.tables.records.TUserInstalledRecordsRecord
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus

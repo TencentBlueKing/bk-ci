@@ -192,7 +192,7 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
-        return  installSoftwareFromXingyun(userId, ip.substringAfter("."), softwareInfoList)
+        return installSoftwareFromXingyun(userId, ip.substringAfter("."), softwareInfoList)
     }
 
     /** 云桌面创建完成后安全初始化：安装ioa
@@ -202,7 +202,7 @@ class SoftwareManageService @Autowired constructor(
     fun installSystemSoftwares(
         projectId: String,
         creator: String,
-        regionId:String,
+        regionId: String,
         ip: String
     ): InstallSoftwareRes? {
         val params = "-project_id \"$projectId\" -creator \"$creator\" -region_id \"$regionId\" -inner_ip \"$ip\""
@@ -213,7 +213,7 @@ class SoftwareManageService @Autowired constructor(
             return null
         }
         val softwareInfoList = mutableListOf<SoftwareInfo>()
-        systemSoftwareInfoList.forEach {record ->
+        systemSoftwareInfoList.forEach { record ->
             softwareInfoList.add(
                 SoftwareInfo(
                     name = record["NAME"] as String,
@@ -221,7 +221,7 @@ class SoftwareManageService @Autowired constructor(
                     commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
                 ))
         }
-        return  installSoftwareFromXingyun(creator, ip.substringAfter("."), softwareInfoList)
+        return installSoftwareFromXingyun(creator, ip.substringAfter("."), softwareInfoList)
     }
 
     // 调用行云接口执行软件安装
