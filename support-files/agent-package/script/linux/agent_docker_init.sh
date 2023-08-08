@@ -13,39 +13,11 @@ ci_log() {
    echo "$msg" >&2
 }
 
-unset_proxy() {
-    unset http_proxy
-    unset https_proxy
-    unset ftp_proxy
-    unset no_proxy
-    unset all_proxy
-    unset HTTP_PROXY
-    unset HTTPS_PROXY
-    unset FTP_PROXY
-    unset NO_PROXY
-    unset ALL_PROXY
-}
-
-cert_update() {
-    mkdir -p /etc/pki/ca-trust/source/anchors/
-    cp /data/bkdevops/apps/certs/git.code.oa.com/* /etc/pki/ca-trust/source/anchors/
-    update-ca-trust
-}
-
-mkdir  -p /data/devops
+mkdir -p /data/devops
 cd /data/devops
 mkdir -p /data/logs
 
 ci_log "docker_init.sh was launched."
-
-ci_log "unset proxy"
-unset_proxy
-ci_log "git.code.oa.com certs update"
-cert_update
-
-yum clean all || echo no yum
-rm -rf /var/lib/rpm/__db*
-rpm --rebuilddb || echo no rpm
 
 export LANG="zh_CN.UTF-8"
 
