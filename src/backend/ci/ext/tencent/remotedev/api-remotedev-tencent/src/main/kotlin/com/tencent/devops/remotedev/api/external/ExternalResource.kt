@@ -27,9 +27,12 @@
 
 package com.tencent.devops.remotedev.api.external
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -59,13 +62,18 @@ interface ExternalResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("job回调")
+    @ApiOperation("软件安装回调")
     @GET
     @Path("/software_install_callback")
     fun softwareInstallCallback(
+        @QueryParam("type")
+        type: String,
         @QueryParam("key")
         key: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @ApiParam(value = "回调信息", required = true)
+        @JsonProperty("software_list")
+        softwareList: SoftwareCallbackRes
     ): Result<Boolean>
 }

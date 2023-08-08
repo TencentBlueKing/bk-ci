@@ -140,4 +140,9 @@ class SoftwareManageDao {
                 .fetch()
         }
     }
+
+    // 添加软件安装记录
+    /*fun addSoftwareInstalledRecords(type: String, softwareList: SoftwareCallbackRes) {
+
+    }*/
 }

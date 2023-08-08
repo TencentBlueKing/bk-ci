@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -188,31 +189,48 @@ class DeliverControl @Autowired constructor(
             }
         }
     }
+    fun updateStatusAndCreateHistory(
+        workspace: TWorkspaceRecord,
+        newStatus: WorkspaceStatus,
+        softwareList: SoftwareCallbackRes,
+        action: WorkspaceAction
+    ) {
+        val oldStatus = WorkspaceStatus.values()[workspace.status]
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspace.name,
+            status = newStatus
+        )
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspace.name,
+            operator = workspace.creator,
+            action = action,
+            actionMessage = String.format(
+                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                oldStatus.name,
+                newStatus.name
+            )
+        )
+        // 添加软件安装历史
+    }
 
-    fun softwareInstallationCompleteCallback(workspaceName: String) {
+    fun softwareInstallationCompleteCallback(type: String, workspaceName: String, softwareList: SoftwareCallbackRes) {
         logger.info("softwareInstallationCompleteCallback $workspaceName")
         updateWorkspaceStatus(workspaceName) { workspace ->
-            when (val status = WorkspaceStatus.values()[workspace.status]) {
+            when (WorkspaceStatus.values()[workspace.status]) {
+                WorkspaceStatus.DELIVERING -> {
+                    if (type == "SYSTEM") {
+                        updateStatusAndCreateHistory(workspace, WorkspaceStatus.DISTRIBUTING, softwareList, WorkspaceAction.CREATE)
+                    }
+                }
                 WorkspaceStatus.DISTRIBUTING -> {
-                    workspaceDao.updateWorkspaceStatus(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        status = WorkspaceStatus.RUNNING
-                    )
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        operator = workspace.creator,
-                        action = WorkspaceAction.CREATE,
-                        actionMessage = String.format(
-                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.RUNNING.name
-                        )
-                    )
+                    if (type != "SYSTEM") {
+                        updateStatusAndCreateHistory(workspace, WorkspaceStatus.RUNNING, softwareList, WorkspaceAction.CREATE)
+                    }
                 }
                 else -> {
-                    logger.info("${workspace.name} is $status, return error.")
+                    logger.info("${workspace.name} is ${WorkspaceStatus.values()[workspace.status]}, return error.")
                 }
             }
         }

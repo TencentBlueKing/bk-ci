@@ -261,7 +261,7 @@ class SoftwareManageService @Autowired constructor(
                 return createSoftwareRes
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("get software group failed.", e)
+            logger.error("install software from xingyun failed.", e)
             // 接口超时失败
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
@@ -269,4 +269,11 @@ class SoftwareManageService @Autowired constructor(
             )
         }
     }
+
+    // 添加系统软件安装记录
+    /*fun addSoftwareInstalledRecords(type: String, softwareList: SoftwareCallbackRes) {
+
+
+
+    }*/
 }

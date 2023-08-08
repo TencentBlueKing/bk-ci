@@ -80,7 +80,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentCreate(
                 userId = userId,
                 appName = appName,
-                pipeLineId = null,
+                pipeLineId = event.projectId,
                 zoneId = event.devFile.zoneId,
                 machineType = event.devFile.machineType
             )
