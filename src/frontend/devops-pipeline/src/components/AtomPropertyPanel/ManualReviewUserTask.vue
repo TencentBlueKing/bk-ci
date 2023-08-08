@@ -12,7 +12,7 @@
                     :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
             </form-field>
         </template>
-        <accordion show-content show-checkbox>
+        <accordion v-bind="reminderTimeConfig">
             <header class="var-header" slot="header">
                 <span>{{ reminderTimeCom.label }}</span>
                 <i class="devops-icon icon-angle-down" style="display: block" />
@@ -89,6 +89,17 @@
             },
             reminderTimeCom () {
                 return this.atomPropsModel.reminderTime
+            },
+            reminderTimeConfig () {
+                if (this.element.reminderTime) {
+                    return {
+                        'show-content': true,
+                        'show-checkbox': true
+                    }
+                }
+                return {
+                    'show-checkbox': true
+                }
             }
         },
         watch: {
