@@ -105,7 +105,8 @@ class DeliverControl @Autowired constructor(
                         projectId,
                         userId,
                         regionId = detail.regionId.toString(),
-                        ip = detail.environmentIP
+                        ip = detail.environmentIP,
+                        workspaceName = workspaceName
                     )
                 }
 
@@ -152,8 +153,9 @@ class DeliverControl @Autowired constructor(
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
             softwareManageService.installUserSoftwares(
-                assign2Owner.userId,
-                detail.environmentIP
+                userId = assign2Owner.userId,
+                ip = detail.environmentIP,
+                workspaceName = workspaceName
             )
         }
 

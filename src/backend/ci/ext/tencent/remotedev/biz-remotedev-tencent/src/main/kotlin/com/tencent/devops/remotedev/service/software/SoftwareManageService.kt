@@ -71,6 +71,13 @@ class SoftwareManageService @Autowired constructor(
     @Value("\${xingyun.install_software_url:}")
     val installSoftwareUrl = ""
 
+    @Value("\${workspace.backendHost:}")
+    val backendHost = ""
+
+    /*请求合法性校验时使用的密钥*/
+    @Value("\${externalKey:}")
+    val externalKey = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
         private const val IOANAME = "IOA"
@@ -176,7 +183,8 @@ class SoftwareManageService @Autowired constructor(
     // 调用行云接口安装指定云桌面的软件
     fun installUserSoftwares(
         userId: String,
-        ip: String
+        ip: String,
+        workspaceName: String?
     ): InstallSoftwareRes? {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
         val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
@@ -192,7 +200,8 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
-        return installSoftwareFromXingyun(userId, ip.substringAfter("."), softwareInfoList)
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback?type=USER&key=$externalKey&workspaceName=$workspaceName"
+        return installSoftwareFromXingyun(userId, ip.substringAfter("."), callBackUrl, softwareInfoList)
     }
 
     /** 云桌面创建完成后安全初始化：安装ioa
@@ -203,7 +212,8 @@ class SoftwareManageService @Autowired constructor(
         projectId: String,
         creator: String,
         regionId: String,
-        ip: String
+        ip: String,
+        workspaceName: String?
     ): InstallSoftwareRes? {
         val params = "-project_id \"$projectId\" -creator \"$creator\" -region_id \"$regionId\" -inner_ip \"$ip\""
         val base64Val = Base64Util.encode(params.toByteArray())
@@ -221,20 +231,23 @@ class SoftwareManageService @Autowired constructor(
                     commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
                 ))
         }
-        return installSoftwareFromXingyun(creator, ip.substringAfter("."), softwareInfoList)
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
+        return installSoftwareFromXingyun(creator, ip.substringAfter("."), callBackUrl, softwareInfoList)
     }
 
     // 调用行云接口执行软件安装
     fun installSoftwareFromXingyun(
         userId: String,
         ip: String,
+        callBackUrl: String,
         softwareInfoList: List<SoftwareInfo>
     ): InstallSoftwareRes? {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
         val softwareCreate = SoftwareCreate(
             ip = ip,
             username = userId,
-            softwareInfo = softwareInfoList
+            softwareInfo = softwareInfoList,
+            callbackUrl = callBackUrl
         )
         val body = JsonUtil.toJson(softwareCreate, false)
         logger.info("installSoftwareFromXingyun|installSoftwareUrl|$installSoftwareUrl|body|$body")
