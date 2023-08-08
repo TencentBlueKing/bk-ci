@@ -25,46 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.filter
+package com.tencent.devops.common.db.listener
 
-import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
-import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
-import org.springframework.core.Ordered
-import org.springframework.core.annotation.Order
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.db.service.ShardingRoutingRuleManageService
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.FilterConfig
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-class RequestChannelFilter : Filter {
-    override fun destroy() = Unit
+class BkShardingRoutingRuleListener @Autowired constructor(
+    private val shardingRoutingRuleManageService: ShardingRoutingRuleManageService
+) : Listener<ShardingRoutingRuleBroadCastEvent> {
 
-    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
-        if (request == null || chain == null) {
-            return
+    override fun execute(event: ShardingRoutingRuleBroadCastEvent) {
+        try {
+            shardingRoutingRuleManageService.handleShardingRoutingRuleLocalCache(
+                routingName = event.routingName,
+                routingRule = event.routingRule,
+                actionType = event.actionType
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to handle the shardingRoutingRule data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to handle the shardingRoutingRule data"
+            )
         }
-        val httpServletRequest = request as HttpServletRequest
-        val requestUrl = httpServletRequest.requestURI
-        // 根据接口路径设置请求渠道信息
-        val channel = if (requestUrl.contains("/api/build/")) {
-            RequestChannelTypeEnum.BUILD.name
-        } else if (requestUrl.contains("/api/user/")) {
-            RequestChannelTypeEnum.USER.name
-        } else if (requestUrl.contains("/api/op/")) {
-            RequestChannelTypeEnum.OP.name
-        } else if (requestUrl.contains("/api/open/")) {
-            RequestChannelTypeEnum.OPEN.name
-        } else {
-            null
-        }
-        channel?.let { request.setAttribute(REQUEST_CHANNEL, channel) }
-        chain.doFilter(request, response)
     }
 
-    override fun init(filterConfig: FilterConfig?) = Unit
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkShardingRoutingRuleListener::class.java)
+    }
 }

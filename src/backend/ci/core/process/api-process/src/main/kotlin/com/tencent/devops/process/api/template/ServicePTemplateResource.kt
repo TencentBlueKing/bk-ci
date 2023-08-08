@@ -27,13 +27,14 @@
 
 package com.tencent.devops.process.api.template
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -66,8 +67,11 @@ interface ServicePTemplateResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @ApiParam("安装模板请求报文体", required = true)
-        addMarketTemplateRequest: AddMarketTemplateRequest
+        addMarketTemplateRequest: MarketTemplateRequest
     ): Result<Map<String, String>>
 
     @ApiOperation("更新已安装的模版")
@@ -77,8 +81,11 @@ interface ServicePTemplateResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @ApiParam("安装模板请求报文体", required = true)
-        updateMarketTemplateRequest: AddMarketTemplateRequest
+        updateMarketTemplateRequest: MarketTemplateRequest
     ): Result<Boolean>
 
     @ApiOperation("查询模板详情")
@@ -130,6 +137,9 @@ interface ServicePTemplateResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "模版ID", required = true)
         @PathParam("templateId")
         templateId: String,

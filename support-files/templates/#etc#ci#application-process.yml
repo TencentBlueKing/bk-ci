@@ -90,3 +90,8 @@ sharding:
 
 stream:
   scmType: __BK_CI_STREAM_SCM_TYPE__
+
+api:
+  project:
+    permission:
+      switch: true

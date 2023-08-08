@@ -24,9 +24,47 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.web.aop
 
-package com.tencent.devops.common.web.constant
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.factory.BkApiHandleFactory
+import org.aspectj.lang.JoinPoint
+import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.annotation.Before
+import org.aspectj.lang.annotation.Pointcut
+import org.aspectj.lang.reflect.MethodSignature
+import org.slf4j.LoggerFactory
 
-enum class BuildApiHandleType {
-    AUTH_CHECK
+@Aspect
+class BkApiAspect {
+
+    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BkApiPermission)")
+    fun pointCut() = Unit
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkApiAspect::class.java)
+    }
+
+    /**
+     * 前置增强：目标方法执行之前执行
+     *
+     * @param jp
+     */
+    @Before("pointCut()")
+    fun doBefore(jp: JoinPoint) {
+        val method = (jp.signature as MethodSignature).method
+        val methodName: String = method.name
+        val types = method.getAnnotation(BkApiPermission::class.java)?.types?.toList()
+        logger.info("[doBefore] the method 【$methodName】 types$types")
+        // 参数value
+        val parameterValue = jp.args
+        // 参数key
+        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        types?.forEach { type ->
+            BkApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
+                parameterNames,
+                parameterValue
+            )
+        }
+    }
 }

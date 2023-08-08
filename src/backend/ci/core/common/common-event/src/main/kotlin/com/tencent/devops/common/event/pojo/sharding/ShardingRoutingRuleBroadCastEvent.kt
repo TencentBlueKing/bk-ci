@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web
+package com.tencent.devops.common.event.pojo.sharding
 
-import com.tencent.devops.common.web.aop.BuildApiAspect
-import org.springframework.beans.factory.annotation.Configurable
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.enums.CrudEnum
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-@Configurable
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BuildApiAutoConfiguration {
-
-    @Bean
-    fun buildApiAspect() = BuildApiAspect()
-}
+@Event(exchange = MQ.EXCHANGE_SHARDING_ROUTING_RULE_FANOUT)
+data class ShardingRoutingRuleBroadCastEvent(
+    val routingName: String,
+    val routingRule: String? = null,
+    val actionType: CrudEnum
+)

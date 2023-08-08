@@ -27,29 +27,16 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.web.filter.RequestProjectPermissionFilter
-import com.tencent.devops.common.web.filter.ServiceSecurityFilter
+import com.tencent.devops.common.web.aop.BkApiAspect
+import org.springframework.beans.factory.annotation.Configurable
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import javax.servlet.http.HttpServletRequest
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class FilterAutoConfiguration(
-    private val jwtManager: JwtManager,
-    private val servletRequest: HttpServletRequest
-) {
+@Configurable
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkApiAutoConfiguration {
 
     @Bean
-    fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
-
-    @Bean
-    fun requestProjectPermissionFilter() = RequestProjectPermissionFilter()
+    fun buildApiAspect() = BkApiAspect()
 }

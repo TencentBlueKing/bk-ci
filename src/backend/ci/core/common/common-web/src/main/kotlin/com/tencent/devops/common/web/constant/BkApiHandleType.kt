@@ -25,29 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.factory
+package com.tencent.devops.common.web.constant
 
-import com.tencent.devops.common.web.constant.BuildApiHandleType
-import com.tencent.devops.common.web.service.BuildApiHandleService
-import com.tencent.devops.common.web.service.impl.BuildApiHandleAuthServiceImpl
-import java.util.concurrent.ConcurrentHashMap
-
-object BuildApiHandleFactory {
-
-    private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
-
-    fun createBuildApiHandleService(
-        type: BuildApiHandleType
-    ): BuildApiHandleService {
-        var buildApiHandleMapService = buildApiHandleMap[type.name]
-        when (type) {
-            BuildApiHandleType.AUTH_CHECK -> {
-                if (buildApiHandleMapService == null) {
-                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl()
-                    buildApiHandleMap[type.name] = buildApiHandleMapService
-                }
-            }
-        }
-        return buildApiHandleMapService
-    }
+enum class BkApiHandleType {
+    BUILD_API_AUTH_CHECK,  // build接口权限校验
+    PROJECT_API_ACCESS_LIMIT // 限制项目接口访问权限
 }

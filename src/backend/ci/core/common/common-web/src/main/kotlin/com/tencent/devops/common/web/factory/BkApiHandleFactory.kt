@@ -25,25 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template
+package com.tencent.devops.common.web.factory
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.common.web.service.BkApiHandleService
+import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
+import java.util.concurrent.ConcurrentHashMap
 
-@ApiModel("模板市场-安装模板请求报文体")
-data class AddMarketTemplateRequest(
-    @ApiModelProperty("项目列表", required = true)
-    val projectCodeList: ArrayList<String>,
-    @ApiModelProperty("模板代码", required = true)
-    val templateCode: String,
-    @ApiModelProperty("模板名称", required = true)
-    val templateName: String,
-    @ApiModelProperty("模板logo", required = false)
-    val logoUrl: String?,
-    @ApiModelProperty("范畴代码列表", required = false)
-    val categoryCodeList: List<String>?,
-    @ApiModelProperty("是否为公共模版", required = true)
-    val publicFlag: Boolean,
-    @ApiModelProperty("发布者", required = false)
-    val publisher: String
-)
+object BkApiHandleFactory {
+
+    private val bkApiHandleMap = ConcurrentHashMap<String, BkApiHandleService>()
+
+    fun createBuildApiHandleService(
+        type: BkApiHandleType
+    ): BkApiHandleService {
+        var bkApiHandleService = bkApiHandleMap[type.name]
+        when (type) {
+            BkApiHandleType.BUILD_API_AUTH_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleBuildAuthServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
+            BkApiHandleType.PROJECT_API_ACCESS_LIMIT -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleProjectAccessServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
+        }
+        return bkApiHandleService
+    }
+}

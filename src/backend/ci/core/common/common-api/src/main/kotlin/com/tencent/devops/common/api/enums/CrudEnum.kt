@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.web.filter.RequestProjectPermissionFilter
-import com.tencent.devops.common.web.filter.ServiceSecurityFilter
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.servlet.http.HttpServletRequest
-
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class FilterAutoConfiguration(
-    private val jwtManager: JwtManager,
-    private val servletRequest: HttpServletRequest
-) {
-
-    @Bean
-    fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
-
-    @Bean
-    fun requestProjectPermissionFilter() = RequestProjectPermissionFilter()
+enum class CrudEnum {
+    CREATAE, // 增加
+    DELETE, // 删除
+    UPDATE, // 更新
+    READ // 查询
 }
