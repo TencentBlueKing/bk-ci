@@ -23,52 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.api.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>?,
-    val total_commits_count: Int,
-    val operation_kind: String?,
-    val action_kind: String?,
-    val push_options: Map<String, String>?,
-    @JsonProperty("push_timestamp")
-    val pushTimestamp: String?,
-    val create_and_update: Boolean?,
-    @JsonProperty("diff_files")
-    val diffFiles: List<GitDiffFile>?
-) : GitEvent() {
-    companion object {
-        const val classType = "push"
-    }
-}
-
-fun GitPushEvent.isDeleteBranch(): Boolean {
-    // 工蜂web端删除
-    if (action_kind == TGitPushActionKind.DELETE_BRANCH.value) {
-        return true
-    }
-    // 发送到工蜂的客户端删除
-    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
-        operation_kind == TGitPushOperationKind.DELETE.value &&
-        after.filter { it != '0' }.isBlank()
-    ) {
-        return true
-    }
-    return false
-}
+@ApiModel("国际化变量")
+data class I18Variable(
+    @ApiModelProperty("国际化变量名")
+    val code: String,
+    @ApiModelProperty("国际化参数")
+    val params: List<String>,
+    @ApiModelProperty("默认信息")
+    val defaultMessage: String? = null
+)

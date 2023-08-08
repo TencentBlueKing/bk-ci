@@ -28,9 +28,11 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
 import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
@@ -407,7 +409,7 @@ class PipelineTriggerEventDao {
                 triggerType = triggerType,
                 triggerUser = triggerUser,
                 eventType = eventType,
-                eventDesc = eventDesc,
+                eventDesc = JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(),
                 hookRequestId = hookRequestId,
                 requestParams = requestParams?.let {
                     JsonUtil.to(

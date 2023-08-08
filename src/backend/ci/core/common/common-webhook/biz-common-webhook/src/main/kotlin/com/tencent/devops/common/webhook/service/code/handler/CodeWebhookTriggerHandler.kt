@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -75,7 +76,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
     /**
      * 获取事件说明,根据不同的事件组织事件说明
      */
-    fun getEventDesc(event: T): String = ""
+    fun getEventDesc(event: T): I18Variable
 
     /**
      * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port

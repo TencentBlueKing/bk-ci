@@ -28,7 +28,9 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -39,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TGIT_PUSH_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -75,6 +78,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import java.util.Date
 
 @CodeWebhookHandler
@@ -127,8 +131,17 @@ class TGitPushTriggerHandler(
         }
     }
 
-    override fun getEventDesc(event: GitPushEvent): String {
-        return "${getBranchName(event)} commit ${event.checkout_sha} pushed by ${event.user_name}"
+    override fun getEventDesc(event: GitPushEvent): I18Variable {
+        return I18Variable(
+            code = TGIT_PUSH_EVENT_DESC,
+            params = listOf(
+                getBranchName(event),
+                "${event.repository.homepage}/commit/${event.checkout_sha}",
+                event.user_name,
+                DateTimeUtil.formatMilliTime(event.pushTimestamp?.let {
+                    DateTimeUtil.zoneDateToTimestamp(it)
+                } ?: LocalDateTime.now().timestampmilli()))
+        )
     }
 
     override fun getExternalId(event: GitPushEvent): String {
