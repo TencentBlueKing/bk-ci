@@ -656,7 +656,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("notifyWinBeforeSleep start check $viewers")
         viewers.forEach { (userId, workspaces) ->
             // 不重复提醒
-            redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) ?: kotlin.run {
+            if (redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) != null) {
                 logger.info("$userId is notify yet. return")
                 return@forEach
             }
