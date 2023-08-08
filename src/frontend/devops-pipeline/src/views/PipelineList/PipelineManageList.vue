@@ -479,6 +479,7 @@
         @include ellipsis();
         flex-shrink: 0;
         max-width: 100px;
+        cursor: pointer;
     }
     .pipeline-list-box {
         flex: 1;
