@@ -34,7 +34,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 
-interface GitTransferService {
+interface IGitTransferService {
     /**
      * 判断用户是否经过oauth授权
      */
