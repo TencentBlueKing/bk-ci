@@ -1168,5 +1168,6 @@
   "fullScreenView": "Full Screen",
   "exitFullscreen": "Exit Full Screen",
   "skipSuc": "Skipped the failed step and continued running",
-  "skipFail": "Skip failed"
+  "skipFail": "Skip failed",
+  "nonManual": "Non Manual"
 }
