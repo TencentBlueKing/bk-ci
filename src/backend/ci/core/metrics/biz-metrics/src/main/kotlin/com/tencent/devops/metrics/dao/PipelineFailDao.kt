@@ -46,6 +46,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -192,8 +193,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(
                 projectId = queryPipelineFailQo.projectId,
-                baseQuery = queryPipelineFailQo.baseQueryReq,
-                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
+                baseQuery = queryPipelineFailQo.baseQueryReq
             )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
@@ -216,8 +216,16 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
                 STATISTICS_TIME
             ).from(this)
             if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tProjectPipelineLabelInfo)
-                    .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+                conditions.add(
+                    DSL.exists(
+                        dslContext.select(tProjectPipelineLabelInfo.PIPELINE_ID).from(tProjectPipelineLabelInfo)
+                            .where(tProjectPipelineLabelInfo.PIPELINE_ID.eq(this.PIPELINE_ID)).and(
+                                tProjectPipelineLabelInfo.LABEL_ID.`in`(
+                                    queryPipelineFailQo.baseQueryReq.pipelineLabelIds
+                                )
+                            )
+                    )
+                )
             }
             return step.where(conditions)
                 .orderBy(START_TIME.desc(), ID)
@@ -233,20 +241,26 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
     ): Long {
         with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
                 projectId = queryPipelineFailQo.projectId,
-                baseQuery = queryPipelineFailQo.baseQueryReq,
-                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
+                baseQuery = queryPipelineFailQo.baseQueryReq
             )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
             }
-            val step = dslContext.selectCount().from(this)
-            if (!pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+            if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                conditions.add(
+                    DSL.exists(
+                        dslContext.select(tProjectPipelineLabelInfo.PIPELINE_ID).from(tProjectPipelineLabelInfo)
+                            .where(tProjectPipelineLabelInfo.PIPELINE_ID.eq(this.PIPELINE_ID)).and(
+                                tProjectPipelineLabelInfo.LABEL_ID.`in`(
+                                    queryPipelineFailQo.baseQueryReq.pipelineLabelIds
+                                )
+                            )
+                    )
+                )
             }
+            val step = dslContext.selectCount().from(this)
             return step.where(conditions)
                 .fetchOne(0, Long::class.java) ?: 0L
         }
@@ -254,8 +268,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
 
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
-        baseQuery: BaseQueryReqVO,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
+        baseQuery: BaseQueryReqVO
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))
@@ -270,9 +283,6 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
         }
         if (!baseQuery.pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(baseQuery.pipelineIds))
-        }
-        if (!baseQuery.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQuery.pipelineLabelIds))
         }
         return conditions
     }

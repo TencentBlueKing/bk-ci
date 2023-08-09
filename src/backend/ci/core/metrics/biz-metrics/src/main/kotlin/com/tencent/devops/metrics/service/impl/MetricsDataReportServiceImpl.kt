@@ -57,7 +57,6 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
-import com.tencent.devops.metrics.service.ProjectInfoManageService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
@@ -86,7 +85,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val metricsDataReportDao: MetricsDataReportDao,
     private val projectInfoDao: ProjectInfoDao,
     private val metricsDataClearService: MetricsDataClearService,
-    private val projectInfoManageService: ProjectInfoManageService,
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : MetricsDataReportService {
@@ -101,11 +99,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val buildId = buildEndPipelineMetricsData.buildId
-        val syncProjectAtomFlag = getSyncProjectAtomFlag(projectId)
-        // 同步项目插件关联信息
-        if (syncProjectAtomFlag) {
-            projectInfoManageService.syncSingleProjectAtomData(projectId)
-        }
         logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
@@ -982,17 +975,5 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).data!!
-    }
-
-    private fun getSyncProjectAtomFlag(projectId: String): Boolean {
-        val lock = RedisLock(redisOperation, "SyncProjectAtomFlag:$projectId", 120)
-        try {
-            if (lock.tryLock()) {
-                return projectInfoDao.projectAtomRelationCountByNotInAtomCodes(dslContext, projectId) <= 0
-            }
-        } finally {
-            lock.unlock()
-        }
-        return false
     }
 }
