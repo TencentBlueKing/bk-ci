@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         row-key="pipelineId"
-        max-height="100%"
+        height="100%"
         :data="pipelineList"
         :size="tableSize"
         :pagination="pagination"
