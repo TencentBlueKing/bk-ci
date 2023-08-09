@@ -254,12 +254,14 @@ class WorkspaceDao {
     fun fetchCreators(
         dslContext: DSLContext,
         status: WorkspaceStatus,
-        systemType: WorkspaceSystemType = WorkspaceSystemType.WINDOWS_GPU
+        systemType: WorkspaceSystemType = WorkspaceSystemType.WINDOWS_GPU,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
     ): List<Record2<String, String>> {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.select(CREATOR, NAME).from(this)
                 .where(STATUS.eq(status.ordinal))
                 .and(SYSTEM_TYPE.eq(systemType.name))
+                .and(OWNER_TYPE.eq(ownerType.name))
                 .fetch()
         }
     }
