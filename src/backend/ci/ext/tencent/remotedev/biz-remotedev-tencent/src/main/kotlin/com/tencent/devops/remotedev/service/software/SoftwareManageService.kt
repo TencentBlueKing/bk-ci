@@ -180,7 +180,10 @@ class SoftwareManageService @Autowired constructor(
         return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
     }
 
-    // 调用行云接口安装指定云桌面的软件
+    /**
+     * 安装用户自定义软件
+     */
+
     fun installUserSoftwares(
         userId: String,
         ip: String,
@@ -200,8 +203,11 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
-        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback?type=USER&key=$externalKey&workspaceName=$workspaceName"
-        return installSoftwareFromXingyun(userId, ip.substringAfter("."), callBackUrl, softwareInfoList)
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
+            "?type=USER&key=$externalKey&workspaceName=$workspaceName"
+        val installSoftwareRes = installSoftwareFromXingyun(userId, ip.substringAfter("."), callBackUrl, softwareInfoList)
+        // 自定义软件不需要依赖安装结果，云桌面可以更新为运行中状态。
+
     }
 
     /** 云桌面创建完成后安全初始化：安装ioa
@@ -231,7 +237,8 @@ class SoftwareManageService @Autowired constructor(
                     commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
                 ))
         }
-        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
         return installSoftwareFromXingyun(creator, ip.substringAfter("."), callBackUrl, softwareInfoList)
     }
 
