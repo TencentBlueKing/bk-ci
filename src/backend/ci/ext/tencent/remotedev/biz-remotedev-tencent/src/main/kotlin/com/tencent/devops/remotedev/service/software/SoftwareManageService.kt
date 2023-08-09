@@ -72,7 +72,7 @@ class SoftwareManageService @Autowired constructor(
     @Value("\${xingyun.install_software_url:}")
     val installSoftwareUrl = ""
 
-    @Value("\${workspace.backendHost:}")
+    @Value("\${devCloud.workspace.backendHost:}")
     val backendHost = ""
 
     /*请求合法性校验时使用的密钥*/
