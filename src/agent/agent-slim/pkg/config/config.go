@@ -41,18 +41,42 @@ func InitConfig() error {
 		StartUser: startUser.Username,
 	}
 
+	// 补全一些默认值
 	if Config.WorkerUser == "" {
 		Config.WorkerUser = startUser.Username
+	}
+
+	// 最大运行数不能为 0
+	if Config.MaxWorkerCount == 0 {
+		Config.MaxWorkerCount = 1
 	}
 
 	return nil
 }
 
 type EnvConfig struct {
-	IsDebug    bool   `env:"DEVOPS_AGENTSLIM_ISDEBUG"`
-	LogPath    string `env:"DEVOPS_AGENTSLIM_LOGPATH"`
+	// DEBUG 模式
+	IsDebug bool `env:"DEVOPS_AGENTSLIM_ISDEBUG"`
+	// 日志路径
+	LogPath string `env:"DEVOPS_AGENTSLIM_LOGPATH"`
+	// worker启动用户
 	WorkerUser string `env:"DEVOPS_AGENTSLIM_WORKER_USER"`
-	Lanuage    string `env:"DEVOPS_AGENTSLIM_LANUAGE"`
+	// 国际化语言
+	Language string `env:"DEVOPS_AGENTSLIM_LANUAGE"`
+	// 最大可执行 worker 数量
+	MaxWorkerCount int `env:"DEVOPS_AGENTSLIM_MAX_WORKER_COUNT"`
+	// 后台网关
+	GateWay string `env:"DEVOPS_AGENTSLIM_GATEWAY"`
+	// 后台仓库网关
+	FileGateWay   string `env:"DEVOPS_AGENTSLIM_FILEGATEWAY"`
+	ProjectId     string `env:"DEVOPS_AGENTSLIM_PROJECT_ID"`
+	ContainerName string `env:"DEVOPS_AGENTSLIM_CONTAINER_NAME"`
+	// workerjar 路径
+	WorkerPath string `env:"DEVOPS_AGENTSLIM_WORKER_PATH"`
+	// java 路径
+	JavaPath    string `env:"DEVOPS_AGENTSLIM_JAVA_PATH"`
+	// 是否根据系统切换 shell，false使用 /bin/bash
+	DetectShell bool   `env:"DEVOPS_AGENTSLIM_WORKER_DETECTSHELL"`
 }
 
 // loadConfigFromEnv 从环境变量中加载相关配置

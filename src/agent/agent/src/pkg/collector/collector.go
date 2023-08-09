@@ -36,7 +36,7 @@ import (
 	"time"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 	"github.com/pkg/errors"
 
 	"github.com/influxdata/telegraf/logger"

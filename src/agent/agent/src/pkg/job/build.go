@@ -45,9 +45,9 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 type BuildTotalManagerType struct {

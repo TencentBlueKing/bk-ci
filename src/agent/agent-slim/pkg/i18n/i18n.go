@@ -109,7 +109,7 @@ func Localize(messageId string, templateData map[string]interface{}) string {
 
 // CheckLocalizer 检查并且切换国际化语言
 func CheckLocalizer() {
-	newLocal := language.Make(config.Config.Lanuage)
+	newLocal := language.Make(config.Config.Language)
 
 	// 先用读锁看一眼，如果一样就不换了
 	localizer.rwLock.RLock()

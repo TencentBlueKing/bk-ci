@@ -36,8 +36,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func Exists(file string) bool {
@@ -74,8 +72,6 @@ func GetFileMd5(file string) (string, error) {
 }
 
 func CopyFile(src string, dst string, overwrite bool) (written int64, err error) {
-	logs.Info("copy file from : " + src + ", to: " + dst)
-
 	srcStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
