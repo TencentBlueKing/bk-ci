@@ -208,9 +208,14 @@ class SoftwareManageService @Autowired constructor(
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
             "?type=USER&key=$externalKey&workspaceName=$workspaceName"
-        val installSoftwareRes = installSoftwareFromXingyun(userId, ip.substringAfter("."), callBackUrl, softwareInfoList)
+        val installSoftwareRes = installSoftwareFromXingyun(
+            userId = userId,
+            ip = ip.substringAfter("."),
+            callBackUrl = callBackUrl,
+            softwareInfoList = softwareInfoList
+        )
         // 自定义软件不需要依赖安装结果，云桌面可以更新为运行中状态。
-// 插入软件安装记录
+        // 插入软件安装记录
         softwareManageDao.batchAddUserInstalledRecords(
             dslContext = dslContext,
             projectId = projectId,
