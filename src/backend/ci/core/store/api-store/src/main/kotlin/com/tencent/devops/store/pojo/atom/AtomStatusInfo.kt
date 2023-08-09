@@ -5,8 +5,8 @@ import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件信息")
-data class AtomListInfo(
+@ApiModel("插件状态信息")
+data class AtomStatusInfo(
     @ApiModelProperty("插件标识")
     val atomCode: String,
     @ApiModelProperty("名称")
@@ -20,9 +20,5 @@ data class AtomListInfo(
                 "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
-    val atomStatus: String,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("创建时间")
-    val createTime: String
+    val atomStatus: String
 )

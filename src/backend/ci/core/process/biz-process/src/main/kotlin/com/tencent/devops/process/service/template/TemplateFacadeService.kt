@@ -123,7 +123,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1965,7 +1965,7 @@ class TemplateFacadeService @Autowired constructor(
      * 检查模板中是否存在已下架、测试中插件
      */
     fun checkTemplateAtoms(template: Model, userId: String, flag: Boolean? = false) {
-        val codeVersions = mutableSetOf<AtomPostReqItem>()
+        val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach nextElement@{ element ->
@@ -1975,7 +1975,7 @@ class TemplateFacadeService @Autowired constructor(
                     if (flag == true && version.contains("*")) {
                         return@nextElement
                     }
-                    codeVersions.add(AtomPostReqItem(atomCode, version))
+                    codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
                 }
             }
         }

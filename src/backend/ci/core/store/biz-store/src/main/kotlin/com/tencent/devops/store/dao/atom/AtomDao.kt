@@ -47,9 +47,11 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -285,9 +287,9 @@ class AtomDao : AtomBaseDao() {
 
     fun getAtomInfos(
         dslContext: DSLContext,
-        codeVersions: List<AtomPostReqItem>
-    ): Result<TAtomRecord> {
-        return with(TAtom.T_ATOM) {
+        codeVersions: List<AtomCodeVersionReqItem>
+    ): List<AtomStatusInfo> {
+        with(TAtom.T_ATOM) {
             var condition: Condition? = null
             codeVersions.forEach {
                 if (condition == null) {
@@ -300,9 +302,10 @@ class AtomDao : AtomBaseDao() {
                     )
                 }
             }
-            dslContext.selectFrom(this)
+            return dslContext.select(ATOM_CODE, NAME, VERSION, ATOM_STATUS)
+                .from(this)
                 .where(condition)
-                .fetch()
+                .fetchInto(AtomStatusInfo::class.java)
         }
     }
 

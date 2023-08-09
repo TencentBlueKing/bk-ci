@@ -69,12 +69,12 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
-import com.tencent.devops.store.pojo.atom.AtomListInfo
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -554,25 +554,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据插件代码和版本号集合批量获取插件信息
      */
-    override fun getListAtomInfos(
-        codeVersions: Set<AtomPostReqItem>
-    ): Result<List<AtomListInfo>> {
-        val atomListInfos = mutableListOf<AtomListInfo>()
+    override fun getTemplateAtomInfos(
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomStatusInfo>> {
+        val atomListInfos = mutableListOf<AtomStatusInfo>()
         val latestCodes = mutableListOf<String>()
-        val atomPostReqItems = mutableListOf<AtomPostReqItem>()
+        val atomCodeVersionReqItems = mutableListOf<AtomCodeVersionReqItem>()
         codeVersions.forEach {
             if (it.version.contains("*")) {
                 latestCodes.add(it.atomCode)
             } else {
-                atomPostReqItems.add(AtomPostReqItem(it.atomCode, it.version))
+                atomCodeVersionReqItems.add(AtomCodeVersionReqItem(it.atomCode, it.version))
             }
         }
-        var noLatestAtomRecords = mutableListOf<TAtomRecord>()
-        if (atomPostReqItems.isNotEmpty()) {
+        var noLatestAtomRecords = mutableListOf<AtomStatusInfo>()
+        if (atomCodeVersionReqItems.isNotEmpty()) {
             noLatestAtomRecords = atomDao.getAtomInfos(
                 dslContext = dslContext,
-                codeVersions = atomPostReqItems
-            )
+                codeVersions = atomCodeVersionReqItems
+            ) as MutableList<AtomStatusInfo>
         }
         val latestAtomRecords = atomDao.getLatestAtomListByCodes(
             dslContext = dslContext,
@@ -581,13 +581,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRecords: List<TAtomRecord> = (noLatestAtomRecords + latestAtomRecords) as List<TAtomRecord>
         atomRecords.forEach {
             atomListInfos.add(
-                AtomListInfo(
+                AtomStatusInfo(
                     atomCode = it.atomCode,
                     name = it.name,
                     version = it.version,
-                    atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
-                    creator = it.creator,
-                    createTime = DateTimeUtil.toDateTime(it.createTime)
+                    atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt())
                 )
             )
         }

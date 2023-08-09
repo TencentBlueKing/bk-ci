@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
@@ -198,19 +198,19 @@ object AtomUtils {
     }
 
     fun checkTemplateAtoms(
-        codeVersions: Set<AtomPostReqItem>,
+        codeVersions: Set<AtomCodeVersionReqItem>,
         userId: String,
         client: Client
     ) {
-        val atomInfos = client.get(ServiceAtomResource::class)
-            .getListAtomInfos(
+        val atomStatusInfos = client.get(ServiceAtomResource::class)
+            .getTemplateAtomInfos(
                 codeVersions = codeVersions
             ).data!!
         val atomStatusList = listOf(
             AtomStatusEnum.TESTING.name,
             AtomStatusEnum.UNDERCARRIAGED.name
         )
-        atomInfos.forEach {
+        atomStatusInfos.forEach {
             if (it.atomStatus in atomStatusList) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,

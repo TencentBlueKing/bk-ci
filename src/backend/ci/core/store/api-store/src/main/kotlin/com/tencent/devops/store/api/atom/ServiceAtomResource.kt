@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
-import com.tencent.devops.store.pojo.atom.AtomListInfo
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import io.swagger.annotations.Api
@@ -82,10 +82,10 @@ interface ServiceAtomResource {
     @ApiOperation("根据插件代码和版本号集合批量获取插件详细信息")
     @POST
     @Path("/list/atomInfos")
-    fun getListAtomInfos(
+    fun getTemplateAtomInfos(
         @ApiParam("插件代码版本集合", required = true)
-        codeVersions: Set<AtomPostReqItem>
-    ): Result<List<AtomListInfo>>
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomStatusInfo>>
 
     @ApiOperation("获取插件真实版本号")
     @GET

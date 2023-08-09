@@ -30,9 +30,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
-import com.tencent.devops.store.pojo.atom.AtomListInfo
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.service.atom.AtomPropService
@@ -57,10 +57,10 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
     }
 
-    override fun getListAtomInfos(
-        codeVersions: Set<AtomPostReqItem>
-    ): Result<List<AtomListInfo>> {
-        return atomService.getListAtomInfos(codeVersions = codeVersions)
+    override fun getTemplateAtomInfos(
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomStatusInfo>> {
+        return atomService.getTemplateAtomInfos(codeVersions = codeVersions)
     }
 
     override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {

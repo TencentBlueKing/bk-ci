@@ -30,11 +30,11 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
-import com.tencent.devops.store.pojo.atom.AtomListInfo
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -134,7 +134,7 @@ interface AtomService {
      * 根据插件代码和版本号集合批量获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getListAtomInfos(codeVersions: Set<AtomPostReqItem>): Result<List<AtomListInfo>>
+    fun getTemplateAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomStatusInfo>>
 
     /**
      * 添加插件信息
