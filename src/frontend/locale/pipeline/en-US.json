@@ -1207,5 +1207,6 @@
   "exitFullscreen": "Exit Full Screen",
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
-  "runs": "runs"
+  "runs": "runs",
+  "nonManual": "Non Manual"
 }

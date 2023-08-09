@@ -1213,5 +1213,6 @@
   "exitFullscreen": "退出全屏",
   "skipSuc": "已跳过失败的步骤，继续运行",
   "skipFail": "跳过失败",
-  "runs": "次"
+  "runs": "次",
+  "nonManual": "非手动"
 }

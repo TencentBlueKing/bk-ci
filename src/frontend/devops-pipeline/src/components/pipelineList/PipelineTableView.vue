@@ -6,6 +6,7 @@
         row-key="pipelineId"
         height="100%"
         :data="pipelineList"
+        :size="tableSize"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
@@ -28,11 +29,12 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
             <template slot-scope="{ row, $index }">
                 <bk-button
                     v-show="showCollectIndex === $index || row.hasCollect"
                     text
+                    class="icon-star-btn"
                     :theme="row.hasCollect ? 'warning' : ''"
                     @click="collectHandler(row)">
                     <i :class="{
@@ -225,7 +227,7 @@
                             
                             @click="execPipeline(props.row)"
                         >
-                            {{ props.row.lock ? $t('disabled') : $t('exec') }}
+                            {{ props.row.lock ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
                         </bk-button>
                     </span>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
@@ -597,6 +599,7 @@
             },
             handelHeaderDragend (newWidth, oldWidth, column) {
                 this.tableWidthMap[column.property] = newWidth
+                // this.tableWidthMap.pipelineName -= 1
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
             handleRowMouseEnter (index) {
@@ -654,6 +657,16 @@
         flex-direction: column;
     }
     .pipeline-list-table {
+        td {
+            position: inherit;
+        }
+        .bk-table-body-wrapper {
+            td {
+                .bk-table-setting-content {
+                    display: none;
+                }
+            }
+        }
         .bk-table-fixed-right {
             right: 6px !important;
         }
@@ -669,7 +682,12 @@
         }
     }
     .exec-pipeline-btn {
-        width: 24px;
-        margin-right: 20px;
+        width: 55px;
+        text-align: left;
+        overflow: hidden;
+    }
+    .icon-star-btn {
+        position: relative;
+        font-size: 14px !important;
     }
 </style>
