@@ -54,7 +54,9 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class PipelinePermConfiguration {
+class PipelinePermConfiguration constructor(
+    val dslContext: DSLContext
+){
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
@@ -73,7 +75,7 @@ class PipelinePermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
     fun mockPipelinePermissionService(
-        dslContext: DSLContext,
+
         pipelineInfoDao: PipelineInfoDao,
         authProjectApi: AuthProjectApi,
         authResourceApi: AuthResourceApi,
@@ -91,7 +93,7 @@ class PipelinePermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3pipelinePermissionService(
-        dslContext: DSLContext,
+
         client: Client,
         redisOperation: RedisOperation,
         pipelineInfoDao: PipelineInfoDao,
@@ -115,7 +117,7 @@ class PipelinePermConfiguration {
     fun githubStreamPipelinePermissionService(
         client: Client,
         pipelineInfoDao: PipelineInfoDao,
-        dslContext: DSLContext,
+
         checkTokenService: ClientTokenService
     ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
         client = client,
@@ -129,7 +131,7 @@ class PipelinePermConfiguration {
     fun gitlabStreamPipelinePermissionService(
         client: Client,
         pipelineInfoDao: PipelineInfoDao,
-        dslContext: DSLContext,
+
         checkTokenService: ClientTokenService
     ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
         client = client,
@@ -144,7 +146,7 @@ class PipelinePermConfiguration {
         authPermissionApi: AuthPermissionApi,
         authProjectApi: AuthProjectApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
-        dslContext: DSLContext,
+
         pipelineInfoDao: PipelineInfoDao,
         pipelineViewGroupService: PipelineViewGroupService,
         authResourceApi: AuthResourceApi

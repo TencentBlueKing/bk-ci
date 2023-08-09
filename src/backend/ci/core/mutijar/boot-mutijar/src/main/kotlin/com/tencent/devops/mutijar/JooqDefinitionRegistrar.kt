@@ -21,7 +21,8 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
         importBeanNameGenerator: BeanNameGenerator
     ) {
         multiDataSource.forEach { dataSource ->
-            val finalDataSource = if (dataSource == "process") "shardingDataSource" else "${dataSource}DataSource"
+            //if (dataSource == "process") "shardingDataSource" else
+            val finalDataSource = "${dataSource}DataSource"
             val connectionProvider = BeanDefinitionBuilder.genericBeanDefinition(
                 DataSourceConnectionProvider::class.java
             ).addConstructorArgReference(finalDataSource)
@@ -40,6 +41,6 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DataSourceDefinitionRegistrar::class.java)
-        private val multiDataSource = listOf("auth","image").filterNot { it == "process" }
+        private val multiDataSource = listOf("auth", "image", "process")
     }
 }

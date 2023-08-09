@@ -80,7 +80,7 @@ class MutijarDslContextConfiguration {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MutijarDslContextConfiguration::class.java)
-        private val multiModelService = listOf("auth","image").filterNot { it == "process" }
+        private val multiModelService = listOf("auth", "image", "process")
         private val lambdaServiceRegex = "\\.(tsource|ttarget|process|project|store)".toRegex()
     }
 }

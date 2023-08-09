@@ -42,8 +42,9 @@ import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 
-@RestResource
+//@RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate,

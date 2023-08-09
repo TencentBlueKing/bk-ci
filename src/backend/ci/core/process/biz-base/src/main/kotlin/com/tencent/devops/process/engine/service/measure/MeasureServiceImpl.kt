@@ -67,8 +67,6 @@ class MeasureServiceImpl : MeasureService {
     @Autowired
     lateinit var buildVariableService: BuildVariableService
     @Autowired
-    lateinit var dslContext: DSLContext
-    @Autowired
     lateinit var templateService: TemplateService
     @Autowired
     lateinit var pipelineInfoService: PipelineInfoService

@@ -58,7 +58,7 @@ class DataSourceDefinitionRegistrar : ImportBeanDefinitionRegistrar {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DataSourceDefinitionRegistrar::class.java)
-        private val multiDataSource = listOf("auth","image").filterNot { it == "process" }
+        private val multiDataSource = listOf("auth", "image", "process")
         private val regex = Regex("""ENC\((.*?)\)""")
     }
 }

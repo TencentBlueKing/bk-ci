@@ -33,10 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("BkVarProcessor")
-class BkVarProcessorService : ProcessorService {
+class BkVarProcessorService constructor(
+    private val dslContext: DSLContext
+) : ProcessorService {
 
-    @Autowired
-    private lateinit var dslContext: DSLContext
 
     @Autowired
     private lateinit var pipelineBuildVarDao: PipelineBuildVarDao
