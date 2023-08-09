@@ -153,6 +153,7 @@ class DeliverControl @Autowired constructor(
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
             softwareManageService.installUserSoftwares(
+                projectId = projectId,
                 userId = assign2Owner.userId,
                 ip = detail.environmentIP,
                 workspaceName = workspaceName
@@ -192,6 +193,7 @@ class DeliverControl @Autowired constructor(
         }
     }
     fun updateStatusAndCreateHistory(
+        type: String,
         workspace: TWorkspaceRecord,
         newStatus: WorkspaceStatus,
         softwareList: SoftwareCallbackRes,
@@ -215,6 +217,10 @@ class DeliverControl @Autowired constructor(
             )
         )
         // 添加软件安装历史
+        softwareManageService.updateSoftwareInstalledRecords(
+            type = type,
+            softwareList = softwareList
+        )
     }
 
     fun softwareInstallationCompleteCallback(type: String, workspaceName: String, softwareList: SoftwareCallbackRes) {
@@ -223,12 +229,24 @@ class DeliverControl @Autowired constructor(
             when (WorkspaceStatus.values()[workspace.status]) {
                 WorkspaceStatus.DELIVERING -> {
                     if (type == "SYSTEM") {
-                        updateStatusAndCreateHistory(workspace, WorkspaceStatus.DISTRIBUTING, softwareList, WorkspaceAction.CREATE)
+                        updateStatusAndCreateHistory(
+                            type = type,
+                            workspace = workspace,
+                            newStatus = WorkspaceStatus.DISTRIBUTING,
+                            softwareList = softwareList,
+                            action = WorkspaceAction.CREATE
+                        )
                     }
                 }
                 WorkspaceStatus.DISTRIBUTING -> {
                     if (type != "SYSTEM") {
-                        updateStatusAndCreateHistory(workspace, WorkspaceStatus.RUNNING, softwareList, WorkspaceAction.CREATE)
+                        updateStatusAndCreateHistory(
+                            type = type,
+                            workspace = workspace,
+                            newStatus = WorkspaceStatus.RUNNING,
+                            softwareList = softwareList,
+                            action = WorkspaceAction.CREATE
+                        )
                     }
                 }
                 else -> {

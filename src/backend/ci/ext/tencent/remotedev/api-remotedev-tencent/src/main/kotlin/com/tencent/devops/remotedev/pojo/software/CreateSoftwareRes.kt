@@ -11,5 +11,5 @@ data class InstallSoftwareRes(
 )
 data class DataRes(
     @JsonProperty("task_id")
-    val taskId: String
+    val taskId: Long
 )

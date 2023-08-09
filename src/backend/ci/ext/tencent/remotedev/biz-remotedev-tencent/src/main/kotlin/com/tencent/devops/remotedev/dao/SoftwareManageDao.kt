@@ -1,12 +1,15 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TProjectSoftwares
+import com.tencent.devops.model.remotedev.tables.TSystemInstalledRecords
 import com.tencent.devops.model.remotedev.tables.TSystemSoftwares
 import com.tencent.devops.model.remotedev.tables.TUserInstalledRecords
 import com.tencent.devops.model.remotedev.tables.TUserInstalledSoftwares
 import com.tencent.devops.model.remotedev.tables.records.TProjectSoftwaresRecord
 import com.tencent.devops.model.remotedev.tables.records.TUserInstalledRecordsRecord
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
+import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import org.jooq.Condition
@@ -142,7 +145,91 @@ class SoftwareManageDao {
     }
 
     // 添加软件安装记录
-    /*fun addSoftwareInstalledRecords(type: String, softwareList: SoftwareCallbackRes) {
+    fun updateSystemInstalledRecords(dslContext: DSLContext, softwareList: SoftwareCallbackRes) {
+        val taskId = softwareList.taskId
+        val statusList = softwareList.softwareStatusInfo
+        statusList.forEach { (t, u) ->
+            with(TSystemInstalledRecords.T_SYSTEM_INSTALLED_RECORDS) {
+                dslContext.update(this)
+                    .set(STATUS, SoftwareInstallStatus.valueOf(u).ordinal)
+                    .where(TASK_ID.eq(taskId))
+                    .and(SOFTWARE_NAME.eq(t))
+                    .execute()
+            }
+        }
+    }
 
-    }*/
+    fun batchAddSystemInstalledRecords(
+        dslContext: DSLContext,
+        tadkId: Long,
+        workspaceName: String,
+        softwareInfoList: List<SoftwareInfo>
+    ) {
+        dslContext.batch(softwareInfoList.map {
+            with(TSystemInstalledRecords.T_SYSTEM_INSTALLED_RECORDS) {
+                dslContext.insertInto(
+                    this,
+                    TASK_ID,
+                    WORKSPACE_NAME,
+                    SOFTWARE_NAME,
+                    STATUS,
+                    CREATE_TIME
+                ).values(
+                    tadkId,
+                    workspaceName,
+                    it.name,
+                    SoftwareInstallStatus.RUNNING.ordinal,
+                    LocalDateTime.now()
+                ).onDuplicateKeyUpdate()
+                    .set(STATUS, SoftwareInstallStatus.RUNNING.ordinal)
+            }
+        }).execute()
+    }
+
+    fun batchAddUserInstalledRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        creator: String,
+        tadkId: Long,
+        workspaceName: String,
+        softwareInfoList: List<SoftwareInfo>
+    ) {
+        dslContext.batch(softwareInfoList.map {
+            with(TUserInstalledRecords.T_USER_INSTALLED_RECORDS) {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    CREATOR,
+                    TASK_ID,
+                    WORKSPACE_NAME,
+                    SOFTWARE_NAME,
+                    STATUS,
+                    CREATE_TIME
+                ).values(
+                    projectId,
+                    creator,
+                    tadkId,
+                    workspaceName,
+                    it.name,
+                    SoftwareInstallStatus.RUNNING.ordinal,
+                    LocalDateTime.now()
+                ).onDuplicateKeyUpdate()
+                    .set(STATUS, SoftwareInstallStatus.RUNNING.ordinal)
+            }
+        }).execute()
+    }
+
+    fun updateUserInstalledRecords(dslContext: DSLContext, softwareList: SoftwareCallbackRes) {
+        val taskId = softwareList.taskId
+        val statusList = softwareList.softwareStatusInfo
+        statusList.forEach { (t, u) ->
+            with(TUserInstalledRecords.T_USER_INSTALLED_RECORDS) {
+                dslContext.update(this)
+                    .set(STATUS, SoftwareInstallStatus.valueOf(u).ordinal)
+                    .where(TASK_ID.eq(taskId))
+                    .and(SOFTWARE_NAME.eq(t))
+                    .execute()
+            }
+        }
+    }
 }
