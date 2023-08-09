@@ -34,6 +34,7 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
 import org.jooq.impl.DefaultExecuteListenerProvider
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -50,11 +51,31 @@ class BkShardingJooqConfiguration {
         @Qualifier("bkJooqExecuteListenerProvider")
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DSLContext {
+        return createDslContext(shardingDataSource, bkJooqExecuteListenerProvider)
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "sharding", name = ["migrationFlag"], havingValue = "Y")
+    fun migratingShardingDslContext(
+        @Qualifier("migratingShardingDataSource")
+        migratingShardingDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DSLContext {
+        return createDslContext(migratingShardingDataSource, bkJooqExecuteListenerProvider)
+    }
+
+    private fun createDslContext(
+        dataSource: DataSource,
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DSLContext {
         val configuration: org.jooq.Configuration = DefaultConfiguration()
-            .set(shardingDataSource)
-            .set(Settings().withRenderSchema(false)
-                .withExecuteLogging(true)
-                .withRenderFormatted(false))
+            .set(dataSource)
+            .set(
+                Settings().withRenderSchema(false)
+                    .withExecuteLogging(true)
+                    .withRenderFormatted(false)
+            )
             .set(SQLDialect.MYSQL)
             .set(bkJooqExecuteListenerProvider)
         return DSL.using(configuration)
