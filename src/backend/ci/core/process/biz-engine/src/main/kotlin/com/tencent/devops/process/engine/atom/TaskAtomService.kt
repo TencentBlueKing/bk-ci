@@ -28,6 +28,8 @@
 package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.KEY_END_TIME
+import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -45,10 +47,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -183,6 +185,7 @@ class TaskAtomService @Autowired(required = false) constructor(
      * 插件任务[task]结束时做的业务处理，启动时间[startTime]毫秒，
      */
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
+        logger.info("TaskAtomService taskEnd")
         try {
             // 更新状态
             pipelineTaskService.updateTaskStatus(
@@ -247,6 +250,14 @@ class TaskAtomService @Autowired(required = false) constructor(
                         )
                     }
                 }
+                val monitorDataMap = mutableMapOf<String, Any>()
+                task.startTime?.let {
+                    monitorDataMap[KEY_START_TIME] = it.timestampmilli()
+                }
+                task.endTime?.let {
+                    monitorDataMap[KEY_END_TIME] = it.timestampmilli()
+                }
+                logger.info("TaskAtomService measureService:$measureService")
                 measureService?.postTaskData(
                     task = task,
                     startTime = task.startTime?.timestampmilli() ?: startTime,
@@ -254,7 +265,8 @@ class TaskAtomService @Autowired(required = false) constructor(
                     type = task.taskType,
                     errorType = atomResponse.errorType?.name,
                     errorCode = atomResponse.errorCode,
-                    errorMsg = atomResponse.errorMsg
+                    errorMsg = atomResponse.errorMsg,
+                    monitorDataMap = monitorDataMap
                 )
                 if (atomResponse.buildStatus.isFailure()) {
                     jmxElements.fail(task.taskType)
