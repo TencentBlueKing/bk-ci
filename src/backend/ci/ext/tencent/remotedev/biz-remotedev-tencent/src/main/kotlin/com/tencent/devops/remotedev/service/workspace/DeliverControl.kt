@@ -158,6 +158,12 @@ class DeliverControl @Autowired constructor(
                 ip = detail.environmentIP,
                 workspaceName = workspaceName
             )
+            // 异步发起用户软件安装，更新为运行中
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspace.name,
+                status = WorkspaceStatus.RUNNING
+            )
         }
 
         val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
