@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.db.config
 
+import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.conf.Settings
@@ -54,7 +55,7 @@ class BkShardingJooqConfiguration {
         return createDslContext(shardingDataSource, bkJooqExecuteListenerProvider)
     }
 
-    @Bean
+    @Bean(name = [MIGRATING_SHARDING_DSL_CONTEXT])
     @ConditionalOnProperty(prefix = "sharding", name = ["migrationFlag"], havingValue = "Y")
     fun migratingShardingDslContext(
         @Qualifier("migratingShardingDataSource")
