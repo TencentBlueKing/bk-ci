@@ -18,6 +18,16 @@ func init() {
 		{
 			ID: "CreateTmpDirectoryFailed", Other: "create tmp directory failed: {{.err}}"},
 		{
+			ID: "EC_BuildProcessRunError", Other: "build into town execution error"},
+		{
+			ID: "EC_BuildProcessStartError", Other: "failed to start build process"},
+		{
+			ID: "EC_LoseRunFileError", Other: "missing execute file failed error"},
+		{
+			ID: "EC_MakeTmpDirError", Other: "failed to create temporary directory"},
+		{
+			ID: "EC_PrepareScriptCreateError", Other: "prebuild script creation failed"},
+		{
 			ID: "ExecutableFileMissing", Other: "\nMissing {{.filename}}, `run install.sh` or `unzip agent.zip` in {{.dir}}."},
 		{
 			ID: "StartWorkerProcessFailed", Other: "start worker process failed: {{.err}}"},
@@ -33,6 +43,16 @@ func init() {
 			ID: "CreateStartScriptFailed", Other: "准备构建脚本生成失败: {{.err}}"},
 		{
 			ID: "CreateTmpDirectoryFailed", Other: "创建临时目录失败: {{.err}}"},
+		{
+			ID: "EC_BuildProcessRunError", Other: "构建进程执行错误"},
+		{
+			ID: "EC_BuildProcessStartError", Other: "启动构建进程失败"},
+		{
+			ID: "EC_LoseRunFileError", Other: "丢失执行文件失败错误"},
+		{
+			ID: "EC_MakeTmpDirError", Other: "创建临时目录失败"},
+		{
+			ID: "EC_PrepareScriptCreateError", Other: "预构建脚本创建失败"},
 		{
 			ID: "ExecutableFileMissing", Other: "\n{{.filename}} 执行文件丢失，请到 {{.dir}} 目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"},
 		{

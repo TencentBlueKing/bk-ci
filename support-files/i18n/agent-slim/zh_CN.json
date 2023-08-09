@@ -19,5 +19,20 @@
    },
    "StartWorkerProcessFailed": {
       "other": "启动构建进程失败: {{.err}}"
+   },
+   "EC_BuildProcessRunError": {
+      "other": "构建进程执行错误"
+   },
+   "EC_LoseRunFileError": {
+      "other": "丢失执行文件失败错误"
+   },
+   "EC_MakeTmpDirError": {
+      "other": "创建临时目录失败"
+   },
+   "EC_BuildProcessStartError": {
+      "other": "启动构建进程失败"
+   },
+   "EC_PrepareScriptCreateError": {
+      "other": "预构建脚本创建失败"
    }
 }

@@ -1,5 +1,7 @@
 package api
 
+import "github.com/TencentBlueKing/bk-ci/agentslim/pkg/i18n"
+
 type ErrorCode int
 
 const (
@@ -9,22 +11,6 @@ const (
 	MakeTmpDirError
 	BuildProcessStartError
 	PrepareScriptCreateError
-	DockerOsError
-	DockerRunShInitError
-	DockerRunShStatError
-	DockerClientCreateError
-	DockerImagesFetchError
-	DockerImagePullError
-	DockerMakeTmpDirError
-	DockerMountCreateError
-	DockerContainerCreateError
-	DockerContainerStartError
-	DockerContainerRunError
-	DockerContainerDoneStatusError
-	DockerChmodInitshError
-	DockerCredGetError
-	DockerDockerOptions
-	DockerImageDebugError
 )
 
 type ErrorTypes string
@@ -37,19 +23,19 @@ const (
 )
 
 type ErrorEnum struct {
-	Type    ErrorTypes
-	Code    ErrorCode
-	Message string
+	Type ErrorTypes
+	Code ErrorCode
+	// 方便国际化
+	MessageId string
 }
 
 var (
-	NoErrorEnum                  = &ErrorEnum{Type: "", Code: 0, Message: ""}
-	BuildProcessRunErrorEnum     = &ErrorEnum{Type: User, Code: BuildProcessRunError, Message: "构建进程执行错误"}
-	RecoverRunFileErrorEnum      = &ErrorEnum{Type: User, Code: RecoverRunFileError, Message: "恢复执行文件失败错误"}
-	LoseRunFileErrorEnum         = &ErrorEnum{Type: User, Code: LoseRunFileError, Message: "丢失执行文件失败错误"}
-	MakeTmpDirErrorEnum          = &ErrorEnum{Type: User, Code: MakeTmpDirError, Message: "创建临时目录失败"}
-	BuildProcessStartErrorEnum   = &ErrorEnum{Type: User, Code: BuildProcessStartError, Message: "启动构建进程失败"}
-	PrepareScriptCreateErrorEnum = &ErrorEnum{Type: User, Code: PrepareScriptCreateError, Message: "预构建脚本创建失败"}
+	NoErrorEnum                  = &ErrorEnum{Type: "", Code: 0, MessageId: ""}
+	BuildProcessRunErrorEnum     = &ErrorEnum{Type: User, Code: BuildProcessRunError, MessageId: "EC_BuildProcessRunError"}
+	LoseRunFileErrorEnum         = &ErrorEnum{Type: User, Code: LoseRunFileError, MessageId: "EC_LoseRunFileError"}
+	MakeTmpDirErrorEnum          = &ErrorEnum{Type: User, Code: MakeTmpDirError, MessageId: "EC_MakeTmpDirError"}
+	BuildProcessStartErrorEnum   = &ErrorEnum{Type: User, Code: BuildProcessStartError, MessageId: "EC_BuildProcessStartError"}
+	PrepareScriptCreateErrorEnum = &ErrorEnum{Type: User, Code: PrepareScriptCreateError, MessageId: "EC_PrepareScriptCreateError"}
 )
 
 func (t *PersistenceBuildInfo) ToFinish(
@@ -60,18 +46,22 @@ func (t *PersistenceBuildInfo) ToFinish(
 	if success || errorEnum == NoErrorEnum {
 		return &PersistenceBuildWithStatus{
 			PersistenceBuildInfo: *t,
-			Success:             success,
-			Message:             message,
-			Error:               nil,
+			Success:              success,
+			Message:              message,
+			Error:                nil,
 		}
+	}
+	errMsg := ""
+	if errorEnum.MessageId != "" {
+		errMsg = i18n.Localize(errorEnum.MessageId, nil)
 	}
 	return &PersistenceBuildWithStatus{
 		PersistenceBuildInfo: *t,
-		Success:             success,
-		Message:             message,
+		Success:              success,
+		Message:              message,
 		Error: &Error{
 			ErrorType:    errorEnum.Type,
-			ErrorMessage: errorEnum.Message,
+			ErrorMessage: errMsg,
 			ErrorCode:    errorEnum.Code,
 		},
 	}

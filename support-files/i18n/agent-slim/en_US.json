@@ -19,5 +19,20 @@
   },
   "StartWorkerProcessFailed": {
     "other": "start worker process failed: {{.err}}"
+  },
+  "EC_BuildProcessRunError": {
+     "other": "build into town execution error"
+  },
+  "EC_LoseRunFileError": {
+     "other": "missing execute file failed error"
+  },
+  "EC_MakeTmpDirError": {
+     "other": "failed to create temporary directory"
+  },
+  "EC_BuildProcessStartError": {
+     "other": "failed to start build process"
+  },
+  "EC_PrepareScriptCreateError": {
+     "other": "prebuild script creation failed"
   }
 }
