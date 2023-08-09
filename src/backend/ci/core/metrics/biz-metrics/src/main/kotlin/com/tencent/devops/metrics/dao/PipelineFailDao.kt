@@ -123,7 +123,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
                 dslContext = dslContext,
                 projectId = queryPipelineFailTrendQo.projectId,
                 baseQueryReq = queryPipelineFailTrendQo.baseQueryReq,
-                pipelineIds = pipelineIds,
+                pipelineIds = pipelineIds
             )
             val step = dslContext.select(this.ERROR_TYPE)
                 .from(this)
