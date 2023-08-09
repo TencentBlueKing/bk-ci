@@ -222,7 +222,16 @@
                             theme="primary"
                             class="exec-pipeline-btn"
                             :disabled="props.row.disabled || props.row.lock"
-                            
+                            v-perm="{
+                                hasPermission: props.row.permissions && props.row.permissions.canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: props.row.pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
                             @click="execPipeline(props.row)"
                         >
                             {{ props.row.lock ? $t('disabled') : $t('exec') }}
@@ -293,6 +302,7 @@
                     count: 0
                 },
                 visibleTagCountList: {},
+                RESOURCE_ACTION,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
                 tableSize: 'small',
