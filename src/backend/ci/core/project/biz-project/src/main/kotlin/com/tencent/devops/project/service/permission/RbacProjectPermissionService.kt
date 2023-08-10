@@ -46,7 +46,9 @@ import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import kotlin.math.log
 
 @Suppress("LongParameterList")
 class RbacProjectPermissionService(
@@ -180,7 +182,16 @@ class RbacProjectPermissionService(
                     resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
                 )
             }
+            throw ErrorCodeException(
+                errorCode = APPROVAL_PROJECT_CANT_UPDATE,
+                params = arrayOf(englishName),
+                defaultMessage = "Projects($englishName) in approval cannot be modified"
+            )
         } catch (ignore: Exception) {
+            logger.warn(
+                "update auth resource failed, " +
+                    "rollback project($englishName) approval|$oldVersionProjectApproval"
+            )
             projectApprovalService.rollBack(
                 projectApprovalInfo = oldVersionProjectApproval!!
             )
@@ -243,5 +254,9 @@ class RbacProjectPermissionService(
             permission = permission,
             supplier = null
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectPermissionServiceImpl::class.java)
     }
 }
