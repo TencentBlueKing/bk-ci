@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
@@ -147,11 +149,13 @@ class PipelineTriggerEventService @Autowired constructor(
         startTime: Long?,
         endTime: Long?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        userId: String
     ): SQLPage<RepoTriggerEventVo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val language = I18nUtil.getLanguage(userId)
         val count = pipelineTriggerEventDao.countRepoTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
@@ -177,7 +181,10 @@ class PipelineTriggerEventService @Autowired constructor(
             endTime = endTime,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )
+        ).map {
+            it.eventDesc = JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+            it
+        }
         return SQLPage(count = count, records = records)
     }
 
