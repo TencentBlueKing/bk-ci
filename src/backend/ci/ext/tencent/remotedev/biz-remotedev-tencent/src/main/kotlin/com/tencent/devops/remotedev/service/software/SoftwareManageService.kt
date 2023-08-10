@@ -71,8 +71,7 @@ class SoftwareManageService @Autowired constructor(
     val softwareGroupUrl = ""
     @Value("\${xingyun.install_software_url:}")
     val installSoftwareUrl = ""
-
-    @Value("\${devCloud.workspace.backendHost:}")
+    @Value("\${devopsGateway.host:#{null}}")
     val backendHost = ""
 
     /*请求合法性校验时使用的密钥*/
