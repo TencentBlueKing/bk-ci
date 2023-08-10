@@ -315,7 +315,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         return oldSetting.copy(
             projectId = projectId,
             pipelineId = newPipelineId,
-            pipelineName = pipelineName,
+            pipelineName = pipelineName
         )
     }
 
