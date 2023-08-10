@@ -25,13 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -51,31 +52,12 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_VERSION"], description = "用户-流水线资源")
-@Path("/user/version")
+@Api(tags = ["SERVICE_PIPELINE_VERSION"], description = "服务-流水线版本管理")
+@Path("/service/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("LongParameterList")
-interface UserPipelineVersionResource {
-
-    
-
-    @ApiOperation("新建流水线编排")
-    @POST
-    @Path("/projects/{projectId}/createPipeline")
-    fun createPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("是否使用模板配置", required = false)
-        @QueryParam("useTemplateSettings")
-        useTemplateSettings: Boolean? = false,
-        @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model
-    ): Result<PipelineId>
+interface ServicePipelineVersionResource {
 
     @ApiOperation("保存流水线编排草稿")
     @POST
@@ -95,7 +77,10 @@ interface UserPipelineVersionResource {
         model: Model,
         @ApiParam("变更说明", required = false)
         @QueryParam("description")
-        description: String? = null
+        description: String? = null,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
     ): Result<Boolean>
 
     @ApiOperation("保存流水线设置")
@@ -112,7 +97,10 @@ interface UserPipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线设置", required = true)
-        setting: PipelineSetting
+        setting: PipelineSetting,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
     ): Result<Boolean>
 
     @ApiOperation("获取流水线编创建人列表（分页）")
@@ -133,7 +121,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
     ): Result<Page<String>>
 
     @ApiOperation("流水线编排版本列表（搜索、分页）")
@@ -160,7 +151,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
     ): Result<PipelineViewPipelinePage<PipelineResVersion>>
 
     @ApiOperation("获取流水线操作日志列表")
@@ -175,6 +169,9 @@ interface UserPipelineVersionResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
     ): Result<List<PipelineOperationDetail>>
 }

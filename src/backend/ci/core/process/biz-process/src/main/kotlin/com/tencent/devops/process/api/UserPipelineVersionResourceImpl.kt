@@ -67,9 +67,11 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         useTemplateSettings: Boolean?,
-        pipeline: Model
+        pipeline: Model,
+        yaml: String?
     ): Result<PipelineId> {
         checkParam(userId, projectId)
+        // 如果穿了yaml
         val pipelineId = PipelineId(
             id = pipelineInfoFacadeService.createPipeline(
                 userId = userId,

@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.user.UserPipelineVersionResource
+import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
@@ -54,51 +54,22 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineVersionResourceImpl @Autowired constructor(
+class ServicePipelineVersionResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineOperationLogService: PipelineOperationLogService
-) : UserPipelineVersionResource {
-
-    override fun createPipeline(
-        userId: String,
-        projectId: String,
-        useTemplateSettings: Boolean?,
-        pipeline: Model
-    ): Result<PipelineId> {
-        checkParam(userId, projectId)
-        val pipelineId = PipelineId(
-            id = pipelineInfoFacadeService.createPipeline(
-                userId = userId,
-                projectId = projectId,
-                model = pipeline,
-                channelCode = ChannelCode.BS,
-                useTemplateSettings = useTemplateSettings
-            )
-        )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId.id,
-                resourceName = pipeline.name,
-                userId = userId,
-                action = "create",
-                actionContent = "Create",
-                projectId = projectId
-            )
-        )
-        return Result(pipelineId)
-    }
+) : ServicePipelineVersionResource {
 
     override fun savePipeline(
         userId: String,
         projectId: String,
         pipelineId: String,
         model: Model,
-        description: String?
+        description: String?,
+        channelCode: ChannelCode
     ): Result<Boolean> {
         checkParam(userId, projectId)
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -130,7 +101,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        setting: PipelineSetting
+        setting: PipelineSetting,
+        channelCode: ChannelCode
     ): Result<Boolean> {
         checkParam(userId, projectId)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
@@ -165,7 +137,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode
     ): Result<Page<String>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -201,7 +174,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         creator: String?,
         description: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode
     ): Result<PipelineViewPipelinePage<PipelineResVersion>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -236,7 +210,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun getPipelineOperationLogs(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        channelCode: ChannelCode
     ): Result<List<PipelineOperationDetail>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW

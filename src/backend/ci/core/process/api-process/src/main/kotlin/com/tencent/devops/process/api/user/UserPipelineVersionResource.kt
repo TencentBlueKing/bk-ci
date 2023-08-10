@@ -51,7 +51,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_VERSION"], description = "用户-流水线资源")
+@Api(tags = ["USER_PIPELINE_VERSION"], description = "用户-流水线版本管理")
 @Path("/user/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -72,7 +72,9 @@ interface UserPipelineVersionResource {
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean? = false,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model
+        pipeline: Model,
+        @ApiParam(value = "流水线模型", required = false)
+        yaml: String?
     ): Result<PipelineId>
 
     @ApiOperation("保存流水线编排草稿")
