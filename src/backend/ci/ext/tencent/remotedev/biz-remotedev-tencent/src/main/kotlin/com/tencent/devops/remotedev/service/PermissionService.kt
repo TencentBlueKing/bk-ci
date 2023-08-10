@@ -73,7 +73,7 @@ class PermissionService @Autowired constructor(
                     if (ws.ownerType == WorkspaceOwnerType.PROJECT.name) {
                         val manager = client.get(ServiceProjectAuthResource::class).getProjectUsers(
                             token = tokenService.getSystemToken(null)!!,
-                            projectCode = ws.creator,
+                            projectCode = ws.projectId,
                             group = BkAuthGroup.MANAGER
                         ).data
                         return manager?.plus(baseUser) ?: baseUser
