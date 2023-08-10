@@ -146,7 +146,7 @@ class PipelineTransferYamlService @Autowired constructor(
                 }
                 watcher.start("transfer start")
                 val input = YamlTransferInput(
-                    pipelineInfo?.creator ?: userId, projectId, pYml
+                     userId, pipelineInfo, pYml
                 )
                 val model = modelTransfer.yaml2Model(input)
                 val setting = modelTransfer.yaml2Setting(input)
