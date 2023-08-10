@@ -224,7 +224,8 @@ class DevCloudBuildListener @Autowired constructor(
                         atoms = dispatchMessage.atoms,
                         dispatchType = dispatchMessage.dispatchType,
                         customBuildEnv = dispatchMessage.customBuildEnv,
-                        containerHashId = dispatchMessage.containerHashId
+                        containerHashId = dispatchMessage.containerHashId,
+                        persistence = (dispatchMessage.dispatchType as PublicDevCloudDispathcType).persistence
                     )
                 )
             }

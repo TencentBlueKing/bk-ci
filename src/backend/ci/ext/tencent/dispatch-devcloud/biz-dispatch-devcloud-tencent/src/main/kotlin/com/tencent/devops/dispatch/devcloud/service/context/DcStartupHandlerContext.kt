@@ -40,7 +40,7 @@ class DcStartupHandlerContext(
     val containerHashId: String?,
     val agentId: String,
     val secretKey: String,
-    val persistence: Boolean = false,
+    val persistence: Boolean? = false,
     var cpu: Int = 16,
     var memory: String = "32768M",
     var disk: String = "100G",
