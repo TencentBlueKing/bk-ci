@@ -137,7 +137,7 @@ class TGitPushTriggerHandler(
             params = listOf(
                 getBranchName(event),
                 "${event.repository.homepage}/commit/${event.checkout_sha}",
-                "${event.checkout_sha}",
+                "${event.checkout_sha}".substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH),
                 event.user_name
             )
         )

@@ -125,7 +125,7 @@ class TGitNoteTriggerHandler(
             code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
             params = listOf(
                 event.objectAttributes.url,
-                event.objectAttributes.note,
+                event.objectAttributes.id.toString(),
                 getUsername(event)
             )
         )

@@ -55,6 +55,7 @@ data class GitPushEvent(
 ) : GitEvent() {
     companion object {
         const val classType = "push"
+        const val SHORT_COMMIT_ID_LENGTH = 8
     }
 }
 
