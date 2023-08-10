@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -80,7 +81,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentCreate(
                 userId = userId,
                 appName = appName,
-                pipeLineId = appName + "_" + event.projectId,
+                pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(5)}",
                 zoneId = event.devFile.zoneId,
                 machineType = event.devFile.machineType
             )
