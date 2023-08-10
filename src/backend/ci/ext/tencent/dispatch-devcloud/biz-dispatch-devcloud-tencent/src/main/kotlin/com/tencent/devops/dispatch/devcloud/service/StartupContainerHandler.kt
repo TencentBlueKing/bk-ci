@@ -34,6 +34,18 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_CONTAINER_NAME
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_FILEGATEWAY
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_GATEWAY
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_ISDEBUG
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_JAVA_PATH
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_LANUAGE
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_LOGPATH
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_MAX_WORKER_COUNT
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_PROJECT_ID
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_DETECTSHELL
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_PATH
+import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_USER
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
@@ -90,7 +102,22 @@ abstract class StartupContainerHandler @Autowired constructor(
             )
 
             if (persistence) {
-                // TODO 新增持久化容器agent相关环境变量
+                envs.putAll(
+                    mapOf(
+                        DEVOPS_AGENTSLIM_ISDEBUG to "false",
+                        DEVOPS_AGENTSLIM_LOGPATH to "/data/logs",
+                        DEVOPS_AGENTSLIM_WORKER_USER to "root",
+                        DEVOPS_AGENTSLIM_LANUAGE to commonConfig.devopsDefaultLocaleLanguage,
+                        DEVOPS_AGENTSLIM_MAX_WORKER_COUNT to "",
+                        DEVOPS_AGENTSLIM_GATEWAY to (commonConfig.devopsDevnetProxyGateway ?: ""),
+                        DEVOPS_AGENTSLIM_FILEGATEWAY to (commonConfig.fileDevnetGateway ?: ""),
+                        DEVOPS_AGENTSLIM_PROJECT_ID to projectId,
+                        DEVOPS_AGENTSLIM_CONTAINER_NAME to (containerName ?: ""),
+                        DEVOPS_AGENTSLIM_WORKER_PATH to "/data",
+                        DEVOPS_AGENTSLIM_JAVA_PATH to "/usr/local/jre",
+                        DEVOPS_AGENTSLIM_WORKER_DETECTSHELL to "true"
+                    )
+                )
             }
 
             return envs
