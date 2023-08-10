@@ -29,5 +29,11 @@ package com.tencent.devops.remotedev.pojo
 
 enum class WorkspaceSystemType {
     LINUX,
-    WINDOWS_GPU
+    WINDOWS_GPU;
+
+    fun needHeartbeat() = this == LINUX
+
+    fun needReminderUser() = this == WINDOWS_GPU
+
+    fun needUpdateBkTicket() = this == LINUX
 }

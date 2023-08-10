@@ -28,13 +28,17 @@
 package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecord
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -64,8 +68,7 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    setting.userSetting.let { JsonUtil.toJson(it, false) }
-
+                    JsonUtil.toJson(RemoteDevUserSettings(), false)
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -73,7 +76,6 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(USER_SETTING, JsonUtil.toJson(setting.userSetting, false))
                 .execute()
         }
     }
@@ -108,6 +110,39 @@ class RemoteDevSettingDao {
                 createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
                 return RemoteDevSettings()
             }
+        }
+    }
+
+    fun fetchAllUserSettings(
+        dslContext: DSLContext,
+        queryUser: String?,
+        limit: SQLLimit
+    ): Result<TRemoteDevSettingsRecord> {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            val condition = mutableListOf<Condition>()
+            condition.add(USER_SETTING.ne(""))
+            if (!queryUser.isNullOrBlank()) {
+                condition.add(USER_ID.like("%$queryUser%"))
+            }
+            return dslContext.selectFrom(this)
+                .where(condition)
+                .limit(limit.limit).offset(limit.offset)
+                .fetch()
+        }
+    }
+    fun countAllUserSettings(
+        dslContext: DSLContext,
+        queryUser: String?
+    ): Long {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            val condition = mutableListOf<Condition>()
+            condition.add(USER_SETTING.ne(""))
+            if (!queryUser.isNullOrBlank()) {
+                condition.add(USER_ID.like("%$queryUser%"))
+            }
+            return dslContext.selectCount().from(this)
+                .where(condition)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -146,20 +181,59 @@ class RemoteDevSettingDao {
         }
     }
 
+    fun fetchAnyUserSetting(
+        dslContext: DSLContext,
+        userId: String
+    ): RemoteDevUserSettings {
+        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.select(USER_SETTING).from(this)
+                .where(USER_ID.eq(userId))
+                .fetchAny()?.let { JsonUtil.toOrNull(it.value1(), RemoteDevUserSettings::class.java) } ?: run {
+                createOrUpdateSetting4OP(dslContext, userId, null)
+                return RemoteDevUserSettings()
+            }
+        }
+    }
+
+    fun batchUpdateWinUsageRemainingTime(
+        dslContext: DSLContext,
+        data: List<Pair<String, Int>>
+    ) {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            data.forEach { (userId, time) ->
+                dslContext.update(this)
+                    .set(WIN_USAGE_REMAINING_TIME, time).where(USER_ID.eq(userId)).execute()
+            }
+        }
+    }
+
+    fun fetchSingleUserWinTimeLeft(
+        dslContext: DSLContext,
+        userId: String
+    ): Int? {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            return dslContext.select(WIN_USAGE_REMAINING_TIME)
+                .from(this).where(USER_ID.eq(userId)).fetchAny(WIN_USAGE_REMAINING_TIME)
+        }
+    }
+
     @Suppress("ComplexMethod")
     fun createOrUpdateSetting4OP(
         dslContext: DSLContext,
-        opSetting: OPUserSetting
+        userId: String,
+        opSetting: OPUserSetting?
     ) {
         val setting = RemoteDevSettings()
         val userSetting = RemoteDevUserSettings().apply {
-            maxRunningCount = opSetting.wsMaxRunningCount ?: maxRunningCount
-            maxHavingCount = opSetting.wsMaxHavingCount ?: maxHavingCount
-            onlyCloudIDE = opSetting.onlyCloudIDE ?: onlyCloudIDE
-            allowedCopy = opSetting.allowedCopy ?: allowedCopy
-            allowedDownload = opSetting.allowedDownload ?: allowedDownload
-            needWatermark = opSetting.needWatermark ?: needWatermark
-            autoDeletedDays = opSetting.autoDeletedDays ?: autoDeletedDays
+            maxRunningCount = opSetting?.maxRunningCount ?: maxRunningCount
+            maxHavingCount = opSetting?.maxHavingCount ?: maxHavingCount
+            onlyCloudIDE = opSetting?.onlyCloudIDE ?: onlyCloudIDE
+            allowedCopy = opSetting?.allowedCopy ?: allowedCopy
+            startCloudExperienceDuration = opSetting?.startCloudExperienceDuration ?: startCloudExperienceDuration
+            allowedDownload = opSetting?.allowedDownload ?: allowedDownload
+            needWatermark = opSetting?.needWatermark ?: needWatermark
+            autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
+            mountType = opSetting?.mountType ?: mountType
         }
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
@@ -175,14 +249,14 @@ class RemoteDevSettingDao {
                 USER_SETTING
             )
                 .values(
-                    opSetting.userId,
+                    userId,
                     setting.defaultShell,
                     JsonUtil.toJson(setting.basicSetting, false),
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    opSetting.wsMaxRunningCount,
-                    opSetting.wsMaxHavingCount,
+                    userSetting.maxRunningCount,
+                    userSetting.maxHavingCount,
                     JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())

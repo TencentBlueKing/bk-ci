@@ -31,6 +31,8 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import io.swagger.annotations.ApiModelProperty
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_CREATE_STARTUP)
@@ -39,9 +41,9 @@ data class WorkspaceCreateEvent(
     override val traceId: String,
     override val workspaceName: String,
     @ApiModelProperty("代码库地址。格式https:://xxx.git")
-    val repositoryUrl: String,
+    val repositoryUrl: String = "",
     @ApiModelProperty("代码库分支")
-    val branch: String,
+    val branch: String = "",
     @ApiModelProperty("代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
     val devFilePath: String?,
     @ApiModelProperty("创建者的oauth token")
@@ -52,6 +54,11 @@ data class WorkspaceCreateEvent(
     val settingEnvs: Map<String, String>,
     @ApiModelProperty("bkTicket")
     val bkTicket: String? = null,
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
+    val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
+    @ApiModelProperty("工作空间归属")
+    val ownerType: WorkspaceOwnerType? = WorkspaceOwnerType.PERSONAL,
+    @ApiModelProperty("projectId")
+    val projectId: String? = null,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

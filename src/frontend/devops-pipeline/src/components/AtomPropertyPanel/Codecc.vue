@@ -2,7 +2,7 @@
     <section>
         <div class="bk-form bk-form-vertical">
             <div v-if="isThirdParty && container.baseOS === 'LINUX'" class="slave-tips">
-                <p class="slave-tips-title">如果非root账号启动agent, 请使用root帐号登录构建机运行以下命令：</p>
+                <p class="slave-tips-title">如果非root账号启动agent, 请使用root账号登录构建机运行以下命令：</p>
                 <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
             </div>
             <template v-for="(obj, key) in commonModel[&quot;row&quot;]">
@@ -57,9 +57,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'codecc',
         mixins: [atomMixin, validMixins],

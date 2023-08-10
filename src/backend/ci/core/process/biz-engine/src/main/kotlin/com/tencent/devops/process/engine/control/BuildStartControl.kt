@@ -259,6 +259,12 @@ class BuildStartControl @Autowired constructor(
                     executeCount = executeCount
                 )
                 broadcastStartEvent(buildInfo)
+            } else {
+                pipelineRuntimeService.updateExecuteCount(
+                    projectId = projectId,
+                    buildId = buildId,
+                    executeCount = executeCount
+                )
             }
         } finally {
             pipelineBuildLock.unlock()

@@ -100,6 +100,51 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132018",
         formatErrorMessage = "get watermark fail."
+    ),
+    NOT_ALLOWED_ENVIRONMENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132019",
+        formatErrorMessage = "Not allowed to create in the current environment."
+    ),
+    WORKSPACE_UNAVAILABLE_WIN_GPU(
+        errorType = ErrorType.USER,
+        errorCode = "2132020",
+        formatErrorMessage = "The windows gpu cloud desktop has reached the maximum usage time, please renew."
+    ),
+    WINDOWS_CONFIG_NOT_FIND(
+        errorType = ErrorType.USER,
+        errorCode = "2132021",
+        formatErrorMessage = "windows config {0} not find"
+    ),
+    WINDOWS_RESOURCE_NOT_AVAILABLE(
+        errorType = ErrorType.USER,
+        errorCode = "2132022",
+        formatErrorMessage = "windows resource {0} not available"
+    ),
+    GET_SOFTWARE_GROUP_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2132023",
+        formatErrorMessage = "get software group fail."
+    ),
+    INSTALL_SOFTWARE_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2132024",
+        formatErrorMessage = "install software fail."
+    ),
+    PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER(
+        errorType = ErrorType.USER,
+        errorCode = "2132025",
+        formatErrorMessage = "The current workspace has an assigned owner"
+    ),
+    DESKTOP_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132026",
+        formatErrorMessage = "The cloud desktop resources are insufficient, currently {0}"
+    ),
+    PROJECT_DESKTOP_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132027",
+        formatErrorMessage = "The cloud desktop resources under the current project are insufficient, currently {0}"
     );
 
     fun getErrorMessage(): String {

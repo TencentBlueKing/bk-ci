@@ -7,10 +7,13 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class WhiteListService @Autowired constructor(
+    @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation,
     private val cacheService: RedisCacheService
 ) {
@@ -34,6 +37,22 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        whiteListUser.apply {
+            val whiteListUserArray = this.split(";")
+            for (user in whiteListUserArray) {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user) ?: run {
+                    logger.info("whiteListUser($user) not in the GPU whiteList")
+                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
+                }
+            }
+        }
+
+        return true
+    }
+
     /* 有关数量的限制:
         如果value大于指定key中id规定的数量，则抛出异常
         如果没有白名单，则抛出异常
@@ -50,5 +69,22 @@ class WhiteListService @Autowired constructor(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
             params = arrayOf("User($id) not in the whiteList or exceeding the limit")
         )
+    }
+
+    /**
+     * 校验云桌面白名单的运行OS只能是windows
+     */
+    fun checkRunsOnOs(key: String, runsOnKey: String, currentOs: String ? = null) {
+        val runsOnValue = cacheService.hentries(key)?.get(runsOnKey)
+        logger.info("checkRunsOnOS|key|$key|runsOnKey|$runsOnKey|currentOs|$currentOs|runsOnValue|$runsOnValue")
+        if (runsOnValue == null || currentOs == null) {
+            return
+        }
+        if (runsOnValue != currentOs) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ErrorCodeEnum.NOT_ALLOWED_ENVIRONMENT.errorCode
+            )
+        }
     }
 }

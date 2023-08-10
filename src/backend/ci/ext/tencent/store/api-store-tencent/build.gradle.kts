@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:log:api-log"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-codecc"))
 }
 
 plugins {

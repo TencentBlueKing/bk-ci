@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -51,11 +52,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.PROJECT_NO_PERMISSION
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -455,9 +459,19 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 分批获取插件的名称
             ListUtils.partition(atomCodeList, 50).forEach { rids ->
                 val atomNameRecords = atomDao.batchGetAtomName(dslContext, rids)
+                val i18nMessageList = atomNameRecords?.let {
+                    client.get(ServiceI18nMessageResource::class).getI18nMessages(
+                        keys = atomNameRecords.map { "ATOM.${it.value1()}.${it.value3()}.releaseInfo.name" },
+                        moduleCode = SystemModuleEnum.STORE.name,
+                        language = I18nUtil.getRequestUserLanguage()
+                    ).data
+                }
                 atomNameRecords?.forEach { atomNameRecord ->
                     val atomCode = atomNameRecord.value1()
-                    val atomName = atomNameRecord.value2()
+                    val i18nMessage = i18nMessageList?.find {
+                        it.key == "ATOM.${atomNameRecord.value1()}.${atomNameRecord.value3()}.releaseInfo.name"
+                    }
+                    val atomName = i18nMessage?.value ?: atomNameRecord.value2()
                     atomNameMap[atomCode] = atomName
                 }
             }
@@ -631,6 +645,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     },
                     recommendFlag = atomFeature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
+                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(pipelineAtomRecord.visibilityLevel as Int),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
                     updateTime = pipelineAtomRecord.updateTime.timestampmilli()
                 )
@@ -1078,8 +1093,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("uninstallAtom, isInstaller=$isInstaller")
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(atomCode),
+                messageCode = PROJECT_NO_PERMISSION,
+                params = arrayOf(projectCode, atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -1135,8 +1150,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(atomCode)
             )
         }
         // 查询插件的最新记录

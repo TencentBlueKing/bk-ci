@@ -43,6 +43,8 @@ object MacAgentEnv {
             logger.info("Change buildType MACOS_NEW...")
             System.setProperty(BUILD_TYPE, BuildType.MACOS_NEW.name)
             BuildEnv.setBuildType(BuildType.MACOS_NEW)
+
+            selectXcode()
             return
         }
 

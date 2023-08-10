@@ -29,8 +29,6 @@ package job
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -41,6 +39,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
@@ -94,11 +93,7 @@ func init() {
 }
 
 const (
-	entryPointCmd               = "/data/init.sh"
-	localDockerBuildTmpDirName  = "docker_build_tmp"
-	LocalDockerWorkSpaceDirName = "docker_workspace"
-	dockerDataDir               = "/data/landun/workspace"
-	dockerLogDir                = "/data/logs"
+	entryPointCmd = "/data/init.sh"
 )
 
 func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
@@ -151,7 +146,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
-	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
+	if dockerBuildInfo.Credential.ErrMsg != "" {
 		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
 		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerCertError", map[string]interface{}{"err": dockerBuildInfo.Credential.ErrMsg}), api.DockerCredGetErrorEnum))
 		return
@@ -194,14 +189,21 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		isLatest = true
 	}
 
-	if ifPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {
+	if job_docker.IfPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {
 		if isLatest {
 			postLog(false, i18n.Localize("PullLatest", nil), buildInfo, api.LogtypeLog)
 		}
 		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo, api.LogtypeLog)
 		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo, api.LogtypeLog)
+
+		auth, err := job_docker.GenerateDockerAuth(dockerBuildInfo.Credential.User, dockerBuildInfo.Credential.Password)
+		if err != nil {
+			logs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
+			return
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
@@ -223,8 +225,8 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	// 创建docker构建机运行准备空间，拉取docker构建机初始化文件
-	tmpDir := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), localDockerBuildTmpDirName)
-	err = mkDir(tmpDir)
+	tmpDir := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), job_docker.LocalDockerBuildTmpDirName)
+	err = systemutil.MkDir(tmpDir)
 	if err != nil {
 		errMsg := i18n.Localize("CreateDockerTmpDirError", map[string]interface{}{"err": err.Error()})
 		logs.Error("DOCKER_JOB|" + errMsg)
@@ -233,14 +235,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	// 解析docker options
-	var dockerConfig *job_docker.ContainerConfig = nil
-	if dockerBuildInfo.Options != nil {
-		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
-		if err != nil {
-			logs.Error("DOCKER_JOB|" + err.Error())
-			dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
-			return
-		}
+	dockerConfig, err := job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+	if err != nil {
+		logs.Error("DOCKER_JOB|" + err.Error())
+		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
+		return
 	}
 
 	// 创建容器
@@ -346,7 +345,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				msg := ""
 				// 如果docker状态不为零，将日志上报
 				logFile := func(tag string) (string, error) {
-					logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
+					logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
 					logFile := filepath.Join(logsDir, "docker.log")
 					content, err := os.ReadFile(logFile)
 					if err != nil && os.IsNotExist(err) {
@@ -410,32 +409,6 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	dockerBuildFinish(buildInfo.ToFinish(true, "", api.NoErrorEnum))
 }
 
-// policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
-// policy 为空，并且为容器镜像指定了非 :latest 的标签， image-pull-policy 就会自动设置为 if-not-present
-func ifPullImage(localExist, islatest bool, policy string) bool {
-	// 为空和枚举写错走一套逻辑
-	switch policy {
-	case api.ImagePullPolicyAlways.String():
-		return true
-	case api.ImagePullPolicyIfNotPresent.String():
-		if !localExist {
-			return true
-		} else {
-			return false
-		}
-	default:
-		if islatest {
-			return true
-		} else {
-			if !localExist {
-				return true
-			} else {
-				return false
-			}
-		}
-	}
-}
-
 // dockerBuildFinish docker构建结束相关
 func dockerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	if buildInfo == nil {
@@ -481,48 +454,25 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logTy
 	}
 }
 
-// mkDir 与  systemutil.MkBuildTmpDir 功能一致
-func mkDir(dir string) error {
-	err := os.MkdirAll(dir, os.ModePerm)
-	err2 := systemutil.Chmod(dir, os.ModePerm)
-	if err == nil && err2 != nil {
-		err = err2
-	}
-	return err
-}
-
-// generateDockerAuth 创建拉取docker凭据
-func generateDockerAuth(cred *api.Credential) string {
-	if cred == nil || cred.User == "" || cred.Password == "" {
-		return ""
-	}
-
-	authConfig := types.AuthConfig{
-		Username: cred.User,
-		Password: cred.Password,
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	return base64.URLEncoding.EncodeToString(encodedJSON)
-}
-
 // parseContainerMounts 解析生成容器挂载内容
 func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, error) {
 	var mounts []mount.Mount
 
-	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
-	if systemutil.IsLinux() {
-		javaDir := config.GAgentConfig.JdkDirPath
-		mounts = append(mounts, mount.Mount{
-			Type:     mount.TypeBind,
-			Source:   javaDir,
-			Target:   "/usr/local/jre",
-			ReadOnly: true,
-		})
-	}
+	// 默认绑定本机的java用来执行worker
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.GAgentConfig.JdkDirPath,
+		Target:   "/usr/local/jre",
+		ReadOnly: true,
+	})
+
+	// 默认绑定本机的 worker 用来执行
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.BuildAgentJarPath(),
+		Target:   "/data/worker-agent.jar",
+		ReadOnly: true,
+	})
 
 	// 挂载docker构建机初始化脚本
 	workDir := systemutil.GetWorkDir()
@@ -537,30 +487,30 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	// data目录优先选择用户自定的工作空间
 	dataDir := ""
 	if buildInfo.Workspace == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
 	} else {
 		dataDir = buildInfo.Workspace
 	}
-	err := mkDir(dataDir)
+	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   dataDir,
-		Target:   dockerDataDir,
+		Target:   constant.DockerDataDir,
 		ReadOnly: false,
 	})
 
-	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
-	err = mkDir(logsDir)
+	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
+	err = systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   logsDir,
-		Target:   dockerLogDir,
+		Target:   job_docker.DockerLogDir,
 		ReadOnly: false,
 	})
 

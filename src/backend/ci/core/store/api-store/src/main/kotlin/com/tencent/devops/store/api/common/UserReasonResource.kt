@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Reason
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
@@ -49,6 +50,7 @@ interface UserReasonResource {
     @ApiOperation("获取原因列表")
     @GET
     @Path("/types/{type}")
+    @BkInterfaceI18n(keyPrefixNames = ["reason", "{data[*].id}"])
     fun list(
         @ApiParam("类别", required = true)
         @PathParam("type")

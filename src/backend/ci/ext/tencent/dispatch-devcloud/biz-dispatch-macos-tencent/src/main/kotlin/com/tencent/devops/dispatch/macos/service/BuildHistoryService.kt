@@ -26,7 +26,6 @@ class BuildHistoryService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         resourceType: String = "DEVCLOUD"
     ): Long {
-        // 检查此任务是否已消费
         val buildHistory = buildHistoryDao.getBuildHistory(
             dslContext = dslContext,
             buildId = dispatchMessage.buildId,
@@ -34,7 +33,8 @@ class BuildHistoryService @Autowired constructor(
             executeCount = dispatchMessage.executeCount ?: 1
         )
 
-        if (buildHistory != null && buildHistory.isNotEmpty) {
+        // 检查此任务是否已消费,如已有消费记录且非主动发起的event重试，则返回存储异常标志
+        if (buildHistory?.isNotEmpty == true && (dispatchMessage.event?.retryTime ?: 0) <= 1) {
             logger.error("$dispatchMessage has been consumed.")
             return -1L
         }

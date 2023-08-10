@@ -36,6 +36,7 @@ data class UpdateTaskInfo(
     val projectId: String, // 项目ID
     val buildId: String, // 构建ID
     val taskId: String, // 任务ID
+    val executeCount: Int,
     val taskStatus: BuildStatus, // 构建状态
     var starter: String? = null, // 启动人
     var approver: String? = null, // 审批人

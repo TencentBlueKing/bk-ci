@@ -7,6 +7,8 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Credential
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -35,7 +37,6 @@ import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
-import com.tencent.devops.dispatch.devcloud.pojo.Credential
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
@@ -44,7 +45,6 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.Params
-import com.tencent.devops.dispatch.devcloud.pojo.Pool
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
@@ -54,12 +54,12 @@ import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import java.util.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.util.Random
 
 /**
  * deng
@@ -99,6 +99,9 @@ class DevCloudBuildListener @Autowired constructor(
 
     @Value("\${devCloud.disk}")
     var disk: String = "500G"
+
+    @Value("\${devCloud.clusterType:normal}")
+    var clusterType: String? = "normal"
 
     @Value("\${devCloud.entrypoint}")
     val entrypoint: String = "devcloud_init.sh"
@@ -308,43 +311,27 @@ class DevCloudBuildListener @Autowired constructor(
         val password = containerPool.credential!!.password
 
         with(dispatchMessage) {
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
-
             val (devCloudTaskId, createName) = dispatchDevCloudClient.createContainer(
-                this, DevCloudContainer(
-                "brief",
-                buildId,
-                ContainerType.DEV.getValue(),
-                "$name:$tag",
-                Registry(host, userName, password),
-                threadLocalCpu.get(),
-                threadLocalMemory.get(),
-                threadLocalDisk.get(),
-                1,
-                emptyList(),
-                generatePwd(),
-                Params(
+                this,
+                DevCloudContainer(
+                    life = "brief",
+                    name = buildId,
+                    type = ContainerType.DEV.getValue(),
+                    image = "$name:$tag",
+                    registry = Registry(host, userName, password),
+                    cpu = threadLocalCpu.get(),
+                    memory = threadLocalMemory.get(),
+                    disk = threadLocalDisk.get(),
+                    replica = 1,
+                    ports = emptyList(),
+                    password = generatePwd(),
+                    params = Params(
                         env = generateEnvs(this),
                         command = listOf("/bin/sh", entrypoint),
-                        labels = containerLabels,
+                        labels = initContainerLabels(),
                         ipEnabled = false
-                    )
+                    ),
+                    clusterType = clusterType
                 )
             )
             logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
@@ -439,24 +426,6 @@ class DevCloudBuildListener @Autowired constructor(
         poolNo: Int
     ) {
         with(dispatchMessage) {
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse和checkout插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
-
             val devCloudTaskId = dispatchDevCloudClient.operateContainer(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -468,7 +437,7 @@ class DevCloudBuildListener @Autowired constructor(
                 param = Params(
                     env = generateEnvs(this),
                     command = listOf("/bin/sh", entrypoint),
-                    labels = containerLabels,
+                    labels = initContainerLabels(),
                     ipEnabled = false
                 )
             )
@@ -561,6 +530,30 @@ class DevCloudBuildListener @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun DispatchMessage.initContainerLabels(): MutableMap<String, String> {
+        val containerLabels = mutableMapOf(
+            "projectId" to projectId,
+            "pipelineId" to pipelineId,
+            "buildId" to buildId,
+            "vmSeqId" to vmSeqId
+        )
+
+        // 针对fuse插件优化
+        fuseAtomCode?.split(",")?.forEach {
+            if (it in atoms.keys) {
+                val (key, value) = fuseContainerLabel!!.split(":")
+                containerLabels[key] = value
+                return@forEach
+            }
+        }
+
+        // overlayfs代码拉取优化
+        if (overlayFsLabel in atoms.keys) {
+            containerLabels[overlayFsLabel] = "true"
+        }
+        return containerLabels
     }
 
     private fun generateEnvs(dispatchMessage: DispatchMessage): Map<String, Any> {

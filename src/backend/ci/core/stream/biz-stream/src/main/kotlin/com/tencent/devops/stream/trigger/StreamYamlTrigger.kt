@@ -106,6 +106,7 @@ class StreamYamlTrigger @Autowired constructor(
         const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
     }
 
+    @BkTimed
     fun checkAndTrigger(
         action: BaseAction,
         trigger: String?
@@ -188,7 +189,6 @@ class StreamYamlTrigger @Autowired constructor(
     }
 
     @Suppress("ComplexMethod")
-    @BkTimed
     fun triggerBuild(
         action: BaseAction,
         triggerEvent: Pair<List<Any>?, TriggerResult>?

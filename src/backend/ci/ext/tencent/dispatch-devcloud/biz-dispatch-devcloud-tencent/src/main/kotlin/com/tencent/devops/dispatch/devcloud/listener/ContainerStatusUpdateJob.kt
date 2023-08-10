@@ -104,7 +104,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
             }
 
             when (val status = statusResponse.optString("data")) {
-                "stopped", "stop" -> {
+                "stopped", "stop", "deleted" -> {
                     logger.info("Update status to idle, containerName: ${it.containerName}")
                     devCloudBuildDao.updateStatus(
                         dslContext = dslContext,
@@ -173,7 +173,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
                 }
             }
         } catch (e: Throwable) {
-            logger.error(
+            logger.warn(
                 "clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|" +
                     "vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e
             )

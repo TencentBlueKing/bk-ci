@@ -33,12 +33,13 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
-import com.tencent.devops.plugin.api.ServiceCodeccResource
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
@@ -67,6 +68,7 @@ class TxStoreIndexCronService(
     private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val atomDao: AtomDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
+    private val codeccApi: CodeccApi,
     private val client: Client
 ) {
 
@@ -139,7 +141,10 @@ class TxStoreIndexCronService(
                         } else {
                             (1 - (atomTotalComponentFailCount.toDouble() / storeExecuteCountByCode.toDouble())) * 100
                         }
-                    val result = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+                    val result = I18nUtil.getCodeLanMessage(
+                        messageCode = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
@@ -154,7 +159,12 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>$BK_ATOM_SLA ： $elementValue%（$result）</span>"
+                        "<span style=\"line-height: 18px\"><span>${
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_ATOM_SLA,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        } ： $elementValue%（$result）</span>"
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
                     tStoreIndexResultRecord.createTime = LocalDateTime.now()
@@ -256,20 +266,34 @@ class TxStoreIndexCronService(
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
-                        result
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = result,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                     )
                     val indexInfo = if (elementValue.isNullOrBlank()) {
-                        elementValue = BK_NO_FAIL_DATA
+                        elementValue = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_NO_FAIL_DATA,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                         elementValue
                     } else {
-                        "$elementValue%(${if (complianceRate > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）"
+                        "$elementValue%(${
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = result,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        }）"
                     }
                     val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord()
                     tStoreIndexElementDetailRecord1.id = UUIDUtil.generate()
                     tStoreIndexElementDetailRecord1.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord1.storeCode = atomCode
                     tStoreIndexElementDetailRecord1.indexCode = indexCode
-                    tStoreIndexElementDetailRecord1.elementName = BK_COMPLIANCE_RATE
+                    tStoreIndexElementDetailRecord1.elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_COMPLIANCE_RATE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     tStoreIndexElementDetailRecord1.elementValue = elementValue
                     tStoreIndexElementDetailRecord1.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord1.creator = SYSTEM_USER
@@ -281,7 +305,10 @@ class TxStoreIndexCronService(
                     tStoreIndexElementDetailRecord2.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord2.storeCode = atomCode
                     tStoreIndexElementDetailRecord2.indexCode = indexCode
-                    tStoreIndexElementDetailRecord2.elementName = BK_CODE_QUALITY
+                    tStoreIndexElementDetailRecord2.elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CODE_QUALITY,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                     tStoreIndexElementDetailRecord2.elementValue = "$codeccOpensourceMeasurement"
                     tStoreIndexElementDetailRecord2.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord2.creator = SYSTEM_USER
@@ -296,12 +323,29 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.storeCode = atomCode
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
+                    val indexResult = if (codeccOpensourceMeasurement == 100.0) {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_UP_TO_PAR,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    } else {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_NOT_UP_TO_PAR,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    }
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\">" +
-                                "<span>$BK_COMPLIANCE_RATE ： $indexInfo" +
-                                "</span></br><span>$BK_CODE_QUALITY ： $codeccOpensourceMeasurement" +
-                                "（${if (codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）" +
-                                "</span></span>"
+                        "<span style=\"line-height: 18px\"><span>${
+                                    I18nUtil.getCodeLanMessage(
+                                        messageCode = BK_COMPLIANCE_RATE,
+                                        I18nUtil.getDefaultLocaleLanguage()
+                                    )
+                                } ： $indexInfo</span></br><span>${
+                                    I18nUtil.getCodeLanMessage(
+                                        messageCode = BK_CODE_QUALITY,
+                                        language = I18nUtil.getDefaultLocaleLanguage()
+                                    )
+                                } ： $codeccOpensourceMeasurement（$indexResult）</span></span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
@@ -345,8 +389,7 @@ class TxStoreIndexCronService(
     private fun getCodeccOpensourceMeasurement(atomCode: String): Double {
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
-            val result = (client.get(ServiceCodeccResource::class)
-                .getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore"))
+            val result = codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0

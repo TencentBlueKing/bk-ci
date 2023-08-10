@@ -89,13 +89,13 @@ import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -450,9 +450,9 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "matrix maxConcurrency number(${option.maxConcurrency}) " +
-                        "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                        "matrix maxConcurrency(${option.maxConcurrency}) " +
-                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -1279,10 +1279,16 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Int {
+    fun updateMaxConRunningQueueSize(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        maxConRunningQueueSize: Int
+    ): Int {
         return pipelineSettingDao.updateMaxConRunningQueueSize(
             dslContext = dslContext,
-            pipelineIdList = listOf(pipelineId),
+            projectId = projectId,
+            pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
         )
     }

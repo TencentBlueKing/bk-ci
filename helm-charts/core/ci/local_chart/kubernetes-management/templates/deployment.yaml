@@ -41,6 +41,15 @@ spec:
       {{- if .Values.kubernetesManager.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.kubernetesManager.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ .Values.kubernetesManager.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              sleep 60s;
       containers:
         - name: kubernetes-manager
           image: {{ .Values.kubernetesManager.image }}
@@ -79,7 +88,7 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 80
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 20
             timeoutSeconds: 10
             failureThreshold: 5

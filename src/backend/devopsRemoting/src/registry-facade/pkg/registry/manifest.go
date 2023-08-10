@@ -92,8 +92,7 @@ type manifestHandler struct {
 }
 
 func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
-	//nolint:staticcheck,ineffassign
-	// span, ctx := opentracing.StartSpanFromContext(r.Context(), "getManifest")
+	start := time.Now()
 	ctx := r.Context()
 	logFields := []zap.Field{
 		logs.String("workspaceId", mh.Name),
@@ -103,7 +102,6 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 	err := func() error {
 		logger := logs.With(logFields...)
 		logger.Debug("get manifest")
-		// tracing.LogMessageSafe(span, "spec", mh.Spec)
 
 		var (
 			acceptType string
@@ -244,7 +242,8 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 		logs.Error("cannot get manifest", logs.Err(err), logs.Any("spec", mh.Spec))
 		respondWithError(w, err)
 	}
-	// tracing.FinishSpan(span, &err)
+
+	logs.Info("get manifest time consuming", logs.String("workspaceId", mh.Name), logs.Any("spec", mh.Spec), logs.String("cost", time.Since(start).String()))
 }
 
 // DownloadConfig 下载desc指定的 OCIv2 镜像配置

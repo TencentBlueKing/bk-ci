@@ -265,9 +265,8 @@ open class MarketAtomTask : ITask() {
             atomExecuteFile = downloadAtomExecuteFile(
                 projectId = buildVariables.projectId,
                 atomFilePath = atomData.pkgPath!!,
-                atomCreateTime = atomData.createTime,
                 workspace = atomTmpSpace,
-                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                authFlag = atomData.authFlag ?: true
             )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -952,9 +951,8 @@ open class MarketAtomTask : ITask() {
     private fun downloadAtomExecuteFile(
         projectId: String,
         atomFilePath: String,
-        atomCreateTime: Long,
         workspace: File,
-        isVmBuildEnv: Boolean
+        authFlag: Boolean
     ): File {
         try {
             // 取插件文件名
@@ -967,9 +965,8 @@ open class MarketAtomTask : ITask() {
             atomApi.downloadAtom(
                 projectId = projectId,
                 atomFilePath = atomFilePath,
-                atomCreateTime = atomCreateTime,
                 file = file,
-                isVmBuildEnv = isVmBuildEnv
+                authFlag = authFlag
             )
             return file
         } catch (t: Throwable) {

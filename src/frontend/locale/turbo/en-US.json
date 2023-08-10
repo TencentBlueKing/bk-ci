@@ -92,5 +92,12 @@
     "构建失败": "failure",
     "查看编译过程数据": "View compilation process data",
     "welcome": "Turbo is based on distributed compilation, caching, and container technologies, and aims to provide users with efficient, stable and convenient acceleration services and improve R&D efficiency. It has supported the acceleration of C/C++ background service compilation under Linux and UE4 code compilation under Windows.",
-    "节省率(%)" : "Saving rate(%)"
+    "节省率(%)" : "Saving rate(%)",
+    "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting keywords or {0}",
+    "清空筛选条件": "Clear Search Conditions",
+    "暂无数据": "No Data",
+    "搜索结果为空": "Search result is empty",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "离开": "Leave"
 }

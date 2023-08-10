@@ -192,7 +192,7 @@ class PipelineRecordModelService @Autowired constructor(
                     containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
                     containerBaseModelMap.remove(VMBuildContainer::groupContainers.name)
                     matrixContainerVarMap = ModelUtils.generateBuildModelDetail(
-                        baseModelMap = containerBaseModelMap,
+                        baseModelMap = containerBaseModelMap.deepCopy(),
                         modelFieldRecordMap = matrixContainerVarMap
                     )
                     groupContainers.add(matrixContainerVarMap)
@@ -247,17 +247,19 @@ class PipelineRecordModelService @Autowired constructor(
                     (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
                 val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
                 taskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
-                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.toMutableMap(), taskVarMap)
+                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
             }
             if (matrixTaskFlag && elementPostInfo == null) {
                 // 生成矩阵task的变量模型
                 val taskBaseMap =
                     (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[index]
-                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.toMutableMap(), taskVarMap)
+                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
             }
             tasks.add(taskVarMap)
         }
-        // 将转换后的job变量数据放入stage中
-        containerVarMap[Container::elements.name] = tasks
+        if (tasks.isNotEmpty()) {
+            // 将转换后的job变量数据放入stage中
+            containerVarMap[Container::elements.name] = tasks
+        }
     }
 }

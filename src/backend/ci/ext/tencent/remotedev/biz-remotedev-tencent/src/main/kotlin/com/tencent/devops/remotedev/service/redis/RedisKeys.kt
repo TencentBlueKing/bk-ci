@@ -4,6 +4,7 @@ object RedisKeys {
     const val REDIS_CALL_LIMIT_KEY_PREFIX = "remotedev:callLimit"
     const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
     const val WORKSPACE_CACHE_KEY_PREFIX = "remotedev:workspaceCache:"
+    fun notifyWinBeforeSleep(userId: String) = "remotedev:notifyWinBeforeSleep:$userId"
 
     // redis 选填项
     const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime" // 10000
@@ -14,6 +15,11 @@ object RedisKeys {
     const val REDIS_REMOTEDEV_INACTIVE_TIME = "remotedev:inactiveTime"
     const val REDIS_WHITELIST_PERIOD = "remotedev:whitelistPeriod"
     const val REDIS_WHITE_LIST_GPU_KEY = "remotedev:whiteListGPU" // 云桌面创建限制
+    const val REDIS_RUNS_ON_OS_KEY = "remotedev:runsOnOS" // 云桌面创建限制
+    const val REDIS_NOTICE_AHEAD_OF_TIME = "remotedev:noticeAheadOfTime" // 云桌面过期通知提前时间 默认60分钟
+    const val REDIS_DEFAULT_AVAILABLE_TIME = "remotedev:defaultAvailableTime" // 云桌面默认可用时间 默认24h
+    const val REDIS_DESTRUCTION_RETENTION_TIME = "remotedev:destructionRetentionTime" // 云桌面销毁保留时间 默认3天
+    const val REDIS_PROJECT_WIN_COUNT_LIMIT = "remotedev:projectWinCountLimit" // 团队空间云桌面创建数量限制
 
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"

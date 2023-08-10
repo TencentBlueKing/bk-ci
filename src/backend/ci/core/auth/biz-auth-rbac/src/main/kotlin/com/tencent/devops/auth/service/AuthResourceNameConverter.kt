@@ -42,17 +42,19 @@ class AuthResourceNameConverter {
         resourceName: String
     ): String {
         return when (resourceType) {
-            // 质量红线规则、质量红线通知组、版本体验组、版本体验资源名可以重复,创建二级管理员时就会报名称冲突,需要转换
+            // 质量红线规则、质量红线通知组、版本体验组、版本体验、代码检查任务、CodeCC忽略类型
+            // 资源名可以重复,创建二级管理员时就会报名称冲突,需要转换
             AuthResourceType.EXPERIENCE_GROUP_NEW.value,
             AuthResourceType.EXPERIENCE_TASK_NEW.value,
             AuthResourceType.QUALITY_RULE.value,
+            AuthResourceType.CODECC_TASK.value,
+            AuthResourceType.CODECC_IGNORE_TYPE.value,
             AuthResourceType.QUALITY_GROUP_NEW.value ->
                 IamGroupUtils.buildSubsetManagerGroupName(
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     resourceName = resourceName
                 )
-
             else ->
                 IamGroupUtils.buildSubsetManagerGroupName(
                     resourceType = resourceType,

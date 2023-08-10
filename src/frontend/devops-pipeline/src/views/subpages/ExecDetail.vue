@@ -4,6 +4,7 @@
         @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
+        
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -53,11 +54,21 @@
             </div>
             <p class="summary-header-shadow" v-show="show"></p>
             <Summary
-                :show-info-row="showSummaryInfoRow"
                 ref="detailSummary"
+                :visible="summaryVisible"
                 :exec-detail="execDetail"
             ></Summary>
-            <p class="pipeline-exec-gap"></p>
+            
+            <p class="pipeline-exec-gap">
+                <span
+                    @click="collapseSummary"
+                    :class="['summary-collapsed-handler', {
+                        'is-collapsed': !summaryVisible
+                    }]"
+                >
+                    <i class="devops-icon icon-angle-double-up"></i>
+                </span>
+            </p>
             <header class="exec-detail-switcher">
                 <span
                     v-for="panel in panels"
@@ -124,25 +135,25 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import webSocketMessage from '@/utils/webSocketMessage'
-    import codeRecord from '@/components/codeRecord'
-    import StartParams from '@/components/StartParams'
+    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import Summary from '@/components/ExecDetail/Summary'
+    import job from '@/components/ExecDetail/job'
+    import plugin from '@/components/ExecDetail/plugin'
+    import stage from '@/components/ExecDetail/stage'
     import ExecPipeline from '@/components/ExecPipeline'
+    import Logo from '@/components/Logo'
     import Outputs from '@/components/Outputs'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
-    import emptyTips from '@/components/devops/emptyTips'
-    import plugin from '@/components/ExecDetail/plugin'
-    import job from '@/components/ExecDetail/job'
-    import Summary from '@/components/ExecDetail/Summary'
-    import stage from '@/components/ExecDetail/stage'
     import stageReviewPanel from '@/components/StageReviewPanel'
+    import StartParams from '@/components/StartParams'
+    import codeRecord from '@/components/codeRecord'
+    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import Logo from '@/components/Logo'
-    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -167,8 +178,8 @@
                 isLoading: true,
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
-                showSummaryInfoRow: true,
                 show: false,
+                summaryVisible: true,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -221,15 +232,27 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
+                            isLatestBuild: this.isLatestBuild,
                             matchRules: this.curMatchRules
                         }
                     },
                     {
                         name: 'outputs',
-                        label: this.$t('details.outputs'),
+                        label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
-                        bindData: {}
+                        bindData: {
+                            currentTab: 'artifacts'
+                        }
+                    },
+                    {
+                        name: 'reports',
+                        label: this.$t('details.report'),
+                        className: '',
+                        component: 'outputs',
+                        bindData: {
+                            currentTab: 'reports'
+                        }
                     },
                     {
                         name: 'codeRecords',
@@ -331,6 +354,9 @@
             },
             statusLabel () {
                 return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
+            },
+            isLatestBuild () {
+                return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
             }
         },
 
@@ -346,13 +372,25 @@
                 }
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
-                    this.isLoading = false
                     this.hasNoPermission = true
                 }
             }
         },
-
+        beforeRouteEnter (to, from, next) {
+            if (!to.params.type) {
+                next({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...to.params,
+                        type: 'executeDetail'
+                    }
+                })
+            } else {
+                next()
+            }
+        },
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
             webSocketMessage.installWsMessage(this.setPipelineDetail)
@@ -453,6 +491,9 @@
                         type: panel.name
                     }
                 })
+            },
+            collapseSummary () {
+                this.summaryVisible = !this.summaryVisible
             }
         }
     }
@@ -480,7 +521,7 @@
     justify-content: space-between;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 22;
     .exec-detail-build-summary-anchor {
       @include build-status();
       position: absolute;
@@ -511,6 +552,7 @@
       .exec-detail-summary-header-build-msg {
         flex: 1;
         margin: 0 24px 0 8px;
+        font-size: 14px;
         @include ellipsis();
         color: #313238;
         min-width: auto;
@@ -548,6 +590,32 @@
     position: sticky;
     top: 40px;
     z-index: 8;
+    .summary-collapsed-handler {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-60px);
+        width: 120px;
+        height: 12px;
+        background: #EAEBF0;
+
+        border-radius: 2px 2px 0 0;
+        text-align: center;
+        line-height: 12px;
+        font-size: 12px;
+        transition: all 0.3s;
+        z-index: 10;
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
+        }
+        &.is-collapsed {
+            > i {
+                display: block;
+                transform: rotate(180deg);
+            }
+        }
+      }
   }
   .exec-detail-switcher {
     background: #f0f1f5;

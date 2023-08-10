@@ -28,4 +28,6 @@ RUN mkdir -p /data/tools && \
 # 安装第三方构建机JRE
 RUN wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
     wget "https://github.com/bkdevops-projects/devops-jre/raw/main/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
-    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ 
+    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
+    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
+    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos_arm64/jre.zip" -P /data/workspace/agent-package/jre/macos_arm64/ 

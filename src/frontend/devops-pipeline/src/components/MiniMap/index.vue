@@ -127,6 +127,12 @@
                     this.$nextTick(this.drawMiniMap)
                 },
                 deep: true
+            },
+            scrollClass (val) {
+                this.scrollEle = document.querySelector(val)
+                this.$nextTick(() => {
+                    this.drawMiniMap(false)
+                })
             }
         },
 
@@ -159,14 +165,14 @@
                 })
             },
 
-            drawMiniMap () {
+            drawMiniMap (drawStage = true) {
                 this.realHeght = this.scrollEle.scrollHeight
                 this.realWidth = this.scrollEle.scrollWidth
                 const heightRate = 134 / this.realHeght
                 const widthRate = 200 / this.realWidth
                 this.rate = Math.min(heightRate, widthRate)
-                const sw = this.rate * this.realWidth
-                const sh = this.rate * this.realHeght
+                const sw = widthRate * this.realWidth
+                const sh = heightRate * this.realHeght
                 this.navTop = this.scrollEle.scrollTop / this.realHeght * sh
                 this.navLeft = this.scrollEle.scrollLeft / this.realWidth * sw
                 this.navWidth = this.scrollEle.offsetWidth / this.realWidth * sw
@@ -175,9 +181,11 @@
                 this.navHeight = this.navHeight > sh ? sh : this.navHeight
                 this.sw = sw
                 this.sh = sh
-                this.canvasCtx.clearRect(0, 0, 200, 134)
-                this.canvasCtx.font = `normal normal normal ${pipelineStyle.fontSize * this.rate}px pingFangSC-Regular`
-                this.drawStages()
+                if (drawStage) {
+                    this.canvasCtx.clearRect(0, 0, 200, 134)
+                    this.canvasCtx.font = `normal normal normal ${pipelineStyle.fontSize * this.rate}px pingFangSC-Regular`
+                    this.drawStages()
+                }
             },
 
             drawStages () {
@@ -231,7 +239,6 @@
                 let left = this.navLeft + currentX - this.startMove.x
                 top = top <= 0 ? 0 : (top >= (this.sh - this.navHeight) ? this.sh - this.navHeight : top)
                 left = left <= 0 ? 0 : (left >= (this.sw - this.navWidth) ? this.sw - this.navWidth : left)
-
                 this.scrollEle.scrollTop = top * this.realHeght / this.sh
                 this.scrollEle.scrollLeft = left * this.realWidth / this.sw
                 this.navTop = top
@@ -246,8 +253,13 @@
 
             eleScroll (event) {
                 if (this.startMove.isStart) return
-                const top = this.scrollEle.scrollTop
-                const left = this.scrollEle.scrollLeft
+                const top = event.target.scrollTop
+                const left = event.target.scrollLeft
+                this.navTop = top / this.realHeght * this.sh
+                this.navLeft = left / this.realWidth * this.sw
+            },
+            scrollTo (left, top) {
+                if (this.startMove.isStart) return
                 this.navTop = top / this.realHeght * this.sh
                 this.navLeft = left / this.realWidth * this.sw
             }

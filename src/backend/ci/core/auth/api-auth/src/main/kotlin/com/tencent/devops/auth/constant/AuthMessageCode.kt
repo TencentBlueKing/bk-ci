@@ -57,7 +57,7 @@ object AuthMessageCode {
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121009" // 权限系统: token验证失败
     const val LOGIN_USER_FREEZE = "2121010" // 账号冻结中
     const val LOGIN_USER_INFO_EXIST = "2121011" // 权限系统： 用户已存在，无需重复创建
-    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登录code校验失败
     const val MANAGER_PERMISSION_EXPIRE = "2121013" // 管理员权限过期
     const val APPROVAL_RECORD_NOT_EXIST = "2121014" // 审批记录不存在
     const val RELATED_RESOURCE_EMPTY = "2121015" // 权限系统：绑定系统资源为空

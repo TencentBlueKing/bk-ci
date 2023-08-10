@@ -15,8 +15,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import qrcode from '@/components/devops/qrcode'
+    import { mapActions } from 'vuex'
     export default {
         components: {
             qrcode
@@ -62,9 +62,11 @@
     .output-qrcode-box {
         display: inline-flex;
         align-items: center;
+        font-size: 0;
         .icon-qrcode {
             color: #979ba5;
             cursor: pointer;
+            font-size: 14px;
         }
     }
     .output-qrcode-popup {
