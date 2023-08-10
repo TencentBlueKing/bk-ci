@@ -43,8 +43,8 @@ import com.tencent.devops.process.yaml.modelTransfer.inner.TransferModelCreatorI
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.test.util.ReflectionTestUtils
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -76,15 +77,18 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         every {
             transferCache.getAtomDefaultValue(any())
         }.returns(emptyMap())
+        ReflectionTestUtils.setField(creator, "marketRunTaskData", true)
+        ReflectionTestUtils.setField(creator, "runPlugInAtomCodeData", "run")
+        ReflectionTestUtils.setField(creator, "runPlugInVersionData", "1.*")
     }
 
     @Test
     fun yaml2Model() {
         val watcher = Watcher(id = "yaml2Model")
         watcher.start("read file")
-        val yml = testReadResourceFile("test2.yml")
+        val yml = testReadResourceFile("temp.yml")
         watcher.start("parse PreScriptBuildYaml")
-        val pYml = YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<PreTemplateScriptBuildYaml>() {})
+        val pYml = YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
         watcher.start("normalize Yaml")
         pYml.replaceTemplate {
             YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<PreScriptBuildYaml>() {})
