@@ -224,7 +224,7 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineRecordChangeEvent(
+    protected fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,

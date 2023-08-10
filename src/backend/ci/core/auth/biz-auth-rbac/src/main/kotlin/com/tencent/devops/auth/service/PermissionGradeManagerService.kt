@@ -157,6 +157,7 @@ class PermissionGradeManagerService @Autowired constructor(
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
+            logger.info("create grade manager|$name|$userId")
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -167,8 +168,8 @@ class PermissionGradeManagerService @Autowired constructor(
                 .sync_perm(true)
                 .groupName(manageGroupConfig.groupName)
                 .build()
-            logger.info("create grade manager|$name|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
+            logger.info("create iam grade manager success|$name|$projectCode|$userId|$gradeManagerId")
             gradeManagerId
         } else {
             val callbackId = UUIDUtil.generate()

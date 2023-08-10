@@ -39,3 +39,8 @@ export const COLLECT_VIEW_ID = 'collect'
 export const DELETED_VIEW_ID = 'recycleBin'
 export const UNCLASSIFIED_PIPELINE_VIEW_ID = 'unclassified'
 export const RECENT_USED_VIEW_ID = 'recentUse'
+
+export const CACHE_PIPELINE_GROUP_NAV_STATUS = 'cache_pipeline_group_nav_status'
+export const CACHE_PIPELINE_TABLE_WIDTH_MAP = 'cache_pipeline_table_width_map'
+export const TABLE_COLUMN_CACHE = 'table_column_cache'
+export const PIPELINE_ASIDE_PANEL_TOGGLE = 'pipeline_aside_panel_toggle'
