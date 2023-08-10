@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.api.external
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import io.swagger.annotations.Api
