@@ -167,7 +167,6 @@ class DeliverControl @Autowired constructor(
                 status = WorkspaceStatus.RUNNING
             )
         }
-        val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
         val em = alreadyExist.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
