@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -73,6 +74,10 @@ class ModelTransfer @Autowired constructor(
     fun yaml2Setting(yamlInput: YamlTransferInput): PipelineSetting {
         val yaml = yamlInput.yaml
         return PipelineSetting(
+            projectId =  yamlInput.pipelineInfo?.projectId ?: "",
+            pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
+            pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
+            desc = yamlInput.pipelineInfo?.pipelineDesc ?: "",
             concurrencyGroup = yaml.concurrency?.group,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
@@ -83,9 +88,7 @@ class ModelTransfer @Autowired constructor(
                 else -> PipelineRunLockType.MULTIPLE
             },
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes ?: TimeUnit.HOURS.toMinutes(8).toInt(),
-            // #6090 stream重试时均需要清理变量表
-            cleanVariablesWhenRetry = true,
-            maxQueueSize = yaml.concurrency?.queueLength ?: 1,
+            maxQueueSize = yaml.concurrency?.queueLength ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
             labels = yaml2Labels(yamlInput),
             pipelineAsCodeSettings = yamlInput.asCodeSettings
         )
@@ -131,7 +134,7 @@ class ModelTransfer @Autowired constructor(
             stages = stageList,
             labels = emptyList(),
             instanceFromTemplate = false,
-            pipelineCreator = yamlInput.userId
+            pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
     }
 

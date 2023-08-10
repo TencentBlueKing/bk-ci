@@ -30,7 +30,7 @@ package com.tencent.devops.process.pojo.transfer
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建模型-ID")
+@ApiModel("流水线 yaml 带定位信息")
 data class PreviewResponse(
     @ApiModelProperty("yaml内容")
     val yaml: String,
