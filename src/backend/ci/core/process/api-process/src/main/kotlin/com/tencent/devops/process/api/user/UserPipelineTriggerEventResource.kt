@@ -122,10 +122,10 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("事件ID", required = true)
+        @ApiParam("事件ID", required = false)
         @QueryParam("eventId")
         eventId: Long?,
         @ApiParam("开始时间", required = false)
