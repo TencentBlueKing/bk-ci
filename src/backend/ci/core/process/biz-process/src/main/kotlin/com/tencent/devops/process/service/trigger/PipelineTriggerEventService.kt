@@ -185,7 +185,7 @@ class PipelineTriggerEventService @Autowired constructor(
             it.eventDesc = try {
                 JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
             } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo triggered event|sourceDesc[${it.eventDesc}]", ignored)
+                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
                 it.eventDesc
             }
             it
