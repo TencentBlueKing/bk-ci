@@ -329,7 +329,11 @@ class DeleteControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+            remoteDevBillingDao.endBilling(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name
+            )
         }
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = operator,
