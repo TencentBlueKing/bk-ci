@@ -74,7 +74,6 @@ interface ExternalResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @ApiParam(value = "回调信息", required = true)
-        @JsonProperty("software_list")
         softwareList: SoftwareCallbackRes
     ): Result<Boolean>
 }
