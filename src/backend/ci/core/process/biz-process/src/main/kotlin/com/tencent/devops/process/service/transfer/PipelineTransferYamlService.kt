@@ -70,7 +70,7 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class PipelineTransferService @Autowired constructor(
+class PipelineTransferYamlService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineViewDao: PipelineViewDao,
@@ -90,7 +90,7 @@ class PipelineTransferService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTransferService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTransferYamlService::class.java)
         private const val TEMPLATE_ROOT_FILE = "TEMPLATE_ROOT_FILE"
         private val pipeline_key = listOf("stages", "jobs", "steps", "finally")
         private val trigger_key = listOf("on")
