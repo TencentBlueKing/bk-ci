@@ -28,7 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.api.user.UserAuthItsmCallbackResource
+import com.tencent.devops.auth.api.service.ServiceAuthItsmCallbackResource
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -1103,7 +1103,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     private fun hasApplicationFinish(projectId: String): Boolean {
-        val callbackRecord = client.get(UserAuthItsmCallbackResource::class).get(projectId = projectId).data
+        val callbackRecord = client.get(ServiceAuthItsmCallbackResource::class).get(projectId = projectId).data
         if (callbackRecord == null || callbackRecord.approveResult != null || callbackRecord.revokeResult) {
             logger.warn("itsm application has ended, no need to cancel|projectCode:$projectId")
             return true
