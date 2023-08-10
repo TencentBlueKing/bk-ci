@@ -31,6 +31,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -38,7 +40,18 @@ import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.Stage
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "version",
+    defaultImpl = PreTemplateScriptBuildYaml::class
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3::class, name = YamlVersion.Version.V3),
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
+)
 interface IPreTemplateScriptBuildYaml : YamlVersion {
     val version: String?
     val name: String?

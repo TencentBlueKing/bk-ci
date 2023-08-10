@@ -57,6 +57,7 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
@@ -127,7 +128,7 @@ class PipelineTransferYamlService @Autowired constructor(
                 watcher.start("FULL_YAML2MODEL start")
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
                 val pYml = TransferMapper.getObjectMapper()
-                    .readValue(data.oldYaml, object : TypeReference<PreTemplateScriptBuildYaml>() {})
+                    .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
                 watcher.start("parse template")
                 pYml.replaceTemplate { templateFilter ->
                     YamlTemplate(
