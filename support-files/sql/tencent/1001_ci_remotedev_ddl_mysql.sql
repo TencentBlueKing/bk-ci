@@ -268,12 +268,43 @@ CREATE TABLE IF NOT EXISTS `T_USER_INSTALLED_RECORDS` (
     `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '蓝盾项目ID',
     `CREATOR` varchar(32) NOT NULL DEFAULT '' COMMENT '用户',
-    `SOFTWARE_ID` bigint(11) NOT NULL DEFAULT '0' COMMENT '软件ID',
+    `TASK_ID` bigint(11) NOT NULL DEFAULT '0' COMMENT '任务ID',
+    `SOFTWARE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '软件名称',
     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '云桌面名称',
-    `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '任务状态,0-INSTALLING,1-SUCCESS,2-FAILURE',
+    `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '任务状态,0-RUNNING,1-FINISHED,2-FAILED,3-SUSPENDED,4-REVOKED,5-WAITING',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '安装时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='项目下用户安装软件记录';
+
+-- ----------------------------
+-- Table structure for T_SYSTEM_SOFTWARES 系统软件信息
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_SYSTEM_SOFTWARES` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `NAME` varchar(32) NOT NULL DEFAULT '' COMMENT '应用名称',
+    `VERSION` varchar(32) NOT NULL DEFAULT '' COMMENT '版本',
+    `SOURCE` varchar(64) NOT NULL DEFAULT '' COMMENT '来源',
+    `CREATOR` varchar(32) NOT NULL DEFAULT '' COMMENT '创建人',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`NAME`,`VERSION`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统软件信息';
+
+-- ----------------------------
+-- Table structure for T_SYSTEM_SOFTWARES_INSTALLED_RECORDS 系统软件安装记录
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_SYSTEM_INSTALLED_RECORDS` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `TASK_ID` bigint(11) NOT NULL DEFAULT '0' COMMENT '任务ID',
+    `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '云桌面名称',
+    `SOFTWARE_NAME` varchar(32) NOT NULL DEFAULT '' COMMENT '应用名称',
+    `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '任务状态,0-RUNNING,1-FINISHED,2-FAILED,3-SUSPENDED,4-REVOKED,5-WAITING',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`TASK_ID`,`SOFTWARE_NAME`,`WORKSPACE_NAME`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统软件安装记录';
 
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -35,8 +35,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
+import com.tencent.devops.remotedev.pojo.software.CommonArgs
 import com.tencent.devops.remotedev.pojo.software.InstallSoftwareRes
 import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
 import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
@@ -45,6 +47,7 @@ import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,9 +71,16 @@ class SoftwareManageService @Autowired constructor(
     val softwareGroupUrl = ""
     @Value("\${xingyun.install_software_url:}")
     val installSoftwareUrl = ""
+    @Value("\${devopsGateway.host:#{null}}")
+    val backendHost = ""
+
+    /*请求合法性校验时使用的密钥*/
+    @Value("\${externalKey:}")
+    val externalKey = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
+        private const val IOANAME = "IOA"
     }
 
     // 获取工作空间模板
@@ -124,7 +134,8 @@ class SoftwareManageService @Autowired constructor(
                 UserSoftwareInstalledRecord(
                     projectId = it.projectId,
                     user = it.creator,
-                    softwareId = it.softwareId,
+                    taskId = it.taskId,
+                    softwareName = it.softwareName,
                     workspaceName = it.workspaceName,
                     status = SoftwareInstallStatus.values()[it.status],
                     installTime = it.createTime.toString()
@@ -170,16 +181,21 @@ class SoftwareManageService @Autowired constructor(
         return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
     }
 
-    // 调用行云接口安装指定云桌面的软件
-    fun installSoftwareFromXingyun(
+    /**
+     * 安装用户自定义软件
+     */
+
+    fun installUserSoftwares(
+        projectId: String,
         userId: String,
-        ip: String
-    ): InstallSoftwareRes? {
+        ip: String,
+        workspaceName: String
+    ) {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
         val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
         logger.info("installSoftwareFromXingyun|userSoftwareInfoList|$userSoftwareInfoList")
         if (userSoftwareInfoList.isNullOrEmpty()) {
-            return null
+            return
         }
         val softwareInfoList = mutableListOf<SoftwareInfo>()
         userSoftwareInfoList.forEach {
@@ -189,10 +205,84 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
+            "?type=USER&key=$externalKey&workspaceName=$workspaceName"
+        val installSoftwareRes = installSoftwareFromXingyun(
+            userId = userId,
+            ip = ip.substringAfter("."),
+            callBackUrl = callBackUrl,
+            softwareInfoList = softwareInfoList
+        )
+        // 自定义软件不需要依赖安装结果，云桌面可以更新为运行中状态。
+        // 插入软件安装记录
+        softwareManageDao.batchAddUserInstalledRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            creator = userId,
+            tadkId = installSoftwareRes.data.taskId,
+            workspaceName = workspaceName,
+            softwareInfoList = softwareInfoList
+        )
+    }
+
+    /** 云桌面创建完成后安全初始化：安装ioa
+     * ioa安装的脚步严格安装以下格式字符串，转base64后传入。
+     * base64(-project_id "cmk-tke" -creator "raylzhang" -region_id "555" -inner_ip "SZ3.11.171.77.15")
+     */
+    fun installSystemSoftwares(
+        projectId: String,
+        creator: String,
+        regionId: String,
+        ip: String,
+        workspaceName: String
+    ) {
+        val params = "-project_id \"$projectId\" -creator \"$creator\" -region_id \"$regionId\" -inner_ip \"$ip\""
+        val base64Val = Base64Util.encode(params.toByteArray())
+        val systemSoftwareInfoList = softwareManageDao.getSystemSoftwareList(dslContext)
+        logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList")
+        if (systemSoftwareInfoList.isEmpty()) {
+            return
+        }
+        val softwareInfoList = mutableListOf<SoftwareInfo>()
+        systemSoftwareInfoList.forEach { record ->
+            softwareInfoList.add(
+                SoftwareInfo(
+                    name = record["NAME"] as String,
+                    version = record["VERSION"] as String,
+                    commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
+                ))
+        }
+        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
+        val installSoftwareRes = installSoftwareFromXingyun(
+            userId = creator,
+            ip = ip.substringAfter("."),
+            callBackUrl = callBackUrl,
+            softwareInfoList = softwareInfoList
+        )
+
+        // 插入软件安装记录
+        softwareManageDao.batchAddSystemInstalledRecords(
+            dslContext = dslContext,
+            tadkId = installSoftwareRes.data.taskId,
+            workspaceName = workspaceName,
+            softwareInfoList = softwareInfoList
+        )
+    }
+
+    // 调用行云接口执行软件安装
+    fun installSoftwareFromXingyun(
+        userId: String,
+        ip: String,
+        callBackUrl: String,
+        softwareInfoList: List<SoftwareInfo>
+    ): InstallSoftwareRes {
+        // 先获取userId安装的软件列表，封装成SoftwareCreate
         val softwareCreate = SoftwareCreate(
             ip = ip,
             username = userId,
-            softwareInfo = softwareInfoList
+            softwareInfo = softwareInfoList,
+            callbackUrl = callBackUrl
         )
         val body = JsonUtil.toJson(softwareCreate, false)
         logger.info("installSoftwareFromXingyun|installSoftwareUrl|$installSoftwareUrl|body|$body")
@@ -219,12 +309,22 @@ class SoftwareManageService @Autowired constructor(
                 return createSoftwareRes
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("get software group failed.", e)
+            logger.error("install software from xingyun failed.", e)
             // 接口超时失败
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode
             )
+        }
+    }
+
+    // 添加系统软件安装记录
+    fun updateSoftwareInstalledRecords(type: String, softwareList: SoftwareCallbackRes) {
+        logger.info("updateSoftwareInstalledRecords|type|$type|softwareList|$softwareList")
+        if (type == "SYSTEM") {
+            softwareManageDao.updateSystemInstalledRecords(dslContext, softwareList)
+        } else {
+            softwareManageDao.updateUserInstalledRecords(dslContext, softwareList)
         }
     }
 }

@@ -306,7 +306,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ownerType == WorkspaceOwnerType.PROJECT) {
-                deliverControl.safeInitialization(event.userId, event.workspaceName)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
             // websocket 通知成功
@@ -443,11 +443,6 @@ class CreateControl @Autowired constructor(
                 redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
             )
         ) {
-//            devfile.runsOn?.container?.image = if (mountType == WorkspaceMountType.BCS) {
-//                "${commonConfig.bcsWorkspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }else{
-//                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
