@@ -241,30 +241,16 @@ class ProjectInfoDao {
         }
     }
 
-    fun projectAtomRelationCountByNotInAtomCodes(
-        dslContext: DSLContext,
-        projectId: String,
-        atomCodes: List<String> = emptyList()
-    ): Int {
-        with(TProjectAtom.T_PROJECT_ATOM) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ATOM_CODE.notIn(atomCodes))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
     fun projectAtomCount(
         dslContext: DSLContext,
         projectId: String,
-        atomCodes: List<String> = emptyList()
+        excludeAtomCodes: List<String> = emptyList()
     ): Int {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(ATOM_CODE.notIn(atomCodes))
+                .and(ATOM_CODE.notIn(excludeAtomCodes))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
