@@ -46,7 +46,7 @@ data class PipelineTriggerEventVo(
     @ApiModelProperty("触发人")
     val triggerUser: String,
     @ApiModelProperty("事件描述")
-    val eventDesc: String,
+    var eventDesc: String,
     @ApiModelProperty("事件时间")
     val eventTime: Long,
     @ApiModelProperty("触发状态")

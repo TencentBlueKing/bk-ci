@@ -135,7 +135,8 @@ class UserPipelineTriggerEventResourceImpl(
                 eventId = eventId,
                 pipelineId = pipelineId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                userId = userId
             )
         )
     }

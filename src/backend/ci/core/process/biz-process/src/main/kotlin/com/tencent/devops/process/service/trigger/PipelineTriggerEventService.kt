@@ -198,7 +198,8 @@ class PipelineTriggerEventService @Autowired constructor(
         eventId: Long,
         pipelineId: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        userId: String
     ): SQLPage<PipelineTriggerEventVo> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -206,6 +207,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val language = I18nUtil.getLanguage(userId)
         val records = pipelineTriggerEventDao.listTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
@@ -213,7 +215,15 @@ class PipelineTriggerEventService @Autowired constructor(
             pipelineId = pipelineId,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )
+        ).map {
+            it.eventDesc = try {
+                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+            } catch (ignored: Exception) {
+                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
+                it.eventDesc
+            }
+            it
+        }
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
