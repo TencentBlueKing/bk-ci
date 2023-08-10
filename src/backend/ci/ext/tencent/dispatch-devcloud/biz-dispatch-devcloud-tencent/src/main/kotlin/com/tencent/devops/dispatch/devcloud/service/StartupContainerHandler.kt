@@ -156,7 +156,7 @@ abstract class StartupContainerHandler @Autowired constructor(
     }
 
     fun generateContainerCommand(handlerContext: DcStartupHandlerContext): List<String> {
-        return if (handlerContext.persistence) {
+        return if (!handlerContext.persistence) {
             listOf("/bin/sh", entrypoint)
         } else {
             listOf("/bin/sh", persistenceEntrypoint)
