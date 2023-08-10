@@ -51,6 +51,5 @@ data class GithubRepository(
         const val classType = "github"
     }
 
-
     override fun getStartPrefix() = "https://github.com/"
 }

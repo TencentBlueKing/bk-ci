@@ -243,7 +243,7 @@ class GithubService @Autowired constructor(
         filePath: String,
         token: String
     ): String {
-        return if (token.isBlank()){
+        return if (token.isBlank()) {
             val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
             OkhttpUtils.doGet(url).use {
                 logger.info("github content url: $url")
