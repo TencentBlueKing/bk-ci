@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,15 +69,30 @@ class PipelineOperationLogService @Autowired constructor(
         )
     }
 
-    fun getOperationLogs(
+    fun getOperationLogsInPage(
         userId: String,
         projectId: String,
-        pipelineId: String
-    ): List<PipelineOperationDetail> {
-        val opList = pipelineOperationLogDao.getList(
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): PipelineViewPipelinePage<PipelineOperationDetail> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: -1
+        var slqLimit: SQLLimit? = null
+        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val offset = slqLimit?.offset ?: 0
+        val limit = slqLimit?.limit ?: -1
+        val opCount = pipelineOperationLogDao.getCountByPipeline(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
+        )
+        val opList = pipelineOperationLogDao.getListByPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
         )
         val versions = mutableSetOf<Int>()
         opList.forEach { versions.add(it.version) }
@@ -85,7 +103,7 @@ class PipelineOperationLogService @Autowired constructor(
             pipelineId = pipelineId,
             versions = versions
         ).forEach { versionMap[it.version] = it }
-        return opList.map {
+        val detailList = opList.map {
             with(it) {
                 PipelineOperationDetail(
                     id = id,
@@ -104,5 +122,11 @@ class PipelineOperationLogService @Autowired constructor(
                 )
             }
         }
+        return PipelineViewPipelinePage(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = opCount.toLong(),
+            records = detailList
+        )
     }
 }

@@ -188,11 +188,11 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         val result = pipelineVersionFacadeService.getVersionCreatorInPage(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
-            )
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize
+        )
         return Result(result)
     }
 
@@ -238,8 +238,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun getPipelineOperationLogs(
         userId: String,
         projectId: String,
-        pipelineId: String
-    ): Result<List<PipelineOperationDetail>> {
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineOperationDetail>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -259,7 +261,13 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineOperationLogService.getOperationLogs(userId, projectId, pipelineId)
+            pipelineOperationLogService.getOperationLogsInPage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
         )
     }
 
