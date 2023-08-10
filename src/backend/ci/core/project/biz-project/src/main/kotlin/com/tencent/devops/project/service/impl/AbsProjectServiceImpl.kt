@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.api.user.UserAuthItsmCallbackResource
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -89,16 +90,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -206,7 +207,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL)
+                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}",
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -919,7 +920,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST)
+            ?: throw ErrorCodeException(errorCode = PROJECT_NOT_EXIST)
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
@@ -1031,7 +1032,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun cancelCreateProject(userId: String, projectId: String): Boolean {
         logger.info("$userId cancel create project($projectId)")
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            errorCode = PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project - $projectId is not exist!"
         )
@@ -1048,6 +1049,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
+            if (hasApplicationFinish(projectId = projectId)) return true
             cancelCreateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.delete(dslContext = dslContext, projectId = projectId)
         } catch (e: Exception) {
@@ -1080,6 +1082,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
+            if (hasApplicationFinish(projectId = projectId)) return true
             cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
@@ -1097,6 +1100,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun hasApplicationFinish(projectId: String): Boolean {
+        val callbackRecord = client.get(UserAuthItsmCallbackResource::class).get(projectId = projectId).data
+        if (callbackRecord == null || callbackRecord.approveResult != null || callbackRecord.revokeResult) {
+            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectId")
+            return true
+        }
+        return false
     }
 
     override fun getProjectByName(projectName: String): ProjectVO? {

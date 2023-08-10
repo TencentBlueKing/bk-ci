@@ -221,4 +221,22 @@ class ServiceProjectResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun cancelCreateProject(userId: String, projectId: String): Result<Boolean> {
+        return Result(
+            projectService.cancelCreateProject(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
+
+    override fun cancelUpdateProject(userId: String, projectId: String): Result<Boolean> {
+        return Result(
+            projectService.cancelUpdateProject(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
 }

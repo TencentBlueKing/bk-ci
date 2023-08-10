@@ -87,6 +87,20 @@ class AuthItsmCallbackDao {
         }
     }
 
+    fun updateRevokeResultBySn(
+        dslContext: DSLContext,
+        sn: String,
+        approver: String,
+        revokeResult: Boolean
+    ): Int {
+        return with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
+            dslContext.update(this)
+                .set(APPROVER, approver)
+                .set(REVOKE_RESULT, revokeResult)
+                .where(SN.eq(sn)).execute()
+        }
+    }
+
     fun getCallbackByEnglishName(
         dslContext: DSLContext,
         projectCode: String
@@ -109,7 +123,8 @@ class AuthItsmCallbackDao {
                     callbackId = callbackId,
                     applicant = applicant,
                     approver = approver,
-                    approveResult = approveResult
+                    approveResult = approveResult,
+                    revokeResult = revokeResult,
                 )
             }
         }

@@ -103,6 +103,7 @@ class PermissionGradeManagerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PermissionGradeManagerService::class.java)
         private const val DEPARTMENT = "department"
         private const val CANCEL_ITSM_APPLICATION_ACTION = "WITHDRAW"
+        private const val REVOKE_ITSM_APPLICATION_ACTION = "REVOKED"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -488,20 +489,26 @@ class PermissionGradeManagerService @Autowired constructor(
     ): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
-        // 审批单不存在或者已经结束
-        if (callbackRecord == null || callbackRecord.approveResult != null) {
-            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
-            return true
-        }
-        itsmService.cancelItsmApplication(
-            ItsmCancelApplicationInfo(
-                sn = callbackRecord.sn,
-                operator = userId,
-                actionType = CANCEL_ITSM_APPLICATION_ACTION
+        val isItsmTicketRevoked = itsmService.getItsmTicketStatus(callbackRecord!!.sn) == REVOKE_ITSM_APPLICATION_ACTION
+        // 用户可以从itsm界面直接撤销工单，此时不需要再调用itsm接口撤销工单
+        if (!isItsmTicketRevoked) {
+            itsmService.cancelItsmApplication(
+                ItsmCancelApplicationInfo(
+                    sn = callbackRecord.sn,
+                    operator = userId,
+                    actionType = CANCEL_ITSM_APPLICATION_ACTION
+                )
             )
-        )
+        }
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
-        return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
+        iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
+        authItsmCallbackDao.updateRevokeResultBySn(
+            dslContext = dslContext,
+            sn = callbackRecord.sn,
+            approver = userId,
+            revokeResult = true
+        )
+        return true
     }
 
     fun listGroup(

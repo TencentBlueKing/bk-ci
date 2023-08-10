@@ -46,5 +46,7 @@ data class AuthItsmCallbackInfo(
     @ApiModelProperty("审批人")
     val approver: String?,
     @ApiModelProperty("审批结果")
-    val approveResult: Boolean?
+    val approveResult: Boolean?,
+    @ApiModelProperty("是否已撤销")
+    val revokeResult: Boolean,
 )

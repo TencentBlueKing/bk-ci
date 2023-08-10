@@ -102,6 +102,15 @@ class ProjectApprovalService @Autowired constructor(
         )
     }
 
+    fun rollBack(
+        projectApprovalInfo: ProjectApprovalInfo
+    ) {
+        projectApprovalDao.update(
+            dslContext = dslContext,
+            projectApprovalInfo = projectApprovalInfo
+        )
+    }
+
     /**
      * 用户主动更新审批状态，如取消
      */
