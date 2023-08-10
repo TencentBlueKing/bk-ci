@@ -154,6 +154,7 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
+            sharedDao.batchCreate(dslContext, workspaceName, userId, listOf(assign2Owner))
             softwareManageService.installUserSoftwares(
                 projectId = projectId,
                 userId = assign2Owner.userId,
