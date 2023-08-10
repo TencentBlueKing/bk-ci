@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.api.external
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import io.swagger.annotations.Api
@@ -74,7 +73,6 @@ interface ExternalResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @ApiParam(value = "回调信息", required = true)
-        @JsonProperty("software_list")
         softwareList: SoftwareCallbackRes
     ): Result<Boolean>
 }
