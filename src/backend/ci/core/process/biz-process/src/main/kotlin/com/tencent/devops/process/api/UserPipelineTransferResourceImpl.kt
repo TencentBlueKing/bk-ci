@@ -35,12 +35,12 @@ import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferResponse
-import com.tencent.devops.process.service.transfer.PipelineTransferService
+import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineTransferResourceImpl @Autowired constructor(
-    private val transferService: PipelineTransferService
+    private val transferService: PipelineTransferYamlService
 ) : UserPipelineTransferResource {
     override fun transfer(
         userId: String,
