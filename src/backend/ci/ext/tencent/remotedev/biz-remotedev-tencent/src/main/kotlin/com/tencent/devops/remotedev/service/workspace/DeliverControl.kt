@@ -245,7 +245,7 @@ class DeliverControl @Autowired constructor(
     }
 
     fun softwareInstallationCompleteCallback(type: String, workspaceName: String, softwareList: SoftwareCallbackRes) {
-        logger.info("softwareInstallationCompleteCallback $workspaceName")
+        logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (WorkspaceStatus.values()[workspace.status]) {
                 WorkspaceStatus.DELIVERING -> {
