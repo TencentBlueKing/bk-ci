@@ -68,7 +68,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         if (triggerOn.manual != "disabled") {
             elementQueue.add(
                 ManualTriggerElement(
-                    I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_MSG_MANUAL),
+                    I18nUtil.getCodeLanMessage(CommonMessageCode.BK_MANUAL_TRIGGER),
                     "T-1-1-1"
                 )
             )

@@ -85,7 +85,7 @@ class StageTransfer @Autowired(required = false) constructor(
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_MSG_TRIGGERS),
+            name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
             elements = triggerElementList,
             status = null,
             startEpoch = null,
