@@ -81,4 +81,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
     }
+
+    override fun fitToRbacAuth(userId: String, resourceType: String): Result<Boolean> {
+        return Result(permissionMigrateService.fitToRbacAuth(userId = userId, resourceType = resourceType))
+    }
 }

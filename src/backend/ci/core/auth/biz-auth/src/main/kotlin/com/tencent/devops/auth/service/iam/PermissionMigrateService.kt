@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 /**
@@ -73,4 +74,6 @@ interface PermissionMigrateService {
      * 授予项目下自定义用户组RBAC新增的权限
      */
     fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
+
+    fun fitToRbacAuth(userId: String, resourceType: String): Boolean
 }

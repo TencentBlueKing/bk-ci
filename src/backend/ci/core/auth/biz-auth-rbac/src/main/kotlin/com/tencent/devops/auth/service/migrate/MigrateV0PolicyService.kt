@@ -42,12 +42,14 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -67,7 +69,8 @@ class MigrateV0PolicyService constructor(
     private val rbacCacheService: RbacCacheService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val authResourceService: AuthResourceService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -120,6 +123,7 @@ class MigrateV0PolicyService constructor(
         private const val MAX_GROUP_MEMBER = 1000
         private const val CERT_VIEW = "cert_view"
         private const val ENV_NODE_VIEW = "env_node_view"
+        private const val USER_TYPE = "user"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -439,5 +443,85 @@ class MigrateV0PolicyService constructor(
         } else {
             result.subject.name!!
         }
+    }
+
+    fun fitToRbacAuth(
+        projectCode: String,
+        resourceType: String,
+        creator: String
+    ) {
+        val userList = listOf(
+            "qijunwang", "beanjia", "daveliu", "dophylu", "ldalin",
+            "neonwang", "tokidong", "tomhywang", "willyxia", "zhienchen"
+        )
+        val projectManagerGroupId = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            groupCode = DefaultGroupType.MANAGER.value
+        )
+        // 获取到对应的管理员组，将10人名单加入。
+        userList.forEach member@{ member ->
+            createRoleGroupMember(
+                groupId = projectManagerGroupId!!.relationId.toInt(),
+                userId = member
+            )
+        }
+        // 获取到项目下的对应资源类型下资源，并且是该用户创建的。
+        val offset = 0
+        val limit = 100
+        do {
+            // 3、获取到项目下的对应资源类型下资源，并且是该用户创建的。
+            val resourceList = authResourceService.listByCreator(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                creator = creator,
+                offset = offset,
+                limit = limit
+            )
+
+            resourceList.forEach {
+                // 4、然后第一步从10人名单中随机抽取一个用户。
+                val user = userList.random()
+                // 5、第一步修改资源表的创建者
+                authResourceService.updateCreator(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = it.resourceCode,
+                    creator = user
+                )
+                // 6、修改流水线/代码库的创建人。
+                // 7、将管理员组中的 加入随机用户
+                val resourceManagerGroup = authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = it.resourceCode,
+                    groupCode = DefaultGroupType.MANAGER.value
+                )
+                createRoleGroupMember(
+                    groupId = resourceManagerGroup!!.relationId.toInt(),
+                    userId = user
+                )
+                // 8、然后将用户移除。
+                v2ManagerService.deleteRoleGroupMemberV2(resourceManagerGroup.relationId.toInt(), USER_TYPE, creator)
+            }
+
+        } while (resourceList.size == limit)
+    }
+
+    private fun createRoleGroupMember(
+        groupId: Int,
+        userId: String
+    ) {
+        val expiredDay = V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
+        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
+        val managerMember = ManagerMember(USER_TYPE, userId)
+        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+            .members(listOf(managerMember))
+            .expiredAt(expiredAt)
+            .build()
+        v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
     }
 }

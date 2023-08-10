@@ -106,4 +106,16 @@ interface OpAuthMigrateResource {
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/fitToRbacAuth")
+    @ApiOperation("fit线权限升级")
+    fun fitToRbacAuth(
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+    ): Result<Boolean>
 }

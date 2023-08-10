@@ -63,4 +63,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         return true
     }
+
+    override fun fitToRbacAuth(userId: String, resourceType: String): Boolean {
+        return true
+    }
 }
