@@ -123,7 +123,7 @@ class AuthItsmCallbackListener @Autowired constructor(
     ) {
         client.get(ServiceProjectResource::class).cancelCreateProject(
             userId = lastApprover,
-            projectId = projectCode,
+            projectId = projectCode
         )
     }
 

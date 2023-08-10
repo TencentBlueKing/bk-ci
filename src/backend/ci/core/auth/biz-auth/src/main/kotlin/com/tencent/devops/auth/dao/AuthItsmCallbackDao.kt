@@ -124,7 +124,7 @@ class AuthItsmCallbackDao {
                     applicant = applicant,
                     approver = approver,
                     approveResult = approveResult,
-                    revokeResult = revokeResult,
+                    revokeResult = revokeResult
                 )
             }
         }
