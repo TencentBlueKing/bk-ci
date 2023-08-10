@@ -26,8 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:process:plugin-load"))
-    api(project(":core:process:plugin-trigger"))
     api(project(":core:common:common-archive"))
     api(project(":core:process:biz-engine"))
     api(project(":core:process:biz-process"))

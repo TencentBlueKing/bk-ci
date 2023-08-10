@@ -42,8 +42,6 @@ dependencies {
     implementation(project(":core:notify:biz-notify"))
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
-    implementation(project(":core:process:plugin-load"))
-    implementation(project(":core:process:plugin-trigger"))
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process-sample"))
     implementation(project(":core:project:biz-project-sample"))

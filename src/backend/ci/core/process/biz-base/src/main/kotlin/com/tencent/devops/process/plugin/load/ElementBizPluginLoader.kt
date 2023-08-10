@@ -25,10 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-pipeline"))
-}
+package com.tencent.devops.process.plugin.load
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.plugin.ElementBizPlugin
+import com.tencent.devops.process.plugin.annotation.ElementBiz
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
+
+@Component
+class ElementBizPluginLoader : BeanPostProcessor {
+
+    private val logger = LoggerFactory.getLogger(ElementBizPluginLoader::class.java)
+
+    override fun postProcessBeforeInitialization(bean: Any, p1: String): Any {
+        return bean
+    }
+
+    override fun postProcessAfterInitialization(bean: Any, p1: String): Any {
+        val elementBiz = AnnotationUtils.findAnnotation(bean::class.java, ElementBiz::class.java)
+        if (elementBiz != null) {
+            if (bean is ElementBizPlugin<out Element>) {
+                ElementBizRegistrar.register(bean)
+            } else {
+                logger.warn("${bean::class.java} is not match for $elementBiz")
+            }
+        }
+        return bean
+    }
 }

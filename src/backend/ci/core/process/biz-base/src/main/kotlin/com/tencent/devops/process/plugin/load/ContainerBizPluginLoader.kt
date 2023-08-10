@@ -25,12 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:plugin-sdk"))
-    api("org.springframework:spring-beans")
-    api("org.springframework:spring-core")
-}
+package com.tencent.devops.process.plugin.load
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.process.plugin.ContainerBizPlugin
+import com.tencent.devops.process.plugin.annotation.ContainerBiz
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
+
+@Component
+class ContainerBizPluginLoader : BeanPostProcessor {
+
+    private val logger = LoggerFactory.getLogger(ContainerBizPluginLoader::class.java)
+
+    override fun postProcessBeforeInitialization(bean: Any, p1: String): Any {
+        return bean
+    }
+
+    override fun postProcessAfterInitialization(bean: Any, p1: String): Any {
+        val containerBiz = AnnotationUtils.findAnnotation(bean::class.java, ContainerBiz::class.java)
+        if (containerBiz != null) {
+            if (bean is ContainerBizPlugin<out Container>) {
+                ContainerBizRegistrar.register(bean)
+            } else {
+                logger.warn("${bean::class.java} is not match for $containerBiz")
+            }
+        }
+        return bean
+    }
 }
