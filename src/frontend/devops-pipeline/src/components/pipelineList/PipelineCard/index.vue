@@ -109,7 +109,7 @@
         </div>
         <div v-else-if="!pipeline.hasPermission && !pipeline.delete" class="pipeline-card-apply-mask">
             <bk-button outline theme="primary" @click="applyPermission(pipeline)">
-                {{$t('applyPermission')}}
+                {{$t('apply')}}
             </bk-button>
         </div>
     </div>
