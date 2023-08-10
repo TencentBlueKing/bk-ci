@@ -79,7 +79,7 @@ interface ServiceAtomResource {
         version: String
     ): Result<PipelineAtom?>
 
-    @ApiOperation("根据插件代码和版本号集合批量获取插件详细信息")
+    @ApiOperation("根据插件代码和版本号集合批量获取插件信息")
     @POST
     @Path("/list/atomInfos")
     fun getTemplateAtomInfos(

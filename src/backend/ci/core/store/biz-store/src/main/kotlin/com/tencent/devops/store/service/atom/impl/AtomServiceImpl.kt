@@ -54,7 +54,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -557,39 +556,29 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getTemplateAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomStatusInfo>> {
-        val atomListInfos = mutableListOf<AtomStatusInfo>()
-        val latestCodes = mutableListOf<String>()
-        val atomCodeVersionReqItems = mutableListOf<AtomCodeVersionReqItem>()
+        val atomStatusInfos = mutableListOf<AtomStatusInfo>()
         codeVersions.forEach {
-            if (it.version.contains("*")) {
-                latestCodes.add(it.atomCode)
+            logger.info("codeVersion $it")
+            val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, it.atomCode)
+            val atomStatusInfoJson = redisOperation.hget(atomStatusInfoKey, it.version)
+            logger.info("atomStatusInfoKey: $atomStatusInfoKey atomStatusInfoJson: $atomStatusInfoJson")
+            if (!atomStatusInfoJson.isNullOrBlank()) {
+                val atomStatusInfo = JsonUtil.to(atomStatusInfoJson, AtomStatusInfo::class.java)
+                atomStatusInfos.add(atomStatusInfo)
             } else {
-                atomCodeVersionReqItems.add(AtomCodeVersionReqItem(it.atomCode, it.version))
+                val atomStatusInfo = atomDao.getAtomInfos(
+                    dslContext = dslContext,
+                    atomCode = it.atomCode,
+                    version = it.version
+                )
+                logger.info("atomStatusInfo: $atomStatusInfo")
+                atomStatusInfos.add(atomStatusInfo)
+                // 将db中的环境信息写入缓存
+                redisOperation.hset(atomStatusInfoKey, it.version, JsonUtil.toJson(atomStatusInfo))
+
             }
         }
-        var noLatestAtomRecords = mutableListOf<AtomStatusInfo>()
-        if (atomCodeVersionReqItems.isNotEmpty()) {
-            noLatestAtomRecords = atomDao.getAtomInfos(
-                dslContext = dslContext,
-                codeVersions = atomCodeVersionReqItems
-            ) as MutableList<AtomStatusInfo>
-        }
-        val latestAtomRecords = atomDao.getLatestAtomListByCodes(
-            dslContext = dslContext,
-            atomCodes = latestCodes
-        )
-        val atomRecords: List<TAtomRecord> = (noLatestAtomRecords + latestAtomRecords) as List<TAtomRecord>
-        atomRecords.forEach {
-            atomListInfos.add(
-                AtomStatusInfo(
-                    atomCode = it.atomCode,
-                    name = it.name,
-                    version = it.version,
-                    atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt())
-                )
-            )
-        }
-        return Result(atomListInfos)
+        return Result(atomStatusInfos)
     }
 
     /**

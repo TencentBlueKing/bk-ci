@@ -31,8 +31,9 @@ import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.STORE_STATUS_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
@@ -80,6 +81,15 @@ object StoreUtils {
      */
     fun getStoreRunInfoKey(typeName: String, storeCode: String): String {
         return "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:$typeName:$storeCode"
+    }
+
+    /**
+     * 获取组件状态信息Key前缀
+     * @param typeName 类型名称
+     * @param storeCode 组件代码
+     */
+    fun getStoreStatusKey(typeName: String, storeCode: String): String {
+        return "$STORE_STATUS_INFO_KEY_PREFIX:$typeName:$storeCode"
     }
 
     /**

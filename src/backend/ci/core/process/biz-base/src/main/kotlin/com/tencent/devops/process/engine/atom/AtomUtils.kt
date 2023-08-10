@@ -55,9 +55,10 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
+import org.slf4j.LoggerFactory
 
 object AtomUtils {
-
+    private val logger = LoggerFactory.getLogger(AtomUtils::class.java)
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
      */
@@ -211,12 +212,14 @@ object AtomUtils {
             AtomStatusEnum.UNDERCARRIAGED.name
         )
         atomStatusInfos.forEach {
-            if (it.atomStatus in atomStatusList) {
+            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus.toInt())
+            logger.info("atomStatus: $atomStatus")
+            if (atomStatus in atomStatusList) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
                         it.name,
-                        AtomStatusEnum.valueOf(it.atomStatus).getI18n(I18nUtil.getLanguage(userId))
+                        AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
                     )
                 )
             }

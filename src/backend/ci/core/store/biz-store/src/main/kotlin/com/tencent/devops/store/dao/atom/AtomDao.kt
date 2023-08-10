@@ -287,25 +287,23 @@ class AtomDao : AtomBaseDao() {
 
     fun getAtomInfos(
         dslContext: DSLContext,
-        codeVersions: List<AtomCodeVersionReqItem>
-    ): List<AtomStatusInfo> {
+        atomCode: String,
+        version: String
+    ): AtomStatusInfo {
         with(TAtom.T_ATOM) {
-            var condition: Condition? = null
-            codeVersions.forEach {
-                if (condition == null) {
-                    condition = ATOM_CODE.eq(it.atomCode)
-                        .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
-                } else {
-                    condition!!.or(
-                        ATOM_CODE.eq(it.atomCode)
-                            .and(VERSION.like(VersionUtils.generateQueryVersion(it.version)))
-                    )
-                }
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            if (VersionUtils.isLatestVersion(version)) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            } else {
+                conditions.add(VERSION.eq(version))
             }
             return dslContext.select(ATOM_CODE, NAME, VERSION, ATOM_STATUS)
                 .from(this)
-                .where(condition)
-                .fetchInto(AtomStatusInfo::class.java)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()!!.into(AtomStatusInfo::class.java)
         }
     }
 
