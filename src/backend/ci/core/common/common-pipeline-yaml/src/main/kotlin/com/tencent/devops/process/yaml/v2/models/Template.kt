@@ -29,5 +29,6 @@ package com.tencent.devops.process.yaml.v2.models
 
 data class Template(
     val template: String,
+    val ref: String?,
     val parameters: Map<String, Any>?
 )

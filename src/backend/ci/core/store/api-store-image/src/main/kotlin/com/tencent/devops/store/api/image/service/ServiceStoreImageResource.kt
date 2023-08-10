@@ -85,6 +85,18 @@ interface ServiceStoreImageResource {
         buildId: String?
     ): Result<ImageRepoInfo>
 
+    @ApiOperation("根据code查询镜像详情简化版（只查镜像信息，不做额外校验）")
+    @GET
+    @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}")
+    fun getImageInfoByCodeAndVersion(
+        @ApiParam("镜像标识", required = true)
+        @PathParam("imageCode")
+        imageCode: String,
+        @ApiParam("镜像版本", required = false)
+        @PathParam("imageVersion")
+        imageVersion: String?
+    ): Result<ImageRepoInfo?>
+
     @ApiOperation("获取所有的自研公共镜像")
     @GET
     @Path("/image/self_develop/public_images")

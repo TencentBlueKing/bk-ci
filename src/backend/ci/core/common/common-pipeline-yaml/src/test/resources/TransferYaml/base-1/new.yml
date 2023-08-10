@@ -1,0 +1,21 @@
+a:
+- sad
+- run: |
+    asdasd \n
+    asdsd
+
+db1:
+  port: 3306
+  name: admin
+  pwd: 123456ssssdasd改变
+  pwd改变: 123456ssssd改变
+db2:
+  port: 3307
+  name: admin
+  pwd: 123456ssssdasd改变
+  pwd改变: 123456ssssd改变
+db23:
+  port2: 3308
+  name: admin2
+  pwd: 123456ssssdasd改变
+  pwd改变: 123456ssssd改变

@@ -50,11 +50,13 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreRepositoryHook
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
@@ -69,6 +71,7 @@ import com.tencent.devops.process.yaml.v2.models.job.RunsOn
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
+import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
@@ -88,12 +91,13 @@ import com.tencent.devops.process.yaml.v2.stageCheck.Flow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -116,9 +120,9 @@ object ScriptYmlUtils {
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal = formatYamlCustom(yamlStr)
+//        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
+        return TransferMapper.formatYaml(yamlStr)
     }
 
     fun parseVersion(yamlStr: String?): YmlVersion? {
@@ -288,7 +292,7 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
+    fun formatStage(preScriptBuildYaml: PreScriptBuildYamlI, transferData: YamlTransferData? = null): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 val jobId = randomString(jobNamespace)
@@ -324,7 +328,7 @@ object ScriptYmlUtils {
         }
     }
 
-    fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData?): List<Job> {
+    fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData? = null): List<Job> {
         if (preJobs == null) {
             return emptyList()
         }
@@ -452,30 +456,36 @@ object ScriptYmlUtils {
             // 检测step env合法性
             StreamEnvUtils.checkEnv(preStep.env)
 
-            val taskId = "e-${UUIDUtil.generate()}"
             stepList.add(
-                Step(
-                    name = preStep.name,
-                    id = preStep.id,
-                    ifFiled = preStep.ifFiled,
-                    ifModify = preStep.ifModify,
-                    uses = preStep.uses,
-                    with = preStep.with,
-                    timeoutMinutes = preStep.timeoutMinutes,
-                    continueOnError = preStep.continueOnError,
-                    retryTimes = preStep.retryTimes,
-                    env = preStep.env,
-                    run = preStep.run,
-                    runAdditionalOptions = mapOf("shell" to preStep.shell),
-                    checkout = preStep.checkout,
-                    taskId = taskId
-                )
+                preStepToStep(preStep, transferData)
             )
-
-            transferData?.add(taskId, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return stepList
+    }
+
+    fun preStepToStep(
+        preStep: PreStep,
+        transferData: YamlTransferData? = null
+    ): Step {
+        val taskId = "e-${UUIDUtil.generate()}"
+        transferData?.add(taskId, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
+        return Step(
+            name = preStep.name,
+            id = preStep.id,
+            ifFiled = preStep.ifFiled,
+            ifModify = preStep.ifModify,
+            uses = preStep.uses,
+            with = preStep.with,
+            timeoutMinutes = preStep.timeoutMinutes,
+            continueOnError = preStep.continueOnError,
+            retryTimes = preStep.retryTimes,
+            env = preStep.env,
+            run = preStep.run,
+            runAdditionalOptions = mapOf("shell" to preStep.shell),
+            checkout = preStep.checkout,
+            taskId = taskId
+        )
     }
 
     private fun preStages2Stages(preStageList: List<PreStage>?, transferData: YamlTransferData?): List<Stage> {
@@ -595,14 +605,14 @@ object ScriptYmlUtils {
         )
     }
 
-    fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
+    fun formatRepoHookTriggerOn(preTriggerOn: IPreTriggerOn?, name: String?): TriggerOn? {
         if (preTriggerOn?.repoHook == null) {
             return null
         }
 
         val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(preTriggerOn.repoHook),
+                JsonUtil.toJson(preTriggerOn.repoHook!!),
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
@@ -655,7 +665,7 @@ object ScriptYmlUtils {
         return null
     }
 
-    fun formatTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn {
+    fun formatTriggerOn(preTriggerOn: IPreTriggerOn?): TriggerOn {
 
         if (preTriggerOn == null) {
             return TriggerOn(
@@ -675,8 +685,7 @@ object ScriptYmlUtils {
                 )
             )
         }
-
-        return TriggerOn(
+        val res = TriggerOn(
             push = pushRule(preTriggerOn),
             tag = tagRule(preTriggerOn),
             mr = mrRule(preTriggerOn),
@@ -688,6 +697,13 @@ object ScriptYmlUtils {
             manual = manualRule(preTriggerOn),
             openapi = openapiRule(preTriggerOn)
         )
+
+        if (preTriggerOn is PreTriggerOnV3) {
+            res.name = preTriggerOn.name
+            res.credentials = preTriggerOn.credentials
+        }
+
+        return res
     }
 
     fun repoHookRule(
@@ -728,7 +744,7 @@ object ScriptYmlUtils {
     }
 
     private fun manualRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): String? {
         if (preTriggerOn.manual == null) {
             return null
@@ -742,7 +758,7 @@ object ScriptYmlUtils {
     }
 
     private fun openapiRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): String? {
         if (preTriggerOn.openapi == null) {
             return null
@@ -756,10 +772,10 @@ object ScriptYmlUtils {
     }
 
     private fun noteRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): NoteRule? {
         if (preTriggerOn.note != null) {
-            val note = preTriggerOn.note
+            val note = preTriggerOn.note!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(note),
@@ -773,10 +789,10 @@ object ScriptYmlUtils {
     }
 
     private fun reviewRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): ReviewRule? {
         if (preTriggerOn.review != null) {
-            val issues = preTriggerOn.review
+            val issues = preTriggerOn.review!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(issues),
@@ -790,10 +806,10 @@ object ScriptYmlUtils {
     }
 
     private fun issueRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): IssueRule? {
         if (preTriggerOn.issue != null) {
-            val issues = preTriggerOn.issue
+            val issues = preTriggerOn.issue!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(issues),
@@ -807,10 +823,10 @@ object ScriptYmlUtils {
     }
 
     private fun deleteRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): DeleteRule? {
         if (preTriggerOn.delete != null) {
-            val delete = preTriggerOn.delete
+            val delete = preTriggerOn.delete!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(delete),
@@ -824,10 +840,10 @@ object ScriptYmlUtils {
     }
 
     private fun schedulesRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): SchedulesRule? {
         if (preTriggerOn.schedules != null) {
-            val schedules = preTriggerOn.schedules
+            val schedules = preTriggerOn.schedules!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(schedules),
@@ -841,10 +857,10 @@ object ScriptYmlUtils {
     }
 
     private fun mrRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): MrRule? {
         if (preTriggerOn.mr != null) {
-            val mr = preTriggerOn.mr
+            val mr = preTriggerOn.mr!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),
@@ -874,10 +890,10 @@ object ScriptYmlUtils {
     }
 
     private fun tagRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): TagRule? {
         if (preTriggerOn.tag != null) {
-            val tag = preTriggerOn.tag
+            val tag = preTriggerOn.tag!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(tag),
@@ -906,10 +922,10 @@ object ScriptYmlUtils {
     }
 
     private fun pushRule(
-        preTriggerOn: PreTriggerOn
+        preTriggerOn: IPreTriggerOn
     ): PushRule? {
         if (preTriggerOn.push != null) {
-            val push = preTriggerOn.push
+            val push = preTriggerOn.push!!
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(push),

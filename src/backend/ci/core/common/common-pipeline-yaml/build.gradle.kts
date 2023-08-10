@@ -33,8 +33,14 @@ dependencies {
 
     api("org.apache.ant:ant")
     api("org.apache.commons:commons-text")
-    api("org.yaml:snakeyaml")
     api("com.github.fge:json-schema-validator")
+    // https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils
+    implementation("io.github.java-diff-utils:java-diff-utils:4.12")
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation("org.json:json:20230618")
+    // https://mvnrepository.com/artifact/org.yaml/snakeyaml
+//    implementation("org.yaml:snakeyaml:2.1")
+    testImplementation(project(":core:common:common-test"))
 }
 
 plugins {

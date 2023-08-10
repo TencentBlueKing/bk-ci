@@ -29,8 +29,10 @@ package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -54,10 +56,15 @@ import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.parameter.Parameters
 import com.tencent.devops.process.yaml.v2.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v2.utils.StreamEnvUtils
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 
 object YamlObjects {
 
-    fun getVariable(fromPath: String, key: String, variable: Map<String, Any>): Variable {
+    fun getTriggerOnV3(triggerOn: Map<String, Any>): PreTriggerOnV3 {
+        return JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {})
+    }
+
+    fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
         val va = Variable(
             value = variable["value"]?.toString(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
@@ -99,7 +106,7 @@ object YamlObjects {
         return va
     }
 
-    private fun getVarProps(fromPath: String, props: Any): VariableProps {
+    private fun getVarProps(fromPath: TemplatePath, props: Any): VariableProps {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
         val po = VariableProps(
             label = getNullValue("label", propsMap),
@@ -118,7 +125,7 @@ object YamlObjects {
         return po
     }
 
-    private fun getVarPropOptions(fromPath: String, options: Any?): List<VariablePropOption>? {
+    private fun getVarPropOptions(fromPath: TemplatePath, options: Any?): List<VariablePropOption>? {
         if (options == null) {
             return null
         }
@@ -134,7 +141,7 @@ object YamlObjects {
         }
     }
 
-    private fun getVarPropDataSource(fromPath: String, datasource: Any?): VariableDatasource? {
+    private fun getVarPropDataSource(fromPath: TemplatePath, datasource: Any?): VariableDatasource? {
         if (datasource == null) {
             return null
         }
@@ -152,7 +159,7 @@ object YamlObjects {
         )
     }
 
-    fun getStep(fromPath: String, step: Map<String, Any>, repo: TemplateInfo?): PreStep {
+    fun getStep(fromPath: TemplatePath, step: Map<String, Any>, repo: TemplateInfo?): PreStep {
         val preStep = PreStep(
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
@@ -189,7 +196,7 @@ object YamlObjects {
             throw YamlFormatException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                    params = arrayOf(fromPath)
+                    params = arrayOf(fromPath.toString())
                 )
             )
         }
@@ -199,7 +206,7 @@ object YamlObjects {
         return preStep
     }
 
-    fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): Mutex {
+    fun getResourceExclusiveDeclaration(fromPath: TemplatePath, resource: Any): Mutex {
         val resourceMap = transValue<Map<String, Any?>>(fromPath, "mutex", resource)
         return Mutex(
             label = getNotNullValue(key = "label", mapName = "mutex", map = resourceMap),
@@ -208,7 +215,7 @@ object YamlObjects {
         )
     }
 
-    fun getService(fromPath: String, service: Any): Map<String, Service> {
+    fun getService(fromPath: TemplatePath, service: Any): Map<String, Service> {
         val serviceMap = transValue<Map<String, Any?>>(fromPath, "services", service)
         val newServiceMap = mutableMapOf<String, Service>()
         serviceMap.forEach { (key, value) ->
@@ -228,7 +235,7 @@ object YamlObjects {
         return newServiceMap
     }
 
-    fun getContainer(fromPath: String, container: Any): Container {
+    fun getContainer(fromPath: TemplatePath, container: Any): Container {
         val containerMap = transValue<Map<String, Any?>>(fromPath, "container", container)
         return Container(
             image = getNotNullValue(key = "image", mapName = "Container", map = containerMap),
@@ -265,7 +272,7 @@ object YamlObjects {
         )
     }
 
-    fun getStrategy(fromPath: String, strategy: Any?): Strategy? {
+    fun getStrategy(fromPath: TemplatePath, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
         val matrix = strategyMap["matrix"] ?: return null
         return Strategy(
@@ -275,7 +282,7 @@ object YamlObjects {
         )
     }
 
-    fun getNotice(fromPath: String, notice: Map<String, Any?>): GitNotices {
+    fun getNotice(fromPath: TemplatePath, notice: Map<String, Any?>): GitNotices {
         return GitNotices(
             type = notice["type"].toString(),
             title = notice["title"]?.toString(),
@@ -299,7 +306,7 @@ object YamlObjects {
         )
     }
 
-    fun getYamlMetaData(fromPath: String, yamlMetaData: Any): MetaData {
+    fun getYamlMetaData(fromPath: TemplatePath, yamlMetaData: Any): MetaData {
         val metaData = transValue<Map<String, Any>>(fromPath, "yamlMetaData", yamlMetaData)
         if (metaData["templateInfo"] == null) {
             return MetaData(templateInfo = null)
@@ -313,7 +320,7 @@ object YamlObjects {
         )
     }
 
-    fun getParameter(fromPath: String, param: Map<String, Any>): Parameters {
+    fun getParameter(fromPath: TemplatePath, param: Map<String, Any>): Parameters {
         return Parameters(
             name = getNotNullValue(key = "name", mapName = TemplateType.PARAMETERS.text, map = param),
             type = getNotNullValue(key = "type", mapName = TemplateType.PARAMETERS.text, map = param),
@@ -326,7 +333,7 @@ object YamlObjects {
         )
     }
 
-    fun getResourcePools(fromPath: String, resources: Any): List<ResourcesPools> {
+    fun getResourcePools(fromPath: TemplatePath, resources: Any): List<ResourcesPools> {
         val resourcesD = transValue<Map<String, Any>>(fromPath, "resources", resources)
         if (resourcesD["pools"] == null) {
             return emptyList()
@@ -340,33 +347,33 @@ object YamlObjects {
         }
     }
 
-    inline fun <reified T> getObjectFromYaml(path: String, template: String): T {
+    inline fun <reified T> getObjectFromYaml(path: TemplatePath, template: String): T {
         return try {
             TemplateYamlMapper.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw YamlFormatException(Constants.YAML_FORMAT_ERROR.format(path, e.message))
+            throw YamlFormatException(Constants.YAML_FORMAT_ERROR.format("${path.path} ${path.ref ?: ""}", e.message))
         }
     }
 
-    inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
+    inline fun <reified T> transValue(file: TemplatePath, type: String, value: Any?): T {
         if (value == null) {
-            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file.toString(), type))
         }
         return try {
             value as T
         } catch (e: Exception) {
-            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file.toString(), type))
         }
     }
 
-    inline fun <reified T> transNullValue(file: String, type: String, key: String, map: Map<String, Any?>): T? {
+    inline fun <reified T> transNullValue(file: TemplatePath, type: String, key: String, map: Map<String, Any?>): T? {
         return if (map[key] == null) {
             null
         } else {
             return try {
                 map[key] as T
             } catch (e: Exception) {
-                throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
+                throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file.toString(), type))
             }
         }
     }
@@ -396,7 +403,11 @@ object YamlObjects {
     }
 }
 
-fun <T> YamlTemplate<T>.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
+fun <T> YamlTemplate<T>.getStage(
+    fromPath: TemplatePath,
+    stage: Map<String, Any>,
+    deepTree: TemplateDeepTreeNode
+): PreStage {
     return PreStage(
         name = stage["name"]?.toString(),
         label = stage["label"],
@@ -445,7 +456,7 @@ fun <T> YamlTemplate<T>.getStage(fromPath: String, stage: Map<String, Any>, deep
 }
 
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
-fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
+fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
     val preJob = PreJob(
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],

@@ -43,25 +43,25 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("分支名称", required = false)
-    val branchName: String?,
+    val branchName: String? = null,
     @ApiModelProperty("用于排除的分支名", required = false)
-    val excludeBranchName: String?,
+    val excludeBranchName: String? = null,
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("用于包含的路径", required = false)
-    val includePaths: String?,
+    val includePaths: String? = null,
     @ApiModelProperty("用于排除的路径", required = false)
-    val excludePaths: String?,
+    val excludePaths: String? = null,
     @ApiModelProperty("用户白名单", required = false)
     val includeUsers: List<String>? = null,
     @ApiModelProperty("用于排除的user id", required = false)
-    val excludeUsers: List<String>?,
+    val excludeUsers: List<String>? = null,
     @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?,
     @ApiModelProperty("是否为block", required = false)
-    val block: Boolean?,
+    val block: Boolean? = null,
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")

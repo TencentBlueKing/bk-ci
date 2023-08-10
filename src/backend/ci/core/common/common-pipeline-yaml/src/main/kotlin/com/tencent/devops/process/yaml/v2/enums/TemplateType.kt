@@ -31,6 +31,7 @@ package com.tencent.devops.process.yaml.v2.enums
  * 模板类型，text为展示内容，content为模板在Yaml中的关键字
  */
 enum class TemplateType(val text: String, val content: String) {
+    TRIGGER_ON("triggerOn", "on"),
     VARIABLE("variable", "variables"),
     STAGE("stage", "stages"),
     JOB("job", "jobs"),

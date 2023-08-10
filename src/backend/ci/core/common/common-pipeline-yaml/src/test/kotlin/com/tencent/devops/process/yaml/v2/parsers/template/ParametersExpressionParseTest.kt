@@ -37,6 +37,7 @@ import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.parsers.template.models.ExpressionBlock
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
@@ -75,7 +76,7 @@ internal class ParametersExpressionParseTest {
                 }
             )
         }
-        val result = ParametersExpressionParse.fromJsonToArrayContext("", "lll", testData)
+        val result = ParametersExpressionParse.fromJsonToArrayContext(TemplatePath(""), "lll", testData)
         Assertions.assertTrue(expectDate.toJson() == result.toJson())
     }
 

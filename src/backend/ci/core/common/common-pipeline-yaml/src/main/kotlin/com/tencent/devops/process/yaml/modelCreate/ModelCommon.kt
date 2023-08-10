@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelCreate
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -97,5 +98,21 @@ object ModelCommon {
         }
 
         return parseReceivers
+    }
+
+    fun customVariableMatch(input: List<NameAndValue>?): String? {
+        val ifString = input?.joinToString(separator = " && ") {
+            "${it.key} == '${it.value}' "
+        }
+        return if (input?.isEmpty() == true) null
+        else ifString
+    }
+
+    fun customVariableMatchNotRun(input: List<NameAndValue>?): String? {
+        val ifString = input?.joinToString(separator = " || ") {
+            "${it.key} != '${it.value}' "
+        }
+        return if (input?.isEmpty() == true) null
+        else ifString
     }
 }
