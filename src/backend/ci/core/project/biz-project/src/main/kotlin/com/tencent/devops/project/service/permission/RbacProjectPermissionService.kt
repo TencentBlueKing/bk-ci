@@ -48,7 +48,6 @@ import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import kotlin.math.log
 
 @Suppress("LongParameterList")
 class RbacProjectPermissionService(
