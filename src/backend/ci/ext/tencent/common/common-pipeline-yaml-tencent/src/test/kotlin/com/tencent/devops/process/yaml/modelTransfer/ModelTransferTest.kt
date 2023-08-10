@@ -31,9 +31,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.modelCreate.ModelContainer
 import com.tencent.devops.process.yaml.modelCreate.TXModelContainer
@@ -71,6 +73,12 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         client, objectMapper, modelContainer, elementTransfer
     )
     private val modelTransfer: ModelTransfer = ModelTransfer(client, stageTransfer, elementTransfer)
+    private val pipelineInfo = PipelineInfo(
+        projectId = "", pipelineId = "", templateId = "", pipelineName = "",
+        pipelineDesc = "", version = 1, createTime = 1, updateTime = 1, creator = "", lastModifyUser = "",
+        channelCode = ChannelCode.BS, canManualStartup = true, canElementSkip = true,
+        taskCount = 1, versionName = "", id = 1, viewNames = emptyList()
+    )
 
     @BeforeEach
     fun setUp() {
@@ -96,7 +104,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         watcher.start("yaml2Model")
         val model = modelTransfer.yaml2Model(
             YamlTransferInput(
-                "a", "a", pYml
+                "a", "a", pipelineInfo, pYml
             )
         )
         val setting = PipelineSetting()
