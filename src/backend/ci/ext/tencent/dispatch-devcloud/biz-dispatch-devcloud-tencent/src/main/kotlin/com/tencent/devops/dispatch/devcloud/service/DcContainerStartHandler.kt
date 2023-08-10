@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -61,50 +60,14 @@ class DcContainerStartHandler @Autowired constructor(
     private val dispatchDevCloudClient: DispatchDevCloudClient
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
 
-    @Value("\${devCloud.entrypoint}")
-    val entrypoint: String = "devcloud_init.sh"
-
-    @Value("\${atom.fuse.container.label}")
-    val fuseContainerLabel: String? = null
-
-    @Value("\${atom.fuse.atom-code}")
-    val fuseAtomCode: String? = null
-
     companion object {
         private val logger = LoggerFactory.getLogger(DcContainerStartHandler::class.java)
-
-        private const val overlayFsLabel = "checkout"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
         with(handlerContext) {
             // 检查containerName
-            if (containerName.isNullOrBlank()) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.START_VM_ERROR.errorType,
-                    ErrorCodeEnum.START_VM_ERROR.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
-                    "ContainerName is null"
-                )
-            }
-
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse和checkout插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
+            checkContainerName(containerName)
 
             val devCloudTaskId = dispatchDevCloudClient.operateContainer(
                 projectId = projectId,
@@ -115,9 +78,9 @@ class DcContainerStartHandler @Autowired constructor(
                 name = containerName!!,
                 action = Action.START,
                 param = Params(
-                    env = generateEnvs(this),
+                    env = generateContainerEnvs(this),
                     command = listOf("/bin/sh", entrypoint),
-                    labels = containerLabels,
+                    labels = generateContainerLabels(this),
                     ipEnabled = false
                 )
             )

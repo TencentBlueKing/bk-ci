@@ -30,10 +30,12 @@ package com.tencent.devops.dispatch.devcloud.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
+import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import org.jooq.DSLContext
@@ -46,6 +48,7 @@ class DcContainerShutdownHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val devCloudBuildDao: DevCloudBuildDao,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
+    private val dcPersistenceBuildDao: DcPersistenceBuildDao,
     private val dispatchDevCloudClient: DispatchDevCloudClient,
     private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher
@@ -58,6 +61,12 @@ class DcContainerShutdownHandler @Autowired constructor(
     override fun handlerRequest(handlerContext: DcShutdownHandlerContext) {
         with(handlerContext) {
             handlerContext.buildLogKey = "$pipelineId|$buildId|$vmSeqId|$executeCount"
+
+            // 持久化构建结束事件
+            if (isPersistenceBuild(this)) {
+                return
+            }
+
 
             // 有可能出现devcloud返回容器状态running了，但是其实流水线任务早已经执行完了，
             // 导致shutdown消息先收到而redis和db还没有设置的情况，因此扔回队列，sleep等待30秒重新触发
@@ -138,6 +147,24 @@ class DcContainerShutdownHandler @Autowired constructor(
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1
             )
+        }
+    }
+
+    private fun isPersistenceBuild(handlerContext: DcShutdownHandlerContext): Boolean {
+        with(handlerContext) {
+            val buildRecord = dcPersistenceBuildDao.getPersistenceBuildInfo(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount
+            )
+
+            if (buildRecord != null) {
+                logger.info("$buildLogKey finish persistenceBuild.")
+                dcPersistenceBuildDao.updateStatus(dslContext, buildRecord.id, PersistenceBuildStatus.DONE.status)
+            }
+
+            return buildRecord != null
         }
     }
 }

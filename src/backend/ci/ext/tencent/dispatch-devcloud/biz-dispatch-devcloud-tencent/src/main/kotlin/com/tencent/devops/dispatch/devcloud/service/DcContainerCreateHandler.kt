@@ -46,7 +46,6 @@ import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
-import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,19 +66,8 @@ class DcContainerCreateHandler @Autowired constructor(
     @Value("\${devCloud.clusterType:normal}")
     var clusterType: String? = "normal"
 
-    @Value("\${devCloud.entrypoint}")
-    val entrypoint: String = "devcloud_init.sh"
-
-    @Value("\${atom.fuse.container.label}")
-    val fuseContainerLabel: String? = null
-
-    @Value("\${atom.fuse.atom-code}")
-    val fuseAtomCode: String? = null
-
     companion object {
         private val logger = LoggerFactory.getLogger(DcContainerCreateHandler::class.java)
-
-        private const val overlayFsLabel = "checkout"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -88,25 +76,7 @@ class DcContainerCreateHandler @Autowired constructor(
             val userName = containerPool!!.credential!!.user
             val password = containerPool!!.credential!!.password
 
-            val containerLabels = mutableMapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "buildId" to buildId,
-                "vmSeqId" to vmSeqId
-            )
-
-            // 针对fuse插件优化
-            if (fuseAtomCode!! in atoms.keys) {
-                val (key, value) = fuseContainerLabel!!.split(":")
-                containerLabels[key] = value
-            }
-
-            // overlayfs代码拉取优化
-            if (overlayFsLabel in atoms.keys) {
-                containerLabels[overlayFsLabel] = "true"
-            }
-
-            val (devCloudTaskId, createName) = dispatchDevCloudClient.createContainer(
+            val (devCloudTaskId, devCloudCreateName) = dispatchDevCloudClient.createContainer(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -125,21 +95,22 @@ class DcContainerCreateHandler @Autowired constructor(
                     ports = emptyList(),
                     password = "",
                     params = Params(
-                        env = generateEnvs(this),
-                        command = listOf("/bin/sh", entrypoint),
-                        labels = containerLabels,
+                        env = generateContainerEnvs(this),
+                        command = generateContainerCommand(this),
+                        labels = generateContainerLabels(this),
                         ipEnabled = false
                     ),
                     clusterType = clusterType
                 )
             )
-            logger.info("$buildLogKey, poolNo: $poolNo createContainer, taskId:($devCloudTaskId)")
 
+            handlerContext.containerName = devCloudCreateName
+            logger.info("$buildLogKey, poolNo: $poolNo createContainer, taskId:($devCloudTaskId)")
             printLog(
                 message = MessageUtil.getMessageByLocale(
                     messageCode = DispatchDevcloudMessageCode.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ) + "，containerName: $createName " + MessageUtil.getMessageByLocale(
+                ) + "，containerName: $containerName " + MessageUtil.getMessageByLocale(
                     messageCode = DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
@@ -152,10 +123,8 @@ class DcContainerCreateHandler @Autowired constructor(
                 pipelineId,
                 devCloudTaskId
             )
-
             if (createResult.first == TaskStatus.SUCCEEDED) {
                 // 启动成功
-                val containerName = createResult.second
                 logger.info("$buildLogKey, poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
                 printLog(
                     message = MessageUtil.getMessageByLocale(
@@ -171,7 +140,7 @@ class DcContainerCreateHandler @Autowired constructor(
                     vmSeqId = vmSeqId,
                     poolNo = poolNo,
                     projectId = projectId,
-                    containerName = containerName,
+                    containerName = containerName ?: "",
                     image = this.dispatchMessage,
                     status = ContainerStatus.BUSY.status,
                     userId = userId,
@@ -181,20 +150,26 @@ class DcContainerCreateHandler @Autowired constructor(
                 )
 
                 // 更新历史表中containerName
-                devCloudBuildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
+                devCloudBuildHisDao.updateContainerName(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    containerName = containerName ?: "",
+                    executeCount = executeCount ?: 1
+                )
 
                 // 创建成功的要记录，shutdown时关机，创建失败时不记录，shutdown时不关机
                 buildContainerPoolNoDao.setDevCloudBuildLastContainer(
-                    dslContext,
-                    buildId,
-                    vmSeqId,
-                    executeCount ?: 1,
-                    containerName,
-                    poolNo.toString()
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount ?: 1,
+                    containerName = containerName ?: "",
+                    poolNo = poolNo.toString()
                 )
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionContainer(createName, this)
+                clearExceptionContainer(containerName ?: "", this)
                 devCloudBuildDao.updateStatus(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
@@ -202,7 +177,13 @@ class DcContainerCreateHandler @Autowired constructor(
                     poolNo = poolNo,
                     status = ContainerStatus.IDLE.status
                 )
-                devCloudBuildHisDao.updateContainerName(dslContext, buildId, vmSeqId, createName, executeCount ?: 1)
+                devCloudBuildHisDao.updateContainerName(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    containerName = containerName ?: "",
+                    executeCount = executeCount ?: 1
+                )
                 throw BuildFailureException(
                     createResult.third.errorType,
                     createResult.third.errorCode,
@@ -215,9 +196,5 @@ class DcContainerCreateHandler @Autowired constructor(
                 )
             }
         }
-    }
-
-    private fun getPersistenceContainerLabel(): String {
-        return "${System.currentTimeMillis()}-" + RandomStringUtils.randomAlphanumeric(16)
     }
 }

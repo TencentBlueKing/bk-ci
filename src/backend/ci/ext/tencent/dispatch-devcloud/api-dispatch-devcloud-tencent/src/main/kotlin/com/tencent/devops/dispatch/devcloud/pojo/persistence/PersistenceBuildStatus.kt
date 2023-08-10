@@ -29,20 +29,20 @@ package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
 import javax.ws.rs.NotFoundException
 
-enum class PersistenceTaskStatus(val status: Int) {
+enum class PersistenceBuildStatus(val status: Int) {
     QUEUE(1),
     RUNNING(2),
     DONE(3),
     FAILURE(4);
 
     companion object {
-        fun toStatus(status: Int): PersistenceTaskStatus {
-            PersistenceTaskStatus.values().forEach {
+        fun toStatus(status: Int): PersistenceBuildStatus {
+            PersistenceBuildStatus.values().forEach {
                 if (it.status == status) {
                     return it
                 }
             }
-            throw NotFoundException("Can't find the pipeline task status($status)")
+            throw NotFoundException("Can't find the build task status($status)")
         }
     }
 }

@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.devcloud.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildInfo
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildWithStatus
@@ -60,7 +59,7 @@ interface BuildPersistenceBuildResource {
         @ApiParam("Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String
-    ): AgentResult<PersistenceBuildInfo?>
+    ): Result<PersistenceBuildInfo?>
 
     @ApiOperation("worker构建结束")
     @POST

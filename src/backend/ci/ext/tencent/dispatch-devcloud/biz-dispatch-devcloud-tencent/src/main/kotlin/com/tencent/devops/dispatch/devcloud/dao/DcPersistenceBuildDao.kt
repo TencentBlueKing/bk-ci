@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.dao
 
-import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceTaskStatus
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudPersistenceBuild
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudPersistenceBuildRecord
 import org.jooq.DSLContext
@@ -71,14 +71,14 @@ class DcPersistenceBuildDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        containerName: String,
+        id: Long,
         status: Int
     ) {
         with(TDevcloudPersistenceBuild.T_DEVCLOUD_PERSISTENCE_BUILD) {
             val sql = dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(STATUS, status)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(ID.eq(id))
                 .execute()
         }
     }
@@ -90,10 +90,32 @@ class DcPersistenceBuildDao {
         with(TDevcloudPersistenceBuild.T_DEVCLOUD_PERSISTENCE_BUILD) {
             return dslContext.selectFrom(this)
                 .where(CONTAINER_NAME.eq(containerName))
-                .and(STATUS.eq(PersistenceTaskStatus.QUEUE.status))
+                .and(STATUS.eq(PersistenceBuildStatus.QUEUE.status))
                 .orderBy(UPDATE_TIME.asc())
                 .limit(1)
                 .fetchAny()
+        }
+    }
+
+    fun getPersistenceBuildInfo(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String?,
+        executeCount: Int? = null
+    ): TDevcloudPersistenceBuildRecord? {
+        with(TDevcloudPersistenceBuild.T_DEVCLOUD_PERSISTENCE_BUILD) {
+            val sql = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+
+            if (executeCount != null) {
+                sql.and(VM_SEQ_ID.eq(vmSeqId))
+            }
+
+            if (executeCount != null) {
+                sql.and(EXECUTE_COUNT.eq(executeCount))
+            }
+
+            return sql.fetchAny()
         }
     }
 }

@@ -27,10 +27,12 @@
 
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
+import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
@@ -43,6 +45,7 @@ import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerCont
 import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -52,7 +55,21 @@ abstract class StartupContainerHandler @Autowired constructor(
     private val dispatchDevCloudClient: DispatchDevCloudClient
 ) : Handler<DcStartupHandlerContext>() {
 
-    fun generateEnvs(handlerContext: DcStartupHandlerContext): Map<String, Any> {
+    @Value("\${atom.fuse.container.label}")
+    val fuseContainerLabel: String? = null
+
+    @Value("\${atom.fuse.atom-code}")
+    val fuseAtomCode: String? = null
+
+    @Value("\${devCloud.entrypoint}")
+    val entrypoint: String = "devcloud_init.sh"
+
+    @Value("\${devCloud.persistenceEntrypoint:}")
+    val persistenceEntrypoint: String = "devcloud_persistence_init.sh"
+
+    private val overlayFsLabel = "checkout"
+
+    fun generateContainerEnvs(handlerContext: DcStartupHandlerContext): Map<String, Any> {
         // 拼接环境变量
         with(handlerContext) {
             val envs = mutableMapOf<String, Any>()
@@ -72,7 +89,50 @@ abstract class StartupContainerHandler @Autowired constructor(
                 )
             )
 
+            if (persistence) {
+                // TODO 新增持久化容器agent相关环境变量
+            }
+
             return envs
+        }
+    }
+
+    fun generateContainerLabels(handlerContext: DcStartupHandlerContext): MutableMap<String, String> {
+        with(handlerContext) {
+            val containerLabels = mutableMapOf(
+                "projectId" to projectId,
+                "pipelineId" to pipelineId,
+                "buildId" to buildId,
+                "vmSeqId" to vmSeqId
+            )
+
+            // 针对fuse插件优化
+            fuseAtomCode?.split(",")?.forEach {
+                if (it in atoms.keys) {
+                    val (key, value) = fuseContainerLabel!!.split(":")
+                    containerLabels[key] = value
+                    return@forEach
+                }
+            }
+
+            // overlayfs代码拉取优化
+            if (overlayFsLabel in atoms.keys) {
+                containerLabels[overlayFsLabel] = "true"
+            }
+
+            // 持久化容器标识
+            if (persistence) {
+                // TODO 新增持久化容器标签
+            }
+            return containerLabels
+        }
+    }
+
+    fun generateContainerCommand(handlerContext: DcStartupHandlerContext): List<String> {
+        return if (handlerContext.persistence) {
+            listOf("/bin/sh", entrypoint)
+        } else {
+            listOf("/bin/sh", persistenceEntrypoint)
         }
     }
 
@@ -110,6 +170,17 @@ abstract class StartupContainerHandler @Autowired constructor(
                 tag = VMUtils.genStartVMTaskId(vmSeqId),
                 jobId = containerHashId,
                 executeCount = executeCount ?: 1
+            )
+        }
+    }
+
+    fun checkContainerName(containerName: String?) {
+        if (containerName.isNullOrBlank()) {
+            throw BuildFailureException(
+                ErrorCodeEnum.START_VM_ERROR.errorType,
+                ErrorCodeEnum.START_VM_ERROR.errorCode,
+                ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                "ContainerName is null"
             )
         }
     }

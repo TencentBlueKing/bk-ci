@@ -13,15 +13,10 @@ class DcPersistenceContainerDao {
         dslContext: DSLContext,
         pipelineId: String,
         vmSeqId: String,
-        poolNo: Int,
         projectId: String,
         containerName: String,
-        image: String,
         status: Int,
-        userId: String,
-        cpu: Int,
-        memory: String,
-        disk: String
+        userId: String
     ): Int {
         return with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.insertInto(
