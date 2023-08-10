@@ -4,6 +4,7 @@ object RedisKeys {
     const val REDIS_CALL_LIMIT_KEY_PREFIX = "remotedev:callLimit"
     const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
     const val WORKSPACE_CACHE_KEY_PREFIX = "remotedev:workspaceCache:"
+    fun notifyWinBeforeSleep(userId: String) = "remotedev:notifyWinBeforeSleep:$userId"
 
     // redis 选填项
     const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime" // 10000

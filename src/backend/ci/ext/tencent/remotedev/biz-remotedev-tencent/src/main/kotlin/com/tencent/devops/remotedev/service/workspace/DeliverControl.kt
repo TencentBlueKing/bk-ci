@@ -112,8 +112,9 @@ class DeliverControl @Autowired constructor(
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
-        if (assign2Owner != null) {
-            if (alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER } != null) {
+        val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
+        if (assign2Owner != null && assign2Owner.userId != existOwner?.sharedUser) {
+            if (existOwner != null) {
                 logger.warn("PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER|$userId|$projectId|$workspaceName")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER.errorCode,
@@ -144,8 +145,22 @@ class DeliverControl @Autowired constructor(
             )
         }
 
-        val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
-        sharedDao.batchCreate(dslContext, workspaceName, userId, needAssign)
+        val em = alreadyExist.map { m -> m.sharedUser }
+        val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
+        if (add.isNotEmpty()) {
+            sharedDao.batchCreate(dslContext, workspaceName, userId, add)
+        }
+
+        val am = assigns.map { m -> m.userId }
+        val reduce = alreadyExist.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.sharedUser !in am }
+        if (reduce.isNotEmpty()) {
+            sharedDao.batchDelete(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                sharedUsers = reduce.map { it.sharedUser },
+                assignType = WorkspaceShared.AssignType.VIEWER
+            )
+        }
     }
 
     fun jobCallback(workspaceName: String) {
