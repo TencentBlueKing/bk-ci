@@ -41,13 +41,13 @@ import javax.ws.rs.core.Response
 @Component
 class TransferModelCreatorImpl @Autowired constructor(
 ) : TransferModelCreator {
-    @Value("\${stream.marketRun.enable:#{false}}")
+    @Value("\${marketRun.enable:#{false}}")
     private val marketRunTaskData: Boolean = false
 
-    @Value("\${stream.marketRun.atomCode:#{null}}")
+    @Value("\${marketRun.atomCode:#{null}}")
     private val runPlugInAtomCodeData: String? = null
 
-    @Value("\${stream.marketRun.atomVersion:#{null}}")
+    @Value("\${marketRun.atomVersion:#{null}}")
     private val runPlugInVersionData: String? = null
 
     @Value("\${container.defaultImage:#{null}}")
@@ -90,7 +90,6 @@ class TransferModelCreatorImpl @Autowired constructor(
         }
 
         inputMap["repositoryUrl"] = step.checkout!!
-
 
         // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
         if (inputMap["authType"] == null) {

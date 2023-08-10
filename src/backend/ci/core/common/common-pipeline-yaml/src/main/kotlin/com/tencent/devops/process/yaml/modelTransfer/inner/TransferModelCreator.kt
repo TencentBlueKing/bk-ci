@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.step.Step
 
 /**
