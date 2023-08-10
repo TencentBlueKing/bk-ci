@@ -384,7 +384,8 @@ class DcContainerPrepareHandler @Autowired constructor(
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
             if (lastContainerPool.container != containerPool.container ||
-                lastContainerPool.credential != containerPool.credential) {
+                lastContainerPool.credential != containerPool.credential ||
+                lastContainerPool.persistence != containerPool.persistence) {
                 logger.info("${handlerContext.buildLogKey} image changed. " +
                                 "old image: $lastContainerPool, new image: $containerPool")
                 return true

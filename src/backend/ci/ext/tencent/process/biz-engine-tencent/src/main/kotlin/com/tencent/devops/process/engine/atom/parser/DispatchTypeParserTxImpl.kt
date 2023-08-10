@@ -256,7 +256,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             credential = credential,
             macOS = null,
             third = true,
-            performanceConfigId = dispatchType.performanceConfigId
+            performanceConfigId = dispatchType.performanceConfigId,
+            persistence = dispatchType.persistence
         )
         dispatchType.image = JsonUtil.toJson(pool)
     }
