@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v2.parsers.template
 
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.Repositories
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
@@ -43,13 +44,13 @@ data class TemplateLibrary<T>(
 
 // 从模板库中获得数据，如果有直接取出，没有则根据保存的库信息从远程仓库拉取，再没有则报错
 fun <T> TemplateLibrary<T>.getTemplate(
-    path: String,
+    path: TemplatePath,
     templateType: TemplateType?,
     nowRepo: Repositories?,
     toRepo: Repositories?
 ): String {
-    if (templates[path] != null) {
-        return templates[path]!!
+    if (templates[path.toString()] != null) {
+        return templates[path.toString()]!!
     }
     //  没有库信息说明是触发库
     val template = if (toRepo == null) {
@@ -74,9 +75,9 @@ fun <T> TemplateLibrary<T>.getTemplate(
         )
     }
     setTemplate(path, template)
-    return templates[path]!!
+    return templates[path.toString()]!!
 }
 
-fun <T> TemplateLibrary<T>.setTemplate(path: String, template: String) {
-    templates[path] = template
+fun <T> TemplateLibrary<T>.setTemplate(path: TemplatePath, template: String) {
+    templates[path.toString()] = template
 }

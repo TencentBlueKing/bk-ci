@@ -18,6 +18,7 @@ import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.exception.YamlTemplateException
 import com.tencent.devops.process.yaml.v2.parameter.Parameters
@@ -43,8 +44,8 @@ object ParametersExpressionParse {
      * @param parameters 引用模板文件时传入的参数
      */
     fun parseTemplateParameters(
-        fromPath: String,
-        path: String,
+        fromPath: TemplatePath,
+        path: TemplatePath,
         template: String,
         templateParameters: MutableList<Parameters>?,
         parameters: Map<String, Any?>?
@@ -57,7 +58,7 @@ object ParametersExpressionParse {
         templateParameters.forEachIndexed { index, param ->
             if (param.name.contains(".")) {
                 throw error(
-                    Constants.PARAMETER_FORMAT_ERROR.format(path, "parameter name ${param.name} not allow contains '.'")
+                    Constants.PARAMETER_FORMAT_ERROR.format(path.toString(), "parameter name ${param.name} not allow contains '.'")
                 )
             }
 
@@ -74,8 +75,8 @@ object ParametersExpressionParse {
             if (!param.values.isNullOrEmpty() && !param.values.contains(newValue)) {
                 throw error(
                     Constants.VALUE_NOT_IN_ENUM.format(
-                        fromPath,
-                        path,
+                        fromPath.toString(),
+                        path.toString(),
                         valueName,
                         newValue,
                         param.values.joinToString(",")
@@ -99,7 +100,7 @@ object ParametersExpressionParse {
                     if (param.default !is Iterable<*>) {
                         throw error(
                             Constants.PARAMETER_FORMAT_ERROR.format(
-                                path, "parameter ${param.name} type is ${param.type} but value not"
+                                path.toString(), "parameter ${param.name} type is ${param.type} but value not"
                             )
                         )
                     }
@@ -123,30 +124,30 @@ object ParametersExpressionParse {
 
                 else -> throw error(
                     Constants.PARAMETER_FORMAT_ERROR.format(
-                        path, "parameter ${param.name} type ${param.type} not support"
+                        path.toString(), "parameter ${param.name} type ${param.type} not support"
                     )
                 )
             }
         }
 
-        return parseParameterValue(path, template, expNameValues, expContext)
+        return parseParameterValue(path.toString(), template, expNameValues, expContext)
     }
 
     // 因为array的里面可能嵌套array所以先转成json再转成array
-    fun fromJsonToArrayContext(path: String, parameterName: String, value: Iterable<*>): ArrayContextData {
+    fun fromJsonToArrayContext(path: TemplatePath, parameterName: String, value: Iterable<*>): ArrayContextData {
         val jsonTree = try {
             JsonUtil.getObjectMapper().readTree(JsonUtil.toJson(value))
         } catch (e: Throwable) {
             throw error(
                 Constants.PARAMETER_FORMAT_ERROR.format(
-                    path, "array parameter $parameterName value [$value] can't to json."
+                    path.toString(), "array parameter $parameterName value [$value] can't to json."
                 )
             )
         }
         if (!jsonTree.isArray) {
             throw error(
                 Constants.PARAMETER_FORMAT_ERROR.format(
-                    path, "array parameter $parameterName value  [$value] json type [${jsonTree.nodeType}] not array."
+                    path.toString(), "array parameter $parameterName value  [$value] json type [${jsonTree.nodeType}] not array."
                 )
             )
         }
