@@ -126,6 +126,7 @@ class DeliverControl @Autowired constructor(
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
+        logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
         if (assign2Owner != null) {
             if (alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER } != null) {
                 logger.warn("PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER|$userId|$projectId|$workspaceName")
@@ -167,6 +168,7 @@ class DeliverControl @Autowired constructor(
         }
 
         val needAssign = assigns.filter { it.userId !in alreadyExist.map { m -> m.sharedUser } }
+        logger.info("assignUser2Workspace|needAssign|$needAssign")
         sharedDao.batchCreate(dslContext, workspaceName, userId, needAssign)
     }
 
