@@ -52,7 +52,7 @@ dependencies {
     implementation(project(":core:store:biz-store-sample"))
     implementation(project(":core:store:biz-store-image-sample"))
     implementation(project(":core:ticket:biz-ticket-sample"))
-    implementation(project(":core:websocket:biz-websocket-blueking"))
+    implementation(project(":core:websocket:biz-websocket"))
 }
 
 configurations.all {

@@ -162,7 +162,7 @@ class DeleteControl @Autowired constructor(
         workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = Constansts.timeoutDays,
             dslContext = dslContext,
-            workspaceMountType = null
+            systemType = WorkspaceSystemType.LINUX
         ).parallelStream().forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(

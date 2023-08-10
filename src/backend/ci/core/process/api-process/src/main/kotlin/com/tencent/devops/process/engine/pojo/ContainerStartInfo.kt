@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,6 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:websocket:biz-websocket"))
-}
+package com.tencent.devops.process.engine.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("构建机启动信息模型")
+data class ContainerStartInfo(
+    @ApiModelProperty("主机名称")
+    val buildContainer: PipelineBuildContainer?,
+    @ApiModelProperty("主机IP")
+    val startBuildTask: PipelineBuildTask?
+)

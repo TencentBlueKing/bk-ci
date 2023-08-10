@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -584,7 +585,7 @@ class WorkspaceService @Autowired constructor(
         val inactivityWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = Constansts.timeoutDays - Constansts.sendNotifyDays,
             dslContext = dslContext,
-            workspaceMountType = null
+            systemType = WorkspaceSystemType.LINUX
         ).groupBy { it.creator }
         logger.info("sendInactivityWorkspaceNotify|workspaceMap|$inactivityWorkspaceMap")
         sendNotification(
@@ -596,7 +597,7 @@ class WorkspaceService @Autowired constructor(
         val startWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = retentionTime - 1,
             dslContext = dslContext,
-            workspaceMountType = WorkspaceMountType.START
+            systemType = WorkspaceSystemType.WINDOWS_GPU
         ).groupBy { it.creator }
         logger.info("sendInactivityWorkspaceNotify|startWorkspaceMap|$startWorkspaceMap")
         sendNotification(
@@ -644,5 +645,52 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext
         )
         return true
+    }
+
+    fun notifyWinBeforeSleep() {
+        logger.info("start notifyWinBeforeSleep")
+        val viewers = mutableMapOf<String, MutableList<String>>()
+        workspaceDao.fetchCreators(dslContext, WorkspaceStatus.RUNNING).forEach {
+            viewers.putIfAbsent(it.value1(), mutableListOf(it.value2()))?.add(it.value2())
+        }
+        logger.info("notifyWinBeforeSleep start check $viewers")
+        viewers.forEach { (userId, workspaces) ->
+            // 不重复提醒
+            if (redisOperation.get(RedisKeys.notifyWinBeforeSleep(userId)) != null) {
+                logger.info("$userId is notify yet. return")
+                return@forEach
+            }
+            val duration = remoteDevSettingService.userWinTimeLeft(userId)
+            val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
+            if (duration < limit * 60) {
+                logger.info("start notify to user $userId")
+                workspaceCommon.dispatchWebsocketPushEvent(
+                    userId = userId,
+                    workspaceName = workspaces.first(),
+                    workspaceHost = null,
+                    errorMsg = null, type = WebSocketActionType.WORKSPACE_NEED_RENEWAL,
+                    status = true, action = WorkspaceAction.NEED_RENEWAL
+                )
+                val request = SendNotifyMessageTemplateRequest(
+                    templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE.templateCode,
+                    receivers = mutableSetOf(userId),
+                    cc = mutableSetOf(userId),
+                    titleParams = null,
+                    bodyParams = mapOf(
+                        "userId" to userId,
+                        "workspaceName" to workspaces.joinToString()
+                    ),
+                    notifyType = mutableSetOf(NotifyType.EMAIL.name)
+                )
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                redisOperation.set(
+                    key = RedisKeys.notifyWinBeforeSleep(userId),
+                    value = workspaces.joinToString(),
+                    expiredInSecond = limit * 60
+                )
+            } else {
+                logger.info("no need to notify now|$userId|$duration|${limit * 60}")
+            }
+        }
     }
 }

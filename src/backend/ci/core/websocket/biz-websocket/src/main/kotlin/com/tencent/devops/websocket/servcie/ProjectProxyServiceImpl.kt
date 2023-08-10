@@ -25,7 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:monitoring:biz-monitoring"))
-    api(project(":core:common:common-notify"))
+package com.tencent.devops.websocket.servcie
+
+class ProjectProxyServiceImpl : ProjectProxyService {
+    override fun checkProject(projectId: String, userId: String): Boolean {
+        return true
+    }
 }

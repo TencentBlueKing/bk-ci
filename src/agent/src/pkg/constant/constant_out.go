@@ -1,3 +1,6 @@
+//go:build out
+// +build out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,18 +27,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.service.impl
 
-import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.service.DispatchReportService
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
+package constant
 
-@Service
-@RefreshScope
-class DispatchReportServiceImpl : DispatchReportService {
+// 用来放一些内外部不一样的常量
 
-    override fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
-        return true
-    }
-}
+const (
+	DockerDataDir = "/data/devops/workspace"
+)

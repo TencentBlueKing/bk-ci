@@ -1,3 +1,6 @@
+//go:build !out
+// +build !out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,14 +28,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.servcie
+package constant
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+// 用来放一些内外部不一样的常量
 
-@Service
-class ProjectProxyServiceImpl @Autowired constructor() : ProjectProxyService {
-    override fun checkProject(projectId: String, userId: String): Boolean {
-        return true
-    }
-}
+const (
+	DockerDataDir = "/data/landun/workspace"
+)
