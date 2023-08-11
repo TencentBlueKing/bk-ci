@@ -67,8 +67,6 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 return
             }
 
-            checkContainerName(containerName)
-
             // 新建容器
             if (containerChanged) {
                 // 存储持久化容器信息
@@ -78,18 +76,18 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     projectId = projectId,
-                    containerName = containerName!!,
+                    containerName = persistenceAgentId,
                     status = PersistenceContainerStatus.RUNNING.status
                 )
             }
 
-            // 根据containerName加分布式锁
-            val lock = PersistenceContainerLock(redisOperation, containerName!!)
+            // 根据persistenceAgentId加分布式锁
+            val lock = PersistenceContainerLock(redisOperation, persistenceAgentId!!)
             try {
                 if (lock.tryLock()) {
                     queueBuild(this)
                 } else {
-                    logger.warn("Container: $containerName is busy, can not get redislock.")
+                    logger.warn("Container agent: $persistenceAgentId is busy, can not get redislock.")
                 }
             } finally {
                 lock.unlock()
@@ -111,14 +109,14 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     containerHashId = containerHashId!!,
-                    containerName = containerName!!,
+                    containerName = persistenceAgentId,
                     agentId = agentId,
                     secretKey = secretKey,
                     executeCount = executeCount ?: 1,
                     status = PersistenceBuildStatus.QUEUE.status
                 )
             } catch (e: DeadlockLoserDataAccessException) {
-                logger.warn("Fail to queue devcloud build of $buildLogKey $containerName")
+                logger.warn("Fail to queue devcloud build of $buildLogKey $persistenceAgentId")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
                     queueBuild(this, retryCount + 1)
                 } else {

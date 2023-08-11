@@ -49,6 +49,7 @@ class DcStartupHandlerContext(
     var poolNo: Int = 0, // 容器池序号
     var containerName: String? = null, // 复用的容器池容器
     var containerChanged: Boolean = true, // 复用的容器池容器配置是否已变更，默认true
+    var persistenceAgentId: String = "",
     override val executeCount: Int?,
     override val userId: String,
     override val projectId: String,

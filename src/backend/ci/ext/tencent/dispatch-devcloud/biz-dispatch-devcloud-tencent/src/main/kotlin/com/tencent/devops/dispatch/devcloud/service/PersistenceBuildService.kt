@@ -28,19 +28,19 @@ class PersistenceBuildService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PersistenceBuildService::class.java)
     }
 
-    fun startBuild(projectId: String, containerName: String): PersistenceBuildInfo? {
+    fun startBuild(projectId: String, persistenceAgentId: String): PersistenceBuildInfo? {
         // 检查containerName当前状态
-        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, containerName)
+        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, persistenceAgentId)
         if (container == null || container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
-            logger.warn("Container $containerName is null or status not running.")
+            logger.warn("Container $persistenceAgentId is null or status not running.")
             return null
         }
 
-        val lock = PersistenceContainerLock(redisOperation, containerName)
+        val lock = PersistenceContainerLock(redisOperation, persistenceAgentId)
         try {
             if (lock.tryLock()) {
-                val buildRecord = dcPersistenceBuildDao.fetchOneQueueBuild(dslContext, containerName) ?: run {
-                    logger.warn("No build for $containerName in queue.")
+                val buildRecord = dcPersistenceBuildDao.fetchOneQueueBuild(dslContext, persistenceAgentId) ?: run {
+                    logger.warn("No build for $persistenceAgentId in queue.")
                     return null
                 }
 
@@ -69,10 +69,10 @@ class PersistenceBuildService @Autowired constructor(
         }
     }
 
-    fun workerBuildFinish(projectId: String, containerName: String, buildInfo: PersistenceBuildWithStatus) {
-        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, containerName)
+    fun workerBuildFinish(projectId: String, persistenceAgentId: String, buildInfo: PersistenceBuildWithStatus) {
+        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, persistenceAgentId)
         if (container == null || container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
-            logger.warn("Container $containerName is null or status not running.")
+            logger.warn("Container $persistenceAgentId is null or status not running.")
         }
 
         // 重新设置container build状态
@@ -101,7 +101,7 @@ class PersistenceBuildService @Autowired constructor(
             pipelineId = buildInfo.pipelineId ?: "",
             buildId = buildInfo.buildId,
             vmSeqId = buildInfo.vmSeqId,
-            nodeHashId = containerName,
+            nodeHashId = persistenceAgentId,
             simpleResult = SimpleResult(
                 success = buildInfo.success,
                 message = buildInfo.message,

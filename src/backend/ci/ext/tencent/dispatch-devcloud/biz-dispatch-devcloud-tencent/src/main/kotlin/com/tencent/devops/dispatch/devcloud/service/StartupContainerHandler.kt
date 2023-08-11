@@ -55,10 +55,12 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.process.engine.common.VMUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Locale
 
 @Service
 abstract class StartupContainerHandler @Autowired constructor(
@@ -102,6 +104,8 @@ abstract class StartupContainerHandler @Autowired constructor(
             )
 
             if (persistence) {
+                val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
+                handlerContext.persistenceAgentId = persistenceAgentId
                 envs.putAll(
                     mapOf(
                         DEVOPS_AGENTSLIM_ISDEBUG to "false",
@@ -112,7 +116,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                         DEVOPS_AGENTSLIM_GATEWAY to (commonConfig.devopsDevnetProxyGateway ?: ""),
                         DEVOPS_AGENTSLIM_FILEGATEWAY to (commonConfig.fileDevnetGateway ?: ""),
                         DEVOPS_AGENTSLIM_PROJECT_ID to projectId,
-                        DEVOPS_AGENTSLIM_CONTAINER_NAME to (containerName ?: ""),
+                        DEVOPS_AGENTSLIM_CONTAINER_NAME to persistenceAgentId,
                         DEVOPS_AGENTSLIM_WORKER_PATH to "/data",
                         DEVOPS_AGENTSLIM_JAVA_PATH to "/usr/local/jre",
                         DEVOPS_AGENTSLIM_WORKER_DETECTSHELL to "true"
