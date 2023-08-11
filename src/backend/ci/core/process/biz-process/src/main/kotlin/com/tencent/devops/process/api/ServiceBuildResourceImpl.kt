@@ -223,8 +223,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         pipelineBuildFacadeService.buildManualShutdown(
-            userId, projectId, pipelineId, buildId, channelCode,
-            ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
         return Result(true)
     }

@@ -25,19 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-misc"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-environment-thirdpartyagent"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-db-sharding"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:project:api-project"))
-    api(project(":core:misc:api-misc"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-websocket"))
-    api("org.json:json")
+package com.tencent.devops.misc.api
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_PROCESS_DB_MIGRATE"], description = "OP-process数据库迁移")
+@Path("/op/process/db")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpProcessDbMigrateResource {
+
+    @ApiOperation("按项目迁移process数据库数据")
+    @Path("/projects/{projectId}/data/migrate")
+    @PUT
+    fun migrateProjectData(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }
