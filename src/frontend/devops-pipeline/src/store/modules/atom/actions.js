@@ -215,6 +215,14 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    // 获取流水线Yaml
+    getPipelineYaml (_, { projectId, pipelineId }) {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/transfer/${projectId}/preview_code`, {
+            params: {
+                pipelineId
+            }
+        }).then(res => res.data)
+    },
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },

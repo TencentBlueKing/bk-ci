@@ -13,6 +13,7 @@
   "audit": {
     "operator": "Operator",
     "operateTime": "Operation time",
+    "operateLogDesc": "Operation Description",
     "operateTimePlaceholder": "Please select a time range",
     "enterPlaceholder": "Press Enter to search"
   },
@@ -1186,7 +1187,8 @@
   "triggerRepo": "触发代码库",
   "noBuildHistory": "暂无执行历史",
   "buildNow": "立即执行",
-  "noBuildHistoryTips": "定义流水线后即可手动触发执行一次构建任务。<br />系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
+  "noBuildHistoryTips": "定义流水线后即可手动触发执行一次构建任务。",
+  "buildHistoryIdTips": "系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
   "triggerEventfilterTips": "触发器类型/事件类型/触发人",
   "triggerType": "触发器类型",
   "eventType": "事件类型",

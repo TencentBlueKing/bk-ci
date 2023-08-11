@@ -38,9 +38,6 @@
             ...mapState('atom', [
                 'isPropertyPanelVisible'
             ]),
-            scrollBoxCls () {
-                return 'bkdevops-pipeline-history'
-            },
             projectId () {
                 return this.$route.params.projectId
             },

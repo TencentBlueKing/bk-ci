@@ -14,7 +14,7 @@
             </bk-button>
             <bk-button
                 theme="primary"
-                :disabled="btnDisabled || !canManualStartup"
+                :disabled="btnDisabled || !canManualStartup || isCurPipelineLocked"
                 :loading="executeStatus"
                 :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
                 @click="saveAndExec"
@@ -44,6 +44,7 @@
             ...mapState('pipelines', ['pipelineSetting']),
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline',
+                isCurPipelineLocked: 'pipelines/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
@@ -62,9 +63,6 @@
             },
             canManualStartup () {
                 return this.curPipeline?.canManualStartup ?? false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
             },
             isTemplatePipeline () {
                 return this.curPipeline?.model?.instanceFromTemplate ?? false

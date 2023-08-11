@@ -1,5 +1,5 @@
 <template>
-    <main class="pipeline-version-history" v-bk-loading="{ isLoading }">
+    <main class="pipeline-version-history" v-bkloading="{ isLoading }">
         <header class="pipeline-version-history-header">
             <bk-select
                 v-model="searchKeys.creator"
@@ -225,14 +225,15 @@
             },
             deleteVersion (row) {
                 if (this.currentPipeline.hasPermission && this.currentPipeline.version !== row.version) {
+                    const { projectId, pipelineId } = this.$route.params
                     const content = this.$t('delete') + this.$t('version') + row.versionName
                     navConfirm({ content }).then(() => {
                         this.deletePipelineVersion({
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId,
+                            projectId,
+                            pipelineId,
                             version: row.version
                         }).then(() => {
-                            this.handlePaginationChange()
+                            this.getPipelineVersions(1)
                             this.$showTips({
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'

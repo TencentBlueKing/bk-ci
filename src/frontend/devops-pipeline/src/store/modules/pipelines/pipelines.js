@@ -32,6 +32,7 @@ import { PIPELINE_AUTHORITY_MUTATION, PIPELINE_SETTING_MUTATION, RESET_PIPELINE_
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const versionPrefix = `/${PROCESS_API_URL_PREFIX}/user/version`
+const triggerPrefix = `/${PROCESS_API_URL_PREFIX}/user/trigger/event`
 const backpre = `${BACKEND_API_URL_PREFIX}/api`
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -63,6 +64,9 @@ const getters = {
             ...(state.curPipeline?.pipelineResource ?? {}),
             ...(state.curPipeline?.pipelineInfo ?? {})
         }
+    },
+    isCurPipelineLocked: state => {
+        return state.curPipeline?.setting?.runLockType === 'LOCK'
     },
     getAllPipelineList: state => state.allPipelineList,
     getPipelineTriggers: state => {
@@ -378,7 +382,6 @@ const actions = {
         const url = `/${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/pipelines/${pipelineId}/resource`
 
         return ajax.get(url).then(response => {
-            console.log(response.data)
             commit('updateCurPipeline', response.data)
             return response.data
         })
@@ -580,25 +583,28 @@ const actions = {
         })
     },
     // 流水线操作日志列表
-    requestPipelineChangelogs (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/changelog`, {
-            params: {
-                page,
-                pageSize
-            }
+    requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
+            params
         }).then(res => res.data)
     },
     // 获取触发事件列表
-    getTriggerEventList (_, { projectId, pipelineId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/triggerEvents`).then(res => res.data)
+    getTriggerEventList (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${triggerPrefix}/${projectId}/${pipelineId}/listPipelineTriggerEvent`, {
+            params
+        }).then(res => res.data)
     },
     // 获取触发类型列表
-    getTriggerTypeList (_, { projectId, pipelineId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/triggerTypes`).then(res => res.data)
+    getTriggerTypeList () {
+        return ajax.get(`${triggerPrefix}/listTriggerType`).then(res => res.data)
     },
     // 获取事件类型列表
-    getEventTypeList (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/eventTypes`).then(res => res.data)
+    getEventTypeList () {
+        return ajax.get(`${triggerPrefix}/listEventType`).then(res => res.data)
+    },
+    // 重新触发事件
+    reTriggerEvent (_, { projectId, detailId }) {
+        return ajax.post(`${triggerPrefix}/${projectId}/${detailId}/replay`)
     }
 }
 

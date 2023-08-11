@@ -88,16 +88,16 @@
                     },
                     children: [{
                         title: this.$t('流水线编排'),
-                        name: 'pipelineModel'
+                        name: 'pipeline'
                     }, {
                         title: this.$t('触发器配置'),
-                        name: 'triggerConf'
+                        name: 'trigger'
                     }, {
                         title: this.$t('通知配置'),
-                        name: 'notification'
+                        name: 'notice'
                     }, {
                         title: this.$t('基础配置'),
-                        name: 'baseInfo'
+                        name: 'setting'
                     }].map(child => ({
                         ...child,
                         active: this.activeMenuItem === child.name
@@ -142,10 +142,10 @@
                         return {
                             component: 'Artifactory'
                         }
-                    case 'pipelineModel':
-                    case 'triggerConf':
-                    case 'notification':
-                    case 'baseInfo':
+                    case 'pipeline':
+                    case 'trigger':
+                    case 'notice':
+                    case 'setting':
                         return {
                             component: 'PipelineConfig'
                         }

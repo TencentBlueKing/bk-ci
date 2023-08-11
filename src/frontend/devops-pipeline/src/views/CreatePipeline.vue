@@ -19,8 +19,10 @@
             <div slot="right">
                 <bk-button
                     theme="primary"
+                    :disabled="isConfirmDisable"
+                    @click="createNewPipeline"
                 >
-                    {{$t('newlist.create')}}
+                    {{$t('create')}}
                 </bk-button>
                 <bk-button
                     @click="goList"
@@ -161,23 +163,6 @@
                         </bk-checkbox-group>
                     </bk-form-item>
                 </bk-form>
-
-                <footer class="pipeline-template-box-right-side-footer">
-                    <bk-button
-                        size="small"
-                        theme="primary"
-                        :disabled="isConfirmDisable"
-                        @click="createNewPipeline"
-                    >
-                        {{ $t('add') }}
-                    </bk-button>
-                    <bk-button
-                        size="small"
-                        @click="goList"
-                    >
-                        {{ $t('cancel') }}
-                    </bk-button>
-                </footer>
             </aside>
         </div>
         <pipeline-template-preview
@@ -473,7 +458,7 @@
                     }
 
                     this.isDisabled = true
-                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}`, pipeline)
+                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.$route.params.projectId}`, pipeline)
                     if (id) {
                         this.$showTips({ message: this.$t('createPipelineSuc'), theme: 'success' })
 

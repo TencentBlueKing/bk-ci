@@ -10,9 +10,15 @@
             />
         </div>
         <aside class="pipeline-history-right-aside">
-            <bk-button theme="primary" @click="goExecPreview">
-                {{ $t("exec") }}
-            </bk-button>
+            <span v-bk-tooltips="tooltip">
+                <bk-button
+                    theme="primary"
+                    :disabled="!executable"
+                    @click="goExecPreview"
+                >
+                    {{ $t("exec") }}
+                </bk-button>
+            </span>
             <more-actions />
         </aside>
     </div>
@@ -34,14 +40,28 @@
         },
         computed: {
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
+                curPipeline: 'pipelines/getCurPipeline',
+                isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
+            executable () {
+                return !(this.isCurPipelineLocked || !this.canManualStartup)
+            },
+            canManualStartup () {
+                return this.curPipeline?.canManualStartup ?? true
+            },
+            tooltip () {
+                return this.executable
+                    ? {
+                        disalbed: true
+                    }
+                    : {
+                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        delay: [300, 0]
+                    }
+            },
             editRouteName () {
                 return { name: 'pipelinesEdit' }
             }
-        },
-        created () {
-            console.log(this.curPipeline)
         },
         methods: {
             goExecPreview () {

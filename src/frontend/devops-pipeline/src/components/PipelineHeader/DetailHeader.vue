@@ -8,13 +8,23 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
-                :disabled="loading || !canManualStartup"
+                v-if="isRunning"
+                :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
-                :theme="isRunning ? 'warning' : 'default'"
+                theme="warning"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("cancel") : $t("history.reBuild") }}
+                {{ $t("cancel") }}
+            </bk-button>
+            <bk-button
+                v-else
+                :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                :icon="loading ? 'loading' : ''"
+                outline
+                @click="handleClick"
+            >
+                {{ $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <router-link :to="editRouteName">
@@ -48,16 +58,14 @@
         computed: {
             ...mapState('atom', ['executeStatus', 'execDetail']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
+                curPipeline: 'pipelines/getCurPipeline',
+                isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
             canManualStartup () {
                 return this.curPipeline?.canManualStartup ?? false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
             },
             buildNumConf () {
                 return {

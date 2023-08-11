@@ -1,16 +1,19 @@
 <template>
-    <main class="pipeline-changelog" v-bk-loading="{ isLoading }">
+    <main class="pipeline-changelog" v-bkloading="{ isLoading }">
         <header class="pipeline-changelog-header">
-            <bk-select>
-                <bk-option v-for="creator in creators" :key="creator">
-                    {{ creator }}
-                </bk-option>
+            <bk-select v-model="filterCreator" @change="init(1)">
+                <bk-option
+                    v-for="creator in creators"
+                    :key="creator"
+                    :id="creator"
+                    :name="creator"
+                />
             </bk-select>
         </header>
         <section class="pipeline-changelog-content">
             <bk-table
                 height="100%"
-                :data="pipelineChangeLogList"
+                :data="operateLogs"
                 :pagination="pagination"
             >
                 <bk-table-column v-for="column in columns" :key="column.key" v-bind="column" />
@@ -20,26 +23,22 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
-    import { convertMiniTime } from '@/utils/util'
+    import { mapActions } from 'vuex'
+    import { convertTime } from '@/utils/util'
     export default {
         data () {
             return {
                 isLoading: false,
-                pipelineChange: [],
+                operateLogs: [],
+                filterCreator: '',
                 pagination: {
                     limit: 20,
                     current: 1,
                     count: 0
-                },
-                versionDesc: ''
+                }
             }
         },
         computed: {
-            ...mapGetters('pipelines', ['getCurPipeline']),
-            currentPipeline () {
-                return this.getCurPipeline
-            },
             creators () {
                 return [
                     'lockiechen'
@@ -48,13 +47,16 @@
             columns () {
                 return [{
                     prop: 'operator',
-                    label: this.$t('versionNum')
+                    label: this.$t('audit.operator')
                 }, {
                     prop: 'operateTime',
-                    label: this.$t('versionDesc'),
+                    label: this.$t('audit.operateTime'),
                     formatter: (row) => {
-                        return convertMiniTime(row.createTime)
+                        return convertTime(row.operateTime)
                     }
+                }, {
+                    prop: 'operationLogStr',
+                    label: this.$t('audit.operateLogDesc')
                 }]
             }
         },
@@ -62,7 +64,6 @@
             this.init()
         },
         methods: {
-
             ...mapActions('pipelines', [
                 'requestPipelineChangelogs'
             ]),
@@ -74,16 +75,18 @@
                     const res = await this.requestPipelineChangelogs({
                         projectId,
                         pipelineId,
+                        creator: this.filterCreator,
                         page: page ?? current,
                         pageSize: limit ?? pageSize
                     })
+                    console.log(res)
                     Object.assign(this.pagination, {
                         current: res.page,
                         limit: res.pageSize,
                         count: res.count
                     })
-                    this.pipelineChange = res.records
-                    console.log(this.pipelineChange)
+                    this.operateLogs = res.records
+                    console.log(this.operateLogs)
                     console.log(res)
                 } catch (error) {
                     this.$bkMessage({
@@ -94,7 +97,6 @@
                     this.isLoading = false
                 }
             }
-
         }
     }
 </script>

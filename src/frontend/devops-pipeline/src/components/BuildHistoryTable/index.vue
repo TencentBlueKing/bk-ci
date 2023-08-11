@@ -11,8 +11,9 @@
             <div class="no-build-history-box">
                 <span>{{ $t('noBuildHistory') }}</span>
                 <div class="no-build-history-box-tip">
-                    <p v-html="$t('noBuildHistoryTips')"></p>
-                    <span>
+                    <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
+                    <p>{{ $t('buildHistoryIdTips') }}</p>
+                    <span v-if="canManualStartup">
                         <bk-button @click="buildNow" theme="primary" size="large">
                             {{$t('buildNow')}}
                         </bk-button>
@@ -453,6 +454,7 @@
         },
         computed: {
             ...mapGetters({
+                curPipeline: 'pipelines/getCurPipeline',
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
             projectId () {
@@ -463,6 +465,9 @@
             },
             isQuerying () {
                 return this.historyPageStatus?.isQuerying ?? false
+            },
+            canManualStartup () {
+                return this.curPipeline?.canManualStartup ?? true
             },
             versionToolTipsConf () {
                 return {

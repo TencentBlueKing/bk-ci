@@ -1,5 +1,5 @@
 <template>
-    <div class="pipeline-config-wrapper" v-bk-loading="{ isLoading }">
+    <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <header class="pipeline-config-header">
             <mode-switch v-model="pipelineMode" />
             <span
@@ -10,7 +10,16 @@
             </span>
         </header>
         <section v-if="pipeline" class="pipeline-model-content">
-            <Ace v-if="pipelineMode === 'codeMode'" height="100%" width="100%" />
+            <Ace
+                v-if="isCodeMode"
+                ref="editor"
+                lang="yaml"
+                height="100%"
+                width="100%"
+                :value="yaml"
+                :highlight-ranges="yamlHighlightBlock"
+                read-only
+            />
             <component
                 v-else-if="dynamicComponentConf"
                 v-bind="dynamicComponentConf.props"
@@ -47,7 +56,10 @@
         data () {
             return {
                 isLoading: false,
-                pipelineMode: 'uiMode'
+                yaml: '',
+                yamlHighlightBlockMap: {},
+                yamlHighlightBlock: [],
+                pipelineMode: 'codeMode' // 'uiMode'
             }
         },
         computed: {
@@ -57,25 +69,27 @@
             pipelineType () {
                 return this.$route.params.type
             },
+            isCodeMode () {
+                return this.pipelineMode === 'codeMode'
+            },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
-                    case 'pipelineModel':
+                    case 'pipeline':
                         return {
                             is: PipelineModel,
                             props: {
                                 pipeline: this.pipeline
                             }
-
                         }
-                    case 'triggerConf':
+                    case 'trigger':
                         return {
                             is: TriggerConfig
                         }
-                    case 'notification':
+                    case 'notice':
                         return {
                             is: NotificationConfig
                         }
-                    case 'baseInfo':
+                    case 'setting':
                         return {
                             is: BaseConfig
 
@@ -85,18 +99,31 @@
                 }
             }
         },
+        watch: {
+            pipelineType (type) {
+                this.yamlHighlightBlock = this.yamlHighlightBlockMap[type]
+            }
+        },
         created () {
             this.init()
         },
         methods: {
             ...mapActions('atom', [
+                'getPipelineYaml',
                 'requestPipeline'
             ]),
             async init () {
                 try {
                     this.isLoading = true
-                    const res = await this.requestPipeline(this.$route.params)
-                    console.log(123, res)
+                    const [, { yaml, ...yamlHighlightBlockMap }] = await Promise.all([
+                        this.requestPipeline(this.$route.params),
+                        this.getPipelineYaml(this.$route.params)
+                    ])
+                    this.yaml = yaml
+                    this.yamlHighlightBlockMap = yamlHighlightBlockMap
+                    if (this.isCodeMode) {
+                        this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
+                    }
                 } catch (error) {
 
                 } finally {

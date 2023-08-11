@@ -105,6 +105,7 @@
             }
         }
         .pipeline-exec-sub-artifact-list {
+
             .pipeline-exec-sub-sub-artifact-list {
                 display: grid;
                 grid-auto-flow: column;

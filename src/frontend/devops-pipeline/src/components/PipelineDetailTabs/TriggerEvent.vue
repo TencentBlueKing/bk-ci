@@ -1,59 +1,70 @@
 <template>
-    <div class="trigger-event-wrapper" v-bk-loading="{ isLoading }">
+    <infiniteScroll
+        ref="infiniteScroll"
+        class="trigger-event-wrapper"
+        :data-fetcher="fetchTriggerEventList"
+        :page-size="pageSize"
+        scroll-box-class-name="trigger-event-timeline"
+        v-slot="{
+            queryList,
+            list
+        }"
+    >
         <header class="trigger-event-filter-bar">
-            <time-picker
-                style="width: 320px"
-                name="dateTimeRange"
-                id="dateTimeRange"
-                :value="dateTimeRange"
-                :date-picker-conf="datePickerConf"
-                :handle-change="handleDateRangeChange"
+            <bk-date-picker
+                v-model="dateTimeRange"
+                :placeholder="$t('选择日期时间范围')"
+                type="datetimerange"
+                @change="handleFilterChange(queryList)"
             />
             <search-select
                 :placeholder="$t('triggerEventfilterTips')"
                 :data="filterData"
-                :values="searchKey"
-                @change="updateSearchKey"
+                v-model="searchKey"
+                @change="handleFilterChange(queryList)"
             >
             </search-select>
         </header>
-        <bk-timeline
-            ext-cls="trigger-event-timeline"
-            :list="timelineList"
-        >
-        </bk-timeline>
-    </div>
+        <div class="trigger-event-timeline">
+            <bk-exception v-if="isSearching && list.length === 0" type="search-empty" scene="part" />
+            <bk-exception v-else-if="list.length === 0" type="empty" scene="part" />
+            <bk-timeline
+                v-if="list.length > 0"
+                :list="getTimelineList(list)"
+            />
+        </div>
+
+    </infiniteScroll>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
     import TriggerEventChildren from './TriggerEventChildren.vue'
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
+    import infiniteScroll from '@/components/infiniteScroll'
     import SearchSelect from '@blueking/search-select'
+    import moment from 'moment'
 
     import '@blueking/search-select/dist/styles/index.css'
     export default {
         components: {
             // eslint-disable-next-line vue/no-unused-components
             TriggerEventChildren,
-            TimePicker,
-            SearchSelect
+            SearchSelect,
+            infiniteScroll
         },
         data () {
             return {
                 dateTimeRange: [],
                 searchKey: [],
+                triggerEventList: [],
                 triggerTypeList: [],
-                eventTypeList: []
+                eventTypeList: [],
+                page: 1,
+                pageSize: 26,
+                isLoading: false
             }
         },
         computed: {
-            datePickerConf () {
-                return {
-                    format: 'yyyy-MM-dd HH:mm:ss',
-                    type: 'datetimerange'
-                }
-            },
             filterData () {
                 return [
                     {
@@ -74,15 +85,13 @@
                     }
                 ]
             },
-            timelineList () {
-                return [{
-                    tag: '2022-10-10',
-                    content: this.$createElement(TriggerEventChildren)
-                }, {
-                    tag: '2022-10-10',
-                    content: this.$createElement(TriggerEventChildren)
-                }]
+            isSearching () {
+                console.log(this.searchKey, this.dateTimeRange)
+                return this.searchKey?.length > 0 || this.dateTimeRange.some(item => !!item)
             }
+        },
+        created () {
+            this.init()
         },
         methods: {
             ...mapActions('pipelines', [
@@ -92,31 +101,82 @@
             ]),
             async init () {
                 try {
-                    this.isLoading = true
                     const [
-                        triggerEventList,
                         triggerTypeList,
                         eventTypeList
                     ] = await Promise.all([
-                        this.getTriggerEventList(),
                         this.getTriggerTypeList(),
                         this.getEventTypeList()
                     ])
-                    console.log(triggerEventList, triggerTypeList, eventTypeList)
-                    this.triggerEventList = triggerEventList
-                    this.triggerTypeList = triggerTypeList
-                    this.eventTypeList = eventTypeList
+
+                    this.triggerTypeList = triggerTypeList.map(item => ({
+                        id: item.id,
+                        name: item.value
+                    }))
+                    this.eventTypeList = eventTypeList.map(item => ({
+                        id: item.id,
+                        name: item.value
+                    }))
+                } catch (error) {
+                    console.error(error)
+                }
+            },
+            async fetchTriggerEventList (page, pageSize) {
+                try {
+                    this.isLoading = true
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        ...this.getSearchQuery(),
+                        page,
+                        pageSize
+                    }
+                    const res = await this.getTriggerEventList(params)
+                    return res
                 } catch (error) {
                     console.error(error)
                 } finally {
                     this.isLoading = false
                 }
             },
-            handleDateRangeChange (name, value) {
-                this.dateTimeRange = value
+            getTimelineList (originList) {
+                const dateMap = originList.reduce((acc, item) => {
+                    const date = moment(item.eventTime).format('YYYY-MM-DD')
+                    console.log(date)
+                    if (!acc.has(date)) {
+                        acc.set(date, [])
+                    }
+                    acc.get(date).push(item)
+                    return acc
+                }, new Map())
+                const list = []
+                dateMap.forEach((events, date) => {
+                    list.push({
+                        tag: date,
+                        content: this.$createElement(TriggerEventChildren, {
+                            props: {
+                                events
+                            }
+                        })
+                    })
+                })
+                console.log(originList, list)
+                return list
             },
-            updateSearchKey (searchKey) {
-                this.searchKey = searchKey
+            handleFilterChange (queryList) {
+                console.log('change')
+                this.$nextTick(() => {
+                    queryList(1)
+                })
+            },
+            getSearchQuery () {
+                return this.searchKey.reduce((acc, item) => {
+                    acc[item.id] = item.values.map(value => value.id).join(',')
+                    return acc
+                }, {
+                    startTime: this.dateTimeRange[0] ? +(new Date(this.dateTimeRange[0])) : undefined,
+                    endTime: this.dateTimeRange[1] ? +(new Date(this.dateTimeRange[1])) : undefined
+                })
             }
 
         }
@@ -134,15 +194,25 @@
         .trigger-event-filter-bar {
             display: grid;
             grid-gap: 10px;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 342px 1fr;
             margin-bottom: 16px;
             flex-shrink: 0;
+            ::placeholder {
+                color: #979BA5;
+            }
         }
         .trigger-event-timeline {
+            display: flex;
             flex: 1;
-            overflow: visible;
-            .bk-timeline-dot .bk-timeline-content {
-                max-width: none; // TODO: hack
+            overflow: scroll;
+            align-items: center;
+            padding: 0 12px;
+            align-items: center;
+            .bk-timeline {
+                align-self: flex-start;
+                .bk-timeline-dot .bk-timeline-content {
+                    max-width: none; // TODO: hack
+                }
             }
         }
     }

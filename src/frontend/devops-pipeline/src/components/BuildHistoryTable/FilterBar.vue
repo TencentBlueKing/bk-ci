@@ -1,13 +1,10 @@
 <template>
     <div class="build-history-filter-bar">
-        <time-picker
-            style="width: 320px"
-            name="dateTimeRange"
-            id="dateTimeRange"
+        <bk-date-picker
             :value="historyPageStatus.dateTimeRange"
-            :date-picker-conf="datePickerConf"
-            :handle-change="handleDateRangeChange"
             :placeholder="$t('startTimeRangePlaceholder')"
+            type="datetimerange"
+            @change="(...args) => handleDateRangeChange('dateTimeRange', ...args)"
         />
         <search-select
             class="pipeline-history-search-select"
@@ -21,7 +18,6 @@
 </template>
 
 <script>
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import SearchSelect from '@blueking/search-select'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { coverStrTimer } from '@/utils/util'
@@ -33,8 +29,7 @@
     export default {
         name: 'filter-bar',
         components: {
-            SearchSelect,
-            TimePicker
+            SearchSelect
         },
         props: {
             resetQueryCondition: Function

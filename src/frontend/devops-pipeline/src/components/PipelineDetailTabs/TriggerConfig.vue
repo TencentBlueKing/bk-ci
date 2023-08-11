@@ -1,6 +1,6 @@
 <template>
     <bk-table
-        v-bk-loading="{ isLoading }"
+        v-bkloading="{ isLoading }"
         :data="triggerList"
     >
         <bk-table-column prop="triggerName" :label="$t('triggerName')">
