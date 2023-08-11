@@ -266,10 +266,15 @@ class DcContainerPrepareHandler @Autowired constructor(
                 return true
             }
 
-            // 构件序号被占用，接着在构建池内寻找
+            // 持久化容器，复用busy状态的构建
             if (containerInfo.status == ContainerStatus.BUSY.status && persistence) {
                 handlerContext.containerName = containerInfo.containerName
                 handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
+                return true
+            }
+
+            // 构件序号被占用，接着在构建池内寻找
+            if (containerInfo.status == ContainerStatus.BUSY.status) {
                 return false
             }
 
