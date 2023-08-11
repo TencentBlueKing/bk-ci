@@ -558,10 +558,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Result<List<AtomStatusInfo>> {
         val atomStatusInfos = mutableListOf<AtomStatusInfo>()
         codeVersions.forEach {
-            logger.info("codeVersion $it")
             val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, it.atomCode)
             val atomStatusInfoJson = redisOperation.hget(atomStatusInfoKey, it.version)
-            logger.info("atomStatusInfoKey: $atomStatusInfoKey atomStatusInfoJson: $atomStatusInfoJson")
             if (!atomStatusInfoJson.isNullOrBlank()) {
                 val atomStatusInfo = JsonUtil.to(atomStatusInfoJson, AtomStatusInfo::class.java)
                 atomStatusInfos.add(atomStatusInfo)
@@ -571,7 +569,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     atomCode = it.atomCode,
                     version = it.version
                 )
-                logger.info("atomStatusInfo: $atomStatusInfo")
                 atomStatusInfos.add(atomStatusInfo)
                 // 将db中的环境信息写入缓存
                 redisOperation.hset(atomStatusInfoKey, it.version, JsonUtil.toJson(atomStatusInfo))
