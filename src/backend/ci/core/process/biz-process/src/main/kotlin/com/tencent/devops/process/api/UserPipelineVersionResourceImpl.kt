@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -67,16 +68,15 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         useTemplateSettings: Boolean?,
-        pipeline: Model,
-        yaml: String?
+        pipeline: PipelineModelAndYaml
     ): Result<PipelineId> {
         checkParam(userId, projectId)
-        // 如果穿了yaml
+        // TODO #8161 如果传了YAML则以YAML为准
         val pipelineId = PipelineId(
             id = pipelineInfoFacadeService.createPipeline(
                 userId = userId,
                 projectId = projectId,
-                model = pipeline,
+                model = pipeline.model,
                 channelCode = ChannelCode.BS,
                 useTemplateSettings = useTemplateSettings
             )
@@ -85,7 +85,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = pipelineId.id,
-                resourceName = pipeline.name,
+                resourceName = pipeline.model.name,
                 userId = userId,
                 action = "create",
                 actionContent = "Create",
