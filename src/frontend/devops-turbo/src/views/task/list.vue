@@ -156,7 +156,7 @@
             },
 
             copy (value) {
-                copyText(value, this.$t.bind(this))
+                copyText(value, this)
             },
 
             modifyTurboPlanTopStatus (row) {
