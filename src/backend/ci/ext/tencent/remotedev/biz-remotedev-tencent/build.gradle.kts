@@ -37,5 +37,6 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
     api(project(":core:notify:api-notify"))
+    api(project(":core:auth:api-auth"))
     testImplementation(project(":core:common:common-test"))
 }
