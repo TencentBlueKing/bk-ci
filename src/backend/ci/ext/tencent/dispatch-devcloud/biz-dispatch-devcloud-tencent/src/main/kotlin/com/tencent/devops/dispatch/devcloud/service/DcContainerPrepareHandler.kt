@@ -267,7 +267,9 @@ class DcContainerPrepareHandler @Autowired constructor(
             }
 
             // 构件序号被占用，接着在构建池内寻找
-            if (containerInfo.status == ContainerStatus.BUSY.status) {
+            if (containerInfo.status == ContainerStatus.BUSY.status && persistence) {
+                handlerContext.containerName = containerInfo.containerName
+                handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
                 return false
             }
 
