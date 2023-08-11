@@ -81,7 +81,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         when (itsmCallBackInfo.currentStatus) {
             REVOKE_ITSM_APPLICATION_ACTION -> revokeCreateProject(
                 projectCode = callBackInfo.englishName,
-                lastApprover = itsmCallBackInfo.lastApprover
+                lastApprover = callBackInfo.applicant
             )
             else -> {
                 denyOrApproveCreateProject(
@@ -106,7 +106,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         when (itsmCallBackInfo.currentStatus) {
             REVOKE_ITSM_APPLICATION_ACTION -> revokeUpdateProject(
                 projectCode = callBackInfo.englishName,
-                lastApprover = itsmCallBackInfo.lastApprover
+                lastApprover = callBackInfo.applicant
             )
             else -> {
                 denyOrApproveUpdateProject(
