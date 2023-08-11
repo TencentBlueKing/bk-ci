@@ -28,13 +28,13 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +75,7 @@ class PipelineOperationLogService @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): PipelineViewPipelinePage<PipelineOperationDetail> {
+    ): Page<PipelineOperationDetail> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         var slqLimit: SQLLimit? = null
@@ -122,11 +122,41 @@ class PipelineOperationLogService @Autowired constructor(
                 )
             }
         }
-        return PipelineViewPipelinePage(
+        return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = opCount.toLong(),
             records = detailList
+        )
+    }
+
+    fun getOperatorInPage(
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<String> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: -1
+        var slqLimit: SQLLimit? = null
+        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+
+        val offset = slqLimit?.offset ?: 0
+        val limit = slqLimit?.limit ?: -1
+        val size = pipelineOperationLogDao.countOperator(dslContext, projectId, pipelineId)
+        val operators = pipelineOperationLogDao.getOperatorInPage(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        )
+
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = size.toLong(),
+            records = operators
         )
     }
 }

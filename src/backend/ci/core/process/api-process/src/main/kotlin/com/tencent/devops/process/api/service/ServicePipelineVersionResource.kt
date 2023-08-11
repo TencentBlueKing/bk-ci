@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
-import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -103,7 +102,7 @@ interface ServicePipelineVersionResource {
         channelCode: ChannelCode
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线编创建人列表（分页）")
+    @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/creatorList")
     fun creatorList(
@@ -157,7 +156,7 @@ interface ServicePipelineVersionResource {
         channelCode: ChannelCode
     ): Result<PipelineViewPipelinePage<PipelineResVersion>>
 
-    @ApiOperation("获取流水线操作日志列表")
+    @ApiOperation("获取流水线操作日志列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/operationLog")
     fun getPipelineOperationLogs(

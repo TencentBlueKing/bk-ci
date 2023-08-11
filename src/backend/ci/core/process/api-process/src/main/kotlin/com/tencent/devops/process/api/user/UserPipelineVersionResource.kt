@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -114,7 +113,7 @@ interface UserPipelineVersionResource {
         setting: PipelineSetting
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线编创建人列表（分页）")
+    @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/creatorList")
     fun creatorList(
@@ -160,9 +159,9 @@ interface UserPipelineVersionResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineResVersion>>
+    ): Result<Page<PipelineResVersion>>
 
-    @ApiOperation("获取流水线操作日志列表")
+    @ApiOperation("获取流水线操作日志列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/operationLog")
     fun getPipelineOperationLogs(
@@ -181,5 +180,26 @@ interface UserPipelineVersionResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineOperationDetail>>
+    ): Result<Page<PipelineOperationDetail>>
+
+    @ApiOperation("获取流水线操作人列表（分页）")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/operatorList")
+    fun operatorList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<String>>
 }

@@ -132,6 +132,35 @@ class PipelineOperationLogDao {
         }
     }
 
+    fun countOperator(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            val query = dslContext.selectDistinct(OPERATOR)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            return query.fetchCount()
+        }
+    }
+
+    fun getOperatorInPage(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int
+    ): List<String> {
+        with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            return dslContext.selectDistinct(OPERATOR)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .limit(limit).offset(offset)
+                .fetch().map { it.component1() }
+        }
+    }
+
     class PipelineOperationLogJooqMapper : RecordMapper<TPipelineOperationLogRecord, PipelineOperationLog> {
         override fun map(record: TPipelineOperationLogRecord?): PipelineOperationLog? {
             return record?.run {

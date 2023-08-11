@@ -47,7 +47,6 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -204,7 +203,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         description: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineResVersion>> {
+    ): Result<Page<PipelineResVersion>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -241,7 +240,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineOperationDetail>> {
+    ): Result<Page<PipelineOperationDetail>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -269,6 +268,40 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun operatorList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<String>> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val result = pipelineOperationLogService.getOperatorInPage(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(result)
     }
 
     private fun checkParam(userId: String, projectId: String) {
