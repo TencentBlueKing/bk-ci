@@ -138,7 +138,7 @@ class PipelineGroupService @Autowired constructor(
 
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {
         val count = pipelineGroupDao.countByName(dslContext, pipelineGroup.projectId, pipelineGroup.name)
-        if (count >= 1 ) {
+        if (count >= 1) {
             logger.warn("Fail to create the group $pipelineGroup by userId $userId")
             throw ErrorCodeException(
                 errorCode = GROUP_IS_EXIST,
@@ -165,7 +165,7 @@ class PipelineGroupService @Autowired constructor(
 
     fun updateGroup(userId: String, pipelineGroup: PipelineGroupUpdate): Boolean {
         val count = pipelineGroupDao.countByName(dslContext, pipelineGroup.projectId, pipelineGroup.name)
-        if (count >= 1 ) {
+        if (count >= 1) {
             logger.warn("Fail to create the group $pipelineGroup by userId $userId")
             throw ErrorCodeException(
                 errorCode = GROUP_IS_EXIST,
