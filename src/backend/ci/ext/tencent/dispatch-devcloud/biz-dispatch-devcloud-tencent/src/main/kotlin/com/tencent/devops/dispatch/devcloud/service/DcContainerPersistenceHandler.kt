@@ -114,6 +114,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     containerName = containerName!!,
                     agentId = agentId,
                     secretKey = secretKey,
+                    executeCount = executeCount ?: 1,
                     status = PersistenceBuildStatus.QUEUE.status
                 )
             } catch (e: DeadlockLoserDataAccessException) {
