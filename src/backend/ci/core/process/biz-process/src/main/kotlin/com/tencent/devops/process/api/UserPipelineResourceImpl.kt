@@ -713,7 +713,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineResVersion>> {
+    ): Result<Page<PipelineResVersion>> {
         checkParam(userId, projectId)
         return Result(
             pipelineVersionFacadeService.listPipelineVersion(

@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -154,7 +153,7 @@ interface ServicePipelineVersionResource {
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
-    ): Result<PipelineViewPipelinePage<PipelineResVersion>>
+    ): Result<Page<PipelineResVersion>>
 
     @ApiOperation("获取流水线操作日志列表（分页）")
     @GET
@@ -178,5 +177,5 @@ interface ServicePipelineVersionResource {
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
-    ): Result<PipelineViewPipelinePage<PipelineOperationDetail>>
+    ): Result<Page<PipelineOperationDetail>>
 }
