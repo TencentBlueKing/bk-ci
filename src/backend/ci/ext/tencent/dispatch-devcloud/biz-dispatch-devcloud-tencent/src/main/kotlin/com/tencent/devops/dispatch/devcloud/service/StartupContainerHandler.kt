@@ -108,8 +108,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                 handlerContext.persistenceAgentId = persistenceAgentId
                 envs.putAll(
                     mapOf(
-                        DEVOPS_AGENTSLIM_ISDEBUG to "false",
-                        DEVOPS_AGENTSLIM_LOGPATH to "/data/logs",
+                        DEVOPS_AGENTSLIM_ISDEBUG to "true",
+                        DEVOPS_AGENTSLIM_LOGPATH to "/data/logs/agent",
                         DEVOPS_AGENTSLIM_WORKER_USER to "root",
                         DEVOPS_AGENTSLIM_LANUAGE to commonConfig.devopsDefaultLocaleLanguage,
                         DEVOPS_AGENTSLIM_MAX_WORKER_COUNT to "1",

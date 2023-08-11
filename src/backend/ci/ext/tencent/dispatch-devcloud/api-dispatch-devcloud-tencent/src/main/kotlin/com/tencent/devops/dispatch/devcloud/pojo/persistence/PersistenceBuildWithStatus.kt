@@ -27,10 +27,12 @@
 
 package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.Error
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("DevCloud持久化容器构建信息模型")
 data class PersistenceBuildWithStatus(
     @ApiModelProperty("项目id")
