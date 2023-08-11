@@ -41,6 +41,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GROUP_COUNT_EXCEEDS_LIMIT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_COUNT_EXCEEDS_LIMIT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_NAME_TOO_LONG
+import com.tencent.devops.process.constant.ProcessMessageCode.GROUP_IS_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.GROUP_LABEL_IS_EXIST
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -55,16 +57,15 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.sql.SQLIntegrityConstraintViolationException
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DataAccessException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.sql.SQLIntegrityConstraintViolationException
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -234,9 +235,12 @@ class PipelineGroupService @Autowired constructor(
                 userId = userId,
                 id = id
             )
-        } catch (t: DuplicateKeyException) {
+        } catch (t: Throwable) {
             logger.warn("Fail to add the label $pipelineLabel by userId $userId")
-            throw OperationException("The label is already exist")
+            throw ErrorCodeException(
+                errorCode = GROUP_LABEL_IS_EXIST,
+                params = arrayOf("${pipelineLabel.groupId}-${pipelineLabel.name}")
+            )
         }
 
         return true
@@ -304,9 +308,12 @@ class PipelineGroupService @Autowired constructor(
                 logger.info("LableChangeMetricsBroadCastEvent： updateLabel $projectId|${decode(pipelineLabel.id)}")
             }
             return result
-        } catch (t: DuplicateKeyException) {
+        } catch (t: Throwable) {
             logger.warn("Fail to update the label $pipelineLabel by userId $userId")
-            throw OperationException("The label is already exist")
+            throw ErrorCodeException(
+                errorCode = GROUP_LABEL_IS_EXIST,
+                params = arrayOf("${pipelineLabel.groupId}-${pipelineLabel.name}")
+            )
         }
     }
 
