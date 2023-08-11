@@ -50,6 +50,8 @@ class PersistenceBuildService @Autowired constructor(
                     status = PersistenceBuildStatus.RUNNING.status
                 )
 
+                logger.info("Container $persistenceAgentId start build $buildRecord")
+
                 return PersistenceBuildInfo(
                     projectId = buildRecord.projectId,
                     pipelineId = buildRecord.pipelineId,
