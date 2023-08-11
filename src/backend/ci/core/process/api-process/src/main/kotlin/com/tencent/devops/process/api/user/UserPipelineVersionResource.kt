@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -71,10 +72,8 @@ interface UserPipelineVersionResource {
         @ApiParam("是否使用模板配置", required = false)
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean? = false,
-        @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model,
-        @ApiParam(value = "流水线模型", required = false)
-        yaml: String?
+        @ApiParam(value = "流水线PAC模型", required = true)
+        pipeline: PipelineModelAndYaml
     ): Result<PipelineId>
 
     @ApiOperation("保存流水线编排草稿")
