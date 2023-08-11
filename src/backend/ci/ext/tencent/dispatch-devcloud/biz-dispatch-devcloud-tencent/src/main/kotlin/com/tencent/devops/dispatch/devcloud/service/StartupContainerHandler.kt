@@ -104,8 +104,6 @@ abstract class StartupContainerHandler @Autowired constructor(
             )
 
             if (persistence) {
-                val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
-                handlerContext.persistenceAgentId = persistenceAgentId
                 envs.putAll(
                     mapOf(
                         DEVOPS_AGENTSLIM_ISDEBUG to "true",

@@ -28,16 +28,19 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
+import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.PersistenceContainerLock
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,6 +72,9 @@ class DcContainerPersistenceHandler @Autowired constructor(
 
             // 新建容器
             if (containerChanged) {
+                val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
+                handlerContext.persistenceAgentId = persistenceAgentId
+
                 // 存储持久化容器信息
                 dcPersistenceContainerDao.createOrUpdate(
                     dslContext = dslContext,
@@ -81,8 +87,22 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 )
             }
 
+            // 获取最近的一次持久化容器记录
+            val containerRecord = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
+            if (containerRecord == null) {
+                logger.error("$buildLogKey no persistence container build history.")
+                throw BuildFailureException(
+                    ErrorCodeEnum.START_VM_ERROR.errorType,
+                    ErrorCodeEnum.START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                    "No persistence container build history."
+                )
+            }
+
+            handlerContext.persistenceAgentId = containerRecord!!.containerName
+
             // 根据persistenceAgentId加分布式锁
-            val lock = PersistenceContainerLock(redisOperation, persistenceAgentId!!)
+            val lock = PersistenceContainerLock(redisOperation, persistenceAgentId)
             try {
                 if (lock.tryLock()) {
                     queueBuild(this)

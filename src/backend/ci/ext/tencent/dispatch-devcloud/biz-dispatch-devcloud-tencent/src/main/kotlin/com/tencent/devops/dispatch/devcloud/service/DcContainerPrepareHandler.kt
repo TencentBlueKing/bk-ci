@@ -63,6 +63,7 @@ class DcContainerPrepareHandler @Autowired constructor(
     private val dispatchDevCloudClient: DispatchDevCloudClient,
     private val dcContainerCreateHandler: DcContainerCreateHandler,
     private val dcContainerStartHandler: DcContainerStartHandler,
+    private val dcContainerPersistenceHandler: DcContainerPersistenceHandler,
     commonConfig: CommonConfig,
     buildLogPrinter: BuildLogPrinter
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
@@ -120,6 +121,9 @@ class DcContainerPrepareHandler @Autowired constructor(
 
                 // 记录构建历史
                 recordBuildHisAndGatewayCheck(this)
+
+                // 持久化容器构建任务入队
+                dcContainerPersistenceHandler.handlerRequest(this)
 
                 // 用户第一次构建，或者用户更换了镜像，或者容器配置有变更，则重新创建容器。否则启动已有空闲容器
                 if (containerChanged) {

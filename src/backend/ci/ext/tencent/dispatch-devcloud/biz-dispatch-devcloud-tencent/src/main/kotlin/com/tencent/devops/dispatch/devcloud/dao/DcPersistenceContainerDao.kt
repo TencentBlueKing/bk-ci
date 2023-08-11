@@ -72,6 +72,7 @@ class DcPersistenceContainerDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
+                .orderBy(CREATE_TIME.desc())
                 .fetchAny()
         }
     }

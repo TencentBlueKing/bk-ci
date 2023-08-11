@@ -29,7 +29,8 @@ class DevCloudBuildDao {
         userId: String,
         cpu: Int,
         memory: String,
-        disk: String
+        disk: String,
+        persistenceAgentId: String = ""
     ): Int {
         return with(TDevcloudBuild.T_DEVCLOUD_BUILD) {
             dslContext.insertInto(
@@ -39,6 +40,7 @@ class DevCloudBuildDao {
                 POOL_NO,
                 PROJECT_ID,
                 CONTAINER_NAME,
+                PERSISTENCE_AGENT_ID,
                 IMAGES,
                 STATUS,
                 CREATED_TIME,
@@ -53,6 +55,7 @@ class DevCloudBuildDao {
                 poolNo,
                 projectId,
                 containerName,
+                persistenceAgentId,
                 image,
                 status,
                 LocalDateTime.now(),
@@ -67,6 +70,7 @@ class DevCloudBuildDao {
                 .set(POOL_NO, poolNo)
                 .set(PROJECT_ID, projectId)
                 .set(CONTAINER_NAME, containerName)
+                .set(PERSISTENCE_AGENT_ID, persistenceAgentId)
                 .set(IMAGES, image)
                 .set(STATUS, status)
                 .set(CPU, cpu)

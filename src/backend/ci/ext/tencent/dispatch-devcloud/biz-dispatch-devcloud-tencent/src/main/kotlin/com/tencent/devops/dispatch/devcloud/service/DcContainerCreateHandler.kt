@@ -59,7 +59,6 @@ class DcContainerCreateHandler @Autowired constructor(
     private val devCloudBuildHisDao: DevCloudBuildHisDao,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val dispatchDevCloudClient: DispatchDevCloudClient,
-    private val dcContainerPersistenceHandler: DcContainerPersistenceHandler,
     commonConfig: CommonConfig,
     buildLogPrinter: BuildLogPrinter
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
@@ -118,9 +117,6 @@ class DcContainerCreateHandler @Autowired constructor(
                 handlerContext = this
             )
 
-            // 持久化容器构建任务入队
-            dcContainerPersistenceHandler.handlerRequest(this)
-
             val createResult = dispatchDevCloudClient.waitTaskFinish(
                 userId,
                 projectId,
@@ -145,6 +141,7 @@ class DcContainerCreateHandler @Autowired constructor(
                     poolNo = poolNo,
                     projectId = projectId,
                     containerName = containerName ?: "",
+                    persistenceAgentId = persistenceAgentId,
                     image = this.dispatchMessage,
                     status = ContainerStatus.BUSY.status,
                     userId = userId,

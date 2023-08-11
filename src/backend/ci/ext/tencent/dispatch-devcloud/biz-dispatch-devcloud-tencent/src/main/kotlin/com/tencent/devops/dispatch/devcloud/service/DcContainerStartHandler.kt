@@ -57,8 +57,7 @@ class DcContainerStartHandler @Autowired constructor(
     private val devCloudBuildDao: DevCloudBuildDao,
     private val devCloudBuildHisDao: DevCloudBuildHisDao,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
-    private val dispatchDevCloudClient: DispatchDevCloudClient,
-    private val dcContainerPersistenceHandler: DcContainerPersistenceHandler
+    private val dispatchDevCloudClient: DispatchDevCloudClient
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
 
     companion object {
@@ -67,12 +66,9 @@ class DcContainerStartHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
         with(handlerContext) {
-            if (persistence) {
-                // 持久化容器构建任务入队
-                dcContainerPersistenceHandler.handlerRequest(this)
+            if (!persistence) {
                 return
             }
-
 
             // 检查containerName
             checkContainerName(containerName)
