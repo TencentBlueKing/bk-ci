@@ -43,7 +43,6 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -211,8 +210,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
         channelCode: ChannelCode
-    ): Result<List<PipelineOperationDetail>> {
+    ): Result<PipelineViewPipelinePage<PipelineOperationDetail>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -232,7 +233,13 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineOperationLogService.getOperationLogs(userId, projectId, pipelineId)
+            pipelineOperationLogService.getOperationLogsInPage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
         )
     }
 
