@@ -20,9 +20,6 @@
 import routes from './router'
 import store from './store'
 import './assets/scss/index.scss'
-import bkMagic from 'bk-magic-vue'
-const Vue = window.Vue
-Vue.use(bkMagic)
 window.changeFlag = false
 window.Pages = window.Pages || {}
 window.Pages.turbo = {
