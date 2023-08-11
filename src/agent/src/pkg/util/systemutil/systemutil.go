@@ -161,7 +161,7 @@ func GetAgentIp(ignoreIps []string) string {
 	ip, err := getLocalIp()
 	if err == nil {
 		defaultIp = ip
-		logs.Info("get local ip %s", defaultIp)
+		logs.Infof("get local ip %s", defaultIp)
 	} else {
 		logs.Warn("failed to get ip by udp", err)
 	}
@@ -172,12 +172,12 @@ func GetAgentIp(ignoreIps []string) string {
 	}
 	for _, nc := range ncs {
 		if nc.HardwareAddr == nil { // #3626 二次确认，需要排除虚拟网卡情况
-			logs.Info("%s have no MAC, skip!", nc.Name)
+			logs.Infof("%s have no MAC, skip!", nc.Name)
 			continue
 		}
 		addresses, err := nc.Addrs()
 		if err != nil {
-			logs.Warn("can not get addr for [%s]: %s", nc.Name, err.Error())
+			logs.Warnf("can not get addr for [%s]: %s", nc.Name, err.Error())
 			continue
 		}
 
@@ -191,15 +191,15 @@ func GetAgentIp(ignoreIps []string) string {
 				continue
 			}
 
-			logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
+			logs.Infof("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
 			if util.Contains(ignoreIps, ipNet.IP.String()) {
-				logs.Info("skipIp=%s", ipNet.IP)
+				logs.Infof("skipIp=%s", ipNet.IP)
 				continue
 			}
 			if ip == ipNet.IP.String() {
 				return ip // 匹配到该通信IP是真正的网卡IP
 			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
-				logs.Info("localIp=%s|change defaultIp [%s] to [%s]", ip, defaultIp, ipNet.IP.String())
+				logs.Infof("localIp=%s|change defaultIp [%s] to [%s]", ip, defaultIp, ipNet.IP.String())
 				defaultIp = ipNet.IP.String()
 			}
 		}
@@ -217,7 +217,7 @@ var processLock *flock.Flock
 
 // KeepProcessAlive keep process alive
 func KeepProcessAlive() {
-	runtime.KeepAlive(*processLock)
+	runtime.KeepAlive(processLock)
 }
 
 // CheckProcess check process and lock
@@ -228,12 +228,12 @@ func CheckProcess(name string) bool {
 	processLock = flock.New(processLockFile)
 	ok, err := processLock.TryLock()
 	if err != nil {
-		logs.Error("failed to get process lock(%s), exit: %v", processLockFile, err)
+		logs.Errorf("failed to get process lock(%s), exit: %v", processLockFile, err)
 		return false
 	}
 
 	if !ok {
-		logs.Error("failed to get process lock(%s), exit: maybe already running.", processLockFile)
+		logs.Errorf("failed to get process lock(%s), exit: maybe already running.", processLockFile)
 		return false
 	}
 
@@ -247,7 +247,7 @@ func CheckProcess(name string) bool {
 	}()
 
 	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {
-		logs.Error("failed to save pid file(%s): %v", pidFile, err)
+		logs.Errorf("failed to save pid file(%s): %v", pidFile, err)
 		return false
 	}
 

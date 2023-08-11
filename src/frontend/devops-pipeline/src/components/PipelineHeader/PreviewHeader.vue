@@ -22,9 +22,9 @@
 </template>
 
 <script>
+    import { bus } from '@/utils/bus'
     import { mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
-    import { bus } from '@/utils/bus'
     export default {
         components: {
             PipelineBreadCrumb

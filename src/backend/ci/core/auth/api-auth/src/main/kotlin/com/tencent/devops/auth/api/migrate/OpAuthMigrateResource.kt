@@ -100,6 +100,14 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
+    @Path("/grantGroupAdditionalAuthorization")
+    @ApiOperation("授予项目下自定义用户组RBAC新增的权限")
+    fun grantGroupAdditionalAuthorization(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
     @Path("/migrateMonitorResource")
     @ApiOperation("迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目")
     fun migrateMonitorResource(

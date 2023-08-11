@@ -60,6 +60,10 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        return true
+    }
+
     override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
         return true
     }

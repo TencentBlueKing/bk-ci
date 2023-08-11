@@ -38,6 +38,13 @@
                         name="play"
                     />
                 </span>
+                <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
+            </aside>
+
+            <div :class="{
+                'collect-btn-background': true,
+                'is-collect': pipeline.hasCollect
+            }">
                 <bk-button
                     text
                     class="bk-pipeline-card-collect-btn"
@@ -49,8 +56,7 @@
                         'icon-star-shape': pipeline.hasCollect
                     }" />
                 </bk-button>
-                <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
-            </aside>
+            </div>
         </header>
         <section class="bk-pipeline-card-info">
             <i class="bk-pipeline-card-info-status-bar" :style="`background: ${statusColor}`"></i>
@@ -180,6 +186,11 @@
         border: 1px solid #DCDEE5;
         border-radius: 2px;
         padding: 16px 16px 0 16px;
+        &:hover {
+            .collect-btn-background {
+                display: block !important;
+            }
+        }
         .bk-pipeline-card-header {
             display: flex;
             font-size: 12px;
@@ -189,6 +200,7 @@
                 flex-direction: column;
                 flex: 1;
                 overflow: hidden;
+                z-index: 150;
 
                 > h3 {
                     color: $primaryColor;
@@ -226,13 +238,12 @@
             .bk-pipeline-card-header-right-aside {
                 display: flex;
                 align-items: center;
-                .bk-pipeline-card-trigger-btn,
-                .bk-pipeline-card-collect-btn {
+                .bk-pipeline-card-trigger-btn {
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
                     font-size: 16px;
-
+                    color: #979BA5;
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
@@ -243,6 +254,35 @@
                 }
                 .bk-pipeline-card-more-trigger {
                     font-size: 24px;
+                }
+            }
+            .collect-btn-background {
+                display: none;
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 99;
+                border-width: 36px 36px 0 0;
+                border-style: solid;
+                border-color: #f0f1f5 transparent transparent transparent;
+                &.is-collect {
+                    display: block;
+                }
+                .bk-pipeline-card-collect-btn {
+                    position: absolute;
+                    top: -35px;
+                    left: -5px;
+                    display: inline-flex;
+                    cursor: pointer;
+                    margin: 0 8px;
+                    font-size: 14px;
+                    &.disabled {
+                        color: #DCDEE5;
+                        cursor: not-allowed;
+                    }
+                    &.bk-pipeline-card-trigger-btn:not(.disabled):hover {
+                        color: $primaryColor;
+                    }
                 }
             }
         }

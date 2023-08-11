@@ -78,6 +78,10 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         )
     }
 
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
+    }
+
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
