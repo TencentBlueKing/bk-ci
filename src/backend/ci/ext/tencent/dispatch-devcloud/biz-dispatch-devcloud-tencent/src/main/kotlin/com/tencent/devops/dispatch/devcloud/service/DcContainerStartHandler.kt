@@ -66,7 +66,7 @@ class DcContainerStartHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
         with(handlerContext) {
-            if (!persistence) {
+            if (persistence) {
                 return
             }
 
