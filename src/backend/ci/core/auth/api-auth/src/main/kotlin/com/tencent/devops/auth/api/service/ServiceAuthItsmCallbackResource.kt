@@ -19,11 +19,11 @@ import javax.ws.rs.core.MediaType
 interface ServiceAuthItsmCallbackResource {
 
     @GET
-    @Path("/{projectId}")
+    @Path("/{projectCode}")
     @ApiOperation("获取项目审批信息")
     fun get(
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        @PathParam("projectCode")
+        projectCode: String
     ): Result<AuthItsmCallbackInfo?>
 }

@@ -41,10 +41,10 @@ class ServiceAuthItsmCallbackResourceImpl @Autowired constructor(
     private val authItsmCallbackDao: AuthItsmCallbackDao
 ) : ServiceAuthItsmCallbackResource {
 
-    override fun get(projectId: String): Result<AuthItsmCallbackInfo?> {
+    override fun get(projectCode: String): Result<AuthItsmCallbackInfo?> {
         val record = authItsmCallbackDao.getCallbackByEnglishName(
             dslContext = dslContext,
-            projectCode = projectId
+            projectCode = projectCode
         )
         return Result(authItsmCallbackDao.convert(record))
     }

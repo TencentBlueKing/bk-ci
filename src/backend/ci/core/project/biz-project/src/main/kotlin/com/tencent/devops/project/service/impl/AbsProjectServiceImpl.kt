@@ -1049,7 +1049,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            if (hasApplicationFinish(projectId = projectId)) return true
+            if (hasApplicationFinish(projectCode = projectInfo.englishName)) return true
             cancelCreateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.delete(dslContext = dslContext, projectId = projectId)
         } catch (e: Exception) {
@@ -1082,7 +1082,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            if (hasApplicationFinish(projectId = projectId)) return true
+            if (hasApplicationFinish(projectCode = projectInfo.englishName)) return true
             cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
@@ -1102,10 +1102,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    private fun hasApplicationFinish(projectId: String): Boolean {
-        val callbackRecord = client.get(ServiceAuthItsmCallbackResource::class).get(projectId = projectId).data
+    private fun hasApplicationFinish(projectCode: String): Boolean {
+        val callbackRecord = client.get(ServiceAuthItsmCallbackResource::class).get(projectCode = projectCode).data
+        logger.info("hasApplicationFinish|callbackRecord:$callbackRecord")
         if (callbackRecord == null || callbackRecord.approveResult != null || callbackRecord.revokeResult) {
-            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectId")
+            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
             return true
         }
         return false
