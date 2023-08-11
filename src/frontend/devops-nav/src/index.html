@@ -167,7 +167,7 @@
         ';'
     }
 
-    function getSubDoamin() {
+    function getSubDomain() {
       try {
         return location.hostname.split('.').reduce((acc, _, index, list) => {
           var last = list.length - 1
@@ -187,11 +187,11 @@
     window.setProjectIdCookie = function (projectId) {
       try {
         if (projectId) {
-          var subDomains = getSubDoamin()
+          var subDomains = getSubDomain()
           subDomains.forEach(domain => {
             removeCookie(X_DEVOPS_PROJECT_ID, domain)
           })
-          setCookie(X_DEVOPS_PROJECT_ID, projectId, subDomains[0] || location.hostname)
+          setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
           window.GLOBAL_PID = projectId
         }
       } catch (e) {
