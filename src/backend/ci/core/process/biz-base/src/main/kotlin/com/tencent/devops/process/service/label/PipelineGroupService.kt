@@ -153,10 +153,13 @@ class PipelineGroupService @Autowired constructor(
                 userId = userId,
                 id = id
             )
-        } catch (t: DataAccessException) {
+        } catch (t: Throwable) {
             if (t.cause is SQLIntegrityConstraintViolationException) {
                 logger.warn("Fail to create the group $pipelineGroup by userId $userId")
-                throw OperationException("The group is already exist")
+                throw ErrorCodeException(
+                    errorCode = GROUP_IS_EXIST,
+                    params = arrayOf("${pipelineGroup.projectId}-${pipelineGroup.name}")
+                )
             } else throw t
         }
         return true
@@ -171,10 +174,13 @@ class PipelineGroupService @Autowired constructor(
                 name = pipelineGroup.name,
                 userId = userId
             )
-        } catch (t: DataAccessException) {
+        } catch (t: Throwable) {
             if (t.cause is SQLIntegrityConstraintViolationException) {
                 logger.warn("Fail to create the group $pipelineGroup by userId $userId")
-                throw OperationException("The group is already exist")
+                throw ErrorCodeException(
+                    errorCode = GROUP_IS_EXIST,
+                    params = arrayOf("${pipelineGroup.projectId}-${pipelineGroup.name}")
+                )
             } else throw t
         }
     }
