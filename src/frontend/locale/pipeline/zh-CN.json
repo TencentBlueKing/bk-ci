@@ -9,7 +9,6 @@
   "templateManage": "模板管理",
   "pluginManage": "插件管理",
   "operatorAudit": "操作审计",
-  "apply": "申请权限",
   "audit": {
     "operator": "操作人",
     "operateTime": "操作时间",
