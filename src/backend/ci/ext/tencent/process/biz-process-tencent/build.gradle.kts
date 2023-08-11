@@ -44,7 +44,6 @@ dependencies {
     api(project(":ext:tencent:external:api-external"))
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":core:process:biz-process"))
-    api(project(":core:process:plugin-trigger"))
     api(project(":ext:tencent:experience:api-experience-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:support:api-support-tencent"))
