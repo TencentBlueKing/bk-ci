@@ -20,7 +20,6 @@
 import routes from './router'
 import store from './store'
 import './assets/scss/index.scss'
-
 window.changeFlag = false
 window.Pages = window.Pages || {}
 window.Pages.turbo = {

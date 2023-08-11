@@ -94,7 +94,7 @@
                 .tips-route {
                     display: inline-block;
                     font-size: 12px;
-                    width: calc(100% - 90px);
+                    width: calc(100% - 133px);
                     overflow: hidden;
                     text-overflow:ellipsis;
                     white-space: nowrap;
