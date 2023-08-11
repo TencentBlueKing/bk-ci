@@ -181,11 +181,6 @@ class RbacProjectPermissionService(
                     resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
                 )
             }
-            throw ErrorCodeException(
-                errorCode = APPROVAL_PROJECT_CANT_UPDATE,
-                params = arrayOf(englishName),
-                defaultMessage = "Projects($englishName) in approval cannot be modified"
-            )
         } catch (ignore: Exception) {
             logger.warn(
                 "update auth resource failed, " +
