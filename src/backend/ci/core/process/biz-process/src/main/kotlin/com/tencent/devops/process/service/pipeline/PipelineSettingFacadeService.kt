@@ -312,20 +312,10 @@ class PipelineSettingFacadeService @Autowired constructor(
         newPipelineId: String,
         pipelineName: String
     ): PipelineSetting {
-        return PipelineSetting(
+        return oldSetting.copy(
             projectId = projectId,
             pipelineId = newPipelineId,
-            pipelineName = pipelineName,
-            desc = oldSetting.desc,
-            successSubscription = oldSetting.successSubscription,
-            failSubscription = oldSetting.failSubscription,
-            maxPipelineResNum = oldSetting.maxPipelineResNum,
-            maxQueueSize = oldSetting.maxQueueSize,
-            hasPermission = oldSetting.hasPermission,
-            labels = oldSetting.labels,
-            runLockType = oldSetting.runLockType,
-            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute,
-            pipelineAsCodeSettings = oldSetting.pipelineAsCodeSettings
+            pipelineName = pipelineName
         )
     }
 
