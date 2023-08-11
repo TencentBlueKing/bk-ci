@@ -273,10 +273,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun operatorList(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<String>> {
+        pipelineId: String
+    ): Result<List<String>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -297,9 +295,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
         val result = pipelineOperationLogService.getOperatorInPage(
             projectId = projectId,
-            pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize
+            pipelineId = pipelineId
         )
         return Result(result)
     }

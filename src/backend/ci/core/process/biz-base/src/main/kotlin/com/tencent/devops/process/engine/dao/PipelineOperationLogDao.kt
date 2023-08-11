@@ -145,18 +145,15 @@ class PipelineOperationLogDao {
         }
     }
 
-    fun getOperatorInPage(
+    fun getOperatorList(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        offset: Int,
-        limit: Int
+        pipelineId: String
     ): List<String> {
         with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
             return dslContext.selectDistinct(OPERATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .limit(limit).offset(offset)
                 .fetch().map { it.component1() }
         }
     }

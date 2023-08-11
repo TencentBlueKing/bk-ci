@@ -132,31 +132,12 @@ class PipelineOperationLogService @Autowired constructor(
 
     fun getOperatorInPage(
         projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Page<String> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        var slqLimit: SQLLimit? = null
-        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-
-        val offset = slqLimit?.offset ?: 0
-        val limit = slqLimit?.limit ?: -1
-        val size = pipelineOperationLogDao.countOperator(dslContext, projectId, pipelineId)
-        val operators = pipelineOperationLogDao.getOperatorInPage(
+        pipelineId: String
+    ): List<String> {
+        return pipelineOperationLogDao.getOperatorList(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId,
-            offset = offset,
-            limit = limit
-        )
-
-        return Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            count = size.toLong(),
-            records = operators
+            pipelineId = pipelineId
         )
     }
 }
