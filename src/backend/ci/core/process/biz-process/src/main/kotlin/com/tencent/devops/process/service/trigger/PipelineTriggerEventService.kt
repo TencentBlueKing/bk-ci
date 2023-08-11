@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
@@ -55,6 +56,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -70,6 +72,8 @@ class PipelineTriggerEventService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineTriggerEventService::class.java)
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
+        // 构建链接
+        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">{1}</a>"
     }
 
     fun getDetailId(): Long {
@@ -216,12 +220,8 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = try {
-                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                it.eventDesc
-            }
+            it.eventDesc = it.getI18nEventDesc(language)
+            it.buildNum = it.getBuildNumUrl()
             it
         }
         val count = pipelineTriggerEventDao.countTriggerEvent(
@@ -359,5 +359,28 @@ class PipelineTriggerEventService @Autowired constructor(
         PipelineTriggerType.REMOTE.name -> WebhookI18nConstants.REMOTE_START_EVENT_DESC
         PipelineTriggerType.SERVICE.name -> WebhookI18nConstants.SERVICE_START_EVENT_DESC
         else -> ""
+    }
+
+    /**
+     * 获取国际化构建事件描述
+     */
+    private fun PipelineTriggerEventVo.getI18nEventDesc(language: String) = try {
+        JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+    } catch (ignored: Exception) {
+        logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
+        eventDesc
+    }
+
+    /**
+     * 获取构建链接
+     */
+    private fun PipelineTriggerEventVo.getBuildNumUrl(): String? {
+        return if (status == PipelineTriggerStatus.SUCCEED.name) {
+            val linkUrl = "${HomeHostUtil.innerServerHost()}/console" +
+                "/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+            MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
+        } else {
+            null
+        }
     }
 }
