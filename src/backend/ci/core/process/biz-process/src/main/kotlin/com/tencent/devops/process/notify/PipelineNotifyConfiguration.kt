@@ -1,4 +1,4 @@
-package com.tencent.devops.process.permission.config
+package com.tencent.devops.process.notify
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.service.PipelineNotifyService
@@ -7,9 +7,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
 import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
-import com.tencent.devops.process.permission.notify.BluekingNotifyPipelineCmd
-import com.tencent.devops.process.permission.notify.BluekingNotifyReceiversCmdImpl
-import com.tencent.devops.process.permission.notify.BluekingNotifyUrlCmdImpl
+import com.tencent.devops.process.notify.command.impl.BluekingNotifyPipelineCmd
+import com.tencent.devops.process.notify.command.impl.BluekingNotifyReceiversCmdImpl
+import com.tencent.devops.process.notify.command.impl.BluekingNotifyUrlCmdImpl
 import com.tencent.devops.process.permission.service.impl.BluekingPipelineNotifyService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService

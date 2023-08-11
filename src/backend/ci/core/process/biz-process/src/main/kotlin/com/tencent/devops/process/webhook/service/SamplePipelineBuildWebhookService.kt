@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.webhook
+package com.tencent.devops.process.webhook.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -33,10 +33,11 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("pipelineBuildWebhookService")
 class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
 
     @Autowired

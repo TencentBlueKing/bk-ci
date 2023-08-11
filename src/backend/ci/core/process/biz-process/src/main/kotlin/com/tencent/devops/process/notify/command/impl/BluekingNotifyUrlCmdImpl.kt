@@ -1,10 +1,9 @@
-package com.tencent.devops.process.permission.notify
+package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingNotifyUrlCmdImpl @Autowired constructor(

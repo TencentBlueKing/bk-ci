@@ -1,4 +1,4 @@
-package com.tencent.devops.process.permission.notify
+package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -7,7 +7,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.ExecutionVariables
-import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM

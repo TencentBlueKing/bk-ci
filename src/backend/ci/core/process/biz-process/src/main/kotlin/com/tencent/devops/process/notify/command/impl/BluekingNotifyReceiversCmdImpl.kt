@@ -1,8 +1,7 @@
-package com.tencent.devops.process.permission.notify
+package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 
 class BluekingNotifyReceiversCmdImpl : NotifyReceiversCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {

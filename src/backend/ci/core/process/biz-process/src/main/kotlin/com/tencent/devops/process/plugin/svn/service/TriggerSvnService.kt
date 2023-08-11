@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.plugin.svn.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.ScmType
@@ -25,13 +25,12 @@ import org.jooq.DSLContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Service
+@Suppress("TooManyFunctions", "MagicNumber")
 class TriggerSvnService(
     private val client: Client,
     private val pipelineWebhookRevisionDao: PipelineWebhookRevisionDao,

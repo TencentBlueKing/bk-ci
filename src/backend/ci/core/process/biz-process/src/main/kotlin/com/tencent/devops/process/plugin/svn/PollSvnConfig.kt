@@ -25,12 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.plugin.svn
 
-import com.tencent.devops.process.service.TriggerSvnService
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.PipelineWebhookRevisionDao
+import com.tencent.devops.process.engine.dao.PipelineWebhookDao
+import com.tencent.devops.process.plugin.svn.service.TriggerSvnService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.SchedulingConfigurer
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
@@ -38,17 +46,37 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.util.Calendar
 import java.util.Date
 
+@Suppress("LongParameterList")
 @Configuration
+@ConditionalOnProperty(prefix = "scm.svn", name = ["enabled"], havingValue = "true")
 class PollSvnConfig : SchedulingConfigurer {
+
+    @Bean
+    fun triggerSvnService(
+        client: Client,
+        pipelineWebhookRevisionDao: PipelineWebhookRevisionDao,
+        pipelineWebhookDao: PipelineWebhookDao,
+        dslContext: DSLContext,
+        redisOperation: RedisOperation,
+        rabbitTemplate: RabbitTemplate
+    ): TriggerSvnService {
+        return TriggerSvnService(
+            client = client,
+            pipelineWebhookRevisionDao = pipelineWebhookRevisionDao,
+            pipelineWebhookDao = pipelineWebhookDao,
+            dslContext = dslContext,
+            redisOperation = redisOperation,
+            rabbitTemplate = rabbitTemplate
+        )
+    }
 
     @Autowired
     private lateinit var triggerSvnService: TriggerSvnService
-
     /**
      *  轮询间隔时间 单位: 秒
      */
     @Value("\${scm.svn.interval:180}")
-    private var interval: Long = 60
+    private var interval: Long = MIN_POLL_INTERVAL
 
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
         val taskScheduler = ThreadPoolTaskScheduler()
@@ -73,7 +101,7 @@ class PollSvnConfig : SchedulingConfigurer {
                 } else {
                     logger.info("CI_REPOSITORY_POLLING_SVN_INTERVAL < 0, check after 5 minutes")
                     // 如果间隔时间设为负数, 关闭轮询, 就每5分钟检查是不是打开了
-                    nextExecutionTime.add(Calendar.MINUTE, 5)
+                    nextExecutionTime.add(Calendar.MINUTE, INTERVAL_MINUTE_5)
                 }
                 nextExecutionTime.time
             }
@@ -88,6 +116,7 @@ class PollSvnConfig : SchedulingConfigurer {
     companion object {
         const val MIN_POLL_INTERVAL = 60L
         const val POOL_SIZE = 10
+        const val INTERVAL_MINUTE_5 = 5
     }
 
     private val logger = LoggerFactory.getLogger(PollSvnConfig::class.qualifiedName)

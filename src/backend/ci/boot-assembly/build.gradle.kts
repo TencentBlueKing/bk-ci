@@ -43,7 +43,7 @@ dependencies {
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
     implementation(project(":core:process:biz-engine"))
-    implementation(project(":core:process:biz-process-sample"))
+    implementation(project(":core:process:biz-process"))
     implementation(project(":core:project:biz-project-sample"))
     implementation(project(":core:quality:biz-quality"))
     implementation(project(":core:repository:biz-repository-sample"))
