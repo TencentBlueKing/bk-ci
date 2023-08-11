@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
@@ -42,6 +43,7 @@ import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcatDistinct
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -49,10 +51,14 @@ import java.time.LocalDateTime
 @Repository
 class PipelineModelTaskDao {
 
+    @Value("\${sm4.sm4Key:}")
+    private lateinit var sm4Key: String
+
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
-                val taskParamJson = JsonUtil.toJson(modelTask.taskParams, formatted = false)
+                val taskParamJson =
+                    BkCryptoUtil.encryptSm4ButNone(sm4Key, JsonUtil.toJson(modelTask.taskParams, formatted = false))
                 val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "", formatted = false)
                 val currentTime = LocalDateTime.now()
                 dslContext.insertInto(this)
@@ -146,9 +152,13 @@ class PipelineModelTaskDao {
                     condition.add(ATOM_VERSION.isNotNull)
                 }
             }
-            return dslContext.selectFrom(this)
+            val records = dslContext.selectFrom(this)
                 .where(condition)
                 .fetch()
+            for (r in records) {
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(sm4Key, r.taskParams))
+            }
+            return records
         }
     }
 
@@ -158,9 +168,13 @@ class PipelineModelTaskDao {
         pipelineIds: Collection<String>
     ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
+            val records = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .fetch()
+            for (r in records) {
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(sm4Key, r.taskParams))
+            }
+            return records
         }
     }
 
