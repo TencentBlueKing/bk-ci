@@ -41,6 +41,5 @@ data class SvnCommitEvent(
     val revision: Int,
     val paths: List<String>,
     val files: List<SvnCommitEventFile>,
-    val commitTime: Long?,
-    val repository: GitCommitRepository
+    val commitTime: Long?
 ) : CodeWebhookEvent
