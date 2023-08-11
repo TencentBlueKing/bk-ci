@@ -54,6 +54,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         projectId: String,
         workspace: ProjectWorkspaceCreate
     ): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         createControl.asyncCreateWorkspace(userId, bkTicket, projectId, workspace)
         return Result(true)
     }
@@ -64,6 +65,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
     }
 
@@ -73,7 +75,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        permissionService.checkPermission(projectId, workspaceName)
+        permissionService.checkUserManager(userId, projectId)
         deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
         return Result(true)
     }
