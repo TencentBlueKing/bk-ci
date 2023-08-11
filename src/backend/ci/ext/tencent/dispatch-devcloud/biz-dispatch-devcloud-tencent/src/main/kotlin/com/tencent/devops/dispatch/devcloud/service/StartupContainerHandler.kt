@@ -108,7 +108,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                         DEVOPS_AGENTSLIM_LOGPATH to "/data/logs",
                         DEVOPS_AGENTSLIM_WORKER_USER to "root",
                         DEVOPS_AGENTSLIM_LANUAGE to commonConfig.devopsDefaultLocaleLanguage,
-                        DEVOPS_AGENTSLIM_MAX_WORKER_COUNT to "",
+                        DEVOPS_AGENTSLIM_MAX_WORKER_COUNT to "1",
                         DEVOPS_AGENTSLIM_GATEWAY to (commonConfig.devopsDevnetProxyGateway ?: ""),
                         DEVOPS_AGENTSLIM_FILEGATEWAY to (commonConfig.fileDevnetGateway ?: ""),
                         DEVOPS_AGENTSLIM_PROJECT_ID to projectId,

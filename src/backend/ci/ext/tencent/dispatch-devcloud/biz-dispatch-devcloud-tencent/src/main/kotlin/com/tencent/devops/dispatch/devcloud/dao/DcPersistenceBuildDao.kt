@@ -19,6 +19,7 @@ class DcPersistenceBuildDao {
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        executeCount: Int,
         projectId: String,
         containerName: String,
         status: Int,
@@ -34,6 +35,7 @@ class DcPersistenceBuildDao {
                 VM_SEQ_ID,
                 PROJECT_ID,
                 BUILD_ID,
+                EXECUTE_COUNT,
                 CONTAINER_NAME,
                 STATUS,
                 CONTAINER_HASH_ID,
@@ -47,6 +49,7 @@ class DcPersistenceBuildDao {
                 vmSeqId,
                 projectId,
                 buildId,
+                executeCount,
                 containerName,
                 status,
                 containerHashId,
@@ -58,6 +61,7 @@ class DcPersistenceBuildDao {
                 .set(PIPELINE_ID, pipelineId)
                 .set(VM_SEQ_ID, vmSeqId)
                 .set(BUILD_ID, buildId)
+                .set(EXECUTE_COUNT, executeCount)
                 .set(PROJECT_ID, projectId)
                 .set(CONTAINER_NAME, containerName)
                 .set(STATUS, status)
