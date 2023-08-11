@@ -80,8 +80,8 @@ class AuthItsmCallbackListener @Autowired constructor(
         )
         when (itsmCallBackInfo.currentStatus) {
             REVOKE_ITSM_APPLICATION_ACTION -> revokeCreateProject(
-                projectCode = callBackInfo.englishName,
-                lastApprover = callBackInfo.applicant
+                projectId = getProjectId(callBackInfo.englishName),
+                userId = callBackInfo.applicant
             )
             else -> {
                 denyOrApproveCreateProject(
@@ -104,10 +104,12 @@ class AuthItsmCallbackListener @Autowired constructor(
             defaultMessage = "itsm application form $sn does not exist"
         )
         when (itsmCallBackInfo.currentStatus) {
-            REVOKE_ITSM_APPLICATION_ACTION -> revokeUpdateProject(
-                projectCode = callBackInfo.englishName,
-                lastApprover = callBackInfo.applicant
-            )
+            REVOKE_ITSM_APPLICATION_ACTION -> {
+                revokeUpdateProject(
+                    projectId = getProjectId(callBackInfo.englishName),
+                    userId = callBackInfo.applicant
+                )
+            }
             else -> {
                 denyOrApproveUpdateProject(
                     callBackInfo = callBackInfo,
@@ -118,12 +120,13 @@ class AuthItsmCallbackListener @Autowired constructor(
     }
 
     private fun revokeCreateProject(
-        projectCode: String,
-        lastApprover: String
+        projectId: String,
+        userId: String
     ) {
+        logger.info("revoke create project:$projectId|$userId")
         client.get(ServiceProjectResource::class).cancelCreateProject(
-            userId = lastApprover,
-            projectId = projectCode
+            userId = userId,
+            projectId = projectId
         )
     }
 
@@ -131,6 +134,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         callBackInfo: TAuthItsmCallbackRecord,
         itsmCallBackInfo: ItsmCallBackInfo
     ) {
+        logger.info("deny or approve create project:$callBackInfo|$itsmCallBackInfo")
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         val englishName = callBackInfo.englishName
@@ -178,12 +182,13 @@ class AuthItsmCallbackListener @Autowired constructor(
     }
 
     private fun revokeUpdateProject(
-        projectCode: String,
-        lastApprover: String
+        projectId: String,
+        userId: String
     ) {
+        logger.info("revoke update project:$projectId|$userId")
         client.get(ServiceProjectResource::class).cancelUpdateProject(
-            userId = lastApprover,
-            projectId = projectCode
+            userId = userId,
+            projectId = projectId
         )
     }
 
@@ -191,6 +196,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         callBackInfo: TAuthItsmCallbackRecord,
         itsmCallBackInfo: ItsmCallBackInfo
     ) {
+        logger.info("deny or approve update project:$callBackInfo|$itsmCallBackInfo")
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         val englishName = callBackInfo.englishName
@@ -235,5 +241,15 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         }
+    }
+
+    fun getProjectId(projectCode: String): String {
+        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data?.projectId
+            ?: throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    defaultMessage = "The project does not exist! | englishName = $projectCode"
+                )
+            )
     }
 }
