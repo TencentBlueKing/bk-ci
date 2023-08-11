@@ -33,7 +33,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -375,7 +374,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	err := os.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
 	defer func() {
 		_ = systemutil.Chmod(scriptFile, os.ModePerm)
 		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
@@ -384,7 +383,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		return "", err
 	} else {
 		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
-		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
+		err := os.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {

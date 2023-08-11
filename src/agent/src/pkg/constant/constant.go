@@ -1,3 +1,6 @@
+//go:build !out
+// +build !out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,7 +28,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:monitoring:biz-monitoring"))
-    api(project(":core:common:common-notify"))
-}
+package constant
+
+// 用来放一些内外部不一样的常量
+
+const (
+	DockerDataDir = "/data/landun/workspace"
+)
