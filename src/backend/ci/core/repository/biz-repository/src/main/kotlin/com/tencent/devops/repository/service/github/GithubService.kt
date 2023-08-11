@@ -263,7 +263,7 @@ class GithubService @Autowired constructor(
                     path = filePath
                 ),
                 token = token
-            )?.content ?: ""
+            )?.getDecodedContentAsString() ?: ""
         }
     }
 
