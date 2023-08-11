@@ -117,8 +117,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                         DEVOPS_AGENTSLIM_FILEGATEWAY to (commonConfig.fileDevnetGateway ?: ""),
                         DEVOPS_AGENTSLIM_PROJECT_ID to projectId,
                         DEVOPS_AGENTSLIM_CONTAINER_NAME to persistenceAgentId,
-                        DEVOPS_AGENTSLIM_WORKER_PATH to "/data",
-                        DEVOPS_AGENTSLIM_JAVA_PATH to "/usr/local/jre",
+                        DEVOPS_AGENTSLIM_WORKER_PATH to "/data/docker.jar",
+                        DEVOPS_AGENTSLIM_JAVA_PATH to "/usr/local/jre/bin/java",
                         DEVOPS_AGENTSLIM_WORKER_DETECTSHELL to "true"
                     )
                 )
