@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -40,6 +41,7 @@ import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParam
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
@@ -269,10 +271,18 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             matcher = matcher,
                             repo = repo
                         )
+                        val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
+                            userId = userId,
+                            buildId = buildId,
+                            pipelineId = pipelineId,
+                            projectId = projectId,
+                            channelCode = ChannelCode.BS
+                        ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)
                             .eventSource(eventSource = repo.repoHashId!!)
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
+                            .buildNum(buildDetail?.buildNum.toString())
                     }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
