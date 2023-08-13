@@ -252,14 +252,14 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countUserWorkspace(
+        val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
+            projectId = projectId,
             ownerType = WorkspaceOwnerType.PROJECT
         )
-        val result = workspaceDao.limitFetchUserWorkspace(
+        val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
+            projectId = projectId,
             ownerType = WorkspaceOwnerType.PROJECT,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()

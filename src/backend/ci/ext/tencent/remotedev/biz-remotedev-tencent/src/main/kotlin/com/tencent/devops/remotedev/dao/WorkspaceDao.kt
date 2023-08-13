@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -63,8 +64,10 @@ class WorkspaceDao {
     ): Long {
         return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
-                /* into = */ this,
-                /* ...fields = */ PROJECT_ID,
+                /* into = */
+                this,
+                /* ...fields = */
+                PROJECT_ID,
                 NAME,
                 TEMPLATE_ID,
                 URL,
@@ -170,25 +173,31 @@ class WorkspaceDao {
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
                 .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .let {
-                    if (unionShared) it.unionAll(
+                    if (unionShared) {
+                        it.unionAll(
                         unionSelect(shared, creator, status, systemType, ownerType)
-                    ) else it
+                    )
+                    } else {
+                        it
+                    }
                 }
                 .fetch(0, Long::class.java).sum()
         }
     }
-    fun countAllWorkspace(
+    fun countProjectWorkspace(
         dslContext: DSLContext,
-        creator: String,
-        unionShared: Boolean = true,
+        projectId: String?,
         ownerType: WorkspaceOwnerType? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
-        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.like("%$projectId%"))
+            }
             return dslContext.selectCount().from(this)
-                .where(CREATOR.eq(creator))
+                .where(conditions)
                 .let {
                     if (status.isNullOrEmpty()) {
                         it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
@@ -198,11 +207,6 @@ class WorkspaceDao {
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
                 .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
-                .let {
-                    if (unionShared) it.unionAll(
-                        unionSelect(shared, creator, status, systemType, ownerType)
-                    ) else it
-                }
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -257,6 +261,28 @@ class WorkspaceDao {
                     ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                         .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit.limit).offset(limit.offset)
+                .fetch()
+        }
+    }
+    fun limitFetchProjectWorkspace(
+        dslContext: DSLContext,
+        limit: SQLLimit,
+        projectId: String?,
+        ownerType: WorkspaceOwnerType? = null
+    ): Result<TWorkspaceRecord>? {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        val conditions = mutableListOf<Condition>()
+
+        with(TWorkspace.T_WORKSPACE) {
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.like("%$projectId%"))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
+                .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }

@@ -163,14 +163,12 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.deleteSharedWorkspace(id))
     }
 
-    override fun getWorkspaceList(
+    override fun getProjectWorkspaceList(
         userId: String,
         projectId: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
-
+        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, page, pageSize))
     }
-
 }
