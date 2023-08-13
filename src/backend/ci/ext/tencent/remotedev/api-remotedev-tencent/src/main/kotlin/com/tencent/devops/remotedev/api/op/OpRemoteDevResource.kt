@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -327,6 +328,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "projectId", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @ApiParam(value = "systemType", required = false)
+        @QueryParam("systemType")
+        systemType: WorkspaceSystemType?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

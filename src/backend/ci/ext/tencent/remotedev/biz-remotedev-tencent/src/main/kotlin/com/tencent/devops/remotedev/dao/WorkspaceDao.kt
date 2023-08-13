@@ -269,7 +269,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
-        ownerType: WorkspaceOwnerType? = null
+        systemType: WorkspaceSystemType? = null
     ): Result<TWorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         val conditions = mutableListOf<Condition>()
@@ -281,7 +281,7 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
+                .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
