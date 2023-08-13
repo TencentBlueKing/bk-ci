@@ -177,6 +177,35 @@ class WorkspaceDao {
                 .fetch(0, Long::class.java).sum()
         }
     }
+    fun countAllWorkspace(
+        dslContext: DSLContext,
+        creator: String,
+        unionShared: Boolean = true,
+        ownerType: WorkspaceOwnerType? = null,
+        status: Set<WorkspaceStatus>? = null,
+        systemType: WorkspaceSystemType? = null
+    ): Long {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectCount().from(this)
+                .where(CREATOR.eq(creator))
+                .let {
+                    if (status.isNullOrEmpty()) {
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    } else {
+                        it.and(STATUS.`in`(status.map { s -> s.ordinal }))
+                    }
+                }
+                .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
+                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
+                .let {
+                    if (unionShared) it.unionAll(
+                        unionSelect(shared, creator, status, systemType, ownerType)
+                    ) else it
+                }
+                .fetch(0, Long::class.java).sum()
+        }
+    }
 
     private fun TWorkspace.unionSelect(
         shared: TWorkspaceShared,
