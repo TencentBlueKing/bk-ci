@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -66,7 +67,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             if (branchName == null) {
                 return null
             }
-            params.block = block ?: false
+            params.block = isBlock(element)
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
             params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
@@ -100,6 +101,15 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             ""
         } else {
             list.joinToString(",")
+        }
+    }
+
+    private fun isBlock(element: CodeTGitWebHookTriggerElement): Boolean {
+        return with(element.data.input) {
+            when {
+                enableCheck == false || eventType != CodeEventType.MERGE_REQUEST -> false
+                else -> block ?: false
+            }
         }
     }
 }
