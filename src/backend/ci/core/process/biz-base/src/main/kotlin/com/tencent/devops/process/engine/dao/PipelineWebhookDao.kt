@@ -55,7 +55,9 @@ class PipelineWebhookDao {
                     REPO_HASH_ID,
                     REPO_NAME,
                     PROJECT_NAME,
-                    TASK_ID
+                    TASK_ID,
+                    EVENT_TYPE,
+                    EXTERNAL_ID
                 )
                     .values(
                         projectId,
@@ -65,13 +67,17 @@ class PipelineWebhookDao {
                         repoHashId,
                         repoName,
                         projectName,
-                        taskId
+                        taskId,
+                        eventType,
+                        externalId
                     )
                     .onDuplicateKeyUpdate()
                     .set(REPO_TYPE, repoType?.name)
                     .set(REPO_HASH_ID, repoHashId)
                     .set(REPO_NAME, repoName)
                     .set(PROJECT_NAME, projectName)
+                    .set(EXTERNAL_ID, externalId)
+                    .set(EVENT_TYPE, eventType)
                     .execute()
             }
         }
@@ -223,6 +229,47 @@ class PipelineWebhookDao {
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }
+    }
+
+    fun listWebhook(
+        dslContext: DSLContext,
+        repositoryType: String?,
+        offset: Int,
+        limit: Int
+    ):Result<TPipelineWebhookRecord>{
+        return with(T_PIPELINE_WEBHOOK) {
+            val conditions = mutableListOf(
+                DELETE.eq(false)
+            )
+            if (!repositoryType.isNullOrBlank()) {
+                conditions.add(REPOSITORY_TYPE.eq(repositoryType))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun updateWebhookEventInfo(
+        dslContext: DSLContext,
+        repoHashId:String?,
+        eventType: String,
+        externalId: String,
+        pipelineId: String,
+        projectId: String,
+        taskId: String
+    ) {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                .set(REPO_HASH_ID, repoHashId)
+                .set(EVENT_TYPE, eventType)
+                .set(EXTERNAL_ID, externalId)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(TASK_ID.eq(taskId))
+                .execute()
+        }
     }
 
     companion object {

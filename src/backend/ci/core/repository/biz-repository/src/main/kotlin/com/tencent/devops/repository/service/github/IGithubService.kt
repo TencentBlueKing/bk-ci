@@ -31,6 +31,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 
 interface IGithubService {
@@ -61,4 +62,6 @@ interface IGithubService {
     fun listBranches(token: String, projectName: String): List<String>
 
     fun listTags(token: String, projectName: String): List<String>
+
+    fun getRepositoryInfo(token: String, projectName: String): GithubRepo
 }

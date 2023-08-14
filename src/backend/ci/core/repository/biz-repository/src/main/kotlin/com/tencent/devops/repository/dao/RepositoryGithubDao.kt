@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubRecord
@@ -43,7 +44,8 @@ class RepositoryGithubDao {
         dslContext: DSLContext,
         repositoryId: Long,
         projectName: String,
-        userName: String
+        userName: String,
+        gitProjectId: Long?
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
@@ -53,14 +55,16 @@ class RepositoryGithubDao {
                 PROJECT_NAME,
                 USER_NAME,
                 CREATED_TIME,
-                UPDATED_TIME
+                UPDATED_TIME,
+                GIT_PROJECT_ID
             )
                 .values(
                     repositoryId,
                     projectName,
                     userName,
                     now,
-                    now
+                    now,
+                    gitProjectId
                 ).execute()
         }
     }
@@ -81,7 +85,8 @@ class RepositoryGithubDao {
         dslContext: DSLContext,
         repositoryId: Long,
         projectName: String,
-        userName: String
+        userName: String,
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
@@ -89,6 +94,7 @@ class RepositoryGithubDao {
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(UPDATED_TIME, now)
+                .set(GIT_PROJECT_ID, gitProjectId)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -121,6 +127,39 @@ class RepositoryGithubDao {
             return dslContext.selectFrom(this)
                 .where(REPOSITORY_ID.`in`(repositoryIds))
                 .fetch()
+        }
+    }
+
+    /**
+     * 分页查询
+     */
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TRepositoryGithubRecord>? {
+        with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
+            return dslContext.selectFrom(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateGitProjectId(
+        dslContext: DSLContext,
+        id: Long,
+        gitProjectId: Long
+    ) {
+        with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
+            val conditions = mutableListOf(
+                REPOSITORY_ID.eq(id),
+                GIT_PROJECT_ID.le(0)
+            )
+            dslContext.update(this)
+                .set(GIT_PROJECT_ID, gitProjectId)
+                .where(conditions)
+                .execute()
         }
     }
 }
