@@ -24,18 +24,18 @@
         <section
             v-if="eventList.length"
             class="timeline-warpper"
+            @scroll.passive="handleScroll"
             v-bkloading="{ isLoading: pageLoading }"
         >
-            <ul
-                class="trigger-timeline"
-                @scroll.passive="handleScroll"
-            >
-                <li class="timeline-dot">
+            <ul class="trigger-timeline">
+                <li class="timeline-dot"
+                    v-for="(data, key, index) in timelineMap" :key="index"
+                >
                     <div class="timeline-section">
-                        <div class="timeline-title">{{ triggerType }}timeline-title</div>
-                        <div class="timeline-content">
-                            <TimelineCollapse />
-                        </div>
+                        <TimelineCollapse
+                            :data="data"
+                            :time="key"
+                        />
                     </div>
                 </li>
             </ul>
@@ -73,10 +73,13 @@
         data () {
             return {
                 eventList: [],
+                timelineMap: {},
                 searchValue: [],
                 daterange: ['', ''],
+                eventTypeList: [],
+                triggerTypeList: [],
                 page: 1,
-                pageSize: 1,
+                pageSize: 20,
                 catchRepoId: '',
                 isLoadingMore: false,
                 hasLoadEnd: false,
@@ -93,72 +96,67 @@
             triggerType () {
                 return this.curRepo.type || ''
             },
-            triggerTypeList () {
-                // const listMap = {
-                //     CODE_SVN: [
-                //         { name: this.$t('codelib. WEB_HOOK触发'), id: 'CODE_SVN' }
-                //     ]
-                // }
-                return [
-                    { name: this.$t('codelib.手动触发'), id: 'MANUAL' },
-                    { name: this.$t('codelib.定时触发'), id: 'TIME_TRIGGER' },
-                    { name: this.$t('codelib.服务触发'), id: 'SERVICE' },
-                    { name: this.$t('codelib.流水线触发'), id: 'PIPELINE' },
-                    { name: this.$t('codelib.远程触发'), id: 'REMOTE' }
-                ]
-            },
-            eventTypeList () {
-                const listMap = {
-                    GITHUB: [
-                        { name: this.$t('codelib.创建Branch/Tag事件'), id: 'CREATE' },
-                        { name: this.$t('codelib.PR事件'), id: 'PULL_REQUEST' }
-                    ],
-                    CODE_SVN: [
-                        { name: this.$t('codelib.POST_COMMIT事件'), id: 'POST_COMMIT' },
-                        { name: this.$t('codelib.LOCK_COMMIT事件'), id: 'LOCK_COMMIT' },
-                        { name: this.$t('codelib.PRE_COMMIT事件'), id: 'PRE_COMMIT' }
-                    ],
-                    CODE_GIT: [
-                        { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-                        { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-                        { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-                        { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-                        { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-                        { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-                    ],
-                    CODE_GITLAB: [
-                        { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-                        { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-                        { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-                        { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-                        { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-                        { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-                    ],
-                    CODE_TGIT: [
-                        { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-                        { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-                        { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-                        { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-                        { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-                        { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-                    ],
-                    CODE_P4: [
-                        { name: this.$t('codelib.CHANGE_COMMIT事件'), id: 'CHANGE_COMMIT' },
-                        { name: this.$t('codelib.PUSH_SUBMIT事件'), id: '.PUSH_SUBMIT' },
-                        { name: this.$t('codelib.CHANGE_CONTENT事件'), id: 'CHANGE_CONTENT' },
-                        { name: this.$t('codelib.CHANGE_SUBMIT事件'), id: 'CHANGE_SUBMIT' },
-                        { name: this.$t('codelib.PUSH_CONTENT事件'), id: 'PUSH_CONTENT' },
-                        { name: this.$t('codelib.PUSH_COMMIT事件'), id: 'PUSH_COMMIT' },
-                        { name: this.$t('codelib.FIX_ADD事件'), id: 'FIX_ADD' },
-                        { name: this.$t('codelib.FIX_DELETE事件'), id: 'FIX_DELETE' },
-                        { name: this.$t('codelib.FORM_COMMIT事件'), id: 'FORM_COMMIT' },
-                        { name: this.$t('codelib.SHELVE_COMMIT事件'), id: 'SHELVE_COMMIT' },
-                        { name: this.$t('codelib.SHELVE_DELETE事件'), id: 'SHELVE_DELETE' },
-                        { name: this.$t('codelib.SHELVE_SUBMIT事件'), id: 'SHELVE_SUBMIT' }
-                    ]
-                }
-                return listMap[this.triggerType] || []
-            },
+            // triggerTypeList () {
+            //     return [
+            //         { name: this.$t('codelib.手动触发'), id: 'MANUAL' },
+            //         { name: this.$t('codelib.定时触发'), id: 'TIME_TRIGGER' },
+            //         { name: this.$t('codelib.服务触发'), id: 'SERVICE' },
+            //         { name: this.$t('codelib.流水线触发'), id: 'PIPELINE' },
+            //         { name: this.$t('codelib.远程触发'), id: 'REMOTE' }
+            //     ]
+            // },
+            // eventTypeList () {
+            //     const listMap = {
+            //         GITHUB: [
+            //             { name: this.$t('codelib.创建Branch/Tag事件'), id: 'CREATE' },
+            //             { name: this.$t('codelib.PR事件'), id: 'PULL_REQUEST' }
+            //         ],
+            //         CODE_SVN: [
+            //             { name: this.$t('codelib.POST_COMMIT事件'), id: 'POST_COMMIT' },
+            //             { name: this.$t('codelib.LOCK_COMMIT事件'), id: 'LOCK_COMMIT' },
+            //             { name: this.$t('codelib.PRE_COMMIT事件'), id: 'PRE_COMMIT' }
+            //         ],
+            //         CODE_GIT: [
+            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
+            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
+            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
+            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
+            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
+            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
+            //         ],
+            //         CODE_GITLAB: [
+            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
+            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
+            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
+            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
+            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
+            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
+            //         ],
+            //         CODE_TGIT: [
+            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
+            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
+            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
+            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
+            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
+            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
+            //         ],
+            //         CODE_P4: [
+            //             { name: this.$t('codelib.CHANGE_COMMIT事件'), id: 'CHANGE_COMMIT' },
+            //             { name: this.$t('codelib.PUSH_SUBMIT事件'), id: '.PUSH_SUBMIT' },
+            //             { name: this.$t('codelib.CHANGE_CONTENT事件'), id: 'CHANGE_CONTENT' },
+            //             { name: this.$t('codelib.CHANGE_SUBMIT事件'), id: 'CHANGE_SUBMIT' },
+            //             { name: this.$t('codelib.PUSH_CONTENT事件'), id: 'PUSH_CONTENT' },
+            //             { name: this.$t('codelib.PUSH_COMMIT事件'), id: 'PUSH_COMMIT' },
+            //             { name: this.$t('codelib.FIX_ADD事件'), id: 'FIX_ADD' },
+            //             { name: this.$t('codelib.FIX_DELETE事件'), id: 'FIX_DELETE' },
+            //             { name: this.$t('codelib.FORM_COMMIT事件'), id: 'FORM_COMMIT' },
+            //             { name: this.$t('codelib.SHELVE_COMMIT事件'), id: 'SHELVE_COMMIT' },
+            //             { name: this.$t('codelib.SHELVE_DELETE事件'), id: 'SHELVE_DELETE' },
+            //             { name: this.$t('codelib.SHELVE_SUBMIT事件'), id: 'SHELVE_SUBMIT' }
+            //         ]
+            //     }
+            //     return listMap[this.triggerType] || []
+            // },
             searchList () {
                 const list = [
                     {
@@ -197,6 +195,7 @@
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
+                this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
@@ -205,6 +204,7 @@
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
+                this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
@@ -212,16 +212,40 @@
         },
         created () {
             this.catchRepoId = this.repoId
+            this.getEventTypeList()
+            this.getTriggerTypeList()
             this.getListData()
         },
         methods: {
             ...mapActions('codelib', [
-                'fetchTriggerEventList'
+                'fetchTriggerEventList',
+                'fetchEventType',
+                'fetchTriggerType'
             ]),
+            getEventTypeList () {
+                this.fetchEventType().then(res => {
+                    this.eventTypeList = res.map(i => {
+                        return {
+                            ...i,
+                            name: i.value
+                        }
+                    })
+                })
+            },
+            getTriggerTypeList () {
+                this.fetchTriggerType().then(res => {
+                    this.triggerTypeList = res.map(i => {
+                        return {
+                            ...i,
+                            name: i.value
+                        }
+                    })
+                })
+            },
             handleScroll (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                if (bottomDis <= 300 && !this.hasLoadEnd && !this.isLoadingMore) this.getListData()
+                if (bottomDis <= 10 && !this.hasLoadEnd && !this.isLoadingMore) this.getListData()
             },
             getListData () {
                 if (this.hasLoadEnd) return
@@ -237,10 +261,8 @@
                 })
                 
                 this.fetchTriggerEventList({
-                    projectId: 'mht',
-                    repositoryHashId: 'NJDD',
-                    // projectId: this.projectId,
-                    // repositoryHashId: this.repoId,
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoId,
                     page: this.page,
                     pageSize: this.pageSize,
                     ...params,
@@ -249,7 +271,24 @@
                     endTimeStartTime: daterange[1]
                 }).then(res => {
                     this.eventList = [...this.eventList, ...res.records]
-                    this.hasLoadEnd = res.totalPages === res.page || res.totalPages === 0
+                    this.timelineMap = {}
+                    
+                    this.eventList.forEach(item => {
+                        const eventDate = new Date(item.eventTime)
+                        const year = eventDate.getFullYear()
+                        const month = eventDate.getMonth()
+                        const day = eventDate.getDate()
+                        const dateKey = `${year}-${month}-${day}`
+
+                        if (!this.timelineMap[dateKey]) {
+                            this.timelineMap[dateKey] = []
+                        }
+
+                        this.timelineMap[dateKey].push(item)
+                    })
+
+                    this.hasLoadEnd = res.count === this.eventList.length
+                    console.log(this.hasLoadEnd, 'hasLoadEnd')
                     this.page += 1
                 }).finally(() => {
                     this.pageLoading = false
@@ -263,6 +302,7 @@
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
+                this.timelineMap = {}
                 this.getListData()
             }
         }
@@ -298,7 +338,7 @@
             border-left: 1px solid #d8d8d8;
             font-size: 0;
             margin-top: 13px;
-            padding-bottom: 24px;
+            padding-bottom: 14px;
             padding-left: 16px;
             position: relative;
             &::before {
@@ -323,17 +363,6 @@
         .timeline-section {
             position: relative;
             top: -15px;
-        }
-        .timeline-title {
-            font-size: 14px;
-            color: #63656e;
-            padding-bottom: 10px;
-            display: inline-block;
-        }
-        .timeline-content {
-            word-break: break-all;
-            font-size: 14px;
-            color: #666;
         }
     }
     .empty-data {

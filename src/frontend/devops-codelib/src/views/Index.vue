@@ -155,23 +155,6 @@
                 const { codelibs } = this
                 return codelibs && codelibs.records && codelibs.records.length > 0
             },
-            /**
-             * @desc 展示的列表列
-             * @returns { Object }
-             */
-            allColumnMap () {
-                if (this.isListFlod) {
-                    return {
-                        version: true,
-                        statusDesc: true
-                    }
-                }
-                return this.selectedTableColumn.reduce((result, item) => {
-                    result[item.id] = true
-                    return result
-                }, {})
-            },
-
             codelibList () {
                 return this.codelibs && this.codelibs.records
             }

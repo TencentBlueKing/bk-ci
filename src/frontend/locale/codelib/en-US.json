@@ -66,6 +66,7 @@
     "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
     "basicSetting": "Basic Setting",
     "triggerEvent": "Trigger Event",
+    "trigger": "Trigger",
     "resetAuth": "Reset Authorization",
     "PACmode": "PAC Mode",
     "common": "Common Settings",
@@ -175,5 +176,6 @@
     "SHELVE_DELETE事件": "SHELVE_DELETE事件",
     "SHELVE_SUBMIT事件": "SHELVE_SUBMIT事件",
     "一键重新触发": "一键重新触发",
-    "重新触发": "重新触发"
+    "重新触发": "重新触发",
+    "触发成功": "触发成功"
 }

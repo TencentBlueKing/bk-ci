@@ -66,6 +66,7 @@
   "auth": "授权",
   "basicSetting": "基本设置",
   "triggerEvent": "触发事件",
+  "trigger": "触发器",
   "resetAuth": "重置授权",
   "PACmode": "PAC 模式",
   "common": "通用设置",
@@ -180,5 +181,6 @@
   "SHELVE_DELETE事件": "SHELVE_DELETE事件",
   "SHELVE_SUBMIT事件": "SHELVE_SUBMIT事件",
   "一键重新触发": "一键重新触发",
-  "重新触发": "重新触发"
+  "重新触发": "重新触发",
+  "触发成功": "触发成功"
 }

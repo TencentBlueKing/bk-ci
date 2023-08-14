@@ -141,7 +141,7 @@
     } from 'vuex'
     import {
         getCodelibConfig
-    } from '../config'
+    } from '../../config'
     export default {
         props: {
             curRepo: {

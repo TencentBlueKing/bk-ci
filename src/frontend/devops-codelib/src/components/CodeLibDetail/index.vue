@@ -104,12 +104,14 @@
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
+    import Trigger from './trigger.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     export default {
         name: 'CodeLibDetail',
         components: {
+            Trigger,
             BasicSetting,
             TriggerEvent,
             UsingPipelinesDialog
@@ -138,6 +140,7 @@
                 oldAliasName: '',
                 panels: [
                     { name: 'basic', label: this.$t('codelib.basicSetting') },
+                    { name: 'trigger', label: this.$t('codelib.trigger') },
                     { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
                 active: 'triggerEvent',
@@ -164,6 +167,7 @@
         computed: {
             componentName () {
                 const comMap = {
+                    trigger: 'Trigger',
                     basic: 'BasicSetting',
                     triggerEvent: 'TriggerEvent'
                 }

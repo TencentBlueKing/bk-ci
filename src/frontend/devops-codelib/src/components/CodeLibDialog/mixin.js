@@ -215,6 +215,17 @@ export default {
         },
         isOAUTH () {
             return this.codelib.authType === 'OAUTH'
+        },
+        scmType () {
+            const typeMap = {
+                codeP4: 'CODE_P4',
+                codeSvn: 'CODE_SVN',
+                codeGit: 'CODE_GIT',
+                codeTGit: 'CODE_TGIT',
+                codeGitlab: 'CODE_GITLAB',
+                github: 'GITHUB'
+            }
+            return typeMap[this.codelibTypeName]
         }
     },
     watch: {
@@ -323,7 +334,10 @@ export default {
          */
         handleCheckPacProject (repoUrl) {
             if (this.isGit && this.isOAUTH && repoUrl) {
-                this.checkPacProject(repoUrl).then((res) => {
+                this.checkPacProject({
+                    repoUrl,
+                    scmType: this.scmType
+                }).then((res) => {
                     this.pacProjectName = res
                 })
             }

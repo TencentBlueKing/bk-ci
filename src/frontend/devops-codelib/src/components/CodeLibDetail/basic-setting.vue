@@ -87,7 +87,7 @@
             </div>
         </div>
         <!-- 通用设置 -->
-        <div
+        <!-- <div
             class="form-item"
             v-if="isGit"
         >
@@ -133,7 +133,7 @@
                     </bk-radio-group>
                 </div>
             </div>
-        </div>
+        </div> -->
         <!-- 历史信息 -->
         <div class="form-item">
             <div class="label">
@@ -257,7 +257,7 @@
     import {
         prettyDateTimeFormat
     } from '@/utils/'
-    import ResetAuthDialog from '../ResetAuthDialog.vue'
+    import ResetAuthDialog from './ResetAuthDialog.vue'
 
     export default {
         name: 'basicSetting',
@@ -316,6 +316,9 @@
             },
             repoId () {
                 return this.$route.query.id
+            },
+            scmType () {
+                return this.curRepo.type
             },
             hasPower () {
                 return (
@@ -410,7 +413,10 @@
              */
             handleCheckPacProject (repoUrl) {
                 if (this.isGit && repoUrl) {
-                    this.checkPacProject(repoUrl).then((res) => {
+                    this.checkPacProject({
+                        repoUrl,
+                        scmType: this.scmType
+                    }).then((res) => {
                         this.pacProjectName = res
                     })
                 }

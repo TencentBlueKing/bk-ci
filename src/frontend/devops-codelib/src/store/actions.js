@@ -338,8 +338,11 @@ const actions = {
         })
     },
 
-    async checkPacProject ({ commit }, repoUrl) {
-        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}`)
+    async checkPacProject ({ commit }, {
+        repoUrl,
+        scmType
+    }) {
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&scmType=${scmType}`)
     },
 
     /**
@@ -423,7 +426,7 @@ const actions = {
         page,
         pageSize
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listUsingPipeline?page=${page}&pageSize=${pageSize}`)
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listRepoPipelineRef?page=${page}&pageSize=${pageSize}`)
     },
 
     /**
@@ -441,7 +444,53 @@ const actions = {
         startTimeEndTime = '',
         endTimeStartTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoWebhookEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
+    },
+
+    /**
+     * 获取触发事件详情
+     */
+    fetchEventDetail ({ commit }, {
+        projectId,
+        eventId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`)
+    },
+
+    /**
+     * 一键重新触发
+     */
+    replayAllEvent ({ commit }, {
+        projectId,
+        eventId
+    }) {
+        return vue.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/replayAll`)
+    },
+
+    /**
+     * 重新触发
+     */
+    replayEvent ({ commit }, {
+        projectId,
+        detailId
+    }) {
+        return vue.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${detailId}/replay`)
+    },
+
+    /**
+     * 获取事件类型
+     */
+
+    fetchEventType ({ commit }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listEventType`)
+    },
+
+    /**
+     * 获取事件类型
+     */
+
+    fetchTriggerType ({ commit }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType`)
     }
 }
 
