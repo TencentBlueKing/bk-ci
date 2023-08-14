@@ -30,7 +30,7 @@ jobs:
       run: yarn --prefer-offline
     - run: yarn install && yarn start && yarn public
       working-directory: src/frontend
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v3
       with:
         name: frontend
         path: src/frontend/frontend/
