@@ -340,9 +340,9 @@ const actions = {
 
     async checkPacProject ({ commit }, {
         repoUrl,
-        scmType
+        repositoryType
     }) {
-        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&scmType=${scmType}`)
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
     },
 
     /**

@@ -38,7 +38,7 @@
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
                     <span>
-                        {{ repoInfo.authType }}@
+                        {{ curRepo.authType }}@
                     </span>
                     <a
                         v-if="!['OAUTH'].includes(repoInfo.authType)"
@@ -317,7 +317,7 @@
             repoId () {
                 return this.$route.query.id
             },
-            scmType () {
+            repositoryType () {
                 return this.curRepo.type
             },
             hasPower () {
@@ -415,7 +415,7 @@
                 if (this.isGit && repoUrl) {
                     this.checkPacProject({
                         repoUrl,
-                        scmType: this.scmType
+                        repositoryType: this.repositoryType
                     }).then((res) => {
                         this.pacProjectName = res
                     })

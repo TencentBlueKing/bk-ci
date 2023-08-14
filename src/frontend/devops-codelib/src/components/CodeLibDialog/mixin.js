@@ -216,7 +216,7 @@ export default {
         isOAUTH () {
             return this.codelib.authType === 'OAUTH'
         },
-        scmType () {
+        repositoryType () {
             const typeMap = {
                 codeP4: 'CODE_P4',
                 codeSvn: 'CODE_SVN',
@@ -336,7 +336,7 @@ export default {
             if (this.isGit && this.isOAUTH && repoUrl) {
                 this.checkPacProject({
                     repoUrl,
-                    scmType: this.scmType
+                    repositoryType: this.repositoryType
                 }).then((res) => {
                     this.pacProjectName = res
                 })
