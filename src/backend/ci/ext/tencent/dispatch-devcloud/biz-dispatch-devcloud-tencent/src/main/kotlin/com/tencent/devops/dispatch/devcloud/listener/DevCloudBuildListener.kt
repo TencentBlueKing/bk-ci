@@ -209,7 +209,12 @@ class DevCloudBuildListener @Autowired constructor(
             // 判断是否需要事件重试
             if (dispatchDevcloudService.needRetry(buildId, vmSeqId, executeCount)) {
                 retry()
-            } else {
+                return
+            }
+
+            // 持久化构建走新版调度逻辑
+            val containerPool = getContainerPool(dispatchMessage)
+            if (containerPool.persistence != null && containerPool.persistence!!) {
                 dcContainerPrepareHandler.handlerRequest(
                     DcStartupHandlerContext(
                         userId = dispatchMessage.userId,
@@ -229,6 +234,8 @@ class DevCloudBuildListener @Autowired constructor(
                         persistence = (dispatchMessage.dispatchType as PublicDevCloudDispathcType).persistence ?: false
                     )
                 )
+            } else {
+                createOrStartContainer(dispatchMessage)
             }
         }
     }

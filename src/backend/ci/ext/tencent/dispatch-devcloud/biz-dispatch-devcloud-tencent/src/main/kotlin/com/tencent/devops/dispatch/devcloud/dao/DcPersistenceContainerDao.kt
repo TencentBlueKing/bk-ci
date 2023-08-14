@@ -15,6 +15,7 @@ class DcPersistenceContainerDao {
         vmSeqId: String,
         projectId: String,
         containerName: String,
+        persistenceAgentId: String,
         status: Int,
         userId: String
     ): Int {
@@ -25,6 +26,7 @@ class DcPersistenceContainerDao {
                 VM_SEQ_ID,
                 PROJECT_ID,
                 CONTAINER_NAME,
+                PERSISTENCE_AGENT_ID,
                 CONTAINER_STATUS,
                 CREATE_TIME,
                 UPDATE_TIME,
@@ -34,15 +36,15 @@ class DcPersistenceContainerDao {
                 vmSeqId,
                 projectId,
                 containerName,
+                persistenceAgentId,
                 status,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 userId
             ).onDuplicateKeyUpdate()
-                .set(PIPELINE_ID, pipelineId)
-                .set(VM_SEQ_ID, vmSeqId)
                 .set(PROJECT_ID, projectId)
                 .set(CONTAINER_NAME, containerName)
+                .set(PERSISTENCE_AGENT_ID, persistenceAgentId)
                 .set(CONTAINER_STATUS, status)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
@@ -51,14 +53,14 @@ class DcPersistenceContainerDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        containerName: String,
+        persistenceAgentId: String,
         status: Int
     ) {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(CONTAINER_STATUS, status)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .execute()
         }
     }
@@ -79,22 +81,22 @@ class DcPersistenceContainerDao {
 
     fun getContainerStatus(
         dslContext: DSLContext,
-        containerName: String
+        persistenceAgentId: String
     ): TDevcloudPersistenceContainerRecord? {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             return dslContext.selectFrom(this)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .fetchAny()
         }
     }
 
     fun delete(
         dslContext: DSLContext,
-        containerName: String
+        persistenceAgentId: String
     ): Int {
         return with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.delete(this)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .execute()
         }
     }

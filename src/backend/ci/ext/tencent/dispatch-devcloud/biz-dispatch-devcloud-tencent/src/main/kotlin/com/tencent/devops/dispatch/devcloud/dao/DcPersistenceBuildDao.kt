@@ -22,6 +22,7 @@ class DcPersistenceBuildDao {
         executeCount: Int,
         projectId: String,
         containerName: String,
+        persistenceAgentId: String,
         status: Int,
         containerHashId: String,
         agentId: String,
@@ -37,6 +38,7 @@ class DcPersistenceBuildDao {
                 BUILD_ID,
                 EXECUTE_COUNT,
                 CONTAINER_NAME,
+                PERSISTENCE_AGENT_ID,
                 STATUS,
                 CONTAINER_HASH_ID,
                 AGENT_ID,
@@ -51,6 +53,7 @@ class DcPersistenceBuildDao {
                 buildId,
                 executeCount,
                 containerName,
+                persistenceAgentId,
                 status,
                 containerHashId,
                 agentId,
@@ -64,6 +67,7 @@ class DcPersistenceBuildDao {
                 .set(EXECUTE_COUNT, executeCount)
                 .set(PROJECT_ID, projectId)
                 .set(CONTAINER_NAME, containerName)
+                .set(PERSISTENCE_AGENT_ID, persistenceAgentId)
                 .set(STATUS, status)
                 .set(CONTAINER_HASH_ID, containerHashId)
                 .set(AGENT_ID, agentId)
@@ -89,11 +93,11 @@ class DcPersistenceBuildDao {
 
     fun fetchOneQueueBuild(
         dslContext: DSLContext,
-        containerName: String
+        persistenceAgentId: String
     ): TDevcloudPersistenceBuildRecord? {
         with(TDevcloudPersistenceBuild.T_DEVCLOUD_PERSISTENCE_BUILD) {
             return dslContext.selectFrom(this)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .and(STATUS.eq(PersistenceBuildStatus.QUEUE.status))
                 .orderBy(UPDATE_TIME.asc())
                 .limit(1)

@@ -141,7 +141,6 @@ class DcContainerCreateHandler @Autowired constructor(
                     poolNo = poolNo,
                     projectId = projectId,
                     containerName = containerName ?: "",
-                    persistenceAgentId = persistenceAgentId,
                     image = this.dispatchMessage,
                     status = ContainerStatus.BUSY.status,
                     userId = userId,

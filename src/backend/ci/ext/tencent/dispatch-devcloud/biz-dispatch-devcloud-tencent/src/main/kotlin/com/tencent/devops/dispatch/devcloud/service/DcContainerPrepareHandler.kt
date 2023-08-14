@@ -117,6 +117,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                 setContainerPerformance(containerPool?.performanceConfigId ?: "0", this)
 
                 // 获取容器池空闲poolNo，如果poolNo绑定了container，则设置对应containerName
+                // 对poolNo, containerName, containerChanged赋值
                 loopIdleContainer(this)
 
                 // 记录构建历史
@@ -273,8 +274,8 @@ class DcContainerPrepareHandler @Autowired constructor(
                 return true
             }
 
-            // 构件序号被占用，接着在构建池内寻找
-            if (containerInfo.status == ContainerStatus.BUSY.status) {
+            // 非持久化容器，构件序号被占用，接着在构建池内寻找
+            if (containerInfo.status == ContainerStatus.BUSY.status && !persistence) {
                 return false
             }
 

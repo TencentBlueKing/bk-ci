@@ -70,8 +70,11 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 return
             }
 
-            // 新建容器
-            if (containerChanged) {
+            // 获取最近的一次持久化容器配置记录
+            val containerRecord = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
+
+            // 容器配置发生变更或者没有历史持久化容器配置记录时新建容器
+            if (containerChanged || containerRecord == null) {
                 val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
                 handlerContext.persistenceAgentId = persistenceAgentId
 
@@ -82,24 +85,14 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     projectId = projectId,
-                    containerName = persistenceAgentId,
+                    containerName = containerName ?: "",
+                    persistenceAgentId = persistenceAgentId,
                     status = PersistenceContainerStatus.RUNNING.status
                 )
+            } else {
+                // 校验持久化容器状态 TODO
+                handlerContext.persistenceAgentId = containerRecord.persistenceAgentId
             }
-
-            // 获取最近的一次持久化容器记录
-            val containerRecord = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
-            if (containerRecord == null) {
-                logger.error("$buildLogKey no persistence container build history.")
-                throw BuildFailureException(
-                    ErrorCodeEnum.START_VM_ERROR.errorType,
-                    ErrorCodeEnum.START_VM_ERROR.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
-                    "No persistence container build history."
-                )
-            }
-
-            handlerContext.persistenceAgentId = containerRecord!!.containerName
 
             // 根据persistenceAgentId加分布式锁
             val lock = PersistenceContainerLock(redisOperation, persistenceAgentId)
@@ -130,6 +123,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     vmSeqId = vmSeqId,
                     containerHashId = containerHashId!!,
                     containerName = persistenceAgentId,
+                    persistenceAgentId = persistenceAgentId,
                     agentId = agentId,
                     secretKey = secretKey,
                     executeCount = executeCount ?: 1,
