@@ -43,6 +43,7 @@ import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelineGroupPermissionService
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -185,9 +186,14 @@ class PipelineTransferYamlService @Autowired constructor(
         return elementTransfer.yaml2element(ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
-    fun preview(userId: String, projectId: String, pipelineId: String): PreviewResponse {
-        // todo 权限校验
-        val yml = getPipelineYaml(userId, projectId, pipelineId)
+    fun buildPreview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): PreviewResponse {
+        // todo 权限校验，增加不存在yaml时自动将model转过来
+        val yml = getPipelineResource(projectId, pipelineId, version)?.yaml ?: ""
         val pipelineIndex = mutableListOf<TransferMark>()
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
@@ -201,11 +207,16 @@ class PipelineTransferYamlService @Autowired constructor(
         return PreviewResponse(yml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
     }
 
-    private fun getPipelineYaml(userId: String, projectId: String, pipelineId: String): String {
-        // 临时方案 todo
-        val classLoader = Thread.currentThread().contextClassLoader
-        val resourceAsStream = classLoader.getResourceAsStream("temp.yml")
-
-        return resourceAsStream?.bufferedReader().use { it?.readText() } ?: ""
+    private fun getPipelineResource(
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): PipelineResourceVersion? {
+        // 如果指定版本号则获取对应版本内容，如果未指定则获取最新内容
+        return pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+        )
     }
 }

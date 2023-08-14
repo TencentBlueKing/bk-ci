@@ -42,8 +42,10 @@ data class PipelineResourceVersion(
     val pipelineId: String,
     @ApiModelProperty("记录版本号", required = true)
     val version: Int,
-    @ApiModelProperty("编排内容", required = true)
+    @ApiModelProperty("JSON编排内容（POJO）", required = true)
     val model: Model,
+    @ApiModelProperty("YAML编排内容", required = false)
+    val yaml: String?,
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("版本名称", required = true)

@@ -70,7 +70,5 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         return Result(transferService.yamlTaskTransfer(userId, projectId, pipelineId, yaml))
     }
 
-    override fun preview(userId: String, projectId: String, pipelineId: String): Result<PreviewResponse> {
-        return Result(transferService.preview(userId, projectId, pipelineId))
-    }
+
 }
