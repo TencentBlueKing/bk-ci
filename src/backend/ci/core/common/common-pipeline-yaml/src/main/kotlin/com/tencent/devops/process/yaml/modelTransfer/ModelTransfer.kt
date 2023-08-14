@@ -74,7 +74,7 @@ class ModelTransfer @Autowired constructor(
     fun yaml2Setting(yamlInput: YamlTransferInput): PipelineSetting {
         val yaml = yamlInput.yaml
         return PipelineSetting(
-            projectId =  yamlInput.pipelineInfo?.projectId ?: "",
+            projectId = yamlInput.pipelineInfo?.projectId ?: "",
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
             pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
             desc = yamlInput.pipelineInfo?.pipelineDesc ?: "",
@@ -97,7 +97,6 @@ class ModelTransfer @Autowired constructor(
     fun yaml2Model(
         yamlInput: YamlTransferInput
     ): Model {
-
         val stageList = mutableListOf<Stage>()
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致

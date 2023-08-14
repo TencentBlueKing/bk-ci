@@ -28,28 +28,16 @@
 package com.tencent.devops.process.service.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
-import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
-import com.tencent.devops.process.dao.label.PipelineGroupDao
-import com.tencent.devops.process.dao.label.PipelineLabelDao
-import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
-import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.dao.label.PipelineViewTopDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelineGroupPermissionService
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.pojo.transfer.TransferResponse
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
@@ -63,7 +51,6 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -71,19 +58,6 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineTransferYamlService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val pipelineViewDao: PipelineViewDao,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineLabelDao: PipelineLabelDao,
-    private val pipelineGroupDao: PipelineGroupDao,
-    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
-    private val pipelineViewTopDao: PipelineViewTopDao,
-    private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
-    private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelineGroupService: PipelineGroupService,
-    private val client: Client,
-    private val pipelineGroupPermissionService: PipelineGroupPermissionService,
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
     private val pipelineRepositoryService: PipelineRepositoryService
