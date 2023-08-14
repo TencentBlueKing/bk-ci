@@ -19,6 +19,7 @@ import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import org.json.JSONArray
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.DumperOptions
 import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
@@ -44,6 +45,7 @@ import java.util.function.Supplier
 import java.util.regex.Pattern
 
 object TransferMapper {
+    private val logger = LoggerFactory.getLogger(TransferMapper::class.java)
 
     /**
      * 重写StringQuotingChecker 以支持on关键字特性
@@ -258,7 +260,8 @@ object TransferMapper {
                                 /* startMark = */ n.startMark,
                                 /* endMark = */ n.endMark,
                                 /* style = */ DumperOptions.ScalarStyle.PLAIN
-                            ), n
+                            ),
+                            n
                         )
                     )
                 }
@@ -476,7 +479,8 @@ object TransferMapper {
 //            throw Exception("not same node")
 //        }
         if (!exactlyTheSameNode(getYamlFactory().compose(new.reader()), getYamlFactory().compose(out.reader()))) {
-            throw Exception("not same node")
+            logger.warn("merge yaml fail|new=\n$new\n|||out=\n$out\n")
+            return new
         }
         return out
     }

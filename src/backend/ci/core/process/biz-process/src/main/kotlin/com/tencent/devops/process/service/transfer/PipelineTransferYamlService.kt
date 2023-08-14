@@ -110,10 +110,11 @@ class PipelineTransferYamlService @Autowired constructor(
         data: TransferBody
     ): TransferResponse {
 
-        val watcher = Watcher(id = "yaml2Model")
+        val watcher = Watcher(id = "yaml and model transfer watcher")
         // todo 权限校验
         when (actionType) {
             TransferActionType.FULL_MODEL2YAML -> {
+                watcher.start("step_1|FULL_MODEL2YAML start")
                 val yml = modelTransfer.model2yaml(
                     ModelTransferInput(
                         data.modelAndSetting.model,
@@ -121,14 +122,18 @@ class PipelineTransferYamlService @Autowired constructor(
                         YamlVersion.Version.V3_0
                     )
                 )
-                return TransferResponse(newYaml = TransferMapper.toYaml(yml))
+                watcher.start("step_2|mergeYaml")
+                val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
+                watcher.stop()
+                logger.info(watcher.toString())
+                return TransferResponse(newYaml = newYaml)
             }
             TransferActionType.FULL_YAML2MODEL -> {
-                watcher.start("FULL_YAML2MODEL start")
+                watcher.start("step_1|FULL_YAML2MODEL start")
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
                 val pYml = TransferMapper.getObjectMapper()
                     .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
-                watcher.start("parse template")
+                watcher.start("step_2|parse template")
                 pYml.replaceTemplate { templateFilter ->
                     YamlTemplate(
                         yamlObject = templateFilter,
@@ -143,12 +148,14 @@ class PipelineTransferYamlService @Autowired constructor(
                         )
                     ).replace()
                 }
-                watcher.start("transfer start")
+                watcher.start("step_3|transfer start")
                 val input = YamlTransferInput(
                     userId, projectId, pipelineInfo, pYml
                 )
                 val model = modelTransfer.yaml2Model(input)
                 val setting = modelTransfer.yaml2Setting(input)
+                watcher.stop()
+                logger.info(watcher.toString())
                 return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
             }
         }

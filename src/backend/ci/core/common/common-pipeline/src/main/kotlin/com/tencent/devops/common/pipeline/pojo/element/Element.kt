@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -139,8 +140,10 @@ abstract class Element(
     @ApiModelProperty("所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
     @ApiModelProperty("所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
-    open var classifyName: String? = null
-) {
+    open var classifyName: String? = null,
+    override var template: String? = null,
+    override var ref: String? = null
+) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
 
