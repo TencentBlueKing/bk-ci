@@ -452,6 +452,7 @@ class GitService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
+        val resetType = authParams["resetType"] as? String
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
             RedirectUrlTypeEnum.DEFAULT -> redirectUrl
@@ -459,7 +460,7 @@ class GitService @Autowired constructor(
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String
                 val repoHashId = "-" + HashUtil.encodeOtherLongId(repoId.toLong())
-                "$redirectUrl/$projectId#popupGit$repoHashId"
+                "$redirectUrl/$projectId#popupGit$repoHashId#$resetType"
             }
         }
     }
