@@ -572,7 +572,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomStatusInfos.add(atomStatusInfo)
                 // 将db中的环境信息写入缓存
                 redisOperation.hset(atomStatusInfoKey, it.version, JsonUtil.toJson(atomStatusInfo))
-
             }
         }
         return Result(atomStatusInfos)
