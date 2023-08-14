@@ -105,9 +105,9 @@ class WorkspaceCommon @Autowired constructor(
         type: WebSocketActionType,
         status: Boolean?,
         action: WorkspaceAction,
-        systemType: WorkspaceSystemType,
-        workspaceMountType: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
+        systemType: WorkspaceSystemType? = null,
+        workspaceMountType: WorkspaceMountType? = null,
+        ownerType: WorkspaceOwnerType? = null
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
