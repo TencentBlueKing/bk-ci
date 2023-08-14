@@ -37,6 +37,10 @@ const handleFilterChange = (newStatus) => {
   };
 };
 
+const handleClear = (payload) => {
+  handleFilterChange(payload);
+};
+
 const getPluginList = () => {
   http.getProjectShowPluginList().then(res =>{
     const atomCodes = res.atomBaseInfos.map(item => item.atomCode)
@@ -68,6 +72,7 @@ onMounted(() => {
       :status="status"
       :reset-btn-disabled="resetBtnDisabled"
       @change="handleChangeResetBtnDisabled"
+      @clear="handleClear"
     />
   </main>
 </template>

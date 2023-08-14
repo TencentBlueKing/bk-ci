@@ -201,6 +201,12 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        logger.info("grant group additional authorization|projectCode:$projectCodes")
+        projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,
@@ -432,7 +438,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode", exception)
+        logger.warn("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,

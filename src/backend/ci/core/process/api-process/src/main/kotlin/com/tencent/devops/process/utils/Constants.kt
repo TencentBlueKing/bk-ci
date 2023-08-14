@@ -100,6 +100,8 @@ const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val BUILD_STATUS = "BK_CI_BUILD_STATUS" // "BuildStatus"
 
+const val JOB_RETRY_TASK_ID = "job.retry_task_id"
+
 /**
  * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改
  */
