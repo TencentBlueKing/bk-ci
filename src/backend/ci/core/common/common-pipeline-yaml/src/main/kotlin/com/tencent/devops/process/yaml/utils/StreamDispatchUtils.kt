@@ -48,8 +48,8 @@ import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
 @Suppress("ALL")

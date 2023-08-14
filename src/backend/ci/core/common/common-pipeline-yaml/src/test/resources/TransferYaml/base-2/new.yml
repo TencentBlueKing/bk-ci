@@ -1,0 +1,9 @@
+type: Example config改
+components:
+- name: First component
+  description: Some short description of the first component改
+- name: Second component
+  description: Some short description of the second component改
+- - first/possible/place
+  - second/possible/place改
+- { jsonStyle: [ { x: y改 }, { x: z } ] }

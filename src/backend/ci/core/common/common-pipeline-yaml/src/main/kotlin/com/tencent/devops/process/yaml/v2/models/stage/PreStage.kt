@@ -32,6 +32,8 @@ import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import io.swagger.annotations.ApiModelProperty
 
+interface IPreStage
+
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
@@ -54,4 +56,4 @@ data class PreStage(
     @ApiModelProperty(name = "check-out")
     @JsonProperty("check-out")
     val checkOut: PreStageCheck?
-)
+) : IPreStage

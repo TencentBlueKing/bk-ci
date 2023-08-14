@@ -64,8 +64,10 @@ data class Model(
     @ApiModelProperty("静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
     @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null
-) {
+    var timeCost: BuildRecordTimeCost? = null,
+    override var template: String? = null,
+    override var ref: String? = null
+) : IModelTemplate {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 

@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -51,7 +52,7 @@ class ManualPreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
-    override var triggerOn: PreTriggerOn?,
+    var triggerOn: PreTriggerOn?,
     var inputs: Map<String, String>?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
@@ -79,4 +80,6 @@ class ManualPreScriptBuildYaml(
         finally = pre.finally,
         concurrency = pre.concurrency
     )
+
+    override fun yamlVersion() = YamlVersion.Version.V2_0
 }

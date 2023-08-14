@@ -1,0 +1,23 @@
+# ttttttt1
+a: &d2
+- run: |
+    asdasd \n
+    asdsd
+- run: asdasdasd #sdasdasd4
+  # ttttttt5
+- asd
+- - - sad
+
+b: *d2
+
+# ttttttt6
+db1: &d1-confs
+  port: 3306 # ttttttt7
+  name: admin
+  # ttttttt8
+  pwd: 123456
+# ttttttt9
+db2: # ttttttt10
+  port: 3307
+  # ttttttt11
+  <<: *d1-confs

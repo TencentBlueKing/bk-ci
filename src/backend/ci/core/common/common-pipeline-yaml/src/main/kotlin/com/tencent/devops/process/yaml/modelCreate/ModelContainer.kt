@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -38,6 +39,7 @@ import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
+import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
@@ -45,27 +47,40 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
+import com.tencent.devops.process.yaml.v2.models.job.PreJob
+import com.tencent.devops.process.yaml.v2.models.job.RunsOn
+import com.tencent.devops.process.yaml.v2.models.job.Strategy
+import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
     @Autowired(required = false)
-    val inner: InnerModelCreator?
+    val inner: InnerModelCreator?,
+    val transferCache: TransferCacheService
 ) {
 
     fun addVmBuildContainer(
@@ -273,6 +288,194 @@ class ModelContainer @Autowired(required = false) constructor(
             queueEnable = true,
             queue = resource.queueLength ?: 0,
             timeout = resource.timeoutMinutes ?: 10
+        )
+    }
+
+    fun addYamlNormalContainer(
+        job: NormalContainer,
+        steps: List<PreStep>?
+    ): PreJob {
+        return PreJob(
+            name = job.name,
+            runsOn = RunsOn(
+                selfHosted = null,
+                poolName = JobRunsOnType.AGENT_LESS.type,
+                container = null
+            ),
+            container = null,
+            services = null,
+            ifField = when (job.jobControlOption?.runCondition) {
+                JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
+                    job.jobControlOption?.customVariables
+                )
+                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
+                    job.jobControlOption?.customVariables
+                )
+                else -> null
+            },
+            steps = steps,
+            timeoutMinutes = job.jobControlOption?.timeout,
+            env = null,
+            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
+            strategy = if (job.matrixGroupFlag == true) {
+                getMatrixFromJob(job.matrixControlOption)
+            } else null,
+            // 蓝盾这边是自定义Job ID
+            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                job.jobControlOption?.dependOnId
+            } else null
+        )
+    }
+
+    fun addYamlVMBuildContainer(
+        job: VMBuildContainer,
+        steps: List<PreStep>?
+    ): PreJob {
+        return PreJob(
+            name = job.name,
+            runsOn = getRunsOn(job),
+            container = null,
+            services = null,
+            ifField = when (job.jobControlOption?.runCondition) {
+                JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
+                    job.jobControlOption?.customVariables
+                )
+                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
+                    job.jobControlOption?.customVariables
+                )
+                else -> null
+            },
+            steps = steps,
+            timeoutMinutes = job.jobControlOption?.timeout,
+            env = null,
+            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
+            strategy = if (job.matrixGroupFlag == true) {
+                getMatrixFromJob(job.matrixControlOption)
+            } else null,
+            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                job.jobControlOption?.dependOnId
+            } else null
+        )
+    }
+
+    fun getRunsOn(
+        job: VMBuildContainer
+    ): RunsOn = when (val dispatchType = job.dispatchType) {
+        is ThirdPartyAgentEnvDispatchType -> {
+            RunsOn(
+                selfHosted = true,
+                poolName = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
+                ),
+                container = null,
+                agentSelector = listOf(job.baseOS.name.toLowerCase()),
+                needs = job.buildEnv
+            )
+        }
+        is DockerDispatchType -> {
+            // todo 凭据是否处理
+            val (containerImage, credentials) = getImageNameAndCredentials(
+                dispatchType
+            )
+            RunsOn(
+                selfHosted = null,
+                poolName = JobRunsOnType.DOCKER.type,
+                container = Container2(
+                    image = containerImage,
+                    credentials = credentials,
+                    options = null,
+                    imagePullPolicy = null
+                ),
+                agentSelector = null,
+                needs = job.buildEnv
+            )
+        }
+        else -> {
+            RunsOn(
+                selfHosted = null,
+                poolName = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
+                ),
+                container = null,
+                agentSelector = null
+            )
+        }
+    }
+
+    fun getImageNameAndCredentials(
+        dispatchType: StoreDispatchType
+    ): Pair<String, String?> {
+        try {
+            when (dispatchType.imageType) {
+                ImageType.BKSTORE -> {
+                    val imageRepoInfo = transferCache.getStoreImageInfo(
+                        imageCode = dispatchType.imageCode ?: "",
+                        imageVersion = dispatchType.imageVersion
+                    ) ?: return Pair(dispatchType.imageCode ?: "", null)
+                    val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
+                        // 蓝盾项目源镜像
+                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                    } else {
+                        // 第三方源镜像
+                        // dockerhub镜像名称不带斜杠前缀
+                        if (imageRepoInfo.repoUrl.isBlank()) {
+                            imageRepoInfo.repoName
+                        } else {
+                            "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                        }
+                    } + ":" + imageRepoInfo.repoTag
+                    return if (imageRepoInfo.publicFlag) {
+                        Pair(completeImageName, null)
+                    } else Pair(
+                        completeImageName, imageRepoInfo.ticketId
+                    )
+                }
+                ImageType.BKDEVOPS -> {
+                    // 针对非商店的旧数据处理
+                    return if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
+                        dispatchType.value != DockerVersion.TLINUX2_2.value
+                    ) {
+                        dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
+                        Pair("bkdevops/" + dispatchType.value, null)
+                    } else {
+                        Pair(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE,
+                                language = I18nUtil.getLanguage()
+                            ), null
+                        )
+                    }
+                }
+                else -> {
+                    return if (dispatchType.credentialId.isNullOrBlank()) {
+                        Pair(dispatchType.value, null)
+                    } else Pair(
+                        dispatchType.value, dispatchType.credentialId
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            return Pair(
+                MessageUtil.getMessageByLocale(
+                    messageCode = ProcessMessageCode.BK_ENTER_URL_ADDRESS_IMAGE,
+                    language = I18nUtil.getLanguage()
+                ), null
+            )
+        }
+    }
+
+    fun getMatrixFromJob(
+        matrixControlOption: MatrixControlOption?
+    ): Strategy? {
+        if (matrixControlOption == null) {
+            return null
+        }
+        return Strategy(
+            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: return null,
+            fastKill = matrixControlOption.fastKill,
+            maxParallel = matrixControlOption.maxConcurrency
         )
     }
 }
