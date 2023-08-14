@@ -51,6 +51,7 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String,
         model: Model,
+        yaml: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
@@ -64,7 +65,8 @@ class PipelineResVersionDao {
             creator = creator,
             version = version,
             versionName = versionName,
-            modelString = JsonUtil.toJson(model, formatted = false),
+            modelStr = JsonUtil.toJson(model, formatted = false),
+            yamlStr = yaml,
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
@@ -80,7 +82,8 @@ class PipelineResVersionDao {
         creator: String,
         version: Int,
         versionName: String = "init",
-        modelString: String,
+        modelStr: String,
+        yamlStr: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
@@ -93,7 +96,8 @@ class PipelineResVersionDao {
                 .set(PIPELINE_ID, pipelineId)
                 .set(VERSION, version)
                 .set(VERSION_NAME, versionName)
-                .set(MODEL, modelString)
+                .set(MODEL, modelStr)
+                .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -102,7 +106,7 @@ class PipelineResVersionDao {
                 .set(STATUS, status?.name)
                 .set(DESCRIPTION, description)
                 .onDuplicateKeyUpdate()
-                .set(MODEL, modelString)
+                .set(MODEL, modelStr)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -166,6 +170,7 @@ class PipelineResVersionDao {
                         null
                     }
                 } ?: return null,
+                yaml = record.yaml,
                 creator = record.creator,
                 versionName = record.versionName,
                 createTime = record.createTime,

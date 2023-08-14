@@ -176,6 +176,8 @@ class PipelineRepositoryService constructor(
             create = create,
             channelCode = channelCode
         )
+        // TODO 增加互转处理
+        val yamlStr = null
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -199,6 +201,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 model = model,
+                yamlStr = yamlStr,
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
@@ -228,6 +231,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
+                yamlStr = yamlStr,
                 userId = userId,
                 channelCode = channelCode,
                 canManualStartup = canManualStartup,
@@ -526,6 +530,7 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
+        yamlStr: String?,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -649,6 +654,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
+                    yaml = yamlStr,
                     versionName = versionName ?: "init",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
@@ -689,6 +695,7 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         userId: String,
         model: Model,
+        yamlStr: String?,
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
@@ -788,6 +795,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
+                    yaml = yamlStr,
                     versionName = versionName ?: "init",
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
@@ -818,7 +826,8 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             creator = userId,
                             version = version - 1,
-                            modelString = lastVersionModelStr,
+                            modelStr = lastVersionModelStr,
+                            yamlStr = yamlStr,
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,

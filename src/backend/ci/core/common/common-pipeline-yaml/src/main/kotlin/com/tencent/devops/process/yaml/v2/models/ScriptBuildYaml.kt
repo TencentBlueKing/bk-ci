@@ -29,6 +29,8 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.Stage
@@ -44,6 +46,7 @@ data class ScriptBuildYaml(
     val version: String?,
     val name: String?,
     val label: List<String>?,
+    @JsonProperty("on")
     val triggerOn: TriggerOn?,
     val variables: Map<String, Variable>?,
     val stages: List<Stage>,
@@ -52,4 +55,6 @@ data class ScriptBuildYaml(
     val notices: List<GitNotices>?,
     var finally: List<Job>?,
     val concurrency: Concurrency?
-)
+) : YamlVersion {
+    override fun yamlVersion() = YamlVersion.Version.V2_0
+}

@@ -94,4 +94,13 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getImageInfoByCodeAndVersion(imageCode: String, imageVersion: String?): Result<ImageRepoInfo?> {
+        return Result(
+            imageService.getImageInfoByCodeAndVersion(
+                imageCode = imageCode,
+                imageVersion = imageVersion
+            )
+        )
+    }
 }

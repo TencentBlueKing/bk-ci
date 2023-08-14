@@ -28,7 +28,8 @@
 package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
@@ -267,9 +268,9 @@ variables:
         } else {
             getStrFromResource(
                 "compared/${
-                file.removePrefix("samples")
-                    .replace("_old.yml", ".yml")
-                    .replace(".yml", "_old.yml")
+                    file.removePrefix("samples")
+                        .replace("_old.yml", ".yml")
+                        .replace(".yml", "_old.yml")
                 }"
             )
         }
@@ -313,12 +314,14 @@ variables:
         val sb = yamlContent ?: getStrFromResource(testYaml!!)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
-        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+        val preTemplateYamlObject = TransferMapper.getObjectMapper().readValue(
+            yaml, PreTemplateScriptBuildYaml::class.java
+        )
         preTemplateYamlObject.resources?.pools?.forEach { pool ->
             resourceExt?.put(pool.format(), pool)
         }
         val preScriptBuildYaml = YamlTemplate(
-            filePath = "",
+            filePath = TemplatePath(""),
             yamlObject = preTemplateYamlObject,
             extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
@@ -326,12 +329,12 @@ variables:
             repo = null,
             resourcePoolMapExt = resourceExt,
             conf = YamlTemplateConf(useOldParametersExpression = useOldParametersExpression)
-        ).replace()
+        ).replace() as PreScriptBuildYaml
         if (!normalized) {
             return preScriptBuildYaml
         }
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
-        val yamls = YamlUtil.toYaml(normalOb)
+        val yamls = TransferMapper.toYaml(normalOb)
         println("------------ Trans -----------")
         println(JsonUtil.toJson(trans))
         println("------------------------")
@@ -342,11 +345,12 @@ variables:
         param: GetTemplateParam<Any?>
     ): String {
         val newPath = if (param.targetRepo == null) {
-            "templates/${param.path}"
+            "templates/${param.path.path}"
         } else {
-            "templates/${param.targetRepo!!.repository}/templates/${param.path}"
+            "templates/${param.targetRepo!!.repository}/templates/${param.path.path}"
         }
         val sb = getStrFromResource(newPath)
+        println(newPath)
         return ScriptYmlUtils.formatYaml(sb)
     }
 

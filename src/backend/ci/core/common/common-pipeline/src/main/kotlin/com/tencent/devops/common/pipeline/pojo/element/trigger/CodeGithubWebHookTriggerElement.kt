@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -42,13 +43,51 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("分支名称", required = false)
-    val branchName: String?,
+    val branchName: String? = null,
     @ApiModelProperty("用于排除的分支名称", required = false)
-    val excludeBranchName: String?,
+    val excludeBranchName: String? = null,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
+    @ApiModelProperty("用于包含的路径", required = false)
+    val includePaths: String? = null,
+    @ApiModelProperty("用于排除的路径", required = false)
+    val excludePaths: String? = null,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("用于排除的user id", required = false)
-    val excludeUsers: String?,
+    val excludeUsers: String? = null,
+    @ApiModelProperty("tag名称", required = false)
+    val tagName: String? = null,
+    @ApiModelProperty("用于排除的tag名称", required = false)
+    val excludeTagName: String? = null,
+    @ApiModelProperty("tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
+    @ApiModelProperty("用于排除的源分支名称", required = false)
+    val excludeSourceBranchName: String? = null,
+    @ApiModelProperty("用于包含的源分支名称", required = false)
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code review 类型", required = false)
+    val includeCrTypes: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("是否启用回写")
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("mr事件action")
+    val includeMrAction: List<String>? = null,
+    @ApiModelProperty("push事件action")
+    val includePushAction: List<String>? = null,
+    @ApiModelProperty("是否启用第三方过滤")
+    val enableThirdFilter: Boolean? = false,
     @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?,
     @ApiModelProperty("新版的github原子的类型")

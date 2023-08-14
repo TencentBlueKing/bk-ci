@@ -48,20 +48,35 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
-    private val pipelineOperationLogService: PipelineOperationLogService
+    private val pipelineOperationLogService: PipelineOperationLogService,
+    private val transferService: PipelineTransferYamlService
 ) : UserPipelineVersionResource {
+
+    override fun preview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<PreviewResponse> {
+        return Result(
+            transferService.buildPreview(userId, projectId, pipelineId, version)
+        )
+    }
 
     override fun createPipeline(
         userId: String,

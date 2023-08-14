@@ -53,6 +53,7 @@ import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfoParam
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
@@ -280,7 +281,7 @@ class ManualTriggerService @Autowired constructor(
 
         return YamlTemplate(
             yamlObject = yamlObject,
-            filePath = StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE,
+            filePath = TemplatePath(StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE),
             extraParameters = action,
             getTemplateMethod = yamlTemplateService::getTemplate,
             nowRepo = null,
