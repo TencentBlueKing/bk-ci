@@ -72,6 +72,7 @@ class RemoteDevService @Autowired constructor(
             event = event,
             environmentUid = result.enviromentUid,
             regionId = result.regionId,
+            taskId = result.taskId,
             status = EnvStatusEnum.running,
             dslContext = dslContext
         )

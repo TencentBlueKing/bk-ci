@@ -248,6 +248,72 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    fun getProjectWorkspaceList4Op(
+        projectId: String?,
+        systemType: WorkspaceSystemType?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<ProjectWorkspace> {
+        logger.info("op get project $projectId workspace list")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val count = workspaceDao.countProjectWorkspace(
+            dslContext = dslContext,
+            projectId = projectId,
+            systemType = systemType
+        )
+        val result = workspaceDao.limitFetchProjectWorkspace(
+            dslContext = dslContext,
+            projectId = projectId,
+            systemType = systemType,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        ) ?: emptyList()
+
+        val owners = mutableMapOf<String, String>()
+        val viewers = mutableMapOf<String, MutableList<String>>()
+
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, result.map { it.name }).forEach {
+            when (it.type) {
+                WorkspaceShared.AssignType.OWNER -> {
+                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
+                }
+                WorkspaceShared.AssignType.VIEWER -> {
+                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
+                }
+            }
+        }
+
+        val allConfig = windowsResourceConfigService.getAllConfig().associateBy { it.id!! }
+
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = result.map {
+                val detail = redisCache.getWorkspaceDetail(it.name)
+                val status = WorkspaceStatus.values()[it.status]
+                ProjectWorkspace(
+                    workspaceId = it.id,
+                    workspaceName = it.name,
+                    projectId = it.projectId,
+                    displayName = it.displayName,
+                    status = status,
+                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
+                    sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+                    createUserId = it.creator,
+                    hostName = detail?.hostIP,
+                    workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
+                    workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType),
+                    winConfig = it.winConfigId?.toLong()?.let { i -> allConfig[i] },
+                    owner = owners[it.name],
+                    viewers = viewers[it.name],
+                    gpu = it.gpu,
+                    cpu = it.cpu,
+                    memory = it.memory,
+                    disk = it.memory
+                )
+            }
+        )
+    }
+
     private fun parsingWorkspace(
         it: TWorkspaceRecord,
         status: WorkspaceStatus,
