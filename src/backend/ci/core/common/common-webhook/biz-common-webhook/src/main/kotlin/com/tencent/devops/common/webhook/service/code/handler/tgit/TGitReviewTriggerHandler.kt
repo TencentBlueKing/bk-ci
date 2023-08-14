@@ -69,7 +69,7 @@ class TGitReviewTriggerHandler(
     }
 
     override fun getUrl(event: GitReviewEvent): String {
-        return event.repository.git_http_url ?: ""
+        return event.repository.git_http_url
     }
 
     override fun getUsername(event: GitReviewEvent): String {
@@ -134,7 +134,7 @@ class TGitReviewTriggerHandler(
                     mrInfo = mrInfo,
                     reviewInfo = reviewInfo,
                     mrRequestId = event.reviewableId!!,
-                    homepage = event.repository?.homepage
+                    homepage = event.repository.homepage
                 )
             )
         }
