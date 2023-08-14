@@ -7,36 +7,12 @@ on:
 jobs:
   frontend:
     name: Build frontend
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - name: Install project dependencies
-      run: yarn --prefer-offline
-    - run: yarn install && yarn start && yarn public
-      working-directory: src/frontend
-    - uses: actions/upload-artifact@v1
-      with:
-        name: frontend
-        path: src/frontend/frontend/
+    uses: ./.github/workflows/frontend.yml
+
 
   agent:
     name: Build agent
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
-      with:
-        go-version: 1.19.6
-    - run: make clean all
-      working-directory: src/agent/
-    - uses: actions/upload-artifact@v1
-      with:
-        name: agent
-        path: src/agent/bin/
+    uses: ./.github/workflows/agent.yml
 
   backend:
     name: Build backend and release
