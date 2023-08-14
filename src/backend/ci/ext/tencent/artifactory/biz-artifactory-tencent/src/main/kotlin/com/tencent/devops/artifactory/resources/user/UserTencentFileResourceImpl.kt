@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.resources.user
 
 import com.tencent.bkrepo.common.artifact.path.PathUtils
-import com.tencent.devops.artifactory.api.user.UserTencentFileResource
+import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.pojo.CopyFileRequest
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
@@ -41,12 +41,13 @@ import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import javax.servlet.http.HttpServletResponse
 
 @RestResource
 class UserTencentFileResourceImpl @Autowired constructor(
     val bkRepoCustomDirService: BkRepoCustomDirService,
     val bkRepoService: BkRepoService
-) : UserTencentFileResource {
+) : UserFileResource {
 
     override fun uploadToPath(
         userId: String,
@@ -54,10 +55,22 @@ class UserTencentFileResourceImpl @Autowired constructor(
         path: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
+    ): Result<String> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
-        return Result(true)
+        return Result("")
+    }
+
+    override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
+        // only in open source
+    }
+
+    override fun downloadFile(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
+        // only in open source
+    }
+
+    override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
+        // only in open source
     }
 
     override fun copy(userId: String, copyFileRequest: CopyFileRequest): Result<Boolean> {
