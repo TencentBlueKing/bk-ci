@@ -6,14 +6,16 @@ name: Backend CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
     - 'src/backend/ci/**'
   pull_request:
-    branches: [ master, release-* ]
+    branches: [master, release-*]
     paths:
     - 'src/backend/ci/**'
   workflow_dispatch:
+  workflow_call:
+
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:

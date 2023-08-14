@@ -7,12 +7,14 @@ on:
   push:
     branches: [master]
     paths:
-      - "src/frontend/**"
+    - "src/frontend/**"
   pull_request:
     branches: [master, release-*]
     paths:
-      - "src/frontend/**"
+    - "src/frontend/**"
   workflow_dispatch:
+  workflow_call:
+
 
 jobs:
   frontend:
