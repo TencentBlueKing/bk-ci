@@ -16,15 +16,13 @@ on:
   workflow_dispatch:
   workflow_call:
 
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  backend:
-    name: Build backend and release
+  backend-jar:
+    name: Build backend -- JAR
     runs-on: ubuntu-20.04
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
@@ -42,9 +40,49 @@ jobs:
       with:
         distribution: "temurin"
         java-version: "8"
-        cache: "gradle"
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-jar-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties','buildSrc/**/Versions.kt') }}
     - name: Gradle Build Backend Service
       working-directory: src/backend/ci
       run: |
         ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
+
+  backend-docker:
+    name: Build backend -- Docker
+    runs-on: ubuntu-20.04
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+        - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+    - uses: actions/checkout@v3
+    - name: init mysql
+      run: |
+        export MYSQL_PWD=root
+        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
+      working-directory: support-files/sql
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v3
+      with:
+        distribution: "temurin"
+        java-version: "8"
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-docker-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties','buildSrc/**/Versions.kt') }}
+    - name: Gradle Build Backend Service
+      working-directory: src/backend/ci
+      run: |
+        ./gradlew clean test build :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
