@@ -1,0 +1,37 @@
+# 每天定时生成缓存
+name: Daily Cache
+on:
+  schedule:
+  - cron: '0 3 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+        - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v2
+      with:
+        ref: master
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v3
+      with:
+        distribution: "temurin"
+        java-version: "8"
+        cache: "gradle"
+    - name: Gradle Build Backend Service
+      working-directory: src/backend/ci
+      run: |
+        ./gradlew clean -x test build :core:worker:worker-agent:shadowJar \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
+    - name: Gradle Build Backend Service -- CLOUD NATIVE
+      working-directory: src/backend/ci
+      run: |
+        ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
