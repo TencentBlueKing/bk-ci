@@ -24,7 +24,7 @@ jobs:
         path: src/frontend/frontend/
 
   agent:
-    name: Build agent on ${{ matrix.os }}
+    name: Build agent
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
