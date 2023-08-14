@@ -78,4 +78,22 @@ interface UserGithubResource {
     @GET
     @Path("/githubAppUrl")
     fun getGithubAppUrl(): Result<GithubAppUrl>
+
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = false,
+        @ApiParam(value = "是否校验token(refreshToken=true时不做校验)", required = false)
+        @QueryParam("validationCheck")
+        validationCheck: Boolean? = false
+    ): Result<AuthorizeResult>
 }

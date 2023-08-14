@@ -369,6 +369,43 @@ class GithubService @Autowired constructor(
         )
     }
 
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        validationCheck: Boolean?
+    ): AuthorizeResult {
+        logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            githubTokenService.getAccessToken(userId)
+        } ?: return AuthorizeResult(
+            status = HTTP_403,
+            url = githubOAuthService.getGithubOauth(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = null
+            ).redirectUrl
+        )
+        if (validationCheck == true) {
+            try {
+                getRepositories(accessToken.accessToken)
+            } catch (e: Exception) {
+                return AuthorizeResult(
+                    status = HTTP_403,
+                    url = githubOAuthService.getGithubOauth(
+                        projectId = projectId,
+                        userId = userId,
+                        repoHashId = null
+                    ).redirectUrl
+                )
+            }
+        }
+        logger.info("github isOAuth accessToken is: $accessToken")
+        return AuthorizeResult(200, "")
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)
         private const val PAGE_SIZE = 100

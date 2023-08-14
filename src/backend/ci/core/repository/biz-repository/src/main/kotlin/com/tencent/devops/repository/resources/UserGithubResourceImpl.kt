@@ -55,4 +55,20 @@ class UserGithubResourceImpl @Autowired constructor(
     override fun getGithubAppUrl(): Result<GithubAppUrl> {
         return Result(githubOAuthService.getGithubAppUrl())
     }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        validationCheck: Boolean?
+    ): Result<AuthorizeResult> {
+        return Result(
+            githubService.isOAuth(
+                userId = userId,
+                projectId = projectId,
+                refreshToken = refreshToken,
+                validationCheck = validationCheck
+            )
+        )
+    }
 }
