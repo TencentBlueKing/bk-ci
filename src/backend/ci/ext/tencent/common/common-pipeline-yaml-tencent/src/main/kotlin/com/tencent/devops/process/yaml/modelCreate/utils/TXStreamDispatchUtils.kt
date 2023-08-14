@@ -63,8 +63,8 @@ import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.scm.api.ServiceGitCiResource
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
 @Suppress("NestedBlockDepth", "ComplexMethod")
@@ -270,11 +270,13 @@ object TXStreamDispatchUtils {
                 else -> GitCIDispatchType(defaultImage)
             }
         } else {
-            throw CustomException(Response.Status.NOT_FOUND,
+            throw CustomException(
+                Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
                     messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ))
+                )
+            )
         }
     }
 

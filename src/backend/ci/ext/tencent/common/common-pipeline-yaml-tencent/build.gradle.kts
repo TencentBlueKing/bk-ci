@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:store:api-store"))
     api(project(":core:quality:api-quality"))
+    testImplementation(project(":core:common:common-test"))
 
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
