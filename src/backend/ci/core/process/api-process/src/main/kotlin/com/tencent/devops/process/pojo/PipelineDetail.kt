@@ -39,7 +39,17 @@ data class PipelineDetail(
     @ApiModelProperty("是否收藏")
     val hasCollect: Boolean,
     @ApiModelProperty("是否可以手动触发")
-    val canManualStartup: Int,
+    val canManualStartup: Boolean,
     @ApiModelProperty("是否有编辑权限")
-    val hasPermission: Boolean
+    val hasPermission: Boolean,
+    @ApiModelProperty("流水线描述")
+    val pipelineDesc: String,
+    @ApiModelProperty("创建者")
+    val creator: String,
+    @ApiModelProperty("创建时间")
+    val createTime: Long = 0,
+    @ApiModelProperty("更新时间")
+    val updateTime: Long = 0,
+    @ApiModelProperty("流水线组名称列表", required = false)
+    var viewNames: List<String>? = null
 )

@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -1732,8 +1731,7 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
-            dslContext = dslContext,
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: return null
@@ -1768,11 +1766,16 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineName = pipelineInfo.pipelineName,
             instanceFromTemplate = instanceFromTemplate,
             hasCollect = hasCollect,
-            canManualStartup = pipelineInfo.manualStartup,
+            canManualStartup = pipelineInfo.canManualStartup,
             pipelineVersion = pipelineInfo.version.toString(),
-            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
+            deploymentTime = pipelineInfo.updateTime,
             hasPermission = hasEditPermission,
-            templateId = templateId
+            templateId = templateId,
+            creator = pipelineInfo.creator,
+            pipelineDesc = pipelineInfo.pipelineDesc,
+            createTime = pipelineInfo.createTime,
+            updateTime = pipelineInfo.updateTime,
+            viewNames = pipelineInfo.viewNames
         )
     }
 

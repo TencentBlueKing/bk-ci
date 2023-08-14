@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
@@ -194,7 +195,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int = 0,
-        checkPermission: Boolean = false
+        checkPermission: Boolean = false,
+        detailInfo: PipelineDetailInfo? = null
     ): PipelineSetting {
 
         if (checkPermission) {
@@ -225,16 +227,20 @@ class PipelineSettingFacadeService @Autowired constructor(
             labels.addAll(it.labels)
         }
         if (settingInfo == null) {
-            val pipeline = client.get(ServicePipelineResource::class).getPipelineInfo(
+            val (pipelineName, pipelineDesc) = detailInfo?.let {
+                Pair(it.pipelineName, it.pipelineDesc)
+            } ?: client.get(ServicePipelineResource::class).getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode
-            ).data
+            ).data?.let {
+                Pair(it.pipelineName, it.pipelineDesc)
+            } ?: Pair(null, null)
             settingInfo = PipelineSetting(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineName = pipeline?.pipelineName ?: "unknown pipeline name",
-                desc = pipeline?.pipelineDesc ?: "",
+                pipelineName = pipelineName ?: "unknown pipeline name",
+                desc = pipelineDesc ?: "",
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
@@ -249,6 +255,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             val ve = pipelineSettingVersionService.getSubscriptionsVer(userId, projectId, pipelineId, version)
             settingInfo.successSubscription = ve.successSubscription
             settingInfo.failSubscription = ve.failSubscription
+            settingInfo.successSubscriptionList = ve.successSubscriptionList
+            settingInfo.failSubscriptionList = ve.failSubscriptionList
         }
 
         return settingInfo

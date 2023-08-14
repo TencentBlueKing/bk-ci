@@ -37,5 +37,7 @@ data class DeployPipelineResult(
     @ApiModelProperty("流水线名称", required = true)
     val pipelineName: String,
     @ApiModelProperty("流水线版本号", required = true)
-    val version: Int
+    val version: Int,
+    @ApiModelProperty("生成版本名称", required = false)
+    val versionName: String?
 )

@@ -27,37 +27,28 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.process.enums.OperationLogType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线名称与Id")
-data class PipelineDetailInfo(
-    @ApiModelProperty("流水线Id")
+@ApiModel("流水线操作日志")
+data class PipelineOperationLog(
+    @ApiModelProperty("唯一标识ID", required = true)
+    val id: Int,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String,
-    @ApiModelProperty("是否收藏")
-    val hasCollect: Boolean,
-    @ApiModelProperty("canManualStartup")
-    val canManualStartup: Boolean,
-    @ApiModelProperty("是否关联模板")
-    val instanceFromTemplate: Boolean,
-    @ApiModelProperty("流水线版本")
-    val pipelineVersion: String,
-    @ApiModelProperty("发布时间-时间戳")
-    val deploymentTime: Long,
-    @ApiModelProperty("是否有编辑权限")
-    val hasPermission: Boolean,
-    @ApiModelProperty("关联模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("流水线描述")
-    val pipelineDesc: String,
-    @ApiModelProperty("创建者")
-    val creator: String,
-    @ApiModelProperty("创建时间")
-    val createTime: Long = 0,
-    @ApiModelProperty("更新时间")
-    val updateTime: Long = 0,
-    @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+    @ApiModelProperty("版本ID", required = true)
+    val version: Int,
+    @ApiModelProperty("操作用户", required = true)
+    val operator: String,
+    @ApiModelProperty("操作类型", required = true)
+    val operationLogType: OperationLogType,
+    @ApiModelProperty("操作参数", required = true)
+    val params: String,
+    @ApiModelProperty("操作时间", required = false)
+    val operateTime: Long,
+    @ApiModelProperty("操作内容", required = false)
+    val description: String?
 )

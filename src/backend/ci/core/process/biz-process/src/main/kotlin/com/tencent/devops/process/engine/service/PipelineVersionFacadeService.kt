@@ -29,17 +29,18 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
@@ -83,12 +84,13 @@ class PipelineVersionFacadeService @Autowired constructor(
     }
 
     fun listPipelineVersion(
-        userId: String,
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
-    ): PipelineViewPipelinePage<PipelineResVersion> {
+        pageSize: Int?,
+        creator: String? = null,
+        description: String? = null
+    ): Page<PipelineResVersion> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         var slqLimit: SQLLimit? = null
@@ -102,11 +104,44 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
+            creator = creator,
+            description = description,
             offset = offset,
             limit = limit
         )
 
-        return PipelineViewPipelinePage(
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = size.toLong(),
+            records = pipelines
+        )
+    }
+
+    fun getVersionCreatorInPage(
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<String> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: -1
+        var slqLimit: SQLLimit? = null
+        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+
+        val offset = slqLimit?.offset ?: 0
+        val limit = slqLimit?.limit ?: -1
+        // 数据量不多，直接全拉
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val (size, pipelines) = pipelineRepositoryVersionService.getVersionCreatorInPage(
+            pipelineInfo = pipelineInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        )
+
+        return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = size.toLong(),

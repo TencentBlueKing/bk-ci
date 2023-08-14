@@ -25,39 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.pipeline
 
-import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线名称与Id")
-data class PipelineDetailInfo(
-    @ApiModelProperty("流水线Id")
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String,
-    @ApiModelProperty("是否收藏")
-    val hasCollect: Boolean,
-    @ApiModelProperty("canManualStartup")
-    val canManualStartup: Boolean,
-    @ApiModelProperty("是否关联模板")
-    val instanceFromTemplate: Boolean,
-    @ApiModelProperty("流水线版本")
-    val pipelineVersion: String,
-    @ApiModelProperty("发布时间-时间戳")
-    val deploymentTime: Long,
-    @ApiModelProperty("是否有编辑权限")
-    val hasPermission: Boolean,
-    @ApiModelProperty("关联模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("流水线描述")
-    val pipelineDesc: String,
-    @ApiModelProperty("创建者")
-    val creator: String,
-    @ApiModelProperty("创建时间")
-    val createTime: Long = 0,
-    @ApiModelProperty("更新时间")
-    val updateTime: Long = 0,
-    @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+data class PipelineModelAndYaml(
+    @ApiModelProperty("流水线模型", required = true)
+    val model: Model,
+    @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
+    val yaml: String?
 )

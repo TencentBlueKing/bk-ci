@@ -594,7 +594,7 @@ interface UserPipelineResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineResVersion>>
+    ): Result<Page<PipelineResVersion>>
 
     @ApiOperation("校验matrix yaml格式")
     @POST
