@@ -2,14 +2,14 @@
 name: Daily Cache
 on:
   schedule:
-  - cron: '0 3 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
+  - cron: '45 3 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
 jobs:
   backend:
     name: Build backend
     runs-on: ubuntu-20.04
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
@@ -20,6 +20,11 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: master
+    - name: init mysql
+      run: |
+        export MYSQL_PWD=root
+        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
+      working-directory: support-files/sql
     - name: Set up JDK 1.8
       uses: actions/setup-java@v3
       with:
@@ -36,3 +41,7 @@ jobs:
       run: |
         ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
+    - name: Gradle Build Turbo Service
+      working-directory: src/backend/turbo
+      run: |
+        ./gradlew clean copyToRelease
