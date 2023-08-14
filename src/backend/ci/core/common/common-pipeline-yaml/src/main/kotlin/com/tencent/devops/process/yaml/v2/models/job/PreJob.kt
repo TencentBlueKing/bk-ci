@@ -35,6 +35,8 @@ import com.tencent.devops.process.yaml.v2.models.YamlMetaData
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import io.swagger.annotations.ApiModelProperty
 
+interface IPreJob
+
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
@@ -68,4 +70,4 @@ data class PreJob(
     @JsonProperty("depend-on")
     val dependOn: List<String>? = null,
     override val yamlMetaData: MetaData? = null
-) : YamlMetaData
+) : YamlMetaData, IPreJob

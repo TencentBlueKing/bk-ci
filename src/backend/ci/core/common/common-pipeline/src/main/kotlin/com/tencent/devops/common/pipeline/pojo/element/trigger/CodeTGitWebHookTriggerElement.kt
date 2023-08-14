@@ -68,23 +68,25 @@ data class CodeTGitWebHookTriggerData(
 @ApiModel("TGit事件触发数据")
 data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("分支名称", required = false)
-    val branchName: String?,
+    val branchName: String? = null,
     @ApiModelProperty("用于排除的分支名", required = false)
-    val excludeBranchName: String?,
+    val excludeBranchName: String? = null,
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("用于包含的路径", required = false)
-    val includePaths: String?,
+    val includePaths: String? = null,
     @ApiModelProperty("用于排除的路径", required = false)
-    val excludePaths: String?,
+    val excludePaths: String? = null,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("用于排除的user id", required = false)
-    val excludeUsers: List<String>?,
+    val excludeUsers: List<String>? = null,
     @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?,
     @ApiModelProperty("是否为block", required = false)
-    val block: Boolean?,
+    val block: Boolean? = null,
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")
@@ -93,10 +95,30 @@ data class CodeTGitWebHookTriggerInput(
     val tagName: String? = null,
     @ApiModelProperty("用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
+    @ApiModelProperty("tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
     @ApiModelProperty("用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false,
     @ApiModelProperty("code review 状态", required = false)
-    val includeCrState: List<String>? = null
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code review 类型", required = false)
+    val includeCrTypes: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("是否启用回写")
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("mr事件action")
+    val includeMrAction: List<String>? = null,
+    @ApiModelProperty("push事件action")
+    val includePushAction: List<String>? = null,
+    @ApiModelProperty("是否启用第三方过滤")
+    val enableThirdFilter: Boolean? = false
 )

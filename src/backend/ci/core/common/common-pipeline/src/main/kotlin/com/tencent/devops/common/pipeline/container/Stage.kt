@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
@@ -68,8 +69,10 @@ data class Stage(
     @ApiModelProperty("步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var executeCount: Int? = null,
     @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null
-) {
+    var timeCost: BuildRecordTimeCost? = null,
+    override var template: String? = null,
+    override var ref: String? = null
+) : IModelTemplate {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */

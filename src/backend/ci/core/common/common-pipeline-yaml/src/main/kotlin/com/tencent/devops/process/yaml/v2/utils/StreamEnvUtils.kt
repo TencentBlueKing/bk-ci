@@ -30,10 +30,11 @@ package com.tencent.devops.process.yaml.v2.utils
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 
 object StreamEnvUtils {
-    fun checkEnv(env: Map<String, Any?>?, fileName: String? = null): Boolean {
+    fun checkEnv(env: Map<String, Any?>?, fileName: TemplatePath? = null): Boolean {
         if (env != null) {
             if (env.size > 100) {
                 throw YamlFormatException(

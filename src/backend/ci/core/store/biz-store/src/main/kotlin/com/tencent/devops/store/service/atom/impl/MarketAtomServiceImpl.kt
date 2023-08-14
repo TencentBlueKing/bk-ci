@@ -91,6 +91,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
@@ -132,16 +133,16 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -328,11 +329,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val atomIndexInfos = atomIndexInfosMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                val flag = storeCommonService.generateInstallFlag(
+                    defaultFlag = defaultFlag,
                     members = members,
                     userId = userId,
                     visibleList = visibleList,
-                    userDeptList = userDeptList)
+                    userDeptList = userDeptList
+                )
                 val classifyId = it[tAtom.CLASSIFY_ID] as String
                 var logoUrl = it[tAtom.LOGO_URL]
                 logoUrl = if (logoUrl?.contains("?") == true) {
@@ -1198,6 +1201,29 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return result
     }
 
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, String> {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return emptyMap()
+        val res = mutableMapOf<String, String>()
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
+        if (null != props["input"]) {
+            val input = props["input"] as Map<String, Any>
+            input.forEach { inputIt ->
+                val paramKey = inputIt.key
+                val paramValueMap = inputIt.value as Map<String, Any>
+                val default = when (val d = paramValueMap["default"]) {
+                    null -> null
+                    is List<*> -> d.joinToString(separator = ",")
+                    is String -> d
+                    else -> d.toString()
+                }
+                if (default != null) {
+                    res[paramKey] = default
+                }
+            }
+        }
+        return res
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
@@ -1336,7 +1362,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                        "true".equals(paramValueMap["required"].toString(), true)
+                    "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1390,7 +1416,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             "atom-checkbox" -> sb.append("boolean")
                             "key-value-normal" -> sb.append(
                                 "\n    - key: string" +
-                                "\n      value: string"
+                                    "\n      value: string"
                             )
                             else -> sb.append("string")
                         }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v2.parsers.template.models
 
+import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.Repositories
 
@@ -39,7 +40,7 @@ import com.tencent.devops.process.yaml.v2.models.Repositories
  * @param extraParameters 额外参数，由各个服务具体定义
  */
 data class GetTemplateParam<T>(
-    val path: String,
+    val path: TemplatePath,
     val templateType: TemplateType?,
     val nowRepoId: String?,
     val targetRepo: Repositories?,
