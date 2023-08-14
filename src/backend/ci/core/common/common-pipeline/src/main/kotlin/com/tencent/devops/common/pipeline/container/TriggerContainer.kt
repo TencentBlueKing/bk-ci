@@ -80,7 +80,9 @@ data class TriggerContainer(
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = null
+    override var timeCost: BuildRecordTimeCost? = null,
+    override var template: String? = null,
+    override var ref: String? = null
 ) : Container {
     companion object {
         const val classType = "trigger"
