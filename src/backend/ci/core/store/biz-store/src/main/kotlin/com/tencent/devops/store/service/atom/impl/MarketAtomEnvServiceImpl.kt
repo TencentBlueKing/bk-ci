@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -282,12 +283,17 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
         )
         val tAtom = TAtom.T_ATOM
-        val atomEnvInfoRecord = getAtomEnvInfoRecord(
-            atomId = atomBaseInfoRecord[tAtom.ID],
-            osName = osName,
-            osArch = osArch,
-            convertOsFlag = convertOsFlag
-        )
+        val htmlTemplateVersion = atomBaseInfoRecord[tAtom.HTML_TEMPLATE_VERSION]
+        val atomEnvInfoRecord = if (htmlTemplateVersion != FrontendTypeEnum.HISTORY.typeVersion) {
+            getAtomEnvInfoRecord(
+                atomId = atomBaseInfoRecord[tAtom.ID],
+                osName = osName,
+                osArch = osArch,
+                convertOsFlag = convertOsFlag
+            )
+        } else {
+            null
+        }
         val status = atomBaseInfoRecord[tAtom.ATOM_STATUS] as Byte
         val createTime = atomBaseInfoRecord[tAtom.CREATE_TIME] as LocalDateTime
         val updateTime = atomBaseInfoRecord[tAtom.UPDATE_TIME] as LocalDateTime
