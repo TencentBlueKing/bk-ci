@@ -2,7 +2,7 @@
 name: Daily Cache
 on:
   schedule:
-  - cron: '45 3 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
+  - cron: '* * * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
 jobs:
   backend:
     name: Build backend
