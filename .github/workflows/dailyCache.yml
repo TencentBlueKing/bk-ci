@@ -9,25 +9,3 @@ jobs:
   backend:
     name: Build backend
     uses: ./.github/workflows/backend.yml
-  release-jar:
-    name: Release All
-    runs-on: ubuntu-20.04
-    needs: [backend]
-    steps:
-    ## bkci
-    - name: download bkci
-      uses: actions/download-artifact@v1
-      with:
-        name: backend-jar
-        path: ./
-  release-docker:
-    name: Release All
-    runs-on: ubuntu-20.04
-    needs: [backend]
-    steps:
-    ## bkci
-    - name: download bkci
-      uses: actions/download-artifact@v1
-      with:
-        name: backend-docker
-        path: ./
