@@ -4,8 +4,9 @@ on:
   schedule:
   - cron: '0 3 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行 TODO
 jobs:
-  backup:
-    runs-on: ubuntu-latest
+  backend:
+    name: Build backend
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
