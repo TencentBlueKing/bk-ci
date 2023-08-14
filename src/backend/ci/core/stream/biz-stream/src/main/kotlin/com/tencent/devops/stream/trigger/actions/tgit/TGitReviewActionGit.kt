@@ -118,9 +118,7 @@ class TGitReviewActionGit(
             } else {
                 event.reviewer!!.reviewer.username
             },
-            gitProjectName = event.repository?.let {
-                GitUtils.getProjectName(it.homepage)
-            }
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
         this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this

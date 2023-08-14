@@ -167,9 +167,7 @@ data class StreamGitRequestEventReq(
             }
             is GitReviewEvent -> {
                 val event = gitRequestEvent.gitEvent as GitReviewEvent
-                event.repository?.let {
-                    jumpUrl = it.homepage + "/reviews/" + gitRequestEvent.mergeRequestId
-                }
+                jumpUrl = event.repository.homepage + "/reviews/" + gitRequestEvent.mergeRequestId
                 buildTitle = commitMsg
                 buildSource = "[$mergeRequestId]"
             }
