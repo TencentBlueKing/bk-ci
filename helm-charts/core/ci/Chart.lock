@@ -7,10 +7,10 @@ dependencies:
   version: 8.8.3
 - name: redis
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 14.8.8
+  version: 15.3.3
 - name: elasticsearch
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 17.5.2
+  version: 17.5.4
 - name: rabbitmq
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.20.1
@@ -25,6 +25,6 @@ dependencies:
   version: 10.30.6
 - name: kubernetes-manager
   repository: file://./local_chart/kubernetes-management
-  version: 0.0.36
-digest: sha256:9a64627edf1e223f51c5aac9ebef4ea399b13b48d0ac241f3a1fe55c5f974bc7
-generated: "2023-07-03T15:53:26.797752554+08:00"
+  version: 0.0.37
+digest: sha256:f39b897b438471cfb4cc9e98a3c4c44ec9d8950c1bb7b658dda8a354cad922a3
+generated: "2023-08-09T15:09:12.834702422+08:00"
