@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
@@ -76,6 +77,14 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(
             transferService.buildPreview(userId, projectId, pipelineId, version)
         )
+    }
+
+    override fun createPipelineFromPipeline(userId: String, projectId: String, useTemplateSettings: Boolean?, pipeline: TemplateInstanceCreateRequest): Result<PipelineId> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineModelAndYaml> {
+        TODO("Not yet implemented")
     }
 
     override fun createPipeline(
