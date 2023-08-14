@@ -15,6 +15,10 @@ on:
     - 'src/backend/ci/**'
   workflow_dispatch:
   workflow_call:
+    inputs:
+      upload:
+        required: true
+        type: boolean
 
 jobs:
   backend-jar:
@@ -51,10 +55,29 @@ jobs:
       run: |
         ./gradlew clean test build :core:worker:worker-agent:shadowJar \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-    - uses: actions/upload-artifact@v3
+    - name: download frontend
+      if: ${{ inputs.upload }}
+      uses: actions/download-artifact@v3
       with:
-        name: backend-jar
-        path: src/backend/ci/release
+        name: frontend
+        path: src/frontend/frontend
+    - name: download agent
+      if: ${{ inputs.upload }}
+      uses: actions/download-artifact@v3
+      with:
+        name: agent
+        path: src/agent/bin/
+    - name: make package
+      if: ${{ inputs.upload }}
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
+    - uses: actions/upload-artifact@v3
+      if: ${{ inputs.upload }}
+      with:
+        name: bkci-slim
+        path: bkci-slim.tar.gz
 
   backend-docker:
     name: Build backend -- Docker
@@ -90,7 +113,65 @@ jobs:
       run: |
         ./gradlew clean test build :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-    - uses: actions/upload-artifact@v3
+    - name: download frontend
+      if: ${{ inputs.upload }}
+      uses: actions/download-artifact@v3
       with:
-        name: backend-docker
-        path: src/backend/ci/release
+        name: frontend
+        path: src/frontend/frontend
+    - name: download agent
+      if: ${{ inputs.upload }}
+      uses: actions/download-artifact@v3
+      with:
+        name: agent
+        path: src/agent/bin/
+    - name: make package
+      if: ${{ inputs.upload }}
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
+    - name: setup docker
+      if: ${{ inputs.upload }}
+      uses: docker-practice/actions-setup-docker@master
+    - name: create docker image
+      if: ${{ inputs.upload }}
+      working-directory: docker-images/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
+        ./0.get_release.sh
+        ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+        ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+        ./3.build_frontend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+    - name: setup python
+      if: ${{ inputs.upload }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.7.15"
+    - name: generate helm chart
+      if: ${{ inputs.upload }}
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo 'python build'
+        pip install pyhumps
+        pip install PyYAML
+        python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version $version
+    - name: install helm
+      if: ${{ inputs.upload }}
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.8.1
+    - name: package helm chart
+      if: ${{ inputs.upload }}
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        helm package . --version $version --app-version $version
+        mv bk-ci-$version.tgz bk-ci-charts.tgz
+    - uses: actions/upload-artifact@v3
+      if: ${{ inputs.upload }}
+      with:
+        name: bkci-chart
+        path: helm-charts/core/ci/bk-ci-charts.tgz

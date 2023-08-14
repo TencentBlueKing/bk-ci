@@ -11,6 +11,10 @@ on:
     - 'src/agent/**'
   workflow_dispatch:
   workflow_call:
+    inputs:
+      upload:
+        required: true
+        type: boolean
 
 jobs:
   build:
@@ -24,6 +28,7 @@ jobs:
     - run: make clean all
       working-directory: src/agent/
     - uses: actions/upload-artifact@v3
+      if: ${{ inputs.upload }}
       with:
         name: agent
         path: src/agent/bin/
