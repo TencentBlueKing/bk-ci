@@ -36,7 +36,7 @@ dependencies {
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
     api(project(":core:monitoring:api-monitoring"))
-    api(project(":core:artifactory:api-artifactory-store"))
+    api(project(":core:artifactory:api-artifactory"))
     api(project(":core:store:model-store"))
     testImplementation(project(":core:common:common-test"))
     api("net.coobird:thumbnailator")

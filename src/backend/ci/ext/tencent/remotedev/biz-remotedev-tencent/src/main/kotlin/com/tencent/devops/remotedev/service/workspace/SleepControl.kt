@@ -45,11 +45,13 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
@@ -74,6 +76,7 @@ class SleepControl @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon
 ) {
@@ -92,7 +95,7 @@ class SleepControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
 
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
@@ -136,7 +139,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -218,7 +222,7 @@ class SleepControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.id}",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspace.name,
@@ -249,7 +253,8 @@ class SleepControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.SLEEPING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -323,6 +328,10 @@ class SleepControl @Autowired constructor(
             )
         }
 
+        if (workspace.systemType == WorkspaceSystemType.WINDOWS_GPU.name) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.creator)
+        }
+
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
@@ -338,7 +347,8 @@ class SleepControl @Autowired constructor(
             status = status,
             action = WorkspaceAction.SLEEP,
             systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
         )
     }
 }

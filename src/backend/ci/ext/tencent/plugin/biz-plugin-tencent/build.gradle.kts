@@ -26,8 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
+    api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:plugin:api-plugin-tencent"))
     api(project(":ext:tencent:ticket:api-ticket-tencent"))
     api(project(":ext:tencent:scm:api-scm-tencent"))

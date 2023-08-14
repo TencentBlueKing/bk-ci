@@ -48,11 +48,13 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
@@ -82,6 +84,7 @@ class DeleteControl @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
+    private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon
 ) {
 
@@ -90,7 +93,12 @@ class DeleteControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
+    fun deleteWorkspace(
+        userId: String,
+        workspaceName: String,
+        needPermission: Boolean = true,
+        checkDeleteImmediately: Boolean? = null
+    ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
         if (needPermission) {
             permissionService.checkPermission(userId, workspaceName)
@@ -99,7 +107,7 @@ class DeleteControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
 
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
@@ -108,7 +116,7 @@ class DeleteControl @Autowired constructor(
                 )
 
             // 校验状态以及处理异常的情况
-            val deleteImmediately = checkWorkspaceStatusForDelete(workspace, userId)
+            val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
 
             // 创建操作历史记录
             createDeleteOperationHistoryRecord(workspace, userId)
@@ -141,7 +149,8 @@ class DeleteControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.DELETING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -153,7 +162,7 @@ class DeleteControl @Autowired constructor(
         workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = Constansts.timeoutDays,
             dslContext = dslContext,
-            workspaceMountType = null
+            systemType = WorkspaceSystemType.LINUX
         ).parallelStream().forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
@@ -166,7 +175,7 @@ class DeleteControl @Autowired constructor(
             }
         }
         val now = LocalDateTime.now()
-        workspaceDao.fetchWorkspace(dslContext, status = WorkspaceStatus.SLEEP, mountType = WorkspaceMountType.START)
+        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.SLEEP)
             ?.parallelStream()?.forEach {
                 MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
@@ -195,7 +204,7 @@ class DeleteControl @Autowired constructor(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.name}",
             expiredTimeInSeconds
-        ).lock().use {
+        ).tryLock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspace.name,
@@ -223,7 +232,8 @@ class DeleteControl @Autowired constructor(
                 status = true,
                 action = WorkspaceAction.DELETING,
                 systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
             )
             return true
         }
@@ -312,6 +322,10 @@ class DeleteControl @Autowired constructor(
                 )
             )
         }
+
+        if (workspace.systemType == WorkspaceSystemType.WINDOWS_GPU.name) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.creator)
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
@@ -326,7 +340,8 @@ class DeleteControl @Autowired constructor(
             status = status,
             action = WorkspaceAction.DELETE,
             systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
         )
     }
 

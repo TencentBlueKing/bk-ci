@@ -194,7 +194,7 @@ object ProcessMessageCode {
     const val BUILD_QUEUE_FOR_CONCURRENCY = "2101105" // 排队中: 当前构建正在并发组({0})排队中
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101106" // 安装插件失败
 
-    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101107" // 暂停的流水线已开始运行
+    const val ERROR_PAUSE_PIPELINE_IS_RUNNING = "2101107" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
@@ -279,6 +279,8 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
+    const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
+    const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -315,9 +317,6 @@ object ProcessMessageCode {
     const val BK_SEND_WECOM_CONTENT = "bkSendWecomContent" // 发送企业微信内容: ({0}) 到 {1}
     const val BK_SEND_WECOM_CONTENT_SUCCESSFULLY = "bkSendWecomContentSuccessfully" // 发送企业微信内容: ({0}) 到 {1}成功
     const val BK_SEND_WECOM_CONTENT_FAILED = "bkSendWecomContentFailed" // 发送企业微信内容: ({0}) 到 {1}失败:
-    const val BK_MATCHING_FILE = "bkMatchingFile" // 匹配文件中:
-    const val BK_UPLOAD_CORRESPONDING_FILE = "bkUploadCorrespondingFile" // 上传对应文件到织云成功!
-    const val BK_START_UPLOADING_CORRESPONDING_FILES = "bkStartUploadingCorrespondingFiles" // 开始上传对应文件到织云...
     const val BK_PULL_GIT_WAREHOUSE_CODE = "bkPullGitWarehouseCode" // 拉取Git仓库代码
     const val BK_AUTOMATIC_EXPORT_NOT_SUPPORTED = "bkAutomaticExportNotSupported"
     // ### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。

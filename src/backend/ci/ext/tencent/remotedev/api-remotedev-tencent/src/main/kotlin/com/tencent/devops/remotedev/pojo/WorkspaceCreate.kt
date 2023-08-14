@@ -45,5 +45,5 @@ data class WorkspaceCreate(
     @ApiModelProperty("当前运行客户端的OS")
     val currentOS: String?,
     @ApiModelProperty("windows 配置id")
-    val windowsResourceConfigId: Long?
+    val windowsResourceConfigId: Int?
 )

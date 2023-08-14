@@ -40,7 +40,7 @@ const backendLocalEnum = {
     'fr-FR': 'fr_FR' // 法文
 }
 
-function getSubDoamin () {
+function getSubDomain () {
     try {
         return location.hostname.split('.').reduce((acc, _, index, list) => {
             const last = list.length - 1
@@ -71,7 +71,7 @@ function getLsLocale () {
 function setLsLocale (locale) {
     const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
-        const subDomains = getSubDoamin()
+        const subDomains = getSubDomain()
         subDomains.forEach(domain => {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })

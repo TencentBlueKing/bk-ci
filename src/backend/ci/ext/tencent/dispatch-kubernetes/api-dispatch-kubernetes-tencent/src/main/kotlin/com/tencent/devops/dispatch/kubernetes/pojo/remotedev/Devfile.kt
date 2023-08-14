@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("devfile 定义处")
 data class Devfile(
     @ApiModelProperty("定义devfile的版本")
-    val version: String,
+    val version: String = "",
     @ApiModelProperty("定义在工作区的git配置键值对。")
     val envs: Map<String, String>? = null,
     @JsonProperty("runs-on")
@@ -26,7 +26,12 @@ data class Devfile(
     @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
     var dotfileRepo: String? = null,
     @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
-    var workspaceFolder: String? = null
+    var workspaceFolder: String? = null,
+    @ApiModelProperty("申请云桌面时指定的区域")
+    val zoneId: String? = null,
+    @ApiModelProperty("申请云桌面时指定的机型:L、XL等")
+    val machineType: String? = null
+
 ) {
     fun checkWorkspaceMountType(): WorkspaceMountType {
         if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {

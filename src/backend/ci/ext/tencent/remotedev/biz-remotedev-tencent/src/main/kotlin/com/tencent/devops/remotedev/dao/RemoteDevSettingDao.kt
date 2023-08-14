@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
@@ -114,17 +115,34 @@ class RemoteDevSettingDao {
 
     fun fetchAllUserSettings(
         dslContext: DSLContext,
-        queryUser: String?
+        queryUser: String?,
+        limit: SQLLimit
     ): Result<TRemoteDevSettingsRecord> {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             val condition = mutableListOf<Condition>()
-            condition.add(USER_SETTING.isNotNull)
+            condition.add(USER_SETTING.ne(""))
             if (!queryUser.isNullOrBlank()) {
-                    condition.add(USER_ID.eq(queryUser))
+                condition.add(USER_ID.like("%$queryUser%"))
             }
             return dslContext.selectFrom(this)
                 .where(condition)
+                .limit(limit.limit).offset(limit.offset)
                 .fetch()
+        }
+    }
+    fun countAllUserSettings(
+        dslContext: DSLContext,
+        queryUser: String?
+    ): Long {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            val condition = mutableListOf<Condition>()
+            condition.add(USER_SETTING.ne(""))
+            if (!queryUser.isNullOrBlank()) {
+                condition.add(USER_ID.like("%$queryUser%"))
+            }
+            return dslContext.selectCount().from(this)
+                .where(condition)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -174,6 +192,28 @@ class RemoteDevSettingDao {
                 createOrUpdateSetting4OP(dslContext, userId, null)
                 return RemoteDevUserSettings()
             }
+        }
+    }
+
+    fun batchUpdateWinUsageRemainingTime(
+        dslContext: DSLContext,
+        data: List<Pair<String, Int>>
+    ) {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            data.forEach { (userId, time) ->
+                dslContext.update(this)
+                    .set(WIN_USAGE_REMAINING_TIME, time).where(USER_ID.eq(userId)).execute()
+            }
+        }
+    }
+
+    fun fetchSingleUserWinTimeLeft(
+        dslContext: DSLContext,
+        userId: String
+    ): Int? {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            return dslContext.select(WIN_USAGE_REMAINING_TIME)
+                .from(this).where(USER_ID.eq(userId)).fetchAny(WIN_USAGE_REMAINING_TIME)
         }
     }
 

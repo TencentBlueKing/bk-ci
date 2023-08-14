@@ -36,7 +36,9 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -49,6 +51,7 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -102,8 +105,9 @@ class WorkspaceCommon @Autowired constructor(
         type: WebSocketActionType,
         status: Boolean?,
         action: WorkspaceAction,
-        systemType: WorkspaceSystemType,
-        workspaceMountType: WorkspaceMountType
+        systemType: WorkspaceSystemType? = null,
+        workspaceMountType: WorkspaceMountType? = null,
+        ownerType: WorkspaceOwnerType? = null
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -115,7 +119,8 @@ class WorkspaceCommon @Autowired constructor(
                     status = action,
                     errorMsg = errorMsg,
                     systemType = systemType,
-                    workspaceMountType = workspaceMountType
+                    workspaceMountType = workspaceMountType,
+                    ownerType = ownerType
                 ),
                 projectId = "",
                 userIds = getWebSocketUsers(userId, workspaceName),
@@ -156,7 +161,8 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.namespace,
-                workspaceInfo.curLaunchId
+                workspaceInfo.curLaunchId,
+                workspaceInfo.regionId
             )
             redisCache.saveWorkspaceDetail(
                 workspaceName,
@@ -258,12 +264,13 @@ class WorkspaceCommon @Autowired constructor(
      * 如果已经销毁，直接返回false
      */
     fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
+        val status = WorkspaceStatus.values()[workspace.status]
         return (
-            WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+            status.notOk2doNextAction() && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME
-            ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
+            ) || status.checkDeleted() || status.workspaceInitializing()
     }
 
     fun updateLastHistory(
@@ -321,19 +328,27 @@ class WorkspaceCommon @Autowired constructor(
 
     fun checkWorkspaceAvailability(
         userId: String,
-        workspace: TWorkspaceRecord
+        type: String
     ) {
-        when (workspace.workspaceMountType) {
+        when (type) {
             WorkspaceMountType.START.name -> {
-                val duration = remoteDevSettingService.startCloudExperienceDuration(userId)
-                if (duration * 60 * 60 < workspace.usageTime) {
+                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+                if (timeLeft <= 0) {
                     throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE.errorCode,
-                        params = arrayOf(workspace.name, duration.toString())
+                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
                     )
                 }
             }
         }
+    }
+
+    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .syncStartCloudResourceList().data
+        }.onFailure {
+            logger.warn("Error syncing start cloud resource list: ${it.message}")
+        }.getOrNull() ?: emptyList()
     }
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {

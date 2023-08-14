@@ -69,7 +69,6 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_PROJECT_TAKEDOWN_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_PERMISSION
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -223,13 +222,6 @@ class ExperienceService @Autowired constructor(
 
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-        experiencePermissionService.validateTaskPermission(
-            user = userId,
-            projectId = experienceRecord.projectId,
-            experienceId = experienceId,
-            authPermission = AuthPermission.VIEW,
-            message = I18nUtil.getCodeLanMessage(USER_NEED_VIEW_EXP_PERMISSION)
-        )
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
@@ -398,7 +390,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                        "artifactoryType:$artifactoryType , path:${experience.path}"
+                    "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -811,13 +803,6 @@ class ExperienceService @Autowired constructor(
         artifactoryPath: String,
         artifactoryType: ArtifactoryType
     ) {
-        // Rbac 得校验是否有创建体验的权限。
-        if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_PERMISSION,
-                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        }
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
             val permissionMsg = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId))
             throw ErrorCodeException(
@@ -1008,7 +993,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
-                        "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
+                    "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
                 deptUsers.isEmpty()
@@ -1187,14 +1172,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

@@ -28,7 +28,6 @@
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:plugin:biz-plugin-tencent"))
-    api(project(":core:plugin:codecc-plugin:biz-codecc"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
 }
 

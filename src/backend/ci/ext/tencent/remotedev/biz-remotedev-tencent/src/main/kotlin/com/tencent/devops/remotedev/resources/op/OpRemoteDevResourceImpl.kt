@@ -1,13 +1,16 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -69,8 +72,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
 
-    override fun getAllUserSettings(userId: String, queryUser: String?): Result<List<RemoteDevUserSettings>> {
-        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser))
+    override fun getAllUserSettings(
+        userId: String,
+        queryUser: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RemoteDevUserSettings>> {
+        return Result(remoteDevSettingService.getAllUserSetting4Op(queryUser, page, pageSize))
     }
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
@@ -104,7 +112,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace(
-                userId = userId, workspaceName = workspaceName, needPermission = false
+                userId = userId, workspaceName = workspaceName, needPermission = false,
+                checkDeleteImmediately = true
             )
         )
     }
@@ -116,6 +125,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             )
         )
     }
+
     override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
         return Result(windowsResourceConfigService.getAllConfig())
     }
@@ -137,10 +147,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceShared): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(
-            workspaceShared.operator,
-            workspaceShared.workspaceName,
-            workspaceShared.sharedUser
+        return Result(
+            workspaceService.shareWorkspace(
+                workspaceShared.operator,
+                workspaceShared.workspaceName,
+                workspaceShared.sharedUser
             )
         )
     }
@@ -151,5 +162,15 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
         return Result(workspaceService.deleteSharedWorkspace(id))
+    }
+
+    override fun getProjectWorkspaceList(
+        userId: String,
+        projectId: String?,
+        systemType: WorkspaceSystemType?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ProjectWorkspace>> {
+        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
     }
 }

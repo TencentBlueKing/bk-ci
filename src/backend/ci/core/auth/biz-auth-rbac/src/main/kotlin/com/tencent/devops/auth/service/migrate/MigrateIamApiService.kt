@@ -113,7 +113,7 @@ class MigrateIamApiService {
      * @param projectCodes v0项目ID
      */
     fun startV0MigrateTask(projectCodes: List<String>): Int {
-        logger.info("start v3 migrate task $projectCodes")
+        logger.info("start v0 migrate task $projectCodes")
         val data = JsonUtil.toJson(projectCodes).toRequestBody(mediaType)
         val request = Request.Builder()
             .url("$iamWebHost/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")

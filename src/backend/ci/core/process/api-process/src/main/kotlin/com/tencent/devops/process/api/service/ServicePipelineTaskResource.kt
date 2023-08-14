@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.pojo.ContainerStartInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import io.swagger.annotations.Api
@@ -105,4 +106,22 @@ interface ServicePipelineTaskResource {
         @PathParam("taskId")
         taskId: String
     ): Result<BuildStatus?>
+
+    @ApiOperation("获取流水线指定Job的构建状态")
+    @GET
+    @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}/tasks/{taskId}")
+    fun getContainerStartupInfo(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("containerId")
+        containerId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<ContainerStartInfo?>
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -74,17 +75,20 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
+        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(5)}"
 
         val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
                 userId = userId,
                 appName = appName,
-                pipeLineId = null
+                pipeLineId = pipeLineId,
+                zoneId = event.devFile.zoneId,
+                machineType = event.devFile.machineType
             )
         )
 
-        return CreateWorkspaceRes(res.cgsIp, EMPTY, res.cloudZoneId.toInt())
+        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toInt())
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -102,7 +106,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentDelete(
                 userId = event.userId,
                 appName = appName,
-                pipeLineId = null
+                pipeLineId = dispatchWorkspaceDao.getWorkspaceInfo(event.workspaceName, dslContext)?.taskId
             )
         )
 
@@ -125,23 +129,24 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        val ip = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)?.environmentUid
+        val workspaceInfo = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
             ?: throw BuildFailureException(
-                ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
-                ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
-                ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
-                "第三方服务-START-CLOUD 异常，异常信息 - ip 为空"
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
         return WorkspaceInfo(
             status = EnvStatusEnum.running,
-            hostIP = ip,
-            environmentIP = ip,
+            hostIP = workspaceInfo.environmentUid,
+            environmentIP = workspaceInfo.environmentUid,
             clusterId = "",
             namespace = "",
             environmentHost = "",
             ready = true,
             started = true,
-            curLaunchId = curLaunchId
+            curLaunchId = curLaunchId,
+            regionId = workspaceInfo.regionId
         )
     }
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {

@@ -20,7 +20,6 @@ import (
 const (
 	LocalDockerBuildTmpDirName  = "docker_build_tmp"
 	LocalDockerWorkSpaceDirName = "docker_workspace"
-	DockerDataDir               = "/data/landun/workspace"
 	DockerLogDir                = "/data/logs"
 )
 

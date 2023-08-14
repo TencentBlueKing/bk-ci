@@ -30,11 +30,10 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.plugin.api.ServiceCodeccResource
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
@@ -47,16 +46,16 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.service.common.TxStoreRepoService
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
-    private val client: Client,
+    private val codeccApi: CodeccApi,
     private val storeMemberDao: StoreMemberDao,
     private val businessConfigDao: BusinessConfigDao,
     private val txStoreRepoService: TxStoreRepoService,
@@ -94,7 +93,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         }
         logger.info("getCodeccMeasureInfo codeccBuildId:$codeccBuildId")
         val mameSpaceName = txStoreRepoService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
-        val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
+        val codeccMeasureInfoResult = codeccApi.getCodeccMeasureInfo(
             repoId = "$mameSpaceName/$storeCode",
             buildId = codeccBuildId
         )
@@ -173,7 +172,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("startCodeccTask commitId:$commitId")
         val mameSpaceName = txStoreRepoService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val repoId = "$mameSpaceName/$storeCode"
-        var startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
+        var startCodeccTaskResult = codeccApi.startCodeccTask(
             repoId = repoId,
             commitId = commitId
         )
@@ -186,7 +185,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             devLanguages?.forEach {
                 codeccLanguages.add(getCodeccLanguage(it))
             }
-            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repoId, codeccLanguages)
+            val createCodeccPipelineResult = codeccApi.createCodeccPipeline(repoId, codeccLanguages)
             logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
             val createFlag = createCodeccPipelineResult.data
             if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
@@ -196,7 +195,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                     defaultMessage = createCodeccPipelineResult.message
                 )
             }
-            startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
+            startCodeccTaskResult = codeccApi.startCodeccTask(
                 repoId = repoId,
                 commitId = commitId
             )

@@ -101,7 +101,8 @@ class RemoteDevResourceImpl @Autowired constructor(
             type = type ?: WebSocketActionType.WORKSPACE_CREATE,
             status = true,
             action = WorkspaceAction.COMPLETE_PULL_CODE,
-            systemType = ws.systemType, workspaceMountType = ws.workspaceMountType
+            systemType = ws.systemType, workspaceMountType = ws.workspaceMountType,
+            ownerType = ws.ownerType
         )
         return Result(true)
     }
