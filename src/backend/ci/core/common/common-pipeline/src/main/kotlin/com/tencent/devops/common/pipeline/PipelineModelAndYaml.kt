@@ -32,6 +32,6 @@ import io.swagger.annotations.ApiModelProperty
 data class PipelineModelAndYaml(
     @ApiModelProperty("流水线模型", required = true)
     val model: Model,
-    @ApiModelProperty("流水线YAML编排", required = false)
+    @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?
 )

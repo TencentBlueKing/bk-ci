@@ -58,6 +58,10 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
+    // TODO 从模板新建直接传ID
+
+    // TODO 版本历史接口增加获取YAML的方式（对比）
+
     @ApiOperation("新建流水线编排")
     @POST
     @Path("/projects/{projectId}/createPipeline")
