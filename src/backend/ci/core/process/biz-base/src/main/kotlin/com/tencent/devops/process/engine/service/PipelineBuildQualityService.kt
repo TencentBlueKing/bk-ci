@@ -327,7 +327,7 @@ class PipelineBuildQualityService(
         buildLogPrinter: BuildLogPrinter
     ): AtomResponse {
         with(task) {
-            val atomDesc = ControlPointPosition.create(position).name
+            val atomDesc = ControlPointPosition.create(position).cnName
             val elementId = task.taskId
 
             if (checkResult.success) {

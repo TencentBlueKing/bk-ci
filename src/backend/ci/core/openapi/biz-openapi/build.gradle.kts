@@ -32,7 +32,7 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:repository:api-repository"))
     api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory-sample"))
+    api(project(":core:artifactory:api-artifactory"))
     api(project(":core:common:common-client"))
     api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")

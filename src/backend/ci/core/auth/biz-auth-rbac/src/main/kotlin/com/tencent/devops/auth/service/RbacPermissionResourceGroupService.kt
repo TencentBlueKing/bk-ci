@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
@@ -92,8 +93,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = PageUtil.getValidPageSize(pageSize)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
+            val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
             permissionGradeManagerService.listGroup(
                 gradeManagerId = resourceInfo.relationId,
+                searchGroupDTO = searchGroupDTO,
                 page = validPage,
                 pageSize = validPageSize
             )
@@ -111,11 +114,23 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
         val iamGroupInfoVoList = iamGroupInfoList.map {
+            val resourceGroup = resourceGroupMap[it.id]
+            val defaultGroup = resourceGroup?.defaultGroup ?: false
+            // 默认组名需要支持国际化
+            val groupName = if (defaultGroup) {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
+                            AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                    defaultMessage = resourceGroup.groupName
+                )
+            } else {
+                it.name
+            }
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
-                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
+                defaultGroup = defaultGroup,
                 groupId = it.id,
-                name = it.name,
+                name = groupName,
                 displayName = it.name,
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
