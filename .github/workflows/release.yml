@@ -37,7 +37,7 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: backend-jar
-        path: ./
+        path: src/backend/ci/release
     - name: make package
       run: |
         version="$(basename $GITHUB_REF)"
@@ -68,7 +68,7 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: backend-docker
-        path: ./
+        path: src/backend/ci/release
     - name: make package
       run: |
         version="$(basename $GITHUB_REF)"
