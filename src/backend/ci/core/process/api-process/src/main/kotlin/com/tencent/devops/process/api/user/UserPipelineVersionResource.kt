@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelAndYaml
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -59,9 +60,58 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
-    // TODO 从模板新建直接传ID
+    @ApiOperation("通过指定模板创建流水线")
+    @POST
+    @Path("/projects/{projectId}/create_pipeline")
+    fun createPipelineFromPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false,
+        @ApiParam(value = "流水线模型实例请求", required = true)
+        pipeline: TemplateInstanceCreateRequest
+    ): Result<PipelineId>
 
-    // TODO 版本历史接口增加获取YAML的方式（对比）
+
+    @ApiOperation("获取流水线指定版本的两种编排")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/versions/{version}")
+    fun getVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<PipelineModelAndYaml>
+
+    @ApiOperation("新建流水线编排")
+    @POST
+    @Path("/projects/{projectId}/create_pipeline")
+    fun createPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false,
+        @ApiParam(value = "流水线PAC模型", required = true)
+        pipeline: PipelineModelAndYaml
+    ): Result<PipelineId>
 
     @ApiOperation("触发前配置")
     @GET
@@ -80,23 +130,6 @@ interface UserPipelineVersionResource {
         @QueryParam("version")
         version: Int?
     ): Result<PreviewResponse>
-
-    @ApiOperation("新建流水线编排")
-    @POST
-    @Path("/projects/{projectId}/create_pipeline")
-    fun createPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("是否使用模板配置", required = false)
-        @QueryParam("useTemplateSettings")
-        useTemplateSettings: Boolean? = false,
-        @ApiParam(value = "流水线PAC模型", required = true)
-        pipeline: PipelineModelAndYaml
-    ): Result<PipelineId>
 
     @ApiOperation("保存流水线编排草稿")
     @POST

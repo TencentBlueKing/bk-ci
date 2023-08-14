@@ -25,19 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.pojo
 
-/**
- * model中报错模板信息的扩展参数
- */
-interface IModelTemplate {
+import io.swagger.annotations.ApiModelProperty
 
-    var template: String?
+data class TemplateInstanceCreateRequest(
+    @ApiModelProperty("模板ID", required = true)
+    var template: String,
+    @ApiModelProperty("版本REF（不传默认最新）", required = false)
     var ref: String?
-
-    /**
-     * 判读是否来自于模板
-     * @return true 是来自于模板|false 不是来自于模板
-     */
-    fun fromTemplate() = !template.isNullOrBlank()
-}
+)
