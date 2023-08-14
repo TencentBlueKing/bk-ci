@@ -58,7 +58,7 @@ class UserTencentFileResourceImpl @Autowired constructor(
     ): Result<String> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
-        return Result("")
+        return Result("true")
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
