@@ -14,7 +14,7 @@ on:
     inputs:
       upload:
         required: true
-        type: boolean
+        type: string
 
 jobs:
   build:
@@ -34,7 +34,7 @@ jobs:
     - run: make clean all
       working-directory: src/agent/
     - uses: actions/upload-artifact@v3
-      if: ${{ inputs.upload }}
+      if: ${{ inputs.upload == 'true'  }}
       with:
         name: agent
         path: src/agent/bin/

@@ -17,7 +17,7 @@ on:
     inputs:
       upload:
         required: true
-        type: boolean
+        type: string
 
 jobs:
   frontend:
@@ -42,7 +42,7 @@ jobs:
     - run: yarn install && yarn start && yarn public
       working-directory: src/frontend
     - uses: actions/upload-artifact@v3
-      if: ${{ inputs.upload }}
+      if: ${{ inputs.upload == 'true'  }}
       with:
         name: frontend
         path: src/frontend/frontend/
