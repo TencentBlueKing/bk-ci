@@ -152,8 +152,7 @@ class RepositoryGithubDao {
     ) {
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
             val conditions = mutableListOf(
-                REPOSITORY_ID.eq(id),
-                GIT_PROJECT_ID.le(0)
+                REPOSITORY_ID.eq(id)
             )
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
