@@ -123,5 +123,6 @@
         "keyFileRule": "Please upload .key file",
         "userCertFile": "Client certificate",
         "userKeyFile": "Client Key File"
-    }
+    },
+    "validateFailed": "Credential inValid"
 }

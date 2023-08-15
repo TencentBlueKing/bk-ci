@@ -118,7 +118,7 @@
             },
 
             copyValue (planId) {
-                copyText(planId, this.$t.bind(this))
+                copyText(planId, this)
             },
 
             requireRule (name) {

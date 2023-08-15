@@ -54,7 +54,7 @@
             },
 
             copy () {
-                copyText(this.$route.query.planId, this.$t.bind(this))
+                copyText(this.$route.query.planId, this)
             },
 
             goToDetail () {
