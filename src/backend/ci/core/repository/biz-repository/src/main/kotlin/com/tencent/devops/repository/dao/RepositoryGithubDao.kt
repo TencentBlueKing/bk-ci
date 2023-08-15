@@ -123,37 +123,4 @@ class RepositoryGithubDao {
                 .fetch()
         }
     }
-
-    /**
-     * 分页查询
-     */
-    fun getAllRepo(
-        dslContext: DSLContext,
-        limit: Int,
-        offset: Int
-    ): Result<TRepositoryGithubRecord>? {
-        with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
-            return dslContext.selectFrom(this)
-                .orderBy(CREATED_TIME.desc())
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
-    fun updateGitProjectId(
-        dslContext: DSLContext,
-        id: Long,
-        gitProjectId: Long
-    ) {
-        with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
-            val conditions = mutableListOf(
-                REPOSITORY_ID.eq(id),
-                GIT_PROJECT_ID.le(0)
-            )
-            dslContext.update(this)
-                .set(GIT_PROJECT_ID, gitProjectId)
-                .where(conditions)
-                .execute()
-        }
-    }
 }
