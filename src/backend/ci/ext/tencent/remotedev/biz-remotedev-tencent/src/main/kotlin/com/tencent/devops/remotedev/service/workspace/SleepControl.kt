@@ -286,7 +286,7 @@ class SleepControl @Autowired constructor(
         if (oldStatus.checkSleeping()) return
         if (status) {
             // 清缓存
-            redisCache.deleteWorkspaceDetail(workspaceName)
+            workspaceDao.deleteWorkspaceDetail(dslContext, workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
