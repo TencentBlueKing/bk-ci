@@ -31,7 +31,13 @@ import io.swagger.annotations.ApiModelProperty
 
 data class TemplateInstanceCreateRequest(
     @ApiModelProperty("模板ID", required = true)
-    var template: String,
+    var templateId: String,
     @ApiModelProperty("版本REF（不传默认最新）", required = false)
-    var ref: String?
+    var ref: String?,
+    @ApiModelProperty("是否使用模板配置", required = false)
+    var useTemplateSettings: Boolean?,
+    @ApiModelProperty("是否使用标签配置", required = false)
+    var useLabelSettings: Boolean?,
+    @ApiModelProperty("是否使用并发配置", required = false)
+    var useConcurrencyGroup: Boolean?,
 )

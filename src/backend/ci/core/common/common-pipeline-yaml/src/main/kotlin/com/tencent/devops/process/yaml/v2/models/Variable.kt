@@ -30,24 +30,11 @@ package com.tencent.devops.process.yaml.v2.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import com.tencent.devops.common.api.util.JsonUtil
 
-//@JsonDeserialize(using = IVariableDeserializer::class)
+// @JsonDeserialize(using = IVariableDeserializer::class)
 interface IVariable
 //
-//class IVariableDeserializer : StdDeserializer<IVariable>(IVariable::class.java) {
+// class IVariableDeserializer : StdDeserializer<IVariable>(IVariable::class.java) {
 //    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): IVariable {
 //        val node: JsonNode = p.codec.readTree(p)
 //        return when (node) {
@@ -63,9 +50,9 @@ interface IVariable
 //            else -> throw Exception("")
 //        }
 //    }
-//}
+// }
 //
-//class IVariableSerializer : StdSerializer<IVariable>(IVariable::class.java) {
+// class IVariableSerializer : StdSerializer<IVariable>(IVariable::class.java) {
 //    override fun serialize(value: IVariable, gen: JsonGenerator, provider: SerializerProvider) {
 //        when (value) {
 //            is ShortVariable -> gen.writeString(value.value)
@@ -73,7 +60,7 @@ interface IVariable
 //            is TemplateVariable -> gen.writeObject(value.toList())
 //        }
 //    }
-//}
+// }
 
 /**
  * Variable model

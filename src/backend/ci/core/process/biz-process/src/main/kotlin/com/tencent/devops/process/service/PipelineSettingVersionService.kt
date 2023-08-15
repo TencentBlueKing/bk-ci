@@ -40,12 +40,10 @@ class PipelineSettingVersionService @Autowired constructor(
     private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
-    fun getSubscriptionsVer(
-        userId: String,
+    fun getPipelineSettingVersion(
         projectId: String,
         pipelineId: String,
-        version: Int,
-        channelCode: ChannelCode = ChannelCode.BS
+        version: Int
     ): PipelineSettingVersion {
         return pipelineSettingVersionDao.getSettingVersion(
             dslContext = dslContext,

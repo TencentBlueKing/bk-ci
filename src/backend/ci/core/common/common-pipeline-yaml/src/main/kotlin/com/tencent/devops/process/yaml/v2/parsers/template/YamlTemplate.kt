@@ -633,7 +633,7 @@ class YamlTemplate<T>(
                         templateType = templateType,
                         templateLib = templateLib,
                         nowRepo = nowRepo,
-                        toRepo = repo,
+                        toRepo = repo
                     ),
                     templateType = templateType
                 )

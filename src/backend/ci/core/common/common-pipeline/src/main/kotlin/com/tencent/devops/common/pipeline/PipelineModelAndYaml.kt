@@ -27,11 +27,12 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineModelAndYaml(
     @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
+    val modelAndSetting: PipelineModelAndSetting,
     @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?
 )

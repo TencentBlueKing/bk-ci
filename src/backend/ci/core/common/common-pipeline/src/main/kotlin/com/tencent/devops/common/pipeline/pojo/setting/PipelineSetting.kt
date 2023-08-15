@@ -25,26 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.common.pipeline.pojo.setting
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
-import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL
-import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL
-import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL
-import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -93,45 +83,4 @@ data class PipelineSetting(
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
-) {
-
-    @Suppress("ALL")
-    fun checkParam() {
-        if (maxPipelineResNum < 1) {
-            throw InvalidParamException(
-                message = I18nUtil.getCodeLanMessage(PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
-                params = arrayOf("maxPipelineResNum")
-            )
-        }
-        if (runLockType == PipelineRunLockType.SINGLE ||
-            runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
-        ) {
-            if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(MAXIMUM_QUEUE_LENGTH_ILLEGAL),
-                    params = arrayOf("waitQueueTimeMinute")
-                )
-            }
-            if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_QUEUES_ILLEGAL),
-                    params = arrayOf("maxQueueSize")
-                )
-            }
-        }
-        if (maxConRunningQueueSize != null && (
-            maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-            )
-        ) {
-            throw InvalidParamException(
-                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
-                params = arrayOf("maxConRunningQueueSize")
-            )
-        }
-    }
-}
+)

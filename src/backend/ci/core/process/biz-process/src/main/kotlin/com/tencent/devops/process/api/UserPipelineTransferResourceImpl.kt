@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineTransferResource
-import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferResponse
@@ -69,6 +68,4 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
     ): Result<Element> {
         return Result(transferService.yamlTaskTransfer(userId, projectId, pipelineId, yaml))
     }
-
-
 }

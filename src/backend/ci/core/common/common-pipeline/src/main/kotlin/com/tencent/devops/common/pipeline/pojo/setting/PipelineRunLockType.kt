@@ -25,9 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.common.pipeline.pojo.setting
 
-data class SubscriptionGroup(
-    val id: String,
-    val name: String
-)
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线运行锁定方式")
+enum class PipelineRunLockType {
+    @ApiModelProperty("可同时运行多个构建任务（默认）")
+    MULTIPLE,
+    @ApiModelProperty("同一时间最多只能运行一个构建任务")
+    SINGLE,
+    @ApiModelProperty("最多只能运行一个构建任务，且失败时锁定")
+    SINGLE_LOCK,
+    @ApiModelProperty("锁定流水线，任何触发方式都无法运行")
+    LOCK,
+    @ApiModelProperty("并发组锁定，项目级别，同一组的构建为SINGLE模式")
+    GROUP_LOCK;
+
+    companion object {
+        fun toValue(type: PipelineRunLockType?): Int {
+            return when (type) {
+                null -> 1
+                MULTIPLE -> 1
+                SINGLE -> 2
+                SINGLE_LOCK -> 3
+                LOCK -> 4
+                GROUP_LOCK -> 5
+            }
+        }
+
+        fun valueOf(value: Int): PipelineRunLockType {
+            return when (value) {
+                1 -> MULTIPLE
+                2 -> SINGLE
+                3 -> SINGLE_LOCK
+                4 -> LOCK
+                5 -> GROUP_LOCK
+                else -> MULTIPLE
+            }
+        }
+
+        fun checkLock(runLockType: Int?): Boolean {
+            return if (runLockType == null) {
+                false
+            } else valueOf(runLockType) == LOCK
+        }
+    }
+}
