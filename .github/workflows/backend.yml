@@ -49,7 +49,7 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-jar-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties','buildSrc/**/Versions.kt') }}
+          key: ${{ runner.os }}-gradle-docker-${{ hashFiles('src/backend/ci/**/*.gradle.kts', 'src/backend/ci/**/gradle-wrapper.properties','src/backend/ci/buildSrc/**/Versions.kt') }}
     - name: Gradle Build Backend Service
       working-directory: src/backend/ci
       run: |
