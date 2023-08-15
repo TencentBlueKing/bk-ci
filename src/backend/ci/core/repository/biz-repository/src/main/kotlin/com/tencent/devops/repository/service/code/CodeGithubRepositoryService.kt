@@ -95,7 +95,7 @@ class CodeGithubRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL()
             )
-            repositoryGithubDao.edit(transactionContext, repositoryId, repository.projectName, userId)
+            repositoryGithubDao.edit(dslContext, repositoryId, repository.projectName, repository.userName)
         }
     }
 
