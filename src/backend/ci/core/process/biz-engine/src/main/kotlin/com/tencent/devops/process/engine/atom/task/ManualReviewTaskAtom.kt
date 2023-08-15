@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -62,6 +61,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -74,6 +74,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 人工审核插件
@@ -204,7 +205,7 @@ class ManualReviewTaskAtom(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildReviewReminderEvent(
                     source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
-                    userId = task.starter, delayMills = param.reminderTime!! * 60 * 60 * 1000,
+                    userId = task.starter, delayMills = TimeUnit.HOURS.toMillis(param.reminderTime!!.toLong()).toInt(),
                     reviewUsers = reviewUsersList.toSet(),
                     notifyTitle = notifyTitle.ifBlank {
                         MessageUtil.getMessageByLocale(
