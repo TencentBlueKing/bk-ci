@@ -265,13 +265,16 @@ class WorkspaceDao {
                 .fetch()
         }
     }
+
+    /**
+     * 获取项目下工作空间列表
+     */
     fun limitFetchProjectWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
         systemType: WorkspaceSystemType? = null
     ): Result<TWorkspaceRecord>? {
-        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         val conditions = mutableListOf<Condition>()
 
         with(TWorkspace.T_WORKSPACE) {
