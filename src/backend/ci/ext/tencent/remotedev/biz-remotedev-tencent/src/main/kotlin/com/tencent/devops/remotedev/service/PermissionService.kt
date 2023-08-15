@@ -94,6 +94,20 @@ class PermissionService @Autowired constructor(
         }
     }
 
+    fun checkUserManager(userId: String, projectId: String) {
+        val res = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId
+        ).data
+        if (res != true) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
+    }
+
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
         if (!enablePermission) return true
 
