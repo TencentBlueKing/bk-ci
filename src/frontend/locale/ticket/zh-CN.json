@@ -123,5 +123,6 @@
         "keyFileRule": "请上传.key文件",
         "userCertFile": "服务端证书文件",
         "userKeyFile": "服务端密钥文件"
-    }
+    },
+    "validateFailed": "凭证非法"
 }
