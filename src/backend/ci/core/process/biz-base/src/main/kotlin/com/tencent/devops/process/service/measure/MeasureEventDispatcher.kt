@@ -35,7 +35,7 @@ import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-class MeasureEventDispatcher (
+class MeasureEventDispatcher(
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<IMeasureEvent> {
 
