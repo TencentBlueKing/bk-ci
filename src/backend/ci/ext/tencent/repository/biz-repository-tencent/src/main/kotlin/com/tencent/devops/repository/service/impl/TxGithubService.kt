@@ -36,6 +36,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
@@ -141,6 +142,13 @@ class TxGithubService @Autowired constructor(
 
     override fun listTags(token: String, projectName: String): List<String> {
         return client.get(ServiceGithubResource::class).listTags(
+            accessToken = token,
+            projectName = projectName
+        ).data!!
+    }
+
+    override fun getRepositoryInfo(token: String, projectName: String): GithubRepo {
+        return client.get(ServiceGithubResource::class).getRepositoryInfo(
             accessToken = token,
             projectName = projectName
         ).data!!

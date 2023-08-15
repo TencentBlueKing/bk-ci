@@ -49,6 +49,7 @@ import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_WAREHOUSE
 import com.tencent.devops.external.constant.ExternalMessageCode.PARAMETER_ERROR
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPO
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
@@ -271,6 +272,31 @@ class GithubService @Autowired constructor(
                 return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
             }
         }, 3, 500)
+    }
+
+    fun getRepositoryInfo(token: String, projectName: String): GithubRepo {
+        logger.info("getRepositoryInfo| $projectName")
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubRepo> {
+                override fun fail(e: Throwable): GithubRepo {
+                    logger.warn("BKSystemMonitor|getRepositoryInfo fail| e=${e.message}", e)
+                    throw e
+                }
+
+                override fun execute(): GithubRepo {
+                    val path = "repos/$projectName"
+                    val request = buildGet(token, path)
+                    val body = getBody(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = OPERATION_GET_REPO
+                        ),
+                        request
+                    )
+                    return objectMapper.readValue<GithubRepo>(body)
+                }
+            },
+            3, 500
+        )
     }
 
     private fun buildGet(token: String, path: String): Request {

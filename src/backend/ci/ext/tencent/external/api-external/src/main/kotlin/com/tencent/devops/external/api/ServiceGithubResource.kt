@@ -33,6 +33,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -181,4 +182,16 @@ interface ServiceGithubResource {
         @QueryParam("projectName")
         projectName: String
     ): Result<List<String>>
+
+    @ApiOperation("get github repository info")
+    @GET
+    @Path("/getRepositoryInfo")
+    fun getRepositoryInfo(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("projectName", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<GithubRepo>
 }
