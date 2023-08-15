@@ -35,9 +35,10 @@ jobs:
         path: src/frontend/**/node_modules
         key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
         lookup-only: ${{ github.event_name == 'tag' }}
-    - name: Install project dependencies
-      run: yarn --prefer-offline
-    - run: yarn install && yarn start && yarn public
+    - name: prefer offline
+      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      run: yarn --prefer-offline && yarn install
+    - run: yarn public
       working-directory: src/frontend
     - uses: actions/upload-artifact@v3
       if: ${{ inputs.upload == 'true'  }}
