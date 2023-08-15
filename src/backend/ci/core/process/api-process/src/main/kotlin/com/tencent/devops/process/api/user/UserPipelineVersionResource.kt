@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -71,7 +72,7 @@ interface UserPipelineVersionResource {
         projectId: String,
         @ApiParam(value = "流水线模型实例请求", required = true)
         pipeline: TemplateInstanceCreateRequest
-    ): Result<PipelineId>
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线指定版本的两种编排")
     @GET
@@ -112,7 +113,7 @@ interface UserPipelineVersionResource {
     @ApiOperation("保存流水线编排草稿")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/saveDraft")
-    fun savePipeline(
+    fun savePipelineDraft(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -124,11 +125,8 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndYaml: PipelineModelAndYaml,
-        @ApiParam("变更说明", required = false)
-        @QueryParam("description")
-        description: String? = null
-    ): Result<Boolean>
+        modelAndYaml: PipelineModelAndYaml
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("保存流水线设置")
     @POST
