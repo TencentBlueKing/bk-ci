@@ -106,7 +106,7 @@ class TGitReviewTriggerHandler(
             code = getI18Code(event),
             params = listOf(
                 "${event.repository.homepage}/reviews/${event.iid}",
-                event.commitId ?: "",
+                event.iid,
                 getUsername(event)
             )
         )
