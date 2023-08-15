@@ -63,7 +63,12 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
-        return Result(deleteControl.deleteWorkspace(userId, workspaceName))
+        return Result(deleteControl.deleteWorkspace(
+            userId = userId,
+            needPermission = false,
+            workspaceName = workspaceName
+        )
+        )
     }
 
     override fun getWorkspaceList(
