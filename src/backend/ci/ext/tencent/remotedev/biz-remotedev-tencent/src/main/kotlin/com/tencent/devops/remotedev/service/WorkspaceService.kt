@@ -520,7 +520,9 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
-        val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf { WorkspaceStatus.values()[workspace.status].checkRunning() }
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf {
+            WorkspaceStatus.values()[workspace.status].checkRunning()
+        }
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
