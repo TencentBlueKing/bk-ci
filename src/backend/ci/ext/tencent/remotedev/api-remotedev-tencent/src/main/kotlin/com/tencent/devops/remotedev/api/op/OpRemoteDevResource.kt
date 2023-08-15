@@ -229,7 +229,7 @@ interface OpRemoteDevResource {
     ): Result<Boolean>
 
     @ApiOperation("销毁工作空间")
-    @GET
+    @DELETE
     @Path("/workspace_delete")
     fun deleteWorkspace(
         @ApiParam(value = "用户ID", required = true)
