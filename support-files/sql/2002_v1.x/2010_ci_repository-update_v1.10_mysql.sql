@@ -26,9 +26,9 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPOSITORY_CODE_GITLAB'
+                    AND TABLE_NAME = 'T_REPOSITORY_GITHUB'
                     AND COLUMN_NAME = 'GIT_PROJECT_ID') THEN
-    ALTER TABLE `T_REPOSITORY_CODE_GITLAB`
+    ALTER TABLE `T_REPOSITORY_GITHUB`
         ADD COLUMN `GIT_PROJECT_ID` bigint(20) DEFAULT 0 COMMENT 'GIT项目ID';
     END IF;
 
