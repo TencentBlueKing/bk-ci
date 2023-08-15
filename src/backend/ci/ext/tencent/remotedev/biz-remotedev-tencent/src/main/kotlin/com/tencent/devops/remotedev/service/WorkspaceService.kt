@@ -566,8 +566,12 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             status = WorkspaceStatus.RUNNING
         )
-        if (workspace != null) {
-            return workspaceCommon.getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType)).let {
+
+        return workspace?.let {
+            workspaceCommon.getOrSaveWorkspaceDetail(
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            ).let {
                 WorkspaceProxyDetail(
                     workspaceName = workspaceName,
                     podIp = it.environmentIP,
@@ -575,13 +579,10 @@ class WorkspaceService @Autowired constructor(
                     environmentHost = it.environmentHost
                 )
             }
-        } else {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
-            )
-        }
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
+        )
     }
-
     // 更新用户运行中的空间的detail缓存信息
     fun updateUserWorkspaceDetailCache(userId: String) {
         workspaceDao.fetchWorkspace(
