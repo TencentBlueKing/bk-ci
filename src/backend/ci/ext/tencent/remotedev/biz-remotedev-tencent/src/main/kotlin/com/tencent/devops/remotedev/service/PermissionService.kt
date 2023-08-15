@@ -78,7 +78,6 @@ class PermissionService @Autowired constructor(
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
-                    val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
                     return workspaceDao.fetchWorkspaceUser(dslContext, name)
                 }
             }
