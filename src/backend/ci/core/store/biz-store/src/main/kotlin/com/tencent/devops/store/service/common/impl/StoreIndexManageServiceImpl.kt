@@ -331,7 +331,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         val oldStoreCodes =
             storeIndexManageInfoDao.getStoreCodeByElementName(dslContext, TRUSTWORTHY_INDEX_CODE, deptCode)
         val intersects = storeCodes.intersect(oldStoreCodes.toSet())
-        var delStoreCodes: List<String>
+        val delStoreCodes: List<String>
         val newStoreCodes = if (intersects.isNotEmpty()) {
             delStoreCodes = oldStoreCodes.subtract(intersects).toList()
             storeCodes.subtract(intersects)
