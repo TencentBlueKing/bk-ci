@@ -1,7 +1,11 @@
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.DispatchService
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
@@ -72,6 +76,7 @@ class PersistenceBuildService @Autowired constructor(
     }
 
     fun workerBuildFinish(projectId: String, persistenceAgentId: String, buildInfo: PersistenceBuildWithStatus) {
+        logger.info("$projectId $persistenceAgentId workerBuildFinish $buildInfo")
         val container = dcPersistenceContainerDao.getContainerStatus(dslContext, persistenceAgentId)
         if (container == null || container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
             logger.warn("Container $persistenceAgentId is null or status not running.")
@@ -98,17 +103,24 @@ class PersistenceBuildService @Autowired constructor(
             )
         }
 
-        client.get(ServiceBuildResource::class).workerBuildFinish(
-            projectId = buildInfo.buildId,
-            pipelineId = buildInfo.pipelineId ?: "",
-            buildId = buildInfo.buildId,
-            vmSeqId = buildInfo.vmSeqId,
-            nodeHashId = persistenceAgentId,
-            simpleResult = SimpleResult(
-                success = buildInfo.success,
-                message = buildInfo.message,
-                error = buildInfo.error
+        try {
+            client.get(ServiceBuildResource::class).setVMStatus(
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId ?: "",
+                buildId = buildInfo.buildId,
+                vmSeqId = buildInfo.vmSeqId,
+                status = if (buildInfo.success) {
+                    BuildStatus.SUCCEED
+                } else {
+                    BuildStatus.FAILED
+                },
+                errorType = ErrorType.SYSTEM,
+                errorCode = buildInfo.error?.errorCode ?: 0,
+                errorMsg = buildInfo.error?.errorMessage ?: ""
             )
-        )
+        } catch (ignore: ClientException) {
+            logger.error("SystemErrorLogMonitor|onContainerFailure|${buildInfo.buildId}|" +
+                             "error=${buildInfo.error}")
+        }
     }
 }

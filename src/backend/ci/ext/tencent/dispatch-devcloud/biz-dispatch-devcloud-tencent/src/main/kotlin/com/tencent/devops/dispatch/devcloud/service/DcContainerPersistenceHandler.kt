@@ -71,10 +71,10 @@ class DcContainerPersistenceHandler @Autowired constructor(
             }
 
             // 获取最近的一次持久化容器配置记录
-            val containerRecord = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
+            val persistenceContainer = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
 
             // 容器配置发生变更或者没有历史持久化容器配置记录时新建容器
-            if (containerChanged || containerRecord == null) {
+            if (containerChanged || persistenceContainer == null) {
                 val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
                 handlerContext.persistenceAgentId = persistenceAgentId
 
@@ -90,7 +90,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     status = PersistenceContainerStatus.RUNNING.status
                 )
             } else {
-                handlerContext.persistenceAgentId = containerRecord.persistenceAgentId
+                handlerContext.persistenceAgentId = persistenceContainer.persistenceAgentId
             }
 
             if (persistenceAgentId.isBlank()) {
