@@ -18,15 +18,17 @@ jobs:
     uses: ./.github/workflows/agent.yml
 
   backend:
+    needs: [frontend, agent]
     name: Build backend
     with:
       upload: true
+    secrets: inherit
     uses: ./.github/workflows/backend.yml
 
   releaseAll:
     name: Release All
     runs-on: ubuntu-20.04
-    needs: [frontend, agent, backend]
+    needs: [backend]
     steps:
     - name: download bkci-slim
       uses: actions/download-artifact@v3

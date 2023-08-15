@@ -6,6 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
+  frontend:
+    name: Build frontend
+    with:
+      upload: false
+    uses: ./.github/workflows/frontend.yml
+
+  agent:
+    name: Build agent
+    with:
+      upload: false
+    uses: ./.github/workflows/agent.yml
+
   backend:
+    needs: [frontend, agent]
     name: Build backend
+    with:
+      upload: false
+    secrets: inherit
     uses: ./.github/workflows/backend.yml
