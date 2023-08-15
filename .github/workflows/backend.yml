@@ -50,6 +50,7 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-jar-${{ hashFiles('src/backend/ci/**/*.gradle.kts', 'src/backend/ci/**/gradle-wrapper.properties','src/backend/ci/buildSrc/**/Versions.kt') }}
+        lookup-only: ${{ github.event_name == 'tag' }}
     - name: Gradle Build Backend Service
       working-directory: src/backend/ci
       run: |
@@ -108,6 +109,7 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-docker-${{ hashFiles('src/backend/ci/**/*.gradle.kts', 'src/backend/ci/**/gradle-wrapper.properties','src/backend/ci/buildSrc/**/Versions.kt') }}
+        lookup-only: ${{ github.event_name == 'tag' }}
     - name: Gradle Build Backend Service
       working-directory: src/backend/ci
       run: |

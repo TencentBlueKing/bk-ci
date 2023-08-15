@@ -34,6 +34,7 @@ jobs:
       with:
         path: src/frontend/**/node_modules
         key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
+        lookup-only: ${{ github.event_name == 'tag' }}
     - name: Install project dependencies
       run: yarn --prefer-offline
     - run: yarn install && yarn start && yarn public

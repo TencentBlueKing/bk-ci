@@ -31,6 +31,7 @@ jobs:
           ~/.cache/go-build
           ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('src/agent/go.sum') }}
+        lookup-only: ${{ github.event_name == 'tag' }}
     - run: make clean all
       working-directory: src/agent/
     - uses: actions/upload-artifact@v3
