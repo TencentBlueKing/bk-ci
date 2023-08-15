@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPO
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPOS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_TAG
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
@@ -284,6 +285,26 @@ class GithubService @Autowired constructor(
                     val operation = getMessageByLocale(OPERATION_LIST_TAGS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
+                }
+            },
+            3, SLEEP_MILLS_FOR_RETRY_500
+        )
+    }
+
+    override fun getRepositoryInfo(token: String, projectName: String): GithubRepo {
+        logger.info("getRepositoryInfo| $projectName")
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubRepo> {
+                override fun fail(e: Throwable): GithubRepo {
+                    logger.warn("BKSystemMonitor|getRepositoryInfo fail| e=${e.message}", e)
+                    throw e
+                }
+                override fun execute(): GithubRepo {
+                    val path = "repos/$projectName"
+                    val request = buildGet(token, path)
+                    val operation = getMessageByLocale(OPERATION_GET_REPO)
+                    val body = getBody(operation, request)
+                    return objectMapper.readValue<GithubRepo>(body)
                 }
             },
             3, SLEEP_MILLS_FOR_RETRY_500
