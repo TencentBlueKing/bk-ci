@@ -123,7 +123,7 @@ class PermissionService @Autowired constructor(
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
         if (!enablePermission) return true
 
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             return false
         }
         return true
