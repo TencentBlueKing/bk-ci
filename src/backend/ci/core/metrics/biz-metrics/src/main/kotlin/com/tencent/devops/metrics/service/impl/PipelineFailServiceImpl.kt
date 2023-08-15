@@ -233,7 +233,6 @@ class PipelineFailServiceImpl @Autowired constructor(
             }
         } else emptyList()
         stopWatch.stop()
-        logger.info("query pipeline fail detail info| watch=$stopWatch")
         return Page(
             page = queryPipelineFailDTO.page,
             pageSize = queryPipelineFailDTO.pageSize,

@@ -166,7 +166,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             atomTrendInfoMap[atomCode]?.atomTrendInfos = atomTrendInfos
         }
         stopWatch.stop()
-        logger.info("query atom trend info| watch=$stopWatch")
         return AtomTrendInfoVO(
             atomTrendInfoMap.values.toList()
         )
@@ -313,7 +312,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             )
         }
         stopWatch.stop()
-        logger.info("query atom executeStatisticsInfo headerInfo: $headerInfo | markStat: $stopWatch")
         return ListPageVO(
             count = queryAtomExecuteStatisticsCount,
             page = queryAtomTrendInfoDTO.page,

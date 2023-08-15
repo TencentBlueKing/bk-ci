@@ -260,13 +260,15 @@ class ProjectInfoDao {
     fun projectAtomRelationCountByAtomCode(
         dslContext: DSLContext,
         projectId: String,
-        atomCode: String
+        atomCode: String,
+        atomName: String
     ): Int {
         with(TProjectAtom.T_PROJECT_ATOM) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ATOM_CODE.eq(atomCode))
+                .and(ATOM_NAME.eq(atomName))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }

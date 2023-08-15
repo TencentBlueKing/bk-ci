@@ -493,7 +493,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
-        if (projectInfoDao.projectAtomRelationCountByAtomCode(dslContext, projectId, atomCode) <= 0) {
+        if (projectInfoDao.projectAtomRelationCountByAtomCode(dslContext, projectId, atomCode, taskMetricsData.atomCode) <= 0) {
             saveProjectAtomRelationPOs.add(
                 SaveProjectAtomRelationDataPO(
                     id = client.get(ServiceAllocIdResource::class)
