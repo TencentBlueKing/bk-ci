@@ -103,12 +103,12 @@ class CodeGithubRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId = 0L
+        var gitProjectId: Long? = null
         if (sourceUrl != repository.url) {
             logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
                             "targetUrl=[${repository.url}]")
             // Git项目ID
-            gitProjectId = getProjectId(repository,userId)
+            gitProjectId = getProjectId(repository, userId)
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)

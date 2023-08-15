@@ -172,7 +172,7 @@ class OPRepositoryService @Autowired constructor(
         }
     }
 
-    fun updateGitProjectId() {
+    fun updateGitProjectId(updateActions: List<() -> Unit>) {
         val startTime = System.currentTimeMillis()
         logger.info("OPRepositoryService:begin updateGitProjectId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
@@ -187,9 +187,11 @@ class OPRepositoryService @Autowired constructor(
         threadPoolExecutor.submit {
             logger.info("OPRepositoryService:begin updateGitProjectId threadPoolExecutor-----------")
             try {
-                updateCodeGithubProjectId()
-            } catch (e: Exception) {
-                logger.warn("OpRepositoryService：updateGitProjectId failed | $e ")
+                updateActions.forEach {
+                    it.invoke()
+                }
+            } catch (ignored: Exception) {
+                logger.warn("OpRepositoryService：updateGitProjectId failed | $ignored ")
             } finally {
                 threadPoolExecutor.shutdown()
             }
@@ -378,7 +380,7 @@ class OPRepositoryService @Autowired constructor(
                 }
                 // 获取token
                 val token = githubTokenService.getAccessToken(it.userName)?.accessToken
-                if (token.isNullOrBlank()){
+                if (token.isNullOrBlank()) {
                     logger.warn("Invalid codeGithub repository token,accessToken is blank|userId[${it.userName}]")
                     codeGithubDao.updateGitProjectId(
                         dslContext = dslContext,
