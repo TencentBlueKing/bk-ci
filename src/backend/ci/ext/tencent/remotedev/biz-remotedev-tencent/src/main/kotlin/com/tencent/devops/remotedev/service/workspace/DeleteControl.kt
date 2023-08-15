@@ -101,7 +101,7 @@ class DeleteControl @Autowired constructor(
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
         if (needPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName)
         }
         RedisCallLimit(
             redisOperation,

@@ -34,13 +34,11 @@ import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -62,31 +60,44 @@ class PermissionService @Autowired constructor(
     @Value("\${remoteDev.enablePermission:true}")
     private val enablePermission: Boolean = true
 
-    private val projectUserCache = CacheBuilder.newBuilder()
+    private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    val baseUser = workspaceDao.fetchWorkspaceUser(dslContext, name)
-                    if (ws.ownerType == WorkspaceOwnerType.PROJECT.name) {
-                        val manager = client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                            token = tokenService.getSystemToken(null)!!,
-                            projectCode = ws.projectId,
-                            group = BkAuthGroup.MANAGER
-                        ).data
-                        return manager?.plus(baseUser) ?: baseUser
-                    }
-                    return baseUser
+                    return listOf(ws.creator)
                 }
             }
         )
 
-    fun checkPermission(userId: String, workspaceName: String) {
+    private val workspaceViewerCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, List<String>>() {
+                override fun load(name: String): List<String> {
+                    return workspaceDao.fetchWorkspaceUser(dslContext, name)
+                }
+            }
+        )
+
+    fun checkOwnerPermission(userId: String, workspaceName: String) {
         if (!enablePermission) return
 
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access workspace $workspaceName")
+            )
+        }
+    }
+
+    fun checkViewerPermission(userId: String, workspaceName: String) {
+        if (!enablePermission) return
+
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -111,7 +122,7 @@ class PermissionService @Autowired constructor(
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
         if (!enablePermission) return true
 
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             return false
         }
         return true

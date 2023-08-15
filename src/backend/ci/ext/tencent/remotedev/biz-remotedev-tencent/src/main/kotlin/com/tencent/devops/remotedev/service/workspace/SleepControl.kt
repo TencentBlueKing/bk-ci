@@ -89,7 +89,7 @@ class SleepControl @Autowired constructor(
     fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
         if (needPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName)
         }
         RedisCallLimit(
             redisOperation,
