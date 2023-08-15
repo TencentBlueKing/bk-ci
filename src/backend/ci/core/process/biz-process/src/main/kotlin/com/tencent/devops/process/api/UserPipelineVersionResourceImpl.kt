@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
@@ -74,39 +75,11 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : UserPipelineVersionResource {
 
-    override fun preview(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int?
-    ): Result<PreviewResponse> {
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
-        )
-        return Result(
-            transferService.buildPreview(userId, projectId, pipelineId, version)
-        )
-    }
-
     override fun createPipelineFromTemplate(
         userId: String,
         projectId: String,
         pipeline: TemplateInstanceCreateRequest
-    ): Result<PipelineId> {
+    ): Result<DeployPipelineResult> {
         TODO()
     }
 
@@ -162,19 +135,48 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(
             PipelineModelAndYaml(
                 modelAndSetting = modelAndSetting,
-                yaml = yaml
+                yaml = yaml,
+                description = resource.description
             )
         )
     }
 
-    override fun savePipeline(
+    override fun preview(
         userId: String,
         projectId: String,
         pipelineId: String,
-        modelAndYaml: PipelineModelAndYaml,
-        description: String?
-    ): Result<Boolean> {
+        version: Int?
+    ): Result<PreviewResponse> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            transferService.buildPreview(userId, projectId, pipelineId, version)
+        )
+    }
+
+    override fun savePipelineDraft(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelAndYaml: PipelineModelAndYaml
+    ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
+        // TODO 保存草稿时如果有传YAML先以YAML为准进行校验
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
@@ -184,7 +186,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             checkPermission = true,
             checkTemplate = true,
             saveDraft = true,
-            description = description
+            description = modelAndYaml.description
         )
         auditService.createAudit(
             Audit(
@@ -197,7 +199,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId
             )
         )
-        return Result(true)
+        return Result(pipelineResult)
     }
 
     override fun saveSetting(

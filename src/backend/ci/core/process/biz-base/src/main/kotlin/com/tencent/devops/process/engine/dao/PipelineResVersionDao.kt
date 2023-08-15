@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
+import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
@@ -57,8 +58,8 @@ class PipelineResVersionDao {
         settingVersion: Int?,
         status: VersionStatus?,
         description: String?
-    ) {
-        create(
+    ): TPipelineResourceVersionRecord? {
+        return create(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -89,9 +90,9 @@ class PipelineResVersionDao {
         settingVersion: Int?,
         status: VersionStatus?,
         description: String?
-    ) {
+    ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            dslContext.insertInto(this)
+            return dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .set(VERSION, version)
@@ -114,7 +115,8 @@ class PipelineResVersionDao {
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, status?.name)
                 .set(DESCRIPTION, description)
-                .execute()
+                .returning()
+                .fetchOne()
         }
     }
 
@@ -180,7 +182,8 @@ class PipelineResVersionDao {
                 referFlag = record.referFlag,
                 referCount = record.referCount,
                 status = record.status?.let { VersionStatus.valueOf(it) },
-                refs = record.refs
+                refs = record.refs,
+                description = record.description
             )
         }
     }
