@@ -30,11 +30,11 @@ func main() {
 	}
 
 	// 初始化日志
-	var logFilePath = config.Config.LogPath
-	if logFilePath == "" {
-		filepath.Join(config.Config.WorkDir, "logs", "devopsAgent.log")
+	var logStd bool
+	if config.Config.IsDebug {
+		logStd = true
 	}
-	if err := logs.Init(logFilePath, config.Config.IsDebug); err != nil {
+	if err := logs.Init(filepath.Join(config.Config.LogPath, "devopsAgent.log"), config.Config.IsDebug, logStd); err != nil {
 		fmt.Printf("init agent log error %s\n", err.Error())
 		os.Exit(1)
 	}

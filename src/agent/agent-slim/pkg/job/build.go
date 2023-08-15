@@ -25,6 +25,7 @@ import (
 func DoPollAndBuild() {
 	for {
 		if normalCanRun := checkWorkerCount(); !normalCanRun {
+			time.Sleep(constant.BuildIntervalInSeconds * time.Second)
 			continue
 		}
 
@@ -32,11 +33,13 @@ func DoPollAndBuild() {
 		buildInfo, err := api.StartUp()
 		if err != nil {
 			logs.WithError(err).Error("get build failed, retry")
+			time.Sleep(constant.BuildIntervalInSeconds * time.Second)
 			continue
 		}
 
 		if buildInfo == nil {
 			logs.Info("no build to run, skip")
+			time.Sleep(constant.BuildIntervalInSeconds * time.Second)
 			continue
 		}
 
@@ -46,8 +49,6 @@ func DoPollAndBuild() {
 		if err != nil {
 			logs.WithError(err).Error("start build failed")
 		}
-
-		time.Sleep(constant.BuildIntervalInSeconds * time.Second)
 	}
 }
 
@@ -67,13 +68,17 @@ func runBuild(buildInfo *api.PersistenceBuildInfo) error {
 	runUser := config.Config.WorkerUser
 
 	goEnv := map[string]string{
-		"DEVOPS_AGENT_VERSION":  config.AgentVersion,
-		"DEVOPS_PROJECT_ID":     buildInfo.ProjectId,
-		"DEVOPS_BUILD_ID":       buildInfo.BuildId,
-		"DEVOPS_VM_SEQ_ID":      buildInfo.VmSeqId,
-		"DEVOPS_FILE_GATEWAY":   config.Config.FileGateWay,
-		"DEVOPS_GATEWAY":        config.Config.GateWay,
-		"BK_CI_LOCALE_LANGUAGE": config.Config.Language,
+		"DEVOPS_AGENT_VERSION":     config.AgentVersion,
+		"DEVOPS_PROJECT_ID":        buildInfo.ProjectId,
+		"DEVOPS_BUILD_ID":          buildInfo.BuildId,
+		"DEVOPS_VM_SEQ_ID":         buildInfo.VmSeqId,
+		"DEVOPS_FILE_GATEWAY":      config.Config.FileGateWay,
+		"DEVOPS_GATEWAY":           config.Config.GateWay,
+		"BK_CI_LOCALE_LANGUAGE":    config.Config.Language,
+		"devops_project_id":       buildInfo.BuildId,
+		"devops_agent_id":         buildInfo.AgentId,
+		"devops_agent_secret_key": buildInfo.SecretKey,
+		"devops_gateway":          config.Config.GateWay,
 	}
 
 	// 定义临时目录
@@ -133,10 +138,11 @@ func writeStartBuildAgentScript(buildInfo *api.PersistenceBuildInfo, tmpDir stri
 		fmt.Sprintf("cd %s", config.Config.WorkDir),
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
 			"-Ddevops.agent.error.file=%s "+
-			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
+			"-Dbuild.type=DOCKER -DLOG_PATH=%s -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s",
 			config.Config.JavaPath, scriptFile, prepareScriptFile,
 			errorMsgFile,
-			agentLogPrefix, tmpDir, config.Config.WorkerPath, encodedBuildInfo(buildInfo)),
+			config.Config.LogPath, agentLogPrefix,
+			tmpDir, config.Config.WorkerPath),
 	}
 	scriptContent := strings.Join(lines, "\n")
 

@@ -25,7 +25,10 @@ type buildData struct {
 var GBuildManager *buildManager
 
 func init() {
-	GBuildManager = new(buildManager)
+	GBuildManager = &buildManager{
+		lock:      &sync.RWMutex{},
+		instances: make(map[int]*buildData, 0),
+	}
 }
 
 func (b *buildManager) GetBuildCount() int {

@@ -51,6 +51,16 @@ func InitConfig() error {
 		Config.MaxWorkerCount = 1
 	}
 
+	if Config.LogPath == "" {
+		Config.LogPath = workDir
+	}
+
+	// 做一些初始化
+	err = os.Mkdir(Config.LogPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -74,9 +84,9 @@ type EnvConfig struct {
 	// workerjar 路径
 	WorkerPath string `env:"DEVOPS_AGENTSLIM_WORKER_PATH"`
 	// java 路径
-	JavaPath    string `env:"DEVOPS_AGENTSLIM_JAVA_PATH"`
+	JavaPath string `env:"DEVOPS_AGENTSLIM_JAVA_PATH"`
 	// 是否根据系统切换 shell，false使用 /bin/bash
-	DetectShell bool   `env:"DEVOPS_AGENTSLIM_WORKER_DETECTSHELL"`
+	DetectShell bool `env:"DEVOPS_AGENTSLIM_WORKER_DETECTSHELL"`
 }
 
 // loadConfigFromEnv 从环境变量中加载相关配置

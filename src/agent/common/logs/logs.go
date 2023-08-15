@@ -3,6 +3,7 @@ package logs
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -12,7 +13,7 @@ import (
 
 var Logs = log.WithFields(log.Fields{})
 
-func Init(filepath string, isDebug bool) error {
+func Init(filepath string, isDebug bool, logStd bool) error {
 	logInfo := log.WithFields(log.Fields{})
 
 	lumLog := &lumberjack.Logger{
@@ -22,7 +23,12 @@ func Init(filepath string, isDebug bool) error {
 		LocalTime:  true,
 	}
 
-	logInfo.Logger.Out = lumLog
+	// 同时写入到 std
+	if logStd {
+		logInfo.Logger.Out = io.MultiWriter(lumLog, os.Stdout)
+	} else {
+		logInfo.Logger.Out = lumLog
+	}
 
 	logInfo.Logger.SetFormatter(&MyFormatter{})
 

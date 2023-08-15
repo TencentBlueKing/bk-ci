@@ -74,7 +74,7 @@ func main() {
 
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
-	err := logs.Init(logFilePath, isDebug)
+	err := logs.Init(logFilePath, isDebug, false)
 	if err != nil {
 		fmt.Printf("init agent log error %v\n", err)
 		systemutil.ExitProcess(1)

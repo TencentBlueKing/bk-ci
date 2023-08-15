@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"github.com/TencentBlueKing/bk-ci/agentslim/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agentslim/pkg/constant"
 	"github.com/pkg/errors"
@@ -38,7 +39,7 @@ type PersistenceBuildInfo struct {
 }
 
 func StartUp() (*PersistenceBuildInfo, error) {
-	url := fmt.Sprintf("%s/ms/dispatchDevcloud/api/buildAgent/agent/devcloud/startup", config.Config.GateWay)
+	url := fmt.Sprintf("%s/ms/dispatch-devcloud/api/buildAgent/agent/devcloud/startup", config.Config.GateWay)
 
 	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 
@@ -75,15 +76,17 @@ type Error struct {
 }
 
 func WorkerBuildFinish(buildInfo *PersistenceBuildWithStatus) (bool, error) {
-	url := fmt.Sprintf("%s/ms/dispatchDevcloud/api/buildAgent/agent/devcloud/workBuildFinish", config.Config.GateWay)
+	url := fmt.Sprintf("%s/ms/dispatch-devcloud/api/buildAgent/agent/devcloud/workerBuildFinish", config.Config.GateWay)
 
 	body, err := json.Marshal(buildInfo)
 	if err != nil {
 		return false, err
 	}
+	logs.Debug("WorkerBuildFinish body", string(body))
 	req, err := http.NewRequestWithContext(context.Background(), "POST", url, bytes.NewReader(body))
 
 	req.Header = GetAuthHeaderMap()
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	resp, err := devopsClient.client.Do(req)
 	if err != nil {
 		return false, errors.Wrap(err, "request WorkerBuildFinish failed")
@@ -97,6 +100,9 @@ func WorkerBuildFinish(buildInfo *PersistenceBuildWithStatus) (bool, error) {
 	result, err := IntoDevopsResult[bool](data)
 	if err != nil {
 		return false, errors.Wrap(err, "parse WorkerBuildFinish result error")
+	}
+	if result == nil {
+		return false, nil
 	}
 
 	return *result, nil
@@ -127,6 +133,10 @@ func IntoDevopsResult[T any](body []byte) (*T, error) {
 
 	if res.Status != 0 {
 		return nil, errors.Errorf("devops result status error %s", res.Message)
+	}
+
+	if res.Data == nil {
+		return nil, nil
 	}
 
 	data, err := json.Marshal(res.Data)

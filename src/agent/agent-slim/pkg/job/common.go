@@ -69,9 +69,11 @@ func workerBuildFinish(buildInfo *api.PersistenceBuildWithStatus, toDelFiles []s
 	result, err := api.WorkerBuildFinish(buildInfo)
 	if err != nil {
 		logs.Error("send worker build finish failed: ", err.Error())
+		return
 	}
 	if !result {
 		logs.Error("worker build finish false")
+		return
 	}
 	logs.Info("workerBuildFinish done")
 }
