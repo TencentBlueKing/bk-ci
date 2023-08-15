@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface UserPipelineTransferResource {
 
-    @ApiOperation("互转入口")
+    @ApiOperation("model与yaml互转入口")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}")
     fun transfer(

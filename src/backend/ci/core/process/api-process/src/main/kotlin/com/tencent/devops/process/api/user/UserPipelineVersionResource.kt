@@ -62,7 +62,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("通过指定模板创建流水线")
     @POST
-    @Path("/projects/{projectId}/create_pipeline_with_template")
+    @Path("/projects/{projectId}/createPipelineWithTemplate")
     fun createPipelineFromPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -98,7 +98,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("新建流水线编排")
     @POST
-    @Path("/projects/{projectId}/create_pipeline")
+    @Path("/projects/{projectId}/createPipeline")
     fun createPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -115,7 +115,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("触发前配置")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/preview_code")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/previewCode")
     fun preview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -133,7 +133,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("保存流水线编排草稿")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/save_draft")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveDraft")
     fun savePipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -154,7 +154,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("保存流水线设置")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/save_setting")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
     fun saveSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -171,7 +171,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/creator_list")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/creatorList")
     fun creatorList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -219,7 +219,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("获取流水线操作日志列表（分页）")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/operation_log")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/operationLog")
     fun getPipelineOperationLogs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -240,7 +240,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("获取流水线操作人列表（分页）")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/operator_list")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/operatorList")
     fun operatorList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
