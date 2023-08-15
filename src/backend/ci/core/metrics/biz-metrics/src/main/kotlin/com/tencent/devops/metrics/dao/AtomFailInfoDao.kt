@@ -164,7 +164,6 @@ class AtomFailInfoDao {
                 this.ERROR_MSG.`as`(BK_ERROR_MSG)
             ).from(this)
             .where(conditions)
-                .groupBy(PIPELINE_ID, BUILD_ID, ATOM_CODE, ERROR_TYPE, ERROR_CODE)
                 .orderBy(START_TIME.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
@@ -178,10 +177,9 @@ class AtomFailInfoDao {
     ): Long {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             val conditions = getConditions(dslContext, queryCondition)
-            return dslContext.select(ID).from(this)
+            return dslContext.selectCount().from(this)
                 .where(conditions)
-                .groupBy(PIPELINE_ID, BUILD_ID, ATOM_CODE, ERROR_TYPE, ERROR_CODE)
-                .execute().toLong()
+                .fetchOne(0, Long::class.java) ?: 0
         }
     }
 

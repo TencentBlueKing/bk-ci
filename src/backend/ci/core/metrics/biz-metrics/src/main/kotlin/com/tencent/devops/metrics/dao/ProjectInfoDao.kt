@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
+import com.tencent.devops.metrics.constant.Constants.BK_MAX_CREATE_TIME
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
 import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
@@ -42,6 +43,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -276,23 +278,28 @@ class ProjectInfoDao {
         pageSize: Int
     ): Result<Record3<String, String, String>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            val tAtomOverviewData1 = this.`as`("t1")
-            val tAtomOverviewData2 = this.`as`("t2")
+          val subQuery = dslContext.select(
+                PROJECT_ID,
+                ATOM_CODE,
+                DSL.max(CREATE_TIME).`as`(BK_MAX_CREATE_TIME)
+            )
+                .from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+                .groupBy(PROJECT_ID, ATOM_CODE)
 
-            val query = dslContext.select(
-                tAtomOverviewData1.PROJECT_ID,
-                tAtomOverviewData1.ATOM_CODE,
-                tAtomOverviewData1.ATOM_NAME
-            ).from(tAtomOverviewData1)
-                .leftJoin(tAtomOverviewData2)
-                .on(tAtomOverviewData1.PROJECT_ID.eq(tAtomOverviewData2.PROJECT_ID)
-                    .and(tAtomOverviewData1.ATOM_CODE.eq(tAtomOverviewData2.ATOM_CODE))
-                    .and(tAtomOverviewData1.CREATE_TIME.lt(tAtomOverviewData2.CREATE_TIME))
+            return dslContext.select(
+                PROJECT_ID,
+                ATOM_CODE,
+                ATOM_NAME
+            )
+                .from(this)
+                .join(subQuery)
+                .on(PROJECT_ID.eq(subQuery.field(PROJECT_ID.name, String::class.java))
+                    .and(ATOM_CODE.eq(subQuery.field(ATOM_CODE.name, String::class.java)))
+                    .and(CREATE_TIME.eq(subQuery.field(BK_MAX_CREATE_TIME, LocalDateTime::class.java)))
                 )
-                .where(tAtomOverviewData1.PROJECT_ID.`in`(projectIds))
-                .and(tAtomOverviewData2.ID.isNull)
-                .limit((page - 1) * pageSize, pageSize)
-            return query.fetch()
+                .where(PROJECT_ID.`in`(projectIds))
+                .fetch()
         }
     }
 
