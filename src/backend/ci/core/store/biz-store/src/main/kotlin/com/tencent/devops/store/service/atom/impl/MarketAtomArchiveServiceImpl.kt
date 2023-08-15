@@ -49,9 +49,11 @@ import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
@@ -228,10 +230,23 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
+        projectCode: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean> {
-        val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
+        var taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
+        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, PackageSourceTypeEnum.UPLOAD)
+        val atomCode = atomPkgInfoUpdateRequest.atomCode
+        val version = atomPkgInfoUpdateRequest.version
+        taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
+            userId = userId,
+            projectCode = projectCode,
+            jsonMap = taskDataMap.toMutableMap(),
+            fileDir = "$atomCode/$version",
+            i18nDir = i18nDir,
+            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+        )
         val propsMap = mutableMapOf<String, Any?>()
         val releaseInfoMap = taskDataMap[KEY_RELEASE_INFO] as? Map<String, Any>
         val configInfoMap = releaseInfoMap?.get(ReleaseInfo::configInfo.name) as? Map<String, Any>
