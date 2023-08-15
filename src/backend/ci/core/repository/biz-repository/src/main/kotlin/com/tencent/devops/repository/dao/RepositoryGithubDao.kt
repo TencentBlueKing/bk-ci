@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubRecord
@@ -44,8 +43,7 @@ class RepositoryGithubDao {
         dslContext: DSLContext,
         repositoryId: Long,
         projectName: String,
-        userName: String,
-        gitProjectId: Long?
+        userName: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
@@ -55,16 +53,14 @@ class RepositoryGithubDao {
                 PROJECT_NAME,
                 USER_NAME,
                 CREATED_TIME,
-                UPDATED_TIME,
-                GIT_PROJECT_ID
+                UPDATED_TIME
             )
                 .values(
                     repositoryId,
                     projectName,
                     userName,
                     now,
-                    now,
-                    gitProjectId
+                    now
                 ).execute()
         }
     }
@@ -85,8 +81,7 @@ class RepositoryGithubDao {
         dslContext: DSLContext,
         repositoryId: Long,
         projectName: String,
-        userName: String,
-        gitProjectId: Long
+        userName: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
@@ -94,7 +89,6 @@ class RepositoryGithubDao {
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(UPDATED_TIME, now)
-                .set(GIT_PROJECT_ID, gitProjectId)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }

@@ -62,6 +62,4 @@ interface IGithubService {
     fun listBranches(token: String, projectName: String): List<String>
 
     fun listTags(token: String, projectName: String): List<String>
-
-    fun getRepositoryInfo(token: String, projectName: String): GithubRepo
 }

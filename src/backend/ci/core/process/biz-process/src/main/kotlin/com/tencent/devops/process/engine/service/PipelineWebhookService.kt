@@ -72,7 +72,6 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -734,7 +733,6 @@ class PipelineWebhookService @Autowired constructor(
     private fun getExternalId(repository: Repository?) = when (repository) {
         is CodeGitRepository -> repository.gitProjectId
         is CodeTGitRepository -> repository.gitProjectId
-        is GithubRepository -> repository.gitProjectId
         is CodeGitlabRepository -> repository.gitProjectId
         is CodeSvnRepository -> repository.url
         is CodeP4Repository -> repository.url
