@@ -53,14 +53,14 @@ class DcPersistenceContainerDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        persistenceAgentId: String,
+        containerName: String,
         status: Int
     ) {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(CONTAINER_STATUS, status)
-                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
+                .where(CONTAINER_NAME.eq(containerName))
                 .execute()
         }
     }

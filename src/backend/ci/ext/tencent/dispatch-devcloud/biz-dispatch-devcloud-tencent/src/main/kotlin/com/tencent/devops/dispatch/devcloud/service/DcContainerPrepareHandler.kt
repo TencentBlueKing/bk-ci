@@ -44,6 +44,7 @@ import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.OriginContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
@@ -322,6 +323,10 @@ class DcContainerPrepareHandler @Autowired constructor(
             handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
             true
         } else {
+            dcContainerPersistenceHandler.updatePersistenceContainerStatus(
+                containerName = containerInfo.containerName,
+                status = PersistenceContainerStatus.DELETED
+            )
             false
         }
     }
