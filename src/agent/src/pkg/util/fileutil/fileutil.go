@@ -33,7 +33,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -115,7 +114,7 @@ func CopyFile(src string, dst string, overwrite bool) (written int64, err error)
 }
 
 func GetString(file string) (string, error) {
-	fileStr, err := ioutil.ReadFile(file)
+	fileStr, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
 	}
