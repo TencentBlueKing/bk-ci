@@ -65,8 +65,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         permissionService.checkUserManager(userId, projectId)
         return Result(deleteControl.deleteWorkspace(
             userId = userId,
+            workspaceName = workspaceName,
             needPermission = false,
-            workspaceName = workspaceName
+            checkDeleteImmediately = true
         )
         )
     }
