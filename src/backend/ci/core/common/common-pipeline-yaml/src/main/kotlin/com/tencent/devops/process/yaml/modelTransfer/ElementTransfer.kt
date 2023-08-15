@@ -129,7 +129,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     fun yaml2element(
         step: Step,
-        agentSelector: String?,
+        agentSelector: String?
     ): Element {
         val timeout = setupTimeout(step)
         val additionalOptions = ElementAdditionalOptions(

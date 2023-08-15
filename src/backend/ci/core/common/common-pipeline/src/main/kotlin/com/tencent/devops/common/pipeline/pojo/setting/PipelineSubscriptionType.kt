@@ -25,20 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.common.pipeline.pojo.setting
 
-import com.tencent.devops.process.pojo.SubscriptionType
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线-消息订阅")
-data class PipelineSubscription(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("订阅用户RTX", required = true)
-    val username: String,
-    @ApiModelProperty("订阅消息的发送类型(email, rtx)", required = true)
-    val subscriptionTypes: List<PipelineSubscriptionType>,
-    @ApiModelProperty("订阅类型", required = false)
-    val type: SubscriptionType?
-)
+@ApiModel("流水线-订阅-消息类型")
+enum class PipelineSubscriptionType {
+    EMAIL,
+    RTX,
+    WECHAT,
+    SMS,
+    WEWORK
+}

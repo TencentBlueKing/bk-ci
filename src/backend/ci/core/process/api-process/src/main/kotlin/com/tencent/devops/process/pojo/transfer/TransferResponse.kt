@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.transfer
 
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

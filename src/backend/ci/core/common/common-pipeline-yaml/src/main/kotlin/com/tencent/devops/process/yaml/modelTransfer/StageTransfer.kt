@@ -101,7 +101,7 @@ class StageTransfer @Autowired(required = false) constructor(
     fun yaml2FinallyStage(
         stageIndex: Int,
         finallyJobs: List<Job>,
-        yamlInput: YamlTransferInput,
+        yamlInput: YamlTransferInput
     ): Stage {
         return yaml2Stage(
             stage = StreamV2Stage(

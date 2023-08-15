@@ -46,7 +46,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType

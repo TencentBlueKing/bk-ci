@@ -25,16 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+/**
+ * 流水线设置-最大排队数量-默认值
+ */
+const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+/**
+ * 流水线设置-最大并发数量-最大值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX = 200
+
+/**
+ * 流水线设置-最大排队时间-默认值 单位:分钟
+ */
+const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
+
+/**
+ * 流水线设置-CONCURRENCY GROUP 并发组-默认值
+ */
+const val PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT = "\${{ci.pipeline_id}}"
+
+/**
+ * 保存流水线编排的最大个数
+ */
+const val PIPELINE_RES_NUM_MIN = 50

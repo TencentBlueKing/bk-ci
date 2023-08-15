@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import io.swagger.annotations.ApiModelProperty

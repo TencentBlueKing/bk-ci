@@ -36,8 +36,8 @@ import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
@@ -149,7 +149,7 @@ class ModelTransfer @Autowired constructor(
         val variables = getVariableFromModel(modelInput.model)
         val finally = modelStage.model2YamlStage(modelInput.model.stages.last()).jobs
         val concurrency = getConcurrency(modelInput.setting)
-        val notices = ""// TODO: 2023/7/17
+        val notices = "" // TODO: 2023/7/17
 
         return when (modelInput.version) {
             YamlVersion.Version.V2_0 -> PreScriptBuildYaml(
