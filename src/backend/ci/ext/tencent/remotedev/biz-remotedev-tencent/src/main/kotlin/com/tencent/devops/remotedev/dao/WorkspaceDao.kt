@@ -616,16 +616,6 @@ class WorkspaceDao {
         }
     }
 
-    // 删除workspace detail
-    fun deleteWorkspaceDetail(dslContext: DSLContext, workspaceName: String) {
-        with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
-            dslContext.delete(this)
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .limit(1)
-                .execute()
-        }
-    }
-
     // 获取workspace detail
     fun getWorkspaceDetail(
         dslContext: DSLContext,

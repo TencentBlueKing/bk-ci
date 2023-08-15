@@ -285,8 +285,6 @@ class SleepControl @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
-            // 清缓存
-            workspaceDao.deleteWorkspaceDetail(dslContext, workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->

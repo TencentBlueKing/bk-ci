@@ -150,6 +150,11 @@ class WorkspaceCommon @Autowired constructor(
 
     fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
         return getWorkspaceDetail(workspaceName) ?: run {
+            return updateWorkspaceDetail(workspaceName, mountType)
+        }
+    }
+
+    fun updateWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
                 workspaceName
@@ -175,7 +180,6 @@ class WorkspaceCommon @Autowired constructor(
                 detail = JsonUtil.toJson(cache)
             )
             return cache
-        }
     }
 
     fun checkAndFixExceptionWS(

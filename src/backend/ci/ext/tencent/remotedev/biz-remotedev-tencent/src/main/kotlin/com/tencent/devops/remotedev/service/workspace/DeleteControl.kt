@@ -280,8 +280,6 @@ class DeleteControl @Autowired constructor(
                         "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
-            // 清缓存
-            workspaceDao.deleteWorkspaceDetail(dslContext, workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->

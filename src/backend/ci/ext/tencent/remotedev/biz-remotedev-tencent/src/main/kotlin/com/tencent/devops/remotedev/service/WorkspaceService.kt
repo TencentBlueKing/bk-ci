@@ -223,8 +223,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name).takeIf { status.checkRunning() }
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -289,8 +289,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name).takeIf { status.checkRunning() }
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -520,7 +520,7 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
-        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf { WorkspaceStatus.values()[workspace.status].checkRunning() }
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
@@ -561,16 +561,25 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        return workspaceCommon.getWorkspaceDetail(workspaceName)?.let {
-            WorkspaceProxyDetail(
-                workspaceName = workspaceName,
-                podIp = it.environmentIP,
-                sshKey = it.sshKey,
-                environmentHost = it.environmentHost
-            )
-        } ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
+        val workspace = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
         )
+        if (workspace != null) {
+            return workspaceCommon.getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType)).let {
+                WorkspaceProxyDetail(
+                    workspaceName = workspaceName,
+                    podIp = it.environmentIP,
+                    sshKey = it.sshKey,
+                    environmentHost = it.environmentHost
+                )
+            }
+        } else {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
+            )
+        }
     }
 
     // 更新用户运行中的空间的detail缓存信息
