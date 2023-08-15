@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +47,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService,
     private val createControl: CreateControl,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val deleteControl: DeleteControl
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -57,6 +59,11 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         permissionService.checkUserManager(userId, projectId)
         createControl.asyncCreateWorkspace(userId, bkTicket, projectId, workspace)
         return Result(true)
+    }
+
+    override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
+        return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
 
     override fun getWorkspaceList(
