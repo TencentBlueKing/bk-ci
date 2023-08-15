@@ -58,7 +58,7 @@ class UserTencentFileResourceImpl @Autowired constructor(
     ): Result<String> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
-        return Result("true")
+        return Result(data = "true") // 内部要返回true, 否则前端会报错
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
