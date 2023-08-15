@@ -34,10 +34,10 @@ jobs:
       with:
         path: src/frontend/**/node_modules
         key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
-        lookup-only: ${{ github.event_name == 'tag' }}
     - name: prefer offline
       if: steps.yarn-cache.outputs.cache-hit != 'true'
       run: yarn --prefer-offline && yarn install
+      working-directory: src/frontend
     - run: yarn public
       working-directory: src/frontend
     - uses: actions/upload-artifact@v3
