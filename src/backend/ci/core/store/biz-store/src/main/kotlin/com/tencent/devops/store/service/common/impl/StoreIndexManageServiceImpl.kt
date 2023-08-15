@@ -326,6 +326,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     override fun updateTrustworthyIndexInfo(
         userId: String,
         deptCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean> {
         val oldStoreCodes =
@@ -343,7 +344,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             deleteStoreIndexResultByStoreCode(
                 userId = userId,
                 indexCode = TRUSTWORTHY_INDEX_CODE,
-                storeType = StoreTypeEnum.ATOM,
+                storeType = storeType,
                 storeCodes = delStoreCodes
             )
         }

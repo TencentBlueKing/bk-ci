@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -45,6 +46,11 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
         deptCode: String,
         storeCodes: List<String>
     ): Result<Boolean> {
-        return storeIndexManageService.updateTrustworthyIndexInfo(userId, deptCode, storeCodes)
+        return storeIndexManageService.updateTrustworthyIndexInfo(
+            userId = userId,
+            deptCode = deptCode,
+            storeType = StoreTypeEnum.ATOM,
+            storeCodes = storeCodes
+        )
     }
 }

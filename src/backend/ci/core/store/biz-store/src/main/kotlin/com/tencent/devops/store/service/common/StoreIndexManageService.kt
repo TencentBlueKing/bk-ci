@@ -92,6 +92,7 @@ interface StoreIndexManageService {
     fun updateTrustworthyIndexInfo(
         userId: String,
         deptCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean>
 }
