@@ -18,25 +18,125 @@ jobs:
     uses: ./.github/workflows/agent.yml
 
   backend:
-    needs: [frontend, agent]
     name: Build backend
     with:
       upload: true
-    secrets: inherit
     uses: ./.github/workflows/backend.yml
+
+  package-zip:
+    name: Package Zip
+    runs-on: ubuntu-20.04
+    needs: [frontend, agent, backend]
+    steps:
+    - uses: actions/checkout@v3
+    - name: download frontend
+      uses: actions/download-artifact@v1
+      with:
+        name: frontend
+        path: src/frontend/frontend
+    - name: download agent
+      uses: actions/download-artifact@v1
+      with:
+        name: agent
+        path: src/agent/bin/
+    - name: download backend
+      uses: actions/download-artifact@v1
+      with:
+        name: backend-jar
+        path: src/backend/ci/release
+    - name: make package
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: bkci-slim
+        path: bkci-slim.tar.gz
+
+  package-docker:
+    name: Package Docker
+    runs-on: ubuntu-20.04
+    needs: [frontend, agent, backend]
+    steps:
+      - uses: actions/checkout@v3
+      - name: download frontend
+        uses: actions/download-artifact@v1
+        with:
+          name: frontend
+          path: src/frontend/frontend
+      - name: download agent
+        uses: actions/download-artifact@v1
+        with:
+          name: agent
+          path: src/agent/bin/
+      - name: download bkci
+        uses: actions/download-artifact@v1
+        with:
+          name: backend-docker
+          path: src/backend/ci/release
+      - name: make package
+        run: |
+          version="$(basename $GITHUB_REF)"
+          echo "version=$version" >> $GITHUB_OUTPUT
+          ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
+      - name: Setup Docker -- CLOUD NATIVE
+        uses: docker-practice/actions-setup-docker@master
+      - name: Create Docker Image -- CLOUD NATIVE
+        working-directory: docker-images/core/ci
+        run: |
+          version="$(basename $GITHUB_REF)"
+          docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
+          ./0.get_release.sh
+          ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./3.build_frontend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+
+  package-helm:
+    name: Package Helm
+    runs-on: ubuntu-20.04
+    needs: [frontend, agent, backend]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python -- CLOUD NATIVE
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.7.15"
+    - name: Generate Helm Chart -- CLOUD NATIVE
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        echo 'python build'
+        pip install pyhumps
+        pip install PyYAML
+        python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version $version
+    - name: Install Helm -- CLOUD NATIVE
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.8.1
+    - name: Package Helm Chart -- CLOUD NATIVE
+      working-directory: helm-charts/core/ci
+      run: |
+        version="$(basename $GITHUB_REF)"
+        helm package . --version $version --app-version $version
+        mv bk-ci-$version.tgz bk-ci-charts.tgz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: bkci-chart
+        path: helm-charts/core/ci/bk-ci-charts.tgz
 
   releaseAll:
     name: Release All
     runs-on: ubuntu-20.04
-    needs: [backend]
+    needs: [package-zip, package-helm]
     steps:
     - name: download bkci-slim
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v1
       with:
         name: bkci-slim
         path: ./
     - name: download bkci-chart
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v1
       with:
         name: bkci-chart
         path: ./
