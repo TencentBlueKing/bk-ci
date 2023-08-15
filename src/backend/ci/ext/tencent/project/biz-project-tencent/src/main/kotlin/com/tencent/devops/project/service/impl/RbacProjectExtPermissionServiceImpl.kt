@@ -80,7 +80,7 @@ class RbacProjectExtPermissionServiceImpl constructor(
         }
         if (checkManager) {
             val isProjectManager = authProjectApi.checkProjectManager(
-                userId = createUser,
+                userId = currencyCreateUser,
                 serviceCode = projectAuthServiceCode,
                 projectCode = projectCode
             )
