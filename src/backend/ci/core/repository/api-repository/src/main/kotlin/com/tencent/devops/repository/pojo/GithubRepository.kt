@@ -30,6 +30,7 @@ package com.tencent.devops.repository.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@SuppressWarnings("ObjectPropertyNaming")
 @ApiModel("代码库模型-GitHub代码库")
 data class GithubRepository(
     @ApiModelProperty("代码库别名", required = true)
