@@ -85,16 +85,18 @@ class RepositoryGithubDao {
         repositoryId: Long,
         projectName: String,
         userName: String,
-        gitProjectId: Long
+        gitProjectId: Long?
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
-            dslContext.update(this)
+            val updateStep = dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(UPDATED_TIME, now)
-                .set(GIT_PROJECT_ID, gitProjectId)
-                .where(REPOSITORY_ID.eq(repositoryId))
+            if (gitProjectId != null) {
+                updateStep.set(GIT_PROJECT_ID, gitProjectId)
+            }
+            updateStep.where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }
