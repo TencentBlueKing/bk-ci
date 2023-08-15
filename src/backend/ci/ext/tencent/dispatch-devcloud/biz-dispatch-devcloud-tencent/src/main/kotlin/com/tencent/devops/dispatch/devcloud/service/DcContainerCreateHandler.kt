@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
+import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
@@ -45,8 +46,10 @@ import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
 import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -58,6 +61,7 @@ class DcContainerCreateHandler @Autowired constructor(
     private val devCloudBuildDao: DevCloudBuildDao,
     private val devCloudBuildHisDao: DevCloudBuildHisDao,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
+    private val dcPersistenceContainerDao: DcPersistenceContainerDao,
     private val dispatchDevCloudClient: DispatchDevCloudClient,
     commonConfig: CommonConfig,
     buildLogPrinter: BuildLogPrinter
@@ -134,56 +138,81 @@ class DcContainerCreateHandler @Autowired constructor(
                     handlerContext = this
                 )
 
-                devCloudBuildDao.createOrUpdate(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    projectId = projectId,
-                    containerName = containerName ?: "",
-                    image = this.dispatchMessage,
-                    status = ContainerStatus.BUSY.status,
-                    userId = userId,
-                    cpu = cpu,
-                    memory = memory,
-                    disk = disk
-                )
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    devCloudBuildDao.createOrUpdate(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        poolNo = poolNo,
+                        projectId = projectId,
+                        containerName = containerName ?: "",
+                        image = this.dispatchMessage,
+                        status = ContainerStatus.BUSY.status,
+                        userId = userId,
+                        cpu = cpu,
+                        memory = memory,
+                        disk = disk
+                    )
 
-                // 更新历史表中containerName
-                devCloudBuildHisDao.updateContainerName(
-                    dslContext = dslContext,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    containerName = containerName ?: "",
-                    executeCount = executeCount ?: 1
-                )
+                    // 更新历史表中containerName
+                    devCloudBuildHisDao.updateContainerName(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        containerName = containerName ?: "",
+                        executeCount = executeCount ?: 1
+                    )
 
-                // 创建成功的要记录，shutdown时关机，创建失败时不记录，shutdown时不关机
-                buildContainerPoolNoDao.setDevCloudBuildLastContainer(
-                    dslContext = dslContext,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    executeCount = executeCount ?: 1,
-                    containerName = containerName ?: "",
-                    poolNo = poolNo.toString()
-                )
+                    // 创建成功的要记录，shutdown时关机，创建失败时不记录，shutdown时不关机
+                    buildContainerPoolNoDao.setDevCloudBuildLastContainer(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        executeCount = executeCount ?: 1,
+                        containerName = containerName ?: "",
+                        poolNo = poolNo.toString()
+                    )
+
+                    if (persistence) {
+                        dcPersistenceContainerDao.updateContainerName(
+                            dslContext = transactionContext,
+                            persistenceAgentId = persistenceAgentId,
+                            containerName = containerName ?: "",
+                            status = PersistenceContainerStatus.RUNNING.status
+                        )
+                    }
+                }
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionContainer(containerName ?: "", this)
-                devCloudBuildDao.updateStatus(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    status = ContainerStatus.IDLE.status
-                )
-                devCloudBuildHisDao.updateContainerName(
-                    dslContext = dslContext,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    containerName = containerName ?: "",
-                    executeCount = executeCount ?: 1
-                )
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    devCloudBuildDao.updateStatus(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        poolNo = poolNo,
+                        status = ContainerStatus.IDLE.status
+                    )
+                    devCloudBuildHisDao.updateContainerName(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        containerName = containerName ?: "",
+                        executeCount = executeCount ?: 1
+                    )
+
+                    if (persistence) {
+                        dcPersistenceContainerDao.updateContainerName(
+                            dslContext = transactionContext,
+                            persistenceAgentId = persistenceAgentId,
+                            containerName = containerName ?: "",
+                            status = PersistenceContainerStatus.DELETED.status
+                        )
+                    }
+                }
+
                 throw BuildFailureException(
                     createResult.third.errorType,
                     createResult.third.errorCode,

@@ -65,6 +65,24 @@ class DcPersistenceContainerDao {
         }
     }
 
+    fun updateContainerName(
+        dslContext: DSLContext,
+        containerName: String,
+        persistenceAgentId: String,
+        status: Int? = null
+    ) {
+        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
+            val sql = dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(CONTAINER_NAME, containerName)
+            if (status != null) {
+                sql.set(CONTAINER_STATUS, status)
+            }
+            sql.where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
+                .execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         pipelineId: String,
@@ -74,6 +92,18 @@ class DcPersistenceContainerDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
+                .orderBy(CREATE_TIME.desc())
+                .fetchAny()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        containerName: String
+    ): TDevcloudPersistenceContainerRecord? {
+        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(CONTAINER_NAME.eq(containerName))
                 .orderBy(CREATE_TIME.desc())
                 .fetchAny()
         }

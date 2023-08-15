@@ -90,8 +90,17 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     status = PersistenceContainerStatus.RUNNING.status
                 )
             } else {
-                // 校验持久化容器状态 TODO
                 handlerContext.persistenceAgentId = containerRecord.persistenceAgentId
+            }
+
+            if (persistenceAgentId.isBlank()) {
+                logger.error("$buildLogKey persistenceAgentId is null.")
+                throw BuildFailureException(
+                    ErrorCodeEnum.START_VM_ERROR.errorType,
+                    ErrorCodeEnum.START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                    "PersistenceAgentId is null"
+                )
             }
 
             // 根据persistenceAgentId加分布式锁

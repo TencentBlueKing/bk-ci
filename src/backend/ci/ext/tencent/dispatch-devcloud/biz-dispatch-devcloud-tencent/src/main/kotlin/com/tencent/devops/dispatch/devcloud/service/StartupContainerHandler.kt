@@ -52,6 +52,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
+import com.tencent.devops.dispatch.devcloud.pojo.OriginContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.process.engine.common.VMUtils
@@ -211,6 +212,31 @@ abstract class StartupContainerHandler @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
                 "ContainerName is null"
             )
+        }
+    }
+
+    fun getContainerStatus(
+        containerName: String?,
+        handlerContext: DcStartupHandlerContext
+    ): String? {
+        with(handlerContext) {
+            if (containerName.isNullOrBlank()) {
+                return null
+            }
+
+            val statusResponse = dispatchDevCloudClient.getContainerStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                userId = userId,
+                name = containerName
+            )
+            if (statusResponse.optInt("actionCode") != 200) {
+                return null
+            }
+
+            return statusResponse.optString("data")
         }
     }
 

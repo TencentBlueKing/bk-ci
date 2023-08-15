@@ -43,6 +43,7 @@ import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.OriginContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
@@ -259,73 +260,70 @@ class DcContainerPrepareHandler @Autowired constructor(
     }
 
     private fun idleContainer(handlerContext: DcStartupHandlerContext): Boolean {
-        with(handlerContext) {
+        return with(handlerContext) {
             val containerInfo = devCloudBuildDao.get(dslContext, pipelineId, vmSeqId, poolNo)
-            // 当前流水线构建Job没有构建池记录，新增构建池记录
-            if (null == containerInfo) {
+            if (containerInfo == null) {
+                // 当前流水线构建Job没有构建池记录，新增构建池记录
                 resetBuildPool(handlerContext)
-                return true
-            }
-
-            // 持久化容器，复用busy状态的构建
-            if (containerInfo.status == ContainerStatus.BUSY.status && persistence) {
-                handlerContext.containerName = containerInfo.containerName
-                handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
-                return true
-            }
-
-            // 非持久化容器，构件序号被占用，接着在构建池内寻找
-            if (containerInfo.status == ContainerStatus.BUSY.status && !persistence) {
-                return false
-            }
-
-            // 构建序号没有被占用，但是没有绑定containerName，复用此构建序号新建容器
-            if (containerInfo.containerName.isEmpty()) {
+                true
+            } else if (containerInfo.status == ContainerStatus.BUSY.status && persistence) {
+                // 持久化容器，复用busy状态的构建容器
+                updateBusyStatusWithPersistence(containerInfo, handlerContext)
+            } else if (containerInfo.status == ContainerStatus.BUSY.status && !persistence) {
+                // 非持久化容器，构件序号被占用，接着在构建池内寻找
+                false
+            } else if (containerInfo.containerName.isEmpty()) {
+                // 构建序号没有被占用，但是没有绑定containerName，复用此构建序号新建容器
                 resetBuildPool(handlerContext)
-                return true
+                true
+            } else {
+                updateStatusForNonEmptyContainerName(containerInfo, handlerContext)
             }
+        }
+    }
 
-            val statusResponse = dispatchDevCloudClient.getContainerStatus(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                userId = userId,
-                name = containerInfo.containerName
-            )
-            val containerStatus = statusResponse.optString("data")
-            // 接口异常，接着在构建池内寻找
-            if (statusResponse.optInt("actionCode") != 200) {
-                return false
-            }
+    private fun updateStatusForNonEmptyContainerName(
+        containerInfo: TDevcloudBuildRecord,
+        handlerContext: DcStartupHandlerContext
+    ): Boolean {
+        val containerStatus = getContainerStatus(containerInfo.containerName, handlerContext) ?: return false
 
-            // 启用stopped容器，复用构建
-            if ("stopped" == containerStatus || "stop" == containerStatus) {
+        return when (containerStatus) {
+            OriginContainerStatus.stopped.name, OriginContainerStatus.stop.name -> {
                 devCloudBuildDao.updateStatus(
                     dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
+                    pipelineId = handlerContext.pipelineId,
+                    vmSeqId = handlerContext.vmSeqId,
+                    poolNo = handlerContext.poolNo,
                     status = ContainerStatus.BUSY.status
                 )
 
-                // 复用容器时写入容器是否需要变更的最终结果
                 handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
                 handlerContext.containerName = containerInfo.containerName
 
-                return true
+                true
             }
-
-            // 删除池内的异常容器，同时重置池子
-            if ("exception" == containerStatus) {
+            OriginContainerStatus.exception.name -> {
                 clearExceptionContainer(containerInfo.containerName, handlerContext)
                 resetBuildPool(handlerContext)
-                return true
+                true
             }
+            else -> false
         }
+    }
 
-        // 接着在构建池内寻找
-        return false
+    private fun updateBusyStatusWithPersistence(
+        containerInfo: TDevcloudBuildRecord,
+        handlerContext: DcStartupHandlerContext
+    ): Boolean {
+        val containerStatus = getContainerStatus(containerInfo.containerName, handlerContext)
+        return if (containerStatus != null && containerStatus == OriginContainerStatus.running.name) {
+            handlerContext.containerName = containerInfo.containerName
+            handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
+            true
+        } else {
+            false
+        }
     }
 
     /**

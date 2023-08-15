@@ -94,7 +94,7 @@ class DevcloudDebugService @Autowired constructor(
             val status = statusResponse.optString("data")
             when (status) {
                 "stopped", "stop" -> {
-                    // 出于关机状态，开机
+                    // 处于关机状态，开机
                     logger.info("Update container status stop to running, containerName: $containerName")
                     startContainer(userId, buildHistory.projectId, pipelineId, buildId, vmSeqId, containerName)
                     devCloudBuildDao.updateDebugStatus(dslContext, pipelineId, vmSeqId, containerName, true)
