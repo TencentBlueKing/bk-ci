@@ -583,6 +583,7 @@ class WorkspaceService @Autowired constructor(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
         )
     }
+
     // 更新用户运行中的空间的detail缓存信息
     fun updateUserWorkspaceDetailCache(userId: String) {
         workspaceDao.fetchWorkspace(
