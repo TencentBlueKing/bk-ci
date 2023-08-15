@@ -143,7 +143,7 @@
                     { name: 'trigger', label: this.$t('codelib.trigger') },
                     { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
-                active: 'triggerEvent',
+                active: 'basic',
                 repoInfo: {},
                 pipelinesList: [],
                 pipelinesDialogPayload: {
