@@ -1,5 +1,6 @@
 package com.tencent.devops.common.db.listener
 
+import com.tencent.devops.common.db.utils.SKIP_CHECK
 import org.jooq.ExecuteContext
 import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
@@ -9,7 +10,7 @@ import org.slf4j.LoggerFactory
 class SQLCheckListener : DefaultExecuteListener() {
     override fun renderEnd(ctx: ExecuteContext) {
         val sql = ctx.sql()!!
-        if (sql.contains("EXPLAIN")) {
+        if (sql.contains(SKIP_CHECK) || sql.contains("EXPLAIN")) {
             return
         }
         check(sql, ctx)
