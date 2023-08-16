@@ -185,28 +185,32 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     override fun syncProjectAtomData(userId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
-            logger.info("begin op sync project atom data")
-            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-            if (projectMinId != null && projectMaxId != null) {
+            try{
+                logger.info("begin op sync project atom data")
+                var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+                val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+                if (projectMinId != null && projectMaxId != null) {
 
-                do {
-                    val projectIds = client.get(ServiceProjectResource::class)
-                        .getProjectListById(
-                            minId = projectMinId,
-                            maxId = projectMinId + 10
-                        ).data?.map { it.englishName }
-                    if (!projectIds.isNullOrEmpty()) {
-                        val midIndex = projectIds.size / 2
-                        val leftList = projectIds.take(midIndex + 1)
-                        val rightList = projectIds.drop(leftList.size)
-                        saveProjectAtomInfo(leftList)
-                        if (rightList.isNotEmpty()) {
-                            saveProjectAtomInfo(rightList)
+                    do {
+                        val projectIds = client.get(ServiceProjectResource::class)
+                            .getProjectListById(
+                                minId = projectMinId,
+                                maxId = projectMinId + 10
+                            ).data?.map { it.englishName }
+                        if (!projectIds.isNullOrEmpty()) {
+                            val midIndex = projectIds.size / 2
+                            val leftList = projectIds.take(midIndex + 1)
+                            val rightList = projectIds.drop(leftList.size)
+                            saveProjectAtomInfo(leftList)
+                            if (rightList.isNotEmpty()) {
+                                saveProjectAtomInfo(rightList)
+                            }
                         }
-                    }
-                    projectMinId += 11
-                } while (projectMinId <= projectMaxId)
+                        projectMinId += 11
+                    } while (projectMinId <= projectMaxId)
+                }
+            } catch (ignore: Throwable) {
+                logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
             }
         }
         return true
