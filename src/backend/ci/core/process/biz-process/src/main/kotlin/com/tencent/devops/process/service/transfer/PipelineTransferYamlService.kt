@@ -86,7 +86,6 @@ class PipelineTransferYamlService @Autowired constructor(
     ): TransferResponse {
 
         val watcher = Watcher(id = "yaml and model transfer watcher")
-        // todo 权限校验
         when (actionType) {
             TransferActionType.FULL_MODEL2YAML -> {
                 watcher.start("step_1|FULL_MODEL2YAML start")
@@ -143,7 +142,6 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         data: Element
     ): String {
-        // todo 权限校验
         val yml = elementTransfer.element2YamlStep(data) ?: throw ErrorCodeException(errorCode = "")
         return TransferMapper.toYaml(yml)
     }
@@ -154,7 +152,6 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         yaml: String
     ): Element {
-        // todo 权限校验
         val tYml = TransferMapper.getObjectMapper()
             .readValue(yaml, object : TypeReference<PreStep>() {})
         return elementTransfer.yaml2element(ScriptYmlUtils.preStepToStep(tYml), null)
@@ -166,7 +163,6 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         version: Int?
     ): PreviewResponse {
-        // todo 权限校验，增加不存在yaml时自动将model转过来
         val yml = getPipelineResource(projectId, pipelineId, version)?.yaml ?: ""
         val pipelineIndex = mutableListOf<TransferMark>()
         val triggerIndex = mutableListOf<TransferMark>()

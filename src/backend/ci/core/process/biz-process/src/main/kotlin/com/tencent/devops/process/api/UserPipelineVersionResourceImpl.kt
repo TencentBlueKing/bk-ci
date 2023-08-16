@@ -46,7 +46,6 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -59,6 +58,7 @@ import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -72,15 +72,46 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineOperationLogService: PipelineOperationLogService,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineVersionResource {
 
     override fun createPipelineFromTemplate(
         userId: String,
         projectId: String,
-        pipeline: TemplateInstanceCreateRequest
+        request: TemplateInstanceCreateRequest
     ): Result<DeployPipelineResult> {
-        TODO()
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            AuthPermission.CREATE
+        )
+        val templateDetail = templateFacadeService.getTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = request.templateId,
+            version = request.templateVersion
+        )
+        // TODO 区分应用模板的配置
+        val templateSetting = templateFacadeService.getTemplateSetting(
+            userId = userId,
+            projectId = projectId,
+            templateId = request.templateId
+        )
+        return Result(
+            pipelineInfoFacadeService.createPipeline(
+                userId = userId,
+                projectId = projectId,
+                model = templateDetail.template.copy(templateId = request.templateId),
+                channelCode = ChannelCode.BS,
+                checkPermission = false,
+                instanceType = request.instanceType,
+                saveDraft = true,
+                useSubscriptionSettings = request.useSubscriptionSettings,
+                useLabelSettings = request.useLabelSettings,
+                useConcurrencyGroup = request.useConcurrencyGroup
+            )
+        )
     }
 
     override fun getVersion(
@@ -176,15 +207,31 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         modelAndYaml: PipelineModelAndYaml
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
-        // TODO 保存草稿时如果有传YAML先以YAML为准进行校验
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             model = modelAndYaml.modelAndSetting.model,
             channelCode = ChannelCode.BS,
-            checkPermission = true,
-            checkTemplate = true,
+            checkPermission = false,
+            checkTemplate = false,
             saveDraft = true,
             description = modelAndYaml.description
         )

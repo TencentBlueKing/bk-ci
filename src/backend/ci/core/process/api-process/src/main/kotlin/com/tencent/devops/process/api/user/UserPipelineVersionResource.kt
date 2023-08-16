@@ -71,7 +71,7 @@ interface UserPipelineVersionResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线模型实例请求", required = true)
-        pipeline: TemplateInstanceCreateRequest
+        request: TemplateInstanceCreateRequest
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线指定版本的两种编排")

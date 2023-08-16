@@ -113,8 +113,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
                     model = pipeline,
                     channelCode = channelCode,
                     checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    useTemplateSettings = useTemplateSettings
-                )
+                    useSubscriptionSettings = useTemplateSettings
+                ).pipelineId
             )
         )
     }

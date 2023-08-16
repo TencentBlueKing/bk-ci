@@ -199,7 +199,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = model,
             channelCode = ChannelCode.BS,
             checkPermission = true
-        )
+        ).pipelineId
 
         val newSetting = pipelineSettingFacadeService.rebuildSetting(
             oldSetting = pipelineModelAndSetting.setting,
@@ -251,8 +251,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
         fixTemplateVersion: Long? = null,
-        useTemplateSettings: Boolean? = false
-    ): String {
+        saveDraft: Boolean? = false,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false
+    ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
         var success = false
@@ -361,23 +364,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     model
                 }
                 watcher.start("deployPipeline")
-                pipelineId = pipelineRepositoryService.deployPipeline(
+                val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     projectId = projectId,
                     signPipelineId = fixPipelineId,
                     userId = userId,
                     channelCode = channelCode,
                     create = true,
-                    useTemplateSettings = useTemplateSettings,
-                    templateId = model.templateId,
+                    useSubscriptionSettings = useSubscriptionSettings,
+                    templateId = templateId,
                     description = null
-                ).pipelineId
+                )
+                pipelineId = result.pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("addLabel")
-                    if (useTemplateSettings == true) {
+                    if (useSubscriptionSettings == true) {
                         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
                         val labels = ArrayList<String>()
                         groups.forEach {
@@ -443,7 +447,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
 
                 success = true
-                return pipelineId
+                return result
             } catch (duplicateKeyException: DuplicateKeyException) {
                 logger.info("duplicateKeyException: ${duplicateKeyException.message}")
                 if (pipelineId != null) {
@@ -615,7 +619,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels = pipelineCopy.labels
             )
             modelCheckPlugin.clearUpModel(copyMode)
-            val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
+            val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode).pipelineId
             val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
             if (settingInfo != null) {
                 // setting pipeline需替换成新流水线的
