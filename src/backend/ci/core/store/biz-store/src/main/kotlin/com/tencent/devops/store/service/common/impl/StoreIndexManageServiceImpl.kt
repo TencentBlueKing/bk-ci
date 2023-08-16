@@ -365,13 +365,13 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
         val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
             newStoreCodes.forEach {
-                val storeType = StoreTypeEnum.ATOM.type.toByte()
+
                 val tStoreIndexResultRecord = TStoreIndexResultRecord()
                 tStoreIndexResultRecord.id = UUIDUtil.generate()
                 tStoreIndexResultRecord.indexId = indexId
                 tStoreIndexResultRecord.indexCode = TRUSTWORTHY_INDEX_CODE
                 tStoreIndexResultRecord.storeCode = it
-                tStoreIndexResultRecord.storeType = storeType
+                tStoreIndexResultRecord.storeType = storeType.type.toByte()
                 tStoreIndexResultRecord.iconTips = I18nUtil.getCodeLanMessage(TRUSTWORTHY_INDEX_LEVEL_NAME)
                 tStoreIndexResultRecord.levelId = levelId
                 tStoreIndexResultRecord.creator = userId
@@ -382,7 +382,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                 val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
                 tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
                 tStoreIndexElementDetailRecord.storeCode = it
-                tStoreIndexElementDetailRecord.storeType = storeType
+                tStoreIndexElementDetailRecord.storeType = storeType.type.toByte()
                 tStoreIndexElementDetailRecord.indexId = indexId
                 tStoreIndexElementDetailRecord.indexCode = TRUSTWORTHY_INDEX_CODE
                 tStoreIndexElementDetailRecord.elementName = deptCode
