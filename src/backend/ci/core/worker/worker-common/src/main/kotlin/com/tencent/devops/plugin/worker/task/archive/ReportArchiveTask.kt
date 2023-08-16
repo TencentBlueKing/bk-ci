@@ -125,8 +125,11 @@ class ReportArchiveTask : ITask() {
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
 
             indexFileContent = indexFile.readText()
-            indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
-            indexFile.writeText(indexFileContent)
+            // pdf文件即使变量不存在，重新写入文件，虽然文件md5不变，但是会无法正常显示
+            if (!indexFile.name.endsWith(".pdf")) {
+                indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
+                indexFile.writeText(indexFileContent)
+            }
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
