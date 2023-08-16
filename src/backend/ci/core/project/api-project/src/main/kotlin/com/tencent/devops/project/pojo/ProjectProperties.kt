@@ -39,6 +39,6 @@ data class ProjectProperties(
     val remotedev: Boolean? = false,
     @ApiModelProperty("可申请的云桌面数", required = false)
     val cloudDesktopNum: Int = 0,
-    @ApiModelProperty("云研发管理员", required = false)
+    @ApiModelProperty("云研发管理员，多人用分号分隔", required = false)
     val remotedevManager: String? = null
 )
