@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,7 +49,7 @@ interface BuildStoreIndexInfoResource {
 
     @ApiOperation("更新平台组织认证组件信息")
     @POST
-    @Path("/dept/{deptCode}/trustworthy/update")
+    @Path("storeTypes/{storeType}/dept/{deptCode}/trustworthy/update")
     fun updateTrustworthyIndexInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -56,6 +57,9 @@ interface BuildStoreIndexInfoResource {
         @ApiParam("组织标识", required = true)
         @PathParam("deptCode")
         deptCode: String,
+        @ApiParam("组织标识", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
         @ApiParam("组件代码列表", required = true)
         storeCodes: List<String>
     ): Result<Boolean>

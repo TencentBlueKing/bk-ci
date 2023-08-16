@@ -44,12 +44,13 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     override fun updateTrustworthyIndexInfo(
         userId: String,
         deptCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean> {
         return storeIndexManageService.updateTrustworthyIndexInfo(
             userId = userId,
             deptCode = deptCode,
-            storeType = StoreTypeEnum.ATOM,
+            storeType = storeType,
             storeCodes = storeCodes
         )
     }
