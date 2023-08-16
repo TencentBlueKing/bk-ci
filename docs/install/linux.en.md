@@ -44,8 +44,8 @@ The following directories are explained in detail.
 - Redis 2.8.17
 - MySQL 5.7
 - ES 7.4
-- RabbitMQ 3.7.15 [RabbitMQ Installation Document](../install/rabbitmq.en.md)
-- Consul 1.0+ [Consul Installation](../install/consul.en.md)
+- RabbitMQ 3.7.15 [RabbitMQ Installation Document](./linux/rabbitmq.en.md)
+- Consul 1.0+ [Consul Installation](./linux/consul.en.md)
 
 ### 2.2 Database Initialization
 
@@ -57,11 +57,11 @@ Run files in the support-files/sql directory sequentially by file number.
 
 OpenResty is used as the gateway server. The deployment consists of two parts, OpenResty installation as well as deployment of Lua and Nginx configurations of gateway.
 
-- [bk-ci Gateway Deployment](../install/gateway.en.md)
+- [bk-ci Gateway Deployment](./linux/gateway.en.md)
 
 ### 3.2 Frontend Compilation & Deployment
 
-- [Frontend Deployment](../install/frontend.en.md)
+- [Frontend Deployment](./linux/frontend.en.md)
 
 Configuration file templates created from frontend builds require variable substitution.
 
@@ -74,11 +74,11 @@ Configuration file templates created from frontend builds require variable subst
 
 Compilation and deployment of backend microservices and agent.jar
 
-- [Backend Service Compilation & Deployment](../install/backend.en.md)
+- [Backend Service Compilation & Deployment](./linux/backend.en.md)
 
 ### 3.4 Agent Compilation & Deployment
 
-- [Agent Compilation & Installation Package Deployment](../install/agent.en.md)
+- [Agent Compilation & Installation Package Deployment](./linux/agent.en.md)
 
 ### 3.5 Initialization of configuration files in the support-files/template directory
 
