@@ -309,15 +309,13 @@ class ProjectInfoDao {
         pageSize: Int
     ): Result<Record3<String, String, String>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-          val subQuery = dslContext.select(
+            val subQuery = dslContext.select(
                 PROJECT_ID,
                 ATOM_CODE,
                 DSL.max(CREATE_TIME).`as`(BK_MAX_CREATE_TIME)
-            )
-                .from(this)
+            ).from(this)
                 .where(PROJECT_ID.`in`(projectIds))
                 .groupBy(PROJECT_ID, ATOM_CODE)
-
             return dslContext.select(
                 PROJECT_ID,
                 ATOM_CODE,
