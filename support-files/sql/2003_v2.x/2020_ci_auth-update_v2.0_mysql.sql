@@ -38,15 +38,6 @@ BEGIN
         ADD COLUMN `ERROR_MESSAGE` text DEFAULT NULL COMMENT '错误信息';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_AUTH_ITSM_CALLBACK'
-                    AND COLUMN_NAME = 'REVOKE_RESULT') THEN
-    ALTER TABLE T_AUTH_ITSM_CALLBACK
-        ADD COLUMN `REVOKE_RESULT` BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否撤销，0-未撤销，1-已撤销';
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
