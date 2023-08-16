@@ -95,6 +95,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
         pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
         buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
+        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
         webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
     }
@@ -109,6 +110,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
         lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
         lateinit var buildLogPrinter: BuildLogPrinter
+        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
         lateinit var webhookBuildParameterService: WebhookBuildParameterService
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -263,7 +265,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(
+                    if (pipelinebuildWebhookService.webhookTriggerPipelineBuild(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             codeRepositoryType = codeRepositoryType,

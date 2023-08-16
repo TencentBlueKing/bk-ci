@@ -21,8 +21,8 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
         importBeanNameGenerator: BeanNameGenerator
     ) {
         multiDataSource.forEach { dataSource ->
-            //if (dataSource == "process") "shardingDataSource" else
-            val finalDataSource = "${dataSource}DataSource"
+            val finalDataSource = if (dataSource == "process") "shardingDataSource" else
+                "${dataSource}DataSource"
             val connectionProvider = BeanDefinitionBuilder.genericBeanDefinition(
                 DataSourceConnectionProvider::class.java
             ).addConstructorArgReference(finalDataSource)

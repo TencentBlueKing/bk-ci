@@ -28,6 +28,7 @@
 package com.tencent.devops.project.config
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.leaf.plugin.LeafSpringBootProperties
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -38,6 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+
 
 @Configuration
 class OpConfig {
@@ -57,4 +60,10 @@ class OpConfig {
         projectDispatcher = projectDispatcher,
         redisOperation = redisOperation
     )
+
+    @Bean
+    @Primary
+    fun leafSpringBootProperties(): LeafSpringBootProperties {
+        return LeafSpringBootProperties()
+    }
 }

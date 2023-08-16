@@ -27,18 +27,21 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 import org.springframework.boot.gradle.tasks.run.BootRun
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-db-base"))
-    api("mysql:mysql-connector-java")
-    implementation(kotlin("stdlib"))
-}
-plugins {
-    `task-multi-boot-jar`
-    `task-multi-boot-run`
-}
-
-tasks.named<BootJar>("bootJar") {
-    val finalModuleName = System.getProperty("devops.multi.to")
-    archiveBaseName.set("boot-$finalModuleName")
+tasks.register<BootRun>("multiBootRun") {
+    doFirst {
+        systemProperty("devops.multi.from", System.getProperty("devops.multi.from"))
+        systemProperty("spring.main.allow-circular-references", "true")
+        systemProperty("spring.cloud.config.enabled", "false")
+        systemProperty("spring.cloud.config.fail-fast", "true")
+        systemProperty("spring.jmx.enabled", "true")
+        systemProperty("jasypt.encryptor.bootstrap", "false")
+        systemProperty("sun.jnu.encoding", "UTF-8")
+        systemProperty("file.encoding", "UTF-8")
+        systemProperty("spring.cloud.consul.host", "localhost")
+    }
+    dependsOn("multiBootJar")
+    val bootJarTask = tasks.getByName<BootJar>("bootJar")
+    println("multi boot run:${bootJarTask.mainClass}|${bootJarTask.classpath}")
+    mainClass.set(bootJarTask.mainClass)
+    classpath = bootJarTask.classpath
 }

@@ -54,9 +54,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class PipelinePermConfiguration constructor(
-    val dslContext: DSLContext
-){
+class PipelinePermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
@@ -75,7 +73,7 @@ class PipelinePermConfiguration constructor(
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
     fun mockPipelinePermissionService(
-
+        dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
         authProjectApi: AuthProjectApi,
         authResourceApi: AuthResourceApi,
@@ -93,7 +91,7 @@ class PipelinePermConfiguration constructor(
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3pipelinePermissionService(
-
+        dslContext: DSLContext,
         client: Client,
         redisOperation: RedisOperation,
         pipelineInfoDao: PipelineInfoDao,
@@ -117,7 +115,7 @@ class PipelinePermConfiguration constructor(
     fun githubStreamPipelinePermissionService(
         client: Client,
         pipelineInfoDao: PipelineInfoDao,
-
+        dslContext: DSLContext,
         checkTokenService: ClientTokenService
     ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
         client = client,
@@ -131,7 +129,7 @@ class PipelinePermConfiguration constructor(
     fun gitlabStreamPipelinePermissionService(
         client: Client,
         pipelineInfoDao: PipelineInfoDao,
-
+        dslContext: DSLContext,
         checkTokenService: ClientTokenService
     ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
         client = client,
@@ -146,7 +144,7 @@ class PipelinePermConfiguration constructor(
         authPermissionApi: AuthPermissionApi,
         authProjectApi: AuthProjectApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
-
+        dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
         pipelineViewGroupService: PipelineViewGroupService,
         authResourceApi: AuthResourceApi

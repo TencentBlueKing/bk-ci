@@ -6,7 +6,7 @@ import javax.annotation.PostConstruct
 
 
 @Component
-class MyStartupTask {
+class MyStartupTask  {
     @PostConstruct
     fun init() {
         logger.info("MyStartupTask init")

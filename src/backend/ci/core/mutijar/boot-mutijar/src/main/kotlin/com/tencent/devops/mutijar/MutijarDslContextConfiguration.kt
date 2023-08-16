@@ -41,6 +41,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Scope
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
+import java.lang.reflect.Method
+import java.lang.reflect.Parameter
 
 /**
  *
@@ -57,8 +59,14 @@ class MutijarDslContextConfiguration {
         injectionPoint: InjectionPoint
     ): DSLContext {
         val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
-        if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
-            val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
+        if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java) ||
+            Method::class.java.isAssignableFrom(annotatedElement::class.java)
+        ) {
+            val declaringClass: Class<*> = when (annotatedElement) {
+                is Constructor<*> -> annotatedElement.declaringClass
+                is Method -> annotatedElement.declaringClass
+                else -> throw IllegalArgumentException("Invalid annotatedElement type")
+            }
             val packageName = declaringClass.getPackage().name
             logger.info("packageName:$packageName")
             // lambda服务有多个数据源，需要进行处理

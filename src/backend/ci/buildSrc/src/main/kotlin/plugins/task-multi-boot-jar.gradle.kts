@@ -31,10 +31,9 @@ tasks.register("multiBootJar") {
             isSpecifiedModulePath(it.path, multiModuleList)
         }.forEach { subProject -> addDependencies(subProject.path) }
         dependsOn("copyToRelease")
-        //dependsOn("bootRun")
-        // dependsOn("jib")
     }
 }
+
 fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
     // 由于store微服务下的有些项目名称包含image，在打包image时会把store给误打包，故在打包image时，把store服务剔除
     return if (path.contains("image") && path.contains("store")) {
