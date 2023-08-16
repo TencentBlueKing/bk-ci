@@ -46,7 +46,7 @@ import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
 @Suppress("LongParameterList")
@@ -94,8 +94,8 @@ class RbacProjectPermissionService(
         authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
         var authProjectId = ""
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
+        val projectCode = resourceRegisterInfo.resourceCode
+        try {
             with(authProjectCreateInfo) {
                 val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
                     ProjectTipsStatus.SHOW_CREATE_PENDING.status
@@ -103,7 +103,6 @@ class RbacProjectPermissionService(
                     ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
                 }
                 projectApprovalService.create(
-                    context = context,
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     approvalStatus = approvalStatus,
@@ -123,10 +122,14 @@ class RbacProjectPermissionService(
                 user = authProjectCreateInfo.userId,
                 serviceCode = projectAuthServiceCode,
                 resourceType = AuthResourceType.PROJECT,
-                projectCode = resourceRegisterInfo.resourceCode,
-                resourceCode = resourceRegisterInfo.resourceCode,
+                projectCode = projectCode,
+                resourceCode = projectCode,
                 resourceName = resourceRegisterInfo.resourceName
             )
+        } catch (ignore: Exception) {
+            logger.warn("create auth resource failed, delete project($projectCode) approval")
+            projectApprovalService.delete(projectId = projectCode)
+            throw ignore
         }
         return authProjectId
     }
@@ -155,18 +158,16 @@ class RbacProjectPermissionService(
                 defaultMessage = "Projects($englishName) in approval cannot be modified"
             )
         }
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
+        val oldVersionProjectApproval = projectApprovalService.get(projectId = englishName)
+        try {
             with(resourceUpdateInfo) {
                 projectApprovalService.update(
-                    context = context,
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
                     approvalStatus = resourceUpdateInfo.approvalStatus,
                     subjectScopes = subjectScopes
                 )
             }
-
             // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
             if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
                 authResourceApi.createResource(
@@ -186,6 +187,15 @@ class RbacProjectPermissionService(
                     resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
                 )
             }
+        } catch (ignore: Exception) {
+            logger.warn(
+                "update auth resource failed, " +
+                    "rollback project($englishName) approval|$oldVersionProjectApproval"
+            )
+            projectApprovalService.rollBack(
+                projectApprovalInfo = oldVersionProjectApproval!!
+            )
+            throw ignore
         }
     }
 
@@ -244,5 +254,9 @@ class RbacProjectPermissionService(
             permission = permission,
             supplier = null
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(RbacProjectPermissionService::class.java)
     }
 }
