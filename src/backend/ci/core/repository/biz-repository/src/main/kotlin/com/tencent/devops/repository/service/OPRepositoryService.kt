@@ -390,8 +390,15 @@ class OPRepositoryService @Autowired constructor(
                     return@forEach
                 }
                 // 获取代码库信息
-                val repositoryProjectInfo = githubService.getRepositoryInfo(token, it.projectName)
-                val gitProjectId = repositoryProjectInfo.id
+                val repositoryProjectInfo = try {
+                    githubService.getRepositoryInfo(token, it.projectName)
+                } catch (ignored: Exception) {
+                    logger.warn(
+                        "get github project info failed,repositoryId=[${repositoryInfo.repositoryId}] | $ignored"
+                    )
+                    null
+                }
+                val gitProjectId = repositoryProjectInfo?.id ?: 0L
                 codeGithubDao.updateGitProjectId(
                     dslContext = dslContext,
                     id = repositoryId,
