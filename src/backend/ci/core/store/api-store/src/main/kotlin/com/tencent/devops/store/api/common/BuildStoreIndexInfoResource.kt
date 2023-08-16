@@ -49,7 +49,7 @@ interface BuildStoreIndexInfoResource {
 
     @ApiOperation("更新平台组织认证组件信息")
     @POST
-    @Path("storeTypes/{storeType}/depts/{deptCode}/trustworthy/update")
+    @Path("/storeTypes/{storeType}/depts/{deptCode}/trustworthy/update")
     fun updateTrustworthyIndexInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
