@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.jooq.DSLContext
