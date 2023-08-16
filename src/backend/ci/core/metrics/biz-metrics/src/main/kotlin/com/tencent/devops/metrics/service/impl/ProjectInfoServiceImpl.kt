@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.PageUtil.MAX_PAGE_SIZE
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
@@ -58,7 +60,8 @@ import org.springframework.stereotype.Service
 class ProjectInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectInfoDao: ProjectInfoDao,
-    private val client: Client
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : ProjectInfoManageService {
 
     private val atomCodeCache = Caffeine.newBuilder()
@@ -209,14 +212,22 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun syncSingleProjectAtomData(projectId: String): Boolean {
+    override fun syncCheck(projectId: String) {
         Executors.newFixedThreadPool(1).submit {
-            logger.info("begin syncProjectAtomData")
-            if (projectInfoDao.projectAtomCount(dslContext, projectId) > 0) {
-                saveProjectAtomInfo(listOf(projectId))
+            val lock = RedisLock(redisOperation, "syncProjectAtomInfo:$projectId", 120)
+            if (lock.tryLock()) {
+                if (projectInfoDao.projectAtomCount(dslContext, projectId) > 0) {
+                    logger.info("begin syncProjectAtomData projectId:$projectId")
+                    saveProjectAtomInfo(listOf(projectId))
+                    logger.info("end syncProjectAtomData projectId:$projectId")
+                }
             }
-            logger.info("end syncProjectAtomData")
         }
+    }
+
+    override fun syncSingleProjectAtomData(projectId: String): Boolean {
+
+
         return true
     }
 
