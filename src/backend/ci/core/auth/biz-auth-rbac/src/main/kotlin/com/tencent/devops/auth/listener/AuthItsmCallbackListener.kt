@@ -78,6 +78,11 @@ class AuthItsmCallbackListener @Autowired constructor(
             params = arrayOf(sn),
             defaultMessage = "itsm application form $sn does not exist"
         )
+        // 审批单不存在或者已经结束
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         when (itsmCallBackInfo.currentStatus) {
             REVOKE_ITSM_APPLICATION_ACTION -> revokeCreateProject(
                 projectId = getProjectId(callBackInfo.englishName),
@@ -103,6 +108,11 @@ class AuthItsmCallbackListener @Autowired constructor(
             params = arrayOf(sn),
             defaultMessage = "itsm application form $sn does not exist"
         )
+        // 审批单不存在或者已经结束
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         when (itsmCallBackInfo.currentStatus) {
             REVOKE_ITSM_APPLICATION_ACTION -> {
                 revokeUpdateProject(

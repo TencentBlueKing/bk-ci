@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("TooManyFunctions")
 class ProjectApprovalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectApprovalDao: ProjectApprovalDao,
@@ -64,7 +65,9 @@ class ProjectApprovalService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProjectApprovalService::class.java)
     }
 
+    @Suppress("LongParameterList")
     fun create(
+        context: DSLContext,
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
@@ -72,7 +75,7 @@ class ProjectApprovalService @Autowired constructor(
         tipsStatus: Int
     ): Int {
         return projectApprovalDao.create(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             approvalStatus = approvalStatus,
@@ -82,6 +85,7 @@ class ProjectApprovalService @Autowired constructor(
     }
 
     fun update(
+        context: DSLContext,
         userId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         approvalStatus: Int,
@@ -93,21 +97,12 @@ class ProjectApprovalService @Autowired constructor(
             else -> ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
         }
         return projectApprovalDao.update(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             projectUpdateInfo = projectUpdateInfo,
             approvalStatus = approvalStatus,
             subjectScopes = subjectScopes,
             tipsStatus = tipsStatus
-        )
-    }
-
-    fun rollBack(
-        projectApprovalInfo: ProjectApprovalInfo
-    ) {
-        projectApprovalDao.update(
-            dslContext = dslContext,
-            projectApprovalInfo = projectApprovalInfo
         )
     }
 
@@ -376,6 +371,7 @@ class ProjectApprovalService @Autowired constructor(
             )
         }
         create(
+            context = dslContext,
             userId = projectInfo.creator,
             projectCreateInfo = projectCreateInfo,
             approvalStatus = ProjectApproveStatus.APPROVED.status,

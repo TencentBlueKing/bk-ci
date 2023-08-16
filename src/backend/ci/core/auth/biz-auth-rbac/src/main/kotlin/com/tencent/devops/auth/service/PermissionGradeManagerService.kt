@@ -489,7 +489,12 @@ class PermissionGradeManagerService @Autowired constructor(
     ): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
-        val isItsmTicketRevoked = itsmService.getItsmTicketStatus(callbackRecord!!.sn) == REVOKE_ITSM_APPLICATION_ACTION
+        // 审批单不存在或者已经结束
+        if (callbackRecord == null || callbackRecord.approveResult != null) {
+            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
+            return true
+        }
+        val isItsmTicketRevoked = itsmService.getItsmTicketStatus(callbackRecord.sn) == REVOKE_ITSM_APPLICATION_ACTION
         // 用户可以从itsm界面直接撤销工单，此时不需要再调用itsm接口撤销工单
         if (!isItsmTicketRevoked) {
             itsmService.cancelItsmApplication(
@@ -502,11 +507,11 @@ class PermissionGradeManagerService @Autowired constructor(
         }
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
-        authItsmCallbackDao.updateRevokeResultBySn(
+        authItsmCallbackDao.updateCallbackBySn(
             dslContext = dslContext,
             sn = callbackRecord.sn,
             approver = userId,
-            revokeResult = true
+            approveResult = false
         )
         return true
     }

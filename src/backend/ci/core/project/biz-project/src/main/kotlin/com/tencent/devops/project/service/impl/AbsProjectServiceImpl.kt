@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.api.service.ServiceAuthItsmCallbackResource
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -1049,7 +1048,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            if (hasApplicationFinish(projectCode = projectInfo.englishName)) return true
             cancelCreateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.delete(dslContext = dslContext, projectId = projectId)
         } catch (e: Exception) {
@@ -1082,7 +1080,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            if (hasApplicationFinish(projectCode = projectInfo.englishName)) return true
             cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
@@ -1100,16 +1097,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         return true
-    }
-
-    private fun hasApplicationFinish(projectCode: String): Boolean {
-        val callbackRecord = client.get(ServiceAuthItsmCallbackResource::class).get(projectCode = projectCode).data
-        logger.info("hasApplicationFinish|callbackRecord:$callbackRecord")
-        if (callbackRecord == null || callbackRecord.approveResult != null || callbackRecord.revokeResult) {
-            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
-            return true
-        }
-        return false
     }
 
     override fun getProjectByName(projectName: String): ProjectVO? {
