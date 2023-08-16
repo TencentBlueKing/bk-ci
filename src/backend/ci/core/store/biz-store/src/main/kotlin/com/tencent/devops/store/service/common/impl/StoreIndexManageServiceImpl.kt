@@ -255,7 +255,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val indexId = storeIndexManageInfoDao.getStoreIndexBaseInfo(
             dslContext = dslContext,
-            storeType = StoreTypeEnum.ATOM,
+            storeType = createIndexComputeDetailRequest.storeType,
             indexCode = createIndexComputeDetailRequest.indexCode
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_INVALID_PARAM_,
