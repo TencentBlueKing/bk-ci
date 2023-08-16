@@ -185,7 +185,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     override fun syncProjectAtomData(userId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
-            try{
+            try {
                 logger.info("begin op sync project atom data")
                 var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
                 val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
