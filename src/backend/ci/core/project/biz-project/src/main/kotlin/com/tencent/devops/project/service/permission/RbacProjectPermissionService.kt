@@ -151,6 +151,7 @@ class RbacProjectPermissionService(
                 defaultMessage = "Projects($englishName) in approval cannot be modified"
             )
         }
+        val beforeUpdateProjectApprovalInfo = projectApprovalService.get(projectId = englishName)
         with(resourceUpdateInfo) {
             projectApprovalService.update(
                 userId = userId,
@@ -159,24 +160,33 @@ class RbacProjectPermissionService(
                 subjectScopes = subjectScopes
             )
         }
-        // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
-        if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
-            authResourceApi.createResource(
-                user = resourceUpdateInfo.userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = englishName,
-                resourceCode = englishName,
-                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+        try {
+            // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
+            if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
+                authResourceApi.createResource(
+                    user = resourceUpdateInfo.userId,
+                    serviceCode = projectAuthServiceCode,
+                    resourceType = AuthResourceType.PROJECT,
+                    projectCode = englishName,
+                    resourceCode = englishName,
+                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+                )
+            } else {
+                authResourceApi.modifyResource(
+                    serviceCode = projectAuthServiceCode,
+                    resourceType = AuthResourceType.PROJECT,
+                    projectCode = englishName,
+                    resourceCode = englishName,
+                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+                )
+            }
+        } catch (ignore: Exception) {
+            logger.warn(
+                "update auth resource failed, " +
+                    "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
             )
-        } else {
-            authResourceApi.modifyResource(
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = englishName,
-                resourceCode = englishName,
-                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
-            )
+            projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
+            throw ignore
         }
     }
 

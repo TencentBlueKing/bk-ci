@@ -402,29 +402,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 "$needApproval | $subjectScopes"
         )
         try {
-            val projectInfo = projectDao.getByEnglishName(
-                dslContext = dslContext,
-                englishName = englishName
-            ) ?: throw NotFoundException("project - $englishName is not exist!")
-            val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
-            if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
-                val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
-                if (!verify) {
-                    logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
-                    throw PermissionForbiddenException(
-                        I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
-                    )
-                }
-            }
-            // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
-            val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
-                needApproval = needApproval,
-                projectInfo = projectInfo,
-                subjectScopesStr = subjectScopesStr,
-                projectUpdateInfo = projectUpdateInfo
-            )
-            val beforeUpdateProjectApprovalInfo = projectApprovalService.get(projectId = englishName)
             try {
+                val projectInfo = projectDao.getByEnglishName(
+                    dslContext = dslContext,
+                    englishName = englishName
+                ) ?: throw NotFoundException("project - $englishName is not exist!")
+                val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+                if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
+                    val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+                    if (!verify) {
+                        logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+                        throw PermissionForbiddenException(
+                            I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+                        )
+                    }
+                }
+                // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
+                val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
+                    needApproval = needApproval,
+                    projectInfo = projectInfo,
+                    subjectScopesStr = subjectScopesStr,
+                    projectUpdateInfo = projectUpdateInfo
+                )
                 val projectId = projectInfo.projectId
                 val logoAddress = projectUpdateInfo.logoAddress
                 val resourceUpdateInfo = ResourceUpdateInfo(
@@ -479,18 +478,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 }
                 success = true
-                throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                if (finalNeedApproval) {
-                    projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
-                }
                 throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (e: Exception) {
                 logger.warn("update project failed :$projectUpdateInfo", e)
-                if (finalNeedApproval) {
-                    projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
-                }
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
