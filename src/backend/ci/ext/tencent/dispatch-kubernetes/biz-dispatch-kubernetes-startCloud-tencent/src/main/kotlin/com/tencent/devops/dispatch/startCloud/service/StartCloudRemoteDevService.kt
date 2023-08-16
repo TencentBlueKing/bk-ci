@@ -88,7 +88,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             )
         )
 
-        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toInt())
+        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toIntOrNull() ?: 0)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
