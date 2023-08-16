@@ -290,18 +290,32 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 )
             }
             is CodeTGitRepository -> {
-                val credInfo = getCredential(projectId, repo)
-                return client.get(ServiceScmResource::class).listBranches(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = ScmType.CODE_TGIT,
-                    privateKey = null,
-                    passPhrase = null,
-                    token = credInfo.privateKey,
-                    region = null,
-                    userName = credInfo.username,
-                    search = search
-                )
+                return if (repo.authType == RepoAuthType.OAUTH) {
+                    client.get(ServiceScmOauthResource::class).listBranches(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = getTGitAccessToken(repo.userName),
+                        region = null,
+                        userName = repo.userName,
+                        search = search
+                    )
+                } else {
+                    val credInfo = getCredential(projectId, repo)
+                    client.get(ServiceScmResource::class).listBranches(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = credInfo.privateKey,
+                        region = null,
+                        userName = credInfo.username,
+                        search = search
+                    )
+                }
             }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
