@@ -79,8 +79,14 @@ abstract class StartupContainerHandler @Autowired constructor(
     @Value("\${devCloud.entrypoint}")
     val entrypoint: String = "devcloud_init.sh"
 
-    @Value("\${devCloud.persistenceEntrypoint:}")
+    @Value("\${devCloud.clusterType:normal}")
+    var clusterType: String? = "normal"
+
+    @Value("\${devCloud.fitPersistenceCluster.persistenceEntrypoint:}")
     val persistenceEntrypoint: String = "devcloud_persistence_init.sh"
+
+    @Value("\${devCloud.fitPersistenceCluster.clusterType:fit}")
+    var persistenceClusterType: String? = "fit"
 
     private val overlayFsLabel = "checkout"
 
@@ -150,19 +156,23 @@ abstract class StartupContainerHandler @Autowired constructor(
                 containerLabels[overlayFsLabel] = "true"
             }
 
-            // 持久化容器标识
-            if (persistence) {
-                // TODO 新增持久化容器标签
-            }
             return containerLabels
         }
     }
 
-    fun generateContainerCommand(handlerContext: DcStartupHandlerContext): List<String> {
-        return if (!handlerContext.persistence) {
-            listOf("/bin/sh", entrypoint)
-        } else {
+    fun generateContainerCommand(persistence: Boolean): List<String> {
+        return if (persistence) {
             listOf("/bin/sh", persistenceEntrypoint)
+        } else {
+            listOf("/bin/sh", entrypoint)
+        }
+    }
+
+    fun generateClusterType(persistence: Boolean): String {
+        return if (persistence) {
+            persistenceClusterType ?: ""
+        } else {
+            clusterType ?: ""
         }
     }
 
@@ -181,7 +191,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                     vmSeqId = vmSeqId,
                     userId = userId,
                     name = containerName,
-                    action = Action.DELETE
+                    action = Action.DELETE,
+                    persistence = persistence
                 )
             } catch (e: Exception) {
                 logger.error("$buildLogKey Failed to clear exceptionContainer.", e)
@@ -230,7 +241,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
-                name = containerName
+                name = containerName,
+                persistence = persistence
             )
             if (statusResponse.optInt("actionCode") != 200) {
                 return null

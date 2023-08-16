@@ -67,9 +67,6 @@ class DcContainerCreateHandler @Autowired constructor(
     buildLogPrinter: BuildLogPrinter
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
 
-    @Value("\${devCloud.clusterType:normal}")
-    var clusterType: String? = "normal"
-
     companion object {
         private val logger = LoggerFactory.getLogger(DcContainerCreateHandler::class.java)
     }
@@ -100,12 +97,13 @@ class DcContainerCreateHandler @Autowired constructor(
                     password = "",
                     params = Params(
                         env = generateContainerEnvs(this),
-                        command = generateContainerCommand(this),
+                        command = generateContainerCommand(this.persistence),
                         labels = generateContainerLabels(this),
                         ipEnabled = false
                     ),
-                    clusterType = clusterType
-                )
+                    clusterType = generateClusterType(this.persistence)
+                ),
+                persistence = persistence
             )
 
             handlerContext.containerName = devCloudCreateName
@@ -122,10 +120,11 @@ class DcContainerCreateHandler @Autowired constructor(
             )
 
             val createResult = dispatchDevCloudClient.waitTaskFinish(
-                userId,
-                projectId,
-                pipelineId,
-                devCloudTaskId
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = devCloudTaskId,
+                persistence = persistence
             )
             if (createResult.first == TaskStatus.SUCCEEDED) {
                 // 启动成功

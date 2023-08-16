@@ -14,7 +14,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
@@ -27,32 +27,18 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
-import java.net.SocketTimeoutException
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 
 @Component
 class DispatchDevCloudClient {
     private val logger = LoggerFactory.getLogger(DispatchDevCloudClient::class.java)
-
-    @Value("\${devCloud.appId}")
-    val devCloudAppId: String = ""
-
-    @Value("\${devCloud.token}")
-    val devCloudToken: String = ""
-
-    @Value("\${devCloud.url}")
-    val devCloudUrl: String = ""
-
-    @Value("\${devCloud.smartProxyToken}")
-    val smartProxyToken: String = ""
 
     @Value("\${devCloud.cpu}")
     var cpu: Int = 32
@@ -77,24 +63,14 @@ class DispatchDevCloudClient {
         buildId: String,
         vmSeqId: String,
         userId: String,
-        devCloudContainer: DevCloudContainer
+        devCloudContainer: DevCloudContainer,
+        persistence: Boolean = false
     ): Pair<String, String> {
-        val url = devCloudUrl + "/api/v2.1/containers"
+        val url = "/api/v2.1/containers"
         val body = ObjectMapper().writeValueAsString(devCloudContainer)
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(
-                SmartProxyUtil.makeHeaders(
-                    devCloudAppId,
-                    devCloudToken,
-                    userId,
-                    smartProxyToken,
-                    projectId,
-                    pipelineId
-                ).toHeaders()
-            )
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
 
@@ -149,9 +125,10 @@ class DispatchDevCloudClient {
         userId: String,
         name: String,
         action: Action,
-        param: Params? = null
+        param: Params? = null,
+        persistence: Boolean = false
     ): String {
-        val url = devCloudUrl + "/api/v2.1/containers/" + name
+        val url = "/api/v2.1/containers/" + name
         val body = when (action) {
             Action.DELETE -> "{\"action\":\"delete\",\"params\":{}}"
             Action.STOP -> "{\"action\":\"stop\",\"params\":{}}"
@@ -164,16 +141,7 @@ class DispatchDevCloudClient {
         }
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                userId,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
         try {
@@ -222,22 +190,12 @@ class DispatchDevCloudClient {
         vmSeqId: String,
         userId: String,
         name: String,
-        retryTime: Int = 3
+        retryTime: Int = 3,
+        persistence: Boolean = false
     ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/containers/" + name + "/status"
+        val url = "/api/v2.1/containers/" + name + "/status"
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
-        val request = Request.Builder()
-            .url(url)
-            .headers(
-                SmartProxyUtil.makeHeaders(
-                    devCloudAppId,
-                    devCloudToken,
-                    userId,
-                    smartProxyToken,
-                    projectId,
-                    pipelineId
-                ).toHeaders()
-            )
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
         try {
@@ -290,21 +248,13 @@ class DispatchDevCloudClient {
     fun getContainerInstance(
         projectId: String,
         pipelineId: String,
-        staffName: String,
-        id: String
+        userId: String,
+        id: String,
+        persistence: Boolean = false
     ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/containers/" + id + "/instances"
+        val url = "/api/v2.1/containers/" + id + "/instances"
         logger.info("request url: $url")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                staffName,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -320,23 +270,15 @@ class DispatchDevCloudClient {
     fun createImage(
         projectId: String,
         pipelineId: String,
-        staffName: String,
-        devCloudImage: DevCloudImage
+        userId: String,
+        devCloudImage: DevCloudImage,
+        persistence: Boolean = false
     ): String {
-        val url = devCloudUrl + "/api/v2.1/images"
+        val url = "/api/v2.1/images"
         val body = ObjectMapper().writeValueAsString(devCloudImage)
         logger.info("request url: $url")
         logger.info("request body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                staffName,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -373,24 +315,16 @@ class DispatchDevCloudClient {
     fun createImageVersions(
         projectId: String,
         pipelineId: String,
-        staffName: String,
+        userId: String,
         id: String,
-        devCloudImageVersion: DevCloudImageVersion
+        devCloudImageVersion: DevCloudImageVersion,
+        persistence: Boolean = false
     ): String {
-        val url = devCloudUrl + "/api/v2.1/images/" + id + "/versions/" + devCloudImageVersion.version
+        val url = "/api/v2.1/images/" + id + "/versions/" + devCloudImageVersion.version
         val body = ObjectMapper().writeValueAsString(devCloudImageVersion)
         logger.info("request url: $url")
         logger.info("request body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                staffName,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -427,21 +361,13 @@ class DispatchDevCloudClient {
     fun getTasks(
         projectId: String,
         pipelineId: String,
-        staffName: String,
+        userId: String,
         taskId: String,
-        retryFlag: Int = 3
+        retryFlag: Int = 3,
+        persistence: Boolean = false
     ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/tasks/" + taskId
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                staffName,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val url = "/api/v2.1/tasks/" + taskId
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
 
@@ -455,7 +381,7 @@ class DispatchDevCloudClient {
                     Thread.sleep(5 * 1000)
                     if (retryFlag > 0) {
                         logger.info("$taskId get taskStatus failed. retry: $retryFlag")
-                        return getTasks(projectId, pipelineId, staffName, taskId, retryFlag - 1)
+                        return getTasks(projectId, pipelineId, userId, taskId, retryFlag - 1)
                     } else {
                         // 没机会了，只能失败
                         logger.error("$taskId retry get task status failed, retry responseCode: ${response.code}")
@@ -475,7 +401,7 @@ class DispatchDevCloudClient {
             // 接口超时失败，重试三次
             if (retryFlag > 0) {
                 logger.info("$taskId get task SocketTimeoutException. retry: $retryFlag")
-                return getTasks(projectId, pipelineId, staffName, taskId, retryFlag - 1)
+                return getTasks(projectId, pipelineId, userId, taskId, retryFlag - 1)
             } else {
                 logger.error("$taskId get task status failed.", e)
                 throw BuildFailureException(
@@ -491,21 +417,13 @@ class DispatchDevCloudClient {
     fun getWebsocket(
         projectId: String,
         pipelineId: String,
-        staffName: String,
-        containerName: String
+        userId: String,
+        containerName: String,
+        persistence: Boolean = false
     ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/containers/" + containerName + "/terminal"
-        logger.info("request url: $url, staffName: $staffName")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                staffName,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val url = "/api/v2.1/containers/" + containerName + "/terminal"
+        logger.info("request url: $url, staffName: $userId")
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -530,7 +448,8 @@ class DispatchDevCloudClient {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        jobReq: DevCloudJobReq
+        jobReq: DevCloudJobReq,
+        persistence: Boolean = false
     ): JobResponse {
         val jobRequestBody = JobRequest(
             alias = jobReq.alias,
@@ -544,17 +463,9 @@ class DispatchDevCloudClient {
             cpu = cpu
         )
 
-        val url = devCloudUrl + "/api/v2.1/job"
+        val url = "/api/v2.1/job"
         val body = JsonUtil.toJson(jobRequestBody)
-        val request = Request.Builder().url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                userId,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body)).build()
         val responseBody = OkhttpUtils.doHttp(request).body!!.string()
         return JsonUtil.getObjectMapper().readValue(responseBody)
@@ -564,20 +475,12 @@ class DispatchDevCloudClient {
         userId: String,
         projectId: String,
         pipelineId: String,
-        jobName: String
+        jobName: String,
+        persistence: Boolean = false
     ): String {
-        val url = devCloudUrl + "/api/v2.1/job/" + jobName + "/status"
+        val url = "/api/v2.1/job/" + jobName + "/status"
         logger.info("getJobStatus request url: $url, staffName: $userId")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                userId,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -600,20 +503,12 @@ class DispatchDevCloudClient {
         userId: String,
         projectId: String,
         pipelineId: String,
-        jobName: String
+        jobName: String,
+        persistence: Boolean = false
     ): String {
-        val url = devCloudUrl + "/api/v2.1/job/" + jobName + "/logs"
+        val url = "/api/v2.1/job/" + jobName + "/logs"
         logger.info("getJobStatus request url: $url, staffName: $userId")
-        val request = Request.Builder()
-            .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                userId,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+        val request = getClientProxy(persistence).baseRequest(userId, url, projectId, pipelineId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -641,7 +536,8 @@ class DispatchDevCloudClient {
         userId: String,
         projectId: String,
         pipelineId: String,
-        taskId: String
+        taskId: String,
+        persistence: Boolean = false
     ): Triple<TaskStatus, String, ErrorCodeEnum> {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
@@ -658,7 +554,8 @@ class DispatchDevCloudClient {
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                taskId = taskId
+                taskId = taskId,
+                persistence = persistence
             )
             return when {
                 !isFinish -> continue@loop
@@ -674,10 +571,17 @@ class DispatchDevCloudClient {
         userId: String,
         projectId: String,
         pipelineId: String,
-        taskId: String
+        taskId: String,
+        persistence: Boolean = false
     ): TaskResult {
         try {
-            val taskResponse = getTasks(projectId, pipelineId, userId, taskId)
+            val taskResponse = getTasks(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                taskId = taskId,
+                persistence = persistence
+            )
             val actionCode = taskResponse.optString("actionCode")
             return if ("200" != actionCode) {
                 // 创建失败
@@ -787,6 +691,20 @@ class DispatchDevCloudClient {
                 }
                 else -> DevCloudContainerStatus.RUNNING
             }
+        }
+    }
+
+    private fun getClientProxy(persistence: Boolean): ClientProxy {
+        return if (persistence) {
+            SpringContextUtil.getBean(
+                ClientProxy::class.java,
+                "fitPersistenceClientProxy"
+            )
+        } else {
+            SpringContextUtil.getBean(
+                ClientProxy::class.java,
+                "commonClientProxy"
+            )
         }
     }
 }
