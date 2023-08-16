@@ -48,14 +48,11 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.environment.client.InfluxdbClient
-import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
@@ -96,6 +93,7 @@ import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentProps
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -126,14 +124,14 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
     private val envShareProjectDao: EnvShareProjectDao,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val agentMetricService: AgentMetricService
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -177,7 +175,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
             } else {
-                influxdbClient.queryHostInfo(agentHashId)
+                agentMetricService.queryHostInfo(nodeRecord.projectId, agentHashId)
             }
         } catch (e: Throwable) {
             logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
@@ -397,105 +395,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 )
             }
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = agentActionCount, records = agentActions)
-    }
-
-    fun queryCpuUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryMemoryUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryDiskioMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryNetMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
     }
 
     fun generateAgent(

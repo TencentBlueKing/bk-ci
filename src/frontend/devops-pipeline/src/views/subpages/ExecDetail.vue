@@ -4,6 +4,7 @@
         @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
+        
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -231,15 +232,27 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
+                            isLatestBuild: this.isLatestBuild,
                             matchRules: this.curMatchRules
                         }
                     },
                     {
                         name: 'outputs',
-                        label: this.$t('details.outputs'),
+                        label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
-                        bindData: {}
+                        bindData: {
+                            currentTab: 'artifacts'
+                        }
+                    },
+                    {
+                        name: 'reports',
+                        label: this.$t('details.report'),
+                        className: '',
+                        component: 'outputs',
+                        bindData: {
+                            currentTab: 'reports'
+                        }
                     },
                     {
                         name: 'codeRecords',
@@ -341,6 +354,9 @@
             },
             statusLabel () {
                 return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
+            },
+            isLatestBuild () {
+                return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
             }
         },
 
@@ -356,8 +372,8 @@
                 }
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
-                    this.isLoading = false
                     this.hasNoPermission = true
                 }
             }
@@ -536,6 +552,7 @@
       .exec-detail-summary-header-build-msg {
         flex: 1;
         margin: 0 24px 0 8px;
+        font-size: 14px;
         @include ellipsis();
         color: #313238;
         min-width: auto;

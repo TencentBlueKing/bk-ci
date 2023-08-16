@@ -13,7 +13,6 @@
         </div>
         <main class="g-scroll-pagination-table">
             <bk-table style="margin-top: 15px;"
-                :empty-text="$t('store.暂时没有模板')"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -23,13 +22,13 @@
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.模板名称')">
+                <bk-table-column :label="$t('store.模板名称')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="atom-name" :title="props.row.templateName" @click="routerAtoms(props.row.templateCode)">{{ props.row.templateName }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.所属项目')" prop="projectName"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')">
+                <bk-table-column :label="$t('store.所属项目')" prop="projectName" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                             v-if="props.row.templateStatus === 'AUDITING'">
@@ -49,8 +48,8 @@
                         <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
-                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter"></bk-table-column>
+                <bk-table-column :label="$t('store.修改人')" prop="modifier" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
                     <template slot-scope="props">
                         <span class="shelf-btn"
@@ -79,6 +78,9 @@
                         </span>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+                </template>
             </bk-table>
         </main>
 
@@ -88,7 +90,8 @@
                 :is-show.sync="templatesideConfig.show"
                 :title="templatesideConfig.title"
                 :quick-close="templatesideConfig.quickClose"
-                :width="templatesideConfig.width">
+                :width="templatesideConfig.width"
+                :before-close="cancelRelateTemplate">
                 <template slot="content">
                     <form class="bk-form relate-template-form"
                         v-bkloading="{
@@ -124,7 +127,7 @@
                                     </bk-select>
                                     <div v-if="templateErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
-                                <bk-popover placement="right">
+                                <bk-popover placement="right" class="bk-icon-tooltips">
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.源模版所属项目') }} </p>
@@ -135,7 +138,11 @@
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.模板') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <bk-select v-model="relateTemplateForm.template" searchable>
+                                <bk-select
+                                    v-model="relateTemplateForm.template"
+                                    searchable
+                                    @change="handleChangeForm"
+                                >
                                     <bk-option v-for="(option, index) in templateList"
                                         :key="index"
                                         :id="option.templateId"
@@ -158,6 +165,7 @@
                                         required: true,
                                         max: 20
                                     }"
+                                    @input="handleChangeForm"
                                     :class="{ 'is-danger': errors.has('templateName') }">
                                 <p :class="errors.has('templateName') ? 'error-tips' : 'normal-tips'">{{ errors.first("templateName") }}</p>
                             </div>
@@ -283,6 +291,7 @@
                 }
             },
             searchName () {
+                this.isLoading = true
                 debounce(this.search)
             }
         },
@@ -426,7 +435,18 @@
 
                         message = this.$t('store.关联成功')
                         theme = 'success'
-                        this.cancelRelateTemplate()
+                        
+                        this.templateErrors.projectError = false
+                        this.templateErrors.tplError = false
+                        this.relateTemplateForm = {
+                            projectCode: '',
+                            template: '',
+                            name: ''
+                        }
+
+                        setTimeout(() => {
+                            this.templatesideConfig.show = false
+                        })
                     } catch (err) {
                         message = err.message ? err.message : err
                         theme = 'error'
@@ -442,13 +462,40 @@
             },
 
             cancelRelateTemplate () {
-                this.templatesideConfig.show = false
-                this.templateErrors.projectError = false
-                this.templateErrors.tplError = false
-                this.relateTemplateForm = {
-                    projectCode: '',
-                    template: '',
-                    name: ''
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            this.relateTemplateForm = {
+                                projectCode: '',
+                                template: '',
+                                name: ''
+                            }
+                            setTimeout(() => {
+                                this.templatesideConfig.show = false
+                                this.templateErrors.projectError = false
+                                this.templateErrors.tplError = false
+                            })
+                            return true
+                        }
+                    })
+                } else {
+                    this.templatesideConfig.show = false
+                    this.templateErrors.projectError = false
+                    this.templateErrors.tplError = false
+                    this.relateTemplateForm = {
+                        projectCode: '',
+                        template: '',
+                        name: ''
+                    }
                 }
             },
 
@@ -463,7 +510,12 @@
              * 切换所属项目，清空模板数据
              */
             handleChangeProject () {
+                this.handleChangeForm()
                 this.relateTemplateForm.template = ''
+            },
+
+            handleChangeForm () {
+                window.changeFlag = true
             },
 
             async selectedTplProject () {
@@ -506,6 +558,7 @@
 
             relateTemplate () {
                 this.templatesideConfig.show = true
+                window.changeFlag = false
             },
 
             offline (form) {
@@ -533,3 +586,10 @@
         }
     }
 </script>
+<style lang="scss">
+    .bk-icon-tooltips {
+        padding-top: 3px;
+        padding-left: 10px;
+    }
+    
+</style>

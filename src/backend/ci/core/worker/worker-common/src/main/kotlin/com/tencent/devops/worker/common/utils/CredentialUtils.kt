@@ -95,7 +95,6 @@ object CredentialUtils {
         }
     }
 
-    @Deprecated("保留原处理变量值逻辑，后续替换凭据建议使用表达式实现")
     fun String.parseCredentialValue(
         context: Map<String, String>? = null,
         acrossProjectId: String? = null
