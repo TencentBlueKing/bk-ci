@@ -35,7 +35,6 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
-    api(project(":core:monitoring:api-monitoring"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:store:model-store"))
     testImplementation(project(":core:common:common-test"))
