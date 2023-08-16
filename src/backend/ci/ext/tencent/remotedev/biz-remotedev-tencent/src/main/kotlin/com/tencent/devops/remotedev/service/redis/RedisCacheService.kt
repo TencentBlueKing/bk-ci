@@ -53,7 +53,8 @@ class RedisCacheService @Autowired constructor(
         logger.info("save workspace detail from redis|$workspaceName|$cache")
         redisOperation.set(
             key = "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName",
-            value = JsonUtil.toJson(cache)
+            value = JsonUtil.toJson(cache),
+            expired = false
         )
     }
 

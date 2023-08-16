@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.resources.external
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,9 +68,14 @@ class ExternalResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun softwareInstallCallback(key: String, workspaceName: String): Result<Boolean> {
+    override fun softwareInstallCallback(
+        type: String,
+        key: String,
+        workspaceName: String,
+        softwareList: SoftwareCallbackRes
+    ): Result<Boolean> {
         if (key != externalKey) return Result(false)
-        deliverControl.softwareInstallationCompleteCallback(workspaceName)
+        deliverControl.softwareInstallationCompleteCallback(type, workspaceName, softwareList)
         return Result(true)
     }
 }

@@ -34,7 +34,7 @@
         var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
     </script>
     <script>
-        function getSubDoamin() {
+        function getSubDomain() {
             try {
                 return location.hostname.split('.').reduce((acc, _, index, list) => {
                     var last = list.length - 1
@@ -93,14 +93,14 @@
 
         function setProjectIdCookie() {
             try {
-                var pathProjectId = location.pathname.match(/^\/pipeline\/([\w\-]+)?/)?.[1]
+                var pathProjectId = location.pathname.match(/^\/pipeline\/zhiyan\/([\w\-]+)?/)?.[1]
                 var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
                 if (pathProjectId && cookiePid && cookiePid !== pathProjectId) {
-                    var subDomains = getSubDoamin()
+                    var subDomains = getSubDomain()
                     subDomains.forEach(domain => {
                         removeCookie(X_DEVOPS_PROJECT_ID, domain)
                     })
-                    setCookie(X_DEVOPS_PROJECT_ID, pathProjectId, subDomains[0] || location.hostname)
+                    setCookie(X_DEVOPS_PROJECT_ID, pathProjectId, location.hostname)
                     location.reload()
                 }
             } catch (error) {

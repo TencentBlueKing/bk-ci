@@ -128,6 +128,22 @@ class WorkspaceSharedDao {
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(SHARED_USER.equals(sharedUser))
                 .limit(1)
+                .execute()
+        }
+    }
+
+    fun batchDelete(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUsers: List<String>,
+        assignType: WorkspaceShared.AssignType
+    ) {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            dslContext.delete(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.`in`(sharedUsers))
+                .and(ASSIGN_TYPE.eq(assignType.name))
+                .execute()
         }
     }
 }

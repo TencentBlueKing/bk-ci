@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -74,19 +75,20 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
+        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(5)}"
 
         val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
                 userId = userId,
                 appName = appName,
-                pipeLineId = null,
+                pipeLineId = pipeLineId,
                 zoneId = event.devFile.zoneId,
                 machineType = event.devFile.machineType
             )
         )
 
-        return CreateWorkspaceRes(res.cgsIp, EMPTY, res.cloudZoneId.toInt())
+        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toInt())
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -104,7 +106,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentDelete(
                 userId = event.userId,
                 appName = appName,
-                pipeLineId = null
+                pipeLineId = dispatchWorkspaceDao.getWorkspaceInfo(event.workspaceName, dslContext)?.taskId
             )
         )
 

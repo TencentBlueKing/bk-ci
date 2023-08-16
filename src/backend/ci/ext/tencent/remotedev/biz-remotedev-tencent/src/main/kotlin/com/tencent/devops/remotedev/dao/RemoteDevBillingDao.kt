@@ -83,7 +83,8 @@ class RemoteDevBillingDao {
      */
     fun endBilling(
         dslContext: DSLContext,
-        workspaceName: String
+        workspaceName: String,
+        computeUsageTime: Boolean = true
     ) {
         val now = LocalDateTime.now()
         val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
@@ -100,18 +101,22 @@ class RemoteDevBillingDao {
                     .where(ID.eq(record.id))
                     .execute()
             }
-            with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-                dslContext.update(this)
-                    .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + add)
-                    .where(USER_ID.eq(record.user))
-                    .execute()
+            if (computeUsageTime) {
+                with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+                    dslContext.update(this)
+                        .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + add)
+                        .where(USER_ID.eq(record.user))
+                        .execute()
+                }
             }
         }
     }
 
     fun fetchNotEndBilling(dslContext: DSLContext, userId: String): List<LocalDateTime> {
+        val ws = TWorkspace.T_WORKSPACE
         with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            return dslContext.select(START_TIME).from(this).where(USER.eq(userId)).and(END_TIME.isNull)
+            return dslContext.select(START_TIME).from(this).leftJoin(ws).on(ws.NAME.eq(this.WORKSPACE_NAME))
+                .where(USER.eq(userId)).and(END_TIME.isNull).and(ws.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
                 .fetch(START_TIME)
         }
     }
@@ -143,8 +148,8 @@ class RemoteDevBillingDao {
          * 每月结束还没有结束的task，并创建一个新的task。这样做便于按月区分粒度
          */
         res.forEach { record2: Record2<String/*WORKSPACE_NAME*/, String/*USER*/> ->
-            endBilling(dslContext, record2.value1())
-            newBilling(dslContext, record2.value1(), record2.value2())
+            endBilling(dslContext = dslContext, workspaceName = record2.value1(), computeUsageTime = false)
+            newBilling(dslContext = dslContext, workspaceName = record2.value1(), userId = record2.value2())
         }
         /**
          * 初始化每个人的计费数据

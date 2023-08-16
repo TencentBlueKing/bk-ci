@@ -89,7 +89,7 @@ class SleepControl @Autowired constructor(
     fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
         if (needPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName)
         }
         RedisCallLimit(
             redisOperation,
@@ -335,7 +335,10 @@ class SleepControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+            remoteDevBillingDao.endBilling(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name)
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

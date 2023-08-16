@@ -58,7 +58,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevReminderEvent
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
@@ -300,17 +299,6 @@ class CreateControl @Autowired constructor(
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
             }
 
-            if (systemType.needReminderUser()) {
-                val duration = remoteDevSettingService.userWinTimeLeft(event.userId)
-                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toInt() ?: 60
-                dispatcher.dispatch(
-                    RemoteDevReminderEvent(
-                        userId = event.userId,
-                        workspaceName = event.workspaceName,
-                        delayMills = (duration - limit * 60).coerceAtLeast(60) * 1000
-                    )
-                )
-            }
             if (systemType.needUpdateBkTicket()) {
                 kotlin.runCatching {
                     bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
@@ -318,7 +306,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ownerType == WorkspaceOwnerType.PROJECT) {
-                deliverControl.safeInitialization(event.userId, event.workspaceName)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
             // websocket 通知成功
@@ -455,11 +443,6 @@ class CreateControl @Autowired constructor(
                 redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
             )
         ) {
-//            devfile.runsOn?.container?.image = if (mountType == WorkspaceMountType.BCS) {
-//                "${commonConfig.bcsWorkspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }else{
-//                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
