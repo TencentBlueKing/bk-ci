@@ -4,6 +4,9 @@ Kubernetes (K8s) 是一个开源系统，用于自动化容器化应用程序的
 
 在 Kubernetes 集群上部署BK-CI , 有利于 BK-CI 的动态扩展 。接下来你将看到在 Kubernetes 集群上部署 BK-CI 的步骤。
 
+## 操作系统
+LINUX
+
 ## 依赖
 1. [Kubernetes](https://kubernetes.io/) (个人用户推荐 [Minikube](https://minikube.sigs.k8s.io/docs/start/))
 2. [Helm3](https://helm.sh/docs/intro/install/)

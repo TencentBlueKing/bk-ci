@@ -4,6 +4,9 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 
 Hosting BK-CI on a Kubernetes Cluster is beneficial for dynamic scalable BK-CI services. Here, we see a step-by-step process for setting up BK-CI on a Kubernetes Cluster.
 
+## System
+LINUX
+
 ## Requirements
 1. [Kubernetes](https://kubernetes.io/) (Recommend for individual: [Minikube](https://minikube.sigs.k8s.io/docs/start/))
 2. [Helm3](https://helm.sh/docs/intro/install/)

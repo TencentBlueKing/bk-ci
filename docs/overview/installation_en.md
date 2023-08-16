@@ -10,5 +10,5 @@ Methods:
 - [Kubernetes](../install/kubernetes_en.md) (Recommend👍)
 - [Linux](../install/linux_en.md)
 
-The large-scale Installation(include login , authentication, BK-REPO, CodeCC and other systems) : xxxx
+The large-scale Installation(include login , authentication, BK-REPO, CodeCC and other systems) : [BlueKing-CI](https://bk.tencent.com/docs/markdown/ZH/DeploymentGuides/7.0/install-ci-suite.md)
 

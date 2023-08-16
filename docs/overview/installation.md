@@ -10,5 +10,5 @@
 - [Kubernetes](../install/kubernetes.md) (推荐👍)
 - [Linux](../install/linux.md)
 
-规模化部署(包含登录鉴权、BK-REPO、CodeCC等系统)请移步到 : xxxx
+规模化部署(包含登录鉴权、BK-REPO、CodeCC等系统)请移步到 : [蓝鲸-CI套餐](https://bk.tencent.com/docs/markdown/ZH/DeploymentGuides/7.0/install-ci-suite.md)
 
