@@ -94,43 +94,36 @@ class RbacProjectPermissionService(
         authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
         var authProjectId = ""
-        val projectCode = resourceRegisterInfo.resourceCode
-        try {
-            with(authProjectCreateInfo) {
-                val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
-                    ProjectTipsStatus.SHOW_CREATE_PENDING.status
-                } else {
-                    ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
-                }
-                projectApprovalService.create(
-                    userId = userId,
-                    projectCreateInfo = projectCreateInfo,
-                    approvalStatus = approvalStatus,
-                    subjectScopes = subjectScopes,
-                    tipsStatus = tipsStatus
-                )
-                if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
-                    // 创建兼容的权限中心项目
-                    authProjectId = projectExtService.createOldAuthProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectCreateInfo = projectCreateInfo
-                    ) ?: ""
-                }
+        with(authProjectCreateInfo) {
+            val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+                ProjectTipsStatus.SHOW_CREATE_PENDING.status
+            } else {
+                ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
             }
-            authResourceApi.createResource(
-                user = authProjectCreateInfo.userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = projectCode,
-                resourceCode = projectCode,
-                resourceName = resourceRegisterInfo.resourceName
+            projectApprovalService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                approvalStatus = approvalStatus,
+                subjectScopes = subjectScopes,
+                tipsStatus = tipsStatus
             )
-        } catch (ignore: Exception) {
-            logger.warn("create auth resource failed, delete project($projectCode) approval")
-            projectApprovalService.delete(projectId = projectCode)
-            throw ignore
+            if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
+                // 创建兼容的权限中心项目
+                authProjectId = projectExtService.createOldAuthProject(
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectCreateInfo = projectCreateInfo
+                ) ?: ""
+            }
         }
+        authResourceApi.createResource(
+            user = authProjectCreateInfo.userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = resourceRegisterInfo.resourceCode,
+            resourceCode = resourceRegisterInfo.resourceCode,
+            resourceName = resourceRegisterInfo.resourceName
+        )
         return authProjectId
     }
 
@@ -158,44 +151,32 @@ class RbacProjectPermissionService(
                 defaultMessage = "Projects($englishName) in approval cannot be modified"
             )
         }
-        val oldVersionProjectApproval = projectApprovalService.get(projectId = englishName)
-        try {
-            with(resourceUpdateInfo) {
-                projectApprovalService.update(
-                    userId = userId,
-                    projectUpdateInfo = projectUpdateInfo,
-                    approvalStatus = resourceUpdateInfo.approvalStatus,
-                    subjectScopes = subjectScopes
-                )
-            }
-            // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
-            if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
-                authResourceApi.createResource(
-                    user = resourceUpdateInfo.userId,
-                    serviceCode = projectAuthServiceCode,
-                    resourceType = AuthResourceType.PROJECT,
-                    projectCode = englishName,
-                    resourceCode = englishName,
-                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
-                )
-            } else {
-                authResourceApi.modifyResource(
-                    serviceCode = projectAuthServiceCode,
-                    resourceType = AuthResourceType.PROJECT,
-                    projectCode = englishName,
-                    resourceCode = englishName,
-                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
-                )
-            }
-        } catch (ignore: Exception) {
-            logger.warn(
-                "update auth resource failed, " +
-                    "rollback project($englishName) approval|$oldVersionProjectApproval"
+        with(resourceUpdateInfo) {
+            projectApprovalService.update(
+                userId = userId,
+                projectUpdateInfo = projectUpdateInfo,
+                approvalStatus = resourceUpdateInfo.approvalStatus,
+                subjectScopes = subjectScopes
             )
-            projectApprovalService.rollBack(
-                projectApprovalInfo = oldVersionProjectApproval!!
+        }
+        // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
+        if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
+            authResourceApi.createResource(
+                user = resourceUpdateInfo.userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = englishName,
+                resourceCode = englishName,
+                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
             )
-            throw ignore
+        } else {
+            authResourceApi.modifyResource(
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = englishName,
+                resourceCode = englishName,
+                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+            )
         }
     }
 
