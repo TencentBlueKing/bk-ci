@@ -102,7 +102,7 @@ class JooqIDAllocDaoImpl @Autowired constructor(
 
     override fun getAllTags(): MutableList<String> {
         with(TLeafAlloc.T_LEAF_ALLOC) {
-            val tagRecords = dslContext.select(BIZ_TAG).from(this).fetch()
+            val tagRecords = dslContext.select(BIZ_TAG).from(this).skipCheck().fetch()
             return tagRecords.map { it.value1() }
         }
     }
