@@ -63,12 +63,13 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
-        return Result(deleteControl.deleteWorkspace(
-            userId = userId,
-            workspaceName = workspaceName,
-            needPermission = false,
-            checkDeleteImmediately = true
-        )
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = false,
+                checkDeleteImmediately = true
+            )
         )
     }
 
@@ -91,5 +92,16 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         permissionService.checkUserManager(userId, projectId)
         deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
         return Result(true)
+    }
+
+    override fun checkManager(userId: String, projectId: String): Result<Boolean> {
+        kotlin.runCatching { permissionService.checkUserManager(userId, projectId) }.fold(
+            {
+                return Result(true)
+            },
+            {
+                return Result(false)
+            }
+        )
     }
 }
