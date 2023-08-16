@@ -340,6 +340,10 @@ class MigrateV0PolicyService constructor(
     ): List<Int> {
         val resource = permission.resources[0]
         val resourceType = oldResourceTypeMappingNewResourceType[resource.type] ?: resource.type
+        // 如果发现资源类型是跳过的,则跳过
+        if (skipResourceTypes.contains(resourceType)) {
+            return emptyList()
+        }
         val userActions = permission.actions.map { it.id }
         logger.info("find match resource group|$userId|$projectCode|$resourceType|$userActions")
         val (resourceCreateActions, resourceActions) = buildRbacActions(
