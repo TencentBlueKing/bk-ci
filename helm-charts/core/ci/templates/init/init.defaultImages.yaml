@@ -25,7 +25,7 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              services="store project"
+              services="store project auth"
               for service in $services
               do
                 until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup

@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
 
@@ -79,7 +80,10 @@ interface OpAtomService {
         userId: String,
         atomCode: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        publisher: String? = null,
+        releaseType: ReleaseTypeEnum? = null,
+        version: String? = null
     ): Result<Boolean>
 
     /**
