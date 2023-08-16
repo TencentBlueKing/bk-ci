@@ -32,6 +32,9 @@ import java.math.BigDecimal
 import java.sql.Timestamp
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.Record
+import org.jooq.SelectOptionStep
+import org.jooq.SelectUnionStep
 import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 
@@ -115,3 +118,9 @@ object JooqUtils {
         )
     }
 }
+
+fun <R : Record> SelectOptionStep<R>.skipCheck(): SelectUnionStep<R> {
+    return this.option("/*$SKIP_CHECK*/")
+}
+
+const val SKIP_CHECK = "@skip_check@"
