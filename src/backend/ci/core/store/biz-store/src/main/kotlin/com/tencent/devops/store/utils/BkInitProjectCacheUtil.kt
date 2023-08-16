@@ -40,9 +40,11 @@ import java.util.concurrent.TimeUnit
  */
 object BkInitProjectCacheUtil {
 
+    private const val CACHE_MAX_SIZE = 5000L
+
     private val initProjectCache = Caffeine.newBuilder()
-        .maximumSize(5000)
-        .expireAfterWrite(3, TimeUnit.MINUTES)
+        .maximumSize(CACHE_MAX_SIZE)
+        .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String, String>()
 
     /**
