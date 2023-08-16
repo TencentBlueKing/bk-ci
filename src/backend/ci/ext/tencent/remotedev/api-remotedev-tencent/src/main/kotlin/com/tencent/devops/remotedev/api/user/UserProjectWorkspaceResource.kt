@@ -121,7 +121,7 @@ interface UserProjectWorkspaceResource {
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
 
-    @ApiOperation("获取项目下空间列表实例列表")
+    @ApiOperation("检查是否为该项目云研发管理员")
     @GET
     @Path("/checkManager")
     fun checkManager(
