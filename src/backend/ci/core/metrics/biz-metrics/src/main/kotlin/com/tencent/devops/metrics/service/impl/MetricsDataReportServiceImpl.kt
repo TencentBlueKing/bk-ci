@@ -102,6 +102,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val buildId = buildEndPipelineMetricsData.buildId
         logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
+        syncCheck(projectId)
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
         val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
@@ -977,5 +978,20 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).data!!
+    }
+
+    private fun syncCheck(projectId: String) {
+        val lock = RedisLock(redisOperation, "syncProjectAtomInfoCheck:$projectId", 120)
+        var syncFlag = false
+        if (lock.tryLock()) {
+            try {
+                syncFlag = projectInfoDao.projectAtomCount(dslContext, projectId) == 0
+            } finally {
+                lock.unlock()
+            }
+        }
+        if (syncFlag) {
+            projectInfoManageService.syncCheck(projectId)
+        }
     }
 }

@@ -56,7 +56,7 @@ class ProjectInfoDao {
         pageSize: Int,
         keyWord: String? = null
     ): List<AtomBaseInfoDO> {
-        with(TProjectAtom.T_PROJECT_ATOM) {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {
@@ -65,7 +65,8 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE, ATOM_NAME)
                 .from(this)
                 .where(conditions)
-                .orderBy(ATOM_CODE, ID)
+                .groupBy(ATOM_CODE)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(AtomBaseInfoDO::class.java)
         }
@@ -243,16 +244,26 @@ class ProjectInfoDao {
         }
     }
 
-    fun projectAtomCount(
+    fun getAtomOverviewDataProjectAtomCount(
         dslContext: DSLContext,
-        projectId: String,
-        excludeAtomCodes: List<String> = emptyList()
+        projectId: String
     ): Int {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(ATOM_CODE.notIn(excludeAtomCodes))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomCount(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
@@ -274,6 +285,24 @@ class ProjectInfoDao {
     }
 
     fun queryProjectAtomNewNameInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, LocalDateTime>> {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.select(
+                ATOM_CODE,
+                ATOM_NAME,
+                DSL.max(CREATE_TIME)
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .groupBy(ATOM_CODE)
+                .fetch()
+        }
+    }
+
+    fun queryProjectAtomNewNameInfos(
         dslContext: DSLContext,
         projectIds: List<String>,
         page: Int,
@@ -302,6 +331,32 @@ class ProjectInfoDao {
                 )
                 .where(PROJECT_ID.`in`(projectIds))
                 .fetch()
+        }
+    }
+
+    fun saveProjectAtomInfo(
+        dslContext: DSLContext,
+        saveProjectAtomRelationPO: SaveProjectAtomRelationDataPO
+    ) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                ATOM_CODE,
+                ATOM_NAME,
+                CREATOR,
+                MODIFIER
+            ).values(
+                saveProjectAtomRelationPO.id,
+                saveProjectAtomRelationPO.projectId,
+                saveProjectAtomRelationPO.atomCode,
+                saveProjectAtomRelationPO.atomName,
+                saveProjectAtomRelationPO.creator,
+                saveProjectAtomRelationPO.modifier
+            ).onDuplicateKeyUpdate()
+                .set(ATOM_NAME, saveProjectAtomRelationPO.atomName)
+                .execute()
         }
     }
 

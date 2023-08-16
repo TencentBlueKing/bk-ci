@@ -216,19 +216,50 @@ class ProjectInfoServiceImpl @Autowired constructor(
         Executors.newFixedThreadPool(1).submit {
             val lock = RedisLock(redisOperation, "syncProjectAtomInfo:$projectId", 120)
             if (lock.tryLock()) {
-                if (projectInfoDao.projectAtomCount(dslContext, projectId) > 0) {
-                    logger.info("begin syncProjectAtomData projectId:$projectId")
-                    saveProjectAtomInfo(listOf(projectId))
-                    logger.info("end syncProjectAtomData projectId:$projectId")
+                try {
+                    if (projectInfoDao.getAtomOverviewDataProjectAtomCount(dslContext, projectId) > 0) {
+                        logger.info("begin syncProjectAtomData projectId:$projectId")
+                        saveProjectAtomInfo(projectId)
+                        logger.info("end syncProjectAtomData projectId:$projectId")
+                    }
+                } finally {
+                    lock.unlock()
                 }
             }
         }
     }
 
-    override fun syncSingleProjectAtomData(projectId: String): Boolean {
-
-
-        return true
+    private fun saveProjectAtomInfo(projectId: String) {
+        try {
+            var page = PageUtil.DEFAULT_PAGE
+            do {
+                val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfo(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    page = page,
+                    pageSize = MAX_PAGE_SIZE
+                )
+                val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+                projectAtomInfo.forEach {
+                    val saveProjectAtomRelationDataPO = SaveProjectAtomRelationDataPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                        projectId = projectId,
+                        atomCode = it.value1(),
+                        atomName = it.value2(),
+                        creator = SYSTEM,
+                        modifier = SYSTEM
+                    )
+                    saveProjectAtomRelationPOs.add(saveProjectAtomRelationDataPO)
+                }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                }
+                page ++
+            } while (projectAtomInfo.size == MAX_PAGE_SIZE)
+        } catch (ignore: Throwable) {
+            logger.warn("ProjectInfoServiceImpl sync project atom data fail", ignore)
+        }
     }
 
     private fun saveProjectAtomInfo(projectIds: List<String>) {
@@ -236,7 +267,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
             try {
                 var page = PageUtil.DEFAULT_PAGE
                 do {
-                    val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfo(
+                    val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfos(
                         dslContext = dslContext,
                         projectIds = projectIds,
                         page = page,
