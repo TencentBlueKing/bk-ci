@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.PageUtil.DEFAULT_PAGE
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.PageUtil.MAX_PAGE_SIZE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.ProjectInfoDao
@@ -183,27 +183,28 @@ class ProjectInfoServiceImpl @Autowired constructor(
     override fun syncProjectAtomData(userId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin op sync project atom data")
-            try {
-                var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-                val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-                if (projectMinId != null && projectMaxId != null) {
+            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+            if (projectMinId != null && projectMaxId != null) {
 
-                    do {
-                        val projectIds = client.get(ServiceProjectResource::class)
-                            .getProjectListById(
-                                minId = projectMinId,
-                                maxId = projectMinId + 10
-                            ).data?.map { it.englishName }
-                        if (!projectIds.isNullOrEmpty()) {
-                            saveProjectAtomInfo(projectIds)
+                do {
+                    val projectIds = client.get(ServiceProjectResource::class)
+                        .getProjectListById(
+                            minId = projectMinId,
+                            maxId = projectMinId + 10
+                        ).data?.map { it.englishName }
+                    if (!projectIds.isNullOrEmpty()) {
+                        val midIndex = projectIds.size / 2
+                        val leftList = projectIds.take(midIndex + 1)
+                        val rightList = projectIds.drop(leftList.size)
+                        saveProjectAtomInfo(leftList)
+                        if (rightList.isNotEmpty()) {
+                            saveProjectAtomInfo(rightList)
                         }
-                        projectMinId += 11
-                    } while (projectMinId <= projectMaxId)
-                }
-            } catch (ignore: Throwable) {
-                logger.warn("ProjectInfoServiceImpl sync project atom data fail", ignore)
+                    }
+                    projectMinId += 11
+                } while (projectMinId <= projectMaxId)
             }
-            logger.info("end op sync project atom data")
         }
         return true
     }
@@ -220,33 +221,38 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     private fun saveProjectAtomInfo(projectIds: List<String>) {
-        var page = DEFAULT_PAGE
-        do {
-            val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfo(
-                dslContext = dslContext,
-                projectIds = projectIds,
-                page = page,
-                pageSize = MAX_PAGE_SIZE
-            )
-            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
-            projectAtomInfo.forEach {
-                val saveProjectAtomRelationDataPO = SaveProjectAtomRelationDataPO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+        Executors.newFixedThreadPool(1).submit {
+            try {
+                var page = PageUtil.DEFAULT_PAGE
+                do {
+                    val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfo(
+                        dslContext = dslContext,
+                        projectIds = projectIds,
+                        page = page,
+                        pageSize = MAX_PAGE_SIZE
+                    )
+                    val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+                    projectAtomInfo.forEach {
+                        val saveProjectAtomRelationDataPO = SaveProjectAtomRelationDataPO(
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
                             projectId = it.value1(),
                             atomCode = it.value2(),
                             atomName = it.value3(),
                             creator = SYSTEM,
                             modifier = SYSTEM
-                )
-                saveProjectAtomRelationPOs.add(saveProjectAtomRelationDataPO)
+                        )
+                        saveProjectAtomRelationPOs.add(saveProjectAtomRelationDataPO)
+                    }
+                    if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                        projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                    }
+                    page ++
+                } while (projectAtomInfo.size == MAX_PAGE_SIZE)
+            } catch (ignore: Throwable) {
+                logger.warn("ProjectInfoServiceImpl sync project atom data fail", ignore)
             }
-            if (saveProjectAtomRelationPOs.isNotEmpty()) {
-                projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
-            }
-            logger.debug("batchSaveProjectAtomInfo count:${saveProjectAtomRelationPOs.size}")
-            page ++
-        } while (projectAtomInfo.size == MAX_PAGE_SIZE)
+        }
     }
 
     companion object {
