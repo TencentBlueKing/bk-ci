@@ -29,13 +29,13 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -43,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -51,12 +52,15 @@ import java.util.concurrent.TimeUnit
 @Service
 class PermissionService @Autowired constructor(
     private val client: Client,
-    private val tokenService: ClientTokenService,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val redisCache: RedisCacheService
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PermissionService::class.java)
+    }
+
     @Value("\${remoteDev.enablePermission:true}")
     private val enablePermission: Boolean = true
 
@@ -106,12 +110,13 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val res = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectId
-        ).data
-        if (res != true) {
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
+        if (projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
