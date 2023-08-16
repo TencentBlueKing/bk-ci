@@ -337,6 +337,7 @@ class OPRepositoryService @Autowired constructor(
         logger.info("OPRepositoryService:end updateCodeGitProjectId")
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun updateCodeGithubProjectId() {
         var offset = 0
         val limit = 100
