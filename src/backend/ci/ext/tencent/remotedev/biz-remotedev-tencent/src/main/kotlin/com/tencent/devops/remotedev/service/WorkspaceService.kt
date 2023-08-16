@@ -117,7 +117,7 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkOwnerPermission(userId, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -131,7 +131,7 @@ class WorkspaceService @Autowired constructor(
 
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkOwnerPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
@@ -462,7 +462,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
         if (checkPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkViewerPermission(userId, workspaceName)
         }
         val now = LocalDateTime.now()
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
@@ -512,7 +512,7 @@ class WorkspaceService @Autowired constructor(
 
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -536,7 +536,7 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         logger.info("$userId get workspace time line from id $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)

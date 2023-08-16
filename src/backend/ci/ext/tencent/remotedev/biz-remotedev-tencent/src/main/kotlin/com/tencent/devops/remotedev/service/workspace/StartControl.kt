@@ -93,7 +93,7 @@ class StartControl @Autowired constructor(
 
     fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkOwnerPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
