@@ -41,5 +41,6 @@ data class MigratePipelineDataParam(
     val semaphore: Semaphore,
     val doneSignal: CountDownLatch,
     val dslContext: DSLContext,
+    val migratingShardingDslContext: DSLContext,
     val processDao: ProcessDao
 )

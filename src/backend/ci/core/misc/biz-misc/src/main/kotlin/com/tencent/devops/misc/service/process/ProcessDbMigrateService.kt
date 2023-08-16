@@ -64,8 +64,8 @@ class ProcessDbMigrateService @Autowired constructor(
         projectId: String,
         cancelFlag: Boolean = false
     ): Boolean {
-        logger.info("migrateProjectData params:[$userId|$projectId]")
         Executors.newFixedThreadPool(1).submit {
+            logger.info("migrateProjectData params:[$userId|$projectId] begin!")
             // 查询项目下流水线数量
             val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
             // 根据流水线数量计算线程数量
@@ -106,6 +106,7 @@ class ProcessDbMigrateService @Autowired constructor(
                                 semaphore = semaphore,
                                 doneSignal = doneSignal,
                                 dslContext = dslContext,
+                                migratingShardingDslContext = migratingShardingDslContext,
                                 processDao = processDao
                             )
                         )
@@ -113,6 +114,7 @@ class ProcessDbMigrateService @Autowired constructor(
                 }
             } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
             doneSignal.await()
+            logger.info("migrateProjectData params:[$userId|$projectId] end!")
         }
         return true
     }

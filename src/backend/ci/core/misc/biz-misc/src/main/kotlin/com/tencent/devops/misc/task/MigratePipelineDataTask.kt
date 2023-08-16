@@ -29,8 +29,10 @@ class MigratePipelineDataTask constructor(
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
             try {
                 if (cancelFlag) {
+                    // 取消未结束的构建
                     handleUnFinishPipelines(RETRY_NUM)
                 }
+                // 开始迁移流水线的数据
             } finally {
                 // 业务逻辑执行完成后释放信号量
                 semaphore.release()
