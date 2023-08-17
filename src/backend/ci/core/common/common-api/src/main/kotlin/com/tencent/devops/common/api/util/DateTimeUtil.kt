@@ -111,7 +111,7 @@ object DateTimeUtil {
     }
 
     fun getFutureTimestamp(seconds: Long): Long {
-        return System.currentTimeMillis() + seconds * ONE_THOUSAND_MS
+        return System.currentTimeMillis() / 1000 + seconds
     }
 
     /**

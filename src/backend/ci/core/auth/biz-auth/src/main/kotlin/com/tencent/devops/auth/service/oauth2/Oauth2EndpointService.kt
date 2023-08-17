@@ -60,7 +60,7 @@ class Oauth2EndpointService constructor(
         )
         // 3、存储scope信息
         val scopeId = scopeService.create(scope = authorizationCodeDTO.scope.joinToString(","))
-        // 4、生成授权码并存储数据库，授权码有效期为5分钟
+        // 4、生成授权码并存储数据库，授权码有效期为10分钟
         val code = UUIDUtil.generate()
         codeService.create(
             userId = userId,

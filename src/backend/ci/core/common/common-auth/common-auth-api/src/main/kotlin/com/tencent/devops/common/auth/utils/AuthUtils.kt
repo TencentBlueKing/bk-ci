@@ -249,7 +249,7 @@ object AuthUtils {
     }
 
     fun isExpired(expirationTimestamp: Long): Boolean {
-        return System.currentTimeMillis() > expirationTimestamp
+        return System.currentTimeMillis() / 1000 > expirationTimestamp
     }
 
     private fun checkProject(projectId: String, expression: ExpressionDTO): Pair<Boolean, Set<String>> {
