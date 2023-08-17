@@ -107,11 +107,14 @@ interface ServiceProjectApprovalResource {
 
     @PUT
     @Path("/{projectId}/updateReject")
-    @ApiOperation("更新审批拒绝")
-    fun updateReject(
+    @ApiOperation("更新审批拒绝/撤销")
+    fun updateRejectOrRevoke(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("审批单状态", required = true)
+        @QueryParam("itsmTicketStatus")
+        itsmTicketStatus: String,
         @ApiParam("审批人", required = true)
         @QueryParam("applicant")
         applicant: String,

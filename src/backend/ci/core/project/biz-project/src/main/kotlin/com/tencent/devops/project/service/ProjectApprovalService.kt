@@ -325,13 +325,21 @@ class ProjectApprovalService @Autowired constructor(
         }
     }
 
-    fun updateReject(projectId: String, applicant: String, approver: String) {
+    fun updateRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ) {
         logger.info("project update reject|$projectId|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project $projectId is not exist"
         )
+        val tipsStatus =
+            if (itsmTicketStatus == REVOKE_ITSM_APPLICATION) ProjectTipsStatus.NOT_SHOW.status
+            else ProjectTipsStatus.SHOW_UPDATE_REJECT.status
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -339,7 +347,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectCode = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status,
-                tipsStatus = ProjectTipsStatus.SHOW_UPDATE_REJECT.status
+                tipsStatus = tipsStatus
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
