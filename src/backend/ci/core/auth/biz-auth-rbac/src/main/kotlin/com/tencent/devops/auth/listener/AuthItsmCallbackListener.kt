@@ -40,7 +40,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.auth.tables.records.TAuthItsmCallbackRecord
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -56,10 +55,6 @@ class AuthItsmCallbackListener @Autowired constructor(
     traceEventDispatcher: TraceEventDispatcher
 ) : BaseTraceListener<AuthItsmCallbackEvent>(traceEventDispatcher) {
 
-    companion object {
-        private const val REVOKE_ITSM_APPLICATION_ACTION = "REVOKED"
-    }
-
     override fun run(event: AuthItsmCallbackEvent) {
         when (event.approveType) {
             AuthItsmApprovalType.CREATE.name ->
@@ -69,84 +64,20 @@ class AuthItsmCallbackListener @Autowired constructor(
         }
     }
 
-    private fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
+    fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create callback info:$itsmCallBackInfo")
         val sn = itsmCallBackInfo.sn
-        // 蓝盾数据库存储的回调信息
-        val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
-            params = arrayOf(sn),
-            defaultMessage = "itsm application form $sn does not exist"
-        )
-        // 审批单不存在或者已经结束
-        if (callBackInfo.approveResult != null) {
-            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
-            return
-        }
-        when (itsmCallBackInfo.currentStatus) {
-            REVOKE_ITSM_APPLICATION_ACTION -> revokeCreateProject(
-                projectId = getProjectId(callBackInfo.englishName),
-                userId = callBackInfo.applicant
-            )
-            else -> {
-                denyOrApproveCreateProject(
-                    callBackInfo = callBackInfo,
-                    itsmCallBackInfo = itsmCallBackInfo
-                )
-            }
-        }
-    }
-
-    private fun updateProjectCallBack(
-        itsmCallBackInfo: ItsmCallBackInfo
-    ) {
-        logger.info("auth itsm update callback info:$itsmCallBackInfo")
-        val sn = itsmCallBackInfo.sn
-        // 蓝盾数据库存储的回调信息
-        val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
-            params = arrayOf(sn),
-            defaultMessage = "itsm application form $sn does not exist"
-        )
-        // 审批单不存在或者已经结束
-        if (callBackInfo.approveResult != null) {
-            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
-            return
-        }
-        when (itsmCallBackInfo.currentStatus) {
-            REVOKE_ITSM_APPLICATION_ACTION -> {
-                revokeUpdateProject(
-                    projectId = getProjectId(callBackInfo.englishName),
-                    userId = callBackInfo.applicant
-                )
-            }
-            else -> {
-                denyOrApproveUpdateProject(
-                    callBackInfo = callBackInfo,
-                    itsmCallBackInfo = itsmCallBackInfo
-                )
-            }
-        }
-    }
-
-    private fun revokeCreateProject(
-        projectId: String,
-        userId: String
-    ) {
-        logger.info("revoke create project:$projectId|$userId")
-        client.get(ServiceProjectResource::class).cancelCreateProject(
-            userId = userId,
-            projectId = projectId
-        )
-    }
-
-    private fun denyOrApproveCreateProject(
-        callBackInfo: TAuthItsmCallbackRecord,
-        itsmCallBackInfo: ItsmCallBackInfo
-    ) {
-        logger.info("deny or approve create project:$callBackInfo|$itsmCallBackInfo")
-        val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
+        // 蓝盾数据库存储的回调信息
+        val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
+            params = arrayOf(sn),
+            defaultMessage = "itsm application form $sn does not exist"
+        )
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
@@ -191,24 +122,20 @@ class AuthItsmCallbackListener @Autowired constructor(
         }
     }
 
-    private fun revokeUpdateProject(
-        projectId: String,
-        userId: String
-    ) {
-        logger.info("revoke update project:$projectId|$userId")
-        client.get(ServiceProjectResource::class).cancelUpdateProject(
-            userId = userId,
-            projectId = projectId
-        )
-    }
-
-    private fun denyOrApproveUpdateProject(
-        callBackInfo: TAuthItsmCallbackRecord,
-        itsmCallBackInfo: ItsmCallBackInfo
-    ) {
-        logger.info("deny or approve update project:$callBackInfo|$itsmCallBackInfo")
+    fun updateProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
+        logger.info("auth itsm update callback info:$itsmCallBackInfo")
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
+        // 蓝盾数据库存储的回调信息
+        val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
+            params = arrayOf(sn),
+            defaultMessage = "itsm application form $sn does not exist"
+        )
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
@@ -251,15 +178,5 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         }
-    }
-
-    fun getProjectId(projectCode: String): String {
-        return client.get(ServiceProjectResource::class).get(englishName = projectCode).data?.projectId
-            ?: throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                    defaultMessage = "The project does not exist! | englishName = $projectCode"
-                )
-            )
     }
 }

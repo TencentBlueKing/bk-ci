@@ -104,6 +104,7 @@ class PermissionGradeManagerService @Autowired constructor(
         private const val DEPARTMENT = "department"
         private const val CANCEL_ITSM_APPLICATION_ACTION = "WITHDRAW"
         private const val REVOKE_ITSM_APPLICATION_ACTION = "REVOKED"
+        private const val FINISH_ITSM_APPLICATION_ACTION = "FINISHED"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -494,9 +495,8 @@ class PermissionGradeManagerService @Autowired constructor(
             logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
             return true
         }
-        val isItsmTicketRevoked = itsmService.getItsmTicketStatus(callbackRecord.sn) == REVOKE_ITSM_APPLICATION_ACTION
-        // 用户可以从itsm界面直接撤销工单，此时不需要再调用itsm接口撤销工单
-        if (!isItsmTicketRevoked) {
+        // 若itsm还未结束，需要发起撤销
+        if (!itsmTicketFinished(callbackRecord.sn)) {
             itsmService.cancelItsmApplication(
                 ItsmCancelApplicationInfo(
                     sn = callbackRecord.sn,
@@ -514,6 +514,12 @@ class PermissionGradeManagerService @Autowired constructor(
             approveResult = false
         )
         return true
+    }
+
+    private fun itsmTicketFinished(sn: String): Boolean {
+        val itsmTicketStatus = itsmService.getItsmTicketStatus(sn)
+        return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION
+            || itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
     }
 
     fun listGroup(
