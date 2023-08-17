@@ -208,6 +208,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         logger.info("model is:$model")
         // 保存流水线信息
         val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+            .pipelineId
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
