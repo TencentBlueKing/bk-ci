@@ -94,7 +94,7 @@ class PipelineStatusService(
             latestBuildNum = pipelineBuildSummary.buildNum,
             latestBuildStartTime = (pipelineBuildSummary.latestStartTime)?.timestampmilli() ?: 0,
             latestBuildStatus = pipelineBuildStatus,
-            latestBuildTaskName = pipelineBuildSummary.latestTaskName,
+//            latestBuildTaskName = pipelineBuildSummary.latestTaskName, // 卡片界面不再需要该信息
             lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
