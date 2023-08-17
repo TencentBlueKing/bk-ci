@@ -203,7 +203,9 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        useTemplateSettings: Boolean? = false,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
@@ -284,7 +286,9 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
                 modelTasks = modelTasks,
-                useTemplateSettings = useTemplateSettings,
+                useSubscriptionSettings = useSubscriptionSettings,
+                useLabelSettings = useLabelSettings,
+                useConcurrencyGroup = useConcurrencyGroup,
                 templateId = templateId,
                 saveDraft = saveDraft,
                 description = description
@@ -583,7 +587,9 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Collection<PipelineModelTask>,
-        useTemplateSettings: Boolean? = false,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         saveDraft: Boolean? = false,
         description: String?
@@ -617,7 +623,8 @@ class PipelineRepositoryService constructor(
                 model.latestVersion = modelVersion
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        if (templateId != null && useTemplateSettings == true) {
+                        // TODO useSubscriptionSettings/useLabelSettings/useConcurrencyGroup 使用三个参数控制刷新
+                        if (templateId != null && useSubscriptionSettings == true) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)

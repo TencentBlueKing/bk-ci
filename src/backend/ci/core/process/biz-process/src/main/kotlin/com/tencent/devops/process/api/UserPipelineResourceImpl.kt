@@ -156,8 +156,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 model = pipeline,
                 channelCode = ChannelCode.BS,
-                useTemplateSettings = useTemplateSettings
-            )
+                useSubscriptionSettings = useTemplateSettings
+            ).pipelineId
         )
         auditService.createAudit(
             Audit(

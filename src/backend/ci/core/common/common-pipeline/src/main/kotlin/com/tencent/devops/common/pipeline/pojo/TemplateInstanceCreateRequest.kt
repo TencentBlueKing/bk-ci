@@ -27,17 +27,20 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class TemplateInstanceCreateRequest(
     @ApiModelProperty("模板ID", required = true)
     var templateId: String,
-    @ApiModelProperty("版本REF（不传默认最新）", required = false)
-    var ref: String?,
-    @ApiModelProperty("是否使用模板配置", required = false)
-    var useTemplateSettings: Boolean?,
+    @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
+    var templateVersion: Long?,
+    @ApiModelProperty("是否使用通知配置", required = false)
+    var useSubscriptionSettings: Boolean?,
     @ApiModelProperty("是否使用标签配置", required = false)
     var useLabelSettings: Boolean?,
-    @ApiModelProperty("是否使用并发配置", required = false)
+    @ApiModelProperty("是否使用并发组配置", required = false)
     var useConcurrencyGroup: Boolean?,
+    @ApiModelProperty("创建实例的模式", required = false)
+    var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
 )

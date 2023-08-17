@@ -1287,7 +1287,7 @@ class TemplateFacadeService @Autowired constructor(
                     buildNo = buildNo,
                     param = param,
                     fixTemplateVersion = version
-                )
+                ).pipelineId
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     if (useTemplateSettings) {

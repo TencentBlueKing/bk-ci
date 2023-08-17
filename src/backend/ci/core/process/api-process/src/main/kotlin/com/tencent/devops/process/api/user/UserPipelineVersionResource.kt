@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
-import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -71,7 +70,7 @@ interface UserPipelineVersionResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线模型实例请求", required = true)
-        pipeline: TemplateInstanceCreateRequest
+        request: TemplateInstanceCreateRequest
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线指定版本的两种编排")
