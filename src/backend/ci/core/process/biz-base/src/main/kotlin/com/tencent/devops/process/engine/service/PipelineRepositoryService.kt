@@ -88,13 +88,17 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.joda.time.LocalDateTime
@@ -204,6 +208,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
@@ -286,6 +291,7 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 useSubscriptionSettings = useSubscriptionSettings,
+                useLabelSettings = useLabelSettings,
                 useConcurrencyGroup = useConcurrencyGroup,
                 templateId = templateId,
                 saveDraft = saveDraft,
@@ -621,14 +627,38 @@ class PipelineRepositoryService constructor(
                 model.latestVersion = modelVersion
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        // TODO useSubscriptionSettings/useLabelSettings/useConcurrencyGroup 使用三个参数控制刷新
-                        if (templateId != null && useSubscriptionSettings == true) {
+                        if (templateId != null && (useSubscriptionSettings == true || useConcurrencyGroup == true)) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
                             setting.pipelineId = pipelineId
                             setting.pipelineName = model.name
                             setting.version = settingVersion
+                            if (useSubscriptionSettings != true) {
+                                setting.successSubscription = Subscription(
+                                    types = setOf(),
+                                    groups = emptySet(),
+                                    users = "\${$PIPELINE_START_USER_NAME}",
+                                    content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
+                                )
+                                setting.successSubscriptionList = listOf(setting.successSubscription)
+                                setting.failSubscription = Subscription(
+                                    types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
+                                    groups = emptySet(),
+                                    users = "\${$PIPELINE_START_USER_NAME}",
+                                    content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+                                )
+                                setting.failSubscriptionList = listOf(setting.failSubscription)
+                            }
+                            if (useConcurrencyGroup != true) {
+                                setting.concurrencyGroup = null
+                                setting.concurrencyCancelInProgress = false
+                                setting.maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                            }
+                            if (useLabelSettings != true) {
+                                setting.labels = listOf()
+                            }
+                            setting.pipelineAsCodeSettings = null
                             pipelineSettingDao.saveSetting(dslContext, setting)
                         } else {
                             // #3311
