@@ -73,7 +73,6 @@ class TGitTokenService @Autowired constructor(
 
     private fun doGetAccessToken(userId: String): GitToken? {
         return tGitTokenDao.getAccessToken(dslContext, userId)?.let {
-            with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
                 GitToken(
                     accessToken = AESUtil.decrypt(aesKey, it.accessToken),
                     refreshToken = AESUtil.decrypt(aesKey, it.refreshToken),
@@ -81,7 +80,6 @@ class TGitTokenService @Autowired constructor(
                     expiresIn = it.expiresIn,
                     createTime = it.createTime.timestampmilli()
                 )
-            }
         }
     }
 
