@@ -225,7 +225,7 @@ class ProjectApprovalService @Autowired constructor(
         applicant: String,
         approver: String
     ) {
-        logger.info("project create reject|$projectId|$itsmTicketStatus|$applicant|$approver")
+        logger.info("create project reject or revoke|$projectId|$itsmTicketStatus|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),

@@ -518,8 +518,8 @@ class PermissionGradeManagerService @Autowired constructor(
 
     private fun itsmTicketFinished(sn: String): Boolean {
         val itsmTicketStatus = itsmService.getItsmTicketStatus(sn)
-        return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION
-            || itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
+        return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION ||
+            itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
     }
 
     fun listGroup(
