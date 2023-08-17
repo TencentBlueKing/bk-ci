@@ -92,12 +92,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             templateId = request.templateId,
             version = request.templateVersion
         )
-        // TODO 区分应用模板的配置
-        val templateSetting = templateFacadeService.getTemplateSetting(
-            userId = userId,
-            projectId = projectId,
-            templateId = request.templateId
-        )
         return Result(
             pipelineInfoFacadeService.createPipeline(
                 userId = userId,

@@ -372,6 +372,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
+                    useConcurrencyGroup = useConcurrencyGroup,
                     templateId = templateId,
                     description = null
                 )
@@ -381,7 +382,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("addLabel")
-                    if (useSubscriptionSettings == true) {
+                    if (useLabelSettings == true) {
                         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
                         val labels = ArrayList<String>()
                         groups.forEach {
