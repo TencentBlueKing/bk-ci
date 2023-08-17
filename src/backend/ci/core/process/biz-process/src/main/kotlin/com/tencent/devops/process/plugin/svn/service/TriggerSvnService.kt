@@ -59,7 +59,7 @@ class TriggerSvnService(
         passPhrase: String?,
         userName: String,
         current: String?
-    ): Pair<Long, List<SvnRevisionInfo>> {
+    ): Pair<Long, List<SvnRevisionInfo>>? {
         val svnService = client.get(ServiceSvnResource::class)
         return svnService.getSvnRevisionList(
             url = url,
@@ -68,7 +68,7 @@ class TriggerSvnService(
             username = userName,
             branchName = "",
             currentVersion = current
-        ).data!!
+        ).data
     }
 
     /**
@@ -77,7 +77,7 @@ class TriggerSvnService(
     private fun pollingSvnRepoTask(interval: Long) {
         logger.info("SVN repositroy pooling, now time: {}", LocalDateTime.now())
         // 使用 redis, 防止多节点同时执行
-        val lock = RedisLock(redisOperation, getRedisLockKey, 30 * 60)
+        val lock = RedisLock(redisOperation, REDIS_LOCK_KEY, LOCK_TIME_SEC)
         try {
             if (!lock.tryLock()) {
                 logger.info("The other process is processing polling job, ignore")
@@ -87,26 +87,26 @@ class TriggerSvnService(
                 return
             }
             // 开始分页查询
-            pagingLoopSvnWebhook(limit = 200)
+            pagingLoopSvnWebhook()
         } finally {
             lock.unlock()
         }
     }
 
-    private fun pagingLoopSvnWebhook(limit: Int) {
+    private fun pagingLoopSvnWebhook() {
         var start = 0
         loop@ while (true) {
             try {
                 // 获取svn触发器
                 val svnTriggerList =
                     pipelineWebhookDao.getPipelineWebHooksByRepositoryType(
-                        dslContext,
-                        ScmType.CODE_SVN.name,
-                        start,
-                        limit
+                        dslContext = dslContext,
+                        repositoryType = ScmType.CODE_SVN.name,
+                        offset = start,
+                        limit = LIMIT
                     )
                 if (svnTriggerList.isEmpty()) {
-                    logger.info("list timer pipeline finish|start=$start|limit=$limit")
+                    logger.info("list timer pipeline finish|start=$start")
                     break@loop
                 }
                 // 通过触发器获取所有仓库id
@@ -123,9 +123,9 @@ class TriggerSvnService(
                     svnRepositoryMap = svnRepositoryMap,
                     svnRevisionMap = svnRevisionMap
                 )
-                start += limit
-            } catch (err: Throwable) {
-                logger.info("loop err, error message : ${err.message}")
+                start += LIMIT
+            } catch (ignore: Throwable) {
+                logger.info("loop err, error message : ${ignore.message}")
             }
         }
     }
@@ -169,7 +169,7 @@ class TriggerSvnService(
                 val svnRevision = svnRevisionMap[projectName]
                 val repoInfoList = svnRepositoryMap[projectName]
                 // 如果获取svn仓库最新数据失败，则不触发
-                if (repoInfoList == null || repoInfoList.isEmpty()) {
+                if (repoInfoList.isNullOrEmpty()) {
                     logger.warn("repository:$it get certificate info fail")
                     return@forEach
                 }
@@ -204,7 +204,7 @@ class TriggerSvnService(
     }
 
     private fun checkLastPollTime(interval: Long): Boolean {
-        val value = redisOperation.get(getRedisKey)
+        val value = redisOperation.get(REDIS_KEY)
         val currentTimeMillis = System.currentTimeMillis()
         if (value != null) {
             val time = JsonUtil.to(value, Long::class.java)
@@ -219,7 +219,7 @@ class TriggerSvnService(
                 return false
             }
         }
-        redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
+        redisOperation.set(REDIS_KEY, JsonUtil.toJson(currentTimeMillis))
         return true
     }
 
@@ -295,7 +295,7 @@ class TriggerSvnService(
         return result
     }
 
-    fun triggerPipelines(projectName: String, url: String, revisionMessage: List<SvnRevisionInfo>) {
+    private fun triggerPipelines(projectName: String, url: String, revisionMessage: List<SvnRevisionInfo>) {
         revisionMessage.forEach {
             triggerTaskExecutor.execute {
                 try {
@@ -460,9 +460,11 @@ class TriggerSvnService(
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(TriggerSvnService::class.java.name)
-        private const val getRedisKey: String = "repository_svn_polling"
-        private const val getRedisLockKey: String = "repository_svn_polling_redis_lock"
+        private const val REDIS_KEY: String = "repository_svn_polling"
+        private const val REDIS_LOCK_KEY: String = "repository_svn_polling_redis_lock"
         private const val THREE = 3L
+        private const val LIMIT = 200
+        private val LOCK_TIME_SEC = TimeUnit.MINUTES.toSeconds(30) // 30 minutes
     }
 
     data class SvnRepoInfo(
