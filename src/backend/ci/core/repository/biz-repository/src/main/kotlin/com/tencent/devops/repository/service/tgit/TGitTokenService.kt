@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
@@ -73,13 +72,13 @@ class TGitTokenService @Autowired constructor(
 
     private fun doGetAccessToken(userId: String): GitToken? {
         return tGitTokenDao.getAccessToken(dslContext, userId)?.let {
-                GitToken(
-                    accessToken = AESUtil.decrypt(aesKey, it.accessToken),
-                    refreshToken = AESUtil.decrypt(aesKey, it.refreshToken),
-                    tokenType = it.tokenType,
-                    expiresIn = it.expiresIn,
-                    createTime = it.createTime.timestampmilli()
-                )
+            GitToken(
+                accessToken = AESUtil.decrypt(aesKey, it.accessToken),
+                refreshToken = AESUtil.decrypt(aesKey, it.refreshToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                createTime = it.createTime.timestampmilli()
+            )
         }
     }
 
