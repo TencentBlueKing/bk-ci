@@ -228,7 +228,23 @@ interface UserPipelineVersionResource {
         pipelineId: String
     ): Result<List<String>>
 
-    // TODO 回滚接口：回归指定版本作为草稿，覆盖已有草稿
+    @ApiOperation("回退草稿为指定历史版本")
+    @POST
+    @Path("/projects/{projectId}/rollbackDraft")
+    fun rollbackDraftFromVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "回退草稿的目标版本", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Result<Boolean>
 
     // TODO 模板查询：在新建预览页带简要信息：3个bool
 

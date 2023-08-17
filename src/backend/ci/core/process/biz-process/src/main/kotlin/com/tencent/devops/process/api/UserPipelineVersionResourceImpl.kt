@@ -416,6 +416,15 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    override fun rollbackDraftFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
