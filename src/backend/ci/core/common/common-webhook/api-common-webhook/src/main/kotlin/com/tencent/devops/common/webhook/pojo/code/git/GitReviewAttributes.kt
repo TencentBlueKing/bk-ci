@@ -46,7 +46,7 @@ data class GitReviewAttributes(
     @JsonProperty("target_project_id")
     val targetProjectId: String,
     @JsonProperty("author_id")
-    val authorId: String,
+    val authorId: String?,
     @JsonProperty("assignee_id")
     val assigneeId: String?,
     val title: String,
