@@ -12,7 +12,7 @@ import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
-import com.tencent.devops.remotedev.service.GitTransferService
+import com.tencent.devops.remotedev.service.IGitTransferService
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service
 @Service
 class GithubTransferService @Autowired constructor(
     private val client: Client
-) : GitTransferService {
+) : IGitTransferService {
 
     companion object {
         private const val DEFAULT_GITHUB_PER_PAGE = 100

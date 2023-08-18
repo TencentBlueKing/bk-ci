@@ -6,7 +6,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
-import com.tencent.devops.remotedev.service.GitTransferService
+import com.tencent.devops.remotedev.service.IGitTransferService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,8 +15,9 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class RemoteDevGitTransfer @Autowired constructor(
-    private val tGitTransferService: TGitTransferService,
+    private val gitTransferService: GitTransferService,
     private val githubTransferService: GithubTransferService,
+    private val tGitTransferService: TGitTransferService,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao
 ) {
@@ -35,19 +36,21 @@ class RemoteDevGitTransfer @Autowired constructor(
 
     fun load(
         gitType: RemoteDevGitType
-    ): GitTransferService {
+    ): IGitTransferService {
         return when (gitType) {
-            RemoteDevGitType.GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> gitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
+            RemoteDevGitType.T_GIT -> tGitTransferService
         }
     }
 
     fun loadByWorkspace(
         workspaceName: String
-    ): GitTransferService {
+    ): IGitTransferService {
         return when (urlCache.get(workspaceName)) {
-            RemoteDevGitType.GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> gitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
+            RemoteDevGitType.T_GIT -> tGitTransferService
             null -> {
                 logger.info("workspace $workspaceName not find")
                 throw ErrorCodeException(
@@ -60,10 +63,11 @@ class RemoteDevGitTransfer @Autowired constructor(
 
     fun loadByGitUrl(
         url: String
-    ): GitTransferService {
+    ): IGitTransferService {
         return when (RemoteDevGitType.load4Url(url)) {
-            RemoteDevGitType.GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> gitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
+            RemoteDevGitType.T_GIT -> tGitTransferService
         }
     }
 }
