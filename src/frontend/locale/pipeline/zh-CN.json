@@ -956,7 +956,9 @@
       "otherChoice": "其他选项"
     },
     "stageOption": "流程控制选项",
-    "pipelineVersionSaveAt": "版本{0}保存于{1}"
+    "pipelineVersionSaveAt": "版本{0}保存于{1}",
+    "every": "每隔",
+    "remindTime": "小时提醒一次"
   },
   "storeMap": {
     "textarea": "文本框",

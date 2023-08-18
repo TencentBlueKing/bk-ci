@@ -953,7 +953,9 @@
       "otherChoice": "Other Choice"
     },
     "stageOption": "Control option",
-    "pipelineVersionSaveAt": "Version {0} save at {1}"
+    "pipelineVersionSaveAt": "Version {0} save at {1}",
+    "every": "Remind every",
+    "remindTime": "hours"
   },
   "storeMap": {
     "textarea": "Textarea",
