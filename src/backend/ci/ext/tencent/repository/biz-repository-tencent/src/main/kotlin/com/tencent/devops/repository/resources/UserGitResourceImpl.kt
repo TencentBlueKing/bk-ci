@@ -48,7 +48,8 @@ class UserGitResourceImpl @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): Result<AuthorizeResult> {
         return Result(
             gitOauthService.isOAuth(
@@ -56,7 +57,8 @@ class UserGitResourceImpl @Autowired constructor(
                 redirectUrlType = redirectUrlType,
                 redirectUrl = redirectUrl,
                 gitProjectId = gitProjectId,
-                refreshToken
+                refreshToken = refreshToken,
+                resetType = resetType
             )
         )
     }

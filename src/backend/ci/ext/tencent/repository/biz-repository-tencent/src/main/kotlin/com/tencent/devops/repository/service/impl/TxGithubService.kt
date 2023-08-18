@@ -145,4 +145,8 @@ class TxGithubService @Autowired constructor(
             projectName = projectName
         ).data!!
     }
+
+    override fun isOAuth(userId: String, projectId: String, refreshToken: Boolean?): AuthorizeResult {
+        return AuthorizeResult(200, "")
+    }
 }
