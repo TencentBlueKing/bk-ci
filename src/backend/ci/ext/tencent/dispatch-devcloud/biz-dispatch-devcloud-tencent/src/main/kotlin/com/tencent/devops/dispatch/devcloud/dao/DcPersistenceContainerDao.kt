@@ -112,11 +112,11 @@ class DcPersistenceContainerDao {
 
     fun get(
         dslContext: DSLContext,
-        containerName: String
+        persistenceAgentId: String
     ): TDevcloudPersistenceContainerRecord? {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             return dslContext.selectFrom(this)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .orderBy(CREATE_TIME.desc())
                 .fetchAny()
         }
