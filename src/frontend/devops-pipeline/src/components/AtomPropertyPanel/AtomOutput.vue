@@ -92,7 +92,7 @@
         },
         methods: {
             editNamespace () {
-                this.showEditNamespace = true
+                this.showEditNamespace = !this.showEditNamespace
             }
         }
     }
