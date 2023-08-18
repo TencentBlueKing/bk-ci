@@ -111,9 +111,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
-            deleteControl.deleteWorkspace(
-                userId = userId, workspaceName = workspaceName, needPermission = false,
-                checkDeleteImmediately = true
+            deleteControl.deleteWorkspace4OP(
+                userId = userId,
+                workspaceName = workspaceName
             )
         )
     }
