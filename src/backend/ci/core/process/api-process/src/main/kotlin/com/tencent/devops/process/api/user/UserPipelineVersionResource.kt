@@ -228,7 +228,7 @@ interface UserPipelineVersionResource {
         pipelineId: String
     ): Result<List<String>>
 
-    @ApiOperation("回退草稿为指定历史版本")
+    @ApiOperation("回滚到指定的历史版本并覆盖草稿")
     @POST
     @Path("/projects/{projectId}/rollbackDraft")
     fun rollbackDraftFromVersion(
