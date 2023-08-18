@@ -236,7 +236,6 @@
                     container: { baseOS, status }
                 } = this
                 const isshowDebugType = [
-                    DOCKER_BUILD_TYPE,
                     PUBLIC_DEVCLOUD_BUILD_TYPE,
                     PUBLIC_BCS_BUILD_TYPE
                 ].includes(this.buildResourceType)
