@@ -76,6 +76,7 @@
                                 </li>
                             </ul>
                         </template>
+                        <div v-else class="no-data">{{ $t('noData') }}</div>
                         <bk-pipeline v-if="showPreview && tempPipeline" class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
@@ -745,6 +746,12 @@
                             }
                         }
                     }
+                }
+                .no-data {
+                    display: flex;
+                    height: 100%;
+                    align-items: center;
+                    justify-content: space-around;
                 }
             }
             .right-temp-info {

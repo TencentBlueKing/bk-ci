@@ -11,10 +11,13 @@ export const BkciDocs = {
     PLUGIN_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-task.md`, // 插件指引文档
     IMAGE_GUIDE_DOC: `${commonPrefix}/Services/Store/docker-build.md`, // docker构建文档
     TEMPLATE_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-template.md`, // 模板指引文档
-    TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md` // turbo指引文档
+    TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md`, // turbo指引文档
+    BKAPP_NAV_OPEN_SOURCE_URL: 'https://github.com/TencentBlueKing/bk-ci', // 开源社区
+    FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question` // 问题反馈
 }
 export const pipelineDocs = {
     ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档
     PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/FAQS/FAQ.md`, // 流水线编辑指引文档
     NAMESPACE_DOC: `${DOCS_URL_PREFIX}/docs/document/6.1/183/22916` // 命名空间文档
 }
+

@@ -847,6 +847,16 @@
         align-items: center;
         padding-left: 8px;
     }
+    .create-atom-slider {
+        .bk-form-item{
+            .bk-label {
+                width: 120px;
+            }
+            .bk-form-content {
+                margin-left: 120px;
+            }
+        }
+    }
     ::v-deep .create-atom-slider-en {
         .bk-form-item{
             .bk-label {
