@@ -73,7 +73,7 @@ interface ServiceProjectApprovalResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/createReject")
+    @Path("/{projectId}/createRejectOrRevoke")
     @ApiOperation("创建审批拒绝/驳回")
     fun createRejectOrRevoke(
         @ApiParam("项目ID", required = true)
@@ -106,7 +106,7 @@ interface ServiceProjectApprovalResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/updateReject")
+    @Path("/{projectId}/updateRejectOrRevoke")
     @ApiOperation("更新审批拒绝/撤销")
     fun updateRejectOrRevoke(
         @ApiParam("项目ID", required = true)

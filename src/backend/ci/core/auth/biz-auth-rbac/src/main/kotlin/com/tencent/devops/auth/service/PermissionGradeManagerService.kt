@@ -496,7 +496,7 @@ class PermissionGradeManagerService @Autowired constructor(
             return true
         }
         // 若itsm还未结束，需要发起撤销
-        if (!itsmTicketFinished(callbackRecord.sn)) {
+        if (!isItsmTicketFinished(callbackRecord.sn)) {
             itsmService.cancelItsmApplication(
                 ItsmCancelApplicationInfo(
                     sn = callbackRecord.sn,
@@ -516,7 +516,7 @@ class PermissionGradeManagerService @Autowired constructor(
         return true
     }
 
-    private fun itsmTicketFinished(sn: String): Boolean {
+    private fun isItsmTicketFinished(sn: String): Boolean {
         val itsmTicketStatus = itsmService.getItsmTicketStatus(sn)
         return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION ||
             itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION

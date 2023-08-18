@@ -322,28 +322,4 @@ interface ServiceProjectResource {
         @ApiParam(value = "ke", required = true)
         subjectScopes: List<SubjectScopeInfo>
     ): Result<Boolean>
-
-    @ApiOperation("取消创建项目")
-    @Path("/{project_id}/cancelCreateProject")
-    @PUT
-    fun cancelCreateProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String
-    ): Result<Boolean>
-
-    @ApiOperation("取消更新项目")
-    @Path("/{project_id}/cancelUpdateProject")
-    @PUT
-    fun cancelUpdateProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String
-    ): Result<Boolean>
 }
