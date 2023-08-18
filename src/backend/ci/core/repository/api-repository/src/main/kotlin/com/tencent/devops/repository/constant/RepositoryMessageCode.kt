@@ -82,5 +82,4 @@ object RepositoryMessageCode {
     const val OPERATION_GET_TAG = "OperationGetTag" // 获取指定Tag
     const val OPERATION_LIST_BRANCHS = "OperationListBranchs" // 获取分支列表
     const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
-    const val OPERATION_GET_REPO = "OperationGetRepo" // 获取单个仓库信息
 }

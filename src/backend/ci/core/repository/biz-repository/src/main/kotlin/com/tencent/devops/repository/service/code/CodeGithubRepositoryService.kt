@@ -29,15 +29,16 @@ package com.tencent.devops.repository.service.code
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
+import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -50,7 +51,7 @@ class CodeGithubRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryGithubDao: RepositoryGithubDao,
     private val dslContext: DSLContext,
-    private val githubService: GithubService,
+    private val githubRepositoryService: GithubRepositoryService,
     private val githubTokenService: GithubTokenService
 ) : CodeRepositoryService<GithubRepository> {
     override fun repositoryType(): String {
@@ -152,7 +153,19 @@ class CodeGithubRepositoryService @Autowired constructor(
             logger.warn("The user[$userId] token invalid")
             null
         } else {
-            githubService.getRepositoryInfo(accessToken.accessToken, repository.projectName)
+            try {
+                githubRepositoryService.getRepository(
+                    request = GetRepositoryRequest(
+                        repoName = repository.projectName
+                    ),
+                    token = accessToken.accessToken
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "get github project info failed,projectName=[${repository.projectName}] | $ignored"
+                )
+                null
+            }
         }
         return githubRepo?.id ?: 0L
     }

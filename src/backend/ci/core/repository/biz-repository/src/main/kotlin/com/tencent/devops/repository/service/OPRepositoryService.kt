@@ -29,14 +29,15 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
+import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
@@ -53,6 +54,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
+@SuppressWarnings("ALL")
 class OPRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val dslContext: DSLContext,
@@ -63,7 +65,7 @@ class OPRepositoryService @Autowired constructor(
     private val scmOauthService: IScmOauthService,
     private val gitOauthService: IGitOauthService,
     private val githubTokenService: GithubTokenService,
-    private val githubService: GithubService,
+    private val githubRepositoryService: GithubRepositoryService,
     private val credentialService: CredentialService
 ) {
     fun addHashId() {
@@ -392,7 +394,12 @@ class OPRepositoryService @Autowired constructor(
                 }
                 // 获取代码库信息
                 val repositoryProjectInfo = try {
-                    githubService.getRepositoryInfo(token, it.projectName)
+                    githubRepositoryService.getRepository(
+                        request = GetRepositoryRequest(
+                            repoName = it.projectName
+                        ),
+                        token = token
+                    )
                 } catch (ignored: Exception) {
                     logger.warn(
                         "get github project info failed,repositoryId=[${repositoryInfo.repositoryId}] | $ignored"
