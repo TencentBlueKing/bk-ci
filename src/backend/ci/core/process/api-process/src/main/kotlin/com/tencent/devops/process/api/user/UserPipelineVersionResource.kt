@@ -127,23 +127,6 @@ interface UserPipelineVersionResource {
         modelAndYaml: PipelineModelAndYaml
     ): Result<DeployPipelineResult>
 
-    @ApiOperation("保存流水线设置")
-    @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
-    fun saveSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "流水线设置", required = true)
-        setting: PipelineSetting
-    ): Result<Boolean>
-
     @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/creatorList")

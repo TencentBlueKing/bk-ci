@@ -218,6 +218,18 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
+        // TODO 增加yaml处理和保存
+//        val model = try {
+//            transferService.transfer(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                actionType = TransferActionType.FULL_YAML2MODEL,
+//                data = TransferBody(
+//
+//                )
+//            )
+//        }
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
@@ -241,40 +253,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(pipelineResult)
-    }
-
-    override fun saveSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        setting: PipelineSetting
-    ): Result<Boolean> {
-        checkParam(userId, projectId)
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            setting = setting,
-            checkPermission = true
-        )
-        pipelineInfoFacadeService.updatePipelineSettingVersion(
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
-        )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = setting.pipelineName,
-                userId = userId,
-                action = "edit",
-                actionContent = "Update Setting",
-                projectId = projectId
-            )
-        )
-        return Result(true)
     }
 
     override fun creatorList(

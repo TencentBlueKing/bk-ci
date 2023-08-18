@@ -64,8 +64,6 @@ data class PipelineResourceVersion(
     val referCount: Int? = null,
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
-    @ApiModelProperty("分支版本标识", required = false)
-    val refs: String? = null,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null
 )

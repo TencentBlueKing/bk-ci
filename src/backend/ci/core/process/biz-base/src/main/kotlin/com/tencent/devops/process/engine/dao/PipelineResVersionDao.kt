@@ -182,7 +182,6 @@ class PipelineResVersionDao {
                 referFlag = record.referFlag,
                 referCount = record.referCount,
                 status = record.status?.let { VersionStatus.valueOf(it) },
-                refs = record.refs,
                 description = record.description
             )
         }
