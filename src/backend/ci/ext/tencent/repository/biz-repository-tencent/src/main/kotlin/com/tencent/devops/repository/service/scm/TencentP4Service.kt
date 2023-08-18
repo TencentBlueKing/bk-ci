@@ -65,7 +65,7 @@ class TencentP4Service(
         return client.getScm(ServiceP4Resource::class).getFileContent(
             p4Port = p4Port,
             username = username,
-            password = URLEncoder.encode(password, "UTF-8"),
+            password = password,
             filePath = filePath,
             reversion = reversion
         ).data!!
