@@ -151,7 +151,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             workspaceService.shareWorkspace(
                 workspaceShared.operator,
                 workspaceShared.workspaceName,
-                workspaceShared.sharedUser
+                workspaceShared.sharedUser,
+                needPermission = false
             )
         )
     }
