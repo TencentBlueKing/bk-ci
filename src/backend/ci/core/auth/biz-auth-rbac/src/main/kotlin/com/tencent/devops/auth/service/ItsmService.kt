@@ -58,6 +58,12 @@ class ItsmService @Autowired constructor(
         }
     }
 
+    fun getItsmTicketStatus(sn: String): String {
+        val itsmResponseDTO = executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
+        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
+        return itsmApiResData["current_status"].toString()
+    }
+
     private fun executeHttpPost(urlSuffix: String, body: Any): ResponseDTO {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
@@ -69,6 +75,18 @@ class ItsmService @Autowired constructor(
             .url(url)
             .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
+            .build()
+        return executeHttpRequest(url, request)
+    }
+
+    private fun executeHttpGet(urlSuffix: String): ResponseDTO {
+        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+            .replace("\\s".toRegex(), "")
+        val url = itsmUrlPrefix + urlSuffix
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("x-bkapi-authorization", headerStr)
+            .get()
             .build()
         return executeHttpRequest(url, request)
     }
@@ -95,5 +113,6 @@ class ItsmService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ItsmService::class.java)
         private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
         private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
+        private const val ITSM_TICKET_STATUS_URL_SUFFIX = "/get_ticket_status?sn=%s"
     }
 }
