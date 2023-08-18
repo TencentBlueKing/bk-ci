@@ -8,11 +8,13 @@ import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import com.tencent.devops.dispatch.devcloud.service.DcPerformanceConfigService
 import com.tencent.devops.dispatch.devcloud.service.DevcloudDebugService
+import com.tencent.devops.dispatch.devcloud.service.PersistenceBuildService
 
 @RestResource
 class ServiceDispatchDcResourceImpl constructor(
     private val devcloudDebugService: DevcloudDebugService,
-    private val dcPerformanceConfigService: DcPerformanceConfigService
+    private val dcPerformanceConfigService: DcPerformanceConfigService,
+    private val persistenceBuildService: PersistenceBuildService
 ) : ServiceDispatchDcResource {
 
     override fun getDcPerformanceConfigList(userId: String, projectId: String): Result<UserPerformanceOptionsVO> {
@@ -39,6 +41,6 @@ class ServiceDispatchDcResourceImpl constructor(
     }
 
     override fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
-        TODO("Not yet implemented")
+        return persistenceBuildService.destroyContainer(userId, destroyContainerReq)
     }
 }

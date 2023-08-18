@@ -74,7 +74,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
             // 获取当前job关联持久化容器配置
             val persistenceContainer = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
 
-            if (persistenceContainer == null || persistenceAgentId.isBlank()) {
+            if (persistenceContainer == null || persistenceContainer.persistenceAgentId.isBlank()) {
                 logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
                     ErrorCodeEnum.START_VM_ERROR.errorType,
@@ -137,7 +137,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     containerHashId = containerHashId!!,
-                    containerName = persistenceAgentId,
+                    containerName = containerName ?: "",
                     persistenceAgentId = persistenceAgentId,
                     agentId = agentId,
                     secretKey = secretKey,
