@@ -91,9 +91,6 @@ interface ServiceOauthResource {
         gitProjectId: Long? = null,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
-        refreshToken: Boolean? = false,
-        @ApiParam(value = "是否校验token(refreshToken=true时不做校验)", required = false)
-        @QueryParam("validationCheck")
-        validationCheck: Boolean? = false
+        refreshToken: Boolean? = false
     ): Result<AuthorizeResult>
 }

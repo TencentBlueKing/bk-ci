@@ -65,7 +65,6 @@ interface IGithubService {
     fun isOAuth(
         userId: String,
         projectId: String,
-        refreshToken: Boolean?,
-        validationCheck: Boolean?
+        refreshToken: Boolean?
     ): AuthorizeResult
 }

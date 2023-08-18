@@ -50,6 +50,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_TAGS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
+import com.tencent.devops.repository.github.service.GithubUserService
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -78,6 +79,7 @@ import org.springframework.stereotype.Service
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
+    private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val client: Client
@@ -372,8 +374,7 @@ class GithubService @Autowired constructor(
     override fun isOAuth(
         userId: String,
         projectId: String,
-        refreshToken: Boolean?,
-        validationCheck: Boolean?
+        refreshToken: Boolean?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
         val accessToken = if (refreshToken == true) {
@@ -389,20 +390,19 @@ class GithubService @Autowired constructor(
                 popupTag = ""
             ).redirectUrl
         )
-        if (validationCheck == true) {
-            try {
-                getRepositories(accessToken.accessToken)
-            } catch (e: Exception) {
-                return AuthorizeResult(
-                    status = HTTP_403,
-                    url = githubOAuthService.getGithubOauth(
-                        projectId = projectId,
-                        userId = userId,
-                        repoHashId = null,
-                        popupTag = ""
-                    ).redirectUrl
-                )
-            }
+        // 校验token是否有效
+        try {
+            githubUserService.getUser(accessToken.accessToken)
+        } catch (e: Exception) {
+            return AuthorizeResult(
+                status = HTTP_403,
+                url = githubOAuthService.getGithubOauth(
+                    projectId = projectId,
+                    userId = userId,
+                    repoHashId = null,
+                    popupTag = ""
+                ).redirectUrl
+            )
         }
         logger.info("github isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")

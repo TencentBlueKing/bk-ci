@@ -54,8 +54,7 @@ class ServiceOauthResourceImpl @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?,
-        validationCheck: Boolean?
+        refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         return Result(
             gitOauthService.isOAuth(
@@ -64,7 +63,6 @@ class ServiceOauthResourceImpl @Autowired constructor(
                 redirectUrl = redirectUrl,
                 gitProjectId = gitProjectId,
                 refreshToken = refreshToken,
-                validationCheck = validationCheck
             )
         )
     }
