@@ -116,11 +116,5 @@ data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("push事件action")
     val includePushAction: List<String>? = null,
     @ApiModelProperty("webhook队列", required = false)
-    val webhookQueue: Boolean? = false,
-    @ApiModelProperty("是否启用第三方过滤")
-    val enableThirdFilter: Boolean? = false,
-    @ApiModelProperty("第三方应用地址")
-    val thirdUrl: String? = null,
-    @ApiModelProperty("第三方应用鉴权token")
-    val thirdSecretToken: String? = null
+    val webhookQueue: Boolean? = false
 )

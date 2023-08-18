@@ -89,9 +89,6 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)
-            params.enableThirdFilter = enableThirdFilter
-            params.thirdUrl = EnvUtils.parseEnv(thirdUrl ?: "", variables)
-            params.thirdSecretToken = EnvUtils.parseEnv(thirdSecretToken ?: "", variables)
             return params
         }
     }
