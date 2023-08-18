@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
@@ -70,40 +71,19 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 return
             }
 
-            // 获取最近的一次持久化容器配置记录
+            // 获取当前job关联持久化容器配置
             val persistenceContainer = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
 
-            // 容器配置发生变更或者没有历史持久化容器配置记录时新建容器
-            if (containerChanged ||
-                persistenceContainer == null ||
-                persistenceContainer.containerStatus != PersistenceContainerStatus.RUNNING.status
-            ) {
-                val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
-                handlerContext.persistenceAgentId = persistenceAgentId
-
-                // 存储持久化容器信息
-                dcPersistenceContainerDao.createOrUpdate(
-                    dslContext = dslContext,
-                    userId = userId,
-                    pipelineId = pipelineId,
-                    vmSeqId = vmSeqId,
-                    projectId = projectId,
-                    containerName = containerName ?: "",
-                    persistenceAgentId = persistenceAgentId,
-                    status = PersistenceContainerStatus.RUNNING.status
-                )
-            } else {
-                handlerContext.persistenceAgentId = persistenceContainer.persistenceAgentId
-            }
-
-            if (persistenceAgentId.isBlank()) {
-                logger.error("$buildLogKey persistenceAgentId is null.")
+            if (persistenceContainer == null || persistenceAgentId.isBlank()) {
+                logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
                     ErrorCodeEnum.START_VM_ERROR.errorType,
                     ErrorCodeEnum.START_VM_ERROR.errorCode,
                     ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
-                    "PersistenceAgentId is null"
+                    "PersistenceContainer is null or PersistenceAgentId is null"
                 )
+            } else {
+                setPersistenceAgentId(persistenceContainer.persistenceAgentId, this)
             }
 
             // 根据persistenceAgentId加分布式锁
@@ -118,6 +98,29 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 lock.unlock()
             }
         }
+    }
+
+    fun addPersistenceContainer(handlerContext: DcStartupHandlerContext) {
+        with(handlerContext) {
+            val persistenceAgentId = RandomStringUtils.randomAlphabetic(8) + "-${System.currentTimeMillis()}"
+            setPersistenceAgentId(persistenceAgentId, this)
+
+            // 存储持久化容器信息
+            dcPersistenceContainerDao.createOrUpdate(
+                dslContext = dslContext,
+                userId = userId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                projectId = projectId,
+                containerName = containerName ?: "",
+                persistenceAgentId = persistenceAgentId,
+                status = PersistenceContainerStatus.RUNNING.status
+            )
+        }
+    }
+
+    fun setPersistenceAgentId(persistenceAgentId: String, handlerContext: DcStartupHandlerContext) {
+        handlerContext.persistenceAgentId = persistenceAgentId
     }
 
     private fun queueBuild(
@@ -153,6 +156,14 @@ class DcContainerPersistenceHandler @Autowired constructor(
     }
 
     fun updatePersistenceContainerStatus(containerName: String, status: PersistenceContainerStatus) {
-        dcPersistenceContainerDao.updateStatus(dslContext, containerName, status.status)
+        dcPersistenceContainerDao.updateBuildStatus(dslContext, containerName, status.status)
+    }
+
+    fun updatePersistenceBuildStatus(containerName: String, status: ContainerBuildStatus) {
+        dcPersistenceContainerDao.updateContainerStatus(dslContext, containerName, status.status)
+    }
+
+    fun getPersistenceBuildStatus(containerName: String?, handlerContext: DcStartupHandlerContext) {
+
     }
 }

@@ -51,7 +51,7 @@ class DcPersistenceContainerDao {
         }
     }
 
-    fun updateStatus(
+    fun updateContainerStatus(
         dslContext: DSLContext,
         containerName: String,
         status: Int
@@ -60,6 +60,20 @@ class DcPersistenceContainerDao {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(CONTAINER_STATUS, status)
+                .where(CONTAINER_NAME.eq(containerName))
+                .execute()
+        }
+    }
+
+    fun updateBuildStatus(
+        dslContext: DSLContext,
+        containerName: String,
+        status: Int
+    ) {
+        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
+            dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(BUILD_STATUS, status)
                 .where(CONTAINER_NAME.eq(containerName))
                 .execute()
         }
@@ -92,7 +106,6 @@ class DcPersistenceContainerDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
-                .orderBy(CREATE_TIME.desc())
                 .fetchAny()
         }
     }
@@ -105,17 +118,6 @@ class DcPersistenceContainerDao {
             return dslContext.selectFrom(this)
                 .where(CONTAINER_NAME.eq(containerName))
                 .orderBy(CREATE_TIME.desc())
-                .fetchAny()
-        }
-    }
-
-    fun getContainerStatus(
-        dslContext: DSLContext,
-        persistenceAgentId: String
-    ): TDevcloudPersistenceContainerRecord? {
-        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
-            return dslContext.selectFrom(this)
-                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .fetchAny()
         }
     }

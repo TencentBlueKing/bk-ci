@@ -39,7 +39,7 @@ import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
@@ -140,7 +140,7 @@ class DcContainerStartHandler @Autowired constructor(
                     projectId = projectId,
                     containerName = instContainerName,
                     image = this.dispatchMessage,
-                    status = ContainerStatus.BUSY.status,
+                    status = ContainerBuildStatus.BUSY.status,
                     userId = userId,
                     cpu = cpu,
                     memory = memory,
@@ -155,7 +155,7 @@ class DcContainerStartHandler @Autowired constructor(
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
                         poolNo = poolNo,
-                        status = ContainerStatus.IDLE.status
+                        status = ContainerBuildStatus.IDLE.status
                     )
                 }
 

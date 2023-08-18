@@ -42,7 +42,7 @@ import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode
 import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.OriginContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
@@ -267,10 +267,10 @@ class DcContainerPrepareHandler @Autowired constructor(
                 // 当前流水线构建Job没有构建池记录，新增构建池记录
                 resetBuildPool(handlerContext)
                 true
-            } else if (containerInfo.status == ContainerStatus.BUSY.status && persistence) {
+            } else if (containerInfo.status == ContainerBuildStatus.BUSY.status && persistence) {
                 // 持久化容器，复用busy状态的构建容器
                 updateBusyStatusWithPersistence(containerInfo, handlerContext)
-            } else if (containerInfo.status == ContainerStatus.BUSY.status && !persistence) {
+            } else if (containerInfo.status == ContainerBuildStatus.BUSY.status && !persistence) {
                 // 非持久化容器，构件序号被占用，接着在构建池内寻找
                 false
             } else if (containerInfo.containerName.isEmpty()) {
@@ -290,13 +290,14 @@ class DcContainerPrepareHandler @Autowired constructor(
         val containerStatus = getContainerStatus(containerInfo.containerName, handlerContext) ?: return false
 
         return when (containerStatus) {
+            // 容器状态为stopped或stop，此容器池位可复用，根据containerChanged决定是否新建容器，更新容器池位绑定的容器
             OriginContainerStatus.stopped.name, OriginContainerStatus.stop.name -> {
                 devCloudBuildDao.updateStatus(
                     dslContext = dslContext,
                     pipelineId = handlerContext.pipelineId,
                     vmSeqId = handlerContext.vmSeqId,
                     poolNo = handlerContext.poolNo,
-                    status = ContainerStatus.BUSY.status
+                    status = ContainerBuildStatus.BUSY.status
                 )
 
                 handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
@@ -317,17 +318,38 @@ class DcContainerPrepareHandler @Autowired constructor(
         containerInfo: TDevcloudBuildRecord,
         handlerContext: DcStartupHandlerContext
     ): Boolean {
-        val containerStatus = getContainerStatus(containerInfo.containerName, handlerContext)
-        return if (containerStatus != null && containerStatus == OriginContainerStatus.running.name) {
+        val containerChanged = checkContainerChanged(containerInfo, handlerContext)
+        // 容器配置变更，跳过这个容器池位
+        if (containerChanged) {
+            return false
+        }
+
+        val originContainerStatus = getContainerStatus(containerInfo.containerName, handlerContext)
+        val buildStatus = dcContainerPersistenceHandler.getPersistenceBuildStatus(containerInfo.containerName, handlerContext)
+        // 容器配置没有变更，且当前容器状态running，复用这个容器池位
+        if (originContainerStatus != null &&
+            originContainerStatus == OriginContainerStatus.running.name
+
+        ) {
             handlerContext.containerName = containerInfo.containerName
-            handlerContext.containerChanged = checkContainerChanged(containerInfo, handlerContext)
-            true
+            handlerContext.containerChanged = false
+
+            /*dcContainerPersistenceHandler.updatePersistenceBuildStatus(
+                containerName = containerInfo.containerName,
+                status = ContainerBuildStatus.BUSY
+            )*/
+
+            return true
         } else {
+            // 容器配置没有变更，但当前容器状态非running，重置容器池位并复用
             dcContainerPersistenceHandler.updatePersistenceContainerStatus(
                 containerName = containerInfo.containerName,
                 status = PersistenceContainerStatus.DELETED
             )
-            false
+            resetBuildPool(handlerContext)
+            handlerContext.containerChanged = true
+
+            return true
         }
     }
 
@@ -345,12 +367,16 @@ class DcContainerPrepareHandler @Autowired constructor(
             projectId = handlerContext.projectId,
             containerName = "",
             image = handlerContext.dispatchMessage,
-            status = ContainerStatus.BUSY.status,
+            status = ContainerBuildStatus.BUSY.status,
             userId = handlerContext.userId,
             cpu = handlerContext.cpu,
             memory = handlerContext.memory,
             disk = handlerContext.disk
         )
+
+        if (handlerContext.persistence) {
+            dcContainerPersistenceHandler.addPersistenceContainer(handlerContext)
+        }
     }
 
     private fun checkContainerChanged(

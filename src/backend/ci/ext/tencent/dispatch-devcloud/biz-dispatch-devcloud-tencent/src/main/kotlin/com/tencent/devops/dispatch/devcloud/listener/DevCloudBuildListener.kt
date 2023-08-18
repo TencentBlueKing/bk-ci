@@ -36,7 +36,7 @@ import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
@@ -418,7 +418,7 @@ class DevCloudBuildListener @Autowired constructor(
                     projectId = projectId,
                     containerName = containerName,
                     image = this.dispatchMessage,
-                    status = ContainerStatus.BUSY.status,
+                    status = ContainerBuildStatus.BUSY.status,
                     userId = userId,
                     cpu = threadLocalCpu.get(),
                     memory = threadLocalMemory.get(),
@@ -445,7 +445,7 @@ class DevCloudBuildListener @Autowired constructor(
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     poolNo = poolNo,
-                    status = ContainerStatus.IDLE.status
+                    status = ContainerBuildStatus.IDLE.status
                 )
                 devCloudBuildHisDao.updateContainerName(dslContext, buildId, vmSeqId, createName, executeCount ?: 1)
                 onFailure(
@@ -532,7 +532,7 @@ class DevCloudBuildListener @Autowired constructor(
                     projectId = projectId,
                     containerName = instContainerName,
                     image = this.dispatchMessage,
-                    status = ContainerStatus.BUSY.status,
+                    status = ContainerBuildStatus.BUSY.status,
                     userId = userId,
                     cpu = threadLocalCpu.get(),
                     memory = threadLocalMemory.get(),
@@ -555,7 +555,7 @@ class DevCloudBuildListener @Autowired constructor(
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
                         poolNo = poolNo,
-                        status = ContainerStatus.IDLE.status
+                        status = ContainerBuildStatus.IDLE.status
                     )
                 }
 
@@ -735,7 +735,7 @@ class DevCloudBuildListener @Autowired constructor(
                 event.pipelineId,
                 it.first,
                 it.second!!.toInt(),
-                ContainerStatus.IDLE.status
+                ContainerBuildStatus.IDLE.status
             )
         }
 
@@ -767,7 +767,7 @@ class DevCloudBuildListener @Autowired constructor(
                         projectId = dispatchMessage.projectId,
                         containerName = "",
                         image = dispatchMessage.dispatchMessage,
-                        status = ContainerStatus.BUSY.status,
+                        status = ContainerBuildStatus.BUSY.status,
                         userId = dispatchMessage.userId,
                         cpu = threadLocalCpu.get(),
                         memory = threadLocalMemory.get(),
@@ -777,7 +777,7 @@ class DevCloudBuildListener @Autowired constructor(
                 }
 
                 // 构件序号被占用，接着在构建池内寻找
-                if (containerInfo.status == ContainerStatus.BUSY.status) {
+                if (containerInfo.status == ContainerBuildStatus.BUSY.status) {
                     continue
                 }
 
@@ -791,7 +791,7 @@ class DevCloudBuildListener @Autowired constructor(
                         projectId = dispatchMessage.projectId,
                         containerName = "",
                         image = dispatchMessage.dispatchMessage,
-                        status = ContainerStatus.BUSY.status,
+                        status = ContainerBuildStatus.BUSY.status,
                         userId = dispatchMessage.userId,
                         cpu = threadLocalCpu.get(),
                         memory = threadLocalMemory.get(),
@@ -823,7 +823,7 @@ class DevCloudBuildListener @Autowired constructor(
                         dispatchMessage.pipelineId,
                         dispatchMessage.vmSeqId,
                         i,
-                        ContainerStatus.BUSY.status
+                        ContainerBuildStatus.BUSY.status
                     )
                     return Triple(containerInfo.containerName, i, checkContainerChanged(containerInfo, dispatchMessage))
                 }
@@ -840,7 +840,7 @@ class DevCloudBuildListener @Autowired constructor(
                         projectId = dispatchMessage.projectId,
                         containerName = "",
                         image = dispatchMessage.dispatchMessage,
-                        status = ContainerStatus.BUSY.status,
+                        status = ContainerBuildStatus.BUSY.status,
                         userId = dispatchMessage.userId,
                         cpu = threadLocalCpu.get(),
                         memory = threadLocalMemory.get(),

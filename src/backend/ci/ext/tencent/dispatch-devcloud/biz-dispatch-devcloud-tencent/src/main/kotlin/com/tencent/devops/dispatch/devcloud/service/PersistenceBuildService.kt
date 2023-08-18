@@ -34,9 +34,9 @@ class PersistenceBuildService @Autowired constructor(
 
     fun startBuild(projectId: String, persistenceAgentId: String): PersistenceBuildInfo? {
         // 检查containerName当前状态
-        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, persistenceAgentId)
-        if (container == null || container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
-            logger.warn("Container $persistenceAgentId is null or status not running.")
+        val container = dcPersistenceContainerDao.get(dslContext, persistenceAgentId)
+        if (container == null) {
+            logger.warn("Container $persistenceAgentId is null.")
             return null
         }
 
@@ -77,9 +77,9 @@ class PersistenceBuildService @Autowired constructor(
 
     fun workerBuildFinish(projectId: String, persistenceAgentId: String, buildInfo: PersistenceBuildWithStatus) {
         logger.info("$projectId $persistenceAgentId workerBuildFinish $buildInfo")
-        val container = dcPersistenceContainerDao.getContainerStatus(dslContext, persistenceAgentId)
-        if (container == null || container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
-            logger.warn("Container $persistenceAgentId is null or status not running.")
+        val container = dcPersistenceContainerDao.get(dslContext, persistenceAgentId)
+        if (container == null) {
+            logger.warn("Container $persistenceAgentId is null.")
         }
 
         // 重新设置container build状态

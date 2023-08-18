@@ -40,7 +40,7 @@ import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
 import com.tencent.devops.dispatch.devcloud.pojo.Params
@@ -52,7 +52,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -147,7 +146,7 @@ class DcContainerCreateHandler @Autowired constructor(
                         projectId = projectId,
                         containerName = containerName ?: "",
                         image = this.dispatchMessage,
-                        status = ContainerStatus.BUSY.status,
+                        status = ContainerBuildStatus.BUSY.status,
                         userId = userId,
                         cpu = cpu,
                         memory = memory,
@@ -192,7 +191,7 @@ class DcContainerCreateHandler @Autowired constructor(
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
                         poolNo = poolNo,
-                        status = ContainerStatus.IDLE.status
+                        status = ContainerBuildStatus.IDLE.status
                     )
                     devCloudBuildHisDao.updateContainerName(
                         dslContext = transactionContext,

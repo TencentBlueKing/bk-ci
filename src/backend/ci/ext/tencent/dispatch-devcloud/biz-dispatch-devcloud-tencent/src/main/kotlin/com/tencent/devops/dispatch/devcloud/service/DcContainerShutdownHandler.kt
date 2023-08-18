@@ -33,7 +33,7 @@ import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
@@ -136,7 +136,7 @@ class DcContainerShutdownHandler @Autowired constructor(
                     pipelineId = pipelineId,
                     vmSeqId = it.first,
                     poolNo = it.second!!.toInt(),
-                    status = ContainerStatus.IDLE.status
+                    status = ContainerBuildStatus.IDLE.status
                 )
             }
 
