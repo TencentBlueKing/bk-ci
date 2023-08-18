@@ -55,7 +55,8 @@ class CodeGitScmImpl constructor(
     private val privateKey: String?,
     private val passPhrase: String?,
     private val token: String,
-    gitConfig: GitConfig,
+    private val gitConfig: GitConfig,
+    private val gitApi: GitApi,
     private val event: String? = null
 ) : IScm {
 
@@ -311,6 +312,5 @@ class CodeGitScmImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitScmImpl::class.java)
-        private val gitApi = GitApi()
     }
 }

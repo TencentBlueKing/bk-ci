@@ -29,65 +29,64 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.UserTGitResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.repository.service.tgit.TGitTokenService
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService,
-    private val tGitOAuthService: TGitOAuthService
-) : ServiceOauthResource {
-    override fun gitGet(userId: String): Result<GitToken?> {
-        return Result(gitOauthService.getAccessToken(userId))
-    }
-
-    override fun tGitGet(userId: String): Result<GitToken?> {
-        return Result(tGitOAuthService.getAccessToken(userId))
-    }
-
-    override fun gitCallback(code: String, state: String): Result<GitOauthCallback> {
-        return Result(gitOauthService.gitCallback(code = code, state = state))
-    }
+class UserTGitResourceImpl @Autowired constructor(
+    private val tGitOauthService: TGitOAuthService,
+    private val tGitTokenService: TGitTokenService
+) : UserTGitResource {
 
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        validationCheck: Boolean?
     ): Result<AuthorizeResult> {
         return Result(
-            gitOauthService.isOAuth(
+            tGitOauthService.isOAuth(
                 userId = userId,
                 redirectUrlType = redirectUrlType,
                 redirectUrl = redirectUrl,
                 gitProjectId = gitProjectId,
-                refreshToken = refreshToken
+                refreshToken = refreshToken,
+                validationCheck = validationCheck
             )
         )
     }
 
-    override fun tGitOAuth(
+    override fun deleteToken(userId: String): Result<Int> {
+        return Result(tGitTokenService.deleteToken(userId))
+    }
+
+    override fun getProject(
         userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?,
-        gitProjectId: Long?,
-        refreshToken: Boolean?
+        projectId: String,
+        repoHashId: String?,
+        search: String?
     ): Result<AuthorizeResult> {
-        return Result(
-            tGitOAuthService.isOAuth(
-                userId = userId,
-                redirectUrlType = redirectUrlType,
-                redirectUrl = redirectUrl,
-                gitProjectId = gitProjectId,
-                refreshToken = refreshToken
-            )
-        )
+        return Result(tGitOauthService.getProject(userId, projectId, repoHashId, search))
+    }
+
+    override fun getProjectList(userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
+        return Result(tGitOauthService.getProjectList(userId, page, pageSize))
+    }
+
+    override fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitBranch>> {
+        return Result(tGitOauthService.getBranch(userId, repository, page, pageSize))
+    }
+
+    override fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitTag>> {
+        return Result(tGitOauthService.getTag(userId, repository, page, pageSize))
     }
 }

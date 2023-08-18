@@ -212,6 +212,14 @@ class ScmOauthService @Autowired constructor(
                     }
                     svnConfig.svnHookUrl
                 }
+
+                ScmType.CODE_TGIT -> {
+                    if (gitConfig.tGitHookUrl.isBlank()) {
+                        logger.warn("The tgit webhook url is not settle")
+                        throw RuntimeException("The tgit webhook url is not settle")
+                    }
+                    gitConfig.tGitHookUrl
+                }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
                     throw RuntimeException("Unknown repository type ($type) when add webhook")

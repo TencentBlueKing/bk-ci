@@ -7,7 +7,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.service.IGitTransferService
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.api.scm.ServiceTGitResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -21,13 +21,14 @@ import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
 @Service
-class TGitTransferService @Autowired constructor(
+class GitTransferService @Autowired constructor(
     private val client: Client
 ) : IGitTransferService {
 
     companion object {
         private const val DEFAULT_GIT_PER_PAGE = 100
         private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 30
     }
 
     override fun isOAuth(
@@ -36,7 +37,7 @@ class TGitTransferService @Autowired constructor(
         redirectUrl: String?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        return client.get(ServiceOauthResource::class).tGitOAuth(
+        return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
@@ -53,7 +54,7 @@ class TGitTransferService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<RemoteDevRepository> {
-        return client.get(ServiceTGitResource::class).getGitCodeProjectList(
+        return client.get(ServiceGitResource::class).getGitCodeProjectList(
             accessToken = getAndCheckOauthToken(userId),
             page = page,
             pageSize = pageSize,
@@ -73,7 +74,7 @@ class TGitTransferService @Autowired constructor(
         val branches = mutableListOf<String>()
         run outside@{
             while (true) {
-                val gitBranches = client.get(ServiceTGitResource::class).getBranch(
+                val gitBranches = client.get(ServiceGitResource::class).getBranch(
                     accessToken = getAndCheckOauthToken(userId),
                     userId = userId,
                     repository = URLEncoder.encode(pathWithNamespace, "UTF-8"),
@@ -92,7 +93,7 @@ class TGitTransferService @Autowired constructor(
     }
 
     override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {
-        return client.get(ServiceTGitResource::class).getGitFileContent(
+        return client.get(ServiceGitResource::class).getGitFileContent(
             token = getAndCheckOauthToken(userId),
             authType = RepoAuthType.OAUTH,
             repoName = URLEncoder.encode(pathWithNamespace, "UTF-8"),
@@ -108,7 +109,7 @@ class TGitTransferService @Autowired constructor(
         ref: String?,
         recursive: Boolean
     ): List<String> {
-        return client.get(ServiceTGitResource::class).getGitFileTree(
+        return client.get(ServiceGitResource::class).getGitFileTree(
             gitProjectId = URLEncoder.encode(pathWithNamespace, "UTF-8"),
             path = path ?: "",
             token = getAndCheckOauthToken(userId),
@@ -127,14 +128,14 @@ class TGitTransferService @Autowired constructor(
     override fun getAndCheckOauthToken(
         userId: String
     ): String {
-        return client.get(ServiceOauthResource::class).tGitGet(userId).data?.accessToken
+        return client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
             ?: throw OauthForbiddenException(
                 message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
             )
     }
 
     override fun getUserInfo(userId: String): GitUserInfo {
-        return client.get(ServiceTGitResource::class).getUserInfoByToken(
+        return client.get(ServiceGitResource::class).getUserInfoByToken(
             token = getAndCheckOauthToken(userId),
             tokenType = TokenTypeEnum.OAUTH
         ).data!!
