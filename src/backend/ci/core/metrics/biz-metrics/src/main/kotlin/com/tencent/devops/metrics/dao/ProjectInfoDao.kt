@@ -77,7 +77,7 @@ class ProjectInfoDao {
         projectId: String,
         keyWord: String? = null
     ): Long {
-        with(TProjectAtom.T_PROJECT_ATOM) {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {
