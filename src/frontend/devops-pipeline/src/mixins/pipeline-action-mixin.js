@@ -20,7 +20,7 @@
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
-import { mapActions, mapGetters, mapMutations } from 'vuex'
+import { mapActions, mapState, mapMutations } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
@@ -46,7 +46,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters('pipelines', [
+        ...mapState('pipelines', [
             'groupMap',
             'isManage'
         ]),
