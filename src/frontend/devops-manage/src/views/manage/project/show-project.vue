@@ -286,7 +286,7 @@ const tipsStatusMap = {
   },
   7: {
     type: 'error',
-    message: t('更新项目申请单已撤回')
+    message: t('创建项目申请单已撤回')
   }
 };
 
