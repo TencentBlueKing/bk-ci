@@ -23,29 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.process.notify
+
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
+import com.tencent.devops.process.service.ReviewReminderService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 /**
- * 项目详情页tips展示状态
+ *  MQ实现的流水线插件任务执行事件
+ *
+ * @version 1.0
  */
-enum class ProjectTipsStatus(val status: Int) {
-    // 不展示
-    NOT_SHOW(0),
-    // 项目创建审批中
-    SHOW_CREATE_PENDING(1),
-    // 项目审批成功
-    SHOW_SUCCESSFUL_CREATE(2),
-    // 项目创建被驳回
-    SHOW_CREATE_REJECT(3),
-    // 编辑审批中
-    SHOW_UPDATE_PENDING(4),
-    // 编辑审批成功
-    SHOW_SUCCESSFUL_UPDATE(5),
-    // 编辑审批驳回
-    SHOW_UPDATE_REJECT(6),
-    // 创建审批撤销
-    SHOW_CREATE_REVOKE(7);
+@Component
+class PipelineAtomTaskReminderListener @Autowired constructor(
+    private val reminderControl: ReviewReminderService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildReviewReminderEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildReviewReminderEvent) {
+        reminderControl.handle(event)
+    }
 }

@@ -23,29 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.process.engine.pojo.event
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
 /**
- * 项目详情页tips展示状态
+ * 用于审核提醒（利用延迟消费）
+ * @author royalhuang
+ * @version 1.0
  */
-enum class ProjectTipsStatus(val status: Int) {
-    // 不展示
-    NOT_SHOW(0),
-    // 项目创建审批中
-    SHOW_CREATE_PENDING(1),
-    // 项目审批成功
-    SHOW_SUCCESSFUL_CREATE(2),
-    // 项目创建被驳回
-    SHOW_CREATE_REJECT(3),
-    // 编辑审批中
-    SHOW_UPDATE_PENDING(4),
-    // 编辑审批成功
-    SHOW_SUCCESSFUL_UPDATE(5),
-    // 编辑审批驳回
-    SHOW_UPDATE_REJECT(6),
-    // 创建审批撤销
-    SHOW_CREATE_REVOKE(7);
-}
+@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_REVIEW_REMINDER)
+data class PipelineBuildReviewReminderEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0,
+    val reviewUsers: Set<String>,
+    val notifyTitle: String,
+    val notifyBody: String,
+    val weworkGroup: Set<String> = emptySet(),
+    val buildId: String,
+    val taskId: String,
+    val executeCount: Int,
+    val reminderCount: Int = 1
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
