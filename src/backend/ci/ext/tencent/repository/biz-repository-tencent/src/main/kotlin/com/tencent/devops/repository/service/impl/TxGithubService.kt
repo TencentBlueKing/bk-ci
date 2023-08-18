@@ -146,11 +146,4 @@ class TxGithubService @Autowired constructor(
             projectName = projectName
         ).data!!
     }
-
-    override fun getRepositoryInfo(token: String, projectName: String): GithubRepo {
-        return client.get(ServiceGithubResource::class).getRepositoryInfo(
-            accessToken = token,
-            projectName = projectName
-        ).data!!
-    }
 }

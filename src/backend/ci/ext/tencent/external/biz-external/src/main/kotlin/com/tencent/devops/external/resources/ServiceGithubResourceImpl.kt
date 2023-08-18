@@ -37,7 +37,6 @@ import com.tencent.devops.external.service.github.GithubOauthService
 import com.tencent.devops.external.service.github.GithubService
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubOauth
-import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -94,9 +93,5 @@ class ServiceGithubResourceImpl @Autowired constructor(
 
     override fun listTags(accessToken: String, projectName: String): Result<List<String>> {
         return Result(githubService.listTags(token = accessToken, projectName = projectName))
-    }
-
-    override fun getRepositoryInfo(accessToken: String, projectName: String): Result<GithubRepo> {
-        return Result(githubService.getRepositoryInfo(token = accessToken, projectName = projectName))
     }
 }
