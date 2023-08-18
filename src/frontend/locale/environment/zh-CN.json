@@ -180,7 +180,7 @@
         "enterDisplayName": "请输入别名",
         "buildTask": "构建任务",
         "buildTaskStatus": "构建任务状态",
-        "machineActivityRecord": "“Agent上下线记录",
+        "machineActivityRecord": "Agent上下线记录",
         "oneHour": "1小时",
         "oneDay": "24小时",
         "oneWeek": "近7天",

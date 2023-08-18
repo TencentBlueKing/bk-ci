@@ -53,7 +53,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
-            ...mapActions('pipleines', [
+            ...mapActions('pipelines', [
                 'resetPipelineSetting'
             ]),
             setState ({ isLoading, isEditing }) {

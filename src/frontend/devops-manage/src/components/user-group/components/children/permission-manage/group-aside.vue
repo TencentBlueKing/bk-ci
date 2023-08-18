@@ -37,12 +37,11 @@
             v-if="resourceType === 'project'"
             class="group-more-option"
             placement="bottom"
-            trigger="click"
-            theme="dot-menu light"
+            theme="light dot-menu"
             :arrow="false"
             offset="15"
             :distance="0">
-            <i class="more-icon manage-icon manage-icon-more-fill"></i>
+            <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
               <div class="menu-content">
                 <bk-button
@@ -488,14 +487,17 @@ export default {
 }
 </style>
 <style lang="scss">
-.group-more-option .btn {
-  width: 60px;
-  height: 32px;
-  line-height: 32px;
-  text-align: center;
-  font-size: 12px;
-  margin-top: 0;
-}
+.dot-menu {
+  padding: 0 !important;
+  .btn {
+    width: 60px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 0;
+  }
+} 
 .group-more-option .btn:hover {
   background-color: #F5F7FA;
 }

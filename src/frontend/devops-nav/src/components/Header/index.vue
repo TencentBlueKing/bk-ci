@@ -99,7 +99,6 @@
                 theme="light navigation-message"
                 placement="bottom"
                 :arrow="false"
-                trigger="click"
                 ref="popoverRef"
             >
                 <div class="flag-box">
@@ -120,13 +119,14 @@
                 theme="light navigation-message"
                 placement="bottom"
                 :arrow="false"
-                trigger="click"
                 ref="popoverRef">
                 <div class="flag-box">
                     <Icon name="help-fill" size="20" />
                 </div>
                 <template slot="content">
                     <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
+                    <li class="bkci-dropdown-item" @click.stop="goToFeedBack">{{ $t('feedback') }}</li>
+                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('community') }}</li>
                 </template>
             </bk-popover>
             <User
@@ -338,6 +338,14 @@
 
         goToDocs (): void {
             this.to(this.BKCI_DOCS.BKCI_DOC)
+        }
+
+        goToFeedBack (): void {
+            this.to(this.BKCI_DOCS.FEED_BACK_URL)
+        }
+
+        goToGithubSource (): void {
+            this.to(this.BKCI_DOCS.BKAPP_NAV_OPEN_SOURCE_URL)
         }
 
         goToPm (): void {
