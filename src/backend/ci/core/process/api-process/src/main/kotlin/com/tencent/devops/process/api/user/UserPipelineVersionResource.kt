@@ -230,7 +230,7 @@ interface UserPipelineVersionResource {
 
     @ApiOperation("回滚到指定的历史版本并覆盖草稿")
     @POST
-    @Path("/projects/{projectId}/rollbackDraft")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/rollbackDraft")
     fun rollbackDraftFromVersion(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -241,7 +241,7 @@ interface UserPipelineVersionResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "回退草稿的目标版本", required = true)
+        @ApiParam(value = "回回滚目标版本", required = true)
         @QueryParam("version")
         version: Int
     ): Result<Boolean>
