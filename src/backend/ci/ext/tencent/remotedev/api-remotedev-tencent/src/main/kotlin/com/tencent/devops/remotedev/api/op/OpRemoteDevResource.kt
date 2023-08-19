@@ -351,6 +351,9 @@ interface OpRemoteDevResource {
         zoneId: String?,
         @ApiParam(value = "machineType", required = false)
         @QueryParam("machineType")
-        machineType: String?
+        machineType: String?,
+        @ApiParam(value = "status", required = false)
+        @QueryParam("status")
+        status: Int?
     ): Result<List<Map<String, Any>>>
 }

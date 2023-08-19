@@ -181,7 +181,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun getStartCloudResourceList(
         userId: String,
         zoneId: String?,
-        machineType: String?
+        machineType: String?,
+        status: Int?
     ): Result<List<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
 
@@ -189,6 +190,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             when {
                 !zoneId.isNullOrEmpty() -> it.zoneId == zoneId
                 !machineType.isNullOrEmpty() -> it.machineType == machineType
+                status != null -> it.status == status
                 else -> true
             }
         }
