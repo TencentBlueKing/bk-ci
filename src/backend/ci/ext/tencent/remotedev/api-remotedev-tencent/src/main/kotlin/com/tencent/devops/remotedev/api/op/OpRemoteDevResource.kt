@@ -345,6 +345,12 @@ interface OpRemoteDevResource {
     fun getStartCloudResourceList(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "zoneId", required = false)
+        @QueryParam("zoneId")
+        zoneId: String?,
+        @ApiParam(value = "machineType", required = false)
+        @QueryParam("machineType")
+        machineType: String?
     ): Result<List<Map<String, Any>>>
 }

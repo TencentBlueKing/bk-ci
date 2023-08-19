@@ -178,12 +178,28 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
     }
 
-    override fun getStartCloudResourceList(userId: String): Result<List<Map<String, Any>>> {
+    override fun getStartCloudResourceList(
+        userId: String,
+        zoneId: String?,
+        machineType: String?
+    ): Result<List<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
-        val list = mutableListOf<Map<String, Any>>()
-        resourceList.forEach {
-            list.add(JsonUtil.toMap(it))
+        if (resourceList.isEmpty()) {
+            return Result(emptyList())
         }
-        return Result(list)
+
+        val filteredList = resourceList.filter {
+            if (!zoneId.isNullOrEmpty()) {
+                it.zoneId == zoneId
+            } else {
+                if (!machineType.isNullOrEmpty()) {
+                    it.machineType == machineType
+                } else {
+                    true
+                }
+            }
+        }
+
+        return Result(filteredList.map { JsonUtil.toMap(it) })
     }
 }
