@@ -271,7 +271,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
-                    -> return environmentRsp.data
+                    -> return environmentRsp.data.rows
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,

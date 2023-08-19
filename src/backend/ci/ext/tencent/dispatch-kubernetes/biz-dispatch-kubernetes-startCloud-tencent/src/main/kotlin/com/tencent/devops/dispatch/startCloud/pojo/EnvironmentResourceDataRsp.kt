@@ -14,7 +14,7 @@ data class EnvironmentResourceDataRsp(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DataRsp(
     @JsonProperty("rows")
-    val rows: List<EnvironmentResourceData>?,
+    val rows: List<EnvironmentResourceData>,
     @JsonProperty("total")
     val total: Int
 )
