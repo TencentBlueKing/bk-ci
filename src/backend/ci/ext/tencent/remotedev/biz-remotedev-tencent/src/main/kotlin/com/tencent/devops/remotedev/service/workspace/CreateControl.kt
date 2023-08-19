@@ -111,6 +111,8 @@ class CreateControl @Autowired constructor(
     fun asyncCreateWorkspace(
         userId: String,
         projectId: String,
+        cgsId: String?,
+        autoAssign: Boolean?,
         workspaceCreate: ProjectWorkspaceCreate
     ) {
         val mountType = WorkspaceMountType.START
@@ -176,7 +178,9 @@ class CreateControl @Autowired constructor(
                     devFilePath = ws.devFilePath,
                     devFile = Devfile(
                         zoneId = windowsConfig.zoneShortName,
-                        machineType = windowsConfig.size
+                        machineType = windowsConfig.size,
+                        cgsId = cgsId,
+                        autoAssign = autoAssign
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -305,7 +309,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ownerType == WorkspaceOwnerType.PROJECT) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
 
             // websocket 通知成功

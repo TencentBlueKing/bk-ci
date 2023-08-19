@@ -234,7 +234,8 @@ class SoftwareManageService @Autowired constructor(
         creator: String,
         regionId: String,
         ip: String,
-        workspaceName: String
+        workspaceName: String,
+        autoAssign: Boolean? = false
     ) {
         val params = "-project_id \"$projectId\" -creator \"$workspaceName\" -region_id \"$regionId\" -inner_ip \"$ip\""
         val base64Val = Base64Util.encode(params.toByteArray())
@@ -253,7 +254,7 @@ class SoftwareManageService @Autowired constructor(
                 ))
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&autoAssign=$autoAssign&projectId=$projectId&userId=$creator"
         val installSoftwareRes = installSoftwareFromXingyun(
             userId = creator,
             ip = ip.substringAfter("."),

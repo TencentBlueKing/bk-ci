@@ -29,6 +29,8 @@ package com.tencent.devops.dispatch.startCloud.dao
 
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -69,6 +71,21 @@ class WindowsGpuResourceDao {
     ) {
         return with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             dslContext.delete(this).execute()
+        }
+    }
+
+    fun getCgsResource(
+        dslContext: DSLContext,
+        cgsId: String?
+    ): TWindowsGpuPoolRecord? {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            val conditions = mutableListOf<Condition>()
+            if (!cgsId.isNullOrBlank()) {
+                conditions.add(CGS_ID.eq(cgsId))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchAny()
         }
     }
 }

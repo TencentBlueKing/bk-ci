@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -83,6 +84,21 @@ class WindowsResourceConfigDao {
         return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             dslContext.selectFrom(this)
                 .where(ID.eq(id.toLong()))
+                .fetchAny()
+        }
+    }
+
+    fun fetchCgsData(
+        dslContext: DSLContext,
+        zoneId: String?,
+        machineType: String?
+    ): TWindowsResourceConfigRecord? {
+        with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(SHORT_NAME.eq(zoneId)).takeIf { zoneId != null }
+            conditions.add(SIZE.eq(machineType)).takeIf { machineType != null }
+            return dslContext.selectFrom(this)
+                .where(conditions)
                 .fetchAny()
         }
     }
