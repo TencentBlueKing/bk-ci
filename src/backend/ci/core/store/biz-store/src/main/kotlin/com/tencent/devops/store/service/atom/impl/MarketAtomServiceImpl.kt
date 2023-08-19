@@ -138,7 +138,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -1097,7 +1097,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             // 清空插件运行时信息缓存
             redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
-            //清空插件状态缓存信息
+            // 清空插件状态缓存信息
             redisOperation.delete(StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode))
         }
         return Result(true)

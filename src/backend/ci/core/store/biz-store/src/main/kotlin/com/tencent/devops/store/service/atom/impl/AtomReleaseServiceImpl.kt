@@ -130,7 +130,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Locale
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -524,7 +524,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     hashKey = VersionUtils.convertLatestVersion(version),
                     values = "true"
                 )
-
             }
             // 更新标签信息
             val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }

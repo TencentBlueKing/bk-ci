@@ -88,7 +88,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
-import io.netty.handler.codec.CodecException
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import org.jooq.Condition
