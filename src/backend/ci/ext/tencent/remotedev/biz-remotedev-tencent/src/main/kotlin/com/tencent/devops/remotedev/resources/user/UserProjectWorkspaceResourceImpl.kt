@@ -57,7 +57,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspace: ProjectWorkspaceCreate
     ): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
-        createControl.asyncCreateWorkspace(userId, bkTicket, projectId, workspace)
+        createControl.asyncCreateWorkspace(userId, projectId, workspace)
         return Result(true)
     }
 

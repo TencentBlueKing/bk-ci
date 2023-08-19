@@ -110,7 +110,6 @@ class CreateControl @Autowired constructor(
 
     fun asyncCreateWorkspace(
         userId: String,
-        bkTicket: String,
         projectId: String,
         workspaceCreate: ProjectWorkspaceCreate
     ) {
