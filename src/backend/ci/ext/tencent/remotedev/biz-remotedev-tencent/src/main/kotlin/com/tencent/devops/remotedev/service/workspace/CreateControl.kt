@@ -562,7 +562,7 @@ class CreateControl @Autowired constructor(
     }
 
     private fun projectWinCreateCheck(projectInfo: ProjectVO, createCount: Int) {
-        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 0 }
+        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 11 }
         if (resourceCount < createCount) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
