@@ -149,6 +149,7 @@ object StoreMessageCode {
     const val BUILD_VISIT_NO_PERMISSION = "2120923" // 接口请求中的插件【{0}】不是当前当前构建运行的插件
     const val VERSION_PUBLISHED = "2120924" // 组件{0}版本({1})已发布
     const val NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION = "2120925" // 无组件{0}管理员或当前版本创建者权限，请联系组件管理员。
+    const val USER_ATOM_VERSION_IS_NOT_EXIST = "2120926" // 研发商店：插件{0}的{1}版本不存在
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

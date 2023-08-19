@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
@@ -46,6 +47,7 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.constant.StoreMessageCode.USER_ATOM_VERSION_IS_NOT_EXIST
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -86,6 +88,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import io.netty.handler.codec.CodecException
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -301,7 +304,10 @@ class AtomDao : AtomBaseDao() {
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
-                .fetchOne()!!.into(AtomStatusInfo::class.java)
+                .fetchOne()?.into(AtomStatusInfo::class.java) ?: throw ErrorCodeException(
+                    errorCode = USER_ATOM_VERSION_IS_NOT_EXIST,
+                    params = arrayOf(atomCode, version)
+                )
         }
     }
 

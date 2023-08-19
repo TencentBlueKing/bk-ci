@@ -29,16 +29,20 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
+import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
+import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -83,6 +87,14 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             atomStatus = atomStatus,
             msg = null
         )
+        val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode)
+        val atomStatusInfo = AtomStatusInfo(
+            atomCode = atomCode,
+            name = atomRecord.name,
+            version = version,
+            atomStatus = atomStatus.status.toByte()
+        )
+        redisOperation.hset(atomStatusInfoKey, version, JsonUtil.toJson(atomStatusInfo))
         if (atomStatus == AtomStatusEnum.TESTING) {
             // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(
