@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.resources.op
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
@@ -21,12 +22,14 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService,
     private val workspaceService: WorkspaceService,
+    private val workspaceCommon: WorkspaceCommon,
     private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val whiteListService: WhiteListService,
@@ -173,5 +176,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
+    }
+
+    override fun getStartCloudResourceList(userId: String): Result<List<Map<String, Any>>> {
+        val resourceList = workspaceCommon.syncStartCloudResourceList()
+        val list = mutableListOf<Map<String, Any>>()
+        resourceList.forEach {
+            list.add(JsonUtil.toMap(it))
+        }
+        return Result(list)
     }
 }

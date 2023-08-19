@@ -5,10 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class EnvironmentResourceData(
-    @JsonProperty("cgs_ip")
+    @JsonProperty("cgsId")
+    val cgsId: String,
+    @JsonProperty("cgsIp")
     val cgsIp: String,
-    @JsonProperty("zone_id")
+    @JsonProperty("zoneId")
     val zoneId: String,
+    @JsonProperty("machineType")
+    val machineType: String,
     @JsonProperty("status")
     val status: Int
 )

@@ -338,4 +338,13 @@ interface OpRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>>
+
+    @ApiOperation("实时获取START云桌面资源池的机器")
+    @GET
+    @Path("/windows/pool/list")
+    fun getStartCloudResourceList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<Map<String, Any>>>
 }

@@ -46,12 +46,16 @@ class WindowsGpuResourceDao {
             with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
                 dslContext.insertInto(
                     this,
+                    CGS_ID,
                     ZONE_ID,
                     CGS_IP,
+                    MACHINE_TYPE,
                     STATUS
                 ).values(
+                    it.cgsId,
                     it.zoneId,
                     it.cgsIp,
+                    it.machineType,
                     it.status
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
