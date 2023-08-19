@@ -129,9 +129,17 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
+    fun shareWorkspace(
+        userId: String,
+        workspaceName: String,
+        sharedUser: String,
+        needPermission: Boolean = true
+    ): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
-        permissionService.checkOwnerPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkOwnerPermission(userId, workspaceName)
+        }
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
