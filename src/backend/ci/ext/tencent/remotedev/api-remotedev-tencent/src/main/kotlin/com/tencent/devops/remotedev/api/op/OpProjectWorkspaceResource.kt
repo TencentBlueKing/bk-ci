@@ -49,7 +49,7 @@ interface OpProjectWorkspaceResource {
     @ApiOperation("分配云桌面")
     @POST
     @Path("/assign")
-    fun addWorkspaceTemplate(
+    fun assignWorkspace(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
