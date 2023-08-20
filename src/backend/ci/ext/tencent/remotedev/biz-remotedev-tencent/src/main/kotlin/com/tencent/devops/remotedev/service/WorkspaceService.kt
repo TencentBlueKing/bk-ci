@@ -224,7 +224,7 @@ class WorkspaceService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
                 val status = WorkspaceStatus.values()[it.status]
-                val detail = workspaceCommon.getWorkspaceDetail(it.name).takeIf { status.checkRunning() }
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -290,7 +290,7 @@ class WorkspaceService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
                 val status = WorkspaceStatus.values()[it.status]
-                val detail = workspaceCommon.getWorkspaceDetail(it.name).takeIf { status.checkRunning() }
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -520,9 +520,7 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
-        val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf {
-            WorkspaceStatus.values()[workspace.status].checkRunning()
-        }
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,

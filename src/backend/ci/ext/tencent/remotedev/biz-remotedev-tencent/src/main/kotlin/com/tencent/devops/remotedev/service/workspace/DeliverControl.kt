@@ -95,7 +95,7 @@ class DeliverControl @Autowired constructor(
                     )
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     // todo job接口执行
-                    val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf { status.checkRunning() }
+                    val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                         ?: throw ErrorCodeException(
                             errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                             params = arrayOf(workspaceName)
@@ -148,7 +148,7 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspace.name, "status is $status, can't assign user now")
                 )
             }
-            val detail = workspaceCommon.getWorkspaceDetail(workspaceName).takeIf { status.checkRunning() }
+            val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                     params = arrayOf(workspaceName)
