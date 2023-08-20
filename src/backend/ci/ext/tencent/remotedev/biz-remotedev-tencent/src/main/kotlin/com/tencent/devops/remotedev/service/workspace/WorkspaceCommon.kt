@@ -154,7 +154,6 @@ class WorkspaceCommon @Autowired constructor(
             val workspaceInfo =
                 client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
-            logger.info("getOrSaveWorkspaceDetail|workspaceInfo|$workspaceInfo")
             val cache = WorkSpaceCacheInfo(
                 sshKey,
                 workspaceInfo.environmentHost,
@@ -165,7 +164,6 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceInfo.curLaunchId,
                 workspaceInfo.regionId
             )
-            logger.info("getOrSaveWorkspaceDetail|cache|$cache")
             redisCache.saveWorkspaceDetail(
                 workspaceName,
                 cache
