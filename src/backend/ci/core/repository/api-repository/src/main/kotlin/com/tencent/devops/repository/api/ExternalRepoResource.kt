@@ -44,10 +44,22 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalRepoResource {
 
-    @ApiOperation("根据用户ID列举Git上面的工程")
+    @ApiOperation("git oauth 授权回调")
     @GET
     @Path("/git/callback")
     fun gitCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
+
+    @ApiOperation("tgit oauth 授权回调")
+    @GET
+    @Path("/tgit/callback")
+    fun tGitCallback(
         @ApiParam(value = "code")
         @QueryParam("code")
         code: String,

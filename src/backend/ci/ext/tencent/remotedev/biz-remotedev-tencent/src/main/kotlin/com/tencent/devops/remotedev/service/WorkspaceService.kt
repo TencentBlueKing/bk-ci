@@ -118,7 +118,7 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
-        permissionService.checkOwnerPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -130,9 +130,17 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
+    fun shareWorkspace(
+        userId: String,
+        workspaceName: String,
+        sharedUser: String,
+        needPermission: Boolean = true
+    ): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
-        permissionService.checkOwnerPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkOwnerPermission(userId, workspaceName)
+        }
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",

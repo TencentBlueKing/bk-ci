@@ -155,6 +155,43 @@ class DeleteControl @Autowired constructor(
             return true
         }
     }
+    fun deleteWorkspace4OP(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        logger.info("$userId delete workspace $workspaceName")
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds
+        ).tryLock().use {
+
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            // 创建操作历史记录
+            createDeleteOperationHistoryRecord(workspace, userId)
+
+            // 如果需要立即删除，则执行删除操作
+            doDeleteWS(true, userId, workspaceName, null)
+
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+
+            // 发送处理事件
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = workspace.creator,
+                    traceId = bizId,
+                    type = UpdateEventType.DELETE,
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                )
+            )
+            return true
+        }
+    }
 
     // 获取已休眠(status:3)且过期14天的工作空间
     fun deleteInactivityWorkspace() {

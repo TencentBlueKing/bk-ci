@@ -87,7 +87,6 @@ class StartCloudRemoteDevService @Autowired constructor(
                 machineType = event.devFile.machineType
             )
         )
-
         return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toIntOrNull() ?: 0)
     }
 
