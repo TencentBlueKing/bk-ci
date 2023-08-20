@@ -38,10 +38,15 @@ tasks.register<BootRun>("multiBootRun") {
         systemProperty("sun.jnu.encoding", "UTF-8")
         systemProperty("file.encoding", "UTF-8")
         systemProperty("spring.cloud.consul.host", "localhost")
+        systemProperty("service.log.dir",  joinPath(projectDir.absolutePath, "log"))
     }
+    dependsOn("replacePlaceholders")
     dependsOn("multiBootJar")
     val bootJarTask = tasks.getByName<BootJar>("bootJar")
-    println("multi boot run:${bootJarTask.mainClass}|${bootJarTask.classpath}")
     mainClass.set(bootJarTask.mainClass)
     classpath = bootJarTask.classpath
 }
+/**
+ * 返回路径
+ */
+fun joinPath(vararg folders: String) = folders.joinToString(File.separator)

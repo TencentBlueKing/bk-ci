@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class RedisUtils @Autowired constructor(
+class k8sRedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     fun setDebugBuilderName(

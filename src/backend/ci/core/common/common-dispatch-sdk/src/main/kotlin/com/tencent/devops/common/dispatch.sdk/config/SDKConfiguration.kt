@@ -42,6 +42,7 @@ import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 
 @Configuration
@@ -87,4 +88,10 @@ class SDKConfiguration {
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
         return MQEventDispatcher(rabbitTemplate)
     }
+
+    @Bean
+    fun channelUtils(
+        @Autowired bkTag: BkTag
+    ) = ChannelUtils(bkTag)
+
 }

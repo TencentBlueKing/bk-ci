@@ -68,7 +68,6 @@ class MutijarDslContextConfiguration {
                 else -> throw IllegalArgumentException("Invalid annotatedElement type")
             }
             val packageName = declaringClass.getPackage().name
-            logger.info("packageName:$packageName")
             // lambda服务有多个数据源，需要进行处理
             val configurationName = if (packageName.contains(".lambda")) {
                 val matchResult = lambdaServiceRegex.find(packageName)
@@ -78,7 +77,6 @@ class MutijarDslContextConfiguration {
                     ?: throw NoSuchBeanDefinitionException("no jooq configuration")
                 serviceName.removePrefix(".").plus("JooqConfiguration")
             }
-            logger.info("AccessoriesJooqConfiguration:$configurationName")
             val configuration: org.jooq.Configuration = configurationMap[configurationName]
                 ?: throw NoSuchBeanDefinitionException("no $configurationName")
             return DSL.using(configuration)
@@ -87,7 +85,6 @@ class MutijarDslContextConfiguration {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MutijarDslContextConfiguration::class.java)
         private val multiModelService = System.getProperty("devops.multi.from").split(",")
         private val lambdaServiceRegex = "\\.(tsource|ttarget|process|project|store)".toRegex()
     }
