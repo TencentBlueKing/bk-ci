@@ -70,7 +70,9 @@ class WindowsResourceConfigService @Autowired constructor(
         }
     }
 
-    fun getConfig(id: Int): WindowsResourceConfig? {
+    fun getConfig(
+        id: Int
+    ): WindowsResourceConfig? {
         logger.info("get windows resource config $id")
         return windowsResourceConfigDao.fetchAny(dslContext, id)?.let {
             WindowsResourceConfig(
@@ -87,7 +89,26 @@ class WindowsResourceConfigService @Autowired constructor(
             )
         }
     }
-
+    fun getConfig(
+        zoneId: String?,
+        machineType: String?
+    ): WindowsResourceConfig? {
+        logger.info("get windows resource zoneId $zoneId machineType $machineType")
+        return windowsResourceConfigDao.fetchCgsData(dslContext, zoneId, machineType)?.let {
+            WindowsResourceConfig(
+                it.id,
+                ByteUtils.byte2Bool(it.availabled),
+                it.zone,
+                it.shortName,
+                it.size,
+                it.gpu,
+                it.cpu,
+                it.memory,
+                it.disk,
+                it.description
+            )
+        }
+    }
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceConfig): Boolean {
         logger.info("WorkspaceTemplateService|addWindowsResource|windowsResourceConfig|$windowsResourceConfig")

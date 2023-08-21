@@ -90,7 +90,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 is CodeTGitRepository -> {
                     val isOauth = repo.credentialId.isEmpty()
                     val token = if (isOauth) {
-                        getAccessToken(repo.userName).first
+                        getTGitAccessToken(repo.userName).first
                     } else {
                         getCredential(projectId, repo).privateKey
                     }
@@ -288,6 +288,12 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
     private fun getAccessToken(userName: String): Pair<String, String?> {
         val gitOauthData = client.get(ServiceOauthResource::class).gitGet(userName).data
+            ?: throw NotFoundException("cannot found oauth access token for user($userName)")
+        return gitOauthData.accessToken to null
+    }
+
+    private fun getTGitAccessToken(userName: String): Pair<String, String?> {
+        val gitOauthData = client.get(ServiceOauthResource::class).tGitGet(userName).data
             ?: throw NotFoundException("cannot found oauth access token for user($userName)")
         return gitOauthData.accessToken to null
     }

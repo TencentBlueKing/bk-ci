@@ -36,4 +36,6 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:quality:api-quality"))
     api(project(":core:common:common-codecc"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-pipeline"))
 }

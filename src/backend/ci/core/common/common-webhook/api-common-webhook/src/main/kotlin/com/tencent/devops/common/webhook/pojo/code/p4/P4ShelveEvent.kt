@@ -43,13 +43,16 @@ data class P4ShelveEvent(
     @ApiModelProperty("路径是否区分大小写，默认区分大小写")
     val caseSensitive: Boolean? = true,
     // 指定项目触发
-    override val projectId: String? = null
+    override val projectId: String? = null,
+    @ApiModelProperty("提交描述", required = false)
+    var description: String? = DEFAULT_SHELVE_DESCRIPTION
 ) : P4Event(projectId = projectId) {
     companion object {
         const val classType = "SHELVE"
         const val SHELVE_COMMIT = "shelve-commit"
         const val SHELVE_DELETE = "shelve-delete"
         const val SHELVE_SUBMIT = "shelve-submit"
+        const val DEFAULT_SHELVE_DESCRIPTION = ""
     }
 
     /**

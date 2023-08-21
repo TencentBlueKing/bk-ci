@@ -36,9 +36,12 @@ import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -79,6 +82,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import javax.ws.rs.core.Response
@@ -697,5 +701,40 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
         }
         return validOsArchFlag
+    }
+
+    override fun getInitProjectCode(atomCode: String, classType: String, htmlTemplateVersion: String): String? {
+        return if (htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion ||
+            (classType != MarketBuildAtomElement.classType && classType != MarketBuildLessAtomElement.classType)
+        ) {
+            // 内置插件没有初始化项目，故返回空
+            null
+        } else {
+            // 先从本地缓存获取插件的初始化项目
+            val localCacheKey = BkInitProjectCacheUtil.getInitProjectCacheKey(atomCode, StoreTypeEnum.ATOM)
+            var initProjectCode = BkInitProjectCacheUtil.getIfPresent(localCacheKey)
+            if (initProjectCode == null) {
+                // 本地缓存未找到记录则从redis中找
+                val redisCacheKey = BkInitProjectCacheUtil.getInitProjectCacheKeyPrefix(StoreTypeEnum.ATOM)
+                initProjectCode = redisOperation.hget(redisCacheKey, atomCode)
+                if (initProjectCode == null) {
+                    // redis缓存未找到记录则从db中找
+                    initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                        dslContext = dslContext,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM.type.toByte()
+                    ) ?: ""
+                    BkInitProjectCacheUtil.put(localCacheKey, initProjectCode)
+                    redisOperation.hset(
+                        key = redisCacheKey,
+                        hashKey = atomCode,
+                        values = initProjectCode
+                    )
+                } else {
+                    BkInitProjectCacheUtil.put(localCacheKey, initProjectCode)
+                }
+            }
+            initProjectCode
+        }
     }
 }

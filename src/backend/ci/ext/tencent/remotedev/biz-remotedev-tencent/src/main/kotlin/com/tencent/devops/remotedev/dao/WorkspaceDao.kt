@@ -27,14 +27,18 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.Condition
@@ -42,6 +46,7 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -62,8 +67,10 @@ class WorkspaceDao {
     ): Long {
         return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
-                /* into = */ this,
-                /* ...fields = */ PROJECT_ID,
+                /* into = */
+                this,
+                /* ...fields = */
+                PROJECT_ID,
                 NAME,
                 TEMPLATE_ID,
                 URL,
@@ -169,10 +176,40 @@ class WorkspaceDao {
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
                 .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .let {
-                    if (unionShared) it.unionAll(
+                    if (unionShared) {
+                        it.unionAll(
                         unionSelect(shared, creator, status, systemType, ownerType)
-                    ) else it
+                    )
+                    } else {
+                        it
+                    }
                 }
+                .fetch(0, Long::class.java).sum()
+        }
+    }
+    fun countProjectWorkspace(
+        dslContext: DSLContext,
+        projectId: String?,
+        ownerType: WorkspaceOwnerType? = null,
+        status: Set<WorkspaceStatus>? = null,
+        systemType: WorkspaceSystemType? = null
+    ): Long {
+        val conditions = mutableListOf<Condition>()
+        with(TWorkspace.T_WORKSPACE) {
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.like("%$projectId%"))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .let {
+                    if (status.isNullOrEmpty()) {
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    } else {
+                        it.and(STATUS.`in`(status.map { s -> s.ordinal }))
+                    }
+                }
+                .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
+                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -233,6 +270,31 @@ class WorkspaceDao {
     }
 
     /**
+     * 获取项目下工作空间列表
+     */
+    fun limitFetchProjectWorkspace(
+        dslContext: DSLContext,
+        limit: SQLLimit,
+        projectId: String?,
+        systemType: WorkspaceSystemType? = null
+    ): Result<TWorkspaceRecord>? {
+        val conditions = mutableListOf<Condition>()
+
+        with(TWorkspace.T_WORKSPACE) {
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.like("%$projectId%"))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit.limit).offset(limit.offset)
+                .fetch()
+        }
+    }
+
+    /**
      * 获得拥有该工作空间的用户
      */
     fun fetchWorkspaceUser(
@@ -247,6 +309,21 @@ class WorkspaceDao {
                         shared.WORKSPACE_NAME.eq(workspaceName)
                     )
                 ).fetch(0, String::class.java)
+        }
+    }
+
+    fun fetchCreators(
+        dslContext: DSLContext,
+        status: WorkspaceStatus,
+        systemType: WorkspaceSystemType = WorkspaceSystemType.WINDOWS_GPU,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+    ): List<Record2<String, String>> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(CREATOR, NAME).from(this)
+                .where(STATUS.eq(status.ordinal))
+                .and(SYSTEM_TYPE.eq(systemType.name))
+                .and(OWNER_TYPE.eq(ownerType.name))
+                .fetch()
         }
     }
 
@@ -326,6 +403,7 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val conditions = mutableListOf<Condition>()
         conditions.add(t1.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
+        conditions.add(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
         if (!workspaceName.isNullOrBlank()) {
             conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
         }
@@ -473,7 +551,7 @@ class WorkspaceDao {
     fun getTimeOutInactivityWorkspace(
         dslContext: DSLContext,
         timeOutDays: Int,
-        workspaceMountType: WorkspaceMountType?,
+        systemType: WorkspaceSystemType?,
         ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
     ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
@@ -486,8 +564,8 @@ class WorkspaceDao {
             condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
             condition.add(OWNER_TYPE.eq(ownerType.name))
 
-            if (workspaceMountType != null) {
-                condition.add(WORKSPACE_MOUNT_TYPE.eq(workspaceMountType.name))
+            if (systemType != null) {
+                condition.add(SYSTEM_TYPE.eq(systemType.name))
             }
             return dslContext.selectFrom(this)
                 .where(condition)
@@ -514,5 +592,40 @@ class WorkspaceDao {
             "timestampdiff({0}, {1}, NOW())",
             Int::class.java, DSL.keyword(part.toSQL()), t1
         )
+    }
+
+    // 持久化存储workspace detail数据
+    fun saveOrUpdateWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String,
+        detail: String
+    ) {
+        with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_NAME,
+                DETAIL,
+                CREATE_TIME
+            ).values(
+                workspaceName,
+                detail,
+                LocalDateTime.now()
+            ).onDuplicateKeyUpdate()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(DETAIL, detail)
+                .execute()
+        }
+    }
+
+    // 获取workspace detail
+    fun getWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String
+    ): TWorkspaceDetailRecord? {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .fetchAny()
+        }
     }
 }
