@@ -356,4 +356,15 @@ interface OpRemoteDevResource {
         @QueryParam("status")
         status: Int?
     ): Result<List<Map<String, Any>>>
+
+    @ApiOperation("转移工作空间detail数据到db")
+    @GET
+    @Path("/workspace/detail/move")
+    fun moveWorkspaceDetail(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
