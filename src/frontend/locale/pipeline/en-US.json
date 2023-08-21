@@ -1020,7 +1020,7 @@
     "atomEvenCancel": "Run even if a previous plugin failed, and run even if it was cancelled",
     "atomOnlyFail": "Only when a previous task has failed",
     "varMatch": "Run when all custom variables are matched",
-    "varNotMatch": "Do not run when all custom variables are matched",
+    "varNotMatch": "Don't run it when all the custom variables are matched",
     "preStageSuccess": "Run it when previous stage has successed",
     "preStageFail": "Run it when previous stage has failed",
     "preStageCancel": "Run it when previous stage has been canceled",
