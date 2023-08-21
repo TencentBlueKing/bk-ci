@@ -12,7 +12,7 @@
                     :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
             </form-field>
         </template>
-        <accordion show-checkbox>
+        <accordion v-if="reminderTimeCom" show-checkbox>
             <header class="var-header" slot="header">
                 <span>{{ reminderTimeCom.label }}</span>
                 <i class="devops-icon icon-angle-down" style="display: block" />
