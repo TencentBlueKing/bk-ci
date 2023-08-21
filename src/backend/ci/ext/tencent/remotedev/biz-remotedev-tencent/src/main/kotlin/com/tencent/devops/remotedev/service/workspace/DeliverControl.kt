@@ -70,7 +70,12 @@ class DeliverControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun safeInitialization(projectId: String, userId: String, workspaceName: String) {
+    fun safeInitialization(
+        projectId: String,
+        userId: String,
+        workspaceName: String,
+        autoAssign: Boolean? = false
+    ) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
             redisOperation,
@@ -95,7 +100,7 @@ class DeliverControl @Autowired constructor(
                     )
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     // todo job接口执行
-                    val detail = redisCache.getWorkspaceDetail(workspaceName)
+                    val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                         ?: throw ErrorCodeException(
                             errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                             params = arrayOf(workspaceName)
@@ -106,7 +111,8 @@ class DeliverControl @Autowired constructor(
                         userId,
                         regionId = detail.regionId.toString(),
                         ip = detail.environmentIP,
-                        workspaceName = workspaceName
+                        workspaceName = workspaceName,
+                        autoAssign = autoAssign
                     )
                 }
 
@@ -148,7 +154,7 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspace.name, "status is $status, can't assign user now")
                 )
             }
-            val detail = redisCache.getWorkspaceDetail(workspaceName)
+            val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                     params = arrayOf(workspaceName)
@@ -245,7 +251,14 @@ class DeliverControl @Autowired constructor(
         )
     }
 
-    fun softwareInstallationCompleteCallback(type: String, workspaceName: String, softwareList: SoftwareCallbackRes) {
+    fun softwareInstallationCompleteCallback(
+        type: String,
+        workspaceName: String,
+        projectId: String,
+        userId: String,
+        autoAssign: Boolean?,
+        softwareList: SoftwareCallbackRes
+    ) {
         logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (WorkspaceStatus.values()[workspace.status]) {
@@ -258,6 +271,20 @@ class DeliverControl @Autowired constructor(
                             softwareList = softwareList,
                             action = WorkspaceAction.CREATE
                         )
+                        if (autoAssign == true) {
+                            assignUser2Workspace(
+                                userId = userId,
+                                projectId = projectId,
+                                workspaceName = workspaceName,
+                                assigns = listOf(
+                                    ProjectWorkspaceAssign(
+                                        userId = userId,
+                                        type = WorkspaceShared.AssignType.OWNER
+                                    )
+                                )
+
+                            )
+                        }
                     }
                 }
                 WorkspaceStatus.DISTRIBUTING -> {

@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -129,9 +130,17 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
+    fun shareWorkspace(
+        userId: String,
+        workspaceName: String,
+        sharedUser: String,
+        needPermission: Boolean = true
+    ): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
-        permissionService.checkOwnerPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkOwnerPermission(userId, workspaceName)
+        }
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
@@ -222,8 +231,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = redisCache.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -288,8 +297,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = redisCache.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -519,7 +528,7 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
-        val detail = redisCache.getWorkspaceDetail(workspaceName)
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
@@ -560,13 +569,24 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        return redisCache.getWorkspaceDetail(workspaceName)?.let {
-            WorkspaceProxyDetail(
-                workspaceName = workspaceName,
-                podIp = it.environmentIP,
-                sshKey = it.sshKey,
-                environmentHost = it.environmentHost
-            )
+        val workspace = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
+
+        return workspace?.let {
+            workspaceCommon.getOrSaveWorkspaceDetail(
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            ).let {
+                WorkspaceProxyDetail(
+                    workspaceName = workspaceName,
+                    podIp = it.environmentIP,
+                    sshKey = it.sshKey,
+                    environmentHost = it.environmentHost
+                )
+            }
         } ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
         )
@@ -592,9 +612,11 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.curLaunchId,
                 workspaceInfo.regionId
             )
-            redisCache.saveWorkspaceDetail(
-                it.name,
-                cache
+
+            workspaceDao.saveOrUpdateWorkspaceDetail(
+                dslContext = dslContext,
+                workspaceName = it.name,
+                detail = JsonUtil.toJson(cache)
             )
         }
     }

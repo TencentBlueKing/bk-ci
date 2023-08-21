@@ -58,4 +58,13 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/startCloud/resourece/list")
     fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
+
+    @ApiOperation("根据cgsId获取资源信息")
+    @GET
+    @Path("/startCloud/cgs")
+    fun getCgsData(
+        @ApiParam("cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<EnvironmentResourceData?>
 }

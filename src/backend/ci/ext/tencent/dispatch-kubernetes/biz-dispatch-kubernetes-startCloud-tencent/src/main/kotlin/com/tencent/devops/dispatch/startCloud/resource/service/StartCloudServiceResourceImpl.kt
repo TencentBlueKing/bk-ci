@@ -46,4 +46,8 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     override fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>> {
         return Result(startCloudInterfaceService.syncStartCloudResourceList())
     }
+
+    override fun getCgsData(cgsId: String): Result<EnvironmentResourceData?> {
+        return Result(startCloudInterfaceService.getCgsData(cgsId))
+    }
 }
