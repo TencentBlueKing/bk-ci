@@ -3,7 +3,7 @@
         <atom v-if="storeType === 'atom'" :atom="atom" :has-summary="hasSummary" />
         <template v-else>
             <img class="card-pic atom-logo" :src="atom.logoUrl">
-            <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
+            <p v-bk-overflow-tips :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
             <h5 class="card-detail">
                 <span class="text-overflow">{{ atom.publisher }}</span>
                 <span>{{ displayNum }} <i class="devops-icon icon-heat-2"></i></span>

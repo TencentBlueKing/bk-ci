@@ -1,9 +1,34 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package job
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,12 +39,13 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -67,17 +93,13 @@ func init() {
 }
 
 const (
-	entryPointCmd               = "/data/init.sh"
-	localDockerBuildTmpDirName  = "docker_build_tmp"
-	LocalDockerWorkSpaceDirName = "docker_workspace"
-	dockerDataDir               = "/data/landun/workspace"
-	dockerLogDir                = "/data/logs"
+	entryPointCmd = "/data/init.sh"
 )
 
 func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 	if !systemutil.IsLinux() {
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-		dockerBuildFinish(buildInfo.ToFinish(false, "目前仅支持linux系统使用docker构建机", api.DockerOsErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("DockerOnlySupportLinux", nil), api.DockerOsErrorEnum))
 		return
 	}
 	// 第一次使用docker构建机后，则直接开启docker构建机相关逻辑
@@ -92,12 +114,12 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 			_, err = download.DownloadDockerInitFile(systemutil.GetWorkDir())
 			if err != nil {
 				GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-				dockerBuildFinish(buildInfo.ToFinish(false, "下载Docker构建机初始化脚本失败|"+err.Error(), api.DockerRunShInitErrorEnum))
+				dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("DownloadDockerInitScriptError", map[string]interface{}{"err": err}), api.DockerRunShInitErrorEnum))
 				return
 			}
 		} else {
 			GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-			dockerBuildFinish(buildInfo.ToFinish(false, "获取Docker构建机初始化脚本状态失败|"+err.Error(), api.DockerRunShStatErrorEnum))
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("StatDockerInitScriptError", map[string]interface{}{"err": err}), api.DockerRunShStatErrorEnum))
 			return
 		}
 	}
@@ -105,7 +127,7 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 	// 每次执行前都校验并修改一次dockerfile权限，防止用户修改或者升级丢失权限
 	if err := systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-		dockerBuildFinish(buildInfo.ToFinish(false, "校验并修改Docker启动脚本权限失败|"+err.Error(), api.DockerChmodInitshErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("CheckDockerInitScriptAuthError", map[string]interface{}{"err": err}), api.DockerChmodInitshErrorEnum))
 		return
 	}
 
@@ -124,16 +146,16 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
-	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
+	if dockerBuildInfo.Credential.ErrMsg != "" {
 		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
-		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker凭据错误|"+dockerBuildInfo.Credential.ErrMsg, api.DockerCredGetErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerCertError", map[string]interface{}{"err": dockerBuildInfo.Credential.ErrMsg}), api.DockerCredGetErrorEnum))
 		return
 	}
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		logs.Error("DOCKER_JOB|create docker client error ", err)
-		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker客户端错误|"+err.Error(), api.DockerClientCreateErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("LinkDockerError", map[string]interface{}{"err": err}), api.DockerClientCreateErrorEnum))
 		return
 	}
 
@@ -143,7 +165,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
 		logs.Error("DOCKER_JOB|list docker images error ", err)
-		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker镜像列表错误|"+err.Error(), api.DockerImagesFetchErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerImagesError", map[string]interface{}{"err": err}), api.DockerImagesFetchErrorEnum))
 		return
 	}
 	localExist := false
@@ -167,18 +189,25 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		isLatest = true
 	}
 
-	if ifPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {
+	if job_docker.IfPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {
 		if isLatest {
-			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
+			postLog(false, i18n.Localize("PullLatest", nil), buildInfo, api.LogtypeLog)
 		}
-		postLog(false, "开始拉取镜像，镜像名称："+imageName, buildInfo, api.LogtypeLog)
-		postLog(false, "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。", buildInfo, api.LogtypeLog)
+		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo, api.LogtypeLog)
+		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo, api.LogtypeLog)
+
+		auth, err := job_docker.GenerateDockerAuth(dockerBuildInfo.Credential.User, dockerBuildInfo.Credential.Password)
+		if err != nil {
+			logs.WithError(err).Errorf("DOCKER_JOB|pull new image generateDockerAuth %s error ", imageName)
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
+			return
+		}
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
+			RegistryAuth: auth,
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
-			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("拉取镜像 %s 失败|%s", imageName, err.Error()), api.DockerImagePullErrorEnum))
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
 			return
 		}
 		defer reader.Close()
@@ -186,41 +215,38 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		_, err = io.Copy(buf, reader)
 		if err != nil {
 			logs.Error("DOCKER_JOB|write image message error ", err)
-			postLog(true, "获取拉取镜像信息日志失败："+err.Error(), buildInfo, api.LogtypeLog)
+			postLog(true, i18n.Localize("GetPullImageLogError", map[string]interface{}{"err": err.Error()}), buildInfo, api.LogtypeLog)
 		} else {
 			// 异步打印，防止过大卡住主流程
 			go postLog(false, buf.String(), buildInfo, api.LogtypeLog)
 		}
 	} else {
-		postLog(false, "本地存在镜像，准备启动构建环境..."+imageName, buildInfo, api.LogtypeLog)
+		postLog(false, i18n.Localize("LocalExistImage", nil)+imageName, buildInfo, api.LogtypeLog)
 	}
 
 	// 创建docker构建机运行准备空间，拉取docker构建机初始化文件
-	tmpDir := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), localDockerBuildTmpDirName)
-	err = mkDir(tmpDir)
+	tmpDir := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), job_docker.LocalDockerBuildTmpDirName)
+	err = systemutil.MkDir(tmpDir)
 	if err != nil {
-		errMsg := fmt.Sprintf("创建Docker构建临时目录失败(create tmp directory failed): %s", err.Error())
+		errMsg := i18n.Localize("CreateDockerTmpDirError", map[string]interface{}{"err": err.Error()})
 		logs.Error("DOCKER_JOB|" + errMsg)
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMakeTmpDirErrorEnum))
 		return
 	}
 
 	// 解析docker options
-	var dockerConfig *job_docker.ContainerConfig = nil
-	if dockerBuildInfo.Options != nil {
-		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
-		if err != nil {
-			logs.Error("DOCKER_JOB|" + err.Error())
-			dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
-			return
-		}
+	dockerConfig, err := job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+	if err != nil {
+		logs.Error("DOCKER_JOB|" + err.Error())
+		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
+		return
 	}
 
 	// 创建容器
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
-		errMsg := fmt.Sprintf("准备Docker挂载目录失败: %s", err.Error())
+		errMsg := i18n.Localize("ReadDockerMountsError", map[string]interface{}{"err": err.Error()})
 		logs.Error("DOCKER_JOB| ", err)
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
@@ -262,7 +288,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
-		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("创建容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerCreateErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(
+			false,
+			i18n.Localize("CreateContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
+			api.DockerContainerCreateErrorEnum,
+		))
 		return
 	}
 
@@ -279,7 +309,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	// 启动容器
 	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|start container %s error ", creatResp.ID), err)
-		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("启动容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerStartErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(
+			false,
+			i18n.Localize("StartContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
+			api.DockerContainerStartErrorEnum,
+		))
 		return
 	}
 
@@ -289,13 +323,21 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	case err := <-errCh:
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), err)
-			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("等待容器 %s 结束错误|%s", containerName, err.Error()), api.DockerContainerRunErrorEnum))
+			dockerBuildFinish(buildInfo.ToFinish(
+				false,
+				i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
+				api.DockerContainerRunErrorEnum,
+			))
 			return
 		}
 	case status := <-statusCh:
 		if status.Error != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), status.Error)
-			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("等待容器 %s 结束错误|%s", containerName, status.Error.Message), api.DockerContainerRunErrorEnum))
+			dockerBuildFinish(buildInfo.ToFinish(
+				false,
+				i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": status.Error.Message}),
+				api.DockerContainerRunErrorEnum,
+			))
 			return
 		} else {
 			if status.StatusCode != 0 {
@@ -303,7 +345,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				msg := ""
 				// 如果docker状态不为零，将日志上报
 				logFile := func(tag string) (string, error) {
-					logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
+					logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
 					logFile := filepath.Join(logsDir, "docker.log")
 					content, err := os.ReadFile(logFile)
 					if err != nil && os.IsNotExist(err) {
@@ -346,7 +388,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				if msg == "" {
 					msg = containerLog
 				} else {
-					go postLog(false, "Docker容器日志为: \n"+containerLog, buildInfo, api.LogtypeDebug)
+					go postLog(false, i18n.Localize("DockerContainerLog", nil)+containerLog, buildInfo, api.LogtypeDebug)
 				}
 
 				if msg == longLogTag {
@@ -354,9 +396,9 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				}
 
 				dockerBuildFinish(
-					buildInfo.ToFinish(false, fmt.Sprintf(
-						"等待容器 %s 结束状态码为 %d 不为0 \n %s",
-						containerName, status.StatusCode, msg),
+					buildInfo.ToFinish(
+						false,
+						i18n.Localize("ContainerExitCodeNotZero", map[string]interface{}{"name": containerName, "code": status.StatusCode, "msg": msg}),
 						api.DockerContainerRunErrorEnum,
 					))
 				return
@@ -365,32 +407,6 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	dockerBuildFinish(buildInfo.ToFinish(true, "", api.NoErrorEnum))
-}
-
-// policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
-// policy 为空，并且为容器镜像指定了非 :latest 的标签， image-pull-policy 就会自动设置为 if-not-present
-func ifPullImage(localExist, islatest bool, policy string) bool {
-	// 为空和枚举写错走一套逻辑
-	switch policy {
-	case api.ImagePullPolicyAlways.String():
-		return true
-	case api.ImagePullPolicyIfNotPresent.String():
-		if !localExist {
-			return true
-		} else {
-			return false
-		}
-	default:
-		if islatest {
-			return true
-		} else {
-			if !localExist {
-				return true
-			} else {
-				return false
-			}
-		}
-	}
 }
 
 // dockerBuildFinish docker构建结束相关
@@ -438,48 +454,25 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logTy
 	}
 }
 
-// mkDir 与  systemutil.MkBuildTmpDir 功能一致
-func mkDir(dir string) error {
-	err := os.MkdirAll(dir, os.ModePerm)
-	err2 := systemutil.Chmod(dir, os.ModePerm)
-	if err == nil && err2 != nil {
-		err = err2
-	}
-	return err
-}
-
-// generateDockerAuth 创建拉取docker凭据
-func generateDockerAuth(cred *api.Credential) string {
-	if cred == nil || cred.User == "" || cred.Password == "" {
-		return ""
-	}
-
-	authConfig := types.AuthConfig{
-		Username: cred.User,
-		Password: cred.Password,
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	return base64.URLEncoding.EncodeToString(encodedJSON)
-}
-
 // parseContainerMounts 解析生成容器挂载内容
 func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, error) {
 	var mounts []mount.Mount
 
-	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
-	if systemutil.IsLinux() {
-		javaDir := config.GAgentConfig.JdkDirPath
-		mounts = append(mounts, mount.Mount{
-			Type:     mount.TypeBind,
-			Source:   javaDir,
-			Target:   "/usr/local/jre",
-			ReadOnly: true,
-		})
-	}
+	// 默认绑定本机的java用来执行worker
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.GAgentConfig.JdkDirPath,
+		Target:   "/usr/local/jre",
+		ReadOnly: true,
+	})
+
+	// 默认绑定本机的 worker 用来执行
+	mounts = append(mounts, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   config.BuildAgentJarPath(),
+		Target:   "/data/worker-agent.jar",
+		ReadOnly: true,
+	})
 
 	// 挂载docker构建机初始化脚本
 	workDir := systemutil.GetWorkDir()
@@ -494,30 +487,30 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	// data目录优先选择用户自定的工作空间
 	dataDir := ""
 	if buildInfo.Workspace == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
 	} else {
 		dataDir = buildInfo.Workspace
 	}
-	err := mkDir(dataDir)
+	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   dataDir,
-		Target:   dockerDataDir,
+		Target:   constant.DockerDataDir,
 		ReadOnly: false,
 	})
 
-	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
-	err = mkDir(logsDir)
+	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
+	err = systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   logsDir,
-		Target:   dockerLogDir,
+		Target:   job_docker.DockerLogDir,
 		ReadOnly: false,
 	})
 

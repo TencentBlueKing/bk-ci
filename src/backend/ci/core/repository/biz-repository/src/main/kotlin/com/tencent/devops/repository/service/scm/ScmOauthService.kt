@@ -203,6 +203,9 @@ class ScmOauthService @Autowired constructor(
                 ScmType.CODE_SVN -> {
                     svnConfig.svnHookUrl
                 }
+                ScmType.CODE_TGIT -> {
+                    gitConfig.tGitHookUrl
+                }
                 else -> {
                     throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                 }

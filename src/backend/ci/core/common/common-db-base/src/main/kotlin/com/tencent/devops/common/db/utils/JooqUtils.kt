@@ -28,12 +28,15 @@
 package com.tencent.devops.common.db.utils
 
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
-import org.jooq.DatePart
-import org.jooq.Field
-import org.jooq.exception.DataAccessException
-import org.jooq.impl.DSL
 import java.math.BigDecimal
 import java.sql.Timestamp
+import org.jooq.DatePart
+import org.jooq.Field
+import org.jooq.Record
+import org.jooq.SelectOptionStep
+import org.jooq.SelectUnionStep
+import org.jooq.exception.DataAccessException
+import org.jooq.impl.DSL
 
 object JooqUtils {
 
@@ -94,6 +97,13 @@ object JooqUtils {
         )
     }
 
+    fun <T> sum(data1: Field<T>, data2: Field<T>, operation: String): Field<BigDecimal> {
+        return DSL.field(
+            "sum(${data1.name}$operation${data2.name})",
+            BigDecimal::class.java
+        )
+    }
+
     fun <T> productSum(t1: Field<T>, t2: Field<T>): Field<BigDecimal> {
         return DSL.field(
             "sum(${t1.name} * ${t2.name})",
@@ -108,3 +118,9 @@ object JooqUtils {
         )
     }
 }
+
+fun <R : Record> SelectOptionStep<R>.skipCheck(): SelectUnionStep<R> {
+    return this.option("/*$SKIP_CHECK*/")
+}
+
+const val SKIP_CHECK = "@skip_check@"

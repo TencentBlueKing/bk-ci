@@ -123,10 +123,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -137,6 +133,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -1062,9 +1062,10 @@ class TemplateFacadeService @Autowired constructor(
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
-                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
-                language = userId
-            ))
+                    messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
@@ -1375,9 +1376,18 @@ class TemplateFacadeService @Autowired constructor(
                 params = arrayOf("version or versionName")
             )
         }
+
+        // 查询该模板的源模板ID(只查研发商店模板的源模板ID这种情况)
+        val srcTemplateId = templateDao.getSrcTemplateId(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            type = TemplateType.CONSTRAINT.name
+        )
+
         val template = templateDao.getTemplate(
             dslContext = dslContext,
-            templateId = templateId,
+            templateId = srcTemplateId ?: templateId,
             versionName = versionName,
             version = version
         )
@@ -1391,7 +1401,8 @@ class TemplateFacadeService @Autowired constructor(
                     templateVersion = template.version,
                     versionName = template.versionName,
                     templateContent = template.template,
-                    templateInstanceUpdate = it
+                    templateInstanceUpdate = it,
+                    srcTemplateId = srcTemplateId
                 )
                 successPipelines.add(it.pipelineName)
             } catch (ignored: DuplicateKeyException) {
@@ -1424,20 +1435,25 @@ class TemplateFacadeService @Autowired constructor(
         templateVersion: Long,
         versionName: String,
         templateContent: String,
-        templateInstanceUpdate: TemplateInstanceUpdate
+        templateInstanceUpdate: TemplateInstanceUpdate,
+        srcTemplateId: String? = null
     ) {
-        val srcTemplateId = templateDao.getSrcTemplateId(
-            dslContext = dslContext,
-            projectId = projectId,
-            templateId = templateId,
-            type = TemplateType.CONSTRAINT.name
-        )
-        if (srcTemplateId != null) {
+        val templateSrcTemplateId = if (srcTemplateId.isNullOrBlank()) {
+            templateDao.getSrcTemplateId(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = templateId,
+                type = TemplateType.CONSTRAINT.name
+            )
+        } else {
+            srcTemplateId
+        }
+        if (templateSrcTemplateId != null) {
             // 安装的研发商店模板需校验模板下组件可见范围
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateUserTemplateComponentVisibleDept(
                     userId = userId,
-                    templateCode = srcTemplateId,
+                    templateCode = templateSrcTemplateId,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
@@ -1603,25 +1619,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
-        with(setting) {
-            return PipelineSetting(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = templateName,
-                desc = desc,
-                runLockType = runLockType,
-                successSubscription = successSubscription,
-                failSubscription = failSubscription,
-                labels = labels,
-                waitQueueTimeMinute = waitQueueTimeMinute,
-                maxQueueSize = maxQueueSize,
-                concurrencyGroup = concurrencyGroup,
-                hasPermission = hasPermission,
-                maxPipelineResNum = maxPipelineResNum,
-                maxConRunningQueueSize = maxConRunningQueueSize,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
-            )
-        }
+        return setting.copy(pipelineId = pipelineId, pipelineName = templateName)
     }
 
     /**

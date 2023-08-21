@@ -41,6 +41,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -63,10 +64,6 @@ class RbacProjectPermissionService(
     // 项目是否需要开启审批
     @Value("\${auth.project.approval:#{false}}")
     private val authProjectApproval: Boolean = false
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(RbacProjectPermissionService::class.java)
-    }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return authProjectApi.checkProjectUser(
@@ -98,11 +95,17 @@ class RbacProjectPermissionService(
     ): String {
         var authProjectId = ""
         with(authProjectCreateInfo) {
+            val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+                ProjectTipsStatus.SHOW_CREATE_PENDING.status
+            } else {
+                ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
+            }
             projectApprovalService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 approvalStatus = approvalStatus,
-                subjectScopes = subjectScopes
+                subjectScopes = subjectScopes,
+                tipsStatus = tipsStatus
             )
             if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
                 // 创建兼容的权限中心项目
@@ -113,7 +116,6 @@ class RbacProjectPermissionService(
                 ) ?: ""
             }
         }
-
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
@@ -149,6 +151,7 @@ class RbacProjectPermissionService(
                 defaultMessage = "Projects($englishName) in approval cannot be modified"
             )
         }
+        val beforeUpdateProjectApprovalInfo = projectApprovalService.get(projectId = englishName)
         with(resourceUpdateInfo) {
             projectApprovalService.update(
                 userId = userId,
@@ -157,25 +160,33 @@ class RbacProjectPermissionService(
                 subjectScopes = subjectScopes
             )
         }
-
-        // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
-        if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
-            authResourceApi.createResource(
-                user = resourceUpdateInfo.userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = englishName,
-                resourceCode = englishName,
-                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+        try {
+            // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
+            if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
+                authResourceApi.createResource(
+                    user = resourceUpdateInfo.userId,
+                    serviceCode = projectAuthServiceCode,
+                    resourceType = AuthResourceType.PROJECT,
+                    projectCode = englishName,
+                    resourceCode = englishName,
+                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+                )
+            } else {
+                authResourceApi.modifyResource(
+                    serviceCode = projectAuthServiceCode,
+                    resourceType = AuthResourceType.PROJECT,
+                    projectCode = englishName,
+                    resourceCode = englishName,
+                    resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+                )
+            }
+        } catch (ignore: Exception) {
+            logger.warn(
+                "update auth resource failed, " +
+                    "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
             )
-        } else {
-            authResourceApi.modifyResource(
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = englishName,
-                resourceCode = englishName,
-                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
-            )
+            projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
+            throw ignore
         }
     }
 
@@ -234,5 +245,9 @@ class RbacProjectPermissionService(
             permission = permission,
             supplier = null
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(RbacProjectPermissionService::class.java)
     }
 }

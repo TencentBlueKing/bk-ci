@@ -27,11 +27,13 @@
 
 package com.tencent.devops.store.utils
 
+import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 object StoreUtils {
@@ -127,6 +129,20 @@ object StoreUtils {
             "$dataKey.$fixPrefixName"
         } else {
             dataKey
+        }
+    }
+
+    /**
+     * 获取组件的国际化目录
+     * @param language 开发语言
+     * @param packageSourceTypeEnum 包类型
+     * @return 国际化目录
+     */
+    fun getStoreI18nDir(language: String, packageSourceTypeEnum: PackageSourceTypeEnum): String {
+        return if (language == JAVA && packageSourceTypeEnum == PackageSourceTypeEnum.REPO) {
+            "src/main/resources/i18n"
+        } else {
+            "i18n"
         }
     }
 }

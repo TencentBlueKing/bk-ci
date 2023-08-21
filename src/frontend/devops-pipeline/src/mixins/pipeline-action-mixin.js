@@ -120,6 +120,7 @@ export default {
                         latestBuildRoute: {
                             name: 'pipelinesDetail',
                             params: {
+                                type: 'executeDetail',
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
                                 buildNo: item.latestBuildId
@@ -219,7 +220,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
-                
+                pipeline.hasCollect = !pipeline.hasCollect
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
@@ -431,7 +432,6 @@ export default {
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
-                console.log(this.pipelineMap, pipelineId)
                 if (this.pipelineMap[pipelineId]) {
                     // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                     Object.assign(this.pipelineMap[pipelineId], {

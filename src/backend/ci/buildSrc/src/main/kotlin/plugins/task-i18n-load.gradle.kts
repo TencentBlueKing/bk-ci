@@ -28,10 +28,14 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
 
-val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
-println("rootDir is: $rootDir, i18nPath is: $i18nPath, projectName is: ${project.name}")
+val i18nPath = joinPath(
+    rootDir.absolutePath.replace("${File.separator}src${File.separator}backend${File.separator}ci", ""),
+    "support-files",
+    "i18n"
+)
+logger.debug("rootDir is: {}, i18nPath is: {}, projectName is: {}", rootDir, i18nPath, project.name)
 if (File(i18nPath).isDirectory) {
-    println("i18n load register , Path is $i18nPath")
+    logger.debug("i18n load register , Path is $i18nPath")
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
         doLast {
@@ -49,7 +53,7 @@ if (File(i18nPath).isDirectory) {
                 } else {
                     parts.size
                 }
-                val projectNameSb = StringBuilder();
+                val projectNameSb = StringBuilder()
                 for (i in 1 until num) {
                     if (i != num - 1) {
                         projectNameSb.append(parts[i]).append("-")
@@ -61,38 +65,39 @@ if (File(i18nPath).isDirectory) {
             }
             val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 
-            println("copy i18n into $moduleName classpath... , moduleFileNames is : $moduleFileNames")
-            for (fileName in moduleFileNames) {
-                // set variables for input files
-                val file1 = File(joinPath(i18nPath, fileName))
-                val file2 = File(joinPath(i18nPath, moduleName, fileName))
-                val targetFile = File(
+            logger.debug("copy i18n into {} classpath... , moduleFileNames is : {}", moduleName, moduleFileNames)
+            val srcFile = File(joinPath(i18nPath, moduleName))
+            if (srcFile.exists()) {
+                val destFile = File(
                     joinPath(
                         projectDir.absolutePath,
                         "src",
                         "main",
                         "resources",
-                        "i18n",
-                        fileName
+                        "i18n"
                     )
                 )
-                targetFile.parentFile.mkdirs()
-                val targetProperties = Properties()
-                if (targetFile.createNewFile()) {
-                    println("create target file : ${targetFile.absolutePath}")
-                    // create output file with first input
-                    if (file1.exists()) {
-                        println("copy file1: ${file1.absolutePath} now...")
-                        targetProperties.load(FileInputStream(file1))
+                logger.debug("copy srcFile: ${srcFile.absolutePath} now...")
+                copy {
+                    from(srcFile.toPath())
+                    into(destFile.toPath())
+                }
+                logger.debug("copy srcFile: ${srcFile.absolutePath} finish...")
+                // 处理模块的properties文件(要合并公共的properties文件)
+                destFile.listFiles()?.filter { it.name.endsWith("properties") }?.forEach { propertyFile ->
+                    val commonPropertyFile = File(joinPath(i18nPath, propertyFile.name))
+                    val targetProperties = Properties()
+                    if (commonPropertyFile.exists()) {
+                        logger.debug("copy commonPropertyFile: ${commonPropertyFile.absolutePath} now...")
+                        targetProperties.load(FileInputStream(commonPropertyFile))
                     }
                     // append second input to output file if it exists
-                    if (file2.exists()) {
-                        println("copy file2: ${file2.absolutePath} now...")
-                        targetProperties.load(FileInputStream(file2))
+                    if (propertyFile.exists()) {
+                        logger.debug("copy modulePropertyFile: ${propertyFile.absolutePath} now...")
+                        targetProperties.load(FileInputStream(propertyFile))
                     }
+                    targetProperties.store(FileOutputStream(propertyFile), "i18n")
                 }
-                targetProperties.store(FileOutputStream(targetFile), "i18n")
-                println("Target file generated: ${targetFile.absolutePath}")
             }
         }
     }

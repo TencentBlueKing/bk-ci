@@ -42,13 +42,16 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import java.util.concurrent.TimeUnit
+import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "NestedBlockDepth", "TooManyFunctions")
 class MigrateV0PolicyService constructor(
@@ -62,7 +65,9 @@ class MigrateV0PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -72,16 +77,16 @@ class MigrateV0PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService
+    rbacCacheService = rbacCacheService,
+    deptService = deptService,
+    permissionGroupPoliciesService = permissionGroupPoliciesService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateV0PolicyService::class.java)
 
-        // v0默认用户组过期时间 2038-01-01
-        private const val V0_DEFAULT_GROUP_EXPIRED_AT = 2145888000L
-        // v0用户自定义组默认360天
-        private const val V0_CUSTOM_GROUP_EXPIRED_DAY = 360L
+        // v0默认用户组过期时间,2年或者3年
+        private val V0_GROUP_EXPIRED_DAY = listOf(180L, 360L, 720L, 1080L)
 
         // v0的资源类型group(版本体验、质量红线组),task(版本体验、codecc任务)存在重复,iam迁移时添加了serviceCode,所以需要转换
         private val oldActionMappingNewAction = mapOf(
@@ -98,9 +103,23 @@ class MigrateV0PolicyService constructor(
         // v0有的action，但是在rbac没有,需要跳过
         private val skipActions = listOf("quality_gate_group_enable")
 
+        // v0有的资源，但是在rbac没有,需要跳过
+        private val skipResourceTypes = listOf(
+            "dev_image", "prod_image", "custom_dir", "gs-apk_task",
+            "cluster_test", "cluster_prod", "namespace", "templates",
+            "metric", "job_template", "script", "scan_task", "wetest_task",
+            "email_group", "xinghai_all", "android", "ios", "macos"
+        )
+
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
+        private val certActions = listOf("cert_edit")
+        private val envNodeActions = listOf("env_node_edit", "env_node_use", "env_node_delete")
+        private const val V0_QC_GROUP_NAME = "质量管理员"
+        private const val MAX_GROUP_MEMBER = 1000
+        private const val CERT_VIEW = "cert_view"
+        private const val ENV_NODE_VIEW = "env_node_view"
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -133,8 +152,12 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
+            // 如果发现资源类型是跳过的,则跳过
+            if (skipResourceTypes.contains(permission.resources[0].type)) {
+                return@permission
+            }
             val (resourceCreateActions, resourceActions) = buildRbacActions(
-                permission = permission
+                actions = permission.actions.map { it.id }
             )
             if (resourceCreateActions.isNotEmpty()) {
                 projectActions.addAll(resourceCreateActions)
@@ -172,10 +195,14 @@ class MigrateV0PolicyService constructor(
         return rbacAuthorizationScopes
     }
 
-    private fun buildRbacActions(permission: AuthorizationScopes): Pair<List<Action>, List<Action>> {
+    /**
+     *   在构造用户组授权范围的动作组时，由于rbac和v0版本版本动作不一致，需要做一些转换
+     *   同时由于rbac增加了一些v0版本不做限制的动作，为了保持旧版的用户组权限不变，需要增加一些额外的动作
+     * */
+    private fun buildRbacActions(actions: List<String>): Pair<List<Action>, List<Action>> {
         val resourceCreateActions = mutableListOf<Action>()
         val resourceActions = mutableListOf<Action>()
-        replaceOrRemoveAction(permission.actions.map { it.id }).forEach { action ->
+        fillNewActions(actions).forEach { action ->
             // 创建的action,需要关联在项目下
             if (action.contains(AuthPermission.CREATE.value)) {
                 resourceCreateActions.add(Action(action))
@@ -184,6 +211,32 @@ class MigrateV0PolicyService constructor(
             }
         }
         return Pair(resourceCreateActions, resourceActions)
+    }
+
+    /**
+     * action替换或移除
+     */
+    private fun fillNewActions(actions: List<String>): List<String> {
+        val rbacActions = actions.toMutableList()
+        actions.forEach action@{ action ->
+            when {
+                oldActionMappingNewAction.containsKey(action) -> {
+                    rbacActions.remove(action)
+                    rbacActions.add(oldActionMappingNewAction[action]!!)
+                }
+                skipActions.contains(action) -> {
+                    logger.info("skip $action action")
+                    rbacActions.remove(action)
+                }
+                certActions.contains(action) && !rbacActions.contains(CERT_VIEW) -> {
+                    rbacActions.add(CERT_VIEW)
+                }
+                envNodeActions.contains(action) && !rbacActions.contains(ENV_NODE_VIEW) -> {
+                    rbacActions.add(ENV_NODE_VIEW)
+                }
+            }
+        }
+        return rbacActions
     }
 
     @Suppress("NestedBlockDepth", "ReturnCount", "LongMethod")
@@ -223,6 +276,7 @@ class MigrateV0PolicyService constructor(
                         val v0ResourceCode = managerPath.id
                         // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
                         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                            projectCode = projectCode,
                             resourceType = pathResourceType,
                             migrateResourceCode = v0ResourceCode
                         ) ?: v0ResourceCode
@@ -279,25 +333,58 @@ class MigrateV0PolicyService constructor(
     override fun matchResourceGroup(
         userId: String,
         projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int? {
+    ): List<Int> {
         val resource = permission.resources[0]
         val resourceType = oldResourceTypeMappingNewResourceType[resource.type] ?: resource.type
-        val userActions = permission.actions.map { it.id }
-        logger.info("find match resource group|$projectCode|$resourceType|$userActions")
-        if (resource.paths.isEmpty() || resource.paths[0].isEmpty()) {
-            logger.info("resource paths is empty,skip|$projectCode|$resourceType|$userActions")
-            return null
+        // 如果发现资源类型是跳过的,则跳过
+        if (skipResourceTypes.contains(resourceType)) {
+            return emptyList()
         }
-        val v0ResourceCode = resource.paths[0][0].id
-        return v0MatchMinResourceGroup(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            v0ResourceCode = v0ResourceCode,
-            userActions = userActions
+        val userActions = permission.actions.map { it.id }
+        logger.info("find match resource group|$userId|$projectCode|$resourceType|$userActions")
+        val (resourceCreateActions, resourceActions) = buildRbacActions(
+            actions = permission.actions.map { it.id }
         )
+        val matchGroupIds = mutableListOf<Int>()
+        // 创建action匹配到的组
+        if (resourceCreateActions.isNotEmpty()) {
+            v0MatchMinResourceGroup(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                v0ResourceCode = projectCode,
+                userActions = resourceCreateActions.map { it.id }
+            )?.let { matchGroupIds.add(it) }
+        }
+        // 资源action匹配到的组
+        if (resourceActions.isNotEmpty()) {
+            val matchResourceGroupId = if (resource.paths.isEmpty() || resource.paths[0].isEmpty()) {
+                matchOrCreateProjectResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    actions = resourceActions.map { it.id },
+                    gradeManagerId = gradeManagerId
+                )
+            } else {
+                val v0ResourceCode = resource.paths[0][0].id
+                v0MatchMinResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    v0ResourceCode = v0ResourceCode,
+                    userActions = resourceActions.map { it.id }
+                )
+            }
+            matchResourceGroupId?.let { matchGroupIds.add(matchResourceGroupId) }
+        }
+        // 项目下任意资源
+        return matchGroupIds
     }
 
     private fun v0MatchMinResourceGroup(
@@ -310,6 +397,7 @@ class MigrateV0PolicyService constructor(
         logger.info("match min resource group|$userId|$projectCode|$resourceType|$v0ResourceCode|$userActions")
         // 先将v0资源code转换成rbac资源code
         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+            projectCode = projectCode,
             resourceType = resourceType,
             migrateResourceCode = v0ResourceCode
         ) ?: return null
@@ -319,38 +407,27 @@ class MigrateV0PolicyService constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = rbacResourceCode,
-            actions = replaceOrRemoveAction(userActions)
+            actions = fillNewActions(userActions)
         )
     }
 
-    /**
-     * action替换或移除
-     *
-     */
-    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
-        val rbacActions = actions.toMutableList()
-        actions.forEach action@{ action ->
-            when {
-                oldActionMappingNewAction.containsKey(action) -> {
-                    rbacActions.remove(action)
-                    rbacActions.add(oldActionMappingNewAction[action]!!)
-                }
-                skipActions.contains(action) -> {
-                    logger.info("skip $action action")
-                    rbacActions.remove(action)
-                }
-            }
-        }
-        return rbacActions
-    }
-
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
-        val expiredAt = if (defaultGroup) {
-            V0_DEFAULT_GROUP_EXPIRED_AT
-        } else {
-            System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(V0_CUSTOM_GROUP_EXPIRED_DAY)
+        if (members.isNullOrEmpty()) {
+            return
         }
-        members?.forEach member@{ member ->
+        if (members.size > MAX_GROUP_MEMBER) {
+            logger.warn("group member size is too large, max size is $MAX_GROUP_MEMBER")
+            return
+        }
+        members.forEach member@{ member ->
+            val expiredDay = if (defaultGroup) {
+                // 默认用户组,2年或3年随机过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
+            } else {
+                // 自定义用户组,半年或者一年过期
+                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
+            }
+            val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
@@ -360,7 +437,11 @@ class MigrateV0PolicyService constructor(
         }
     }
 
-    override fun getGroupName(result: MigrateTaskDataResult): String {
-        return result.subject.name!!
+    override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
+        return if (result.subject.name == V0_QC_GROUP_NAME) {
+            RBAC_QC_GROUP_NAME
+        } else {
+            result.subject.name!!
+        }
     }
 }

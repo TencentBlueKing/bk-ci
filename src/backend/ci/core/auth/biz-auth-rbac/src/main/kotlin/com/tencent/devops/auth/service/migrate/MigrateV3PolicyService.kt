@@ -43,11 +43,14 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 /**
  * v3权限策略迁移到rbac
@@ -71,7 +74,9 @@ class MigrateV3PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -81,7 +86,9 @@ class MigrateV3PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService
+    rbacCacheService = rbacCacheService,
+    deptService = deptService,
+    permissionGroupPoliciesService = permissionGroupPoliciesService
 ) {
 
     companion object {
@@ -97,6 +104,13 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_ENABLE = "project_enable"
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
+        // 流水线查看权限,v3没有pipeline_list权限,迁移至rbac需要添加
+        private const val PIPELINE_VIEW = "pipeline_view"
+        // 项目访问权限
+        private const val PIPELINE_LIST = "pipeline_list"
+
+        // 过期用户增加5分钟
+        private const val EXPIRED_MEMBER_ADD_TIME = 5L
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
 
@@ -201,6 +215,7 @@ class MigrateV3PolicyService constructor(
                     }
                     // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
                     val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                        projectCode = projectCode,
                         resourceType = managerPath.type,
                         migrateResourceCode = v3ResourceCode
                     ) ?: v3ResourceCode
@@ -234,9 +249,11 @@ class MigrateV3PolicyService constructor(
     override fun matchResourceGroup(
         userId: String,
         projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
         managerGroupId: Int,
         permission: AuthorizationScopes
-    ): Int? {
+    ): List<Int> {
         // v3资源都只有一层
         val resource = permission.resources[0]
         val resourceType = resource.type
@@ -244,12 +261,14 @@ class MigrateV3PolicyService constructor(
         logger.info("match resource group|$projectCode|$resourceType|$userActions")
         // 如果path为空,则直接跳过
         if (resource.paths.isEmpty()) {
-            return null
+            return emptyList()
         }
-        return when {
+        val groupIds = mutableListOf<Int>()
+        val matchGroupId = when {
             // 如果有all_action,直接加入管理员组
             userActions.contains(Constants.ALL_ACTION) -> managerGroupId
-            isProjectPolicy(resource) ->
+            // 项目类型
+            resource.type == AuthResourceType.PROJECT.value ->
                 v3MatchMinResourceGroup(
                     userId = userId,
                     projectCode = projectCode,
@@ -257,13 +276,19 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = projectCode,
                     userActions = permission.actions.map { it.id }
                 )
-            resource.paths[0].size >= 2 && resource.paths[0][1].id == "*" -> {
-                logger.info(
-                    "user cannot match all resources and matching will be skipped|" +
-                        "$projectCode|$resourceType|$userActions"
+            // 项目任意资源
+            isAnyResource(resource) -> {
+                val finalUserActions = replaceOrRemoveAction(userActions)
+                matchOrCreateProjectResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    actions = finalUserActions,
+                    gradeManagerId = gradeManagerId
                 )
-                null
             }
+            // 具体资源权限
             resource.paths[0].size >= 2 -> {
                 v3MatchMinResourceGroup(
                     userId = userId,
@@ -275,14 +300,17 @@ class MigrateV3PolicyService constructor(
             }
             else -> null
         }
+        matchGroupId?.let { groupIds.add(it) }
+        return groupIds
     }
 
-    private fun isProjectPolicy(
+    /**
+     * 有项目下任意资源权限
+     */
+    private fun isAnyResource(
         resource: ManagerResources
     ): Boolean {
-        // 资源类型是项目或者资源值是*,表示所有的资源，那么也应该迁移到项目组下
-        return resource.type == AuthResourceType.PROJECT.value ||
-            // 项目下所有资源
+        return resource.paths[0].size >= 2 && resource.paths[0][1].id == "*" ||
             (resource.paths[0].size == 1 && resource.paths[0][0].type == AuthResourceType.PROJECT.value)
     }
 
@@ -296,6 +324,7 @@ class MigrateV3PolicyService constructor(
         logger.info("match min resource group|$userId|$projectCode|$resourceType|$v3ResourceCode|$userActions")
         // 先将v3资源code转换成rbac资源code
         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+            projectCode = projectCode,
             resourceType = resourceType,
             migrateResourceCode = v3ResourceCode
         ) ?: return null
@@ -332,25 +361,31 @@ class MigrateV3PolicyService constructor(
         if (finalUserActions.contains(QUALITY_GROUP_ENABLE)) {
             finalUserActions.remove(QUALITY_GROUP_ENABLE)
         }
+        // v3没有pipeline_list权限,但是rbac有这个权限,迁移时需要补充
+        if (finalUserActions.contains(PIPELINE_VIEW)) {
+            finalUserActions.add(PIPELINE_LIST)
+        }
         return finalUserActions
     }
 
     override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
         members?.forEach member@{ member ->
-            // 过期的用户直接移除
-            if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
-                return@member
+            // 已过期用户,迁移时无法添加到用户组成员,增加5分钟添加到iam就过期，方便用户续期
+            val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
+                System.currentTimeMillis() / MILLISECOND + TimeUnit.MINUTES.toSeconds(EXPIRED_MEMBER_ADD_TIME)
+            } else {
+                member.expiredAt
             }
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
-                .expiredAt(member.expiredAt)
+                .expiredAt(expiredAt)
                 .build()
             v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
         }
     }
 
-    override fun getGroupName(result: MigrateTaskDataResult): String {
-        return result.subject.name!!.substringAfter("${result.projectId}-")
+    override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {
+        return result.subject.name!!.substringAfter("$projectName-")
     }
 }

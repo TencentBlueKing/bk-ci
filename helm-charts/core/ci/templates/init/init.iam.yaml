@@ -35,7 +35,7 @@ spec:
       {{- end }}
       containers:
         - name: init-iam
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/bkiam
           {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
@@ -60,8 +60,6 @@ spec:
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (6,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (9,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/experience/api/open/experience/callback/task", "experience_task", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (10,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/experience/api/open/experience/callback/group", "experience_group", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/project/api/open/project/callback/", "project", "ci");
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;

@@ -28,6 +28,8 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -110,22 +112,37 @@ class ProjectDao {
         }
     }
 
-    fun list(
+    fun list(dslContext: DSLContext, limit: Int, offset: Int): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(true))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun listMigrateProjects(
         dslContext: DSLContext,
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
-        offset: Int,
-        enabled: Boolean? = null,
-        channelCode: ProjectChannelCode? = null
+        offset: Int
     ): Result<TProjectRecord> {
+        val centerId = migrateProjectConditionDTO.centerId
+        val deptId = migrateProjectConditionDTO.deptId
+        val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
+        val creator = migrateProjectConditionDTO.projectCreator
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .let {
-                    if (enabled != null) it.and(ENABLED.eq(enabled)) else it
-                }
-                .let {
-                    if (channelCode != null) it.and(CHANNEL.eq(channelCode.name)) else it
-                }
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name))
+                .and(
+                    ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                        .or(ROUTER_TAG.isNull)
+                )
+                .let { if (centerId == null) it else it.and(CENTER_ID.eq(centerId)) }
+                .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
+                .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
+                .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
@@ -592,6 +609,7 @@ class ProjectDao {
                 .set(KIND, projectInfoRequest.kind)
                 .set(ENABLED, projectInfoRequest.enabled)
                 .set(PIPELINE_LIMIT, projectInfoRequest.pipelineLimit)
+                .set(PROPERTIES, projectInfoRequest.properties?.let { JsonUtil.toJson(it, false) })
 
             if (projectInfoRequest.hybridCCAppId != null) {
                 step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)
@@ -717,6 +735,14 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(SUBJECT_SCOPES, SubjectScopesStr).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateCreatorByCode(dslContext: DSLContext, projectCode: String, creator: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(CREATOR, creator).where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }

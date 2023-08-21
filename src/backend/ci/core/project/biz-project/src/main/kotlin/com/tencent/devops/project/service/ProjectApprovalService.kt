@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("TooManyFunctions")
 class ProjectApprovalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectApprovalDao: ProjectApprovalDao,
@@ -62,19 +63,16 @@ class ProjectApprovalService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectApprovalService::class.java)
+        private const val REVOKE_ITSM_APPLICATION = "REVOKED"
     }
 
     fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        subjectScopes: List<SubjectScopeInfo>,
+        tipsStatus: Int
     ): Int {
-        val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
-            ProjectTipsStatus.SHOW_CREATE_PENDING.status
-        } else {
-            ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
-        }
         return projectApprovalDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -103,6 +101,15 @@ class ProjectApprovalService @Autowired constructor(
             approvalStatus = approvalStatus,
             subjectScopes = subjectScopes,
             tipsStatus = tipsStatus
+        )
+    }
+
+    fun rollBack(
+        projectApprovalInfo: ProjectApprovalInfo
+    ) {
+        projectApprovalDao.update(
+            dslContext = dslContext,
+            projectApprovalInfo = projectApprovalInfo
         )
     }
 
@@ -212,13 +219,21 @@ class ProjectApprovalService @Autowired constructor(
         }
     }
 
-    fun createReject(projectId: String, applicant: String, approver: String) {
-        logger.info("project create reject|$projectId|$applicant|$approver")
+    fun createRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ) {
+        logger.info("create project reject or revoke|$projectId|$itsmTicketStatus|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project $projectId is not exist"
         )
+        val tipsStatus =
+            if (itsmTicketStatus == REVOKE_ITSM_APPLICATION) ProjectTipsStatus.SHOW_CREATE_REVOKE.status
+            else ProjectTipsStatus.SHOW_CREATE_REJECT.status
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -226,7 +241,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectCode = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.CREATE_REJECT.status,
-                tipsStatus = ProjectTipsStatus.SHOW_CREATE_REJECT.status
+                tipsStatus = tipsStatus
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
@@ -310,13 +325,21 @@ class ProjectApprovalService @Autowired constructor(
         }
     }
 
-    fun updateReject(projectId: String, applicant: String, approver: String) {
+    fun updateRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ) {
         logger.info("project update reject|$projectId|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project $projectId is not exist"
         )
+        val tipsStatus =
+            if (itsmTicketStatus == REVOKE_ITSM_APPLICATION) ProjectTipsStatus.NOT_SHOW.status
+            else ProjectTipsStatus.SHOW_UPDATE_REJECT.status
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -324,7 +347,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectCode = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status,
-                tipsStatus = ProjectTipsStatus.SHOW_UPDATE_REJECT.status
+                tipsStatus = tipsStatus
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
@@ -380,7 +403,8 @@ class ProjectApprovalService @Autowired constructor(
                     type = AuthConstants.ALL_MEMBERS,
                     name = AuthConstants.ALL_MEMBERS_NAME
                 )
-            )
+            ),
+            tipsStatus = ProjectTipsStatus.NOT_SHOW.status
         )
     }
 }

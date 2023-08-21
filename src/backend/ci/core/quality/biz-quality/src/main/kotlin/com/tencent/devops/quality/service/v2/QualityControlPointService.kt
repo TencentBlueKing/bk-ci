@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -40,11 +41,14 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointData
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_STAGE_KEY
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.pojo.po.ControlPointPO
 import com.tencent.devops.quality.util.ElementUtils
+import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -63,7 +67,8 @@ class QualityControlPointService @Autowired constructor(
     private val controlPointDao: QualityControlPointDao,
     private val qualityRuleDao: QualityRuleDao,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) {
 
     @PostConstruct
@@ -74,18 +79,20 @@ class QualityControlPointService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality control point")
                     val classPathResource = ClassPathResource(
-                        "controlPoint_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}controlPoint_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                     val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
                     controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
                     logger.info("init quality control point end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality control point fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
@@ -132,14 +139,20 @@ class QualityControlPointService @Autowired constructor(
         return QualityControlPoint(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
-            name = record.name ?: "",
-            stage = record.stage ?: "",
+            name = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.elementType),
+                defaultMessage = record.name ?: ""
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.elementType),
+                defaultMessage = record.stage ?: ""
+            ),
             availablePos = if (record.availablePosition.isNullOrBlank()) {
                 listOf()
             } else {
-                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+                record.availablePosition.split(",").map { name -> ControlPointPosition.create(name) }
             },
-            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            defaultPos = ControlPointPosition.create(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion
         )
@@ -158,10 +171,17 @@ class QualityControlPointService @Autowired constructor(
                 QualityControlPoint(
                     hashId = HashUtil.encodeLongId(it.id),
                     type = it.elementType,
-                    name = it.name,
-                    stage = it.stage,
-                    availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                    defaultPos = ControlPointPosition(it.defaultPosition),
+                    name = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(it.elementType),
+                        defaultMessage = it.name
+                    ),
+                    stage = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.elementType),
+                        defaultMessage = it.stage
+                    ),
+                    availablePos = it.availablePosition.split(",")
+                        .map { name -> ControlPointPosition.create(name) },
+                    defaultPos = ControlPointPosition.create(it.defaultPosition),
                     enable = it.enable,
                     atomVersion = it.atomVersion
                 )

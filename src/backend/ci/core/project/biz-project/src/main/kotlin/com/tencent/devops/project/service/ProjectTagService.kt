@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -38,12 +39,14 @@ import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODEC
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
@@ -82,6 +85,9 @@ class ProjectTagService @Autowired constructor(
     @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
 
+    @Value("\${system.inContainer:#{null}}")
+    private val inContainerTags: String? = null
+
     private val projectRouterCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(2, TimeUnit.MINUTES)
@@ -110,6 +116,7 @@ class ProjectTagService @Autowired constructor(
                 )
                 updateTagByProject(projectTagUpdateDTO)
             }
+
             SystemEnums.CODECC, SystemEnums.REPO -> {
                 val projectTagUpdateDTO = ProjectExtSystemTagDTO(routerTag, projectCodeList, system = system.name)
                 updateExtSystemRouterTag(projectTagUpdateDTO)
@@ -121,7 +128,7 @@ class ProjectTagService @Autowired constructor(
     fun updateTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByProject: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
-        checkProject(projectTagUpdateDTO.projectCodeList)
+        // checkProject(projectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
             englishNames = projectTagUpdateDTO.projectCodeList!!,
@@ -329,14 +336,21 @@ class ProjectTagService @Autowired constructor(
         return projectClusterCheck(projectInfo.routerTag)
     }
 
-    private fun projectClusterCheck(routerTag: String?): Boolean {
-        val tag = bkTag.getLocalTag()
-        // 默认集群是不会有routerTag的信息
-        if (routerTag.isNullOrBlank()) {
-            // 只有默认集群在routerTag为空的时候才返回true
-            return tag == prodTag
+    @SuppressWarnings("ReturnCount")
+    private fun projectClusterCheck(projectTag: String?): Boolean {
+        val isContainerProject = inContainerTags?.split(",")?.contains(projectTag) == true
+        if (isContainerProject && KubernetesUtils.notInContainer()) { // 容器化项目需要在容器化环境下执行
+            return false
         }
-        return tag == routerTag
+        // 容器化项目需要将本地tag中的kubernetes-去掉来比较
+        val localTag = bkTag.getLocalTag()
+        val clusterTag = if (isContainerProject) localTag.replace("kubernetes-", "") else localTag
+        // 默认集群是不会有routerTag的信息
+        if (projectTag.isNullOrBlank()) {
+            // 只有默认集群在routerTag为空的时候才返回true
+            return clusterTag == prodTag
+        }
+        return clusterTag == projectTag
     }
 
     private fun checkRouteTag(routerTag: String) {
@@ -426,6 +440,10 @@ class ProjectTagService @Autowired constructor(
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
         } ?: emptyMap()
+
+        val projectProperties = projectData.properties?.let {
+            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
+        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
         return ProjectInfoResponse(
             projectId = projectData.projectId,
             projectName = projectData.projectName,
@@ -457,7 +475,8 @@ class ProjectTagService @Autowired constructor(
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
             enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit
+            pipelineLimit = projectData.pipelineLimit,
+            properties = projectProperties
         )
     }
 

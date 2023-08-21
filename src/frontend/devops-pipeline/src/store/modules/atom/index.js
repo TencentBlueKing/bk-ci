@@ -18,8 +18,8 @@
  */
 
 import actions from './actions'
-import mutations from './mutations'
 import getters from './getters'
+import mutations from './mutations'
 
 export default {
     namespaced: true,
@@ -59,8 +59,8 @@ export default {
         isAddParallelStage: false,
         insertStageIndex: null,
         insertStageIsFinally: false,
-        buildParamsMap: {},
         execDetail: null,
+        hideSkipExecTask: false,
         globalEnvs: null,
         executeStatus: false,
         saveStatus: false,

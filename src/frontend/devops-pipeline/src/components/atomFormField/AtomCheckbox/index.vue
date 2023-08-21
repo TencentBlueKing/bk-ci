@@ -26,11 +26,11 @@
             },
             desc: {
                 type: String,
-                default: false
+                default: ''
             },
             title: {
                 type: String,
-                default: false
+                default: ''
             },
             disabled: {
                 type: Boolean,

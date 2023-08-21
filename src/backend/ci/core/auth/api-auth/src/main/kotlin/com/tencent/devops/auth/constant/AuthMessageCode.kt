@@ -57,7 +57,7 @@ object AuthMessageCode {
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121009" // 权限系统: token验证失败
     const val LOGIN_USER_FREEZE = "2121010" // 账号冻结中
     const val LOGIN_USER_INFO_EXIST = "2121011" // 权限系统： 用户已存在，无需重复创建
-    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登录code校验失败
     const val MANAGER_PERMISSION_EXPIRE = "2121013" // 管理员权限过期
     const val APPROVAL_RECORD_NOT_EXIST = "2121014" // 审批记录不存在
     const val RELATED_RESOURCE_EMPTY = "2121015" // 权限系统：绑定系统资源为空
@@ -89,7 +89,7 @@ object AuthMessageCode {
     const val RESOURCE_TYPE_NOT_FOUND = "2121040" // 权限系统：资源类型{0}不存在
     const val RESOURCE_TYPE_NOT_EMPTY = "2121041" // 权限系统：资源类型不能为空
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121042" // 权限系统: 申请加入用户组失败
-    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组权限信息失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组{0}权限信息失败
     const val GET_IAM_GROUP_FAIL = "2121044" // 权限系统: 获取用户组失败
     const val GET_REDIRECT_INFORMATION_FAIL = "2121045" // 权限系统: 获取跳转链接失败
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121046" // 用户没有管理员权限
@@ -108,5 +108,6 @@ object AuthMessageCode {
     const val ERROR_PROJECT_NOT_UPGRADE = "2121059" // 权限系统: 项目尚未升级到新版权限系统
     const val MIGRATION_GROUP_DESCRIPTION = "2121060" // 用户组:{0},迁移于{1}
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121061" // 迁移项目{0}失败,权限策略对比失败
-    const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人已离职
+    const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人离职
+    const val ERROR_RESOURCE_CREATE_FAIL = "2121063" // 资源创建失败
 }
