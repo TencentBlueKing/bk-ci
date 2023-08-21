@@ -95,8 +95,8 @@ class WindowsResourceConfigDao {
     ): TWindowsResourceConfigRecord? {
         with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(SHORT_NAME.eq(zoneId)).takeIf { zoneId != null }
-            conditions.add(SIZE.eq(machineType)).takeIf { machineType != null }
+            zoneId?.let { conditions.add(SHORT_NAME.eq(it)) }
+            machineType?.let { conditions.add(SIZE.eq(it)) }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchAny()

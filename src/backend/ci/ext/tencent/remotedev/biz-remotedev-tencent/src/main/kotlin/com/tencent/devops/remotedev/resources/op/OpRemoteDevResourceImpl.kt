@@ -187,12 +187,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val resourceList = workspaceCommon.syncStartCloudResourceList()
 
         val filteredResources = resourceList.filter {
-            when {
-                !zoneId.isNullOrEmpty() -> it.zoneId == zoneId
-                !machineType.isNullOrEmpty() -> it.machineType == machineType
-                status != null -> it.status == status
-                else -> true
-            }
+            (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
+                (machineType.isNullOrEmpty() || it.machineType == machineType) &&
+                (status == null || it.status == status)
         }
 
         return Result(filteredResources.map { JsonUtil.toMap(it) })
