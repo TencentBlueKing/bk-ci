@@ -605,3 +605,24 @@
     body: "项目【${projectName}】所注册的【${events}】事件回调接口【${callbackUrl}】因多次调用失败，现已被禁用\n流水线链接：${pipelineListUrl}"
   creator: "system"
   modifior: "system"
+- index: 39
+  id: "bbd6cc0244424ebd945168ac28f18184"
+  templateCode: "MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"
+  templateName: "人工审核插件审核提醒"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "65957d6cf0ad48638965a0706648a806"
+    sender: "DevOps"
+    title: "【流水线审核提醒】你有1条流水线等待审核，请及时处理"
+    body: |
+      标题：${title}
+      审核描述：${body}
+
+      若无需提醒，请修改人工审核插件配置
+
+      PC端审核：${reviewUrl} 移动端审核：${reviewAppUrl}
+  creator: "system"
+  modifior: "system"

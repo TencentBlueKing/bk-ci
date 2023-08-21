@@ -6,9 +6,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -160,5 +162,15 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
         return Result(workspaceService.deleteSharedWorkspace(id))
+    }
+
+    override fun getProjectWorkspaceList(
+        userId: String,
+        projectId: String?,
+        systemType: WorkspaceSystemType?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ProjectWorkspace>> {
+        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
     }
 }

@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +47,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService,
     private val createControl: CreateControl,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val deleteControl: DeleteControl
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -54,8 +56,21 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         projectId: String,
         workspace: ProjectWorkspaceCreate
     ): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         createControl.asyncCreateWorkspace(userId, bkTicket, projectId, workspace)
         return Result(true)
+    }
+
+    override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = false,
+                checkDeleteImmediately = true
+            )
+        )
     }
 
     override fun getWorkspaceList(
@@ -64,6 +79,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
     }
 
@@ -73,8 +89,19 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        permissionService.checkPermission(projectId, workspaceName)
+        permissionService.checkUserManager(userId, projectId)
         deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
         return Result(true)
+    }
+
+    override fun checkManager(userId: String, projectId: String): Result<Boolean> {
+        kotlin.runCatching { permissionService.checkUserManager(userId, projectId) }.fold(
+            {
+                return Result(true)
+            },
+            {
+                return Result(false)
+            }
+        )
     }
 }

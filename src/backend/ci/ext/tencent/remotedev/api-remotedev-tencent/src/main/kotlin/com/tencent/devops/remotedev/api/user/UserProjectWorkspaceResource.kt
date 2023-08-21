@@ -39,6 +39,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -68,6 +69,21 @@ interface UserProjectWorkspaceResource {
         projectId: String,
         @ApiParam("工作空间描述", required = true)
         workspace: ProjectWorkspaceCreate
+    ): Result<Boolean>
+
+    @ApiOperation("删除工作空间")
+    @DELETE
+    @Path("/")
+    fun deleteWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
@@ -103,5 +119,17 @@ interface UserProjectWorkspaceResource {
         workspaceName: String,
         @ApiParam("工作空间描述", required = true)
         assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @ApiOperation("检查是否为该项目云研发管理员")
+    @GET
+    @Path("/checkManager")
+    fun checkManager(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
     ): Result<Boolean>
 }

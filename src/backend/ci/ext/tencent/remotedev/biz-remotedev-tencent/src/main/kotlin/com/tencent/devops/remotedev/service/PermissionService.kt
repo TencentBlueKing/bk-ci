@@ -29,22 +29,21 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -53,40 +52,45 @@ import java.util.concurrent.TimeUnit
 @Service
 class PermissionService @Autowired constructor(
     private val client: Client,
-    private val tokenService: ClientTokenService,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val redisCache: RedisCacheService
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PermissionService::class.java)
+    }
+
     @Value("\${remoteDev.enablePermission:true}")
     private val enablePermission: Boolean = true
 
-    private val projectUserCache = CacheBuilder.newBuilder()
+    private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    val baseUser = workspaceDao.fetchWorkspaceUser(dslContext, name)
-                    if (ws.ownerType == WorkspaceOwnerType.PROJECT.name) {
-                        val manager = client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                            token = tokenService.getSystemToken(null)!!,
-                            projectCode = ws.projectId,
-                            group = BkAuthGroup.MANAGER
-                        ).data
-                        return manager?.plus(baseUser) ?: baseUser
-                    }
-                    return baseUser
+                    return listOf(ws.creator)
                 }
             }
         )
 
-    fun checkPermission(userId: String, workspaceName: String) {
+    private val workspaceViewerCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, List<String>>() {
+                override fun load(name: String): List<String> {
+                    return workspaceDao.fetchWorkspaceUser(dslContext, name)
+                }
+            }
+        )
+
+    fun checkOwnerPermission(userId: String, workspaceName: String) {
         if (!enablePermission) return
 
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -94,10 +98,36 @@ class PermissionService @Autowired constructor(
         }
     }
 
+    fun checkViewerPermission(userId: String, workspaceName: String) {
+        if (!enablePermission) return
+
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access workspace $workspaceName")
+            )
+        }
+    }
+
+    fun checkUserManager(userId: String, projectId: String) {
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
+        if (projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
+    }
+
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
         if (!enablePermission) return true
 
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             return false
         }
         return true

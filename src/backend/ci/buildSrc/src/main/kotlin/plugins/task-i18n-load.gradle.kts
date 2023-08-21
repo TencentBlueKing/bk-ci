@@ -33,9 +33,9 @@ val i18nPath = joinPath(
     "support-files",
     "i18n"
 )
-println("rootDir is: $rootDir, i18nPath is: $i18nPath, projectName is: ${project.name}")
+logger.debug("rootDir is: {}, i18nPath is: {}, projectName is: {}", rootDir, i18nPath, project.name)
 if (File(i18nPath).isDirectory) {
-    println("i18n load register , Path is $i18nPath")
+    logger.debug("i18n load register , Path is $i18nPath")
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
         doLast {
@@ -53,7 +53,7 @@ if (File(i18nPath).isDirectory) {
                 } else {
                     parts.size
                 }
-                val projectNameSb = StringBuilder();
+                val projectNameSb = StringBuilder()
                 for (i in 1 until num) {
                     if (i != num - 1) {
                         projectNameSb.append(parts[i]).append("-")
@@ -65,7 +65,7 @@ if (File(i18nPath).isDirectory) {
             }
             val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 
-            println("copy i18n into $moduleName classpath... , moduleFileNames is : $moduleFileNames")
+            logger.debug("copy i18n into {} classpath... , moduleFileNames is : {}", moduleName, moduleFileNames)
             val srcFile = File(joinPath(i18nPath, moduleName))
             if (srcFile.exists()) {
                 val destFile = File(
@@ -77,23 +77,23 @@ if (File(i18nPath).isDirectory) {
                         "i18n"
                     )
                 )
-                println("copy srcFile: ${srcFile.absolutePath} now...")
+                logger.debug("copy srcFile: ${srcFile.absolutePath} now...")
                 copy {
                     from(srcFile.toPath())
                     into(destFile.toPath())
                 }
-                println("copy srcFile: ${srcFile.absolutePath} finish...")
+                logger.debug("copy srcFile: ${srcFile.absolutePath} finish...")
                 // 处理模块的properties文件(要合并公共的properties文件)
                 destFile.listFiles()?.filter { it.name.endsWith("properties") }?.forEach { propertyFile ->
                     val commonPropertyFile = File(joinPath(i18nPath, propertyFile.name))
                     val targetProperties = Properties()
                     if (commonPropertyFile.exists()) {
-                        println("copy commonPropertyFile: ${commonPropertyFile.absolutePath} now...")
+                        logger.debug("copy commonPropertyFile: ${commonPropertyFile.absolutePath} now...")
                         targetProperties.load(FileInputStream(commonPropertyFile))
                     }
                     // append second input to output file if it exists
                     if (propertyFile.exists()) {
-                        println("copy modulePropertyFile: ${propertyFile.absolutePath} now...")
+                        logger.debug("copy modulePropertyFile: ${propertyFile.absolutePath} now...")
                         targetProperties.load(FileInputStream(propertyFile))
                     }
                     targetProperties.store(FileOutputStream(propertyFile), "i18n")

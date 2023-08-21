@@ -155,7 +155,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelines.sortWith { a, b ->
             when (sortType) {
                 PipelineSortType.NAME -> {
-                    a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
+                    a.pipelineName.lowercase().compareTo(b.pipelineName.toLowerCase())
                 }
 
                 PipelineSortType.CREATE_TIME -> {
@@ -1386,7 +1386,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildStartTime = (pipelineBuildSummaryRecord.latestStartTime)?.timestampmilli() ?: 0
                 it.latestBuildEndTime = (pipelineBuildSummaryRecord.latestEndTime)?.timestampmilli() ?: 0
                 it.latestBuildNum = pipelineBuildSummaryRecord.buildNum
-                it.latestBuildTaskName = pipelineBuildSummaryRecord.latestTaskName
+//                it.latestBuildTaskName = pipelineBuildSummaryRecord.latestTaskName // 卡片界面不再需要该信息
                 it.latestBuildId = pipelineBuildSummaryRecord.latestBuildId
                 it.latestBuildUserId = pipelineBuildSummaryRecord.latestStartUser ?: ""
                 it.latestBuildNumAlias = pipelineBuildSummaryRecord.buildNumAlias

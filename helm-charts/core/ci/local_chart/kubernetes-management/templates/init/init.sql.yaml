@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: init-sql
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-weight": "100"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
