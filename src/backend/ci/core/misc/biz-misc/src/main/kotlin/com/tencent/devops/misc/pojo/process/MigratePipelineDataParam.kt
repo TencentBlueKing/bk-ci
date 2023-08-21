@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.pojo.process
 
 import com.tencent.devops.misc.dao.process.ProcessDao
+import com.tencent.devops.misc.dao.process.ProcessDbMigrateDao
 import io.swagger.annotations.ApiModel
 import org.jooq.DSLContext
 import java.util.concurrent.CountDownLatch
@@ -42,5 +43,6 @@ data class MigratePipelineDataParam(
     val doneSignal: CountDownLatch,
     val dslContext: DSLContext,
     val migratingShardingDslContext: DSLContext,
-    val processDao: ProcessDao
+    val processDao: ProcessDao,
+    val processDbMigrateDao: ProcessDbMigrateDao
 )

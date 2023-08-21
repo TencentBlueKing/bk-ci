@@ -27,11 +27,13 @@
 
 package com.tencent.devops.misc.sharding
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.db.pojo.DEFAULT_MIGRATING_DATA_SOURCE_NAME
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -39,8 +41,19 @@ import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingV
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 class BkProcessDatabaseMigratingShardingAlgorithm : StandardShardingAlgorithm<String> {
+
+    companion object {
+        private const val DEFAULT_CACHE_MAX_SIZE = 1000L
+        private const val DEFAULT_CACHE_EXPIRE_TINE_NUM = 10L
+    }
+
+    private val shardingRoutingCache = Caffeine.newBuilder()
+        .maximumSize(DEFAULT_CACHE_MAX_SIZE)
+        .expireAfterWrite(DEFAULT_CACHE_EXPIRE_TINE_NUM, TimeUnit.MINUTES)
+        .build<String, String>()
 
     /**
      * 分片路由算法
@@ -65,14 +78,14 @@ class BkProcessDatabaseMigratingShardingAlgorithm : StandardShardingAlgorithm<St
             routingName = routingName
         )
         // 从本地缓存获取路由规则
-        var routingRule = BkShardingRoutingCacheUtil.getIfPresent(key)
+        var routingRule = shardingRoutingCache.getIfPresent(key)
         if (routingRule.isNullOrBlank()) {
             // 本地缓存没有查到路由规则信息则调接口去redis查
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
             routingRule = redisOperation.get(key)
             if (routingRule != null) {
                 // 将路由规则信息放入本地缓存
-                BkShardingRoutingCacheUtil.put(key, routingRule)
+                shardingRoutingCache.put(key, routingRule)
             }
         }
         if (routingRule.isNullOrBlank() || !availableTargetNames.contains(routingRule)) {
