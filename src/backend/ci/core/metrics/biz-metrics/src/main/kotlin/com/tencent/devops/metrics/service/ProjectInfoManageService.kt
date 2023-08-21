@@ -62,9 +62,4 @@ interface ProjectInfoManageService {
      * 同步项目插件关联信息
      */
     fun syncProjectAtomData(userId: String): Boolean
-
-    /**
-     * 检查项目是否需要进行项目插件历史信息同步
-     */
-    fun syncCheck(projectId: String)
 }
