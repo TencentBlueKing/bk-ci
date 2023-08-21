@@ -80,7 +80,7 @@ class WindowsGpuResourceDao {
     ): TWindowsGpuPoolRecord? {
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             val conditions = mutableListOf<Condition>()
-            if (!cgsId.isNullOrBlank()) {
+            cgsId?.let {
                 conditions.add(CGS_ID.eq(cgsId))
             }
             return dslContext.selectFrom(this)
