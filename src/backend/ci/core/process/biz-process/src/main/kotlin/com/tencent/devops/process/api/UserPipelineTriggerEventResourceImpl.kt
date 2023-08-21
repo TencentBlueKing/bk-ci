@@ -38,7 +38,7 @@ import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 
 @RestResource
 class UserPipelineTriggerEventResourceImpl(

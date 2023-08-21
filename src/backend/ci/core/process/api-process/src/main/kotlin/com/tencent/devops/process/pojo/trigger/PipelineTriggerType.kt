@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.annotations.ApiModel
@@ -79,6 +80,14 @@ enum class PipelineTriggerType {
                         defaultMessage = it.name
                     )
                 )
+            }
+        }
+
+        fun toScmType(triggerType: String): ScmType? {
+            return if (ScmType.values().map { it.name }.contains(triggerType)) {
+                ScmType.valueOf(triggerType)
+            } else {
+                null
             }
         }
     }

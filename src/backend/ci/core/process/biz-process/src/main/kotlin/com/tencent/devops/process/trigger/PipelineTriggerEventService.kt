@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.service.trigger
+package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -39,6 +39,8 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
@@ -49,7 +51,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.webhook.listener.PipelineTriggerRequestService
+import com.tencent.devops.process.webhook.WebhookRequestService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -65,7 +67,7 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val pipelineTriggerRequestService: PipelineTriggerRequestService
+    private val webhookRequestService: WebhookRequestService
 ) {
 
     companion object {
@@ -251,7 +253,7 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY,
             params = arrayOf(detailId.toString())
         )
-        pipelineTriggerRequestService.handleReplayRequest(
+        replayAll(
             userId = userId,
             projectId = projectId,
             eventId = triggerDetail.eventId,
@@ -263,14 +265,28 @@ class PipelineTriggerEventService @Autowired constructor(
     fun replayAll(
         userId: String,
         projectId: String,
-        eventId: Long
+        eventId: Long,
+        pipelineId: String? = null
     ): Boolean {
         logger.info("replay all pipeline trigger event|$userId|$projectId|$eventId")
-        pipelineTriggerRequestService.handleReplayRequest(
-            userId = userId,
+        val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
+            dslContext = dslContext,
             projectId = projectId,
             eventId = eventId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
+            params = arrayOf(eventId.toString())
         )
+        val request = WebhookRequestReplay(
+            userId = userId,
+            projectId = projectId,
+            hookRequestId = triggerEvent.hookRequestId!!
+        )
+        val scmType = PipelineTriggerType.toScmType(triggerEvent.triggerType) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
+            params = arrayOf(triggerEvent.triggerType)
+        )
+        webhookRequestService.replay(scmType = scmType, request = request)
         return true
     }
 

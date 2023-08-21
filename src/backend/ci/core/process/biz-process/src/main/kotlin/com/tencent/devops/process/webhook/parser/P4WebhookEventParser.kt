@@ -26,22 +26,31 @@
  *
  */
 
-package com.tencent.devops.common.webhook.atom
+package com.tencent.devops.process.webhook.parser
 
-import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import org.slf4j.LoggerFactory
 
 /**
- * 触发器原子业务逻辑接口定义
+ * p4 webhook事件解析
  */
-interface IWebhookAtomTask {
-    /**
-     * webhook事件执行
-     */
-    fun request(request: WebhookRequest)
+class P4WebhookEventParser(
+    private val objectMapper: ObjectMapper
+) : IWebhookEventParser {
 
-    /**
-     * webhook事件重放
-     */
-    fun replay(request: WebhookRequestReplay)
+    companion object {
+        private val logger = LoggerFactory.getLogger(P4WebhookEventParser::class.java)
+    }
+
+    override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        return try {
+            objectMapper.readValue(request.body, P4Event::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the p4 web hook event", e)
+            return null
+        }
+    }
 }

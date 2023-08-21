@@ -26,30 +26,31 @@
  *
  */
 
-package com.tencent.devops.process.webhook.atom
+package com.tencent.devops.process.webhook.parser
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import org.slf4j.LoggerFactory
 
-@Service
-class CodeTGitWebhookTriggerTaskAtom @Autowired constructor(
-    private val objectMapper: ObjectMapper,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
-    private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val webhookTriggerTaskAtomService: WebhookTriggerTaskAtomService
-) : CodeGitWebhookTriggerTaskAtom(
-    objectMapper = objectMapper,
-    scmWebhookMatcherBuilder = scmWebhookMatcherBuilder,
-    pipelineWebhookService = pipelineWebhookService,
-    pipelineBuildWebhookService = pipelineBuildWebhookService,
-    webhookTriggerTaskAtomService = webhookTriggerTaskAtomService
-) {
+/**
+ * svn webhook事件解析
+ */
+class SvnWebhookEventParser(
+    private val objectMapper: ObjectMapper
+) : IWebhookEventParser {
 
-    override fun getScmType() = ScmType.CODE_TGIT
+    companion object {
+        private val logger = LoggerFactory.getLogger(SvnWebhookEventParser::class.java)
+    }
+
+    override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        return try {
+            objectMapper.readValue(request.body, SvnCommitEvent::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the svn web hook commit event", e)
+            return null
+        }
+    }
 }
