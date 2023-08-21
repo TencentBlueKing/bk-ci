@@ -41,6 +41,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildSta
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.PersistenceContainerLock
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudPersistenceContainerRecord
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,7 +74,6 @@ class DcContainerPersistenceHandler @Autowired constructor(
 
             // 获取当前job关联持久化容器配置
             val persistenceContainer = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
-
             if (persistenceContainer == null || persistenceContainer.persistenceAgentId.isBlank()) {
                 logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
@@ -163,7 +163,9 @@ class DcContainerPersistenceHandler @Autowired constructor(
         dcPersistenceContainerDao.updateContainerStatus(dslContext, containerName, status.status)
     }
 
-    fun getPersistenceBuildStatus(containerName: String?, handlerContext: DcStartupHandlerContext) {
-
+    fun getPersistenceContainer(
+        containerName: String
+    ): TDevcloudPersistenceContainerRecord? {
+        return dcPersistenceContainerDao.getByContainerName(dslContext, containerName)
     }
 }

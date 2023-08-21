@@ -3,15 +3,14 @@ package com.tencent.devops.dispatch.devcloud.service
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildInfo
@@ -40,10 +39,22 @@ class PersistenceBuildService @Autowired constructor(
 
     fun startBuild(projectId: String, persistenceAgentId: String): PersistenceBuildInfo? {
         // 检查containerName当前状态
-        val container = dcPersistenceContainerDao.get(dslContext, persistenceAgentId)
+        val container = dcPersistenceContainerDao.getByPersistenceAgentId(dslContext, persistenceAgentId)
         if (container == null) {
             logger.warn("Container $persistenceAgentId is null.")
             return null
+        }
+
+        // 当前容器非running状态，主动清理
+        if (container.containerStatus != PersistenceContainerStatus.RUNNING.status) {
+            deletePersistenceContainer(
+                userId = container.userId,
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = "",
+                vmSeqId = container.vmSeqId,
+                containerName = container.containerName
+            )
         }
 
         val lock = PersistenceContainerLock(redisOperation, persistenceAgentId)
@@ -83,16 +94,27 @@ class PersistenceBuildService @Autowired constructor(
 
     fun workerBuildFinish(projectId: String, persistenceAgentId: String, buildInfo: PersistenceBuildWithStatus) {
         logger.info("$projectId $persistenceAgentId workerBuildFinish $buildInfo")
-        val container = dcPersistenceContainerDao.get(dslContext, persistenceAgentId)
-        if (container == null) {
+        val persistenceContainerRecord = dcPersistenceContainerDao.getByPersistenceAgentId(
+            dslContext,
+            persistenceAgentId
+        )
+        if (persistenceContainerRecord == null) {
             logger.warn("Container $persistenceAgentId is null.")
         }
 
-        // 重新设置container build状态
+        // 重置persistenceContainer状态
+        dcPersistenceContainerDao.updateBuildStatus(
+            dslContext,
+            persistenceContainerRecord!!.containerName,
+            ContainerBuildStatus.IDLE.status
+        )
+
+        // 重新设置persistence build状态
         val buildRecord = dcPersistenceBuildDao.getPersistenceBuildInfo(
             dslContext = dslContext,
             buildId = buildInfo.buildId,
-            vmSeqId = buildInfo.vmSeqId
+            vmSeqId = buildInfo.vmSeqId,
+            executeCount = buildInfo.executeCount
         )
         if (buildRecord != null && (
                 buildRecord.status != PersistenceBuildStatus.DONE.status ||
@@ -152,38 +174,55 @@ class PersistenceBuildService @Autowired constructor(
             )
         }
 
-        val buildLogKey = "$userId|${destroyContainerReq.projectId}|${destroyContainerReq.pipelineId}" +
-            "|${destroyContainerReq.vmSeqId}"
+        deletePersistenceContainer(
+            userId = userId,
+            projectId = destroyContainerReq.projectId,
+            pipelineId = destroyContainerReq.pipelineId,
+            buildId = "",
+            vmSeqId = destroyContainerReq.vmSeqId,
+            containerName = containerName
+        )
+
+        return Result(true)
+    }
+
+    private fun deletePersistenceContainer(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        containerName: String
+    ) {
+        val buildLogKey = "$userId|$projectId|$pipelineId|$buildId|$vmSeqId"
 
         try {
-            logger.info("$buildLogKey stop dev cloud container, containerName:$containerName")
+            logger.info("$buildLogKey delete container:$containerName")
             val taskId = dispatchDevCloudClient.operateContainer(
-                projectId = destroyContainerReq.projectId,
-                pipelineId = destroyContainerReq.pipelineId,
-                buildId = "",
-                vmSeqId = destroyContainerReq.vmSeqId ?: "",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
                 userId = userId,
                 name = containerName,
-                action = Action.STOP
+                action = Action.DELETE
             )
             val opResult = dispatchDevCloudClient.waitTaskFinish(
                 userId = userId,
-                projectId = destroyContainerReq.projectId,
-                pipelineId = destroyContainerReq.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 taskId = taskId
             )
             if (opResult.first == TaskStatus.SUCCEEDED) {
-                logger.info("$buildLogKey stop dev cloud vm success.")
+                logger.info("$buildLogKey delete $containerName success.")
             } else {
-                logger.info("$buildLogKey stop dev cloud vm failed, msg: ${opResult.second}")
+                logger.info("$buildLogKey delete $containerName failed, msg: ${opResult.second}")
             }
         } catch (e: Exception) {
             logger.error(
-                "$buildLogKey stop dev cloud vm failed. containerName: $containerName",
+                "$buildLogKey delete $containerName failed.",
                 e
             )
         }
-
-        return Result(true)
     }
 }

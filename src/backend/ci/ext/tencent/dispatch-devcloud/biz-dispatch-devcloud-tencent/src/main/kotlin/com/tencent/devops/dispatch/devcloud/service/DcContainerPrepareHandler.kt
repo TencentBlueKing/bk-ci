@@ -315,35 +315,51 @@ class DcContainerPrepareHandler @Autowired constructor(
     }
 
     private fun updateBusyStatusWithPersistence(
-        containerInfo: TDevcloudBuildRecord,
+        containerBuildInfo: TDevcloudBuildRecord,
         handlerContext: DcStartupHandlerContext
     ): Boolean {
-        val containerChanged = checkContainerChanged(containerInfo, handlerContext)
-        // 容器配置变更，跳过这个容器池位
-        if (containerChanged) {
+        val containerChanged = checkContainerChanged(containerBuildInfo, handlerContext)
+        // 容器配置变更或者构建池位没有绑定容器，跳过这个容器池位
+        if (containerChanged || containerBuildInfo.containerName.isNullOrBlank()) {
             return false
         }
 
-        val originContainerStatus = getContainerStatus(containerInfo.containerName, handlerContext)
-        val buildStatus = dcContainerPersistenceHandler.getPersistenceBuildStatus(containerInfo.containerName, handlerContext)
+        val persistenceContainerInfo = dcContainerPersistenceHandler
+            .getPersistenceContainer(containerBuildInfo.containerName)
+
+
+        // 不存在持久化容器记录，跳过这个容器池位
+        if (persistenceContainerInfo == null) {
+            logger.error("${handlerContext.buildLogKey} persistenceContainer" +
+                             " ${containerBuildInfo.containerName} is null.")
+            return false
+        }
+
+        val originContainerStatus = getContainerStatus(containerBuildInfo.containerName, handlerContext)
+
         // 容器配置没有变更，且当前容器状态running，复用这个容器池位
         if (originContainerStatus != null &&
             originContainerStatus == OriginContainerStatus.running.name
 
         ) {
-            handlerContext.containerName = containerInfo.containerName
+            handlerContext.containerName = persistenceContainerInfo.containerName
             handlerContext.containerChanged = false
 
-            /*dcContainerPersistenceHandler.updatePersistenceBuildStatus(
-                containerName = containerInfo.containerName,
-                status = ContainerBuildStatus.BUSY
-            )*/
+            return if (persistenceContainerInfo.buildStatus == ContainerBuildStatus.IDLE.status) {
+                dcContainerPersistenceHandler.updatePersistenceBuildStatus(
+                    containerName = persistenceContainerInfo.containerName,
+                    status = ContainerBuildStatus.BUSY
+                )
 
-            return true
+                true
+            } else {
+                // 当前持久化容器已有构建任务，跳过当前容器池位
+                false
+            }
         } else {
             // 容器配置没有变更，但当前容器状态非running，重置容器池位并复用
             dcContainerPersistenceHandler.updatePersistenceContainerStatus(
-                containerName = containerInfo.containerName,
+                containerName = persistenceContainerInfo.containerName,
                 status = PersistenceContainerStatus.DELETED
             )
             resetBuildPool(handlerContext)

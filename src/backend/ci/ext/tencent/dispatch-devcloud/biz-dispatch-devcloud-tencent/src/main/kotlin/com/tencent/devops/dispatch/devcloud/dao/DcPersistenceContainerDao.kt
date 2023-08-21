@@ -110,14 +110,24 @@ class DcPersistenceContainerDao {
         }
     }
 
-    fun get(
+    fun getByPersistenceAgentId(
         dslContext: DSLContext,
         persistenceAgentId: String
     ): TDevcloudPersistenceContainerRecord? {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             return dslContext.selectFrom(this)
                 .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
-                .orderBy(CREATE_TIME.desc())
+                .fetchAny()
+        }
+    }
+
+    fun getByContainerName(
+        dslContext: DSLContext,
+        containerName: String
+    ): TDevcloudPersistenceContainerRecord? {
+        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(CONTAINER_NAME.eq(containerName))
                 .fetchAny()
         }
     }
