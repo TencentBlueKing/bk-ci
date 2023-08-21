@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import com.tencent.devops.auth.pojo.BkUserExtras
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -13,5 +15,9 @@ data class UserAndDeptInfoVo(
     @ApiModelProperty("信息类型")
     val type: ManagerScopesEnum,
     @ApiModelProperty("是否拥有子级")
-    val hasChild: Boolean? = false
+    val hasChild: Boolean? = false,
+    @ApiModelProperty("用户部门详细信息")
+    val deptInfo: BkUserDeptInfo? = null,
+    @ApiModelProperty("用户额外详细信息")
+    val extras: BkUserExtras? = null
 )
