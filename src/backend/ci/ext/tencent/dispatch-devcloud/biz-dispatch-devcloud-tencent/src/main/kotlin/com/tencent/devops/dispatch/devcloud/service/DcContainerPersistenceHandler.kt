@@ -156,11 +156,11 @@ class DcContainerPersistenceHandler @Autowired constructor(
     }
 
     fun updatePersistenceContainerStatus(containerName: String, status: PersistenceContainerStatus) {
-        dcPersistenceContainerDao.updateBuildStatus(dslContext, containerName, status.status)
+        dcPersistenceContainerDao.updateContainerStatus(dslContext, containerName, status.status)
     }
 
     fun updatePersistenceBuildStatus(containerName: String, status: ContainerBuildStatus) {
-        dcPersistenceContainerDao.updateContainerStatus(dslContext, containerName, status.status)
+        dcPersistenceContainerDao.updateBuildStatus(dslContext, containerName, status.status)
     }
 
     fun getPersistenceContainer(
