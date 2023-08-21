@@ -31,7 +31,7 @@ import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.ContainerStatus
-import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.buildless.utils.BuildlessRedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
@@ -44,7 +44,7 @@ import java.util.concurrent.Future
  */
 @Service
 class BuildLessTaskService(
-    private val redisUtils: RedisUtils,
+    private val buildlessRedisUtils: BuildlessRedisUtils,
     private val dispatchClient: DispatchClient,
     private val containerPoolExecutor: ContainerPoolExecutor
 ) {
@@ -60,7 +60,7 @@ class BuildLessTaskService(
                     return AsyncResult(buildLessPoolInfo.buildLessTask)
                 }
 
-                val buildLessTask = redisUtils.popBuildLessReadyTask()
+                val buildLessTask = buildlessRedisUtils.popBuildLessReadyTask()
                 if (buildLessTask != null) {
                     try {
                         logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
@@ -70,14 +70,14 @@ class BuildLessTaskService(
                         )
 
                         logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                        redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+                        buildlessRedisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
                         return AsyncResult(buildLessTask)
                     } catch (e: Exception) {
                         // 异常时任务重新回队列
                         logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
                                         "retry.", e)
-                        redisUtils.leftPushBuildLessReadyTask(buildLessTask)
+                        buildlessRedisUtils.leftPushBuildLessReadyTask(buildLessTask)
 
                         continue
                     }
@@ -105,7 +105,7 @@ class BuildLessTaskService(
                     return
                 }
 
-                val buildLessTask = redisUtils.popBuildLessReadyTask()
+                val buildLessTask = buildlessRedisUtils.popBuildLessReadyTask()
                 if (buildLessTask != null) {
                     logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
                     dispatchClient.updateContainerId(
@@ -114,7 +114,7 @@ class BuildLessTaskService(
                     )
 
                     logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+                    buildlessRedisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
                     deferredResult.setResult(buildLessTask)
                     return

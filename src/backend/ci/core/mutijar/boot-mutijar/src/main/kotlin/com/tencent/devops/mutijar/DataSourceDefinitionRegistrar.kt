@@ -58,7 +58,12 @@ class DataSourceDefinitionRegistrar : ImportBeanDefinitionRegistrar {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DataSourceDefinitionRegistrar::class.java)
-        private val multiDataSource = System.getProperty("devops.multi.from").split(",").filterNot { it == "process" }
-        private val regex = Regex("""ENC\((.*?)\)""")
+        private val notNeedDataSourceService = listOf(
+            "buildless", "dockerhost", "metrics", "misc", "monitoring", "process","worker","websocket"
+        )
+
+        private
+        val multiDataSource = System.getProperty("devops.multi.from")
+            .split(",").filterNot { notNeedDataSourceService.contains(it) }
     }
 }

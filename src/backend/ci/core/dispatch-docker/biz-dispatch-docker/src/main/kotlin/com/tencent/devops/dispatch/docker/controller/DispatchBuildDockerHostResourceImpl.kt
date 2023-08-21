@@ -29,21 +29,21 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
+import com.tencent.devops.dispatch.docker.api.builds.DispatchBuildDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DispatchDockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService,
+class DispatchBuildDockerHostResourceImpl @Autowired constructor(
+    private val dispatchDockerHostBuildService: DispatchDockerHostBuildService,
     private val dispatchDockerService: DispatchDockerService,
     private val dockerResourceOptionsService: DockerResourceOptionsService
-) : BuildDockerHostResource {
+) : DispatchBuildDockerHostResource {
 
     override fun getResourceConfig(pipelineId: String, vmSeqId: String): Result<DockerResourceOptionsVO> {
         return Result(dockerResourceOptionsService.getDockerResourceConfig(pipelineId, vmSeqId))
@@ -55,11 +55,11 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         vmSeqId: String,
         poolNo: Int
     ): Result<List<String>> {
-        return Result(dockerHostBuildService.getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo))
+        return Result(dispatchDockerHostBuildService.getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo))
     }
 
     override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag, jobId)
+        dispatchDockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }
 
@@ -70,12 +70,12 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         tag: String?,
         jobId: String?
     ): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag, jobId)
+        dispatchDockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }
 
     override fun getPublicImages(): Result<List<ImageRepoInfo>> {
-        return dockerHostBuildService.getPublicImage()
+        return dispatchDockerHostBuildService.getPublicImage()
     }
 
     override fun refresh(dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {

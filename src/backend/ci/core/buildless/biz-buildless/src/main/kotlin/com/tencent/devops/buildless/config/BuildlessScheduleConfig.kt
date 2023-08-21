@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.docker.config
+package com.tencent.devops.buildless.config
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.SchedulingConfigurer
@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class ScheduleConfig : SchedulingConfigurer {
+class BuildlessScheduleConfig : SchedulingConfigurer {
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
         val scheduler = ScheduledThreadPoolExecutor(5)
         scheduler.maximumPoolSize = 5

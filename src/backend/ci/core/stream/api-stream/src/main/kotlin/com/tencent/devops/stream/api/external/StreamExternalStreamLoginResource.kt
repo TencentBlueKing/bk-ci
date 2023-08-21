@@ -23,22 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dockerhost.cron
+package com.tencent.devops.stream.api.external
 
-import com.tencent.devops.dockerhost.utils.SystemInfoUtil
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Component
-class SystemInfoRunner {
+@Api(tags = ["EXTERNAL_STREAM_LOGIN"], description = "External-STREAM_LOGIN")
+@Path("/external/stream/login")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface StreamExternalStreamLoginResource {
 
-    @Scheduled(cron = "0/5 * * * * ?")
-    fun startCollect() {
-        SystemInfoUtil.pushMem()
-        SystemInfoUtil.pushCpu()
-        SystemInfoUtil.pushDisk()
-        SystemInfoUtil.pushDiskIOUtil()
-    }
+    @ApiOperation("获取登录url")
+    @GET
+    @Path("url")
+    fun loginUrl(
+        @ApiParam(value = "type")
+        @QueryParam("type")
+        type: String
+    ): Result<String>
 }

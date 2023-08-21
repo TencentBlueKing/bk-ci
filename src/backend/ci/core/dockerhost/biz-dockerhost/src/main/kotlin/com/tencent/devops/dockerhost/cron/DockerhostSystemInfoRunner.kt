@@ -25,27 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources.external
+package com.tencent.devops.dockerhost.cron
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.external.ExternalStreamResource
-import com.tencent.devops.stream.service.StreamPipelineBadgeService
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 
-@RestResource
-class ExternalStreamResourceImpl(
-    private val streamPipelineBadgeService: StreamPipelineBadgeService
-) : ExternalStreamResource {
-    override fun getPipelineBadge(
-        gitProjectId: Long,
-        filePath: String,
-        branch: String?,
-        objectKind: String?
-    ): String {
-        return streamPipelineBadgeService.get(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            objectKind = objectKind
-        )
+@Component
+class DockerhostSystemInfoRunner {
+
+    @Scheduled(cron = "0/5 * * * * ?")
+    fun startCollect() {
+        SystemInfoUtil.pushMem()
+        SystemInfoUtil.pushCpu()
+        SystemInfoUtil.pushDisk()
+        SystemInfoUtil.pushDiskIOUtil()
     }
 }

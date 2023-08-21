@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCheckService @Autowired constructor(
+class RepoGitCheckService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCheckDao: GitCheckDao
 ) {

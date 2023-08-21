@@ -30,19 +30,19 @@ package com.tencent.devops.dispatch.docker.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DispatchDockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpDockerBuildResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService,
+    private val dispatchDockerHostBuildService: DispatchDockerHostBuildService,
     private val dockerHostQpcService: DockerHostQpcService
 ) :
     OpDockerBuildResource {
 
     override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
+        dispatchDockerHostBuildService.enable(pipelineId, vmSeqId, enable)
         return Result(true)
     }
 

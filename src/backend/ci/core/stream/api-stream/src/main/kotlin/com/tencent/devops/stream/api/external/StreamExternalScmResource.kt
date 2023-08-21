@@ -23,23 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.stream.resources.external
+package com.tencent.devops.stream.api.external
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.external.ExternalStreamLoginResource
-import com.tencent.devops.stream.service.StreamLoginService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ExternalStreamLoginResourceImpl @Autowired constructor(
-    private val streamLoginService: StreamLoginService
-) : ExternalStreamLoginResource {
+@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
+@Path("/service/scm")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface StreamExternalScmResource {
 
-    override fun loginUrl(type: String): Result<String> {
-        return Result(streamLoginService.loginUrl(type))
-    }
+    @ApiOperation("Code平台Git仓库提交")
+    @POST
+    @Path("/codegit/commit")
+    fun webHookCodeGitCommit(
+        @HeaderParam("X-Token")
+        token: String,
+        @ApiParam("X-Event")
+        @HeaderParam("X-Event")
+        eventType: String,
+        event: String
+    ): Result<Boolean>
 }

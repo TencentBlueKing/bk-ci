@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
-import com.tencent.devops.monitoring.client.InfluxdbClient
+import com.tencent.devops.monitoring.client.MonitoringInfluxdbClient
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_INSERT_DATA_FAIL
 import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorProcessor
 import io.micrometer.core.instrument.Counter
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
-    private val influxdbClient: InfluxdbClient,
+    private val monitoringInfluxdbClient: MonitoringInfluxdbClient,
     private val monitorProcessors: List<AbstractMonitorProcessor>,
     private val meterRegistry: MeterRegistry
 ) : Listener<AtomMonitorReportBroadCastEvent> {
@@ -54,7 +54,7 @@ class AtomMonitorReportListener @Autowired constructor(
             insertAtomMonitorData(monitorData)
 
             monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }
-                .forEach { it.process(influxdbClient, monitorData) }
+                .forEach { it.process(monitoringInfluxdbClient, monitorData) }
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the atom monitor data", ignored)
             throw ErrorCodeException(
@@ -66,7 +66,7 @@ class AtomMonitorReportListener @Autowired constructor(
 
     fun insertAtomMonitorData(data: AtomMonitorData) {
         // 写入influxdb
-        influxdbClient.insert(data)
+        monitoringInfluxdbClient.insert(data)
 
         // 暴露prometheus
         Counter.builder("atom_monitor")

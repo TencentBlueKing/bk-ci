@@ -34,7 +34,7 @@ import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerCo
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import org.jooq.DSLContext
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildLessStartDispatchHandler @Autowired constructor(
-    private val redisUtils: RedisUtils,
+    private val dispatchDockerRedisUtils: DispatchDockerRedisUtils,
     private val dslContext: DSLContext,
     private val dockerHostUtils: DockerHostUtils,
     private val buildLessStartHandler: BuildLessStartHandler,
@@ -95,7 +95,7 @@ class BuildLessStartDispatchHandler @Autowired constructor(
             )
 
             val agentId = HashUtil.encodeLongId(id)
-            redisUtils.setDockerBuild(
+            dispatchDockerRedisUtils.setDockerBuild(
                 id = id, secretKey = secretKey,
                 redisBuild = RedisBuild(
                     vmName = agentId,

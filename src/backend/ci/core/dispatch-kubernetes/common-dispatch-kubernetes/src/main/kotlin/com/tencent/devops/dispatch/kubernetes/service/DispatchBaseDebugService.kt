@@ -53,7 +53,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.JobServiceFactory
-import com.tencent.devops.dispatch.kubernetes.utils.k8sRedisUtils
+import com.tencent.devops.dispatch.kubernetes.utils.DispatchKubernetesRedisUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -69,7 +69,7 @@ class DispatchBaseDebugService @Autowired constructor(
     private val dispatchKubernetesBuildHisDao: DispatchKubernetesBuildHisDao,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val k8sRedisUtils: k8sRedisUtils,
+    private val DispatchKubernetesRedisUtils: DispatchKubernetesRedisUtils,
     private val dockerRoutingSdkService: DockerRoutingSdkService
 ) {
 
@@ -186,7 +186,7 @@ class DispatchBaseDebugService @Autowired constructor(
         }
 
         // 设置containerName缓存
-        k8sRedisUtils.setDebugBuilderName(userId, pipelineId, vmSeqId, builderName)
+        DispatchKubernetesRedisUtils.setDebugBuilderName(userId, pipelineId, vmSeqId, builderName)
 
         return DebugResponse(
             websocketUrl = containerServiceFactory.load(projectId).getDebugWebsocketUrl(
@@ -210,7 +210,7 @@ class DispatchBaseDebugService @Autowired constructor(
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
 
         val debugBuilderName = builderName.ifBlank {
-            k8sRedisUtils.getDebugBuilderName(userId, pipelineId, vmSeqId) ?: ""
+            DispatchKubernetesRedisUtils.getDebugBuilderName(userId, pipelineId, vmSeqId) ?: ""
         }
 
         logger.info(

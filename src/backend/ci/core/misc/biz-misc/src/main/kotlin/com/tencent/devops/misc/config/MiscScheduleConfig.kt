@@ -25,43 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.misc.config
 
-import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.config.ScheduledTaskRegistrar
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
-@Component
-class k8sRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setDebugBuilderName(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        builderName: String
-    ) {
-        redisOperation.set(
-            debugContainerNameKey(userId, pipelineId, vmSeqId),
-            builderName,
-            3600 * 6,
-            true
-        )
-    }
-
-    fun getDebugBuilderName(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String
-    ): String? {
-        return redisOperation.get(debugContainerNameKey(userId, pipelineId, vmSeqId))
-    }
-
-    private fun debugContainerNameKey(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String
-    ): String {
-        return "dispatchkubernetes:debug:$userId-$pipelineId-$vmSeqId"
+@Configuration
+class MiscScheduleConfig : SchedulingConfigurer {
+    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
+        val scheduler = ScheduledThreadPoolExecutor(20)
+        scheduler.maximumPoolSize = 500
+        scheduler.setKeepAliveTime(60, TimeUnit.SECONDS)
+        scheduler.rejectedExecutionHandler = ThreadPoolExecutor.CallerRunsPolicy()
+        taskRegistrar.setScheduler(scheduler)
     }
 }

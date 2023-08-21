@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Scope
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
+import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
@@ -59,33 +60,29 @@ class MutijarDslContextConfiguration {
         injectionPoint: InjectionPoint
     ): DSLContext {
         val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
-        if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java) ||
-            Method::class.java.isAssignableFrom(annotatedElement::class.java)
+        if (annotatedElement !is Constructor<*> && annotatedElement !is Method && annotatedElement !is Field
         ) {
-            val declaringClass: Class<*> = when (annotatedElement) {
-                is Constructor<*> -> annotatedElement.declaringClass
-                is Method -> annotatedElement.declaringClass
-                else -> throw IllegalArgumentException("Invalid annotatedElement type")
-            }
-            val packageName = declaringClass.getPackage().name
-            // lambda服务有多个数据源，需要进行处理
-            val configurationName = if (packageName.contains(".lambda")) {
-                val matchResult = lambdaServiceRegex.find(packageName)
-                "${matchResult?.groupValues?.get(1) ?: "lambda"}JooqConfiguration"
-            } else {
-                val serviceName = multiModelService.find { packageName.contains(it) }
-                    ?: throw NoSuchBeanDefinitionException("no jooq configuration")
-                serviceName.removePrefix(".").plus("JooqConfiguration")
-            }
-            val configuration: org.jooq.Configuration = configurationMap[configurationName]
-                ?: throw NoSuchBeanDefinitionException("no $configurationName")
-            return DSL.using(configuration)
+            throw IllegalArgumentException("Invalid annotatedElement type")
         }
-        throw NoSuchBeanDefinitionException("no jooq configuration")
+        val declaringClass: Class<*> = when (annotatedElement) {
+            is Constructor<*> -> annotatedElement.declaringClass
+            is Method -> annotatedElement.declaringClass
+            is Field -> annotatedElement.declaringClass
+            else -> throw IllegalArgumentException("Invalid annotatedElement type")
+        }
+
+        val packageName = declaringClass.`package`.name
+        val serviceName = multiModelService.find { packageName.contains(it) }
+            ?: throw NoSuchBeanDefinitionException("no jooq configuration")
+        val configurationName = serviceName.removePrefix(".").plus("JooqConfiguration")
+
+        val configuration: org.jooq.Configuration = configurationMap[configurationName]
+            ?: throw NoSuchBeanDefinitionException("no $configurationName")
+
+        return DSL.using(configuration)
     }
 
     companion object {
         private val multiModelService = System.getProperty("devops.multi.from").split(",")
-        private val lambdaServiceRegex = "\\.(tsource|ttarget|process|project|store)".toRegex()
     }
 }
