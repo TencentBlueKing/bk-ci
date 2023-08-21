@@ -150,8 +150,10 @@ class PersistenceBuildService @Autowired constructor(
                 errorMsg = buildInfo.error?.errorMessage ?: ""
             )
         } catch (ignore: ClientException) {
-            logger.error("SystemErrorLogMonitor|onContainerFailure|${buildInfo.buildId}|" +
-                             "error=${buildInfo.error}")
+            logger.error(
+                "SystemErrorLogMonitor|onContainerFailure|${buildInfo.buildId}|" +
+                    "error=${buildInfo.error}"
+            )
         }
     }
 

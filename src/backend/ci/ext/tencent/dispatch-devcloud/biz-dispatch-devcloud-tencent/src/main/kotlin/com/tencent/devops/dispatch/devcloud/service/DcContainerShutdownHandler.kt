@@ -67,7 +67,6 @@ class DcContainerShutdownHandler @Autowired constructor(
                 return
             }
 
-
             // 有可能出现devcloud返回容器状态running了，但是其实流水线任务早已经执行完了，
             // 导致shutdown消息先收到而redis和db还没有设置的情况，因此扔回队列，sleep等待30秒重新触发
             val containerNameList = buildContainerPoolNoDao.getDevCloudBuildLastContainer(

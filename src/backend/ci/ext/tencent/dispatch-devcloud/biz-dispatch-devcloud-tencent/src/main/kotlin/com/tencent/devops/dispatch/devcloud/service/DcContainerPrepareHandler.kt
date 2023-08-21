@@ -327,11 +327,12 @@ class DcContainerPrepareHandler @Autowired constructor(
         val persistenceContainerInfo = dcContainerPersistenceHandler
             .getPersistenceContainer(containerBuildInfo.containerName)
 
-
         // 不存在持久化容器记录，跳过这个容器池位
         if (persistenceContainerInfo == null) {
-            logger.error("${handlerContext.buildLogKey} persistenceContainer" +
-                             " ${containerBuildInfo.containerName} is null.")
+            logger.error(
+                "${handlerContext.buildLogKey} persistenceContainer " +
+                    "${containerBuildInfo.containerName} is null."
+            )
             return false
         }
 

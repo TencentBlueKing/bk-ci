@@ -37,6 +37,6 @@ interface ApigwTXDispatchResourceV4 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "请求报文", required = true)
-        destroyContainerReq: DestroyContainerReq,
+        destroyContainerReq: DestroyContainerReq
     ): Result<Boolean>
 }

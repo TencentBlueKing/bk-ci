@@ -52,16 +52,13 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.devcloud.pojo.OriginContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.process.engine.common.VMUtils
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Locale
 
 @Service
 abstract class StartupContainerHandler @Autowired constructor(

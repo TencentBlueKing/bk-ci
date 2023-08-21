@@ -125,7 +125,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
 
     private fun queueBuild(
         handlerContext: DcStartupHandlerContext,
-        retryCount: Int = 0,
+        retryCount: Int = 0
     ) {
         with(handlerContext) {
             try {

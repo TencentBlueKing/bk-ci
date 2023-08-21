@@ -5,9 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.devcloud.api.service.ServiceDispatchDcResource
 import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
-import com.tencent.devops.environment.api.ServiceCmdbNodeResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTXDispatchResourceV4
-import com.tencent.devops.openapi.api.apigw.v4.ApigwTXEnvironmentResourceV4
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

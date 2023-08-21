@@ -23,5 +23,4 @@ class BuildPersistenceBuildResourceImpl constructor(
         persistenceBuildService.workerBuildFinish(projectId, agentId, buildInfo)
         return Result(true)
     }
-
 }

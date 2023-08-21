@@ -52,5 +52,5 @@ data class PersistenceBuildWithStatus(
     @ApiModelProperty("错误信息")
     val error: Error?,
     @ApiModelProperty("流水线执行次数")
-    val executeCount: Int?,
+    val executeCount: Int?
 )

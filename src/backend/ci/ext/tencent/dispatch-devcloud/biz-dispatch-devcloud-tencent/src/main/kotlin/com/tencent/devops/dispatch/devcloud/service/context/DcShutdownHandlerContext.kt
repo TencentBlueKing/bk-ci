@@ -37,7 +37,7 @@ class DcShutdownHandlerContext(
     override val userId: String,
     override val projectId: String,
     override val pipelineId: String,
-    override val buildId: String,
+    override val buildId: String
 ) : HandlerContext(
     projectId, pipelineId, buildId, userId, executeCount
 )
