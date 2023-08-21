@@ -110,8 +110,9 @@ class CreateControl @Autowired constructor(
 
     fun asyncCreateWorkspace(
         userId: String,
-        bkTicket: String,
         projectId: String,
+        cgsId: String?,
+        autoAssign: Boolean?,
         workspaceCreate: ProjectWorkspaceCreate
     ) {
         val mountType = WorkspaceMountType.START
@@ -177,7 +178,9 @@ class CreateControl @Autowired constructor(
                     devFilePath = ws.devFilePath,
                     devFile = Devfile(
                         zoneId = windowsConfig.zoneShortName,
-                        machineType = windowsConfig.size
+                        machineType = windowsConfig.size,
+                        cgsId = cgsId,
+                        autoAssign = autoAssign
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -306,7 +309,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ownerType == WorkspaceOwnerType.PROJECT) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
 
             // websocket 通知成功
@@ -559,7 +562,7 @@ class CreateControl @Autowired constructor(
     }
 
     private fun projectWinCreateCheck(projectInfo: ProjectVO, createCount: Int) {
-        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 0 }
+        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 11 }
         if (resourceCount < createCount) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,

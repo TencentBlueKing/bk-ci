@@ -383,4 +383,13 @@ class WorkspaceCommon @Autowired constructor(
             null
         }
     }
+
+    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .getCgsData(cgsId).data
+        }.onFailure {
+            logger.warn("Error syncing start cloud resource list: ${it.message}")
+        }.getOrNull()
+    }
 }

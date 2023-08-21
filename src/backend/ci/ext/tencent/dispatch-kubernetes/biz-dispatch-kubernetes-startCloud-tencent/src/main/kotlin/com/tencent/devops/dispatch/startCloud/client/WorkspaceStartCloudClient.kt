@@ -240,8 +240,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun getResourceList(): List<EnvironmentResourceData> {
-        val url = "$apiUrl/openapi/resource/list"
-        val body = JsonUtil.toJson(mapOf("AppName" to appName), false)
+        val url = "$apiUrl/openapi/cgs/list"
+        val body = JsonUtil.toJson(mapOf("appName" to appName), false)
         logger.info("getResourceList request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
@@ -271,7 +271,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
-                    -> return environmentRsp.data
+                    -> return environmentRsp.data.rows
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,

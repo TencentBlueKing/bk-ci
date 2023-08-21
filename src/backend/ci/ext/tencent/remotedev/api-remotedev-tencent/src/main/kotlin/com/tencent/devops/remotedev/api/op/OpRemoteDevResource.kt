@@ -339,6 +339,24 @@ interface OpRemoteDevResource {
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>>
 
+    @ApiOperation("实时获取START云桌面资源池的机器")
+    @GET
+    @Path("/windows/pool/list")
+    fun getStartCloudResourceList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "zoneId", required = false)
+        @QueryParam("zoneId")
+        zoneId: String?,
+        @ApiParam(value = "machineType", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @ApiParam(value = "status", required = false)
+        @QueryParam("status")
+        status: Int?
+    ): Result<List<Map<String, Any>>>
+
     @ApiOperation("转移工作空间detail数据到db")
     @GET
     @Path("/workspace/detail/move")

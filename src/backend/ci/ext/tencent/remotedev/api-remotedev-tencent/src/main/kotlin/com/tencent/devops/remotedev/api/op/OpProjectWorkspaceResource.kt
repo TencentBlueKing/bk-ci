@@ -25,46 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.api.service
+package com.tencent.devops.remotedev.api.op
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "START云桌面接口模块")
-@Path("/service/startCloud")
-@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
+@Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
+@Path("/op/project/workspace")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceStartCloudResource {
-    @ApiOperation("创建START云桌面用户")
-    @GET
-    @Path("/startCloud/user/create")
-    fun createStartCloudUser(
-        @ApiParam("user", required = true)
-        @QueryParam("user")
-        user: String
-    ): Result<Boolean>
-    @ApiOperation("同步更新START云桌面的资源池")
-    @GET
-    @Path("/startCloud/resourece/list")
-    fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
+interface OpProjectWorkspaceResource {
 
-    @ApiOperation("根据cgsId获取资源信息")
-    @GET
-    @Path("/startCloud/cgs")
-    fun getCgsData(
-        @ApiParam("cgsId", required = true)
+    @ApiOperation("分配云桌面")
+    @POST
+    @Path("/assign")
+    fun assignWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "拥有者", required = true)
+        @QueryParam("owner")
+        owner: String,
+        @ApiParam(value = "云桌面ID", required = true)
         @QueryParam("cgsId")
         cgsId: String
-    ): Result<EnvironmentResourceData?>
+    ): Result<Boolean>
 }

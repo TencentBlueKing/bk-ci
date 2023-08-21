@@ -70,8 +70,14 @@ interface ExternalResource {
         type: String,
         @QueryParam("key")
         key: String,
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("userId")
+        userId: String,
         @QueryParam("workspaceName")
         workspaceName: String,
+        @QueryParam("autoAssign")
+        autoAssign: Boolean? = false,
         @ApiParam(value = "回调信息", required = true)
         softwareList: SoftwareCallbackRes
     ): Result<Boolean>

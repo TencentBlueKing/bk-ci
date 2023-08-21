@@ -55,7 +55,8 @@ class WorkspaceListener @Autowired constructor(
             mountType = event.mountType ?: event.devFile.checkWorkspaceMountType(),
             type = UpdateEventType.CREATE,
             bkTicket = event.bkTicket,
-            status = false
+            status = false,
+            autoAssign = event.devFile.autoAssign
         )
         try {
             logger.info("Start to handle workspace create ($event)")

@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.resources.op
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ImageSpec
@@ -28,14 +29,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService,
     private val workspaceService: WorkspaceService,
+    private val workspaceCommon: WorkspaceCommon,
     private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val whiteListService: WhiteListService,
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceCommon: WorkspaceCommon
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -175,6 +176,23 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
+    }
+
+    override fun getStartCloudResourceList(
+        userId: String,
+        zoneId: String?,
+        machineType: String?,
+        status: Int?
+    ): Result<List<Map<String, Any>>> {
+        val resourceList = workspaceCommon.syncStartCloudResourceList()
+
+        val filteredResources = resourceList.filter {
+            (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
+                (machineType.isNullOrEmpty() || it.machineType == machineType) &&
+                (status == null || it.status == status)
+        }
+
+        return Result(filteredResources.map { JsonUtil.toMap(it) })
     }
 
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
