@@ -121,6 +121,20 @@ class ProjectDao {
         }
     }
 
+    fun getProjectNameByNameCaseSensitive(
+        dslContext: DSLContext,
+        projectName: String
+    ): List<String> {
+        return with(TProject.T_PROJECT) {
+            dslContext.select(PROJECT_NAME)
+                .from(TProject.T_PROJECT)
+                .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name))
+                .and(DSL.lower(PROJECT_NAME).eq(projectName.lowercase()))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun listMigrateProjects(
         dslContext: DSLContext,
         migrateProjectConditionDTO: MigrateProjectConditionDTO,

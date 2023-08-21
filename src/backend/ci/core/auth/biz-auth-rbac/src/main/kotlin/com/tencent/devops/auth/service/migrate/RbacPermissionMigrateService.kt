@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -80,6 +81,8 @@ class RbacPermissionMigrateService constructor(
         private const val ALL_MEMBERS_NAME = "allMembersName"
         private val toRbacExecutorService = Executors.newFixedThreadPool(5)
         private val migrateProjectsExecutorService = Executors.newFixedThreadPool(5)
+        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
+        private const val MAX_RETRY_TIMES = 1
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -407,20 +410,52 @@ class RbacPermissionMigrateService constructor(
         projectInfo: ProjectVO,
         projectCreator: String
     ): Int? {
+        val projectName = projectInfo.projectName
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        permissionResourceService.resourceCreateRelation(
-            userId = projectCreator,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectInfo.projectName,
-            async = false
-        )
+        for (suffix in 0..MAX_RETRY_TIMES) {
+            try {
+                permissionResourceService.resourceCreateRelation(
+                    userId = projectCreator,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(projectName, suffix),
+                    async = false
+                )
+                break
+            } catch (iamException: IamException) {
+                // 由于iam项目大小写不敏感，蓝盾敏感，可能会出现分级管理员名称重复,需要进行处理
+                handleRepeatProjectName(
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    iamException = iamException,
+                    suffix = suffix
+                )
+            }
+        }
         return authResourceService.getOrNull(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         )?.relationId?.toInt()
+    }
+
+    private fun handleRepeatProjectName(
+        projectCode: String,
+        projectName: String,
+        iamException: IamException,
+        suffix: Int
+    ) {
+        if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR || suffix == MAX_RETRY_TIMES) {
+            throw iamException
+        } else {
+            val projectNames = client.get(ServiceProjectResource::class)
+                .getProjectNameByNameCaseSensitive(projectName = projectName).data ?: throw iamException
+            logger.info("duplicate project name handle|$projectCode|$projectNames")
+            if (projectNames.size <= 1) {
+                throw iamException
+            }
+        }
     }
 
     private fun handleException(exception: Exception, projectCode: String) {

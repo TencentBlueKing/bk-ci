@@ -116,6 +116,11 @@ interface ProjectService {
     fun getByEnglishName(englishName: String): ProjectVO?
 
     /**
+     * 根据项目名称查询大小写不敏感的项目
+     */
+    fun getProjectNameByNameCaseSensitive(projectName: String): List<String>
+
+    /**
      * 修改项目信息 [englishName]是项目英文名，目前平台在api接口上会把他命名成projectId，实际上与t_project表中的project_id字段不同
      * 后续会统一
      */

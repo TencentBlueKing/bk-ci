@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
@@ -48,6 +49,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -194,17 +196,26 @@ class MigrateResourceService @Autowired constructor(
                         )
                     }
                 } ?: run {
-                    rbacPermissionResourceService.resourceCreateRelation(
-                        userId = migrateCreatorFixService.getResourceCreator(
-                            projectCreator = projectCreator,
-                            resourceCreator = instance.iamApprover.first()
-                        ),
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = instance.displayName,
-                        async = false
-                    )
+                    // 迁移资源，可能会出现重名
+                    for (suffix in 0..MAX_RETRY_TIMES) {
+                        try {
+                            rbacPermissionResourceService.resourceCreateRelation(
+                                userId = migrateCreatorFixService.getResourceCreator(
+                                    projectCreator = projectCreator,
+                                    resourceCreator = instance.iamApprover.first()
+                                ),
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                resourceName = RbacAuthUtils.addSuffixIfNeed(instance.displayName, suffix),
+                                async = false
+                            )
+                            break
+                        } catch (iamException: IamException) {
+                            if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR) throw iamException
+                            if (suffix == MAX_RETRY_TIMES) throw iamException
+                        }
+                    }
                 }
             }
             offset += limit
@@ -283,5 +294,7 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.PROJECT.value
         )
         private val executorService = Executors.newFixedThreadPool(50)
+        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
+        private const val MAX_RETRY_TIMES = 5
     }
 }

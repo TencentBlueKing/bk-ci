@@ -78,6 +78,15 @@ interface ServiceProjectResource {
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
 
+    @GET
+    @Path("/getProjectNameByNameCaseSensitive/{projectName}")
+    @ApiOperation("根据项目名称查询大小写不敏感的项目")
+    fun getProjectNameByNameCaseSensitive(
+        @ApiParam("项目名称", required = true)
+        @PathParam("projectName")
+        projectName: String
+    ): Result<List<String>>
+
     @POST
     @Path("/listMigrateProjects/{offset}/{limit}")
     @ApiOperation("条件迁移项目实体")

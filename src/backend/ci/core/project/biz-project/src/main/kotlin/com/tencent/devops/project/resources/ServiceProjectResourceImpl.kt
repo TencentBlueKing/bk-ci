@@ -81,6 +81,10 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getAllProject())
     }
 
+    override fun getProjectNameByNameCaseSensitive(projectName: String): Result<List<String>> {
+        return Result(projectService.getProjectNameByNameCaseSensitive(projectName))
+    }
+
     override fun listMigrateProjects(
         migrateProjectConditionDTO: MigrateProjectConditionDTO,
         limit: Int,
