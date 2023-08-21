@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -33,7 +34,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceCommon: WorkspaceCommon
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -173,5 +175,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
+    }
+
+    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
+        // 先获取工作空间信息
+        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
+            ?: return Result(false)
+
+        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
+        return Result(true)
     }
 }

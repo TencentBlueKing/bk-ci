@@ -31,7 +31,9 @@ import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -590,5 +592,40 @@ class WorkspaceDao {
             "timestampdiff({0}, {1}, NOW())",
             Int::class.java, DSL.keyword(part.toSQL()), t1
         )
+    }
+
+    // 持久化存储workspace detail数据
+    fun saveOrUpdateWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String,
+        detail: String
+    ) {
+        with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_NAME,
+                DETAIL,
+                CREATE_TIME
+            ).values(
+                workspaceName,
+                detail,
+                LocalDateTime.now()
+            ).onDuplicateKeyUpdate()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(DETAIL, detail)
+                .execute()
+        }
+    }
+
+    // 获取workspace detail
+    fun getWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String
+    ): TWorkspaceDetailRecord? {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .fetchAny()
+        }
     }
 }
