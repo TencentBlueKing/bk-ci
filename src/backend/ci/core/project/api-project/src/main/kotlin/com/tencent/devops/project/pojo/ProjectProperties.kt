@@ -34,5 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("项目其他配置")
 data class ProjectProperties(
     @ApiModelProperty("YAML流水线功能设置")
-    val pipelineAsCodeSettings: PipelineAsCodeSettings
+    val pipelineAsCodeSettings: PipelineAsCodeSettings,
+    @ApiModelProperty("数据标签，创建项目时会为该项目分配指定标签的db")
+    val dataTag: String? = null
 )
