@@ -105,7 +105,7 @@ open class BaseBuildRecordService(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount
             ) ?: run {
-                message = "Will not update"
+                message = "Model record is empty"
                 return
             }
             startUser = record.startUser
@@ -117,7 +117,7 @@ open class BaseBuildRecordService(
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (!change && cancelUser.isNullOrBlank()) {
-                message = "Will not update"
+                message = "Build status did not change"
                 return
             }
             buildRecordModelDao.updateRecord(
@@ -183,7 +183,7 @@ open class BaseBuildRecordService(
                 pipelineId = pipelineId,
                 handlePostFlag = false
             )
-            val baseModelMap = JsonUtil.toMutableMap(fullModel)
+            val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -224,7 +224,7 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineRecordChangeEvent(
+    protected fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -236,7 +236,7 @@ open class BaseBuildRecordService(
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,

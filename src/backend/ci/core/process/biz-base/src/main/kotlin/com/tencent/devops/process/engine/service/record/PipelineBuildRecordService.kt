@@ -77,15 +77,16 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress(
     "LongParameterList",
@@ -238,35 +239,10 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.resetBuildOption()
             // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
             stage.containers.forEach { container ->
-                container.containerHashId = container.containerHashId ?: container.containerId
-                container.containerId = container.id
-                var elementElapsed = 0L
-                container.elements.forEach { element ->
-                    element.timeCost?.executeCost?.let {
-                        element.elapsed = it
-                        elementElapsed += it
-                    }
-                    element.additionalOptions?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
+                fixContainerDetail(container)
+                container.fetchGroupContainers()?.forEach { groupContainer ->
+                    fixContainerDetail(groupContainer)
                 }
-                if (container is NormalContainer) {
-                    container.jobControlOption?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                    container.mutexGroup?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                } else if (container is VMBuildContainer) {
-                    container.jobControlOption?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                    container.mutexGroup?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                }
-                container.elementElapsed = container.elementElapsed ?: elementElapsed
-                container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
             }
             stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
@@ -291,51 +267,42 @@ class PipelineBuildRecordService @Autowired constructor(
                     is CodeGitWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Git")
                         )
                     }
                     is CodeTGitWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Git")
                         )
                     }
                     is CodeGithubWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("GitHub")
                         )
                     }
                     is CodeGitlabWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("Gitlab")
                         )
                     }
                     is CodeP4WebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("P4")
                         )
                     }
                     is CodeSVNWebHookTriggerElement -> {
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("SVN")
                         )
                     }
                     else -> null
                 }
-            } ?: I18nUtil.getCodeLanMessage(
-                messageCode = BK_WAREHOUSE_EVENTS,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
+            } ?: I18nUtil.getCodeLanMessage(messageCode = BK_WAREHOUSE_EVENTS)
         } else {
             StartType.toReadableString(
                 buildInfo.trigger,
@@ -375,11 +342,47 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
-            buildMsg = buildInfo.buildMsg,
+            buildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = buildInfo.buildMsg,
+                startType = StartType.toStartType(buildInfo.trigger),
+                channelCode = buildInfo.channelCode
+            ),
             material = buildInfo.material,
             remark = buildInfo.remark,
             webhookInfo = buildInfo.webhookInfo
         )
+    }
+
+    private fun fixContainerDetail(container: Container) {
+        container.containerHashId = container.containerHashId ?: container.containerId
+        container.containerId = container.id
+        var elementElapsed = 0L
+        container.elements.forEach { element ->
+            element.timeCost?.executeCost?.let {
+                element.elapsed = it
+                elementElapsed += it
+            }
+            element.additionalOptions?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        }
+        if (container is NormalContainer) {
+            container.jobControlOption?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+            container.mutexGroup?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        } else if (container is VMBuildContainer) {
+            container.jobControlOption?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+            container.mutexGroup?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        }
+        container.elementElapsed = container.elementElapsed ?: elementElapsed
+        container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
     }
 
     private fun fixDetailTimeCost(buildInfo: BuildInfo, detail: Model) {
@@ -498,6 +501,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 null, cancelUser, null
             )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
+            )
         }
     }
 
@@ -571,6 +581,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 errorInfoList, null, null
+            )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
             )
         }
         val detail = pipelineBuildDetailService.buildEnd(

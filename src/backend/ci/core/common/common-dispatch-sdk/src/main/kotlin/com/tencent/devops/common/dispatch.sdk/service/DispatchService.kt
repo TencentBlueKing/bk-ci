@@ -65,6 +65,7 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
+@Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
@@ -146,17 +147,21 @@ class DispatchService constructor(
         // 当hash表为空时，redis会自动删除
     }
 
-    fun checkRunning(event: PipelineAgentStartupEvent) {
+    fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
         // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
             projectId = event.projectId,
             buildId = event.buildId,
+            containerId = event.containerId,
             taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline task is running " +
-                            "because of ${statusResult.message}")
+        val startBuildTask = statusResult.data?.startBuildTask
+        val buildContainer = statusResult.data?.buildContainer
+        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                    "because of statusResult(${statusResult.message})"
+            )
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
@@ -166,7 +171,20 @@ class DispatchService constructor(
             )
         }
 
-        if (!statusResult.data!!.isRunning()) {
+        var needStart = true
+        if (event.executeCount != startBuildTask.executeCount) {
+            // 如果已经重试过或执行次数不匹配则直接丢弃
+            needStart = false
+        } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
+            // 如果Job已经启动在运行或则直接丢弃
+            needStart = false
+        } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
+            needStart = false
+        }
+
+        if (!needStart) {
+            if (event.retryTime > 1) return false
+            // 如果Job已经结束或为在启动中，则dispatch主动发起的重试
             logger.warn("The build event($event) is not running")
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
@@ -176,6 +194,7 @@ class DispatchService constructor(
                 errorMessage = errorMessage
             )
         }
+        return true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
@@ -251,7 +270,8 @@ class DispatchService constructor(
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
         val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(key = secretInfoRedisKey,
+        val redisResult = redisOperation.hget(
+            key = secretInfoRedisKey,
             hashKey = secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1)
         )
         if (redisResult != null) {

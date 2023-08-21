@@ -1,10 +1,12 @@
 <template>
     <bk-table
+        ext-cls="pipeline-list-table"
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         row-key="pipelineId"
         height="100%"
         :data="pipelineList"
+        :size="tableSize"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
@@ -12,6 +14,9 @@
         @sort-change="handleSort"
         :default-sort="sortField"
         @selection-change="handleSelectChange"
+        @header-dragend="handelHeaderDragend"
+        @row-mouse-enter="handleRowMouseEnter"
+        @row-mouse-leave="handleRowMouseLeave"
         :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
@@ -22,8 +27,24 @@
                 {{$t('clearSelection')}}
             </bk-button>
         </div>
-        <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
+            <template slot-scope="{ row, $index }">
+                <bk-button
+                    v-show="showCollectIndex === $index || row.hasCollect"
+                    text
+                    class="icon-star-btn"
+                    :theme="row.hasCollect ? 'warning' : ''"
+                    @click="collectHandler(row)">
+                    <i :class="{
+                        'devops-icon': true,
+                        'icon-star': !row.hasCollect,
+                        'icon-star-shape': row.hasCollect
+                    }" />
+                </bk-button>
+            </template>
+        </bk-table-column>
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
@@ -43,7 +64,7 @@
                 <span v-else>{{props.row.pipelineName}}</span>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
+        <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
             <div :ref="`belongsGroupBox_${props.$index}`" class="pipeline-group-box-cell" slot-scope="props">
                 <template v-if="pipelineGroups[props.$index].visibleGroups">
                     <bk-tag
@@ -83,20 +104,20 @@
             </div>
         </bk-table-column>
         <template v-if="isPatchView">
-            <bk-table-column width="150" :label="$t('latestExec')" prop="latestBuildNum">
+            <bk-table-column :width="tableWidthMap.latestBuildNum" :label="$t('latestExec')" prop="latestBuildNum">
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
-            <bk-table-column width="200" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column width="200" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
-            <bk-table-column width="200" :label="$t('creator')" prop="creator" />
+            <bk-table-column :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
+            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
-            <bk-table-column key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
-            <bk-table-column key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
+            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.deleteTime" key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :label="$t('latestExec')">
+            <bk-table-column v-if="allRenderColumnMap.latestExec" :width="tableWidthMap.latestExec" min-width="180" :label="$t('latestExec')" prop="latestExec">
                 <span v-if="props.row.delete" slot-scope="props">
                     {{$t('deleteAlready')}}
                 </span>
@@ -132,21 +153,27 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="200" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
+            <bk-table-column v-if="allRenderColumnMap.lastExecTime" :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
                 <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </div>
             </bk-table-column>
-            <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
+            <bk-table-column v-if="allRenderColumnMap.lastModify" :width="tableWidthMap.updateTime" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
                 <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
                 </div>
             </bk-table-column>
+            <bk-table-column v-if="allRenderColumnMap.creator" :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
+            <bk-table-column v-if="allRenderColumnMap.created" :width="tableWidthMap.created" :label="$t('created')" prop="createTime">
+                <template slot-scope="props">
+                    {{ prettyDateTimeFormat(props.row.createTime) }}
+                </template>
+            </bk-table-column>
         </template>
-        <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
+        <bk-table-column v-if="!isPatchView" :width="tableWidthMap.pipelineId" fixed="right" :label="$t('operate')" prop="pipelineId">
             <div class="pipeline-operation-cell" slot-scope="props">
                 <bk-button
                     v-if="isDeleteView"
@@ -174,35 +201,31 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <bk-button
-                        text
-                        theme=""
-                        class="pipeline-exec-btn"
-                        :disabled="props.row.disabled"
-                        @click="execPipeline(props.row)"
-                    >
-                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
-                            <logo v-if="props.row.lock" name="minus-circle"></logo>
-                            <logo
-                                v-else
-                                name="play"
-                            />
-                        </span>
-                    </bk-button>
-                    <bk-button
-                        text
-                        :theme="props.row.hasCollect ? 'warning' : ''"
-                        class="pipeline-collect-btn"
-                        @click="collectHandler(props.row)">
-                        <i :class="{
-                            'devops-icon': true,
-                            'icon-star': !props.row.hasCollect,
-                            'icon-star-shape': props.row.hasCollect
-                        }" />
-                    </bk-button>
+                    <span v-bk-tooltips="props.row.tooltips">
+                        <bk-button
+                            text
+                            theme="primary"
+                            class="exec-pipeline-btn"
+                            :disabled="props.row.disabled || props.row.lock"
+                            
+                            @click="execPipeline(props.row)"
+                        >
+                            {{ props.row.lock ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
+                        </bk-button>
+                    </span>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
                 </template>
             </div>
+        </bk-table-column>
+        <bk-table-column
+            v-if="!isPatchView && !isDeleteView"
+            type="setting">
+            <bk-table-setting-content
+                :fields="tableColumn"
+                :selected="selectedTableColumn"
+                :size="tableSize"
+                @setting-change="handleSettingChange"
+            />
         </bk-table-column>
     </bk-table>
 </template>
@@ -216,10 +239,12 @@
     import {
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID,
-        RECENT_USED_VIEW_ID
+        RECENT_USED_VIEW_ID,
+        CACHE_PIPELINE_TABLE_WIDTH_MAP,
+        TABLE_COLUMN_CACHE
     } from '@/store/constants'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { convertTime, isShallowEqual } from '@/utils/util'
+    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -247,7 +272,12 @@
                     limit: parseInt(this.$route.query.pageSize ?? 50),
                     count: 0
                 },
-                visibleTagCountList: {}
+                visibleTagCountList: {},
+                tableWidthMap: {},
+                tableSize: 'small',
+                tableColumn: [],
+                selectedTableColumn: [],
+                showCollectIndex: -1
             }
         },
         computed: {
@@ -298,6 +328,12 @@
                     prop: this.getkeyByValue(PIPELINE_SORT_FILED, prop),
                     order: this.getkeyByValue(ORDER_ENUM, order)
                 }
+            },
+            allRenderColumnMap () {
+                return this.selectedTableColumn.reduce((result, item) => {
+                    result[item.id] = true
+                    return result
+                }, {})
             }
         },
 
@@ -323,12 +359,92 @@
                         page: 1
                     })
                 }
+            },
+            isAllPipelineView (val) {
+                this.setTableColumn(val)
+            },
+            isPatchView (val) {
+                this.setTableColumn(val)
+            },
+            isDeleteView (val) {
+                this.setTableColumn(val)
             }
         },
         mounted () {
+            this.tableColumn = [
+                {
+                    id: 'pipelineName',
+                    label: this.$t('pipelineName'),
+                    disabled: true
+                },
+                {
+                    id: 'ownGroupName',
+                    label: this.$t('ownGroupName')
+                },
+                {
+                    id: 'latestExec',
+                    label: this.$t('latestExec')
+                },
+                {
+                    id: 'lastExecTime',
+                    label: this.$t('lastExecTime')
+                },
+                {
+                    id: 'lastModify',
+                    label: this.$t('lastModify')
+                },
+                {
+                    id: 'creator',
+                    label: this.$t('creator')
+                },
+                {
+                    id: 'created',
+                    label: this.$t('created')
+                },
+                {
+                    id: 'operate',
+                    label: this.$t('operate'),
+                    disabled: true
+                }
+            ]
+            const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
+            if (columnsCache) {
+                this.selectedTableColumn = columnsCache.columns
+                this.tableSize = columnsCache.size
+            } else {
+                this.selectedTableColumn = [
+                    { id: 'pipelineName' },
+                    { id: 'ownGroupName' },
+                    { id: 'latestExec' },
+                    { id: 'lastExecTime' },
+                    { id: 'lastModify' },
+                    { id: 'creator' },
+                    { id: 'created' },
+                    { id: 'operate' }
+                ]
+            }
+
+            if (!(this.isAllPipelineView)) {
+                this.tableColumn.splice(1, 1)
+            }
+            this.tableWidthMap = JSON.parse(localStorage.getItem(CACHE_PIPELINE_TABLE_WIDTH_MAP)) || {
+                pipelineName: 192,
+                viewNames: 192,
+                latestBuildNum: 150,
+                latestBuildStartDate: 154,
+                createTime: 154,
+                deleteTime: 154,
+                creator: 154,
+                updateTime: 154,
+                lastModifyUser: '',
+                latestExec: 484,
+                created: 154,
+                pipelineId: 60
+            }
             this.requestList()
         },
         methods: {
+            prettyDateTimeFormat,
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -446,6 +562,35 @@
                     }
                     return acc
                 }, {})
+            },
+            handelHeaderDragend (newWidth, oldWidth, column) {
+                this.tableWidthMap[column.property] = newWidth
+                // this.tableWidthMap.pipelineName -= 1
+                localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
+            },
+            handleRowMouseEnter (index) {
+                this.showCollectIndex = index
+            },
+            handleRowMouseLeave (index) {
+                this.showCollectIndex = -1
+            },
+            setTableColumn (val) {
+                if (val) {
+                    this.tableColumn.splice(1, 0, {
+                        id: 'ownGroupName',
+                        label: this.$t('ownGroupName')
+                    })
+                } else {
+                    this.tableColumn.splice(1, 1)
+                }
+            },
+            handleSettingChange ({ fields, size }) {
+                this.selectedTableColumn = fields
+                this.tableSize = size
+                localStorage.setItem(TABLE_COLUMN_CACHE, JSON.stringify({
+                    columns: fields,
+                    size
+                }))
             }
         }
     }
@@ -476,5 +621,39 @@
     .latest-build-multiple-row {
         display: flex;
         flex-direction: column;
+    }
+    .pipeline-list-table {
+        td {
+            position: inherit;
+        }
+        .bk-table-body-wrapper {
+            td {
+                .bk-table-setting-content {
+                    display: none;
+                }
+            }
+        }
+        .bk-table-fixed-right {
+            right: 6px !important;
+        }
+        ::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
+            background-color: white;
+        }
+        ::-webkit-scrollbar-thumb {
+            height: 6px;
+            border-radius: 20px;
+            background-color: #DCDEE5 !important;
+        }
+    }
+    .exec-pipeline-btn {
+        width: 55px;
+        text-align: left;
+        overflow: hidden;
+    }
+    .icon-star-btn {
+        position: relative;
+        font-size: 14px !important;
     }
 </style>
