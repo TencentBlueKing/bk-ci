@@ -51,6 +51,7 @@ import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -604,6 +605,46 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         }
         logger.info("validateUserDownloadFilePermission, result: $flag")
         return flag
+    }
+
+    override fun generateFileDownloadUrl(
+        fileChannelType: FileChannelTypeEnum,
+        destPath: String,
+        fullUrl: Boolean
+    ): String {
+        val urlPrefix = StringBuilder()
+        when (fileChannelType) {
+            FileChannelTypeEnum.WEB_SHOW -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download")
+            }
+            FileChannelTypeEnum.WEB_DOWNLOAD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download/local")
+            }
+            FileChannelTypeEnum.SERVICE -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/service/artifactories/file/download")
+            }
+            FileChannelTypeEnum.BUILD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/build/artifactories/file/download")
+            }
+        }
+        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
+        return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
+            "$urlPrefix/${URLEncoder.encode(filePath, "UTF-8")}"
+        } else {
+            "$urlPrefix?filePath=$filePath"
+        }
     }
 
     override fun deleteFile(userId: String, filePath: String) {
