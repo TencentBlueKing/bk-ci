@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "LongMethod")
+@Suppress("ComplexMethod", "LongMethod", "ReturnCount")
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,

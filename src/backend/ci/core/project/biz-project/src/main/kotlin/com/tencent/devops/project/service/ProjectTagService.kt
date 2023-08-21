@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -45,6 +46,7 @@ import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
@@ -438,6 +440,10 @@ class ProjectTagService @Autowired constructor(
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
         } ?: emptyMap()
+
+        val projectProperties = projectData.properties?.let {
+            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
+        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
         return ProjectInfoResponse(
             projectId = projectData.projectId,
             projectName = projectData.projectName,
@@ -469,7 +475,8 @@ class ProjectTagService @Autowired constructor(
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
             enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit
+            pipelineLimit = projectData.pipelineLimit,
+            properties = projectProperties
         )
     }
 
