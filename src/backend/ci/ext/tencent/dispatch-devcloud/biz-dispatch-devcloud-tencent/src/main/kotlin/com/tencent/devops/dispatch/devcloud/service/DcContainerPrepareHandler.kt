@@ -342,14 +342,14 @@ class DcContainerPrepareHandler @Autowired constructor(
             originContainerStatus == OriginContainerStatus.running.name
 
         ) {
-            handlerContext.containerName = persistenceContainerInfo.containerName
-            handlerContext.containerChanged = false
-
             return if (persistenceContainerInfo.buildStatus == ContainerBuildStatus.IDLE.status) {
                 dcContainerPersistenceHandler.updatePersistenceBuildStatus(
                     containerName = persistenceContainerInfo.containerName,
                     status = ContainerBuildStatus.BUSY
                 )
+
+                handlerContext.containerName = persistenceContainerInfo.containerName
+                handlerContext.containerChanged = false
 
                 true
             } else {

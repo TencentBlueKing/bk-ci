@@ -55,6 +55,8 @@ class PersistenceBuildService @Autowired constructor(
                 vmSeqId = container.vmSeqId,
                 containerName = container.containerName
             )
+
+            return null
         }
 
         val lock = PersistenceContainerLock(redisOperation, persistenceAgentId)
@@ -100,12 +102,13 @@ class PersistenceBuildService @Autowired constructor(
         )
         if (persistenceContainerRecord == null) {
             logger.warn("Container $persistenceAgentId is null.")
+            return
         }
 
         // 重置persistenceContainer状态
         dcPersistenceContainerDao.updateBuildStatus(
             dslContext,
-            persistenceContainerRecord!!.containerName,
+            persistenceContainerRecord.containerName,
             ContainerBuildStatus.IDLE.status
         )
 
