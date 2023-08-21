@@ -30,6 +30,7 @@ package com.tencent.devops.repository.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@SuppressWarnings("ObjectPropertyNaming")
 @ApiModel("代码库模型-GitHub代码库")
 data class GithubRepository(
     @ApiModelProperty("代码库别名", required = true)
@@ -43,7 +44,9 @@ data class GithubRepository(
     @ApiModelProperty("项目id", required = true)
     override val projectId: String = "",
     @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
+    override val repoHashId: String?,
+    @ApiModelProperty("Git仓库ID", required = false)
+    val gitProjectId: Long? = null
 ) : Repository {
     companion object {
         const val classType = "github"
