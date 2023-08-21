@@ -288,4 +288,46 @@ class P4Api(
             }
         }
     }
+
+    /**
+     * 获取修改列表
+     */
+    fun getChangelist(
+        change: Int
+    ): P4ChangeList {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            p4Server.getServer().getChangelist(change).run {
+                P4ChangeList(
+                    description = this.description,
+                    fileList = this.getFiles(true).map { iFileSpec ->
+                        P4FileSpec(
+                            opStatus = iFileSpec.opStatus.name,
+                            depotPathString = iFileSpec.depotPathString
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    fun getShelvedChangeList(
+        change: Int
+    ): P4ChangeList {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            val description = p4Server.getServer().getChangelist(change).description
+            p4Server.getServer().getShelvedFiles(change).run {
+                P4ChangeList(
+                    description = description,
+                    fileList = this.map { iFileSpec ->
+                        P4FileSpec(
+                            opStatus = iFileSpec.opStatus.name,
+                            depotPathString = iFileSpec.depotPathString
+                        )
+                    }
+                )
+            }
+        }
+    }
 }
