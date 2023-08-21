@@ -56,6 +56,7 @@ class CodeTGitScmImpl constructor(
     private var passPhrase: String?,
     private val token: String,
     private val gitConfig: GitConfig,
+    private val gitApi: GitApi,
     private val event: String? = null
 ) : IScm {
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
@@ -302,6 +303,5 @@ class CodeTGitScmImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitScmImpl::class.java)
-        private val gitApi = GitApi()
     }
 }

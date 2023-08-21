@@ -50,7 +50,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebhookEventListener constructor(
-    private val pipelineBuildService: PipelineBuildWebhookService,
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate,
     private val triggerBuildLogService: PipelineWebhookBuildLogService
 ) {
@@ -72,25 +72,25 @@ class WebhookEventListener constructor(
                 requestContent = event.requestContent
             )
             when (event.commitEventType) {
-                CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
+                CommitEventType.SVN -> pipelineBuildWebhookService.externalCodeSvnBuild(event.requestContent)
                 CommitEventType.GIT -> {
-                    pipelineBuildService.externalCodeGitBuild(
+                    pipelineBuildWebhookService.externalCodeGitBuild(
                         codeRepositoryType = CodeGitWebHookTriggerElement.classType,
                         event = event.event,
                         body = event.requestContent
                     )
                 }
-                CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(
+                CommitEventType.GITLAB -> pipelineBuildWebhookService.externalGitlabBuild(
                     e = event.requestContent
                 )
                 CommitEventType.TGIT -> {
-                    pipelineBuildService.externalCodeGitBuild(
+                    pipelineBuildWebhookService.externalCodeGitBuild(
                         codeRepositoryType = CodeTGitWebHookTriggerElement.classType,
                         event = event.event,
                         body = event.requestContent
                     )
                 }
-                CommitEventType.P4 -> pipelineBuildService.externalP4Build(event.requestContent)
+                CommitEventType.P4 -> pipelineBuildWebhookService.externalP4Build(event.requestContent)
             }
             result = true
         } catch (ignore: Throwable) {
@@ -174,7 +174,7 @@ class WebhookEventListener constructor(
             requestContent = thisGithubWebhook.body
         )
         try {
-            pipelineBuildService.externalCodeGithubBuild(
+            pipelineBuildWebhookService.externalCodeGithubBuild(
                 eventType = thisGithubWebhook.event,
                 guid = thisGithubWebhook.guid,
                 signature = thisGithubWebhook.signature,
