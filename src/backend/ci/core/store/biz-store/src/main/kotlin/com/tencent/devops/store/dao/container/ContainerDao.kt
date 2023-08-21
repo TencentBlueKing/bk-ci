@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.container
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TContainer
 import com.tencent.devops.model.store.tables.records.TContainerRecord
 import com.tencent.devops.store.pojo.container.ContainerRequest
@@ -94,6 +95,7 @@ class ContainerDao {
                 .selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
+                .skipCheck()
                 .fetch()
         }
     }
