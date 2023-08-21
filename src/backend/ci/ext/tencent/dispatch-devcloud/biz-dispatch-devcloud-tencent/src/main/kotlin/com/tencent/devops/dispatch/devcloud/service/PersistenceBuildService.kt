@@ -178,6 +178,11 @@ class PersistenceBuildService @Autowired constructor(
                 data = false
             )
         }
+        dcPersistenceContainerDao.updateContainerStatus(
+            dslContext,
+            containerName,
+            PersistenceContainerStatus.DELETED.status
+        )
 
         deletePersistenceContainer(
             userId = userId,

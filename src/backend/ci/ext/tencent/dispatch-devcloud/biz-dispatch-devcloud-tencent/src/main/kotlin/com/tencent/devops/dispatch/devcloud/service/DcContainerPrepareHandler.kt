@@ -91,10 +91,10 @@ class DcContainerPrepareHandler @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DcContainerPrepareHandler::class.java)
 
-        private const val devCloudHelpUrl =
+        private const val DEVCLOUD_HELP_URL =
             "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>" +
                 "【DevCloud容器问题FAQ】</a>"
-        private const val buildPoolSize = 100000 // 单个流水线可同时执行的任务数量
+        private const val BUILD_POOL_SIZE = 100000 // 单个流水线可同时执行的任务数量
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -137,7 +137,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                     dcContainerStartHandler.handlerRequest(handlerContext)
                 }
             } catch (e: BuildFailureException) {
-                logger.error("$buildLogKey create devCloud failed. msg:${e.message}. \n$devCloudHelpUrl")
+                logger.error("$buildLogKey create devCloud failed. msg:${e.message}. \n$DEVCLOUD_HELP_URL")
                 throw BuildFailureException(
                     e.errorType,
                     e.errorCode,
@@ -146,7 +146,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                         messageCode = DispatchDevcloudMessageCode.BK_FAILED_START_DEVCLOUD
                     )) + "\n" + I18nUtil.getCodeLanMessage(
                         messageCode = DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS
-                    ) + "：$devCloudHelpUrl"
+                    ) + "：$DEVCLOUD_HELP_URL"
                 )
             } catch (e: Exception) {
                 logger.error("$buildLogKey create devCloud failed, msg:${e.message}")
@@ -171,7 +171,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                         ":${e.message}. \n" +
                         I18nUtil.getCodeLanMessage(
                             messageCode = DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS) +
-                        "：$devCloudHelpUrl"
+                        "：$DEVCLOUD_HELP_URL"
                 )
             }
         }
@@ -235,28 +235,26 @@ class DcContainerPrepareHandler @Autowired constructor(
     }
 
     private fun loopIdleContainer(handlerContext: DcStartupHandlerContext) {
-        with(handlerContext) {
-            val lock = PipelineContainerLock(redisOperation, pipelineId, vmSeqId)
-            try {
-                lock.lock()
-                for (i in 1..buildPoolSize) {
-                    logger.info("$buildLogKey poolNo is $poolNo")
-                    handlerContext.poolNo = i
-                    if (idleContainer(handlerContext)) {
-                        return
-                    }
+        val lock = PipelineContainerLock(redisOperation, handlerContext.pipelineId, handlerContext.vmSeqId)
+        try {
+            lock.lock()
+            for (i in 1..BUILD_POOL_SIZE) {
+                logger.info("${handlerContext.buildLogKey} poolNo is ${handlerContext.poolNo}")
+                handlerContext.poolNo = i
+                if (idleContainer(handlerContext)) {
+                    return
                 }
-
-                // 构建池遍历结束也没有可用构建机，报错
-                throw BuildFailureException(
-                    ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
-                    ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
-                    ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
-                )
-            } finally {
-                lock.unlock()
             }
+
+            // 构建池遍历结束也没有可用构建机，报错
+            throw BuildFailureException(
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
+            )
+        } finally {
+            lock.unlock()
         }
     }
 
