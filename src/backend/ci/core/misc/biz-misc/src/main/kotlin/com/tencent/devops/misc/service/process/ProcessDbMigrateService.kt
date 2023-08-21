@@ -182,6 +182,7 @@ class ProcessDbMigrateService @Autowired constructor(
             routingName = projectId
         )
         redisOperation.delete(key)
+        // 删除项目原来的路由规则
         // todo 删除原库的数据
         // todo 发送迁移成功消息
     }
