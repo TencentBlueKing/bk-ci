@@ -302,7 +302,7 @@ class StartControl @Autowired constructor(
                 )
             }
 
-            workspaceCommon.getOrSaveWorkspaceDetail(
+            workspaceCommon.updateWorkspaceDetail(
                 workspaceName,
                 WorkspaceMountType.valueOf(workspace.workspaceMountType)
             )

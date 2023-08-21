@@ -194,4 +194,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
         return Result(filteredResources.map { JsonUtil.toMap(it) })
     }
+
+    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
+        // 先获取工作空间信息
+        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
+            ?: return Result(false)
+
+        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
+        return Result(true)
+    }
 }
