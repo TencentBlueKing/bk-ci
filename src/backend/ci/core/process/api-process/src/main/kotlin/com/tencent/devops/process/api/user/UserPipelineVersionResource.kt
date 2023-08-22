@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
@@ -148,7 +147,6 @@ interface UserPipelineVersionResource {
         pageSize: Int?
     ): Result<Page<String>>
 
-    // TODO 增加Version搜索同时查名字，增加指定一个版本放在第一页最后一个
     @ApiOperation("流水线编排版本列表（搜索、分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/versions")
@@ -162,16 +160,22 @@ interface UserPipelineVersionResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("过滤创建人", required = false)
+        @ApiParam("跳转定位的版本号", required = false)
+        @QueryParam("fromVersion")
+        fromVersion: Int? = null,
+        @ApiParam("搜索字段：版本名包含字符", required = false)
+        @QueryParam("versionName")
+        versionName: String? = null,
+        @ApiParam("搜索字段：创建人", required = false)
         @QueryParam("creator")
         creator: String? = null,
-        @ApiParam("模糊查询变更说明", required = false)
+        @ApiParam("搜索字段：变更说明", required = false)
         @QueryParam("description")
         description: String? = null,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "5")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<PipelineResVersion>>

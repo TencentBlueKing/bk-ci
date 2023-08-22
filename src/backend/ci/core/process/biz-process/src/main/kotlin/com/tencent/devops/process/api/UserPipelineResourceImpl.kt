@@ -721,8 +721,10 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }

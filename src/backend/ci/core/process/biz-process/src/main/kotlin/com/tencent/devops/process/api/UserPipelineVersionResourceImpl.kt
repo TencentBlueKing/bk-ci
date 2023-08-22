@@ -309,6 +309,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        fromVersion: Int?,
+        versionName: String?,
         creator: String?,
         description: String?,
         page: Int?,
@@ -336,10 +338,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                fromVersion = fromVersion,
+                versionName = versionName,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                page = page,
-                pageSize = pageSize
+                page = page ?: 1,
+                pageSize = pageSize ?: 5
             )
         )
     }

@@ -200,8 +200,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }

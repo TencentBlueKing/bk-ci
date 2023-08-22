@@ -63,7 +63,6 @@ import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

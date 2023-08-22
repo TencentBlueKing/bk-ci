@@ -65,5 +65,9 @@ data class PipelineResourceVersion(
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
     @ApiModelProperty("版本变更说明", required = false)
-    val description: String? = null
+    val description: String? = null,
+    @ApiModelProperty("调试构建ID", required = false)
+    val debugBuildId: String? = null,
+    @ApiModelProperty("来源代码库标识（分支名）", required = false)
+    val pacRefs: String? = null
 )
