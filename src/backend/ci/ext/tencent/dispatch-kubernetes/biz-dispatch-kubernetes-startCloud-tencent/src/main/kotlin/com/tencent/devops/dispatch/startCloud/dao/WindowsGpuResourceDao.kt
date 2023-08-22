@@ -105,7 +105,7 @@ class WindowsGpuResourceDao {
             }
             return dslContext.selectFrom(this)
                 .where(condition)
-                .fetchOne()
+                .fetchAny()
         }
     }
 }
