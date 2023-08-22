@@ -40,5 +40,7 @@ data class ProjectProperties(
     @ApiModelProperty("可申请的云桌面数", required = false)
     val cloudDesktopNum: Int = 0,
     @ApiModelProperty("云研发管理员，多人用分号分隔", required = false)
-    val remotedevManager: String? = null
+    val remotedevManager: String? = null,
+    @ApiModelProperty("数据标签，创建项目时会为该项目分配指定标签的db")
+    val dataTag: String? = null
 )
