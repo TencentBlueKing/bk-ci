@@ -48,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
-import com.tencent.devops.process.yaml.modelCreate.ModelContainer
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
@@ -56,6 +55,7 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
+import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v2.stageCheck.PreFlow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageReviews
@@ -70,7 +70,7 @@ import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 class StageTransfer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val modelContainer: ModelContainer,
+    val modelContainer: ContainerTransfer,
     val modelElement: ElementTransfer
 ) {
     companion object {
@@ -200,7 +200,7 @@ class StageTransfer @Autowired(required = false) constructor(
         }
         return PreStage(
             name = stage.name,
-            label = stage.tag?.ifEmpty { null },
+            label = maskYamlStageLabel(stage.tag).ifEmpty { null },
             ifField = when (stage.stageControlOption?.runCondition) {
                 StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
                 StageRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
@@ -217,6 +217,11 @@ class StageTransfer @Autowired(required = false) constructor(
             // TODO 暂时不支持准出和gates的导出
             checkOut = null
         )
+    }
+
+    private fun maskYamlStageLabel(tags: List<String>?): List<String> {
+        if (tags.isNullOrEmpty()) return emptyList()
+        return tags.map { StageLabel.parseById(it).value }
     }
 
     private fun getCheckInForStage(stage: Stage): PreStageCheck? {

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
-import com.tencent.devops.process.yaml.v2.models.GitNotices
+import com.tencent.devops.process.yaml.v2.models.PacNotices
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -61,7 +61,7 @@ data class PreScriptBuildYamlV3(
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    override var notices: List<GitNotices>?,
+    var notices: List<PacNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {

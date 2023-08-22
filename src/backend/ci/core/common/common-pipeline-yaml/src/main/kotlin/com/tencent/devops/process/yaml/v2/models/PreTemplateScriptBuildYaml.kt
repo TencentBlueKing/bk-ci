@@ -44,7 +44,7 @@ import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
     property = "version",
     defaultImpl = PreTemplateScriptBuildYaml::class
 )
@@ -56,7 +56,7 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     val version: String?
     val name: String?
     val label: List<String>?
-    val notices: List<GitNotices>?
+    val notices: List<Notices>?
     val concurrency: Concurrency?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI)

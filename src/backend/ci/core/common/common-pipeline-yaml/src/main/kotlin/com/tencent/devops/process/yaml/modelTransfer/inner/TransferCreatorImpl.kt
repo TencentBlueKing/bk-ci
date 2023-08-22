@@ -39,8 +39,8 @@ import javax.ws.rs.core.Response
 
 @Primary
 @Component
-class TransferModelCreatorImpl @Autowired constructor(
-) : TransferModelCreator {
+class TransferCreatorImpl @Autowired constructor(
+) : TransferCreator {
     @Value("\${marketRun.enable:#{false}}")
     private val marketRunTaskData: Boolean = false
 
@@ -51,7 +51,7 @@ class TransferModelCreatorImpl @Autowired constructor(
     private val runPlugInVersionData: String? = null
 
     @Value("\${container.defaultImage:#{null}}")
-    private val defaultImageData: String = "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
+    private val defaultImageData: String = "mirrors.tencent.com/ci/tlinux3_ci:2.5.0"
 
     companion object {
         private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"

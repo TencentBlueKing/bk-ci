@@ -1,7 +1,13 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.process.api.service.ServicePipelineGroupResource
+import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
@@ -13,7 +19,8 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class TransferCacheService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val tokenService: ClientTokenService
 ) {
 
     companion object {
@@ -42,11 +49,39 @@ class TransferCacheService @Autowired constructor(
                         imageCode = imageCode,
                         imageVersion = imageVersion
                     ).data
-            }.onFailure { logger.warn("get $key default value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key ImageInfoByCodeAndVersion value error.") }.getOrNull()
+        }
+
+    private val projectGroupAndUsersCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, List<BkAuthGroupAndUserList>?> { key ->
+            kotlin.runCatching {
+                client.get(ServiceProjectAuthResource::class)
+                    .getProjectGroupAndUserList(
+                        token = tokenService.getSystemToken(null)!!,
+                        projectCode = key
+                    ).data
+            }.onFailure { logger.warn("get $key ProjectGroupAndUserList error.") }.getOrNull()
+        }
+
+    private val pipelineLabel = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, List<PipelineGroup>?> { projectId ->
+            kotlin.runCatching {
+                client.get(ServicePipelineGroupResource::class)
+                    .getGroups(AUTH_HEADER_USER_ID_DEFAULT_VALUE, projectId)
+                    .data
+            }.onFailure { logger.warn("get $projectId default value error.") }.getOrNull()
         }
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
 
     fun getStoreImageInfo(imageCode: String, imageVersion: String?) =
         storeImageInfoCache.get("$imageCode@@${imageVersion ?: ""}")
+
+    fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
+
+    fun getPipelineLabel(projectId: String) = pipelineLabel.get(projectId)
 }
