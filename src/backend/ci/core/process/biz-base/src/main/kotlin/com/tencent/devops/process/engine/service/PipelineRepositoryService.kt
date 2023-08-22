@@ -99,6 +99,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.joda.time.LocalDateTime
@@ -149,15 +150,6 @@ class PipelineRepositoryService constructor(
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
-        private fun getVersionName(
-            pipelineVersion: Int?,
-            triggerVersion: Int?,
-            settingVersion: Int?
-        ): String {
-            return if (pipelineVersion == null || triggerVersion == null || settingVersion == null) {
-                "init"
-            } else "P$pipelineVersion.T$triggerVersion.$settingVersion"
-        }
 
         @Suppress("ALL")
         fun PipelineSetting.checkParam() {
@@ -714,7 +706,9 @@ class PipelineRepositoryService constructor(
                     }
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
-                versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion)
+                versionName = PipelineVersionUtils.getVersionName(
+                    pipelineVersion, triggerVersion, settingVersion
+                )
                 if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -846,16 +840,16 @@ class PipelineRepositoryService constructor(
                         logger.error("parse process($pipelineId) model fail", ignored)
                         null
                     } ?: return@let
-                    watcher.start("getModelJsonObject")
-                    val originTriggerJson = JSONObject(originModel.stages.first())
-                    val originPipelineJson = JSONObject(originModel.stages.slice(1 until originModel.stages.size))
-                    val triggerJson = JSONObject(model.stages.first())
-                    val pipelineJson = JSONObject(model.stages.slice(1 until model.stages.size))
-                    watcher.start("getSimilarResult")
-                    if (!originTriggerJson.similar(triggerJson)) triggerVersion++
-                    if (!originPipelineJson.similar(pipelineJson)) pipelineVersion++
+                    pipelineVersion = PipelineVersionUtils.getPipelineVersion(
+                        pipelineVersion, originModel, model
+                    )
+                    triggerVersion = PipelineVersionUtils.getTriggerVersion(
+                        pipelineVersion, originModel, model
+                    )
                 }
-                versionName = getVersionName(pipelineVersion, triggerVersion, settingVersion)
+                versionName = PipelineVersionUtils.getVersionName(
+                    pipelineVersion, triggerVersion, settingVersion
+                )
                 watcher.start("updatePipelineResource")
                 if (saveDraft != true) pipelineResDao.create(
                     dslContext = transactionContext,

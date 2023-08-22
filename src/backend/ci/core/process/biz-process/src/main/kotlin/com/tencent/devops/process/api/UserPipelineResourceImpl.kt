@@ -244,6 +244,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = pipeline,
+            yaml = null,
             saveDraft = saveDraft,
             channelCode = ChannelCode.BS
         )

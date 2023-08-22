@@ -86,54 +86,59 @@ class PipelineTransferYamlService @Autowired constructor(
         actionType: TransferActionType,
         data: TransferBody
     ): TransferResponse {
-
         val watcher = Watcher(id = "yaml and model transfer watcher")
-        when (actionType) {
-            TransferActionType.FULL_MODEL2YAML -> {
-                watcher.start("step_1|FULL_MODEL2YAML start")
-                val yml = modelTransfer.model2yaml(
-                    ModelTransferInput(
-                        data.modelAndSetting.model,
-                        data.modelAndSetting.setting,
-                        YamlVersion.Version.V3_0
-                    )
-                )
-                watcher.start("step_2|mergeYaml")
-                val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
-                watcher.stop()
-                logger.info(watcher.toString())
-                return TransferResponse(newYaml = newYaml)
-            }
-            TransferActionType.FULL_YAML2MODEL -> {
-                watcher.start("step_1|FULL_YAML2MODEL start")
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-                val pYml = TransferMapper.getObjectMapper()
-                    .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
-                watcher.start("step_2|parse template")
-                pYml.replaceTemplate { templateFilter ->
-                    YamlTemplate(
-                        yamlObject = templateFilter,
-                        filePath = TemplatePath(TEMPLATE_ROOT_FILE),
-                        extraParameters = this,
-                        getTemplateMethod = ::getTemplate,
-                        nowRepo = null,
-                        repo = null,
-                        resourcePoolMapExt = null,
-                        conf = YamlTemplateConf(
-                            useOldParametersExpression = false // todo
+        try {
+            when (actionType) {
+                TransferActionType.FULL_MODEL2YAML -> {
+                    watcher.start("step_1|FULL_MODEL2YAML start")
+                    val yml = modelTransfer.model2yaml(
+                        ModelTransferInput(
+                            data.modelAndSetting.model,
+                            data.modelAndSetting.setting,
+                            YamlVersion.Version.V3_0
                         )
-                    ).replace()
+                    )
+                    watcher.start("step_2|mergeYaml")
+                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
+                    watcher.stop()
+                    logger.info(watcher.toString())
+                    return TransferResponse(newYaml = newYaml)
                 }
-                watcher.start("step_3|transfer start")
-                val input = YamlTransferInput(
-                    userId, projectId, pipelineInfo, pYml
-                )
-                val model = modelTransfer.yaml2Model(input)
-                val setting = modelTransfer.yaml2Setting(input)
-                watcher.stop()
-                logger.info(watcher.toString())
-                return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
+                TransferActionType.FULL_YAML2MODEL -> {
+                    watcher.start("step_1|FULL_YAML2MODEL start")
+                    val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                    val pYml = TransferMapper.getObjectMapper()
+                        .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+                    watcher.start("step_2|parse template")
+                    pYml.replaceTemplate { templateFilter ->
+                        YamlTemplate(
+                            yamlObject = templateFilter,
+                            filePath = TemplatePath(TEMPLATE_ROOT_FILE),
+                            extraParameters = this,
+                            getTemplateMethod = ::getTemplate,
+                            nowRepo = null,
+                            repo = null,
+                            resourcePoolMapExt = null,
+                            conf = YamlTemplateConf(
+                                useOldParametersExpression = false // todo
+                            )
+                        ).replace()
+                    }
+                    watcher.start("step_3|transfer start")
+                    val input = YamlTransferInput(
+                        userId, projectId, pipelineInfo, pYml
+                    )
+                    val model = modelTransfer.yaml2Model(input)
+                    val setting = modelTransfer.yaml2Setting(input)
+
+                    logger.info(watcher.toString())
+                    return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
+                }
             }
+        } catch (t: Throwable) {
+            logger.warn("PAC|TRANSFER|transferAction")
+        } finally {
+            watcher.stop()
         }
         return TransferResponse()
     }

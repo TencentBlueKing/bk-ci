@@ -134,6 +134,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = pipeline,
+            yaml = null,
             channelCode = channelCode,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             updateLastModifyUser = updateLastModifyUser

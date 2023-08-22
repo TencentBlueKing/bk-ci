@@ -62,6 +62,7 @@ import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -123,16 +124,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )?.let { origin ->
-            logger.info("[$projectId]|$pipelineId|saveSetting|origin=\n\n$origin\n\nsetting=\n\n$setting")
-            val originJson = JSONObject(origin)
-            val currentJson = JSONObject(setting)
-            if (currentJson.similar(originJson)) {
-                origin.version
-            } else {
-                origin.version + 1
-            }
+            PipelineVersionUtils.getSettingVersion(setting.version, setting, origin)
         } ?: 1
-        logger.info("[$projectId]|$pipelineId|saveSetting|settingVersion=$settingVersion|")
 
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,

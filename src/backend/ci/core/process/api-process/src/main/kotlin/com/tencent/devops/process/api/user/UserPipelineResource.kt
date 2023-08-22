@@ -267,6 +267,7 @@ interface UserPipelineResource {
         includeDraft: Boolean? = false
     ): Result<Model>
 
+    // TODO 当前版本(草稿分开给)、是否为实例化、取掉setting model
     @ApiOperation("获取流水线编排和设置")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/resource")

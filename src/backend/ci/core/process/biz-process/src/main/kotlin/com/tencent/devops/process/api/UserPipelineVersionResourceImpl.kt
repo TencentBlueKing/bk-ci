@@ -48,7 +48,6 @@ import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -161,7 +160,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             PipelineModelAndYaml(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
-                description = resource.description
+                description = resource.description,
+                baseVersion = resource.version,
+                baseVersionName = resource.versionName
             )
         )
     }
@@ -218,28 +219,43 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        // TODO 增加yaml处理和保存
-//        val model = try {
-//            transferService.transfer(
-//                userId = userId,
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                actionType = TransferActionType.FULL_YAML2MODEL,
-//                data = TransferBody(
-//
-//                )
-//            )
-//        }
+        val baseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = modelAndYaml.baseVersion,
+            includeDraft = true
+        )
+        val transferResult = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            actionType = TransferActionType.FULL_YAML2MODEL,
+            data = TransferBody(
+                modelAndSetting = modelAndYaml.modelAndSetting,
+                oldYaml = baseVersion?.yaml ?: ""
+            )
+        )
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = transferResult.modelAndSetting?.setting ?: modelAndYaml.modelAndSetting.setting,
+            checkPermission = false,
+            dispatchPipelineUpdateEvent = false,
+            saveDraft = true
+        )
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            model = modelAndYaml.modelAndSetting.model,
+            model = transferResult.modelAndSetting?.model ?: modelAndYaml.modelAndSetting.model,
             channelCode = ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false,
             saveDraft = true,
-            description = modelAndYaml.description
+            description = modelAndYaml.description,
+            yaml = transferResult.newYaml,
+            savedSetting = savedSetting
         )
         auditService.createAudit(
             Audit(

@@ -75,6 +75,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = model,
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = true,

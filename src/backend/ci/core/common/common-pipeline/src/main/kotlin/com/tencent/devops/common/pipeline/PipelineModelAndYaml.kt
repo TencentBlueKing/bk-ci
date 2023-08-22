@@ -37,6 +37,8 @@ data class PipelineModelAndYaml(
     val yaml: String?,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null,
-    @ApiModelProperty("保存草稿时的来源版本", required = false)
-    val baseVersion: String? = null
+    @ApiModelProperty("草稿的来源版本", required = false)
+    val baseVersion: Int,
+    @ApiModelProperty("草稿的来源版本名称", required = false)
+    val baseVersionName: String?
 )
