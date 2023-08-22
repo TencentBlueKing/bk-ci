@@ -75,7 +75,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(5)}"
+        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val res = workspaceClient.createWorkspace(
             userId,

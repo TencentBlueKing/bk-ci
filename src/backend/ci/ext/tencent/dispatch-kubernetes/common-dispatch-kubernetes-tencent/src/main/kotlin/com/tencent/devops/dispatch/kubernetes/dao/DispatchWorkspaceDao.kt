@@ -55,6 +55,7 @@ class DispatchWorkspaceDao {
         return with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.insertInto(
                 this,
+                USER_ID,
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
@@ -66,6 +67,7 @@ class DispatchWorkspaceDao {
                 TASK_ID
             )
                 .values(
+                    userId,
                     event.projectId,
                     event.workspaceName,
                     environmentUid,

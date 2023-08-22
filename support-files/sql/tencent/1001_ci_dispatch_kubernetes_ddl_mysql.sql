@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     ZONE_ID varchar(32) default ''                 not null comment '区域ID，SZ3，NJ1等',
     CGS_IP  varchar(32)  default ''                not null comment 'ip',
     MACHINE_TYPE  varchar(32)  default ''          not null comment '机型',
-    STATUS int           default 0                 not null comment '0未使用 1使用中 2待销毁',
-    UNIQUE `uni_1` (`ZONE_ID`,`CGS_IP`)
+    STATUS int           default 0                 not null comment '0使用中 1待销毁 2销毁中 10注册中 11未使用',
+    UNIQUE `uni_1` (`CGS_ID`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
 
