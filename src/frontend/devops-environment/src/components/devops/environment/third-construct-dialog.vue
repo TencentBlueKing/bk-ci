@@ -164,6 +164,7 @@
         }
 
         .command-line {
+            flex: 1;
             padding-right: 24px;
             overflow: hidden;
             text-overflow: ellipsis;

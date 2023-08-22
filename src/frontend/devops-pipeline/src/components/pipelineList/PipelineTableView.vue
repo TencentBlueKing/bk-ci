@@ -677,17 +677,10 @@
                 }
             }
         }
-        .bk-table-fixed-right {
-            right: 6px !important;
-        }
         ::-webkit-scrollbar {
-            width: 6px !important;
-            height: 6px !important;
             background-color: white;
         }
         ::-webkit-scrollbar-thumb {
-            height: 6px;
-            border-radius: 20px;
             background-color: #DCDEE5 !important;
         }
     }

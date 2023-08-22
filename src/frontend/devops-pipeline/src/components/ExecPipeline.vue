@@ -41,10 +41,13 @@
                     v-for="step in timeSteps"
                     :key="step.title"
                 >
-                    <span>
-                        {{ step.title }}
+                    <span class="title-item">
+                        <p>{{ step.title }}</p>
+                        <span v-bk-tooltips="step.popup" class="time-step-divider">
+                            <p></p>
+                        </span>
                     </span>
-                    <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
+                    <!-- <p v-bk-tooltips="step.popup" class="time-step-divider"></p> -->
                     <p class="constant-width-num">
                         {{ step.description }}
                     </p>
@@ -962,26 +965,29 @@
         background: white;
         border: 2px solid #d8d8d8;
       }
-
-      &:not(:last-child) .time-step-divider {
-        display: block;
-        position: absolute;
-        width: calc(100% - 24px);
-        height: 24px;
-        top: 0;
-        &:hover {
-          &:before {
-            background: $primaryColor;
+      &:not(:last-child) {
+          .title-item {
+            display: flex;
+            .time-step-divider {
+                flex: 1;
+                height: 16px;
+                cursor: pointer;
+                &:hover {
+                    p {
+    
+                        background: $primaryColor;
+                    }
+                }
+                p {
+                    position: relative;
+                    top: 8px;
+                    left: 4px;
+                    width: 96%;
+                    height: 1px;
+                    background: #d8d8d8;
+                }
+            }
           }
-        }
-        &:before {
-          content: "";
-          position: absolute;
-          height: 1px;
-          width: 100%;
-          top: 8px;
-          background: #d8d8d8;
-        }
       }
     }
   }

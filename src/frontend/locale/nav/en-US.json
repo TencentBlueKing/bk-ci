@@ -232,5 +232,6 @@
         "enable/disable": "Enable/Disable",
         "manage": "Manage"
     },
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "community": "Community"
 }

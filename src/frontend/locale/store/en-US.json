@@ -187,7 +187,7 @@
     "新增版本": "New Version",
     "上架": "Publish",
     "进度": "Progress",
-    "只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息": "Only when the item is in the state of denied approval, release, Basic information is allowed to be modified only in the state of review rejection, release, shelf suspension, and detachment.",
+    "有新版本正在发布中，请取消发布再编辑，或者等待发布完成后编辑": "There is a new version being released. Please cancel the release before editing, or wait for the release to complete before editing.",
     "收起": "Collapse",
     "展开": "expand",
     "无构建环境": "No build environment",

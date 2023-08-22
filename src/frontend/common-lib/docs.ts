@@ -6,12 +6,14 @@ export const BkciDocs = {
     GATE_DOC: `${gatePrefix}/Intro/README.md`, // 质量红线文档
     TICKET_DOC: `${commonPrefix}/Services/Ticket/ticket-add.md`, // 凭据文档
     WIN_AGENT_GUIDE: `${commonPrefix}/Services/Resource/bkci-hosted-windows-agent.md`, // 安装Windows构建机指引文档
-    PLUGIN_SPECIFICATE_DOC: `${commonPrefix}/Services/Store/plugins/plugin-specification.md`, // 插件规范文档
-    PLUGIN_ERROR_CODE_DOC: `${commonPrefix}/Services/Store/plugins/plugin-error-code.md`, // 插件错误码文档
+    PLUGIN_SPECIFICATE_DOC: `${commonPrefix}/ZH/Devops/UserGuide/Developer/plugins/plugin-dev-standard/plugin-specification.md`, // 插件规范文档
+    PLUGIN_ERROR_CODE_DOC: `${commonPrefix}/ZH/Devops/UserGuide/Developer/plugins/plugin-dev-standard/plugin-error-code.md`, // 插件错误码文档
     PLUGIN_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-task.md`, // 插件指引文档
     IMAGE_GUIDE_DOC: `${commonPrefix}/Services/Store/docker-build.md`, // docker构建文档
     TEMPLATE_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-template.md`, // 模板指引文档
-    TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md` // turbo指引文档
+    TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md`, // turbo指引文档
+    BKAPP_NAV_OPEN_SOURCE_URL: 'https://github.com/TencentBlueKing/bk-ci', // 开源社区
+    FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question` // 问题反馈
 }
 export const pipelineDocs = {
     ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档
