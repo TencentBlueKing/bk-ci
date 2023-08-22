@@ -6,8 +6,8 @@ export const BkciDocs = {
     GATE_DOC: `${gatePrefix}/Intro/README.md`, // 质量红线文档
     TICKET_DOC: `${commonPrefix}/Services/Ticket/ticket-add.md`, // 凭据文档
     WIN_AGENT_GUIDE: `${commonPrefix}/Services/Resource/bkci-hosted-windows-agent.md`, // 安装Windows构建机指引文档
-    PLUGIN_SPECIFICATE_DOC: `${commonPrefix}/Services/Store/plugins/plugin-specification.md`, // 插件规范文档
-    PLUGIN_ERROR_CODE_DOC: `${commonPrefix}/Services/Store/plugins/plugin-error-code.md`, // 插件错误码文档
+    PLUGIN_SPECIFICATE_DOC: `${commonPrefix}/ZH/Devops/UserGuide/Developer/plugins/plugin-dev-standard/plugin-specification.md`, // 插件规范文档
+    PLUGIN_ERROR_CODE_DOC: `${commonPrefix}/ZH/Devops/UserGuide/Developer/plugins/plugin-dev-standard/plugin-error-code.md`, // 插件错误码文档
     PLUGIN_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-task.md`, // 插件指引文档
     IMAGE_GUIDE_DOC: `${commonPrefix}/Services/Store/docker-build.md`, // docker构建文档
     TEMPLATE_GUIDE_DOC: `${commonPrefix}/Services/Store/start-new-template.md`, // 模板指引文档
@@ -20,4 +20,3 @@ export const pipelineDocs = {
     PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/FAQS/FAQ.md`, // 流水线编辑指引文档
     NAMESPACE_DOC: `${DOCS_URL_PREFIX}/docs/document/6.1/183/22916` // 命名空间文档
 }
-
