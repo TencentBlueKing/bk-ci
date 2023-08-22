@@ -44,7 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferModelCreator
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.RunAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
@@ -63,7 +64,7 @@ import org.springframework.stereotype.Component
 class ElementTransfer @Autowired(required = false) constructor(
     val client: Client,
     @Autowired(required = false)
-    val creator: TransferModelCreator,
+    val creator: TransferCreator,
     val transferCache: TransferCacheService,
     val triggerTransfer: TriggerTransfer
 ) {
@@ -133,11 +134,11 @@ class ElementTransfer @Autowired(required = false) constructor(
     ): Element {
         val timeout = setupTimeout(step)
         val additionalOptions = ElementAdditionalOptions(
-            continueWhenFailed = step.continueOnError ?: false,
-            timeout = timeout,
+            continueWhenFailed = step.continueOnError ?: VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED,
+            timeout = timeout.toLong(),
             timeoutVar = timeout.toString(),
             retryWhenFailed = step.retryTimes != null,
-            retryCount = step.retryTimes ?: 0,
+            retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             enableCustomEnv = step.env != null,
             customEnv = getElementEnv(step.env),
             runCondition = when {
@@ -178,7 +179,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         return element
     }
 
-    private fun setupTimeout(step: Step) = step.timeoutMinutes?.toLong() ?: 480
+    private fun setupTimeout(step: Step) = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT
 
     private fun makeRunElement(
         step: Step,
@@ -243,10 +244,13 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun element2YamlStep(element: Element): PreStep? {
-        val retryTimes = element.additionalOptions?.retryCount ?: 0
-        val timeoutMinutes = element.additionalOptions?.timeout?.toInt() ?: 480
+        val retryTimes = element.additionalOptions?.retryCount.nullIfDefault(VariableDefault.DEFAULT_RETRY_COUNT)
+        val timeoutMinutes = element.additionalOptions?.timeout?.toInt()
+            .nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)
         val continueOnError = element.additionalOptions?.continueWhenFailed
+            .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED)
         val uses = "${element.getAtomCode()}@${element.version}"
+        val env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }?.ifEmpty { null }
         return when {
             element is LinuxScriptElement -> {
                 PreStep(
@@ -259,7 +263,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = element.script,
                     checkout = null,
                     shell = RunAtomParam.ShellType.BASH.shellName
@@ -276,7 +280,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = element.script,
                     checkout = null,
                     shell = RunAtomParam.ShellType.CMD.shellName
@@ -292,11 +296,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = parseStepIfFiled(element),
                     uses = null,
-                    with = simplifyParams(uses, input),
+                    with = simplifyParams(uses, input).ifEmpty { null },
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = null,
                     checkout = url,
                     shell = null
@@ -315,11 +319,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                         input.filterNot {
                             it.key == RunAtomParam::shell.name || it.key == RunAtomParam::script.name
                         }
-                    ),
+                    ).ifEmpty { null },
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = input[RunAtomParam::script.name]?.toString(),
                     checkout = null,
                     shell = input[RunAtomParam::shell.name]?.toString()
@@ -333,11 +337,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = parseStepIfFiled(element),
                     uses = uses,
-                    with = simplifyParams(uses, input),
+                    with = simplifyParams(uses, input).ifEmpty { null },
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = null,
                     checkout = null,
                     shell = null
@@ -351,11 +355,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = parseStepIfFiled(element),
                     uses = uses,
-                    with = simplifyParams(uses, input),
+                    with = simplifyParams(uses, input).ifEmpty { null },
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
-                    env = null,
+                    env = env,
                     run = null,
                     checkout = null,
                     shell = null

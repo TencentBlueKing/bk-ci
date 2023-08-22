@@ -30,9 +30,9 @@ package com.tencent.devops.process.pojo.classify
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型")
+@ApiModel("流水线标签组模型")
 data class PipelineGroup(
-    @ApiModelProperty("流水线id", required = false)
+    @ApiModelProperty("id", required = false)
     val id: String,
     @ApiModelProperty("项目id", required = false)
     val projectId: String,

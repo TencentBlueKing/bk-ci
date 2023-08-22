@@ -34,7 +34,7 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 /**
  * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
  */
-interface TransferModelCreator {
+interface TransferCreator {
     // 控制run插件是否是研发商店插件
     val marketRunTask: Boolean
 

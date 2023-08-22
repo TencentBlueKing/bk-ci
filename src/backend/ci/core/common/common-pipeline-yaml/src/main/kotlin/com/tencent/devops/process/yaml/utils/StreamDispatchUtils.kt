@@ -220,7 +220,8 @@ object StreamDispatchUtils {
                 credId = null,
                 acrossTemplateId = null,
                 options = container.options,
-                imagePullPolicy = container.imagePullPolicy
+                imagePullPolicy = container.imagePullPolicy,
+                imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
             )
         } catch (e: Exception) {
             val container = YamlUtil.getObjectMapper().readValue(
@@ -235,7 +236,8 @@ object StreamDispatchUtils {
                 credId = container.credentials,
                 acrossTemplateId = buildTemplateAcrossInfo?.templateId,
                 options = container.options,
-                imagePullPolicy = container.imagePullPolicy
+                imagePullPolicy = container.imagePullPolicy,
+                imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
             )
         }
     }

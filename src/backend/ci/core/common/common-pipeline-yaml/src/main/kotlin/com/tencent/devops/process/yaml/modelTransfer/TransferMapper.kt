@@ -2,6 +2,7 @@ package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.io.IOContext
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
@@ -355,7 +356,9 @@ object TransferMapper {
     private val yamlObjectMapper = ObjectMapper(
         CustomYAMLFactoryBuilder.enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
             .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
             .disable(YAMLGenerator.Feature.SPLIT_LINES)
+            .disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
             .stringQuotingChecker(CustomStringQuotingChecker()).build()
     ).setSerializationInclusion(JsonInclude.Include.NON_NULL).apply {
         registerKotlinModule().setFilterProvider(
@@ -409,6 +412,10 @@ object TransferMapper {
         }
         return getObjectMapper().writeValueAsString(bean)!!
     }
+
+    fun <T> anyTo(any: Any?): T = getObjectMapper().readValue(
+        getObjectMapper().writeValueAsString(any), object : TypeReference<T>() {}
+    )
 
     /**
      * 获得 yaml 第一层级的坐标定位信息
