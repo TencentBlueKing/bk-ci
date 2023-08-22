@@ -17,7 +17,7 @@ data class UserAndDeptInfoVo(
     @ApiModelProperty("是否拥有子级")
     val hasChild: Boolean? = false,
     @ApiModelProperty("用户部门详细信息")
-    val deptInfo: BkUserDeptInfo? = null,
+    val deptInfo: List<BkUserDeptInfo>? = null,
     @ApiModelProperty("用户额外详细信息")
     val extras: BkUserExtras? = null
 )

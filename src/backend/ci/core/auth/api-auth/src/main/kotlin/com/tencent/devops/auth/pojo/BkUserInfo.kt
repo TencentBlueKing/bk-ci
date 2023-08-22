@@ -14,5 +14,5 @@ data class BkUserInfo(
     @ApiModelProperty("用户额外信息")
     val extras: BkUserExtras,
     @ApiModelProperty("用户部门")
-    val departments: BkUserDeptInfo
+    val departments: List<BkUserDeptInfo>
 )
