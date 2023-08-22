@@ -25,7 +25,7 @@ class Oauth2EndpointService constructor(
         clientId: String,
         redirectUri: String
     ): Oauth2AuthorizationInfoVo {
-        logger.info("get authorization information :$userId|$clientId")
+        logger.info("get authorization information:$userId|$clientId")
         // 1、校验clientId是否存在
         val clientDetails = clientService.getClientDetails(clientId = clientId)
         // 2、校验客户端信息是否正确
