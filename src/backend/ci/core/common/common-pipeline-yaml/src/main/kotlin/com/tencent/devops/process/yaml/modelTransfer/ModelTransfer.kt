@@ -28,14 +28,13 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
@@ -46,13 +45,10 @@ import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Notices
 import com.tencent.devops.process.yaml.v2.models.PacNotices
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

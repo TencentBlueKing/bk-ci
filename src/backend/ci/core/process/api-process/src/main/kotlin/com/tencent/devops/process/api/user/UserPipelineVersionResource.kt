@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelAndYaml
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
-import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -58,31 +58,60 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
-    // TODO 从模板新建直接传ID
-
-    // TODO 版本历史接口增加获取YAML的方式（对比）
-
-    @ApiOperation("新建流水线编排")
+    @ApiOperation("通过指定模板创建流水线")
     @POST
-    @Path("/projects/{projectId}/createPipeline")
-    fun createPipeline(
+    @Path("/projects/{projectId}/createPipelineWithTemplate")
+    fun createPipelineFromTemplate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("是否使用模板配置", required = false)
-        @QueryParam("useTemplateSettings")
-        useTemplateSettings: Boolean? = false,
-        @ApiParam(value = "流水线PAC模型", required = true)
-        pipeline: PipelineModelAndYaml
-    ): Result<PipelineId>
+        @ApiParam(value = "流水线模型实例请求", required = true)
+        request: TemplateInstanceCreateRequest
+    ): Result<DeployPipelineResult>
+
+    @ApiOperation("获取流水线指定版本的两种编排")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/versions/{version}")
+    fun getVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<PipelineModelAndYaml>
+
+    @ApiOperation("触发前配置")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/previewCode")
+    fun preview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线版本号", required = false)
+        @QueryParam("version")
+        version: Int?
+    ): Result<PreviewResponse>
 
     @ApiOperation("保存流水线编排草稿")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/saveDraft")
-    fun savePipeline(
+    fun savePipelineDraft(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -94,28 +123,8 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        model: Model,
-        @ApiParam("变更说明", required = false)
-        @QueryParam("description")
-        description: String? = null
-    ): Result<Boolean>
-
-    @ApiOperation("保存流水线设置")
-    @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
-    fun saveSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "流水线设置", required = true)
-        setting: PipelineSetting
-    ): Result<Boolean>
+        modelAndYaml: PipelineModelAndYaml
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
@@ -151,16 +160,22 @@ interface UserPipelineVersionResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("过滤创建人", required = false)
+        @ApiParam("跳转定位的版本号", required = false)
+        @QueryParam("fromVersion")
+        fromVersion: Int? = null,
+        @ApiParam("搜索字段：版本名包含字符", required = false)
+        @QueryParam("versionName")
+        versionName: String? = null,
+        @ApiParam("搜索字段：创建人", required = false)
         @QueryParam("creator")
         creator: String? = null,
-        @ApiParam("模糊查询变更说明", required = false)
+        @ApiParam("搜索字段：变更说明", required = false)
         @QueryParam("description")
         description: String? = null,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "5")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<PipelineResVersion>>
@@ -200,4 +215,26 @@ interface UserPipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<String>>
+
+    @ApiOperation("回滚到指定的历史版本并覆盖草稿")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/rollbackDraft")
+    fun rollbackDraftFromVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "回回滚目标版本", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Result<Boolean>
+
+    // TODO 模板查询：在新建预览页带简要信息：3个bool
+
+    //
 }

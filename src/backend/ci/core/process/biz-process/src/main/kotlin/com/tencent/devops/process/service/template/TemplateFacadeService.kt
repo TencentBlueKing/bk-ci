@@ -85,7 +85,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -1287,7 +1287,7 @@ class TemplateFacadeService @Autowired constructor(
                     buildNo = buildNo,
                     param = param,
                     fixTemplateVersion = version
-                )
+                ).pipelineId
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     if (useTemplateSettings) {
@@ -1494,6 +1494,8 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = templateInstanceUpdate.pipelineId,
             model = instanceModel,
+            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = false

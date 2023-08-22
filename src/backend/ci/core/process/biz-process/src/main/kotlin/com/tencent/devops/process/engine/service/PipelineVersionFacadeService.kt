@@ -86,33 +86,44 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun listPipelineVersion(
         projectId: String,
         pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
+        fromVersion: Int?,
+        versionName: String?,
         creator: String? = null,
         description: String? = null
     ): Page<PipelineResVersion> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
         var slqLimit: SQLLimit? = null
-        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 
         val offset = slqLimit?.offset ?: 0
-        val limit = slqLimit?.limit ?: -1
-        // 数据量不多，直接全拉
+        var limit = slqLimit?.limit ?: -1
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
+        val fromResource = if (fromVersion != null && page == 1) {
+            limit -= 1
+            pipelineRepositoryVersionService.getPipelineVersion(
+                pipelineInfo = pipelineInfo,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = fromVersion
+            )
+        } else null
         val (size, pipelines) = pipelineRepositoryVersionService.listPipelineVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description,
+            versionName = versionName,
+            excludeVersion = fromVersion,
             offset = offset,
             limit = limit
         )
-
+        fromResource?.let { pipelines.add(it) }
         return Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
+            page = page,
+            pageSize = pageSize,
             count = size.toLong(),
             records = pipelines
         )

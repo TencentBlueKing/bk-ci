@@ -116,6 +116,7 @@ class PipelineResDao {
                         null
                     }
                 } ?: return null,
+                yaml = record.yaml,
                 creator = record.creator,
                 versionName = record.versionName,
                 createTime = record.createTime,

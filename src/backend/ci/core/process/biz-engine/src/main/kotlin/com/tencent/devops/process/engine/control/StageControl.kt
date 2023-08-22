@@ -98,6 +98,7 @@ class StageControl @Autowired constructor(
                 stageIdLock.lock()
                 watcher.start("execute")
                 execute(watcher = watcher)
+                watcher.start("finish")
             } finally {
                 stageIdLock.unlock()
                 watcher.stop()

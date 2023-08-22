@@ -42,8 +42,10 @@ data class PipelineResourceVersion(
     val pipelineId: String,
     @ApiModelProperty("记录版本号", required = true)
     val version: Int,
-    @ApiModelProperty("编排内容", required = true)
+    @ApiModelProperty("JSON编排内容（POJO）", required = true)
     val model: Model,
+    @ApiModelProperty("YAML编排内容", required = false)
+    val yaml: String?,
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("版本名称", required = true)
@@ -62,6 +64,10 @@ data class PipelineResourceVersion(
     val referCount: Int? = null,
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
-    @ApiModelProperty("分支版本标识", required = false)
-    val refs: String? = null
+    @ApiModelProperty("版本变更说明", required = false)
+    val description: String? = null,
+    @ApiModelProperty("调试构建ID", required = false)
+    val debugBuildId: String? = null,
+    @ApiModelProperty("来源代码库标识（分支名）", required = false)
+    val pacRefs: String? = null
 )

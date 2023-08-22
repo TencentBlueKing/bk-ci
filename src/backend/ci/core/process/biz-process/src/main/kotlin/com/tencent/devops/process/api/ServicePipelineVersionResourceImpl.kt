@@ -45,7 +45,7 @@ import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -75,6 +75,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = model,
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = true,
@@ -199,8 +200,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }

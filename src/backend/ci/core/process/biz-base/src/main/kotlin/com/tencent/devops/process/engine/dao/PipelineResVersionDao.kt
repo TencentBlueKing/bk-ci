@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
+import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
@@ -51,20 +52,22 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String,
         model: Model,
+        yaml: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         status: VersionStatus?,
         description: String?
-    ) {
-        create(
+    ): TPipelineResourceVersionRecord? {
+        return create(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             version = version,
             versionName = versionName,
-            modelString = JsonUtil.toJson(model, formatted = false),
+            modelStr = JsonUtil.toJson(model, formatted = false),
+            yamlStr = yaml,
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
@@ -80,20 +83,22 @@ class PipelineResVersionDao {
         creator: String,
         version: Int,
         versionName: String = "init",
-        modelString: String,
+        modelStr: String,
+        yamlStr: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         status: VersionStatus?,
         description: String?
-    ) {
+    ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            dslContext.insertInto(this)
+            return dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .set(VERSION, version)
                 .set(VERSION_NAME, versionName)
-                .set(MODEL, modelString)
+                .set(MODEL, modelStr)
+                .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -102,7 +107,7 @@ class PipelineResVersionDao {
                 .set(STATUS, status?.name)
                 .set(DESCRIPTION, description)
                 .onDuplicateKeyUpdate()
-                .set(MODEL, modelString)
+                .set(MODEL, modelStr)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -110,7 +115,8 @@ class PipelineResVersionDao {
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, status?.name)
                 .set(DESCRIPTION, description)
-                .execute()
+                .returning()
+                .fetchOne()
         }
     }
 
@@ -166,6 +172,7 @@ class PipelineResVersionDao {
                         null
                     }
                 } ?: return null,
+                yaml = record.yaml,
                 creator = record.creator,
                 versionName = record.versionName,
                 createTime = record.createTime,
@@ -175,7 +182,9 @@ class PipelineResVersionDao {
                 referFlag = record.referFlag,
                 referCount = record.referCount,
                 status = record.status?.let { VersionStatus.valueOf(it) },
-                refs = record.refs
+                description = record.description,
+                debugBuildId = record.debugBuildId,
+                pacRefs = record.refs
             )
         }
     }
@@ -213,7 +222,9 @@ class PipelineResVersionDao {
         pipelineId: String,
         offset: Int,
         limit: Int,
+        excludeVersion: Int?,
         creator: String?,
+        versionName: String?,
         description: String?
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
@@ -222,6 +233,15 @@ class PipelineResVersionDao {
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            versionName?.let {
+                query.and(
+                    VERSION.like("%$versionName%")
+                        .or(VERSION_NAME.like("%$versionName%"))
+                )
+            }
+            excludeVersion?.let {
+                query.and(VERSION.notEqual(excludeVersion))
+            }
             val result = query
                 .orderBy(VERSION.desc()).limit(limit).offset(offset).fetch()
             result.forEach { record ->

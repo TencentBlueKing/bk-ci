@@ -71,9 +71,10 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRecentUseService
@@ -155,8 +156,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 model = pipeline,
                 channelCode = ChannelCode.BS,
-                useTemplateSettings = useTemplateSettings
-            )
+                useSubscriptionSettings = useTemplateSettings
+            ).pipelineId
         )
         auditService.createAudit(
             Audit(
@@ -243,6 +244,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = pipeline,
+            yaml = null,
             saveDraft = saveDraft,
             channelCode = ChannelCode.BS
         )
@@ -719,8 +721,10 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }
