@@ -198,6 +198,7 @@ class MigratePipelineDataTask constructor(
                 )
                 // 4、业务逻辑成功执行完后计数器减1
                 doneSignal.countDown()
+                logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] end..............")
             } finally {
                 // 5、业务逻辑执行完成后释放信号量
                 semaphore.release()
@@ -732,12 +733,12 @@ class MigratePipelineDataTask constructor(
                             channelCode = ChannelCode.getChannel(channel) ?: ChannelCode.BS
                         )
                         if (shutdownResult.isNotOk()) {
-                            logger.warn("porject[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail")
+                            logger.warn("project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail")
                             retryFlag = true
                         }
                     } catch (ignored: Throwable) {
                         logger.warn(
-                            "porject[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail",
+                            "project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail",
                             ignored
                         )
                         retryFlag = true

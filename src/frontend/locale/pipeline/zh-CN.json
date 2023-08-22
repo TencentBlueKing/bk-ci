@@ -54,6 +54,7 @@
   "desc": "描述",
   "success": "成功",
   "creator": "创建人",
+  "created": "创建时间",
   "editSuc": "编辑成功",
   "saveSuc": "保存成功",
   "addSuc": "新建成功",
@@ -194,7 +195,7 @@
     "downLoadLog": "下载日志",
     "emptyLog": "日志内容为空",
     "report": "报告",
-    "artifactory": "构件"
+    "artifactory": "制品"
   },
   "timeMap": {
     "days": "天",
@@ -955,7 +956,9 @@
       "otherChoice": "其他选项"
     },
     "stageOption": "流程控制选项",
-    "pipelineVersionSaveAt": "版本{0}保存于{1}"
+    "pipelineVersionSaveAt": "版本{0}保存于{1}",
+    "every": "每隔",
+    "remindTime": "小时提醒一次"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1165,10 +1168,11 @@
   "access": "访问",
   "outputNameSpaceDescTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
   "noReleatedPipeline": "暂无关联流水线",
-  "outputsFilterPlaceholder": "制品名称/报告名称",
+  "artifactsFilterPlaceholder": "制品名称",
+  "reportsFilterPlaceholder": "报告名称",
   "fullScreenView": "全屏查看",
   "exitFullscreen": "退出全屏",
   "skipSuc": "已跳过失败的步骤，继续运行",
-  "skipFail": "跳过失败"
-
+  "skipFail": "跳过失败",
+  "nonManual": "非手动"
 }

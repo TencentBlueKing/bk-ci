@@ -35,6 +35,12 @@ import io.swagger.annotations.ApiModelProperty
 data class ProjectProperties(
     @ApiModelProperty("YAML流水线功能设置")
     val pipelineAsCodeSettings: PipelineAsCodeSettings,
+    @ApiModelProperty("是否启用云研发", required = false)
+    val remotedev: Boolean? = false,
+    @ApiModelProperty("可申请的云桌面数", required = false)
+    val cloudDesktopNum: Int = 0,
+    @ApiModelProperty("云研发管理员，多人用分号分隔", required = false)
+    val remotedevManager: String? = null,
     @ApiModelProperty("数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null
 )

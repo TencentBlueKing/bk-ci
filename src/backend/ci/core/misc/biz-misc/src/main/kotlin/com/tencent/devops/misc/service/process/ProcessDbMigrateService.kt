@@ -27,19 +27,24 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
-import com.tencent.devops.common.db.pojo.DataSourceConfig
-import com.tencent.devops.common.db.pojo.DataSourceProperties
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.MIGRATING_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDbMigrateDao
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
+import com.tencent.devops.misc.service.project.DataSourceService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
+import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +63,7 @@ class ProcessDbMigrateService @Autowired constructor(
     @Resource(name = MIGRATING_SHARDING_DSL_CONTEXT) private val migratingShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDbMigrateDao: ProcessDbMigrateDao,
-    private val dataSourceProperties: DataSourceProperties,
+    private val dataSourceService: DataSourceService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -78,18 +83,14 @@ class ProcessDbMigrateService @Autowired constructor(
     fun migrateProjectData(
         userId: String,
         projectId: String,
-        cancelFlag: Boolean = false
+        cancelFlag: Boolean = false,
+        dataTag: String? = null
     ): Boolean {
         // 为项目分配路由规则
-        val migratingDataSourceConfigs = dataSourceProperties.migratingDataSourceConfigs
-        if (migratingDataSourceConfigs.isNullOrEmpty()) {
-            logger.warn("migratingDataSourceConfigs is empty!")
-            return false
-        }
-        assignShardingRoutingRule(migratingDataSourceConfigs, projectId)
+        val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
         // 开启异步任务迁移项目的数据
         Executors.newFixedThreadPool(1).submit {
-            logger.info("migrateProjectData params:[$userId|$projectId] begin!")
+            logger.info("migrateProjectData begin,params:[$userId|$projectId]")
             // 查询项目下流水线数量
             val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
             // 根据流水线数量计算线程数量
@@ -138,18 +139,18 @@ class ProcessDbMigrateService @Autowired constructor(
                     )
                 }
             } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
-            // 迁移与项目直接相关的数据
-            doMigrationBus(projectId)
             try {
+                // 迁移与项目直接相关的数据
+                doMigrationBus(projectId)
                 // 等待所有任务执行完成
                 doneSignal.await(migrationTimeout, TimeUnit.HOURS)
+                // 执行迁移完成后的逻辑
+                doAfterMigrationBus(userId, projectId, routingRuleMap)
             } catch (ignored: Throwable) {
-                logger.warn("migrateProjectData timed out|error=${ignored.message}", ignored)
+                logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=${ignored.message}", ignored)
                 // todo 删除迁移库的数据
             }
-            // 执行迁移完成后的逻辑
-            doAfterMigrationBus(projectId)
-            logger.info("migrateProjectData params:[$userId|$projectId] end!")
+            logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
     }
@@ -173,25 +174,62 @@ class ProcessDbMigrateService @Autowired constructor(
         migratePipelineRecentUseData(projectId)
     }
 
-    private fun doAfterMigrationBus(projectId: String) {
-        // 清除缓存中项目的路由规则
+    private fun doAfterMigrationBus(userId: String, projectId: String, routingRuleMap: Map<String, String>) {
         val key = ShardingUtil.getMigratingShardingRoutingRuleKey(
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = SystemModuleEnum.PROCESS.name,
             ruleType = ShardingRuleTypeEnum.DB.name,
             routingName = projectId
         )
-        redisOperation.delete(key)
-        // 删除项目原来的路由规则
-        // todo 删除原库的数据
+        val migratingShardingRoutingRule = redisOperation.get(key)
+        val shardingRoutingRule = routingRuleMap[migratingShardingRoutingRule]
+        if (migratingShardingRoutingRule != null && shardingRoutingRule != null) {
+            // 清除缓存中项目的迁移DB路由规则
+            redisOperation.delete(key)
+            // 更新项目原来的路由规则
+            val client = SpringContextUtil.getBean(Client::class.java)
+            val updateResult = client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
+                userId = userId,
+                shardingRoutingRule = ShardingRoutingRule(
+                    clusterName = CommonUtils.getDbClusterName(),
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    dataSourceName = shardingRoutingRule,
+                    type = ShardingRuleTypeEnum.DB,
+                    routingName = projectId,
+                    routingRule = shardingRoutingRule
+                )
+            )
+            if (updateResult.isNotOk()) {
+                logger.warn("project[$projectId] updateShardingRoutingRule fail")
+                throw ErrorCodeException(
+                    errorCode = updateResult.status.toString(),
+                    defaultMessage = updateResult.message
+                )
+            }
+        }
+
+        // todo 异步删除原库的数据
         // todo 发送迁移成功消息
     }
 
     private fun assignShardingRoutingRule(
-        migratingDataSourceConfigs: List<DataSourceConfig>,
-        projectId: String
-    ) {
-        val maxSizeIndex = migratingDataSourceConfigs.size - 1
+        projectId: String,
+        dataTag: String? = null
+    ): Map<String, String> {
+        val clusterName = CommonUtils.getDbClusterName()
+        val moduleCode = SystemModuleEnum.PROCESS
+        // 根据标签查找可用的数据源
+        val dataSourceNames = dataSourceService.listByModule(
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            fullFlag = false,
+            dataTag = dataTag
+        )?.map { it.dataSourceName }
+        if (dataSourceNames.isNullOrEmpty()) {
+            logger.warn("[$clusterName]$moduleCode has no dataSource available")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        }
+        val maxSizeIndex = dataSourceNames.size - 1
         val randomIndex = (0..maxSizeIndex).random()
         val routingRule = "${MIGRATING_DATA_SOURCE_NAME_PREFIX}$randomIndex"
         val key = ShardingUtil.getMigratingShardingRoutingRuleKey(
@@ -200,7 +238,9 @@ class ProcessDbMigrateService @Autowired constructor(
             ruleType = ShardingRuleTypeEnum.DB.name,
             routingName = projectId
         )
+        // 把项目在迁移db集群的路由规则写入redis
         redisOperation.setIfAbsent(key, routingRule)
+        return mapOf(routingRule to dataSourceNames[randomIndex])
     }
 
     private fun migrateAuditResourceData(projectId: String) {

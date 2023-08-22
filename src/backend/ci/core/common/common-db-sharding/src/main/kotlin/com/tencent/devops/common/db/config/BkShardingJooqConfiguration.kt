@@ -29,13 +29,16 @@ package com.tencent.devops.common.db.config
 
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import org.jooq.DSLContext
+import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.jooq.impl.DefaultExecuteListenerProvider
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -43,16 +46,16 @@ import javax.sql.DataSource
 
 @Configuration
 @Import(BkShardingDataSourceConfiguration::class, DBBaseConfiguration::class)
+@AutoConfigureAfter(DBBaseConfiguration::class)
 class BkShardingJooqConfiguration {
 
     @Bean
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
-        return createDslContext(shardingDataSource, bkJooqExecuteListenerProvider)
+        return createDslContext(shardingDataSource, executeListenerProviders)
     }
 
     @Bean(name = [MIGRATING_SHARDING_DSL_CONTEXT])
@@ -60,25 +63,33 @@ class BkShardingJooqConfiguration {
     fun migratingShardingDslContext(
         @Qualifier("migratingShardingDataSource")
         migratingShardingDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
-        return createDslContext(migratingShardingDataSource, bkJooqExecuteListenerProvider)
+        return createDslContext(migratingShardingDataSource, executeListenerProviders)
     }
 
     private fun createDslContext(
-        dataSource: DataSource,
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        shardingDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
-        val configuration: org.jooq.Configuration = DefaultConfiguration()
-            .set(dataSource)
+        val configuration = DefaultConfiguration()
+            .set(shardingDataSource)
             .set(
                 Settings().withRenderSchema(false)
                     .withExecuteLogging(true)
                     .withRenderFormatted(false)
             )
             .set(SQLDialect.MYSQL)
-            .set(bkJooqExecuteListenerProvider)
+        for (provider in executeListenerProviders) {
+            logger.info("provider class: {}", provider.provide().javaClass)
+        }
+        configuration.set(*executeListenerProviders.stream().toArray { size ->
+            arrayOfNulls<ExecuteListenerProvider>(size)
+        })
         return DSL.using(configuration)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkShardingJooqConfiguration::class.java)
     }
 }

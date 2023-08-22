@@ -32,14 +32,18 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.scm.code.CodeGitScmOauthImpl
+import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
 import com.tencent.devops.scm.code.CodeSvnScmImpl
+import com.tencent.devops.scm.code.CodeTGitScmImpl
+import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 
 object ScmOauthFactory {
+
+    private val gitOauthApi = GitOauthApi()
 
     @Suppress("ALL")
     fun getScm(
@@ -92,7 +96,7 @@ object ScmOauthFactory {
                     )
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitScmOauthImpl(
+                CodeGitScmImpl(
                     projectName = projectName,
                     branchName = branchName,
                     url = url,
@@ -100,6 +104,28 @@ object ScmOauthFactory {
                     passPhrase = passPhrase,
                     token = token,
                     gitConfig = gitConfig,
+                    gitApi = gitOauthApi,
+                    event = event
+                )
+            }
+            ScmType.CODE_TGIT -> {
+                if (token == null) {
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The git token is null"
+                    )
+                }
+                val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
+                CodeTGitScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    gitConfig = gitConfig,
+                    gitApi = gitOauthApi,
                     event = event
                 )
             }

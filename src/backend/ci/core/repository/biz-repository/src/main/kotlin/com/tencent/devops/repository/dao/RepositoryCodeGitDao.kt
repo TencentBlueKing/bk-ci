@@ -102,7 +102,7 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: Long
+        gitProjectId: Long?
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -112,7 +112,7 @@ class RepositoryCodeGitDao {
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
                 .set(AUTH_TYPE, authType?.name ?: RepoAuthType.SSH.name)
-            if (gitProjectId >= 0) {
+            if (gitProjectId != null) {
                 updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
             }
             updateSetStep.where(REPOSITORY_ID.eq(repositoryId))

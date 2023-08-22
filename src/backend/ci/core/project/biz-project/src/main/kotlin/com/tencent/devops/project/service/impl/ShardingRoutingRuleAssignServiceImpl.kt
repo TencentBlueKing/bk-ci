@@ -62,6 +62,9 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
     @Value("\${sharding.database.assign.fusibleSwitch:true}")
     private val assignDbFusibleSwitch: Boolean = true
 
+    @Value("\${sharding.database.dataTag.modules:#{null}}")
+    private val dataTagModulesConfig: String = SystemModuleEnum.PROCESS.name
+
     /**
      * 为项目分配分片路由规则
      * @param channelCode 渠道代码
@@ -106,18 +109,19 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         val clusterName = CommonUtils.getDbClusterName()
         var validDataSourceName = DEFAULT_DATA_SOURCE_NAME
         // 根据模块查找还有空余容量的数据源
+        val dataTagModules = dataTagModulesConfig.split(",")
         val dataSourceNames = dataSourceDao.listByModule(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
             fullFlag = false,
-            dataTag = dataTag
+            dataTag = if (dataTagModules.contains(moduleCode.name)) dataTag else null
         )?.map { it.dataSourceName }
 
         if (dataSourceNames.isNullOrEmpty()) {
             logger.warn("[$clusterName]$moduleCode has no dataSource available")
-            if (assignDbFusibleSwitch || !dataTag.isNullOrBlank()) {
-                // 当分配db的熔断开关打开时或者数据标签不为空，如果没有可用的数据源则报错
+            if (assignDbFusibleSwitch || dataTagModules.contains(moduleCode.name)) {
+                // 当分配db的熔断开关打开时或者模块要用指定标签的数据源，如果没有可用的数据源则报错
                 throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
             }
         } else {
