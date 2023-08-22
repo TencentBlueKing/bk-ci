@@ -412,7 +412,7 @@ class RbacPermissionMigrateService constructor(
     ): Int? {
         val projectName = projectInfo.projectName
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        for (suffix in 0..MAX_RETRY_TIMES) {
+        repeat(2) { suffix ->
             try {
                 permissionResourceService.resourceCreateRelation(
                     userId = projectCreator,
@@ -422,7 +422,11 @@ class RbacPermissionMigrateService constructor(
                     resourceName = RbacAuthUtils.addSuffixIfNeed(projectName, suffix),
                     async = false
                 )
-                break
+                return authResourceService.getOrNull(
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode
+                )?.relationId?.toInt()
             } catch (iamException: IamException) {
                 // 由于iam项目大小写不敏感，蓝盾敏感，可能会出现分级管理员名称重复,需要进行处理
                 handleRepeatProjectName(
@@ -433,11 +437,7 @@ class RbacPermissionMigrateService constructor(
                 )
             }
         }
-        return authResourceService.getOrNull(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )?.relationId?.toInt()
+        return null
     }
 
     private fun handleRepeatProjectName(
@@ -446,12 +446,13 @@ class RbacPermissionMigrateService constructor(
         iamException: IamException,
         suffix: Int
     ) {
+        logger.info("handle repeat project name:$projectCode|$projectName|$iamException")
         if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR || suffix == MAX_RETRY_TIMES) {
             throw iamException
         } else {
             val projectNames = client.get(ServiceProjectResource::class)
                 .getProjectNameByNameCaseSensitive(projectName = projectName).data ?: throw iamException
-            logger.info("duplicate project name handle|$projectCode|$projectNames")
+            logger.info("duplicate project name|$projectCode|$projectNames")
             if (projectNames.size <= 1) {
                 throw iamException
             }
