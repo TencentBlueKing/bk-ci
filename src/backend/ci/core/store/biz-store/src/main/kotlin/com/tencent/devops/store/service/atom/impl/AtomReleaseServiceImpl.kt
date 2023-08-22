@@ -240,7 +240,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             pkgRepoPath = "",
             language = marketAtomCreateRequest.language,
             minVersion = null,
-            target = null,
+            target = "",
             shaContent = null,
             preCmd = null,
             atomPostInfo = null,
