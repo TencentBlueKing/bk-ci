@@ -33,12 +33,8 @@ class SQLCheckListener : DefaultExecuteListener() {
                     for (record in explain) {
                         val rows = record.get("rows")?.toString()
                         val possibleKeys = record.get("possible_keys")?.toString()
-                        if (possibleKeys.isNullOrBlank()) {
+                        if (possibleKeys.isNullOrBlank() && rows != null) {
                             logger.error("SQL: $realSQL , possible_keys can not be blank. Please add table index")
-                            return false
-                        }
-                        if (rows == null || rows.toInt() > 1000000) {
-                            logger.error("SQL: $realSQL , too many rows. Please optimization table index")
                             return false
                         }
                     }
