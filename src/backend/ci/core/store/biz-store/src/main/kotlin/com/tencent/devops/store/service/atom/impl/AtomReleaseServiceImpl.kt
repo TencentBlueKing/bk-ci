@@ -234,6 +234,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val handleAtomPackageMap = handleAtomPackageResult.data
         val id = UUIDUtil.generate()
+        val atomEnvRequest = AtomEnvRequest(
+            userId = userId,
+            pkgName = null,
+            pkgRepoPath = "",
+            language = marketAtomCreateRequest.language,
+            minVersion = null,
+            target = null,
+            shaContent = null,
+            preCmd = null,
+            atomPostInfo = null,
+            osName = null,
+            osArch = null
+        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 添加插件基本信息
@@ -291,6 +304,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, listOf(atomEnvRequest))
         }
         return Result(id)
     }

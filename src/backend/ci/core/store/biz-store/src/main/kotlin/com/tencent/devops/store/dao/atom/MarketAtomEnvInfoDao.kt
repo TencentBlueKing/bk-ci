@@ -35,6 +35,7 @@ import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,7 +43,6 @@ import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -91,7 +91,23 @@ class MarketAtomEnvInfoDao {
                         atomEnvRequest.finishKillFlag,
                         atomEnvRequest.userId,
                         atomEnvRequest.userId
-                    ).execute()
+                    ).onDuplicateKeyUpdate()
+                    .set(PKG_NAME, atomEnvRequest.pkgName)
+                    .set(PKG_PATH, atomEnvRequest.pkgRepoPath)
+                    .set(LANGUAGE, atomEnvRequest.language)
+                    .set(MIN_VERSION, atomEnvRequest.minVersion)
+                    .set(TARGET, atomEnvRequest.target)
+                    .set(SHA_CONTENT, atomEnvRequest.shaContent)
+                    .set(PRE_CMD, atomEnvRequest.preCmd)
+                    .set(POST_ENTRY_PARAM, atomEnvRequest.atomPostInfo?.postEntryParam)
+                    .set(POST_CONDITION, atomEnvRequest.atomPostInfo?.postCondition)
+                    .set(OS_NAME, atomEnvRequest.osName)
+                    .set(OS_ARCH, atomEnvRequest.osArch)
+                    .set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
+                    .set(DEFAULT_FLAG, atomEnvRequest.defaultFlag)
+                    .set(FINISH_KILL_FLAG, atomEnvRequest.finishKillFlag)
+                    .set(MODIFIER, atomEnvRequest.userId)
+                    .execute()
             }
         }
     }
