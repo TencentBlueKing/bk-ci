@@ -25,36 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate
+package com.tencent.devops.common.pipeline.pojo.setting
 
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Primary
-@Component
-class TXModelCreate @Autowired constructor(
-    client: Client,
-    modelStage: ModelStage
-) : ModelCreate(
-    client, modelStage
-) {
-    override fun createPipelineModel(
-        modelName: String,
-        event: ModelCreateEvent,
-        yaml: ScriptBuildYaml,
-        pipelineParams: List<BuildFormProperty>,
-        asCodeSettings: PipelineAsCodeSettings?
-    ): PipelineModelAndSetting {
-        // 预安装插件市场的插件
-        modelStage.inner?.preInstallMarketAtom(client, event)
-
-        return super.createPipelineModel(modelName, event, yaml, pipelineParams, asCodeSettings)
-    }
-}
+@ApiModel("设置-订阅消息")
+data class Subscription(
+    @ApiModelProperty("通知方式(email, rtx)", required = true)
+    val types: Set<PipelineSubscriptionType> = setOf(),
+    @ApiModelProperty("分组", required = false)
+    val groups: Set<String> = setOf(),
+    @ApiModelProperty("通知人员", required = false)
+    val users: String = "",
+    @ApiModelProperty("企业微信群通知开关", required = false)
+    val wechatGroupFlag: Boolean = false,
+    @ApiModelProperty("企业微信群通知群ID", required = false)
+    val wechatGroup: String = "",
+    @ApiModelProperty("企业微信群通知转为Markdown格式开关", required = false)
+    val wechatGroupMarkdownFlag: Boolean = false,
+    @ApiModelProperty("通知的流水线详情连接开关", required = false)
+    val detailFlag: Boolean = false,
+    @ApiModelProperty("自定义通知内容", required = false)
+    val content: String = ""
+)

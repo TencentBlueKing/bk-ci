@@ -31,6 +31,7 @@ package com.tencent.devops.common.pipeline
  * model中报错模板信息的扩展参数
  */
 interface IModelTemplate {
+
     var template: String?
     var ref: String?
 

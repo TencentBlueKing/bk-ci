@@ -86,9 +86,15 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.joda.time.LocalDateTime
@@ -148,6 +154,46 @@ class PipelineRepositoryService constructor(
                 "init"
             } else "P$pipelineVersion.T$triggerVersion.$settingVersion"
         }
+
+        @Suppress("ALL")
+        fun PipelineSetting.checkParam() {
+            if (maxPipelineResNum < 1) {
+                throw InvalidParamException(
+                    message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
+                    params = arrayOf("maxPipelineResNum")
+                )
+            }
+            if (runLockType == PipelineRunLockType.SINGLE ||
+                runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
+            ) {
+                if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
+                    waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+                ) {
+                    throw InvalidParamException(
+                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL),
+                        params = arrayOf("waitQueueTimeMinute")
+                    )
+                }
+                if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                    maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+                ) {
+                    throw InvalidParamException(
+                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL),
+                        params = arrayOf("maxQueueSize")
+                    )
+                }
+            }
+            if (maxConRunningQueueSize != null && (
+                    this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                        this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    )
+            ) {
+                throw InvalidParamException(
+                    I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
+                    params = arrayOf("maxConRunningQueueSize")
+                )
+            }
+        }
     }
 
     fun deployPipeline(
@@ -157,7 +203,9 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        useTemplateSettings: Boolean? = false,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
@@ -176,6 +224,8 @@ class PipelineRepositoryService constructor(
             create = create,
             channelCode = channelCode
         )
+        // TODO 增加互转处理
+        val yamlStr = null
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -199,6 +249,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 model = model,
+                yamlStr = yamlStr,
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
@@ -228,13 +279,16 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
+                yamlStr = yamlStr,
                 userId = userId,
                 channelCode = channelCode,
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
                 modelTasks = modelTasks,
-                useTemplateSettings = useTemplateSettings,
+                useSubscriptionSettings = useSubscriptionSettings,
+                useLabelSettings = useLabelSettings,
+                useConcurrencyGroup = useConcurrencyGroup,
                 templateId = templateId,
                 saveDraft = saveDraft,
                 description = description
@@ -526,13 +580,16 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
+        yamlStr: String?,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Collection<PipelineModelTask>,
-        useTemplateSettings: Boolean? = false,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         saveDraft: Boolean? = false,
         description: String?
@@ -566,7 +623,8 @@ class PipelineRepositoryService constructor(
                 model.latestVersion = modelVersion
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        if (templateId != null && useTemplateSettings == true) {
+                        // TODO useSubscriptionSettings/useLabelSettings/useConcurrencyGroup 使用三个参数控制刷新
+                        if (templateId != null && useSubscriptionSettings == true) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
@@ -649,6 +707,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
+                    yaml = yamlStr,
                     versionName = versionName ?: "init",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
@@ -689,6 +748,7 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         userId: String,
         model: Model,
+        yamlStr: String?,
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
@@ -788,6 +848,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
+                    yaml = yamlStr,
                     versionName = versionName ?: "init",
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
@@ -818,7 +879,8 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             creator = userId,
                             version = version - 1,
-                            modelString = lastVersionModelStr,
+                            modelStr = lastVersionModelStr,
+                            yamlStr = yamlStr,
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferResponse
@@ -39,7 +38,6 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -55,9 +53,9 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface UserPipelineTransferResource {
 
-    @ApiOperation("互转入口")
+    @ApiOperation("model与yaml互转入口")
     @POST
-    @Path("/{projectId}")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}")
     fun transfer(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -66,7 +64,7 @@ interface UserPipelineTransferResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线id", required = true)
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("操作类型", required = true)
         @QueryParam("actionType")
@@ -76,7 +74,7 @@ interface UserPipelineTransferResource {
 
     @ApiOperation("task转yaml格式")
     @POST
-    @Path("/{projectId}/task2yaml")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/task2yaml")
     fun modelTaskTransfer(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -85,14 +83,14 @@ interface UserPipelineTransferResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线id", required = true)
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String,
         data: Element
     ): Result<String>
 
     @ApiOperation("task转json格式")
     @POST
-    @Path("/{projectId}/task2model")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/task2model")
     fun yamlTaskTransfer(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -101,23 +99,8 @@ interface UserPipelineTransferResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线id", required = true)
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String,
         yaml: String
     ): Result<Element>
-
-    @ApiOperation("触发前配置")
-    @GET
-    @Path("/{projectId}/preview_code")
-    fun preview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线id", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String
-    ): Result<PreviewResponse>
 }

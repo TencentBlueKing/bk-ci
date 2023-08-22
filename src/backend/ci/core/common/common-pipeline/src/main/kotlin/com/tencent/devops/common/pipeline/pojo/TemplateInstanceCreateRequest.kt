@@ -25,16 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
+data class TemplateInstanceCreateRequest(
+    @ApiModelProperty("模板ID", required = true)
+    var templateId: String,
+    @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
+    var templateVersion: Long?,
+    @ApiModelProperty("是否使用通知配置", required = false)
+    var useSubscriptionSettings: Boolean?,
+    @ApiModelProperty("是否使用标签配置", required = false)
+    var useLabelSettings: Boolean?,
+    @ApiModelProperty("是否使用并发组配置", required = false)
+    var useConcurrencyGroup: Boolean?,
+    @ApiModelProperty("创建实例的模式", required = false)
+    var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
 )

@@ -28,28 +28,17 @@
 package com.tencent.devops.process.service.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
-import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
-import com.tencent.devops.process.dao.label.PipelineGroupDao
-import com.tencent.devops.process.dao.label.PipelineLabelDao
-import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
-import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.dao.label.PipelineViewTopDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelineGroupPermissionService
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.pojo.transfer.TransferResponse
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
@@ -63,7 +52,6 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -71,19 +59,6 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineTransferYamlService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val pipelineViewDao: PipelineViewDao,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineLabelDao: PipelineLabelDao,
-    private val pipelineGroupDao: PipelineGroupDao,
-    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
-    private val pipelineViewTopDao: PipelineViewTopDao,
-    private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
-    private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelineGroupService: PipelineGroupService,
-    private val client: Client,
-    private val pipelineGroupPermissionService: PipelineGroupPermissionService,
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
     private val pipelineRepositoryService: PipelineRepositoryService
@@ -111,7 +86,6 @@ class PipelineTransferYamlService @Autowired constructor(
     ): TransferResponse {
 
         val watcher = Watcher(id = "yaml and model transfer watcher")
-        // todo 权限校验
         when (actionType) {
             TransferActionType.FULL_MODEL2YAML -> {
                 watcher.start("step_1|FULL_MODEL2YAML start")
@@ -168,7 +142,6 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         data: Element
     ): String {
-        // todo 权限校验
         val yml = elementTransfer.element2YamlStep(data) ?: throw ErrorCodeException(errorCode = "")
         return TransferMapper.toYaml(yml)
     }
@@ -179,15 +152,18 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         yaml: String
     ): Element {
-        // todo 权限校验
         val tYml = TransferMapper.getObjectMapper()
             .readValue(yaml, object : TypeReference<PreStep>() {})
         return elementTransfer.yaml2element(ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
-    fun preview(userId: String, projectId: String, pipelineId: String): PreviewResponse {
-        // todo 权限校验
-        val yml = getPipelineYaml(userId, projectId, pipelineId)
+    fun buildPreview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): PreviewResponse {
+        val yml = getPipelineResource(projectId, pipelineId, version)?.yaml ?: ""
         val pipelineIndex = mutableListOf<TransferMark>()
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
@@ -201,11 +177,16 @@ class PipelineTransferYamlService @Autowired constructor(
         return PreviewResponse(yml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
     }
 
-    private fun getPipelineYaml(userId: String, projectId: String, pipelineId: String): String {
-        // 临时方案 todo
-        val classLoader = Thread.currentThread().contextClassLoader
-        val resourceAsStream = classLoader.getResourceAsStream("temp.yml")
-
-        return resourceAsStream?.bufferedReader().use { it?.readText() } ?: ""
+    private fun getPipelineResource(
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): PipelineResourceVersion? {
+        // 如果指定版本号则获取对应版本内容，如果未指定则获取最新内容
+        return pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
     }
 }

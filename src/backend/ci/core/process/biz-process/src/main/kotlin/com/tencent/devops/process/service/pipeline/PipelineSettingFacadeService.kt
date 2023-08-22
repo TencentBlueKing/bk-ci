@@ -52,10 +52,10 @@ import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
-import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
 import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -252,7 +252,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
-            val ve = pipelineSettingVersionService.getSubscriptionsVer(userId, projectId, pipelineId, version)
+            val ve = pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)
             settingInfo.successSubscription = ve.successSubscription
             settingInfo.failSubscription = ve.failSubscription
             settingInfo.successSubscriptionList = ve.successSubscriptionList

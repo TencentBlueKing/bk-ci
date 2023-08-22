@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.jooq.DSLContext
@@ -40,12 +39,10 @@ class PipelineSettingVersionService @Autowired constructor(
     private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
-    fun getSubscriptionsVer(
-        userId: String,
+    fun getPipelineSettingVersion(
         projectId: String,
         pipelineId: String,
-        version: Int,
-        channelCode: ChannelCode = ChannelCode.BS
+        version: Int
     ): PipelineSettingVersion {
         return pipelineSettingVersionDao.getSettingVersion(
             dslContext = dslContext,
