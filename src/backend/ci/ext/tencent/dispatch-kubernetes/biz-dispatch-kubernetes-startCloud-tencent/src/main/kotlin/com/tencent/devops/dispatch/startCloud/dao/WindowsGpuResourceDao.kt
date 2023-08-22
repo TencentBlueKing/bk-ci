@@ -27,8 +27,11 @@
 
 package com.tencent.devops.dispatch.startCloud.dao
 
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWorkspaceRecord
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -85,6 +88,23 @@ class WindowsGpuResourceDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .fetchAny()
+        }
+    }
+
+    fun getCgsWorkspace(
+        dslContext: DSLContext,
+        cgsId: String,
+        status: EnvStatusEnum? = null
+    ): TDispatchWorkspaceRecord? {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            val condition = mutableListOf<Condition>()
+            condition.add(ENVIRONMENT_UID.eq(cgsId))
+            status?.let {
+                condition.add(STATUS.eq(status.ordinal))
+            }
+            return dslContext.selectFrom(this)
+                .where(condition)
                 .fetchAny()
         }
     }

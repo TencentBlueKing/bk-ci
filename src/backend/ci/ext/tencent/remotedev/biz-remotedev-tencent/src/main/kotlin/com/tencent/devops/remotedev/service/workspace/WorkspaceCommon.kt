@@ -392,4 +392,13 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull()
     }
+
+    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .checkCgsRunning(cgsId, status).data
+        }.onFailure {
+            logger.warn("Error check cgs running: ${it.message}")
+        }.getOrNull() ?: false
+    }
 }
