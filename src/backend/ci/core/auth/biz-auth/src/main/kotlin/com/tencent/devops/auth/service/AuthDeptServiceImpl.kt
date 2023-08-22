@@ -138,8 +138,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
+            bk_app_code = appCode,
+            bk_app_secret = appSecret,
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = USERNAME,
@@ -163,7 +163,9 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id,
                             name = it.username,
-                            type = ManagerScopesEnum.USER
+                            type = ManagerScopesEnum.USER,
+                            deptInfo = it.departments,
+                            extras = it.extras
                         )
                     )
                 }
@@ -188,12 +190,14 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id,
                             name = it.username,
-                            type = ManagerScopesEnum.USER
+                            type = ManagerScopesEnum.USER,
+                            deptInfo = it.departments,
+                            extras = it.extras
                         )
                     )
                 }
-                val depteInfos = getDeptInfo(deptSearch)
-                depteInfos.results.forEach {
+                val deptInfos = getDeptInfo(deptSearch)
+                deptInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id,
@@ -205,7 +209,6 @@ class AuthDeptServiceImpl @Autowired constructor(
                 }
             }
         }
-
         return userAndDeptInfos
     }
 
@@ -296,12 +299,12 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
         val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
-        return objectMapper.readValue<DeptInfoVo>(responseDTO)
+        return objectMapper.readValue(responseDTO)
     }
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
         val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
-        return objectMapper.readValue<BkUserInfoVo>(responseDTO)
+        return objectMapper.readValue(responseDTO)
     }
 
     private fun callUserCenter(url: String, searchEntity: EsbBaseReq): String {
@@ -337,7 +340,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
-                    ))
+                    )
+                )
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return objectMapper.writeValueAsString(responseDTO.data)
