@@ -329,14 +329,7 @@ class PipelineBuildQualityService(
         with(task) {
             val atomDesc = ControlPointPosition.create(position).cnName
             val elementId = task.taskId
-            logger.info(
-                "handleResult 20230822 atomDesc:$atomDesc|message:" +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_QUALITY_CHECK_SUCCEED,
-                            params = arrayOf(atomDesc),
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
-            )
+
             if (checkResult.success) {
                 buildLogPrinter.addLine(
                     buildId = buildId,
