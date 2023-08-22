@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.devcloud.dao
 import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudPersistenceContainer
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudPersistenceContainerRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -13,6 +14,7 @@ class DcPersistenceContainerDao {
         dslContext: DSLContext,
         pipelineId: String,
         vmSeqId: String,
+        poolNo: Int,
         projectId: String,
         containerName: String,
         persistenceAgentId: String,
@@ -24,6 +26,7 @@ class DcPersistenceContainerDao {
                 this,
                 PIPELINE_ID,
                 VM_SEQ_ID,
+                POOL_NO,
                 PROJECT_ID,
                 CONTAINER_NAME,
                 PERSISTENCE_AGENT_ID,
@@ -34,6 +37,7 @@ class DcPersistenceContainerDao {
             ).values(
                 pipelineId,
                 vmSeqId,
+                poolNo,
                 projectId,
                 containerName,
                 persistenceAgentId,
@@ -97,19 +101,6 @@ class DcPersistenceContainerDao {
         }
     }
 
-    fun get(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeqId: String
-    ): TDevcloudPersistenceContainerRecord? {
-        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .fetchAny()
-        }
-    }
-
     fun getByPersistenceAgentId(
         dslContext: DSLContext,
         persistenceAgentId: String
@@ -121,25 +112,31 @@ class DcPersistenceContainerDao {
         }
     }
 
-    fun getByContainerName(
+    fun getPersistenceContainer(
         dslContext: DSLContext,
-        containerName: String
+        pipelineId: String,
+        vmSeqId: String,
+        poolNo: Int
     ): TDevcloudPersistenceContainerRecord? {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             return dslContext.selectFrom(this)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(POOL_NO.eq(poolNo))
                 .fetchAny()
         }
     }
 
-    fun delete(
+    fun getAllJobPersistenceContainers(
         dslContext: DSLContext,
-        persistenceAgentId: String
-    ): Int {
-        return with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
-            dslContext.delete(this)
-                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
-                .execute()
+        pipelineId: String,
+        vmSeqId: String
+    ): Result<TDevcloudPersistenceContainerRecord> {
+        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .fetch()
         }
     }
 }

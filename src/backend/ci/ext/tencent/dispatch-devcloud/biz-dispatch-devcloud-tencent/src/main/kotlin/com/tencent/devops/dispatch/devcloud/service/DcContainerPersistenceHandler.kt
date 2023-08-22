@@ -73,7 +73,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
             }
 
             // 获取当前job关联持久化容器配置
-            val persistenceContainer = dcPersistenceContainerDao.get(dslContext, pipelineId, vmSeqId)
+            val persistenceContainer = dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)
             if (persistenceContainer == null || persistenceContainer.persistenceAgentId.isBlank()) {
                 logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
@@ -111,6 +111,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 userId = userId,
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
+                poolNo = poolNo,
                 projectId = projectId,
                 containerName = containerName ?: "",
                 persistenceAgentId = persistenceAgentId,
@@ -164,8 +165,10 @@ class DcContainerPersistenceHandler @Autowired constructor(
     }
 
     fun getPersistenceContainer(
-        containerName: String
+        pipelineId: String,
+        vmSeqId: String,
+        poolNo: Int
     ): TDevcloudPersistenceContainerRecord? {
-        return dcPersistenceContainerDao.getByContainerName(dslContext, containerName)
+        return dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)
     }
 }

@@ -36,16 +36,16 @@ import org.springframework.stereotype.Component
 @Component
 class FitPersistenceClientProxy : ClientProxy {
 
-    @Value("\${devCloud.fitPersistenceCluster.appId}")
+    @Value("\${devCloud.fitPersistenceCluster.appId:}")
     override val devCloudAppId: String = ""
 
-    @Value("\${devCloud.fitPersistenceCluster.token}")
+    @Value("\${devCloud.fitPersistenceCluster.token:}")
     override val devCloudToken: String = ""
 
-    @Value("\${devCloud.fitPersistenceCluster.url}")
+    @Value("\${devCloud.fitPersistenceCluster.url:}")
     override val devCloudUrl: String = ""
 
-    @Value("\${devCloud.smartProxyToken}")
+    @Value("\${devCloud.smartProxyToken:}")
     override val smartProxyToken: String = ""
 
     override fun baseRequest(

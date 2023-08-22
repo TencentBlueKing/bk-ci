@@ -323,18 +323,17 @@ class DcContainerPrepareHandler @Autowired constructor(
         }
 
         val persistenceContainerInfo = dcContainerPersistenceHandler
-            .getPersistenceContainer(containerBuildInfo.containerName)
+            .getPersistenceContainer(handlerContext.pipelineId, handlerContext.vmSeqId, handlerContext.poolNo)
 
         // 不存在持久化容器记录，跳过这个容器池位
         if (persistenceContainerInfo == null) {
             logger.error(
-                "${handlerContext.buildLogKey} persistenceContainer " +
-                    "${containerBuildInfo.containerName} is null."
+                "${handlerContext.buildLogKey} persistenceContainer ${containerBuildInfo.containerName} is null."
             )
             return false
         }
 
-        val originContainerStatus = getContainerStatus(containerBuildInfo.containerName, handlerContext)
+        val originContainerStatus = getContainerStatus(persistenceContainerInfo.containerName, handlerContext)
 
         // 容器配置没有变更，且当前容器状态running，复用这个容器池位
         if (originContainerStatus != null &&

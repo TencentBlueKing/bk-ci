@@ -159,39 +159,33 @@ class PersistenceBuildService @Autowired constructor(
 
     fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
         logger.info("$userId destroy container $destroyContainerReq")
-        val containerName = if (destroyContainerReq.containerName == null) {
-            val buildRecord = dcPersistenceContainerDao.get(
+        if (destroyContainerReq.containerName.isNullOrBlank()) {
+            val buildRecords = dcPersistenceContainerDao.getAllJobPersistenceContainers(
                 dslContext,
                 destroyContainerReq.pipelineId,
                 destroyContainerReq.vmSeqId
             )
-            buildRecord?.containerName ?: ""
-        } else {
-            destroyContainerReq.containerName
-        }
 
-        if (containerName.isNullOrBlank()) {
-            logger.warn("$userId destroy containerName is null.")
-            return Result(
-                status = 500,
-                message = "ContainerName is null",
-                data = false
+            buildRecords.forEach {
+                deletePersistenceContainer(
+                    userId = userId,
+                    projectId = destroyContainerReq.projectId,
+                    pipelineId = destroyContainerReq.pipelineId,
+                    buildId = "",
+                    vmSeqId = destroyContainerReq.vmSeqId,
+                    containerName = it.containerName
+                )
+            }
+        } else {
+            deletePersistenceContainer(
+                userId = userId,
+                projectId = destroyContainerReq.projectId,
+                pipelineId = destroyContainerReq.pipelineId,
+                buildId = "",
+                vmSeqId = destroyContainerReq.vmSeqId,
+                containerName = destroyContainerReq.containerName!!
             )
         }
-        dcPersistenceContainerDao.updateContainerStatus(
-            dslContext,
-            containerName,
-            PersistenceContainerStatus.DELETED.status
-        )
-
-        deletePersistenceContainer(
-            userId = userId,
-            projectId = destroyContainerReq.projectId,
-            pipelineId = destroyContainerReq.pipelineId,
-            buildId = "",
-            vmSeqId = destroyContainerReq.vmSeqId,
-            containerName = containerName
-        )
 
         return Result(true)
     }
@@ -205,6 +199,12 @@ class PersistenceBuildService @Autowired constructor(
         containerName: String
     ) {
         val buildLogKey = "$userId|$projectId|$pipelineId|$buildId|$vmSeqId"
+
+        dcPersistenceContainerDao.updateContainerStatus(
+            dslContext,
+            containerName,
+            PersistenceContainerStatus.DELETED.status
+        )
 
         try {
             logger.info("$buildLogKey delete container:$containerName")
