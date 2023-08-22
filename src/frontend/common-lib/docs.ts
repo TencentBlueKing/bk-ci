@@ -20,4 +20,3 @@ export const pipelineDocs = {
     PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/FAQS/FAQ.md`, // 流水线编辑指引文档
     NAMESPACE_DOC: `${DOCS_URL_PREFIX}/docs/document/6.1/183/22916` // 命名空间文档
 }
-
