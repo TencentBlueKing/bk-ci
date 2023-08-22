@@ -303,6 +303,6 @@ class MigrateResourceService @Autowired constructor(
         private val executorService = Executors.newFixedThreadPool(50)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
         private const val MAX_RETRY_TIMES = 6
-        private val suffixList = listOf("(1)", "(2)", "(3)")
+        private val suffixList = listOf("(1)", "(2)", "(3)", "(5)", "(6)", "(4)")
     }
 }
