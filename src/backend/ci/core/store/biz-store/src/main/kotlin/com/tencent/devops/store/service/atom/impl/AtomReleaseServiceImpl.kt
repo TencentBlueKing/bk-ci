@@ -246,7 +246,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomPostInfo = null,
             osName = null,
             osArch = null,
-            defaultFlag = false
+            defaultFlag = true
         )
         dslContext.transaction { t ->
             val context = DSL.using(t)
