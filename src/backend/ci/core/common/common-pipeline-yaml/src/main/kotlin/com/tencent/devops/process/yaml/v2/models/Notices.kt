@@ -30,11 +30,10 @@ package com.tencent.devops.process.yaml.v2.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import io.swagger.annotations.ApiModelProperty
-import java.util.TreeSet
 
 /**
  * model Stream 通知类型基类
