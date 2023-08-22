@@ -1,6 +1,6 @@
 module github.com/TencentBlueKing/bk-ci/agentcommon
 
-go 1.20
+go 1.19
 
 require (
 	github.com/sirupsen/logrus v1.9.3

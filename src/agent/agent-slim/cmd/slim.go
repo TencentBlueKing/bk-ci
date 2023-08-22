@@ -34,7 +34,7 @@ func main() {
 	if config.Config.IsDebug {
 		logStd = true
 	}
-	if err := logs.Init(filepath.Join(config.Config.LogPath, "devopsAgent.log"), config.Config.IsDebug, logStd); err != nil {
+	if err := logs.Init(filepath.Join(config.Config.LogDir, "devopsAgent.log"), config.Config.IsDebug, logStd); err != nil {
 		fmt.Printf("init agent log error %s\n", err.Error())
 		os.Exit(1)
 	}

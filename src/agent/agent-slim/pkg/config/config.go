@@ -51,12 +51,12 @@ func InitConfig() error {
 		Config.MaxWorkerCount = 1
 	}
 
-	if Config.LogPath == "" {
-		Config.LogPath = workDir
+	if Config.LogDir == "" {
+		Config.LogDir = workDir
 	}
 
 	// 做一些初始化
-	err = os.Mkdir(Config.LogPath, os.ModePerm)
+	err = os.Mkdir(Config.LogDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ type EnvConfig struct {
 	// DEBUG 模式
 	IsDebug bool `env:"DEVOPS_AGENTSLIM_ISDEBUG"`
 	// 日志路径
-	LogPath string `env:"DEVOPS_AGENTSLIM_LOGPATH"`
+	LogDir string `env:"DEVOPS_AGENTSLIM_LOGPATH"`
 	// worker启动用户
 	WorkerUser string `env:"DEVOPS_AGENTSLIM_WORKER_USER"`
 	// 国际化语言
