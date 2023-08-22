@@ -118,6 +118,7 @@ import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
@@ -178,6 +179,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var client: Client
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+    @Autowired
+    lateinit var marketAtomEnvService: MarketAtomEnvService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -621,7 +624,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
                 marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             }
-            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
+            marketAtomEnvService.updateMarketAtomEnvInfos(atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -966,7 +969,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
-            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
+            marketAtomEnvService.updateMarketAtomEnvInfos(atomId, atomEnvRequests)
         }
         marketAtomVersionLogDao.addMarketAtomVersion(
             dslContext = context,

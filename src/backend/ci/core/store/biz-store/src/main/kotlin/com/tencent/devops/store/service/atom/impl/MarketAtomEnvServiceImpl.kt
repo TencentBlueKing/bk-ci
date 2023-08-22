@@ -70,6 +70,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import org.checkerframework.checker.units.qual.m
 
 /**
  * 插件执行环境逻辑类
@@ -494,6 +495,33 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 params = arrayOf("$atomCode+$version"),
                 data = false,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
+        }
+    }
+
+    override fun updateMarketAtomEnvInfos(atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
+        val newAtomEnvRequests = mutableListOf<AtomEnvRequest>()
+        atomEnvRequests.forEach {
+            var flag = false
+            if (it.osName == null && it.osArch == null) {
+                flag = marketAtomEnvInfoDao.getAtomEnvInfoByOsNameIsNull(
+                    dslContext = dslContext,
+                    atomId = atomId,
+                    osName = null,
+                    osArch = null
+                ) != null
+            }
+            if (flag) {
+                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, it)
+            } else {
+                newAtomEnvRequests.add(it)
+            }
+        }
+        if (newAtomEnvRequests.isNotEmpty()) {
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(
+                dslContext = dslContext,
+                atomId = atomId,
+                atomEnvRequests = atomEnvRequests
             )
         }
     }

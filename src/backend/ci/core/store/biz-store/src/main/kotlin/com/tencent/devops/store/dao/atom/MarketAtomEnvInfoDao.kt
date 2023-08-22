@@ -234,6 +234,24 @@ class MarketAtomEnvInfoDao {
         }
     }
 
+    fun getAtomEnvInfoByOsNameIsNull(
+        dslContext: DSLContext,
+        atomId: String,
+        osName: String? = null,
+        osArch: String? = null
+    ): TAtomEnvInfoRecord? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_ID.eq(atomId))
+            conditions.add(OS_NAME.eq(osName))
+            conditions.add(OS_ARCH.eq(osArch))
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getNewestAtomEnvInfo(dslContext: DSLContext, atomId: String): TAtomEnvInfoRecord? {
         return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             dslContext.selectFrom(this)
