@@ -17,7 +17,8 @@ class Oauth2EndpointService constructor(
     private val clientService: Oauth2ClientService,
     private val codeService: Oauth2CodeService,
     private val scopeService: Oauth2ScopeService,
-    private val accessTokenService: Oauth2AccessTokenService
+    private val accessTokenService: Oauth2AccessTokenService,
+    private val scopeOperationService: Oauth2ScopeOperationService
 ) {
     fun getAuthorizationInformation(
         userId: String,
@@ -34,10 +35,11 @@ class Oauth2EndpointService constructor(
             redirectUri = redirectUri,
             clientDetails = clientDetails
         )
+        val scopeOperations = clientDetails.scope.split(",")
         return Oauth2AuthorizationInfoVo(
             userName = userId,
             clientName = clientDetails.clientName,
-            scope = SCOPE
+            scope = scopeOperations.associateWith { scopeOperationService.get(it)!!.operationNameCn }
         )
     }
 
@@ -126,11 +128,6 @@ class Oauth2EndpointService constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(Oauth2EndpointService::class.java)
         private const val codeValiditySeconds = 600L
-        private val SCOPE = mutableMapOf(
-            "project_visit" to "获取你有权限的项目列表",
-            "pipeline_list" to "获取你有权限的流水线列表",
-            "pipeline_download" to "下载你有权限的制品"
-        )
         private const val OAUTH2_SCHEME = "Bearer "
     }
 }

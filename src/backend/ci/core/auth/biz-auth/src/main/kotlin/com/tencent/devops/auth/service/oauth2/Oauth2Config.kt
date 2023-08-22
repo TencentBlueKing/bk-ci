@@ -17,7 +17,8 @@ class Oauth2Config constructor(
     private val accessTokenService: Oauth2AccessTokenService,
     private val clientCredentialsTokenGranter: ClientCredentialsTokenGranter,
     private val authorizationCodeTokenGranter: AuthorizationCodeTokenGranter,
-    private val refreshTokenGranter: RefreshTokenGranter
+    private val refreshTokenGranter: RefreshTokenGranter,
+    private val scopeOperationService: Oauth2ScopeOperationService
 ) {
     @Bean
     fun oauth2EndpointService(): Oauth2EndpointService {
@@ -26,7 +27,8 @@ class Oauth2Config constructor(
             clientService = oauth2ClientService,
             codeService = codeService,
             scopeService = scopeService,
-            accessTokenService = accessTokenService
+            accessTokenService = accessTokenService,
+            scopeOperationService = scopeOperationService
         )
     }
 
