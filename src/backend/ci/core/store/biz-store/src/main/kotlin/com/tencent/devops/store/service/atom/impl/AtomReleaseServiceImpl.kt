@@ -239,16 +239,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val id = UUIDUtil.generate()
         val atomEnvRequest = AtomEnvRequest(
             userId = userId,
-            pkgName = null,
-            pkgRepoPath = "",
             language = marketAtomCreateRequest.language,
-            minVersion = null,
-            target = "",
-            shaContent = null,
-            preCmd = null,
-            atomPostInfo = null,
-            osName = null,
-            osArch = null,
             defaultFlag = true
         )
         dslContext.transaction { t ->
