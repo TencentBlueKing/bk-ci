@@ -23,7 +23,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
 
         // 先校验该cgsId是否已被申领分配并运行中
-        if (workspaceCommon.checkCgsRunning(cgsId, null)) return Result(false)
+        if (!workspaceCommon.checkCgsRunning(cgsId, null)) return Result(false)
         // 根据cgsId获取对应的机型和地域
         val cgsData = workspaceCommon.getCgsData(cgsId) ?: return Result(false)
         // 再根据机型和地域获取硬件资源配置
