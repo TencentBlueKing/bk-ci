@@ -19,6 +19,7 @@ class DcPersistenceContainerDao {
         containerName: String,
         persistenceAgentId: String,
         status: Int,
+        buildStatus: Int,
         userId: String
     ): Int {
         return with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
@@ -31,6 +32,7 @@ class DcPersistenceContainerDao {
                 CONTAINER_NAME,
                 PERSISTENCE_AGENT_ID,
                 CONTAINER_STATUS,
+                BUILD_STATUS,
                 CREATE_TIME,
                 UPDATE_TIME,
                 USER_ID
@@ -42,6 +44,7 @@ class DcPersistenceContainerDao {
                 containerName,
                 persistenceAgentId,
                 status,
+                buildStatus,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 userId
@@ -50,6 +53,7 @@ class DcPersistenceContainerDao {
                 .set(CONTAINER_NAME, containerName)
                 .set(PERSISTENCE_AGENT_ID, persistenceAgentId)
                 .set(CONTAINER_STATUS, status)
+                .set(BUILD_STATUS, buildStatus)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }

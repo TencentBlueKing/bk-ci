@@ -115,7 +115,8 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 projectId = projectId,
                 containerName = containerName ?: "",
                 persistenceAgentId = persistenceAgentId,
-                status = PersistenceContainerStatus.RUNNING.status
+                status = PersistenceContainerStatus.RUNNING.status,
+                buildStatus = ContainerBuildStatus.IDLE.status
             )
         }
     }

@@ -66,6 +66,17 @@ class DcContainerStartHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
         with(handlerContext) {
+            printLog(
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "，containerName: $containerName " + MessageUtil.getMessageByLocale(
+                    messageCode = DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                handlerContext = this
+            )
+
             if (persistence) {
                 return
             }
@@ -90,16 +101,6 @@ class DcContainerStartHandler @Autowired constructor(
             )
 
             logger.info("$buildLogKey, poolNo: $poolNo start container, taskId:($devCloudTaskId)")
-            printLog(
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + "，containerName: $containerName " + MessageUtil.getMessageByLocale(
-                    messageCode = DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),
-                handlerContext = this
-            )
 
             buildContainerPoolNoDao.setDevCloudBuildLastContainer(
                 dslContext = dslContext,
