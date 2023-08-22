@@ -1494,6 +1494,8 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = templateInstanceUpdate.pipelineId,
             model = instanceModel,
+            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = false

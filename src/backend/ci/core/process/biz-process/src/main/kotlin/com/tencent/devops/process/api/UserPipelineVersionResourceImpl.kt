@@ -48,7 +48,6 @@ import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -91,12 +90,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             templateId = request.templateId,
             version = request.templateVersion
-        )
-        // TODO 区分应用模板的配置
-        val templateSetting = templateFacadeService.getTemplateSetting(
-            userId = userId,
-            projectId = projectId,
-            templateId = request.templateId
         )
         return Result(
             pipelineInfoFacadeService.createPipeline(
@@ -167,7 +160,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             PipelineModelAndYaml(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
-                description = resource.description
+                description = resource.description,
+                baseVersion = resource.version,
+                baseVersionName = resource.versionName
             )
         )
     }
@@ -224,16 +219,43 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
+        val baseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = modelAndYaml.baseVersion,
+            includeDraft = true
+        )
+        val transferResult = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            actionType = TransferActionType.FULL_YAML2MODEL,
+            data = TransferBody(
+                modelAndSetting = modelAndYaml.modelAndSetting,
+                oldYaml = baseVersion?.yaml ?: ""
+            )
+        )
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = transferResult.modelAndSetting?.setting ?: modelAndYaml.modelAndSetting.setting,
+            checkPermission = false,
+            dispatchPipelineUpdateEvent = false,
+            saveDraft = true
+        )
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            model = modelAndYaml.modelAndSetting.model,
+            model = transferResult.modelAndSetting?.model ?: modelAndYaml.modelAndSetting.model,
             channelCode = ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false,
             saveDraft = true,
-            description = modelAndYaml.description
+            description = modelAndYaml.description,
+            yaml = transferResult.newYaml,
+            savedSetting = savedSetting
         )
         auditService.createAudit(
             Audit(
@@ -247,40 +269,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(pipelineResult)
-    }
-
-    override fun saveSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        setting: PipelineSetting
-    ): Result<Boolean> {
-        checkParam(userId, projectId)
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            setting = setting,
-            checkPermission = true
-        )
-        pipelineInfoFacadeService.updatePipelineSettingVersion(
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
-        )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = setting.pipelineName,
-                userId = userId,
-                action = "edit",
-                actionContent = "Update Setting",
-                projectId = projectId
-            )
-        )
-        return Result(true)
     }
 
     override fun creatorList(
@@ -321,6 +309,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        fromVersion: Int?,
+        versionName: String?,
         creator: String?,
         description: String?,
         page: Int?,
@@ -348,10 +338,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                fromVersion = fromVersion,
+                versionName = versionName,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                page = page,
-                pageSize = pageSize
+                page = page ?: 1,
+                pageSize = pageSize ?: 5
             )
         )
     }
@@ -420,6 +412,15 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             pipelineId = pipelineId
         )
         return Result(result)
+    }
+
+    override fun rollbackDraftFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 
     private fun checkParam(userId: String, projectId: String) {

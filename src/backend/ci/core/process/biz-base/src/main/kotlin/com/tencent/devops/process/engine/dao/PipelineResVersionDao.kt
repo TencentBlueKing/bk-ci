@@ -182,8 +182,9 @@ class PipelineResVersionDao {
                 referFlag = record.referFlag,
                 referCount = record.referCount,
                 status = record.status?.let { VersionStatus.valueOf(it) },
-                refs = record.refs,
-                description = record.description
+                description = record.description,
+                debugBuildId = record.debugBuildId,
+                pacRefs = record.refs
             )
         }
     }
@@ -221,7 +222,9 @@ class PipelineResVersionDao {
         pipelineId: String,
         offset: Int,
         limit: Int,
+        excludeVersion: Int?,
         creator: String?,
+        versionName: String?,
         description: String?
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
@@ -230,6 +233,15 @@ class PipelineResVersionDao {
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            versionName?.let {
+                query.and(
+                    VERSION.like("%$versionName%")
+                        .or(VERSION_NAME.like("%$versionName%"))
+                )
+            }
+            excludeVersion?.let {
+                query.and(VERSION.notEqual(excludeVersion))
+            }
             val result = query
                 .orderBy(VERSION.desc()).limit(limit).offset(offset).fetch()
             result.forEach { record ->

@@ -41,7 +41,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReturnCount")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResVersionDao: PipelineResVersionDao,
@@ -108,17 +108,60 @@ class PipelineRepositoryVersionService(
         }
     }
 
+    fun getPipelineVersion(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineResVersion? {
+        if (pipelineInfo == null) {
+            return null
+        }
+        val resource = pipelineResVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: return null
+        return PipelineResVersion(
+            createTime = pipelineInfo.createTime,
+            creator = pipelineInfo.creator,
+            canElementSkip = pipelineInfo.canElementSkip,
+            canManualStartup = pipelineInfo.canManualStartup,
+            channelCode = pipelineInfo.channelCode,
+            id = pipelineInfo.id,
+            lastModifyUser = pipelineInfo.lastModifyUser,
+            pipelineDesc = pipelineInfo.pipelineDesc,
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            projectId = pipelineInfo.projectId,
+            taskCount = pipelineInfo.taskCount,
+            templateId = pipelineInfo.templateId,
+            version = resource.version,
+            versionName = resource.versionName ?: "init",
+            pipelineVersion = resource.pipelineVersion,
+            triggerVersion = resource.triggerVersion,
+            settingVersion = resource.settingVersion,
+            status = resource.status,
+            debugBuildId = resource.debugBuildId,
+            pacRefs = resource.pacRefs
+        )
+    }
+
     fun listPipelineVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int,
+        excludeVersion: Int?,
+        versionName: String?,
         creator: String?,
         description: String?
-    ): Pair<Int, List<PipelineResVersion>> {
+    ): Pair<Int, MutableList<PipelineResVersion>> {
         if (pipelineInfo == null) {
-            return Pair(0, emptyList())
+            return Pair(0, mutableListOf())
         }
 
         val count = pipelineResVersionDao.count(
@@ -134,6 +177,8 @@ class PipelineRepositoryVersionService(
             pipelineId = pipelineId,
             creator = creator,
             description = description,
+            versionName = versionName,
+            excludeVersion = excludeVersion,
             offset = offset,
             limit = limit
         )

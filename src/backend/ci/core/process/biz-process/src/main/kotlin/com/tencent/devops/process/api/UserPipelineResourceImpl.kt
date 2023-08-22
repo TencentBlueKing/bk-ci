@@ -244,6 +244,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = pipeline,
+            yaml = null,
             saveDraft = saveDraft,
             channelCode = ChannelCode.BS
         )
@@ -720,8 +721,10 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }
