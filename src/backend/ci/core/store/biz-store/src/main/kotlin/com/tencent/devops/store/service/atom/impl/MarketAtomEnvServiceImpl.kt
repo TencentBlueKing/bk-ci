@@ -505,9 +505,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (it.osName == null && it.osArch == null) {
                 flag = marketAtomEnvInfoDao.getAtomEnvInfoByOsNameIsNull(
                     dslContext = dslContext,
-                    atomId = atomId,
-                    osName = null,
-                    osArch = null
+                    atomId = atomId
                 ) != null
             }
             if (flag) {

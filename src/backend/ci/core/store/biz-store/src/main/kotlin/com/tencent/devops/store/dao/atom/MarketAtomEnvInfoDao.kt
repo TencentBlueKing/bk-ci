@@ -236,15 +236,13 @@ class MarketAtomEnvInfoDao {
 
     fun getAtomEnvInfoByOsNameIsNull(
         dslContext: DSLContext,
-        atomId: String,
-        osName: String? = null,
-        osArch: String? = null
+        atomId: String
     ): TAtomEnvInfoRecord? {
         return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
-            conditions.add(OS_NAME.eq(osName))
-            conditions.add(OS_ARCH.eq(osArch))
+            conditions.add(OS_NAME.isNull)
+            conditions.add(OS_ARCH.isNull)
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
