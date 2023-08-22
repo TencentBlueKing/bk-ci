@@ -540,7 +540,7 @@
             },
             getLanguage () {
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
-                    this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
+                    this.languageList = res || []
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
             },
 
