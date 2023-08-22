@@ -535,7 +535,12 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
-        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!, detail.regionId)
+        return WorkspaceStartCloudDetail(
+            ip = detail.environmentIP,
+            curLaunchId = detail.curLaunchId!!,
+            regionId = detail.regionId,
+            projectId = workspace.projectId
+        )
     }
 
     fun getWorkspaceTimeline(
