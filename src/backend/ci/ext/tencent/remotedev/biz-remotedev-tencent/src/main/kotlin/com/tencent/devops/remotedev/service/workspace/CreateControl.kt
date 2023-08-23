@@ -364,7 +364,7 @@ class CreateControl @Autowired constructor(
                 if (it is ErrorCodeException) throw it
                 else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                    params = arrayOf("获取 devfile 异常 ${it.message}")
+                    params = arrayOf("获取 devfile 异常。")
                 )
             }
         } else {

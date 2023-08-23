@@ -37,5 +37,7 @@ data class WorkspaceStartCloudDetail(
     @ApiModelProperty("start客户端所需唯一索引")
     val curLaunchId: Int,
     @ApiModelProperty("云区域ID")
-    val regionId: Int? = null
+    val regionId: Int? = null,
+    @ApiModelProperty("项目ID")
+    val projectId: String? = null
 )
