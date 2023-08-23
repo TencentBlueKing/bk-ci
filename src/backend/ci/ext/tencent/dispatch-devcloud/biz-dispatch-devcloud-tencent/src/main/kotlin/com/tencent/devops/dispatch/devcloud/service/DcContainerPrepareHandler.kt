@@ -286,7 +286,6 @@ class DcContainerPrepareHandler @Autowired constructor(
         handlerContext: DcStartupHandlerContext
     ): Boolean {
         val containerStatus = getContainerStatus(containerInfo.containerName, handlerContext) ?: return false
-
         return when (containerStatus) {
             // 容器状态为stopped或stop，此容器池位可复用，根据containerChanged决定是否新建容器，更新容器池位绑定的容器
             OriginContainerStatus.stopped.name, OriginContainerStatus.stop.name -> {

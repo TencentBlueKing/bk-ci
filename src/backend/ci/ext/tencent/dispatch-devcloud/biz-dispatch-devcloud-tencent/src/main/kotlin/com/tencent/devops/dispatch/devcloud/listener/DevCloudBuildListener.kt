@@ -212,31 +212,25 @@ class DevCloudBuildListener @Autowired constructor(
                 return
             }
 
-            // 持久化构建走新版调度逻辑
-            val containerPool = getContainerPool(dispatchMessage)
-            if (containerPool.persistence != null && containerPool.persistence!!) {
-                dcContainerPrepareHandler.handlerRequest(
-                    DcStartupHandlerContext(
-                        userId = dispatchMessage.userId,
-                        projectId = dispatchMessage.projectId,
-                        pipelineId = dispatchMessage.pipelineId,
-                        buildId = dispatchMessage.buildId,
-                        vmSeqId = dispatchMessage.vmSeqId,
-                        executeCount = dispatchMessage.executeCount,
-                        agentId = dispatchMessage.id,
-                        secretKey = dispatchMessage.secretKey,
-                        gateway = dispatchMessage.gateway,
-                        dispatchMessage = dispatchMessage.dispatchMessage,
-                        atoms = dispatchMessage.atoms,
-                        dispatchType = dispatchMessage.dispatchType,
-                        customBuildEnv = dispatchMessage.customBuildEnv,
-                        containerHashId = dispatchMessage.containerHashId,
-                        persistence = (dispatchMessage.dispatchType as PublicDevCloudDispathcType).persistence ?: false
-                    )
+            dcContainerPrepareHandler.handlerRequest(
+                DcStartupHandlerContext(
+                    userId = dispatchMessage.userId,
+                    projectId = dispatchMessage.projectId,
+                    pipelineId = dispatchMessage.pipelineId,
+                    buildId = dispatchMessage.buildId,
+                    vmSeqId = dispatchMessage.vmSeqId,
+                    executeCount = dispatchMessage.executeCount,
+                    agentId = dispatchMessage.id,
+                    secretKey = dispatchMessage.secretKey,
+                    gateway = dispatchMessage.gateway,
+                    dispatchMessage = dispatchMessage.dispatchMessage,
+                    atoms = dispatchMessage.atoms,
+                    dispatchType = dispatchMessage.dispatchType,
+                    customBuildEnv = dispatchMessage.customBuildEnv,
+                    containerHashId = dispatchMessage.containerHashId,
+                    persistence = (dispatchMessage.dispatchType as PublicDevCloudDispathcType).persistence ?: false
                 )
-            } else {
-                createOrStartContainer(dispatchMessage)
-            }
+            )
         }
     }
 
