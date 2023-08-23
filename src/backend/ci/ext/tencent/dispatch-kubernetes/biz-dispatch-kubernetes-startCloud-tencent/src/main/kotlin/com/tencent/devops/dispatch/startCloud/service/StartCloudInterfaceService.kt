@@ -89,7 +89,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 zoneId = it.zoneId,
                 machineType = it.machineType,
                 status = it.status,
-                userInstanceList = JsonUtil.toOrNull(it.userInstanceList, List::class.java) as List<Instance>
+                userInstanceList = null
             )
         }
     }
