@@ -91,7 +91,7 @@ class DeliverControl @Autowired constructor(
                 )
             // 校验状态
             when (val status = WorkspaceStatus.values()[workspace.status]) {
-                WorkspaceStatus.DELIVERING -> {
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.PREPARING -> {
                     workspaceOpHistoryDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
