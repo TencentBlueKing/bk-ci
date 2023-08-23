@@ -539,7 +539,9 @@ class WorkspaceService @Autowired constructor(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
             regionId = detail.regionId,
-            projectId = workspace.projectId
+            projectId = workspace.projectId,
+            name = workspace.name,
+            creator = workspace.creator
         )
     }
 
