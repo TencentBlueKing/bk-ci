@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.startCloud.dao
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
@@ -64,7 +65,7 @@ class WindowsGpuResourceDao {
                     it.cgsIp,
                     it.machineType,
                     it.status,
-                    JsonUtil.toJson(it.userInstanceList.toString(), false)
+                    ObjectMapper().writeValueAsString(it.userInstanceList)
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
