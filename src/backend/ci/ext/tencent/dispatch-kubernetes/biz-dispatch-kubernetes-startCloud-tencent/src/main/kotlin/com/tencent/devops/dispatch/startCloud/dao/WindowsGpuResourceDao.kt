@@ -64,7 +64,7 @@ class WindowsGpuResourceDao {
                     it.cgsIp,
                     it.machineType,
                     it.status,
-                    JsonUtil.toJson(it.userInstanceList, false)
+                    JsonUtil.toJson(it.userInstanceList.toString(), false)
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
