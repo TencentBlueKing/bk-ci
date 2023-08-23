@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -187,10 +186,10 @@ class WorkspaceDao {
                 .fetch(0, Long::class.java).sum()
         }
     }
+
     fun countProjectWorkspace(
         dslContext: DSLContext,
         projectId: String?,
-        ownerType: WorkspaceOwnerType? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
@@ -209,7 +208,7 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -288,6 +287,7 @@ class WorkspaceDao {
                 .where(conditions)
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()

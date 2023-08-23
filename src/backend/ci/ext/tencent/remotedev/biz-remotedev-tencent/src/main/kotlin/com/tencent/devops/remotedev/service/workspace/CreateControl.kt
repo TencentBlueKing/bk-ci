@@ -109,7 +109,7 @@ class CreateControl @Autowired constructor(
     }
 
     fun asyncCreateWorkspace(
-        userId: String,
+        pmUserId: String,
         projectId: String,
         cgsId: String?,
         autoAssign: Boolean?,
@@ -146,7 +146,7 @@ class CreateControl @Autowired constructor(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = projectId,
+                createUserId = pmUserId,
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
@@ -172,7 +172,7 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = userId,
+                    userId = pmUserId,
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,

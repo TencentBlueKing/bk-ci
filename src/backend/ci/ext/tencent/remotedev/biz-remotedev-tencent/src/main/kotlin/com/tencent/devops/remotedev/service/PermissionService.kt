@@ -39,6 +39,9 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -55,6 +58,7 @@ class PermissionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService
 ) {
     companion object {
@@ -71,7 +75,12 @@ class PermissionService @Autowired constructor(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    return listOf(ws.creator)
+                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL.name) {
+                        return listOf(ws.creator)
+                    } else {
+                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.name)
+                            .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                    }
                 }
             }
         )
