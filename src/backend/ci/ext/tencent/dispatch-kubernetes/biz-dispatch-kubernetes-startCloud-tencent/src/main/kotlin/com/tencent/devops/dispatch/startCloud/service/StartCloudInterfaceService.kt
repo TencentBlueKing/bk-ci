@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Instance
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
@@ -88,7 +89,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 zoneId = it.zoneId,
                 machineType = it.machineType,
                 status = it.status,
-                userInstanceList = JsonUtil.toJson(it.userInstanceList, false)
+                userInstanceList = JsonUtil.toOrNull(it.userInstanceList, List::class.java) as List<Instance>
             )
         }
     }
