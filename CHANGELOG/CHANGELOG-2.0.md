@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.0.0-beta.30](#v200-beta30)
+   - [Changelog since v2.0.0-beta.29](#changelog-since-v200-beta29)
+
 - [v2.0.0-beta.28](#v200-beta28)
    - [Changelog since v2.0.0-beta.27](#changelog-since-v200-beta27)
 
@@ -7,6 +10,13 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.0.0-beta.30
+## Changelog since v2.0.0-beta.29
+#### 新增
+- [新增] 修复macos的jdk [链接](http://github.com/TencentBlueKing/bk-ci/issues/9362)
+
+#### 修复
+- [修复] 蓝盾v2.0.0问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9343)
 # v2.0.0-beta.28
 ## Changelog since v2.0.0-beta.27
 #### 新增
