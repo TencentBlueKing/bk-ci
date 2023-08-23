@@ -16,7 +16,7 @@ export const BkciDocs = {
     // TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md`, // turbo指引文档
     SPAWN_NODES_DOC: `${IWIKI_DOCS_URL}/p/1083624634`, // 跨项目调用文档
     BKAPP_NAV_OPEN_SOURCE_URL: 'https://github.com/TencentBlueKing/bk-ci', // 开源社区
-    FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question` // 问题反馈
+    FEED_BACK_URL: 'https://mk.woa.com/q/new?coterie=346' // 问题反馈
 }
 export const pipelineDocs = {
     ALIAS_BUILD_NO_DOC: 'https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno', // 构建号别名文档
