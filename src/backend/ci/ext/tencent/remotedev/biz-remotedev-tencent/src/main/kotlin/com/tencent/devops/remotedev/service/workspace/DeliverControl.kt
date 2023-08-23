@@ -193,66 +193,6 @@ class DeliverControl @Autowired constructor(
         }
     }
 
-    fun jobCallback(workspaceName: String) {
-        logger.info("jobCallBack $workspaceName")
-        updateWorkspaceStatus(workspaceName) { workspace ->
-            when (val status = WorkspaceStatus.values()[workspace.status]) {
-                // 团队云桌面
-                WorkspaceStatus.DELIVERING -> {
-                    workspaceDao.updateWorkspaceStatus(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        status = WorkspaceStatus.DISTRIBUTING
-                    )
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        operator = workspace.creator,
-                        action = WorkspaceAction.CREATE,
-                        actionMessage = String.format(
-                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.DISTRIBUTING.name
-                        )
-                    )
-                }
-                // 个人云桌面
-                WorkspaceStatus.PREPARING -> {
-                    workspaceDao.updateWorkspaceStatus(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        status = WorkspaceStatus.RUNNING
-                    )
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        operator = workspace.creator,
-                        action = WorkspaceAction.CREATE,
-                        actionMessage = String.format(
-                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.RUNNING.name
-                        )
-                    )
-                    workspaceCommon.dispatchWebsocketPushEvent(
-                        userId = workspace.creator,
-                        workspaceName = workspace.name,
-                        workspaceHost = workspace.hostName,
-                        type = WebSocketActionType.WORKSPACE_CREATE,
-                        status = true,
-                        action = WorkspaceAction.START,
-                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-                        ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
-                    )
-                }
-                else -> {
-                    logger.info("${workspace.name} is $status, return error.")
-                }
-            }
-        }
-    }
-
     fun updateStatusAndCreateHistory(
         type: String,
         workspace: TWorkspaceRecord,
@@ -294,7 +234,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
-            when (WorkspaceStatus.values()[workspace.status]) {
+            when (val status = WorkspaceStatus.values()[workspace.status]) {
                 WorkspaceStatus.DELIVERING -> {
                     if (type == "SYSTEM") {
                         updateStatusAndCreateHistory(
@@ -330,6 +270,36 @@ class DeliverControl @Autowired constructor(
                             action = WorkspaceAction.CREATE
                         )
                     }
+                }
+                // 个人云桌面
+                WorkspaceStatus.PREPARING -> {
+                    workspaceDao.updateWorkspaceStatus(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        status = WorkspaceStatus.RUNNING
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        operator = workspace.creator,
+                        action = WorkspaceAction.CREATE,
+                        actionMessage = String.format(
+                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    workspaceCommon.dispatchWebsocketPushEvent(
+                        userId = workspace.creator,
+                        workspaceName = workspace.name,
+                        workspaceHost = workspace.hostName,
+                        type = WebSocketActionType.WORKSPACE_CREATE,
+                        status = true,
+                        action = WorkspaceAction.START,
+                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
+                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
+                        ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+                    )
                 }
                 else -> {
                     logger.info("${workspace.name} is ${WorkspaceStatus.values()[workspace.status]}, return error.")
