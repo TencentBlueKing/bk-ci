@@ -41,6 +41,6 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DataSourceDefinitionRegistrar::class.java)
-        private val multiDataSource = listOf("auth", "image", "process")
+        private val multiDataSource = System.getProperty("devops.multi.from").split(",")
     }
 }

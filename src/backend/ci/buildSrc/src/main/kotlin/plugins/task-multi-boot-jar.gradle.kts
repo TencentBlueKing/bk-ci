@@ -31,7 +31,7 @@ tasks.register("multiBootJar") {
             isSpecifiedModulePath(it.path, multiModuleList)
         }.forEach { subProject -> addDependencies(subProject.path) }
         dependsOn("copyToRelease")
-        dependsOn("bootRun")
+        //dependsOn("bootRun")
         // dependsOn("jib")
     }
 }

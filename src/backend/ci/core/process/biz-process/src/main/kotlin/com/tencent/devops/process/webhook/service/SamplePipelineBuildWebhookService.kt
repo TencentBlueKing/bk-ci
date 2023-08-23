@@ -56,7 +56,7 @@ class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
         )
     }
 
-/*    @BkTimed // 要aop生效必须在子类上拦截
+    @BkTimed // 要aop生效必须在子类上拦截
     override fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
@@ -64,5 +64,5 @@ class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
         matcher: ScmWebhookMatcher
     ): Boolean {
         return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
-    }*/
+    }
 }

@@ -43,6 +43,8 @@ tasks.named<BootJar>("bootJar") {
 }
 
 tasks.named<BootRun>("bootRun") {
-    println("bootRun classpath is :" + classpath.asPath.toString())
-    //classpath = files("C:\\Users\\bk-ci-2\\src\\backend\\ci\\core\\mutijar\\boot-mutijar\\build\\classes\\kotlin\\main")
+    dependsOn("multiBootJar")
+    doFirst {
+        systemProperty("devops.multi.from", System.getProperty("devops.multi.from"))
+    }
 }

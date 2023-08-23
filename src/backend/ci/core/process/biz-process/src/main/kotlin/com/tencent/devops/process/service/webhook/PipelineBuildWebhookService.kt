@@ -81,10 +81,8 @@ import com.tencent.devops.repository.utils.RepositoryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
-import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-@Service
 abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
     override fun setApplicationContext(applicationContext: ApplicationContext) {
@@ -265,13 +263,13 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         return@outside
                     }
 
-                    /*if (pipelinebuildWebhookService.webhookTriggerPipelineBuild(
+                    if (webhookTriggerPipelineBuild(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             codeRepositoryType = codeRepositoryType,
                             matcher = matcher
                         )
-                    ) return@outside*/
+                    ) return@outside
                 } catch (e: Throwable) {
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
