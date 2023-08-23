@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -41,6 +42,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
         return CodeTGitWebHookTriggerElement::class.java
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
@@ -57,10 +59,15 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
             }
+            params.includeUsers = if (includeUsers == null || includeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
+            }
             if (branchName == null) {
                 return null
             }
-            params.block = block ?: false
+            params.block = isBlock(element)
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
             params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
@@ -77,7 +84,29 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 includeCrState!!.joinToString(",")
             }
+            params.fromBranches = EnvUtils.parseEnv(fromBranches ?: "", variables)
+            params.webhookQueue = webhookQueue ?: false
+            params.includeIssueAction = joinToString(includeIssueAction)
+            params.includeNoteComment = includeNoteComment
+            params.includeNoteTypes = joinToString(includeNoteTypes)
             return params
+        }
+    }
+
+    private fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
+            ""
+        } else {
+            list.joinToString(",")
+        }
+    }
+
+    private fun isBlock(element: CodeTGitWebHookTriggerElement): Boolean {
+        return with(element.data.input) {
+            when {
+                enableCheck == false || eventType != CodeEventType.MERGE_REQUEST -> false
+                else -> block ?: false
+            }
         }
     }
 }

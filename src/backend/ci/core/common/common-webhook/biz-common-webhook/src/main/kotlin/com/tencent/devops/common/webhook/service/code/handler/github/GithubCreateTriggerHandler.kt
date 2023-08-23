@@ -70,7 +70,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getMessage(event: GithubCreateEvent): String? {
-        return ""
+        return event.ref
     }
 
     override fun retrieveParams(

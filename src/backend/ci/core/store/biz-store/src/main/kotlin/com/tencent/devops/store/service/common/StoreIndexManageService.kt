@@ -77,16 +77,21 @@ interface StoreIndexManageService {
     ): Result<Boolean>
 
     /**
-     * 根据要素值获取关联的插件列表
-     */
-    fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>>
-
-    /**
      * 根据组件代码删除指标结果
      */
     fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Result<Boolean>
+
+    /**
+     * 更新平台组织认证组件信息
+     */
+    fun updateTrustworthyIndexInfo(
+        userId: String,
+        deptCode: String,
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean>

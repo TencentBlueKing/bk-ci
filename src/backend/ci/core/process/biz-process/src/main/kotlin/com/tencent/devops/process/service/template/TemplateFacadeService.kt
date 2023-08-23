@@ -122,10 +122,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -136,6 +132,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -1061,9 +1061,10 @@ class TemplateFacadeService @Autowired constructor(
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
-                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
-                language = I18nUtil.getLanguage(userId)
-            ))
+                    messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
@@ -1619,27 +1620,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
-        with(setting) {
-            return PipelineSetting(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = templateName,
-                desc = desc,
-                runLockType = runLockType,
-                successSubscription = successSubscription,
-                failSubscription = failSubscription,
-                successSubscriptionList = successSubscriptionList,
-                failSubscriptionList = failSubscriptionList,
-                labels = labels,
-                waitQueueTimeMinute = waitQueueTimeMinute,
-                maxQueueSize = maxQueueSize,
-                concurrencyGroup = concurrencyGroup,
-                hasPermission = hasPermission,
-                maxPipelineResNum = maxPipelineResNum,
-                maxConRunningQueueSize = maxConRunningQueueSize,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
-            )
-        }
+        return setting.copy(pipelineId = pipelineId, pipelineName = templateName)
     }
 
     /**
