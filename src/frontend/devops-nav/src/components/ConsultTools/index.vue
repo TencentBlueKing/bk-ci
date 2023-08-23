@@ -50,7 +50,7 @@
                     icon: 'feedback',
                     id: 'feedback',
                     label: this.$t('feedback'),
-                    href: 'https://mk.woa.com/q/new?coterie=346',
+                    href: this.BKCI_DOCS.FEED_BACK_URL,
                     target: '_blank'
                 }
             ]
