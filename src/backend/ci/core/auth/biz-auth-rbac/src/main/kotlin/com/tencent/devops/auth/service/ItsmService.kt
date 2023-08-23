@@ -2,12 +2,22 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmScheme
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -107,6 +117,90 @@ class ItsmService @Autowired constructor(
             logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return responseDTO
         }
+    }
+
+    @Suppress("LongParameterList")
+    fun buildGradeManagerItsmContentDTO(
+        projectName: String,
+        projectId: String,
+        desc: String,
+        organization: String,
+        authSecrecy: Int,
+        subjectScopes: List<SubjectScopeInfo>
+    ): ItsmContentDTO {
+        val itsmColumns = listOf(
+            ItsmColumn.builder().key("projectName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type("text").build(),
+            ItsmColumn.builder().key("projectId").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
+            ).type("text").build(),
+            ItsmColumn.builder().key("desc").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)
+            ).type("text").build(),
+            ItsmColumn.builder().key("organization")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type("text").build(),
+            ItsmColumn.builder().key("authSecrecy")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type("text").build(),
+            ItsmColumn.builder().key("subjectScopes")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type("text").build()
+        )
+        val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
+        val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
+        val scheme = HashMap<String, ItsmScheme>()
+        scheme["content_table"] = itsmScheme
+        val value = HashMap<String, ItsmStyle>()
+        value["projectName"] = ItsmStyle.builder().value(projectName).build()
+        value["projectId"] = ItsmStyle.builder().value(projectId).build()
+        value["desc"] = ItsmStyle.builder().value(desc).build()
+        value["organization"] = ItsmStyle.builder().value(organization).build()
+        value["authSecrecy"] =
+            ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
+        value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
+        val itsmValue = ItsmValue.builder()
+            .scheme("content_table")
+            .lable(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
+            )
+            .value(listOf(value))
+            .build()
+        return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
+    }
+
+    fun buildGroupApplyItsmContentDTO(): ItsmContentDTO {
+        val itsmColumns = listOf(
+            ItsmColumn.builder().key("projectName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type("text").build(),
+            ItsmColumn.builder().key("projectId").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
+            ).type("text").build()
+        )
+        val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
+        val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
+        val scheme = HashMap<String, ItsmScheme>()
+        scheme["content_table"] = itsmScheme
+        return ItsmContentDTO.builder().formData(emptyList()).schemes(scheme).build()
+    }
+
+    @Suppress("LongParameterList")
+    fun buildGroupApplyItsmValue(
+        projectName: String,
+        projectId: String,
+        resourceType: String,
+        resourceName: String,
+        resourceCode: String,
+        groupId: String,
+        groupName: String
+    ): ItsmValue {
+        val value = HashMap<String, ItsmStyle>()
+        value["projectName"] = ItsmStyle.builder().value(projectName).build()
+        value["projectId"] = ItsmStyle.builder().value(projectId).build()
+        return ItsmValue.builder()
+            .scheme("content_table")
+            .lable(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
+            )
+            .value(listOf(value))
+            .build()
     }
 
     companion object {
