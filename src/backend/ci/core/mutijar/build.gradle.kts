@@ -24,28 +24,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-tasks.register("multiBootJar") {
-    System.getProperty("devops.multi.from")?.let { multiModuleStr ->
-        val multiModuleList = multiModuleStr.split(",").toMutableList()
-        rootProject.subprojects.filter {
-            isSpecifiedModulePath(it.path, multiModuleList)
-        }.forEach { subProject -> addDependencies(subProject.path) }
-        dependsOn("copyToRelease")
-        // dependsOn("jib")
-    }
-}
-fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
-    // 由于store微服务下的有些项目名称包含image，在打包image时会把store给误打包，故在打包image时，把store服务剔除
-    return if (path.contains("image") && path.contains("store")) {
-        false
-    } else {
-        path.contains("biz")
-            && multiModuleList.any { module -> path.contains(module) }
-    }
-}
 
-fun addDependencies(path: String) {
-    dependencies {
-        add("implementation", project(path))
-    }
+subprojects {
+    group = "com.tencent.bk.devops.ci.mutijar"
 }

@@ -24,28 +24,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-tasks.register("multiBootJar") {
-    System.getProperty("devops.multi.from")?.let { multiModuleStr ->
-        val multiModuleList = multiModuleStr.split(",").toMutableList()
-        rootProject.subprojects.filter {
-            isSpecifiedModulePath(it.path, multiModuleList)
-        }.forEach { subProject -> addDependencies(subProject.path) }
-        dependsOn("copyToRelease")
-        // dependsOn("jib")
-    }
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+import org.springframework.boot.gradle.tasks.run.BootRun
+
+dependencies {
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-db-base"))
+    api("mysql:mysql-connector-java")
+    implementation(kotlin("stdlib"))
 }
-fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
-    // 由于store微服务下的有些项目名称包含image，在打包image时会把store给误打包，故在打包image时，把store服务剔除
-    return if (path.contains("image") && path.contains("store")) {
-        false
-    } else {
-        path.contains("biz")
-            && multiModuleList.any { module -> path.contains(module) }
-    }
+plugins {
+    `task-multi-boot-jar`
 }
 
-fun addDependencies(path: String) {
-    dependencies {
-        add("implementation", project(path))
-    }
+tasks.named<BootJar>("bootJar") {
+    val finalModuleName = System.getProperty("devops.multi.to")
+    archiveBaseName.set("boot-$finalModuleName")
+}
+
+tasks.named<BootRun>("bootRun") {
+    println("bootRun classpath is :" + classpath.asPath.toString())
+    //classpath = files("C:\\Users\\bk-ci-2\\src\\backend\\ci\\core\\mutijar\\boot-mutijar\\build\\classes\\kotlin\\main")
 }

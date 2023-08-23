@@ -1,0 +1,21 @@
+spring:
+  profiles:
+    active:
+      - common
+      - auth
+      - image
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: mutijar
+    desc: DevOps MUTIJAR Service
+    version: 4.0.0
+    packageName: com.tencent.devops.mutijar
+  cloud:
+    config:
+      fail-fast: true
+server:
+  port: 21930
+logging:
+  level:
+    root=DEBUG: DEBUG
