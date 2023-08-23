@@ -226,11 +226,11 @@ class DcContainerPrepareHandler @Autowired constructor(
                 handlerContext.cpu = performanceOption.cpu
                 handlerContext.memory = "${performanceOption.memory}M"
                 handlerContext.disk = "${performanceOption.disk}G"
-            } else {
-                handlerContext.cpu = cpu
-                handlerContext.memory = memory
-                handlerContext.disk = disk
             }
+        } else {
+            handlerContext.cpu = cpu
+            handlerContext.memory = memory
+            handlerContext.disk = disk
         }
     }
 
