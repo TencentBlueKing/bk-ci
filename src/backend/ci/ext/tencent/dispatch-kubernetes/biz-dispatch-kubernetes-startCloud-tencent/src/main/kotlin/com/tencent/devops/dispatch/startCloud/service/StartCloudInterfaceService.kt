@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.startCloud.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
@@ -86,7 +87,8 @@ class StartCloudInterfaceService @Autowired constructor(
                 cgsIp = it.cgsIp,
                 zoneId = it.zoneId,
                 machineType = it.machineType,
-                status = it.status
+                status = it.status,
+                userInstanceList = JsonUtil.toJson(it.userInstanceList, false)
             )
         }
     }

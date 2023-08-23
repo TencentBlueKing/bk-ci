@@ -14,5 +14,17 @@ data class EnvironmentResourceData(
     @JsonProperty("machineType")
     val machineType: String,
     @JsonProperty("status")
-    val status: Int
+    val status: Int,
+    @JsonProperty("userInstanceList")
+    val userInstanceList: MutableList<Instance>
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Instance(
+    @JsonProperty("userId")
+    val userId: String,
+    @JsonProperty("status")
+    val status: Int,
+    @JsonProperty("pipelineId")
+    val pipelineId: String
 )
