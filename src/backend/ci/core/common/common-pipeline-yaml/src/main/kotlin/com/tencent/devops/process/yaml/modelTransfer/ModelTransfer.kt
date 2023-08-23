@@ -32,35 +32,34 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.process.api.user.UserPipelineGroupResource
-import com.tencent.devops.process.pojo.classify.PipelineGroup
-import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
-import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
+import com.tencent.devops.process.yaml.v2.models.IfType
+import com.tencent.devops.process.yaml.v2.models.Notices
+import com.tencent.devops.process.yaml.v2.models.PacNotices
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 @Component
 class ModelTransfer @Autowired constructor(
     val client: Client,
     val modelStage: StageTransfer,
-    val modelElement: ElementTransfer
+    val modelElement: ElementTransfer,
+    val transferCache: TransferCacheService
 ) {
 
     companion object {
@@ -68,7 +67,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     fun yaml2Labels(yamlInput: YamlTransferInput): List<String> {
-        return preparePipelineLabels(yamlInput.userId, yamlInput.projectCode, yamlInput.yaml)
+        return preparePipelineLabels(yamlInput.projectCode, yamlInput.yaml)
     }
 
     fun yaml2Setting(yamlInput: YamlTransferInput): PipelineSetting {
@@ -80,18 +79,47 @@ class ModelTransfer @Autowired constructor(
             desc = yamlInput.pipelineInfo?.pipelineDesc ?: "",
             concurrencyGroup = yaml.concurrency?.group,
             // Cancel-In-Progress 配置group后默认为true
-            concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
-                ?: yaml.concurrency?.group?.let { true }
-                ?: true,
+            concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
             runLockType = when {
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                 else -> PipelineRunLockType.MULTIPLE
             },
-            waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes ?: TimeUnit.HOURS.toMinutes(8).toInt(),
-            maxQueueSize = yaml.concurrency?.queueLength ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+            waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
+                ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
+            maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
             labels = yaml2Labels(yamlInput),
-            pipelineAsCodeSettings = yamlInput.asCodeSettings
+            pipelineAsCodeSettings = yamlInput.asCodeSettings,
+            successSubscriptionList = yamlNotice2Setting(
+                projectId = yamlInput.projectCode,
+                notices = yaml.notices?.filter { it.checkNotifyForSuccess() }
+            ),
+            failSubscriptionList = yamlNotice2Setting(
+                projectId = yamlInput.projectCode,
+                notices = yaml.notices?.filter { it.checkNotifyForFail() }
+            )
         )
+    }
+
+    private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
+        if (notices.isNullOrEmpty()) return listOf(Subscription())
+        return notices.map {
+            val res = it.toSubscription()
+            prepareModelGroups(projectId, res)
+        }
+    }
+
+    private fun prepareModelGroups(projectId: String, notice: Subscription): Subscription {
+        if (notice.groups.isEmpty()) return notice
+        val info = transferCache.getProjectGroupAndUsers(projectId)?.associateBy { it.displayName } ?: return notice
+        val groups = notice.groups.map { info[it]?.roleName ?: "" }.toSet()
+        return notice.copy(groups = groups)
+    }
+
+    private fun prepareYamlGroups(projectId: String, notice: PacNotices): PacNotices {
+        if (notice.groups.isNullOrEmpty()) return notice
+        val info = transferCache.getProjectGroupAndUsers(projectId)?.associateBy { it.roleName } ?: return notice
+        val groups = notice.groups.mapNotNull { info[it]?.displayName }
+        return notice.copy(groups = groups)
     }
 
     fun yaml2Model(
@@ -137,61 +165,93 @@ class ModelTransfer @Autowired constructor(
         )
     }
 
-    fun model2yaml(modelInput: ModelTransferInput): PreScriptBuildYamlI {
+    fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYaml {
         val stages = mutableListOf<PreStage>()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             val ymlStage = modelStage.model2YamlStage(stage)
             stages.add(ymlStage)
         }
-        val label = modelInput.model.labels.ifEmpty { null }
+        val label = prepareYamlLabels(modelInput.setting).ifEmpty { null }
         val triggerOn = getTriggerOn(modelInput.model)
         val variables = getVariableFromModel(modelInput.model)
-        val finally = modelStage.model2YamlStage(modelInput.model.stages.last()).jobs
+        val lastStage = modelInput.model.stages.last()
+        val finally = if (lastStage.finally) modelStage.model2YamlStage(lastStage).jobs else null
         val concurrency = getConcurrency(modelInput.setting)
-        val notices = "" // TODO: 2023/7/17
 
         return when (modelInput.version) {
-            YamlVersion.Version.V2_0 -> PreScriptBuildYaml(
+            YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
                 version = "v2.0",
                 name = modelInput.model.name,
                 label = label,
                 triggerOn = triggerOn[modelInput.defaultScmType]?.toPreV2(),
                 variables = variables,
-                stages = stages,
+                stages = TransferMapper.anyTo(stages),
                 extends = null,
                 resources = null,
-                notices = null,
+                notices = makeNoticesV2(modelInput.setting),
                 finally = finally,
                 concurrency = concurrency
             )
-            YamlVersion.Version.V3_0 -> PreScriptBuildYamlV3(
+            YamlVersion.Version.V3_0 -> PreTemplateScriptBuildYamlV3(
                 version = "v3.0",
                 name = modelInput.model.name,
                 label = label,
-                triggerOn = triggerOn.map { it.value.toPreV3() },
+                triggerOn = triggerOn.map { on ->
+                    on.value.toPreV3().also { it.type = on.key.alis }
+                }.ifEmpty { null }?.let { if (it.size == 1) it.first() else it },
                 variables = variables,
-                stages = stages,
+                stages = TransferMapper.anyTo(stages),
                 extends = null,
                 resources = null,
-                notices = null,
+                notices = makeNoticesV3(modelInput.setting),
                 finally = finally,
                 concurrency = concurrency
             )
         }
     }
 
-    private fun getNotices(setting: PipelineSetting): List<GitNotices> {
-        return emptyList()
+    private fun makeNoticesV2(setting: PipelineSetting): List<GitNotices> {
+        val res = mutableListOf<GitNotices>()
+        setting.successSubscriptionList?.forEach {
+            if (it.types.isNotEmpty()) {
+                res.add(GitNotices(it, IfType.SUCCESS.name))
+            }
+        }
+        setting.failSubscriptionList?.forEach {
+            if (it.types.isNotEmpty()) {
+                res.add(GitNotices(it, IfType.FAILURE.name))
+            }
+        }
+        return res
+    }
+
+    private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices> {
+        val res = mutableListOf<PacNotices>()
+        setting.successSubscriptionList?.forEach {
+            if (it.types.isNotEmpty()) {
+                val notice = PacNotices(it, IfType.SUCCESS.name)
+                res.add(prepareYamlGroups(setting.projectId, notice))
+            }
+        }
+        setting.failSubscriptionList?.forEach {
+            if (it.types.isNotEmpty()) {
+                val notice = PacNotices(it, IfType.FAILURE.name)
+                res.add(prepareYamlGroups(setting.projectId, notice))
+            }
+        }
+        return res
     }
 
     private fun getConcurrency(setting: PipelineSetting): Concurrency? {
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK) {
             return Concurrency(
                 group = setting.concurrencyGroup,
-                cancelInProgress = setting.concurrencyCancelInProgress,
-                queueLength = setting.maxQueueSize,
+                cancelInProgress = setting.concurrencyCancelInProgress.nullIfDefault(false),
+                queueLength = setting.maxQueueSize
+                    .nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE),
                 queueTimeoutMinutes = setting.waitQueueTimeMinute
+                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE)
             )
         }
         return null
@@ -217,75 +277,30 @@ class ModelTransfer @Autowired constructor(
 
     @Suppress("NestedBlockDepth")
     private fun preparePipelineLabels(
-        userId: String,
         projectCode: String,
         yaml: IPreTemplateScriptBuildYaml
     ): List<String> {
-        val gitCIPipelineLabels = mutableListOf<String>()
+        val ymlLabel = yaml.label ?: return emptyList()
+        val labels = mutableListOf<String>()
 
-        try {
-            // 获取当前项目下存在的标签组
-            val pipelineGroups = client.get(UserPipelineGroupResource::class)
-                .getGroups(userId, projectCode)
-                .data
-
-            yaml.label?.forEach {
-                // 要设置的标签组不存在，新建标签组和标签（同名）
-                if (!checkPipelineLabel(it, pipelineGroups)) {
-                    client.get(UserPipelineGroupResource::class).addGroup(
-                        userId,
-                        PipelineGroupCreate(
-                            projectId = projectCode,
-                            name = it
-                        )
-                    )
-
-                    val pipelineGroup = getPipelineGroup(it, userId, projectCode)
-                    if (pipelineGroup != null) {
-                        client.get(UserPipelineGroupResource::class).addLabel(
-                            userId = userId,
-                            projectId = projectCode,
-                            pipelineLabel = PipelineLabelCreate(
-                                groupId = pipelineGroup.id,
-                                name = it
-                            )
-                        )
-                    }
-                }
-
-                // 保证标签已创建成功后，取label加密ID
-                val pipelineGroup = getPipelineGroup(it, userId, projectCode)
-                gitCIPipelineLabels.add(pipelineGroup!!.labels[0].id)
+        transferCache.getPipelineLabel(projectCode)?.forEach { group ->
+            group.labels.forEach {
+                if (ymlLabel.contains(it.name)) labels.add(it.id)
             }
-        } catch (e: Exception) {
-            logger.warn("$userId|$projectCode preparePipelineLabels error.", e)
         }
-
-        return gitCIPipelineLabels
+        return labels
     }
 
-    private fun checkPipelineLabel(gitciPipelineLabel: String, pipelineGroups: List<PipelineGroup>?): Boolean {
-        pipelineGroups?.forEach { pipelineGroup ->
-            pipelineGroup.labels.forEach {
-                if (it.name == gitciPipelineLabel) {
-                    return true
-                }
+    private fun prepareYamlLabels(
+        pipelineSetting: PipelineSetting
+    ): List<String> {
+        val labels = mutableListOf<String>()
+
+        transferCache.getPipelineLabel(pipelineSetting.projectId)?.forEach { group ->
+            group.labels.forEach {
+                if (pipelineSetting.labels.contains(it.id)) labels.add(it.name)
             }
         }
-
-        return false
-    }
-
-    private fun getPipelineGroup(labelGroupName: String, userId: String, projectId: String): PipelineGroup? {
-        val pipelineGroups = client.get(UserPipelineGroupResource::class)
-            .getGroups(userId, projectId)
-            .data
-        pipelineGroups?.forEach {
-            if (it.name == labelGroupName) {
-                return it
-            }
-        }
-
-        return null
+        return labels
     }
 }

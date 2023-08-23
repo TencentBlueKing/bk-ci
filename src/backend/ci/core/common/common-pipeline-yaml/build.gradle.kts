@@ -29,6 +29,7 @@ dependencies {
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:common:common-expression"))
     api(project(":core:store:api-store"))
+    api(project(":core:auth:api-auth"))
     api(project(":core:quality:api-quality"))
 
     api("org.apache.ant:ant")

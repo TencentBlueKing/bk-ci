@@ -31,13 +31,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
-import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ITemplateFilter
+import com.tencent.devops.process.yaml.v2.models.PacNotices
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -55,14 +57,14 @@ data class PreTemplateScriptBuildYamlV3(
     override val name: String?,
     override val label: List<String>? = null,
     @JsonProperty("on")
-    var triggerOn: List<PreTriggerOnV3>?,
+    var triggerOn: Any?,
     override val variables: Map<String, Any>?,
     override val stages: List<Map<String, Any>>?,
     override val jobs: Map<String, Any>? = null,
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override val notices: List<GitNotices>?,
+    override val notices: List<PacNotices>?,
     override var finally: Map<String, Any>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
@@ -73,7 +75,7 @@ data class PreTemplateScriptBuildYamlV3(
             version = version,
             name = name,
             label = label,
-            triggerOn = triggerOn,
+            triggerOn = makeRunsOn(),
             resources = resources,
             notices = notices,
             concurrency = concurrency
@@ -96,7 +98,8 @@ data class PreTemplateScriptBuildYamlV3(
     }
 
     override fun formatTriggerOn(default: ScmType): Map<ScmType, TriggerOn> {
-        return triggerOn?.associateBy({ it.type ?: default }, { ScriptYmlUtils.formatTriggerOn(it) }) ?: emptyMap()
+        return makeRunsOn()?.associateBy({ ScmType.parse(it.type) ?: default }, { ScriptYmlUtils.formatTriggerOn(it) })
+            ?: emptyMap()
     }
 
     override fun formatStages(): List<Stage> {
@@ -116,5 +119,18 @@ data class PreTemplateScriptBuildYamlV3(
 
     private fun checkInitialized() {
         if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")
+    }
+
+    private fun makeRunsOn(): List<PreTriggerOnV3>? {
+        if (triggerOn == null) return null
+        // 简写方式
+        if (triggerOn is Map<*, *>) {
+            val new = JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {})
+            return listOf(new)
+        }
+        if (triggerOn is List<*>) {
+            return JsonUtil.anyTo(triggerOn, object : TypeReference<List<PreTriggerOnV3>>() {})
+        }
+        return null
     }
 }

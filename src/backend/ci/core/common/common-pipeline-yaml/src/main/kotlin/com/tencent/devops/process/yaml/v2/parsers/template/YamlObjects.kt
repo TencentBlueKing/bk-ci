@@ -37,6 +37,7 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.MetaData
+import com.tencent.devops.process.yaml.v2.models.PacNotices
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -282,7 +283,7 @@ object YamlObjects {
         )
     }
 
-    fun getNotice(fromPath: TemplatePath, notice: Map<String, Any?>): GitNotices {
+    fun getNoticeV2(fromPath: TemplatePath, notice: Map<String, Any?>): GitNotices {
         return GitNotices(
             type = notice["type"].toString(),
             title = notice["title"]?.toString(),
@@ -301,7 +302,44 @@ object YamlObjects {
             chatId = if (notice["chat-id"] == null) {
                 null
             } else {
-                transValue<List<String>>(fromPath, "receivers", notice["chat-id"]).toSet()
+                transValue<List<String>>(fromPath, "chat-id", notice["chat-id"]).toSet()
+            }
+        )
+    }
+
+    fun getNoticeV3(fromPath: TemplatePath, notice: Map<String, Any?>): PacNotices {
+        return PacNotices(
+            type = if (notice["receivers"] == null) {
+                emptyList()
+            } else {
+                transValue(fromPath, "type", notice["type"])
+            },
+            receivers = if (notice["receivers"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "receivers", notice["receivers"])
+            },
+            groups = if (notice["groups"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "groups", notice["groups"])
+            },
+            content = notice["content"]?.toString(),
+            ifField = notice["if"]?.toString(),
+            chatId = if (notice["chat-id"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "chat-id", notice["chat-id"])
+            },
+            notifyMarkdown = if (notice["notify-markdown"] == null) {
+                null
+            } else {
+                transValue<Boolean>(fromPath, "notify-markdown", notice["notify-markdown"])
+            },
+            notifyDetail = if (notice["notify-detail-url"] == null) {
+                null
+            } else {
+                transValue<Boolean>(fromPath, "notify-detail-url", notice["notify-detail-url"])
             }
         )
     }

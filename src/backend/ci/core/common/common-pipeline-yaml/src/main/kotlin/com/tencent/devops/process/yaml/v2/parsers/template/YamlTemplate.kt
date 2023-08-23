@@ -28,7 +28,9 @@
 package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -37,6 +39,8 @@ import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.ITemplateFilter
+import com.tencent.devops.process.yaml.v2.models.PacNotices
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Repositories
@@ -225,12 +229,23 @@ class YamlTemplate<T>(
             )
         }
         // notices只用做一次模板替换没有嵌套模板
-        if (templateObject["notices"] != null) {
+        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYaml) {
             val notices = mutableListOf<GitNotices>()
             val temNotices =
                 YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
             temNotices.forEach {
-                notices.add(YamlObjects.getNotice(filePath, it))
+                notices.add(YamlObjects.getNoticeV2(filePath, it))
+            }
+            preYamlObject.notices = notices
+        }
+
+        // notices只用做一次模板替换没有嵌套模板
+        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlV3) {
+            val notices = mutableListOf<PacNotices>()
+            val temNotices =
+                YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
+            temNotices.forEach {
+                notices.add(YamlObjects.getNoticeV3(filePath, it))
             }
             preYamlObject.notices = notices
         }
@@ -247,14 +262,16 @@ class YamlTemplate<T>(
     }
 
     private fun replaceTriggerOn(
-        triggerOn: List<Map<String, Any>>,
+        triggerOn: Any,
         preYamlObject: PreScriptBuildYamlI,
         deepTree: TemplateDeepTreeNode
     ) {
         if (preYamlObject.yamlVersion() != YamlVersion.Version.V3_0) return
-        val triggerOnV3s = mutableListOf<PreTriggerOnV3>()
-        triggerOn.forEach { value ->
-            triggerOnV3s.add(YamlObjects.getTriggerOnV3(value))
+        val triggerOnV3s = when (triggerOn) {
+            // 简写方式
+            is Map<*, *> -> listOf(JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {}))
+            is List<*> -> JsonUtil.anyTo(triggerOn, object : TypeReference<List<PreTriggerOnV3>>() {})
+            else -> null
         }
         (preYamlObject as PreScriptBuildYamlV3).triggerOn = triggerOnV3s
     }

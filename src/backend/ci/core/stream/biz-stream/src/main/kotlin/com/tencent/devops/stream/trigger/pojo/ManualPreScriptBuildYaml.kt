@@ -60,7 +60,7 @@ class ManualPreScriptBuildYaml(
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    override var notices: List<GitNotices>?,
+    var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {
