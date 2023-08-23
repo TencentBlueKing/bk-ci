@@ -105,7 +105,7 @@ class WorkspaceCommon @Autowired constructor(
         userId: String,
         workspaceName: String,
         workspaceHost: String?,
-        errorMsg: String?,
+        errorMsg: String? = null,
         type: WebSocketActionType,
         status: Boolean?,
         action: WorkspaceAction,
