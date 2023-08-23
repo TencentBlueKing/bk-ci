@@ -476,10 +476,6 @@
                 width: 100%;
                 height: 180px;
             }
-
-            .exception-wrap-item {
-                padding-bottom: 20px;
-            }
         }
     }
 </style>

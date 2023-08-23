@@ -139,7 +139,6 @@
     "hotline": "客服电话：",
     "contactUs": "技术支持",
     "feedback": "意见反馈",
-    "documentation": "帮助文档",
     "mobileGame": "手游",
     "pcGame": "端游",
     "webGame": "页游",
@@ -238,5 +237,6 @@
         "enable/disable": "停用/启用",
         "manage": "管理"
     },
-    "documentation": "产品文档"
+    "documentation": "产品文档",
+    "community": "开源社区"
 }

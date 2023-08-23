@@ -4,7 +4,6 @@
         theme="light navigation-message"
         placement="bottom"
         :arrow="false"
-        trigger="click"
         ref="popoverRef">
         <div
             class="user-entry"

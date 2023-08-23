@@ -139,7 +139,6 @@
     "hotline": "Customer service hotline：",
     "contactUs": "Support",
     "feedback": "Feedback",
-    "documentation": "Documentation",
     "mobileGame": "Mobile game",
     "pcGame": "PC game",
     "webGame": "Web game",
@@ -238,5 +237,6 @@
         "enable/disable": "Enable/Disable",
         "manage": "Manage"
     },
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "community": "Community"
 }
