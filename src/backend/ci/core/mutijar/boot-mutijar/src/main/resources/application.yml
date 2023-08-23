@@ -4,6 +4,26 @@ spring:
       - common
       - auth
       - image
+      - process
+      - environment
+      - ticket
+      - repository
+      - project
+      - notify
+      - openapi
+      - dispatch
+      - dispatch-docker
+      - dispatch-kubernetes
+      - artifactory
+      - buildless
+      - dockerhost
+      - metrics
+      - monitoring
+      - plugin
+      - stream
+      - worker
+      - websocket
+      - quality
   main:
     allow-bean-definition-overriding: true
   application:
@@ -14,8 +34,6 @@ spring:
   cloud:
     config:
       fail-fast: true
-server:
-  port: 21930
 logging:
   level:
     root=DEBUG: DEBUG
