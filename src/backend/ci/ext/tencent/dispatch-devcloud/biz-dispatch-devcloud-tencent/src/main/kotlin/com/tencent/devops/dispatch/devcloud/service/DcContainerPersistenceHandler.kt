@@ -72,6 +72,11 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 return
             }
 
+            // 容器配置变更，重置持久化容器配置
+            if (containerChanged) {
+                addPersistenceContainer(handlerContext)
+            }
+
             // 获取当前job关联持久化容器配置
             val persistenceContainer = dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)
             if (persistenceContainer == null || persistenceContainer.persistenceAgentId.isBlank()) {

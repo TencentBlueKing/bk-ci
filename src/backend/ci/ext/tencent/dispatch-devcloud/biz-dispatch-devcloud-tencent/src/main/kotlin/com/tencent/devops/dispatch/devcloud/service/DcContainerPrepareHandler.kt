@@ -386,10 +386,6 @@ class DcContainerPrepareHandler @Autowired constructor(
             memory = handlerContext.memory,
             disk = handlerContext.disk
         )
-
-        if (handlerContext.persistence) {
-            dcContainerPersistenceHandler.addPersistenceContainer(handlerContext)
-        }
     }
 
     private fun checkContainerChanged(
