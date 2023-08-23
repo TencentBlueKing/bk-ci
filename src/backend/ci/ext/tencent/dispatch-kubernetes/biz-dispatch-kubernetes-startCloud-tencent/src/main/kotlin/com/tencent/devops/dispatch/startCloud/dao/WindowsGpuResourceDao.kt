@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.startCloud.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
