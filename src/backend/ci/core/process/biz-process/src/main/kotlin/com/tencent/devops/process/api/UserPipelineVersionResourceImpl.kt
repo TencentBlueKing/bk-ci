@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelAndYaml
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -50,12 +51,16 @@ import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
@@ -64,6 +69,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserPipelineVersionResourceImpl @Autowired constructor(
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
@@ -72,8 +78,54 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineOperationLogService: PipelineOperationLogService,
     private val transferService: PipelineTransferYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineVersionResource {
+
+    override fun getPipelineResourceAndSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        includeDraft: Boolean?
+    ): Result<PipelineResourceAndSetting> {
+        checkParam(userId, projectId)
+        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
+        val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeDraft = includeDraft,
+            channelCode = ChannelCode.BS
+        )
+        val setting = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = resource.settingVersion ?: resource.version,
+            detailInfo = detailInfo
+        )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(
+            PipelineResourceAndSetting(
+                pipelineInfo = detailInfo?.let {
+                    PipelineDetail(
+                        pipelineId = it.pipelineId,
+                        pipelineName = it.pipelineName,
+                        hasCollect = it.hasCollect,
+                        canManualStartup = it.canManualStartup,
+                        hasPermission = it.hasPermission,
+                        pipelineDesc = it.pipelineDesc,
+                        creator = it.creator,
+                        createTime = it.createTime,
+                        updateTime = it.updateTime,
+                        viewNames = it.viewNames
+                    )
+                },
+                pipelineResource = resource,
+                setting = setting
+            )
+        )
+    }
 
     override fun createPipelineFromTemplate(
         userId: String,

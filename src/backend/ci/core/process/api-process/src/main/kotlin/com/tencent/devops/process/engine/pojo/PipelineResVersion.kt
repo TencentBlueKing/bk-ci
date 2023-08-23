@@ -50,7 +50,7 @@ data class PipelineResVersion(
     val createTime: Long = 0,
     @ApiModelProperty("更新时间")
     val updateTime: Long = 0,
-    @ApiModelProperty("创建者")
+    @ApiModelProperty("版本创建者")
     val creator: String,
     @ApiModelProperty("上一次的更新者")
     val lastModifyUser: String,

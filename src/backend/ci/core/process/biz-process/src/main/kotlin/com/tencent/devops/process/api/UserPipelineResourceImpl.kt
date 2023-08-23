@@ -362,50 +362,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipeline)
     }
 
-    override fun getPipelineResourceAndSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        includeDraft: Boolean?
-    ): Result<PipelineResourceAndSetting> {
-        checkParam(userId, projectId)
-        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-        val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            includeDraft = includeDraft,
-            channelCode = ChannelCode.BS
-        )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: resource.version,
-            detailInfo = detailInfo
-        )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(
-            PipelineResourceAndSetting(
-                pipelineInfo = detailInfo?.let {
-                    PipelineDetail(
-                        pipelineId = it.pipelineId,
-                        pipelineName = it.pipelineName,
-                        hasCollect = it.hasCollect,
-                        canManualStartup = it.canManualStartup,
-                        hasPermission = it.hasPermission,
-                        pipelineDesc = it.pipelineDesc,
-                        creator = it.creator,
-                        createTime = it.createTime,
-                        updateTime = it.updateTime,
-                        viewNames = it.viewNames
-                    )
-                },
-                pipelineResource = resource,
-                setting = setting
-            )
-        )
-    }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
         checkParam(userId, projectId)
@@ -419,6 +375,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             )
         )
     }
+
 
     override fun generateRemoteToken(
         userId: String,

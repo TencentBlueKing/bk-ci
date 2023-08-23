@@ -36,12 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -57,6 +59,25 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
+
+    // TODO #8161 当前版本(草稿分开给)、是否为实例化、取掉setting model
+    @ApiOperation("获取流水线编排和设置")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/resource")
+    fun getPipelineResourceAndSetting(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        includeDraft: Boolean? = false
+    ): Result<PipelineResourceAndSetting>
 
     @ApiOperation("通过指定模板创建流水线")
     @POST
