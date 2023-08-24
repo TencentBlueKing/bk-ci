@@ -91,17 +91,6 @@ class DcContainerShutdownHandler @Autowired constructor(
                 stopContainer(this, buildContainerPools)
             }
 
-            buildContainerPools.filter { it.poolNo != null }.forEach {
-                logger.info("$buildLogKey update status in db,vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
-                devCloudBuildDao.updateStatus(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    vmSeqId = it.vmSeqId,
-                    poolNo = it.poolNo!!.toInt(),
-                    status = ContainerBuildStatus.IDLE.status
-                )
-            }
-
             logger.info("[$buildLogKey delete buildContainerPoolNo.")
             buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
                 dslContext = dslContext,
@@ -132,10 +121,10 @@ class DcContainerShutdownHandler @Autowired constructor(
 
     private fun stopContainer(
         handlerContext: DcShutdownHandlerContext,
-        containerNameList: Result<TBuildContainerPoolNoRecord>
+        buildContainerPools: Result<TBuildContainerPoolNoRecord>
     ) {
         with(handlerContext) {
-            containerNameList.filter { it.containerName != null }.forEach {
+            buildContainerPools.filter { it.containerName != null }.forEach {
                 try {
                     logger.info(
                         "$buildLogKey stop dev cloud container,vmSeqId: ${it.vmSeqId}, " +
@@ -170,6 +159,17 @@ class DcContainerShutdownHandler @Autowired constructor(
                     // 清除job创建记录
                     devCloudJobRedisUtils.deleteJobCount(buildId, it.containerName!!)
                 }
+            }
+
+            buildContainerPools.filter { it.poolNo != null }.forEach {
+                logger.info("$buildLogKey update status in db,vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
+                devCloudBuildDao.updateStatus(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    vmSeqId = it.vmSeqId,
+                    poolNo = it.poolNo!!.toInt(),
+                    status = ContainerBuildStatus.IDLE.status
+                )
             }
         }
     }
