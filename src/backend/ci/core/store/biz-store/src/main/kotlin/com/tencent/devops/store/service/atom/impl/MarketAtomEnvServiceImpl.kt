@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -499,27 +500,32 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     }
 
     override fun updateMarketAtomEnvInfos(atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
-        val newAtomEnvRequests = mutableListOf<AtomEnvRequest>()
         atomEnvRequests.forEach {
-            var flag = false
-            if (it.osName == null && it.osArch == null) {
-                flag = marketAtomEnvInfoDao.getAtomEnvInfoByOsNameIsNull(
-                    dslContext = dslContext,
-                    atomId = atomId
-                ) != null
-            }
-            if (flag) {
-                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, it)
-            } else {
-                newAtomEnvRequests.add(it)
-            }
-        }
-        if (newAtomEnvRequests.isNotEmpty()) {
-            marketAtomEnvInfoDao.addMarketAtomEnvInfo(
-                dslContext = dslContext,
-                atomId = atomId,
-                atomEnvRequests = atomEnvRequests
+            val lock = RedisLock(
+                redisOperation,
+                "$atomId|${it.osArch ?: "osArch"}|${it.osName ?: "osName"}",
+                40
             )
+            try {
+                lock.lock()
+                val record = marketAtomEnvInfoDao.getAtomEnvInfo(
+                    dslContext = dslContext,
+                    atomId = atomId,
+                    osArch = it.osArch,
+                    osName = it.osName
+                )
+                if (record != null) {
+                    marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, it)
+                } else {
+                    marketAtomEnvInfoDao.addMarketAtomEnvInfo(
+                        dslContext = dslContext,
+                        atomId = atomId,
+                        atomEnvRequest = it
+                    )
+                }
+            } finally {
+                lock.unlock()
+            }
         }
     }
 }

@@ -48,67 +48,49 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomEnvInfoDao {
 
-    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
+    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
-            atomEnvRequests.forEach { atomEnvRequest ->
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    ATOM_ID,
-                    PKG_NAME,
-                    PKG_PATH,
-                    LANGUAGE,
-                    MIN_VERSION,
-                    TARGET,
-                    SHA_CONTENT,
-                    PRE_CMD,
-                    POST_ENTRY_PARAM,
-                    POST_CONDITION,
-                    OS_NAME,
-                    OS_ARCH,
-                    RUNTIME_VERSION,
-                    DEFAULT_FLAG,
-                    FINISH_KILL_FLAG,
-                    CREATOR,
-                    MODIFIER
-                )
-                    .values(
-                        UUIDUtil.generate(),
-                        atomId,
-                        atomEnvRequest.pkgName,
-                        atomEnvRequest.pkgRepoPath,
-                        atomEnvRequest.language,
-                        atomEnvRequest.minVersion,
-                        atomEnvRequest.target,
-                        atomEnvRequest.shaContent,
-                        atomEnvRequest.preCmd,
-                        atomEnvRequest.atomPostInfo?.postEntryParam,
-                        atomEnvRequest.atomPostInfo?.postCondition,
-                        atomEnvRequest.osName,
-                        atomEnvRequest.osArch,
-                        atomEnvRequest.runtimeVersion,
-                        atomEnvRequest.defaultFlag,
-                        atomEnvRequest.finishKillFlag,
-                        atomEnvRequest.userId,
-                        atomEnvRequest.userId
-                    ).onDuplicateKeyUpdate()
-                    .set(PKG_NAME, atomEnvRequest.pkgName)
-                    .set(PKG_PATH, atomEnvRequest.pkgRepoPath)
-                    .set(LANGUAGE, atomEnvRequest.language)
-                    .set(MIN_VERSION, atomEnvRequest.minVersion)
-                    .set(TARGET, atomEnvRequest.target)
-                    .set(SHA_CONTENT, atomEnvRequest.shaContent)
-                    .set(PRE_CMD, atomEnvRequest.preCmd)
-                    .set(POST_ENTRY_PARAM, atomEnvRequest.atomPostInfo?.postEntryParam)
-                    .set(POST_CONDITION, atomEnvRequest.atomPostInfo?.postCondition)
-                    .set(OS_NAME, atomEnvRequest.osName)
-                    .set(OS_ARCH, atomEnvRequest.osArch)
-                    .set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
-                    .set(DEFAULT_FLAG, atomEnvRequest.defaultFlag)
-                    .set(FINISH_KILL_FLAG, atomEnvRequest.finishKillFlag)
-                    .set(MODIFIER, atomEnvRequest.userId)
-                    .execute()
-            }
+            dslContext.insertInto(
+                this,
+                ID,
+                ATOM_ID,
+                PKG_NAME,
+                PKG_PATH,
+                LANGUAGE,
+                MIN_VERSION,
+                TARGET,
+                SHA_CONTENT,
+                PRE_CMD,
+                POST_ENTRY_PARAM,
+                POST_CONDITION,
+                OS_NAME,
+                OS_ARCH,
+                RUNTIME_VERSION,
+                DEFAULT_FLAG,
+                FINISH_KILL_FLAG,
+                CREATOR,
+                MODIFIER
+            )
+                .values(
+                    UUIDUtil.generate(),
+                    atomId,
+                    atomEnvRequest.pkgName,
+                    atomEnvRequest.pkgRepoPath,
+                    atomEnvRequest.language,
+                    atomEnvRequest.minVersion,
+                    atomEnvRequest.target,
+                    atomEnvRequest.shaContent,
+                    atomEnvRequest.preCmd,
+                    atomEnvRequest.atomPostInfo?.postEntryParam,
+                    atomEnvRequest.atomPostInfo?.postCondition,
+                    atomEnvRequest.osName,
+                    atomEnvRequest.osArch,
+                    atomEnvRequest.runtimeVersion,
+                    atomEnvRequest.defaultFlag,
+                    atomEnvRequest.finishKillFlag,
+                    atomEnvRequest.userId,
+                    atomEnvRequest.userId
+                ).execute()
         }
     }
 
@@ -227,22 +209,6 @@ class MarketAtomEnvInfoDao {
             if (!osArch.isNullOrBlank()) {
                 conditions.add(OS_ARCH.eq(osArch))
             }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .limit(1)
-                .fetchOne()
-        }
-    }
-
-    fun getAtomEnvInfoByOsNameIsNull(
-        dslContext: DSLContext,
-        atomId: String
-    ): TAtomEnvInfoRecord? {
-        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(ATOM_ID.eq(atomId))
-            conditions.add(OS_NAME.isNull)
-            conditions.add(OS_ARCH.isNull)
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)

@@ -299,7 +299,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
-            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, listOf(atomEnvRequest))
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, atomEnvRequest)
         }
         return Result(id)
     }
