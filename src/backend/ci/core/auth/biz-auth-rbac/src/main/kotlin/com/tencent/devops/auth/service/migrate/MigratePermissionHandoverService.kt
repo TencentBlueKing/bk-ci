@@ -99,7 +99,7 @@ class MigratePermissionHandoverService constructor(
                         userId = handoverTo,
                         memberType = USER_TYPE,
                         expiredDay = GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)],
-                        groupId = resourceManagerGroup!!.relationId.toInt(),
+                        groupId = resourceManagerGroup!!.relationId.toInt()
                     )
                     v2ManagerService.deleteRoleGroupMemberV2(
                         resourceManagerGroup.relationId.toInt(),
