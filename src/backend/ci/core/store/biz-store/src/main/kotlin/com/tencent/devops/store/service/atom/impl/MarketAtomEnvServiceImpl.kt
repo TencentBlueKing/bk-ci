@@ -503,7 +503,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomEnvRequests.forEach {
             val lock = RedisLock(
                 redisOperation,
-                "updateMarketAtomEnvInfo|$atomId|${it.osArch ?: "osArch"}|${it.osName ?: "osName"}",
+                "UPDATE_MARKET_ATOM_ENV_INFO${atomId}" +
+                        "_${it.osArch ?: "OS_ARCH"}" +
+                        "_${it.osName ?: "OS_NAME"}",
                 40
             )
             try {
