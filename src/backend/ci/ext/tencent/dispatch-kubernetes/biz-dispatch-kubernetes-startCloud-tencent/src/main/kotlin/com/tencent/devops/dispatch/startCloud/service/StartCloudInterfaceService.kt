@@ -86,7 +86,8 @@ class StartCloudInterfaceService @Autowired constructor(
                 cgsIp = it.cgsIp,
                 zoneId = it.zoneId,
                 machineType = it.machineType,
-                status = it.status
+                status = it.status,
+                userInstanceList = null
             )
         }
     }

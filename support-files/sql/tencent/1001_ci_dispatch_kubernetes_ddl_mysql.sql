@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     CGS_IP  varchar(32)  default ''                not null comment 'ip',
     MACHINE_TYPE  varchar(32)  default ''          not null comment '机型',
     STATUS int           default 0                 not null comment '0使用中 1待销毁 2销毁中 10注册中 11未使用',
-    UNIQUE `uni_1` (`CGS_ID`)
+    USER_INSTANCE_List text NOT NULL COMMENT '拥有者或共享人详情',
+    UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
 

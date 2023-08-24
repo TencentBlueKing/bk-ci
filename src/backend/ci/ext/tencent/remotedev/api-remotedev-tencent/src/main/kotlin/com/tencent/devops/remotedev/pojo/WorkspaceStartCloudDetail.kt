@@ -39,5 +39,9 @@ data class WorkspaceStartCloudDetail(
     @ApiModelProperty("云区域ID")
     val regionId: Int? = null,
     @ApiModelProperty("项目ID")
-    val projectId: String? = null
+    val projectId: String? = null,
+    @ApiModelProperty("工作空间名称")
+    val name: String? = null,
+    @ApiModelProperty("创建人")
+    val creator: String? = null
 )
