@@ -40,6 +40,12 @@ data class PipelineDetail(
     val hasCollect: Boolean,
     @ApiModelProperty("是否可以手动触发")
     val canManualStartup: Boolean,
+    @ApiModelProperty("是否从模板实例化")
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("最新的发布版本（只有草稿则为空）")
+    val latestVersion: Int?,
+    @ApiModelProperty("最新的发布版本名称（只有草稿则为空）")
+    val latestVersionName: String?,
     @ApiModelProperty("是否有编辑权限")
     val hasPermission: Boolean,
     @ApiModelProperty("流水线描述")

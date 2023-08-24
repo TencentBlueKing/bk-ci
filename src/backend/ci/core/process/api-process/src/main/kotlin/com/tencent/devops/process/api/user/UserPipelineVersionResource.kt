@@ -35,9 +35,9 @@ import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -62,9 +62,9 @@ import javax.ws.rs.core.MediaType
 interface UserPipelineVersionResource {
 
     // TODO #8161 当前版本(草稿分开给)、是否为实例化、取掉setting model
-    @ApiOperation("获取流水线编排和设置")
+    @ApiOperation("获取流水线信息")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/resource")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/detail")
     fun getPipelineResourceAndSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -78,7 +78,7 @@ interface UserPipelineVersionResource {
         @QueryParam("draft")
         @DefaultValue("false")
         includeDraft: Boolean? = false
-    ): Result<PipelineResourceAndSetting>
+    ): Result<PipelineDetail>
 
     @ApiOperation("通过指定模板创建流水线")
     @POST

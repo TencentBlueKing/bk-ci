@@ -38,5 +38,5 @@ data class ThirdPartyContainerInfo(
     val acrossTemplateId: String?,
     val options: DockerOptions?,
     val imagePullPolicy: String?,
-    val imageType: ImageType? = ImageType.THIRD,
+    val imageType: ImageType? = ImageType.THIRD
 )

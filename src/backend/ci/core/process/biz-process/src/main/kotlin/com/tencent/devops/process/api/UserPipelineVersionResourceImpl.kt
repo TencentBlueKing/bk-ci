@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -54,7 +53,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
@@ -88,42 +86,34 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         includeDraft: Boolean?
-    ): Result<PipelineResourceAndSetting> {
+    ): Result<PipelineDetail> {
         checkParam(userId, projectId)
         val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-        val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
-            userId = userId,
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                params = arrayOf(pipelineId)
+            )
+        val latestResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            includeDraft = includeDraft,
-            channelCode = ChannelCode.BS
-        )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: resource.version,
-            detailInfo = detailInfo
+            includeDraft = includeDraft
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
-            PipelineResourceAndSetting(
-                pipelineInfo = detailInfo?.let {
-                    PipelineDetail(
-                        pipelineId = it.pipelineId,
-                        pipelineName = it.pipelineName,
-                        hasCollect = it.hasCollect,
-                        canManualStartup = it.canManualStartup,
-                        hasPermission = it.hasPermission,
-                        pipelineDesc = it.pipelineDesc,
-                        creator = it.creator,
-                        createTime = it.createTime,
-                        updateTime = it.updateTime,
-                        viewNames = it.viewNames
-                    )
-                },
-                pipelineResource = resource,
-                setting = setting
+            PipelineDetail(
+                pipelineId = detailInfo.pipelineId,
+                pipelineName = detailInfo.pipelineName,
+                hasCollect = detailInfo.hasCollect,
+                instanceFromTemplate = detailInfo.instanceFromTemplate,
+                canManualStartup = detailInfo.canManualStartup,
+                hasPermission = detailInfo.hasPermission,
+                pipelineDesc = detailInfo.pipelineDesc,
+                creator = detailInfo.creator,
+                createTime = detailInfo.createTime,
+                updateTime = detailInfo.updateTime,
+                viewNames = detailInfo.viewNames,
+                latestVersion = latestResource?.version,
+                latestVersionName = latestResource?.versionName
             )
         )
     }
