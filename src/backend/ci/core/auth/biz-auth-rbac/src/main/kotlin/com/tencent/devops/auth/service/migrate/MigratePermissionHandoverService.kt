@@ -81,7 +81,7 @@ class MigratePermissionHandoverService constructor(
                 resourceList.forEach { resource ->
                     val resourceCode = resource.resourceCode
                     val handoverTo = handoverToList.random()
-                    logger.info("handover resource permissions:$projectCode|$resourceCode|$handoverFrom|$handoverTo")
+                    logger.info("handover resource permissions :$projectCode|$resourceCode|$handoverFrom|$handoverTo")
                     authResourceService.updateCreator(
                         projectCode = projectCode,
                         resourceType = resourceType,
