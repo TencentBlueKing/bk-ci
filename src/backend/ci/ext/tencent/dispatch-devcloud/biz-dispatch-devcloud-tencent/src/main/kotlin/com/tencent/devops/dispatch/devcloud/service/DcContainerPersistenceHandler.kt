@@ -98,9 +98,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 vmSeqId = vmSeqId,
                 poolNo = poolNo
             )
-            if (persistenceContainers.isNotEmpty ||
-                persistenceContainers[0].persistenceAgentId.isBlank()
-            ) {
+            if (persistenceContainers.isEmpty() || persistenceContainers[0].persistenceAgentId.isBlank()) {
                 logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
                     ErrorCodeEnum.START_VM_ERROR.errorType,
