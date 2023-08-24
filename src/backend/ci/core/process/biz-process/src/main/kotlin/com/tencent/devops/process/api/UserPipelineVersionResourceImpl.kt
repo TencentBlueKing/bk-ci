@@ -36,7 +36,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.PipelineModelAndYaml
+import com.tencent.devops.common.pipeline.PipelineModelWithYaml
+import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
@@ -164,7 +165,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineModelAndYaml> {
+    ): Result<PipelineModelWithYaml> {
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -209,12 +210,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             data = TransferBody(modelAndSetting)
         ).newYaml
         return Result(
-            PipelineModelAndYaml(
+            PipelineModelWithYaml(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
                 description = resource.description,
-                baseVersion = resource.version,
-                baseVersionName = resource.versionName
+                version = resource.version,
+                versionName = resource.versionName
             )
         )
     }
@@ -251,7 +252,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        modelAndYaml: PipelineModelAndYaml
+        modelAndYaml: PipelineModelWithYamlRequest
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
