@@ -72,9 +72,4 @@ interface MarketAtomEnvService {
         version: String,
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean>
-
-    /**
-     * 更新插件执行环境
-     */
-    fun updateMarketAtomEnvInfos(atomId: String, atomEnvRequests: List<AtomEnvRequest>)
 }

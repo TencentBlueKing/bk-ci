@@ -252,7 +252,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             val props = JsonUtil.toJson(propsMap)
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
-            marketAtomEnvService.updateMarketAtomEnvInfos(atomId, atomPkgInfoUpdateRequest.atomEnvRequests)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomPkgInfoUpdateRequest.atomEnvRequests)
         }
         return Result(true)
     }

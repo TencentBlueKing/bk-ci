@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -499,35 +498,4 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateMarketAtomEnvInfos(atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
-        atomEnvRequests.forEach {
-            val lock = RedisLock(
-                redisOperation,
-                "UPDATE_MARKET_ATOM_ENV_INFO$atomId" +
-                        "_${it.osArch ?: "OS_ARCH"}" +
-                        "_${it.osName ?: "OS_NAME"}",
-                40
-            )
-            try {
-                lock.lock()
-                val record = marketAtomEnvInfoDao.getAtomEnvInfo(
-                    dslContext = dslContext,
-                    atomId = atomId,
-                    osArch = it.osArch,
-                    osName = it.osName
-                )
-                if (record != null) {
-                    marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, it)
-                } else {
-                    marketAtomEnvInfoDao.addMarketAtomEnvInfo(
-                        dslContext = dslContext,
-                        atomId = atomId,
-                        atomEnvRequest = it
-                    )
-                }
-            } finally {
-                lock.unlock()
-            }
-        }
-    }
 }

@@ -48,49 +48,51 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomEnvInfoDao {
 
-    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
+    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
-            dslContext.insertInto(
-                this,
-                ID,
-                ATOM_ID,
-                PKG_NAME,
-                PKG_PATH,
-                LANGUAGE,
-                MIN_VERSION,
-                TARGET,
-                SHA_CONTENT,
-                PRE_CMD,
-                POST_ENTRY_PARAM,
-                POST_CONDITION,
-                OS_NAME,
-                OS_ARCH,
-                RUNTIME_VERSION,
-                DEFAULT_FLAG,
-                FINISH_KILL_FLAG,
-                CREATOR,
-                MODIFIER
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    atomId,
-                    atomEnvRequest.pkgName,
-                    atomEnvRequest.pkgRepoPath,
-                    atomEnvRequest.language,
-                    atomEnvRequest.minVersion,
-                    atomEnvRequest.target,
-                    atomEnvRequest.shaContent,
-                    atomEnvRequest.preCmd,
-                    atomEnvRequest.atomPostInfo?.postEntryParam,
-                    atomEnvRequest.atomPostInfo?.postCondition,
-                    atomEnvRequest.osName,
-                    atomEnvRequest.osArch,
-                    atomEnvRequest.runtimeVersion,
-                    atomEnvRequest.defaultFlag,
-                    atomEnvRequest.finishKillFlag,
-                    atomEnvRequest.userId,
-                    atomEnvRequest.userId
-                ).execute()
+            atomEnvRequests.forEach { atomEnvRequest ->
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    ATOM_ID,
+                    PKG_NAME,
+                    PKG_PATH,
+                    LANGUAGE,
+                    MIN_VERSION,
+                    TARGET,
+                    SHA_CONTENT,
+                    PRE_CMD,
+                    POST_ENTRY_PARAM,
+                    POST_CONDITION,
+                    OS_NAME,
+                    OS_ARCH,
+                    RUNTIME_VERSION,
+                    DEFAULT_FLAG,
+                    FINISH_KILL_FLAG,
+                    CREATOR,
+                    MODIFIER
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        atomId,
+                        atomEnvRequest.pkgName,
+                        atomEnvRequest.pkgRepoPath,
+                        atomEnvRequest.language,
+                        atomEnvRequest.minVersion,
+                        atomEnvRequest.target,
+                        atomEnvRequest.shaContent,
+                        atomEnvRequest.preCmd,
+                        atomEnvRequest.atomPostInfo?.postEntryParam,
+                        atomEnvRequest.atomPostInfo?.postCondition,
+                        atomEnvRequest.osName,
+                        atomEnvRequest.osArch,
+                        atomEnvRequest.runtimeVersion,
+                        atomEnvRequest.defaultFlag,
+                        atomEnvRequest.finishKillFlag,
+                        atomEnvRequest.userId,
+                        atomEnvRequest.userId
+                    ).execute()
+            }
         }
     }
 

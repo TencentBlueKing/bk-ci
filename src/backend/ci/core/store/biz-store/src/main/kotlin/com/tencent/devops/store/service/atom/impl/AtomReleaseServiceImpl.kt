@@ -299,7 +299,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
-            marketAtomEnvService.updateMarketAtomEnvInfos(id, listOf(atomEnvRequest))
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, listOf(atomEnvRequest))
         }
         return Result(id)
     }
@@ -612,10 +612,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
-            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
-                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
-            }
-            marketAtomEnvService.updateMarketAtomEnvInfos(atomId, atomEnvRequests)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -960,7 +957,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
-            marketAtomEnvService.updateMarketAtomEnvInfos(atomId, atomEnvRequests)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         marketAtomVersionLogDao.addMarketAtomVersion(
             dslContext = context,
