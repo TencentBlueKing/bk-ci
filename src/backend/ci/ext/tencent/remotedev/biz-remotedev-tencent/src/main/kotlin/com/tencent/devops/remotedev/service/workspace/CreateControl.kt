@@ -554,7 +554,7 @@ class CreateControl @Autowired constructor(
             id = userId,
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
-                creator = userId,
+                userId = userId,
                 unionShared = false,
                 status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING),
                 systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -575,7 +575,7 @@ class CreateControl @Autowired constructor(
             ?: 20
         val count = workspaceDao.countUserWorkspace(
             dslContext = dslContext,
-            creator = projectInfo.englishName,
+            projectId = projectInfo.englishName,
             ownerType = WorkspaceOwnerType.PROJECT,
             unionShared = false
         )

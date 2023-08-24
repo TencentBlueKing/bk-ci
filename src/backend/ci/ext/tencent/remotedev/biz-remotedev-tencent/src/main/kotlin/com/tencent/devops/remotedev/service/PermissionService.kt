@@ -148,7 +148,7 @@ class PermissionService @Autowired constructor(
         if (!runningOnly) {
             val maxHavingCount = setting.second ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT)
                 ?.toInt() ?: 3
-            workspaceDao.countUserWorkspace(dslContext, userId, unionShared = false).let {
+            workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId, unionShared = false).let {
                 if (it >= maxHavingCount) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_MAX_HAVING.errorCode,
@@ -158,8 +158,8 @@ class PermissionService @Autowired constructor(
             }
         }
         workspaceDao.countUserWorkspace(
-            dslContext,
-            userId,
+            dslContext = dslContext,
+            userId = userId,
             unionShared = false,
             status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
         ).let {
