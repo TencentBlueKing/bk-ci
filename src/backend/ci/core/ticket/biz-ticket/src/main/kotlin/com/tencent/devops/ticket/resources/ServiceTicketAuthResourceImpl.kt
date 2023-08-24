@@ -45,7 +45,7 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
     override fun certInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent?.id  // FETCH_INSTANCE_INFO场景下iam不会传parentId
+        val projectId = callBackInfo.filter.parent?.id // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authCertService.getCert(

@@ -261,8 +261,6 @@ class MigrateResourceService @Autowired constructor(
         ) as FetchInstanceInfoResponseDTO?
     }
 
-
-
     private fun calculateResourceCount(projectCode: String, resourceType: String): ResourceMigrationCountDTO {
         val count = authResourceService.countByProjectAndType(
             projectCode = projectCode,

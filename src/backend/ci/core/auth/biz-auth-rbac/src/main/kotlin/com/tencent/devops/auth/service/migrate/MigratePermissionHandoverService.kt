@@ -64,7 +64,7 @@ class MigratePermissionHandoverService constructor(
                         userId = handoverTo,
                         memberType = USER_TYPE,
                         expiredDay = GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)],
-                        groupId = projectManagerGroupId!!.relationId.toInt(),
+                        groupId = projectManagerGroupId!!.relationId.toInt()
                     )
                 }
             }
