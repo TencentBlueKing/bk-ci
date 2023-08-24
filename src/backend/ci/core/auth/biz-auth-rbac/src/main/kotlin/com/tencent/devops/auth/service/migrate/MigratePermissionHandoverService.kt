@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import org.apache.commons.lang3.RandomUtils
+import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
 class MigratePermissionHandoverService constructor(
@@ -80,6 +81,7 @@ class MigratePermissionHandoverService constructor(
                 resourceList.forEach { resource ->
                     val resourceCode = resource.resourceCode
                     val handoverTo = handoverToList.random()
+                    logger.info("handover resource permissions:$projectCode|$resourceCode|$handoverFrom|$handoverTo")
                     authResourceService.updateCreator(
                         projectCode = projectCode,
                         resourceType = resourceType,
@@ -114,5 +116,6 @@ class MigratePermissionHandoverService constructor(
         // v0默认用户组过期时间,2年或者3年
         private val GROUP_EXPIRED_DAY = listOf(180L, 360L, 720L, 1080L)
         private const val USER_TYPE = "user"
+        private val logger = Logger.getLogger(MigratePermissionHandoverService::class.java)
     }
 }
