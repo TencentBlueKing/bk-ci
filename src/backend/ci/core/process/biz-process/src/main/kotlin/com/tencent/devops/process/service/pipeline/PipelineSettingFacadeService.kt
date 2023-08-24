@@ -123,7 +123,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )?.let { origin ->
-            PipelineVersionUtils.getSettingVersion(setting.version, setting, origin)
+            PipelineVersionUtils.getSettingVersion(origin.version, origin, setting)
         } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
