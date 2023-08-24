@@ -51,7 +51,7 @@ class PersistenceBuildService @Autowired constructor(
                 userId = container.userId,
                 projectId = container.projectId,
                 pipelineId = container.pipelineId,
-                buildId = "",
+                persistenceAgentId = persistenceAgentId,
                 vmSeqId = container.vmSeqId,
                 containerName = container.containerName
             )
@@ -108,7 +108,7 @@ class PersistenceBuildService @Autowired constructor(
         // 重置persistenceContainer状态
         dcPersistenceContainerDao.updateBuildStatus(
             dslContext,
-            persistenceContainerRecord.containerName,
+            persistenceAgentId,
             ContainerBuildStatus.IDLE.status
         )
 
@@ -159,31 +159,38 @@ class PersistenceBuildService @Autowired constructor(
 
     fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
         logger.info("$userId destroy container $destroyContainerReq")
-        if (destroyContainerReq.containerName.isNullOrBlank()) {
-            val buildRecords = dcPersistenceContainerDao.getAllJobPersistenceContainers(
+        if (!destroyContainerReq.persistenceAgentId.isNullOrBlank()) {
+            val containerName = dcPersistenceContainerDao.getByPersistenceAgentId(
                 dslContext,
-                destroyContainerReq.pipelineId,
-                destroyContainerReq.vmSeqId
-            )
+                destroyContainerReq.persistenceAgentId!!
+            )?.containerName ?: ""
 
-            buildRecords.forEach {
-                deletePersistenceContainer(
-                    userId = userId,
-                    projectId = destroyContainerReq.projectId,
-                    pipelineId = destroyContainerReq.pipelineId,
-                    buildId = "",
-                    vmSeqId = destroyContainerReq.vmSeqId,
-                    containerName = it.containerName
-                )
-            }
-        } else {
             deletePersistenceContainer(
                 userId = userId,
                 projectId = destroyContainerReq.projectId,
                 pipelineId = destroyContainerReq.pipelineId,
-                buildId = "",
+                persistenceAgentId = destroyContainerReq.persistenceAgentId!!,
                 vmSeqId = destroyContainerReq.vmSeqId,
-                containerName = destroyContainerReq.containerName!!
+                containerName = containerName
+            )
+
+            return Result(true)
+        }
+
+        val buildRecords = dcPersistenceContainerDao.getAllJobPersistenceContainers(
+            dslContext,
+            destroyContainerReq.pipelineId,
+            destroyContainerReq.vmSeqId
+        )
+
+        buildRecords.forEach {
+            deletePersistenceContainer(
+                userId = userId,
+                projectId = destroyContainerReq.projectId,
+                pipelineId = destroyContainerReq.pipelineId,
+                persistenceAgentId = it.persistenceAgentId,
+                vmSeqId = destroyContainerReq.vmSeqId,
+                containerName = it.containerName
             )
         }
 
@@ -194,15 +201,15 @@ class PersistenceBuildService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
+        persistenceAgentId: String,
         vmSeqId: String,
         containerName: String
     ) {
-        val buildLogKey = "$userId|$projectId|$pipelineId|$buildId|$vmSeqId"
+        val buildLogKey = "$userId|$projectId|$pipelineId|$vmSeqId|$persistenceAgentId"
 
         dcPersistenceContainerDao.updateContainerStatus(
             dslContext,
-            containerName,
+            persistenceAgentId,
             PersistenceContainerStatus.DELETED.status
         )
 
@@ -211,7 +218,7 @@ class PersistenceBuildService @Autowired constructor(
             val taskId = dispatchDevCloudClient.operateContainer(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
+                buildId = "",
                 vmSeqId = vmSeqId,
                 userId = userId,
                 name = containerName,

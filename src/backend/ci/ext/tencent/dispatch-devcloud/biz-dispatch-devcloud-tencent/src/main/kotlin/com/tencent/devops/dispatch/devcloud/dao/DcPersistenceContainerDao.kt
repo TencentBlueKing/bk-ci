@@ -61,28 +61,28 @@ class DcPersistenceContainerDao {
 
     fun updateContainerStatus(
         dslContext: DSLContext,
-        containerName: String,
+        persistenceAgentId: String,
         status: Int
     ) {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(CONTAINER_STATUS, status)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .execute()
         }
     }
 
     fun updateBuildStatus(
         dslContext: DSLContext,
-        containerName: String,
+        persistenceAgentId: String,
         status: Int
     ) {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(BUILD_STATUS, status)
-                .where(CONTAINER_NAME.eq(containerName))
+                .where(PERSISTENCE_AGENT_ID.eq(persistenceAgentId))
                 .execute()
         }
     }

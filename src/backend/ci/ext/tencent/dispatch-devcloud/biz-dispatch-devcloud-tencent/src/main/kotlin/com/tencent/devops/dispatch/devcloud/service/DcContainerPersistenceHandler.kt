@@ -162,12 +162,12 @@ class DcContainerPersistenceHandler @Autowired constructor(
         }
     }
 
-    fun updatePersistenceContainerStatus(containerName: String, status: PersistenceContainerStatus) {
-        dcPersistenceContainerDao.updateContainerStatus(dslContext, containerName, status.status)
+    fun updatePersistenceContainerStatus(persistenceAgentId: String, status: PersistenceContainerStatus) {
+        dcPersistenceContainerDao.updateContainerStatus(dslContext, persistenceAgentId, status.status)
     }
 
-    fun updatePersistenceBuildStatus(containerName: String, status: ContainerBuildStatus) {
-        dcPersistenceContainerDao.updateBuildStatus(dslContext, containerName, status.status)
+    fun updatePersistenceBuildStatus(persistenceAgentId: String, status: ContainerBuildStatus) {
+        dcPersistenceContainerDao.updateBuildStatus(dslContext, persistenceAgentId, status.status)
     }
 
     fun getPersistenceContainer(

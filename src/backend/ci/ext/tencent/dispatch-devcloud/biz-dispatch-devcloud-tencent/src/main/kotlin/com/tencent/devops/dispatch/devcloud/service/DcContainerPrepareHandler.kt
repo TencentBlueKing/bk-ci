@@ -341,7 +341,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         ) {
             return if (persistenceContainerInfo.buildStatus == ContainerBuildStatus.IDLE.status) {
                 dcContainerPersistenceHandler.updatePersistenceBuildStatus(
-                    containerName = persistenceContainerInfo.containerName,
+                    persistenceAgentId = persistenceContainerInfo.persistenceAgentId,
                     status = ContainerBuildStatus.BUSY
                 )
 
@@ -356,7 +356,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         } else {
             // 容器配置没有变更，但当前容器状态非running，重置容器池位并复用
             dcContainerPersistenceHandler.updatePersistenceContainerStatus(
-                containerName = persistenceContainerInfo.containerName,
+                persistenceAgentId = persistenceContainerInfo.persistenceAgentId,
                 status = PersistenceContainerStatus.DELETED
             )
             resetBuildPool(handlerContext)
