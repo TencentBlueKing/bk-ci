@@ -109,7 +109,7 @@ class CreateControl @Autowired constructor(
     }
 
     fun asyncCreateWorkspace(
-        userId: String,
+        pmUserId: String,
         projectId: String,
         cgsId: String?,
         autoAssign: Boolean?,
@@ -146,7 +146,7 @@ class CreateControl @Autowired constructor(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = projectId,
+                createUserId = pmUserId,
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
@@ -172,7 +172,7 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = userId,
+                    userId = pmUserId,
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
@@ -265,16 +265,13 @@ class CreateControl @Autowired constructor(
                 )
             }.getOrElse { emptyArray() }
             val ownerType = WorkspaceOwnerType.valueOf(ws.ownerType)
+            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = if (ownerType == WorkspaceOwnerType.PERSONAL) {
-                        WorkspaceStatus.RUNNING
-                    } else {
-                        WorkspaceStatus.DELIVERING
-                    },
+                    status = systemType.afterCreateStatus(ownerType),
                     hostName = event.environmentHost
                 )
                 remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
@@ -296,7 +293,6 @@ class CreateControl @Autowired constructor(
             }
 
             workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
 
             if (systemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -308,8 +304,13 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            if (ownerType == WorkspaceOwnerType.PROJECT) {
+            if (systemType.needSafeInitialization()) {
                 deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
+            }
+
+            if (!systemType.afterCreateNeedWs(ownerType)) {
+                // 直接return 不做websocket
+                return
             }
 
             // websocket 通知成功
@@ -553,7 +554,7 @@ class CreateControl @Autowired constructor(
             id = userId,
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
-                creator = userId,
+                userId = userId,
                 unionShared = false,
                 status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING),
                 systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -574,7 +575,7 @@ class CreateControl @Autowired constructor(
             ?: 20
         val count = workspaceDao.countUserWorkspace(
             dslContext = dslContext,
-            creator = projectInfo.englishName,
+            projectId = projectInfo.englishName,
             ownerType = WorkspaceOwnerType.PROJECT,
             unionShared = false
         )

@@ -155,6 +155,7 @@ class DeleteControl @Autowired constructor(
             return true
         }
     }
+
     fun deleteWorkspace4OP(
         userId: String,
         workspaceName: String
@@ -236,7 +237,12 @@ class DeleteControl @Autowired constructor(
             )
         }
 
-        if (!workspaceCommon.checkProjectRouter(workspace.creator, workspace.name)) return false
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.creator,
+                workspaceName = workspace.name,
+                workspaceOwnerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            )
+        ) return false
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.name}",

@@ -105,7 +105,7 @@ class WorkspaceCommon @Autowired constructor(
         userId: String,
         workspaceName: String,
         workspaceHost: String?,
-        errorMsg: String?,
+        errorMsg: String? = null,
         type: WebSocketActionType,
         status: Boolean?,
         action: WorkspaceAction,
@@ -155,31 +155,31 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     fun updateWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
-            val userSet = workspaceDao.fetchWorkspaceUser(
-                dslContext,
-                workspaceName
-            ).toSet()
-            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-            val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
-            val cache = WorkSpaceCacheInfo(
-                sshKey,
-                workspaceInfo.environmentHost,
-                workspaceInfo.hostIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.namespace,
-                workspaceInfo.curLaunchId,
-                workspaceInfo.regionId
-            )
+        val userSet = workspaceDao.fetchWorkspaceUser(
+            dslContext,
+            workspaceName
+        ).toSet()
+        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+        val workspaceInfo =
+            client.get(ServiceRemoteDevResource::class)
+                .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
+        val cache = WorkSpaceCacheInfo(
+            sshKey,
+            workspaceInfo.environmentHost,
+            workspaceInfo.hostIP,
+            workspaceInfo.environmentIP,
+            workspaceInfo.environmentIP,
+            workspaceInfo.namespace,
+            workspaceInfo.curLaunchId,
+            workspaceInfo.regionId
+        )
 
-            workspaceDao.saveOrUpdateWorkspaceDetail(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                detail = JsonUtil.toJson(cache)
-            )
-            return cache
+        workspaceDao.saveOrUpdateWorkspaceDetail(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            detail = JsonUtil.toJson(cache)
+        )
+        return cache
     }
 
     fun checkAndFixExceptionWS(
@@ -218,7 +218,12 @@ class WorkspaceCommon @Autowired constructor(
             logger.info(
                 "workspace ${it.name} is EXCEPTION, try to fix."
             )
-            if (!checkProjectRouter(it.creator, it.name)) return@forEach
+            if (!checkProjectRouter(
+                    creator = it.creator,
+                    workspaceName = it.name,
+                    workspaceOwnerType = WorkspaceOwnerType.valueOf(it.ownerType)
+                )
+            ) return@forEach
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
                 workspaceName = it.name,
@@ -312,11 +317,16 @@ class WorkspaceCommon @Autowired constructor(
 
     fun checkProjectRouter(
         creator: String,
-        workspaceName: String
+        workspaceName: String,
+        workspaceOwnerType: WorkspaceOwnerType
     ): Boolean {
         if (profile.isDebug()) return true
-        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
-            .ifBlank { null } ?: run {
+
+        val projectId = when (workspaceOwnerType) {
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
+                .ifBlank { null }
+            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.projectId
+        } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
             return false
         }

@@ -151,12 +151,6 @@ class WorkspaceService @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)
                 )
-            if (userId != workspace.creator) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                    params = arrayOf("only workspace creator can share")
-                )
-            }
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START.name) {
                 client.get(ServiceStartCloudResource::class)
@@ -200,15 +194,13 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countUserWorkspace(
+        val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
-            ownerType = WorkspaceOwnerType.PROJECT
+            projectId = projectId
         )
-        val result = workspaceDao.limitFetchUserWorkspace(
+        val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
-            ownerType = WorkspaceOwnerType.PROJECT,
+            projectId = projectId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -359,10 +351,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countUserWorkspace(dslContext, userId)
+        val count = workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId)
         val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
-            creator = userId,
+            userId = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 

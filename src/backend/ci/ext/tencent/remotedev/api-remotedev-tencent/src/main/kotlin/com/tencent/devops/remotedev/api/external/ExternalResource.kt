@@ -52,16 +52,6 @@ interface ExternalResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun getDevfile(): Response
 
-    @ApiOperation("job回调")
-    @GET
-    @Path("/job_callback")
-    fun jobCallback(
-        @QueryParam("key")
-        key: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
     @ApiOperation("软件安装回调")
     @POST
     @Path("/software_install_callback")
