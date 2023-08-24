@@ -48,7 +48,11 @@ import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfo
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -185,7 +189,15 @@ class ProjectInfoServiceImpl @Autowired constructor(
     override fun syncProjectAtomData(userId: String): Boolean {
         Executors.newFixedThreadPool(1).submit {
             try {
-                val executor = Executors.newFixedThreadPool(20)
+                val executor = ThreadPoolExecutor(
+                    5,
+                    5,
+                    0L,
+                    TimeUnit.SECONDS,
+                    LinkedBlockingQueue()
+                )
+
+                executor.prestartAllCoreThreads()
                 logger.info("begin op sync project atom data")
                 var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
                 val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
@@ -198,17 +210,14 @@ class ProjectInfoServiceImpl @Autowired constructor(
                                 maxId = projectMinId + 10
                             ).data?.map { it.englishName }
                         if (!projectIds.isNullOrEmpty()) {
-                            val midIndex = projectIds.size / 2
-                            val leftList = projectIds.take(midIndex + 1)
-                            val rightList = projectIds.drop(leftList.size)
-                            executor.submit {
-                                saveProjectAtomInfo(leftList)
+                            val subLists = projectIds.chunked(2)
+                            val latch = CountDownLatch(subLists.size)
+                            subLists.forEach { subList ->
+                                executor.submit(Callable {
+                                    saveProjectAtomInfo(subList)
+                                })
                             }
-                            if (rightList.isNotEmpty()) {
-                                executor.submit {
-                                    saveProjectAtomInfo(rightList)
-                                }
-                            }
+                            latch.await()
                         }
                         projectMinId += 11
                     } while (projectMinId <= projectMaxId)
