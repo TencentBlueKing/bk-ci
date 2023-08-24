@@ -170,7 +170,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            executeCount = param.executeCount ?: 1
+            executeCount = task.executeCount ?: 1
         )
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 
