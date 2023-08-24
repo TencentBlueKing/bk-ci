@@ -30,8 +30,10 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
@@ -59,6 +61,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
@@ -76,6 +79,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
         private const val MAX_GROUP_NAME_LENGTH = 32
         private const val MIN_GROUP_NAME_LENGTH = 5
+        // 毫秒转换
+        private const val MILLISECOND = 1000
     }
 
     override fun listGroup(
@@ -120,7 +125,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             val groupName = if (defaultGroup) {
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
-                            AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                        AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                     defaultMessage = resourceGroup.groupName
                 )
             } else {
@@ -329,6 +334,23 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val managerRoleGroup = ManagerRoleGroup()
         managerRoleGroup.name = renameGroupDTO.groupName
         iamV2ManagerService.updateRoleGroupV2(groupId, managerRoleGroup)
+        return true
+    }
+
+    override fun addGroupMember(
+        userId: String,
+        /*user 或 department*/
+        memberType: String,
+        expiredDay: Long,
+        groupId: Int
+    ): Boolean {
+        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
+        val managerMember = ManagerMember(memberType, userId)
+        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+            .members(listOf(managerMember))
+            .expiredAt(expiredAt)
+            .build()
+        iamV2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
         return true
     }
 

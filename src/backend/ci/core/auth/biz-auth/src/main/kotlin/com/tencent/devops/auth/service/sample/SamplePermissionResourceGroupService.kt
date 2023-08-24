@@ -103,4 +103,14 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
+
+    override fun addGroupMember(
+        userId: String,
+        /*user 或 department*/
+        memberType: String,
+        expiredDay: Long,
+        groupId: Int
+    ): Boolean {
+        return true
+    }
 }

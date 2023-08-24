@@ -31,19 +31,17 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -73,6 +71,7 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -210,26 +209,8 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    override fun fitToRbacAuth(userId: String, resourceType: String): Boolean {
-        logger.info("migrate fit to Rbac auth:$userId|$resourceType")
-        var offset = 0
-        val limit = PageUtil.MAX_PAGE_SIZE
-        do {
-            val projectList = authResourceService.listByCreator(
-                resourceType = AuthResourceType.PROJECT.value,
-                creator = userId,
-                offset = offset,
-                limit = limit
-            )
-            projectList.forEach {
-                migrateV0PolicyService.fitToRbacAuth(
-                    projectCode = it.resourceCode,
-                    resourceType = resourceType,
-                    creator = userId
-                )
-            }
-            offset += limit
-        } while (projectList.size == limit)
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
         return true
     }
 

@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 class SamplePermissionMigrateService : PermissionMigrateService {
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
@@ -64,7 +65,7 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun fitToRbacAuth(userId: String, resourceType: String): Boolean {
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }
 }

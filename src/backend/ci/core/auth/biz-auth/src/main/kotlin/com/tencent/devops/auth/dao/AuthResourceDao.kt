@@ -373,6 +373,7 @@ class AuthResourceDao {
                 .let { if (projectCode == null) it else it.and(PROJECT_CODE.eq(projectCode)) }
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(CREATE_USER.eq(creator))
+                .orderBy(CREATE_TIME)
                 .limit(limit)
                 .offset(offset)
                 .fetch()

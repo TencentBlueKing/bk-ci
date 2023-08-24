@@ -32,6 +32,7 @@ import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -82,7 +83,7 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
     }
 
-    override fun fitToRbacAuth(userId: String, resourceType: String): Result<Boolean> {
-        return Result(permissionMigrateService.fitToRbacAuth(userId = userId, resourceType = resourceType))
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO))
     }
 }

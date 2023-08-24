@@ -28,8 +28,8 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 /**
  * 权限中心迁移服务
@@ -75,5 +75,8 @@ interface PermissionMigrateService {
      */
     fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
 
-    fun fitToRbacAuth(userId: String, resourceType: String): Boolean
+    /**
+     * 权限交接
+     */
+    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
 }
