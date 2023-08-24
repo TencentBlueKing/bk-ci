@@ -87,8 +87,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     lateinit var storeI18nMessageService: StoreI18nMessageService
     @Autowired
     lateinit var client: Client
-    @Autowired
-    lateinit var marketAtomEnvService: MarketAtomEnvServiceImpl
 
     private val logger = LoggerFactory.getLogger(MarketAtomArchiveServiceImpl::class.java)
 
