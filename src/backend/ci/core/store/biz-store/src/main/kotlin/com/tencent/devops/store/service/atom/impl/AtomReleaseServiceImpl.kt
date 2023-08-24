@@ -612,9 +612,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
-            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
-                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
-            }
+            marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
