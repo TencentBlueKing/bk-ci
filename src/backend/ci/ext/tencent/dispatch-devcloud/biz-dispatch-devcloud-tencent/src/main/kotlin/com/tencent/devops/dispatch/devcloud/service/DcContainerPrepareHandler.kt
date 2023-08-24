@@ -335,10 +335,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         val originContainerStatus = getContainerStatus(persistenceContainerInfo.containerName, handlerContext)
 
         // 容器配置没有变更，且当前容器状态running，复用这个容器池位
-        if (originContainerStatus != null &&
-            originContainerStatus == OriginContainerStatus.running.name
-
-        ) {
+        if (originContainerStatus != null && originContainerStatus == OriginContainerStatus.running.name) {
             return if (persistenceContainerInfo.buildStatus == ContainerBuildStatus.IDLE.status) {
                 dcContainerPersistenceHandler.updatePersistenceBuildStatus(
                     persistenceAgentId = persistenceContainerInfo.persistenceAgentId,
@@ -434,10 +431,19 @@ class DcContainerPrepareHandler @Autowired constructor(
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
             if (lastContainerPool.container != containerPool.container ||
-                lastContainerPool.credential != containerPool.credential ||
-                lastContainerPool.persistence != containerPool.persistence) {
-                logger.info("${handlerContext.buildLogKey} image changed. " +
-                                "old image: $lastContainerPool, new image: $containerPool")
+                lastContainerPool.credential != containerPool.credential) {
+                logger.info(
+                    "${handlerContext.buildLogKey} image changed. " +
+                        "old image: $lastContainerPool, new image: $containerPool"
+                )
+                return true
+            }
+
+            if (lastContainerPool.persistence != containerPool.persistence) {
+                logger.info(
+                    "${handlerContext.buildLogKey} persistence changed. " +
+                        "old image: $lastContainerPool, new image: $containerPool"
+                )
                 return true
             }
         } else {

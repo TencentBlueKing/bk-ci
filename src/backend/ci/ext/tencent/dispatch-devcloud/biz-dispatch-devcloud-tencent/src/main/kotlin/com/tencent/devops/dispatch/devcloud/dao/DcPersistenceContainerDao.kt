@@ -120,27 +120,17 @@ class DcPersistenceContainerDao {
         dslContext: DSLContext,
         pipelineId: String,
         vmSeqId: String,
-        poolNo: Int
-    ): TDevcloudPersistenceContainerRecord? {
-        with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .and(POOL_NO.eq(poolNo))
-                .fetchAny()
-        }
-    }
-
-    fun getAllJobPersistenceContainers(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeqId: String
+        poolNo: Int? = null
     ): Result<TDevcloudPersistenceContainerRecord> {
         with(TDevcloudPersistenceContainer.T_DEVCLOUD_PERSISTENCE_CONTAINER) {
-            return dslContext.selectFrom(this)
+            val sql = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
-                .fetch()
+
+            if (poolNo != null) {
+                sql.and(POOL_NO.eq(poolNo))
+            }
+            return sql.fetch()
         }
     }
 }

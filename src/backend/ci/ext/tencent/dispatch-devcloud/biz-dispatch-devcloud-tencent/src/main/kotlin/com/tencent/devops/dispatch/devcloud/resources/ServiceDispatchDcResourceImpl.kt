@@ -41,6 +41,6 @@ class ServiceDispatchDcResourceImpl constructor(
     }
 
     override fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
-        return persistenceBuildService.destroyContainer(userId, destroyContainerReq)
+        return persistenceBuildService.destroyPersistenceContainer(userId, destroyContainerReq)
     }
 }

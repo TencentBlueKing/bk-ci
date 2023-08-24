@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
+import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
@@ -57,7 +58,8 @@ class DcContainerPersistenceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dcPersistenceContainerDao: DcPersistenceContainerDao,
     private val dcPersistenceBuildDao: DcPersistenceBuildDao,
-    private val dispatchDevCloudClient: DispatchDevCloudClient
+    private val dispatchDevCloudClient: DispatchDevCloudClient,
+    private val persistenceBuildService: PersistenceBuildService
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
 
     companion object {
@@ -72,14 +74,33 @@ class DcContainerPersistenceHandler @Autowired constructor(
                 return
             }
 
-            // 容器配置变更，重置持久化容器配置
+            // 容器配置变更
             if (containerChanged) {
+                // 清理历史持久化容器
+                persistenceBuildService.destroyPersistenceContainer(
+                    userId = userId,
+                    destroyContainerReq = DestroyContainerReq(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        poolNo = poolNo
+                    )
+                )
+
+                // 重置持久化容器配置
                 addPersistenceContainer(handlerContext)
             }
 
             // 获取当前job关联持久化容器配置
-            val persistenceContainer = dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)
-            if (persistenceContainer == null || persistenceContainer.persistenceAgentId.isBlank()) {
+            val persistenceContainers = dcPersistenceContainerDao.getPersistenceContainer(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo
+            )
+            if (persistenceContainers.isNotEmpty ||
+                persistenceContainers[0].persistenceAgentId.isBlank()
+            ) {
                 logger.error("$buildLogKey PersistenceContainer is null or PersistenceAgentId is null.")
                 throw BuildFailureException(
                     ErrorCodeEnum.START_VM_ERROR.errorType,
@@ -88,7 +109,7 @@ class DcContainerPersistenceHandler @Autowired constructor(
                     "PersistenceContainer is null or PersistenceAgentId is null"
                 )
             } else {
-                setPersistenceAgentId(persistenceContainer.persistenceAgentId, this)
+                setPersistenceAgentId(persistenceContainers[0].persistenceAgentId, this)
             }
 
             // 根据persistenceAgentId加分布式锁
@@ -175,6 +196,6 @@ class DcContainerPersistenceHandler @Autowired constructor(
         vmSeqId: String,
         poolNo: Int
     ): TDevcloudPersistenceContainerRecord? {
-        return dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)
+        return dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId, poolNo)[0]
     }
 }

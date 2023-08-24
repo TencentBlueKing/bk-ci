@@ -8,10 +8,12 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_CONTAINER_STATUS_EXCEPTION
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_GET_WEBSOCKET_URL_FAIL
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
+import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceContainerDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
@@ -20,6 +22,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
 import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import org.jooq.DSLContext
@@ -33,11 +36,12 @@ import org.springframework.stereotype.Service
 class DevcloudDebugService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
-    private val dispatchDevCloudClient: com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient,
+    private val dispatchDevCloudClient: DispatchDevCloudClient,
     private val devCloudBuildDao: DevCloudBuildDao,
     private val devCloudBuildHisDao: DevCloudBuildHisDao,
     private val bkAuthPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val dcPersistenceContainerDao: DcPersistenceContainerDao
 ) {
     @Value("\${devCloud.cpu}")
     var cpu: Int = 32
@@ -150,8 +154,7 @@ class DevcloudDebugService @Autowired constructor(
             redisUtils.getDebugContainerName(userId, pipelineId, vmSeqId) ?: ""
         }
 
-        logger.info("$userId stop debug devcloud pipelineId: $pipelineId " +
-                        "containName: $debugContainerName vmSeqId: $vmSeqId")
+        logger.info("$userId|$pipelineId|$vmSeqId stop debug container:$debugContainerName")
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -166,7 +169,12 @@ class DevcloudDebugService @Autowired constructor(
                     devcloudBuild.containerName,
                     false
                 )
-                if (devcloudBuild.status == 0 && devcloudBuild.debugStatus) {
+
+                // 当前JOB是否为持久化构建,持久化容器登录调试结束后不关闭容器
+                if (devcloudBuild.status == 0 &&
+                    devcloudBuild.debugStatus &&
+                    !persistenceContainer(pipelineId, vmSeqId)
+                ) {
                     // 关闭容器
                     val taskId = dispatchDevCloudClient.operateContainer(
                         projectId = devcloudBuild.projectId,
@@ -188,8 +196,10 @@ class DevcloudDebugService @Autowired constructor(
                     } else {
                         // 停不掉，尝试删除
                         logger.info("stopDebug stop dev cloud vm failed, msg: ${opResult.second}")
-                        logger.info("stopDebug stop dev cloud vm failed, try to delete it, " +
-                                        "containerName:${devcloudBuild.containerName}")
+                        logger.info(
+                            "stopDebug stop dev cloud vm failed, try to delete it, " +
+                                "containerName:${devcloudBuild.containerName}"
+                        )
                         dispatchDevCloudClient.operateContainer(
                             projectId = devcloudBuild.projectId,
                             pipelineId = devcloudBuild.pipelineId,
@@ -202,14 +212,20 @@ class DevcloudDebugService @Autowired constructor(
                         devCloudBuildDao.delete(dslContext, pipelineId, vmSeqId, devcloudBuild.poolNo)
                     }
                 } else {
-                    logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                                    "containerName:$debugContainerName container is not in debug or in use")
+                    logger.info(
+                        "stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                            "containerName:$debugContainerName container is idle or not in debug."
+                    )
                 }
             } else {
-                logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                                "containerName:$debugContainerName container no longer exists")
+                logger.info(
+                    "stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                        "containerName:$debugContainerName container no longer exists."
+                )
             }
         }
+
+        redisUtils.deleteDebugContainerName(userId, pipelineId, vmSeqId)
 
         return true
     }
@@ -239,6 +255,21 @@ class DevcloudDebugService @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun persistenceContainer(
+        pipelineId: String,
+        vmSeqId: String
+    ): Boolean {
+        val persistenceContainers = dcPersistenceContainerDao.getPersistenceContainer(dslContext, pipelineId, vmSeqId)
+
+        persistenceContainers.forEach {
+            if (it.containerStatus == PersistenceContainerStatus.RUNNING.status) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun startContainer(

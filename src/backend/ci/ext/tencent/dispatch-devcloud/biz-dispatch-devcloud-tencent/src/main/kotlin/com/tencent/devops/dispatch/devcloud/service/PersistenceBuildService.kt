@@ -157,7 +157,7 @@ class PersistenceBuildService @Autowired constructor(
         }
     }
 
-    fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
+    fun destroyPersistenceContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
         logger.info("$userId destroy container $destroyContainerReq")
         if (!destroyContainerReq.persistenceAgentId.isNullOrBlank()) {
             val containerName = dcPersistenceContainerDao.getByPersistenceAgentId(
@@ -177,10 +177,11 @@ class PersistenceBuildService @Autowired constructor(
             return Result(true)
         }
 
-        val buildRecords = dcPersistenceContainerDao.getAllJobPersistenceContainers(
+        val buildRecords = dcPersistenceContainerDao.getPersistenceContainer(
             dslContext,
             destroyContainerReq.pipelineId,
-            destroyContainerReq.vmSeqId
+            destroyContainerReq.vmSeqId,
+            destroyContainerReq.poolNo
         )
 
         buildRecords.forEach {
