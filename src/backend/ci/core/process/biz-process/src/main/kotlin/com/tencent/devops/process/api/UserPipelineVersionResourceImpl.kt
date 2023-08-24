@@ -81,7 +81,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineVersionResource {
 
-    override fun getPipelineResourceAndSetting(
+    override fun getPipelineDetail(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -98,6 +98,15 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             includeDraft = includeDraft
         )
+        val setting = latestResource?.let {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = latestResource.settingVersion ?: latestResource.version,
+                detailInfo = detailInfo
+            )
+        }
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
             PipelineDetail(
@@ -112,8 +121,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 createTime = detailInfo.createTime,
                 updateTime = detailInfo.updateTime,
                 viewNames = detailInfo.viewNames,
-                latestVersion = latestResource?.version,
-                latestVersionName = latestResource?.versionName
+                version = latestResource?.version,
+                versionName = latestResource?.versionName,
+                runLockType = setting?.runLockType
             )
         )
     }

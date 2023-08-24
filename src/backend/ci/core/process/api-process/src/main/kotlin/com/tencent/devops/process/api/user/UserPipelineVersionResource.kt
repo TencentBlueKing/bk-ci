@@ -61,11 +61,10 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
-    // TODO #8161 当前版本(草稿分开给)、是否为实例化、取掉setting model
     @ApiOperation("获取流水线信息")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/detail")
-    fun getPipelineResourceAndSetting(
+    fun getPipelineDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
