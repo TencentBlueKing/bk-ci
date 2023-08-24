@@ -38,7 +38,9 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildStatus
 import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TBuildContainerPoolNoRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -62,21 +64,16 @@ class DcContainerShutdownHandler @Autowired constructor(
         with(handlerContext) {
             handlerContext.buildLogKey = "$pipelineId|$buildId|$vmSeqId|$executeCount"
 
-            // 持久化构建结束事件
-            if (isPersistenceBuild(this)) {
-                return
-            }
-
             // 有可能出现devcloud返回容器状态running了，但是其实流水线任务早已经执行完了，
             // 导致shutdown消息先收到而redis和db还没有设置的情况，因此扔回队列，sleep等待30秒重新触发
-            val containerNameList = buildContainerPoolNoDao.getDevCloudBuildLastContainer(
+            val buildContainerPools = buildContainerPoolNoDao.getBuildContainerPoolNo(
                 dslContext = dslContext,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1
             )
 
-            if (containerNameList.none { it.second != null } && shutdownEvent.retryTime <= 3) {
+            if (buildContainerPools.none { it.containerName != null } && shutdownEvent.retryTime <= 3) {
                 logger.info(
                     "$buildLogKey shutdown no containerName, sleep 10s and retry ${shutdownEvent.retryTime}. "
                 )
@@ -87,54 +84,20 @@ class DcContainerShutdownHandler @Autowired constructor(
                 return
             }
 
-            containerNameList.filter { it.second != null }.forEach {
-                try {
-                    logger.info("$buildLogKey stop dev cloud container,vmSeqId: ${it.first}, " +
-                                    "containerName:${it.second}")
-                    val taskId = dispatchDevCloudClient.operateContainer(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        vmSeqId = vmSeqId ?: "",
-                        userId = userId,
-                        name = it.second!!,
-                        action = Action.STOP
-                    )
-                    val opResult = dispatchDevCloudClient.waitTaskFinish(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        taskId = taskId
-                    )
-                    if (opResult.first == TaskStatus.SUCCEEDED) {
-                        logger.info("$buildLogKey stop dev cloud vm success.")
-                    } else {
-                        logger.info("$buildLogKey stop dev cloud vm failed, msg: ${opResult.second}")
-                    }
-                } catch (e: Exception) {
-                    logger.error(
-                        "$buildLogKey stop dev cloud vm failed. containerName: ${it.second}",
-                        e
-                    )
-                } finally {
-                    // 清除job创建记录
-                    devCloudJobRedisUtils.deleteJobCount(buildId, it.second!!)
-                }
+            // 持久化构建结束事件, 不关机
+            if (isPersistenceBuild(this)) {
+                return
+            } else {
+                stopContainer(this, buildContainerPools)
             }
 
-            val containerPoolList = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
-                dslContext = dslContext,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                executeCount = executeCount ?: 1
-            )
-            containerPoolList.filter { it.second != null }.forEach {
-                logger.info("$buildLogKey update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
+            buildContainerPools.filter { it.poolNo != null }.forEach {
+                logger.info("$buildLogKey update status in db,vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
                 devCloudBuildDao.updateStatus(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
-                    vmSeqId = it.first,
-                    poolNo = it.second!!.toInt(),
+                    vmSeqId = it.vmSeqId,
+                    poolNo = it.poolNo!!.toInt(),
                     status = ContainerBuildStatus.IDLE.status
                 )
             }
@@ -164,6 +127,50 @@ class DcContainerShutdownHandler @Autowired constructor(
             }
 
             return buildRecord != null
+        }
+    }
+
+    private fun stopContainer(
+        handlerContext: DcShutdownHandlerContext,
+        containerNameList: Result<TBuildContainerPoolNoRecord>
+    ) {
+        with(handlerContext) {
+            containerNameList.filter { it.containerName != null }.forEach {
+                try {
+                    logger.info(
+                        "$buildLogKey stop dev cloud container,vmSeqId: ${it.vmSeqId}, " +
+                            "containerName:${it.containerName}"
+                    )
+                    val taskId = dispatchDevCloudClient.operateContainer(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId ?: "",
+                        userId = userId,
+                        name = it.containerName!!,
+                        action = Action.STOP
+                    )
+                    val opResult = dispatchDevCloudClient.waitTaskFinish(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = taskId
+                    )
+                    if (opResult.first == TaskStatus.SUCCEEDED) {
+                        logger.info("$buildLogKey stop dev cloud vm success.")
+                    } else {
+                        logger.info("$buildLogKey stop dev cloud vm failed, msg: ${opResult.second}")
+                    }
+                } catch (e: Exception) {
+                    logger.error(
+                        "$buildLogKey stop dev cloud vm failed. containerName: ${it.containerName}",
+                        e
+                    )
+                } finally {
+                    // 清除job创建记录
+                    devCloudJobRedisUtils.deleteJobCount(buildId, it.containerName!!)
+                }
+            }
         }
     }
 }
