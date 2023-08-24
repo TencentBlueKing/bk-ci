@@ -18,6 +18,7 @@
  */
 
 export const REPOSITORY_API_URL_PREFIX = 'repository/api'
+export const PROCESS_API_URL_PREFIX = 'process/api'
 export const TICKET_API_URL_PREFIX = 'ticket/api'
 
 export const FETCH_ERROR = 'FETCH_ERROR'

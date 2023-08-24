@@ -22,6 +22,7 @@ import {
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
     TICKET_API_URL_PREFIX,
+    PROCESS_API_URL_PREFIX,
     SET_TICKETS_MUTATION,
     UPDATE_CODE_LIB_MUTATION,
     TOGGLE_CODE_LIB_DIALOG,
@@ -98,7 +99,7 @@ const actions = {
         }
     },
     /**
-     * 新增or编辑代码库
+     * 新增代码库
      *
      * @param {Function} commit store commit mutation handler
      * @param {Object} state store state
@@ -106,18 +107,30 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    createOrEditRepo ({
+    createRepo ({
         commit,
         state,
         dispatch
     }, {
         projectId,
-        hashId,
         params
     }) {
-        return vue.$ajax[`${hashId ? 'put' : 'post'}`](`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${hashId ? `${hashId}` : ''}`, {
+        return vue.$ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}`, {
             ...params
         })
+    },
+    /**
+     * 编辑代码库
+     */
+    editRepo ({ commit },
+        {
+            projectId,
+            repositoryHashId,
+            params
+        }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}`,
+            params
+        )
     },
     /**
      * 删除指定代码库
@@ -258,6 +271,7 @@ const actions = {
                 repositoryHashId,
                 search
             }
+            commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/${type}/getProject?${queryStr}`)
             const projectIndex = res?.project?.findIndex(project => project.httpUrl === state.templateCodeLib?.url)
@@ -271,6 +285,7 @@ const actions = {
                 oAuth: res,
                 type
             })
+            commit(DIALOG_LOADING_MUTATION, false)
         } catch (e) {
             commit(FETCH_ERROR, e, {
                 root: true
@@ -311,6 +326,171 @@ const actions = {
         commit
     }, codeLib) {
         commit(SET_TEMPLATE_CODELIB, codeLib)
+    },
+
+    async changeMrBlock ({ commit }, {
+        projectId,
+        repositoryHashId,
+        enableMrBlock
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/updateRepoSetting`, {
+            enableMrBlock
+        })
+    },
+
+    async checkPacProject ({ commit }, {
+        repoUrl,
+        repositoryType
+    }) {
+        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+    },
+
+    /**
+     * 刷新 git / tgit 工蜂授权token
+     */
+    async refreshGitOauth ({ commit }, {
+        type,
+        resetType = '',
+        redirectUrl = ''
+    }) {
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
+        commit(SET_OAUTH_MUTATION, {
+            oAuth: res,
+            type
+        })
+        return res
+    },
+
+    /**
+     * 刷新github授权token
+     */
+    async refreshGithubOauth ({ commit }, {
+        projectId,
+        resetType = '',
+        redirectUrl = ''
+    }) {
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
+        commit(SET_OAUTH_MUTATION, {
+            oAuth: res,
+            type: 'github'
+        })
+        return res
+    },
+
+    /**
+     * 重命名-代码库别名
+     */
+    async renameAliasName ({ commit }, {
+        projectId,
+        repositoryHashId,
+        params
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/rename`, params)
+    },
+    /**
+     * 关闭PAC校验- 仓库是否存在.ci文件夹
+     */
+    async checkHasCiFolder ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+    },
+
+    /**
+     * 关闭PAC
+     */
+    closePac ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac`)
+    },
+
+    /**
+     * 开启PAC
+     */
+    enablePac ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/enablePac`)
+    },
+
+    /**
+     * 获取代码库关联的流水线列表
+     */
+    fetchUsingPipelinesList ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listRepoPipelineRef?page=${page}&pageSize=${pageSize}`)
+    },
+
+    /**
+     * 获取触发信息列表
+     */
+    fetchTriggerEventList ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize,
+        triggerType,
+        eventType = '',
+        triggerUser = '',
+        pipelineName = '',
+        startTimeEndTime = '',
+        endTimeStartTime = ''
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
+    },
+
+    /**
+     * 获取触发事件详情
+     */
+    fetchEventDetail ({ commit }, {
+        projectId,
+        eventId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`)
+    },
+
+    /**
+     * 一键重新触发
+     */
+    replayAllEvent ({ commit }, {
+        projectId,
+        eventId
+    }) {
+        return vue.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/replayAll`)
+    },
+
+    /**
+     * 重新触发
+     */
+    replayEvent ({ commit }, {
+        projectId,
+        detailId
+    }) {
+        return vue.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${detailId}/replay`)
+    },
+
+    /**
+     * 获取事件类型
+     */
+
+    fetchEventType ({ commit }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listEventType`)
+    },
+
+    /**
+     * 获取事件类型
+     */
+
+    fetchTriggerType ({ commit }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType`)
     }
 }
 
