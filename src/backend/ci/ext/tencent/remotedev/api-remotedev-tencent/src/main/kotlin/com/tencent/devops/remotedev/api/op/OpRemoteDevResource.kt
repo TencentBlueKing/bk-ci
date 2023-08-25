@@ -363,6 +363,17 @@ interface OpRemoteDevResource {
         pageSize: Int?
     ): Result<List<Map<String, Any>>>
 
+    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @GET
+    @Path("/windows/pool/config")
+    fun getCgsConfig(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Page<ProjectWorkspace>>
+
+
+
     @ApiOperation("转移工作空间detail数据到db")
     @GET
     @Path("/workspace/detail/move")
