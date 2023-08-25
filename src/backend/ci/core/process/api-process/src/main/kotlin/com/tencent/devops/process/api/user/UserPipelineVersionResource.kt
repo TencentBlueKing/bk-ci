@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -168,6 +168,7 @@ interface UserPipelineVersionResource {
         pageSize: Int?
     ): Result<Page<String>>
 
+    // TODO 给出主路径的bool
     @ApiOperation("流水线编排版本列表（搜索、分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/versions")
@@ -199,7 +200,7 @@ interface UserPipelineVersionResource {
         @ApiParam("每页多少条", required = false, defaultValue = "5")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<PipelineResVersion>>
+    ): Result<Page<PipelineVersionInfo>>
 
     @ApiOperation("获取流水线操作日志列表（分页）")
     @GET

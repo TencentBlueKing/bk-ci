@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线信息")
-data class PipelineResVersion(
+data class PipelineVersionInfo(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("流水线DI")
@@ -76,10 +76,10 @@ data class PipelineResVersion(
     val triggerVersion: Int? = null,
     @ApiModelProperty("配置版本号", required = false)
     val settingVersion: Int? = null,
-    @ApiModelProperty("草稿版本标识", required = false)
+    @ApiModelProperty("草稿版本状态标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @ApiModelProperty("该版本的来源版本（空时一定为主路径）", required = false)
+    val baseVersion: Int? = null,
     @ApiModelProperty("调试构建ID", required = false)
-    val debugBuildId: String? = null,
-    @ApiModelProperty("来源代码库标识（分支名）", required = false)
-    val pacRefs: String? = null
+    val debugBuildId: String? = null
 )

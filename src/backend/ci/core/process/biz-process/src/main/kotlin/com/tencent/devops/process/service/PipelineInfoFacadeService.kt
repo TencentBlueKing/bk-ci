@@ -240,11 +240,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
+    // TODO #8161 旧接口传参改造
     fun createPipeline(
         userId: String,
         projectId: String,
         model: Model,
         channelCode: ChannelCode,
+        yaml: String? = null,
         checkPermission: Boolean = true,
         fixPipelineId: String? = null,
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
@@ -374,7 +376,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                     useSubscriptionSettings = useSubscriptionSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     templateId = templateId,
-                    description = null
+                    description = null,
+                    yamlStr = yaml,
+                    baseVersion = null
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -663,6 +667,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    // TODO #8161 旧接口传参改造
     fun editPipeline(
         userId: String,
         projectId: String,
@@ -675,7 +680,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
         saveDraft: Boolean? = false,
-        description: String? = null
+        description: String? = null,
+        baseVersion: Int? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -757,7 +763,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 updateLastModifyUser = updateLastModifyUser,
                 savedSetting = savedSetting,
                 saveDraft = saveDraft,
-                description = description
+                description = description,
+                yamlStr = yaml,
+                baseVersion = baseVersion
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

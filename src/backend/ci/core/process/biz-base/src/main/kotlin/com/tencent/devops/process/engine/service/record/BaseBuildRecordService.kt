@@ -53,8 +53,8 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -77,8 +77,8 @@ open class BaseBuildRecordService(
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineElementService: PipelineElementService
 ) {
 
@@ -161,9 +161,9 @@ open class BaseBuildRecordService(
     ): Model? {
         val watcher = Watcher(id = "getRecordModel#$buildId")
         watcher.start("getVersionModelString")
-        val resourceStr = pipelineResVersionDao.getVersionModelString(
+        val resourceStr = pipelineResourceVersionDao.getVersionModelString(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
-        ) ?: pipelineResDao.getVersionModelString(
+        ) ?: pipelineResourceDao.getVersionModelString(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

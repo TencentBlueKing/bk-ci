@@ -68,6 +68,6 @@ data class PipelineResourceVersion(
     val description: String? = null,
     @ApiModelProperty("调试构建ID", required = false)
     val debugBuildId: String? = null,
-    @ApiModelProperty("来源代码库标识（分支名）", required = false)
-    val pacRefs: String? = null
+    @ApiModelProperty("该版本的来源版本（空时一定为主路径）", required = false)
+    val baseVersion: Int? = null
 )

@@ -73,7 +73,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -155,7 +155,7 @@ class TemplateFacadeService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
@@ -291,7 +291,7 @@ class TemplateFacadeService @Autowired constructor(
 
         checkPermission(projectId, userId)
 
-        val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
+        val template = pipelineResourceDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1070,7 +1070,7 @@ class TemplateFacadeService @Autowired constructor(
         )
         val v1Model: Model = instanceCompareModel(
             objectMapper.readValue(
-                content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
+                content = pipelineResourceDao.getVersionModelString(dslContext, projectId, pipelineId, null)
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -2064,7 +2064,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
-        val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds, projectId)
+        val modelResources = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIds, projectId)
         return modelResources?.map { modelResource ->
             modelResource.value1() to modelResource.value3()
         }?.toMap() ?: mapOf()

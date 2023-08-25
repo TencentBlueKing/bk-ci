@@ -42,7 +42,7 @@ import java.time.LocalDateTime
 
 @Suppress("Unused", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Repository
-class PipelineResVersionDao {
+class PipelineResourceVersionDao {
 
     fun create(
         dslContext: DSLContext,
@@ -52,6 +52,7 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String,
         model: Model,
+        baseVersion: Int,
         yaml: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
@@ -68,6 +69,7 @@ class PipelineResVersionDao {
             versionName = versionName,
             modelStr = JsonUtil.toJson(model, formatted = false),
             yamlStr = yaml,
+            baseVersion = baseVersion,
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
@@ -84,6 +86,7 @@ class PipelineResVersionDao {
         version: Int,
         versionName: String = "init",
         modelStr: String,
+        baseVersion: Int,
         yamlStr: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
@@ -106,10 +109,12 @@ class PipelineResVersionDao {
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, status?.name)
                 .set(DESCRIPTION, description)
+                .set(BASE_VERSION, baseVersion)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelStr)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
+                .set(BASE_VERSION, baseVersion)
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
@@ -184,7 +189,7 @@ class PipelineResVersionDao {
                 status = record.status?.let { VersionStatus.valueOf(it) },
                 description = record.description,
                 debugBuildId = record.debugBuildId,
-                pacRefs = record.refs
+                baseVersion = record.baseVersion
             )
         }
     }
@@ -259,7 +264,7 @@ class PipelineResVersionDao {
                         settingVersion = record.settingVersion,
                         status = record.status?.let { VersionStatus.valueOf(it) },
                         debugBuildId = record.debugBuildId,
-                        pacRefs = record.refs
+                        baseVersion = record.baseVersion
                     )
                 )
             }
@@ -294,7 +299,7 @@ class PipelineResVersionDao {
                         settingVersion = record.settingVersion,
                         status = record.status?.let { VersionStatus.valueOf(it) },
                         debugBuildId = record.debugBuildId,
-                        pacRefs = record.refs
+                        baseVersion = record.baseVersion
                     )
                 )
             }

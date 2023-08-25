@@ -49,7 +49,7 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -668,7 +668,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<PipelineResVersion>> {
+    ): Result<Page<PipelineVersionInfo>> {
         checkParam(userId, projectId)
         return Result(
             pipelineVersionFacadeService.listPipelineVersion(

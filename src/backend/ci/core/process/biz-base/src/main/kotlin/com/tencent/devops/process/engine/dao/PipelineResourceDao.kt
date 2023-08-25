@@ -44,7 +44,7 @@ import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
 @Repository
-class PipelineResDao {
+class PipelineResourceDao {
 
     fun create(
         dslContext: DSLContext,
@@ -270,6 +270,6 @@ class PipelineResDao {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineResDao::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineResourceDao::class.java)
     }
 }
