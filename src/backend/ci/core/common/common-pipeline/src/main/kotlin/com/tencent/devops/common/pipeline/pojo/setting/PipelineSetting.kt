@@ -67,13 +67,13 @@ data class PipelineSetting(
     @ApiModelProperty("并发时,设定的group", required = false)
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
-    val concurrencyCancelInProgress: Boolean = false,
+    var concurrencyCancelInProgress: Boolean = false,
     @ApiModelProperty("是否有操作权限", required = false)
     var hasPermission: Boolean? = null,
     @ApiModelProperty("保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @ApiModelProperty("并发构建数量限制", required = false)
-    val maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
+    var maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
     @ApiModelProperty("版本", required = false)
     var version: Int = 1,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
@@ -82,5 +82,5 @@ data class PipelineSetting(
     @ApiModelProperty("重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
-    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )

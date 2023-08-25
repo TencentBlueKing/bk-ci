@@ -73,7 +73,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -122,10 +122,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -136,6 +132,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -155,7 +155,7 @@ class TemplateFacadeService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
@@ -291,7 +291,7 @@ class TemplateFacadeService @Autowired constructor(
 
         checkPermission(projectId, userId)
 
-        val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
+        val template = pipelineResourceDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1061,15 +1061,16 @@ class TemplateFacadeService @Autowired constructor(
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
-                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
-                language = I18nUtil.getLanguage(userId)
-            ))
+                    messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
         val v1Model: Model = instanceCompareModel(
             objectMapper.readValue(
-                content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
+                content = pipelineResourceDao.getVersionModelString(dslContext, projectId, pipelineId, null)
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1494,6 +1495,8 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = templateInstanceUpdate.pipelineId,
             model = instanceModel,
+            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = false
@@ -1617,27 +1620,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
-        with(setting) {
-            return PipelineSetting(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = templateName,
-                desc = desc,
-                runLockType = runLockType,
-                successSubscription = successSubscription,
-                failSubscription = failSubscription,
-                successSubscriptionList = successSubscriptionList,
-                failSubscriptionList = failSubscriptionList,
-                labels = labels,
-                waitQueueTimeMinute = waitQueueTimeMinute,
-                maxQueueSize = maxQueueSize,
-                concurrencyGroup = concurrencyGroup,
-                hasPermission = hasPermission,
-                maxPipelineResNum = maxPipelineResNum,
-                maxConRunningQueueSize = maxConRunningQueueSize,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
-            )
-        }
+        return setting.copy(pipelineId = pipelineId, pipelineName = templateName)
     }
 
     /**
@@ -2081,7 +2064,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
-        val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds, projectId)
+        val modelResources = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIds, projectId)
         return modelResources?.map { modelResource ->
             modelResource.value1() to modelResource.value3()
         }?.toMap() ?: mapOf()

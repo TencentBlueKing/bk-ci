@@ -50,7 +50,6 @@ interface PreScriptBuildYamlI : YamlVersion {
     var steps: List<PreStep>?
     var extends: Extends?
     var resources: Resources?
-    var notices: List<GitNotices>?
     var finally: Map<String, PreJob>?
     val concurrency: Concurrency?
 }
@@ -74,7 +73,7 @@ data class PreScriptBuildYaml(
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    override var notices: List<GitNotices>?,
+    var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {

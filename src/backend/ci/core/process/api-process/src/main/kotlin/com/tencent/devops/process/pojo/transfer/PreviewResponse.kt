@@ -35,11 +35,11 @@ data class PreviewResponse(
     @ApiModelProperty("yaml内容")
     val yaml: String,
     @ApiModelProperty("流水线编排")
-    val pipeline: List<TransferMark>?,
+    val pipeline: List<TransferMark>? = listOf(),
     @ApiModelProperty("触发器配置")
-    val trigger: List<TransferMark>?,
+    val trigger: List<TransferMark>? = listOf(),
     @ApiModelProperty("通知配置")
-    val notice: List<TransferMark>?,
+    val notice: List<TransferMark>? = listOf(),
     @ApiModelProperty("基础设置")
-    val setting: List<TransferMark>?
+    val setting: List<TransferMark>? = listOf()
 )

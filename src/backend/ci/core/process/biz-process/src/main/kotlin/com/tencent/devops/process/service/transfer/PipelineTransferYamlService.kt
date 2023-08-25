@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.pojo.transfer.TransferResponse
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
@@ -61,6 +62,7 @@ import org.springframework.stereotype.Service
 class PipelineTransferYamlService @Autowired constructor(
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
@@ -84,54 +86,59 @@ class PipelineTransferYamlService @Autowired constructor(
         actionType: TransferActionType,
         data: TransferBody
     ): TransferResponse {
-
         val watcher = Watcher(id = "yaml and model transfer watcher")
-        when (actionType) {
-            TransferActionType.FULL_MODEL2YAML -> {
-                watcher.start("step_1|FULL_MODEL2YAML start")
-                val yml = modelTransfer.model2yaml(
-                    ModelTransferInput(
-                        data.modelAndSetting.model,
-                        data.modelAndSetting.setting,
-                        YamlVersion.Version.V3_0
-                    )
-                )
-                watcher.start("step_2|mergeYaml")
-                val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
-                watcher.stop()
-                logger.info(watcher.toString())
-                return TransferResponse(newYaml = newYaml)
-            }
-            TransferActionType.FULL_YAML2MODEL -> {
-                watcher.start("step_1|FULL_YAML2MODEL start")
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-                val pYml = TransferMapper.getObjectMapper()
-                    .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
-                watcher.start("step_2|parse template")
-                pYml.replaceTemplate { templateFilter ->
-                    YamlTemplate(
-                        yamlObject = templateFilter,
-                        filePath = TemplatePath(TEMPLATE_ROOT_FILE),
-                        extraParameters = this,
-                        getTemplateMethod = ::getTemplate,
-                        nowRepo = null,
-                        repo = null,
-                        resourcePoolMapExt = null,
-                        conf = YamlTemplateConf(
-                            useOldParametersExpression = false // todo
+        try {
+            when (actionType) {
+                TransferActionType.FULL_MODEL2YAML -> {
+                    watcher.start("step_1|FULL_MODEL2YAML start")
+                    val yml = modelTransfer.model2yaml(
+                        ModelTransferInput(
+                            data.modelAndSetting.model,
+                            data.modelAndSetting.setting,
+                            YamlVersion.Version.V3_0
                         )
-                    ).replace()
+                    )
+                    watcher.start("step_2|mergeYaml")
+                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
+                    watcher.stop()
+                    logger.info(watcher.toString())
+                    return TransferResponse(newYaml = newYaml)
                 }
-                watcher.start("step_3|transfer start")
-                val input = YamlTransferInput(
-                    userId, projectId, pipelineInfo, pYml
-                )
-                val model = modelTransfer.yaml2Model(input)
-                val setting = modelTransfer.yaml2Setting(input)
-                watcher.stop()
-                logger.info(watcher.toString())
-                return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
+                TransferActionType.FULL_YAML2MODEL -> {
+                    watcher.start("step_1|FULL_YAML2MODEL start")
+                    val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                    val pYml = TransferMapper.getObjectMapper()
+                        .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+                    watcher.start("step_2|parse template")
+                    pYml.replaceTemplate { templateFilter ->
+                        YamlTemplate(
+                            yamlObject = templateFilter,
+                            filePath = TemplatePath(TEMPLATE_ROOT_FILE),
+                            extraParameters = this,
+                            getTemplateMethod = ::getTemplate,
+                            nowRepo = null,
+                            repo = null,
+                            resourcePoolMapExt = null,
+                            conf = YamlTemplateConf(
+                                useOldParametersExpression = false // todo
+                            )
+                        ).replace()
+                    }
+                    watcher.start("step_3|transfer start")
+                    val input = YamlTransferInput(
+                        userId, projectId, pipelineInfo, pYml
+                    )
+                    val model = modelTransfer.yaml2Model(input)
+                    val setting = modelTransfer.yaml2Setting(input)
+
+                    logger.info(watcher.toString())
+                    return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
+                }
             }
+        } catch (t: Throwable) {
+            logger.warn("PAC|TRANSFER|transferAction")
+        } finally {
+            watcher.stop()
         }
         return TransferResponse()
     }
@@ -163,18 +170,37 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         version: Int?
     ): PreviewResponse {
-        val yml = getPipelineResource(projectId, pipelineId, version)?.yaml ?: ""
+        val resource = getPipelineResource(projectId, pipelineId, version)
+            ?: return PreviewResponse("")
+        val setting = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = resource.settingVersion ?: version ?: 1
+        )
+        val modelAndSetting = PipelineModelAndSetting(
+            setting = setting,
+            model = resource.model
+        )
+        val yaml = resource.yaml ?: transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            actionType = TransferActionType.FULL_MODEL2YAML,
+            data = TransferBody(modelAndSetting)
+        ).newYaml ?: return PreviewResponse("")
+
         val pipelineIndex = mutableListOf<TransferMark>()
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        TransferMapper.getYamlLevelOneIndex(yml).forEach { (key, value) ->
+        TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
             if (key in pipeline_key) pipelineIndex.add(value)
             if (key in trigger_key) triggerIndex.add(value)
             if (key in notice_key) noticeIndex.add(value)
             if (key in setting_key) settingIndex.add(value)
         }
-        return PreviewResponse(yml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
+        return PreviewResponse(yaml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
     }
 
     private fun getPipelineResource(

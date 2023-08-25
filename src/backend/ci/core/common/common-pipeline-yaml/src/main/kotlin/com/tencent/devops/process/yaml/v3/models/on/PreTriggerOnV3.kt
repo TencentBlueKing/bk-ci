@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
@@ -45,7 +44,7 @@ import io.swagger.annotations.ApiModelProperty
 data class PreTriggerOnV3(
     val name: String?,
     var repoHashId: String?,
-    var type: ScmType?,
+    var type: String?,
     val credentials: String?,
     override val push: Any?,
     override val tag: Any?,

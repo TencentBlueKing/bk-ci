@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
@@ -51,7 +51,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -266,24 +265,6 @@ interface UserPipelineResource {
         @DefaultValue("false")
         includeDraft: Boolean? = false
     ): Result<Model>
-
-    @ApiOperation("获取流水线编排和设置")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/resource")
-    fun getPipelineResourceAndSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        includeDraft: Boolean? = false
-    ): Result<PipelineResourceAndSetting>
 
     @ApiOperation("获取流水线编排版本")
     @GET
@@ -594,7 +575,7 @@ interface UserPipelineResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<PipelineResVersion>>
+    ): Result<Page<PipelineVersionInfo>>
 
     @ApiOperation("校验matrix yaml格式")
     @POST

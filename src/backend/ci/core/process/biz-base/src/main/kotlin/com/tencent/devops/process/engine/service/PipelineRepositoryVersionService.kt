@@ -33,18 +33,18 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReturnCount")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val redisOperation: RedisOperation
@@ -54,7 +54,7 @@ class PipelineRepositoryVersionService(
         PipelineVersionLock(redisOperation, pipelineId, resourceVersion).use { versionLock ->
             versionLock.lock()
             // 查询流水线版本记录
-            val pipelineVersionInfo = pipelineResVersionDao.getPipelineVersionSimple(
+            val pipelineVersionInfo = pipelineResourceVersionDao.getPipelineVersionSimple(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -71,7 +71,7 @@ class PipelineRepositoryVersionService(
                 )
 
             // 更新流水线版本关联构建记录信息
-            pipelineResVersionDao.updatePipelineVersionReferInfo(
+            pipelineResourceVersionDao.updatePipelineVersionReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -100,12 +100,53 @@ class PipelineRepositoryVersionService(
             }
             dslContext.transaction { t ->
                 val transactionContext = DSL.using(t)
-                pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+                pipelineResourceVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
                 pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
             }
         } finally {
             pipelineVersionLock.unlock()
         }
+    }
+
+    fun getPipelineVersion(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionInfo? {
+        if (pipelineInfo == null) {
+            return null
+        }
+        val resource = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: return null
+        return PipelineVersionInfo(
+            createTime = pipelineInfo.createTime,
+            creator = pipelineInfo.creator,
+            canElementSkip = pipelineInfo.canElementSkip,
+            canManualStartup = pipelineInfo.canManualStartup,
+            channelCode = pipelineInfo.channelCode,
+            id = pipelineInfo.id,
+            lastModifyUser = pipelineInfo.lastModifyUser,
+            pipelineDesc = pipelineInfo.pipelineDesc,
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            projectId = pipelineInfo.projectId,
+            taskCount = pipelineInfo.taskCount,
+            templateId = pipelineInfo.templateId,
+            version = resource.version,
+            versionName = resource.versionName ?: "init",
+            pipelineVersion = resource.pipelineVersion,
+            triggerVersion = resource.triggerVersion,
+            settingVersion = resource.settingVersion,
+            status = resource.status,
+            debugBuildId = resource.debugBuildId,
+            baseVersion = resource.baseVersion
+        )
     }
 
     fun listPipelineVersion(
@@ -114,34 +155,38 @@ class PipelineRepositoryVersionService(
         pipelineId: String,
         offset: Int,
         limit: Int,
+        excludeVersion: Int?,
+        versionName: String?,
         creator: String?,
         description: String?
-    ): Pair<Int, List<PipelineResVersion>> {
+    ): Pair<Int, MutableList<PipelineVersionInfo>> {
         if (pipelineInfo == null) {
-            return Pair(0, emptyList())
+            return Pair(0, mutableListOf())
         }
 
-        val count = pipelineResVersionDao.count(
+        val count = pipelineResourceVersionDao.count(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description
         )
-        val result = pipelineResVersionDao.listPipelineVersion(
+        val result = pipelineResourceVersionDao.listPipelineVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description,
+            versionName = versionName,
+            excludeVersion = excludeVersion,
             offset = offset,
             limit = limit
         )
-        val list = mutableListOf<PipelineResVersion>()
+        val list = mutableListOf<PipelineVersionInfo>()
 
         result.forEach {
             list.add(
-                PipelineResVersion(
+                PipelineVersionInfo(
                     createTime = pipelineInfo.createTime,
                     creator = pipelineInfo.creator,
                     canElementSkip = pipelineInfo.canElementSkip,
@@ -162,7 +207,7 @@ class PipelineRepositoryVersionService(
                     settingVersion = it.settingVersion,
                     status = it.status,
                     debugBuildId = it.debugBuildId,
-                    pacRefs = it.pacRefs
+                    baseVersion = it.baseVersion
                 )
             )
         }
@@ -180,12 +225,12 @@ class PipelineRepositoryVersionService(
             return Pair(0, emptyList())
         }
 
-        val count = pipelineResVersionDao.countVersionCreator(
+        val count = pipelineResourceVersionDao.countVersionCreator(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
-        val result = pipelineResVersionDao.getVersionCreatorInPage(
+        val result = pipelineResourceVersionDao.getVersionCreatorInPage(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

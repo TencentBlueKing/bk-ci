@@ -40,7 +40,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -75,6 +75,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = model,
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = true,
@@ -174,7 +175,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode
-    ): Result<Page<PipelineResVersion>> {
+    ): Result<Page<PipelineVersionInfo>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -199,8 +200,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                page = page,
-                pageSize = pageSize
+                fromVersion = null,
+                versionName = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }

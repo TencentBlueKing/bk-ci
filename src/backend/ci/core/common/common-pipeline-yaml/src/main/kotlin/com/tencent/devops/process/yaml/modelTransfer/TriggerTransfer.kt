@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferModelCreator
+import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
@@ -56,7 +56,7 @@ import org.springframework.stereotype.Component
 class TriggerTransfer @Autowired(required = false) constructor(
     val client: Client,
     @Autowired(required = false)
-    val creator: TransferModelCreator,
+    val creator: TransferCreator,
     val transferCache: TransferCacheService
 ) {
     companion object {

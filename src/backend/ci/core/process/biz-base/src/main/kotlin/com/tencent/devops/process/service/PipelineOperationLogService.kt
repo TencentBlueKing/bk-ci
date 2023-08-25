@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 class PipelineOperationLogService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineOperationLogDao: PipelineOperationLogDao,
-    private val pipelineResVersionDao: PipelineResVersionDao
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
 
     fun addOperationLog(
@@ -97,7 +97,7 @@ class PipelineOperationLogService @Autowired constructor(
         val versions = mutableSetOf<Int>()
         opList.forEach { versions.add(it.version) }
         val versionMap = mutableMapOf<Int, PipelineVersionSimple>()
-        pipelineResVersionDao.listPipelineVersionInList(
+        pipelineResourceVersionDao.listPipelineVersionInList(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

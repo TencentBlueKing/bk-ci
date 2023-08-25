@@ -170,7 +170,7 @@ class ModelElement @Autowired(required = false) constructor(
             if (job.runsOn.agentSelector.isNullOrEmpty()) {
                 linux
             } else {
-                when (job.runsOn.agentSelector.first()) {
+                when (job.runsOn.agentSelector!!.first()) {
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
