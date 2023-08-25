@@ -211,7 +211,9 @@ class RbacPermissionMigrateService constructor(
 
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         logger.info("handover permissions:$permissionHandoverDTO")
-        migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
         return true
     }
 
