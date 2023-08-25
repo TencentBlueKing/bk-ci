@@ -93,7 +93,7 @@
 
         function setProjectIdCookie() {
             try {
-                var pathProjectId = location.pathname.match(/^\/pipeline\/([\w\-]+)?/)?.[1]
+                var pathProjectId = location.pathname.match(/^\/pipeline\/zhiyan\/([\w\-]+)?/)?.[1]
                 var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
                 if (pathProjectId && cookiePid && cookiePid !== pathProjectId) {
                     var subDomains = getSubDomain()

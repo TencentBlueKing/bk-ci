@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import io.swagger.annotations.Api
@@ -118,4 +119,40 @@ interface ServiceP4Resource {
         @QueryParam("password")
         password: String
     ): Result<P4ServerInfo>
+
+    @ApiOperation("获取p4文件变更列表(含提交信息)")
+    @GET
+    @Path("/getChangelist")
+    fun getChangelist(
+        @ApiParam("p4Port", required = true)
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam("p4 username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("p4 password", required = true)
+        @QueryParam("password")
+        password: String,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<P4ChangeList>
+
+    @ApiOperation("获取p4 shelve文件变更列表(含提交信息)")
+    @GET
+    @Path("/getShelvedChangeList")
+    fun getShelvedChangeList(
+        @ApiParam("p4Port", required = true)
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam("p4 username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("p4 password", required = true)
+        @QueryParam("password")
+        password: String,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<P4ChangeList>
 }

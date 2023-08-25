@@ -25,23 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.remotedev.api.op
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("start客户端工作空间详情")
-data class WorkspaceStartCloudDetail(
-    @ApiModelProperty("ip地址")
-    val ip: String,
-    @ApiModelProperty("start客户端所需唯一索引")
-    val curLaunchId: Int,
-    @ApiModelProperty("云区域ID")
-    val regionId: Int? = null,
-    @ApiModelProperty("项目ID")
-    val projectId: String? = null,
-    @ApiModelProperty("工作空间名称")
-    val name: String? = null,
-    @ApiModelProperty("创建人")
-    val creator: String? = null
-)
+@Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
+@Path("/op/project/workspace")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpProjectWorkspaceResource {
+
+    @ApiOperation("分配云桌面")
+    @POST
+    @Path("/assign")
+    fun assignWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "拥有者", required = true)
+        @QueryParam("owner")
+        owner: String,
+        @ApiParam(value = "云桌面ID", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<Boolean>
+}

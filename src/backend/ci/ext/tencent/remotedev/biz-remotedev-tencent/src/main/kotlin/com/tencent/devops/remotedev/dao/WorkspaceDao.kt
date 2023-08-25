@@ -27,15 +27,17 @@
 
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.Condition
@@ -153,16 +155,22 @@ class WorkspaceDao {
      */
     fun countUserWorkspace(
         dslContext: DSLContext,
-        creator: String,
+        userId: String? = null,
+        projectId: String? = null,
         unionShared: Boolean = true,
-        ownerType: WorkspaceOwnerType? = null,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .where(CREATOR.eq(creator))
+                .let {
+                    when (ownerType) {
+                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
+                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
+                    }.and(OWNER_TYPE.eq(ownerType.name))
+                }
                 .let {
                     if (status.isNullOrEmpty()) {
                         it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
@@ -171,12 +179,11 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
                 .let {
-                    if (unionShared) {
+                    if (unionShared && userId != null) {
                         it.unionAll(
-                        unionSelect(shared, creator, status, systemType, ownerType)
-                    )
+                            unionSelect(shared, userId, status, systemType)
+                        )
                     } else {
                         it
                     }
@@ -184,10 +191,10 @@ class WorkspaceDao {
                 .fetch(0, Long::class.java).sum()
         }
     }
+
     fun countProjectWorkspace(
         dslContext: DSLContext,
         projectId: String?,
-        ownerType: WorkspaceOwnerType? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
@@ -206,7 +213,7 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .let { if (ownerType != null) it.and(OWNER_TYPE.eq(ownerType.name)) else it }
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -215,8 +222,7 @@ class WorkspaceDao {
         shared: TWorkspaceShared,
         creator: String,
         status: Set<WorkspaceStatus>?,
-        systemType: WorkspaceSystemType?,
-        ownerType: WorkspaceOwnerType?
+        systemType: WorkspaceSystemType?
     ) = DSL.selectCount().from(this).where(
         NAME.`in`(
             DSL.select(shared.WORKSPACE_NAME).from(shared).where(
@@ -232,7 +238,6 @@ class WorkspaceDao {
             i.and(STATUS.`in`(status.map { s -> s.ordinal }))
         }
     }.let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
-        .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
 
     /**
      * 获得用户所拥有工作空间列表
@@ -240,38 +245,45 @@ class WorkspaceDao {
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
-        creator: String,
-        ownerType: WorkspaceOwnerType? = null
+        userId: String? = null,
+        projectId: String? = null,
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
     ): Result<TWorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(CREATOR.eq(creator))
+                .let {
+                    when (ownerType) {
+                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
+                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
+                    }.and(OWNER_TYPE.eq(ownerType.name))
+                }
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
                             DSL.select(shared.WORKSPACE_NAME).from(shared).where(
                                 shared.SHARED_USER.eq(
-                                    creator
+                                    userId
                                 )
                             )
                         )
                     ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                        .let { i -> if (ownerType != null) i.and(OWNER_TYPE.eq(ownerType.name)) else i }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }
     }
+
+    /**
+     * 获取项目下工作空间列表
+     */
     fun limitFetchProjectWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
         systemType: WorkspaceSystemType? = null
     ): Result<TWorkspaceRecord>? {
-        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         val conditions = mutableListOf<Condition>()
 
         with(TWorkspace.T_WORKSPACE) {
@@ -282,6 +294,7 @@ class WorkspaceDao {
                 .where(conditions)
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
@@ -397,7 +410,7 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val conditions = mutableListOf<Condition>()
         conditions.add(t1.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
-        conditions.add(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+        conditions.add(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
         if (!workspaceName.isNullOrBlank()) {
             conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
         }
@@ -586,5 +599,40 @@ class WorkspaceDao {
             "timestampdiff({0}, {1}, NOW())",
             Int::class.java, DSL.keyword(part.toSQL()), t1
         )
+    }
+
+    // 持久化存储workspace detail数据
+    fun saveOrUpdateWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String,
+        detail: String
+    ) {
+        with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_NAME,
+                DETAIL,
+                CREATE_TIME
+            ).values(
+                workspaceName,
+                detail,
+                LocalDateTime.now()
+            ).onDuplicateKeyUpdate()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(DETAIL, detail)
+                .execute()
+        }
+    }
+
+    // 获取workspace detail
+    fun getWorkspaceDetail(
+        dslContext: DSLContext,
+        workspaceName: String
+    ): TWorkspaceDetailRecord? {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .fetchAny()
+        }
     }
 }
