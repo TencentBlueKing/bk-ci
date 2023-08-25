@@ -41,8 +41,10 @@ import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Service
 class WebhookRequestService(
     private val client: Client,
     private val webhookEventFactory: WebhookEventFactory,

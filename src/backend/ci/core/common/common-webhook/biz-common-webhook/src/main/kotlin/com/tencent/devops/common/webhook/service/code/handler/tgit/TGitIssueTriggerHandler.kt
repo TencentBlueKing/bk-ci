@@ -56,16 +56,15 @@ import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 class TGitIssueTriggerHandler(
     private val eventCacheService: EventCacheService
-) : CodeWebhookTriggerHandler<GitIssueEvent> {
+) : GitHookTriggerHandler<GitIssueEvent> {
 
     override fun eventClass(): Class<GitIssueEvent> {
         return GitIssueEvent::class.java
@@ -146,6 +145,22 @@ class TGitIssueTriggerHandler(
 
     override fun getAction(event: GitIssueEvent): String? {
         return event.objectAttributes.action
+    }
+
+    override fun getEventFilters(
+        event: GitIssueEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): List<WebhookFilter> {
+        val actionFilter = ContainsFilter(
+            pipelineId = pipelineId,
+            filterName = "issueAction",
+            triggerOn = event.objectAttributes.action ?: "",
+            included = WebhookUtils.convert(webHookParams.includeIssueAction)
+        )
+        return listOf(actionFilter)
     }
 
     override fun retrieveParams(event: GitIssueEvent, projectId: String?, repository: Repository?): Map<String, Any> {
