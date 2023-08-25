@@ -218,6 +218,7 @@ object CommonMessageCode {
     const val DELETE_BRANCH = "bkDeleteBranch" // 删除分支
 
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
+    const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签

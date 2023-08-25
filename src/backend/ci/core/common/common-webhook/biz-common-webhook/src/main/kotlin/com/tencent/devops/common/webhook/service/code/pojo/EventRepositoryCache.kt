@@ -4,6 +4,7 @@ import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 
 /**
  * 事件触发仓库级缓存
@@ -12,6 +13,7 @@ data class EventRepositoryCache(
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null,
     var gitMrChangeFiles: Set<String>? = null,
+    var gitCommitReviewInfo: GitCommitReviewInfo? = null,
     var gitCompareChangeFiles: Set<String>? = null,
     var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
     var repoAuthUser: String? = null,

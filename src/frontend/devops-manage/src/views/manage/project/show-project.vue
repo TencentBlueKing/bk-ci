@@ -284,6 +284,10 @@ const tipsStatusMap = {
     type: 'error',
     message: t('更新项目信息审批被拒绝。'),
   },
+  7: {
+    type: 'error',
+    message: t('创建项目申请单已撤回')
+  }
 };
 
 const projectTypeNameMap = {

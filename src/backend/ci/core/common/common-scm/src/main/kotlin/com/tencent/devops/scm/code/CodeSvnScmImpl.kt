@@ -50,8 +50,8 @@ class CodeSvnScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
     override val url: String,
-    private val username: String,
-    private val privateKey: String,
+    private var username: String,
+    private var privateKey: String,
     private val passphrase: String?,
     private val svnConfig: SVNConfig
 ) : IScm {
@@ -131,6 +131,10 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndUsername() {
         try {
+            // 检查用户名密码时privateKey为用户名，passphrase为密码
+            // 参考：com.tencent.devops.repository.service.scm.ScmService.checkUsernameAndPassword
+            username = privateKey
+            privateKey = passphrase!!
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)

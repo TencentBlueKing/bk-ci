@@ -47,7 +47,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -97,7 +96,6 @@ class PipelineTaskService @Autowired constructor(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val containerBuildRecordService: ContainerBuildRecordService,
@@ -397,7 +395,6 @@ class PipelineTaskService @Autowired constructor(
     /**
      * 根据插件标识，获取使用插件的流水线详情
      */
-    @Suppress("UNCHECKED_CAST")
     fun listPipelinesByAtomCode(
         atomCode: String,
         projectCode: String?,
@@ -671,7 +668,6 @@ class PipelineTaskService @Autowired constructor(
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         val projectId = task.projectId
-        val pipelineId = task.pipelineId
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
@@ -698,17 +694,18 @@ class PipelineTaskService @Autowired constructor(
                 additionalOptions = task.additionalOptions?.takeIf { task.additionalOptions!!.change }
             )
         )
-        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
-        if (buildStatus.isRunning()) {
-            pipelineBuildSummaryDao.updateCurrentBuildTask(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                currentTaskId = taskId,
-                currentTaskName = taskName
-            )
-        }
+        // 卡片界面上 已经不再展示当前正在执行的插件任务名称,因此不需要更新,并减少热点流水线的该表锁竞争.
+//        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
+//        if (buildStatus.isRunning()) {
+//            pipelineBuildSummaryDao.updateCurrentBuildTask(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                currentTaskId = taskId,
+//                currentTaskName = taskName
+//            )
+//        }
     }
 
     /**
