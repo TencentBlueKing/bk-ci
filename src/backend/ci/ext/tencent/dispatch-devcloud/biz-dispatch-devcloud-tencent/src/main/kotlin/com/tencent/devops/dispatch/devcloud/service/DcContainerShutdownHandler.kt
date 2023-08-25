@@ -84,10 +84,8 @@ class DcContainerShutdownHandler @Autowired constructor(
                 return
             }
 
-            // 持久化构建结束事件, 不关机
-            if (isPersistenceBuild(this)) {
-                return
-            } else {
+            // 非持久化构建结束事件, 需要关机
+            if (!isPersistenceBuild(this)) {
                 stopContainer(this, buildContainerPools)
             }
 
