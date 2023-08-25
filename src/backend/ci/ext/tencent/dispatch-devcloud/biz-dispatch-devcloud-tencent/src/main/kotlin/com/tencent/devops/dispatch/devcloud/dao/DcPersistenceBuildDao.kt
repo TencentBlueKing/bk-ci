@@ -4,14 +4,11 @@ import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildSta
 import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudPersistenceBuild
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudPersistenceBuildRecord
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class DcPersistenceBuildDao {
-
-    private val logger = LoggerFactory.getLogger(DcPersistenceBuildDao::class.java)
 
     fun pushQueueBuild(
         dslContext: DSLContext,
@@ -83,7 +80,7 @@ class DcPersistenceBuildDao {
         status: Int
     ) {
         with(TDevcloudPersistenceBuild.T_DEVCLOUD_PERSISTENCE_BUILD) {
-            val sql = dslContext.update(this)
+            dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(STATUS, status)
                 .where(ID.eq(id))
