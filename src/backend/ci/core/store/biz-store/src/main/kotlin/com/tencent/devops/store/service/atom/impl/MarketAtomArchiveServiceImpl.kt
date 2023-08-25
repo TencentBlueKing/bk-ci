@@ -140,7 +140,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
             val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(
-                atomRecord = atomRecord,
+                atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                    atomRecord
+                } else {
+                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+                },
                 releaseType = releaseType,
                 osList = osList,
                 version = version
