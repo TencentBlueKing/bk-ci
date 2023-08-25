@@ -84,7 +84,7 @@ class P4ShelveTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ShelveEvent) = ""
+    override fun getMessage(event: P4ShelveEvent) = event.description
 
     override fun getEventDesc(event: P4ShelveEvent): String {
         val i18Variable = I18Variable(

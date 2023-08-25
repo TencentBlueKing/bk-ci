@@ -16,8 +16,8 @@
 </template>
 
 <script>
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -26,7 +26,10 @@
         },
         computed: {
             editRouteName () {
-                return { name: 'pipelinesEdit' }
+                return {
+                    name: 'pipelinesEdit',
+                    params: this.$route.params
+                }
             }
         },
         methods: {

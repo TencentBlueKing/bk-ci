@@ -501,6 +501,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 null, cancelUser, null
             )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
+            )
         }
     }
 
@@ -574,6 +581,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 errorInfoList, null, null
+            )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
             )
         }
         val detail = pipelineBuildDetailService.buildEnd(

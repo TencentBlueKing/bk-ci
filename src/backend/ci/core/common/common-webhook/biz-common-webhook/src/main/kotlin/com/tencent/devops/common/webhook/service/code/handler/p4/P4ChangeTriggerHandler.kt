@@ -83,7 +83,7 @@ class P4ChangeTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ChangeEvent) = ""
+    override fun getMessage(event: P4ChangeEvent) = event.description
 
     override fun getEventDesc(event: P4ChangeEvent): String {
         val i18Variable = I18Variable(

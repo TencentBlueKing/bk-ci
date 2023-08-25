@@ -103,6 +103,14 @@ class MigrateV0PolicyService constructor(
         // v0有的action，但是在rbac没有,需要跳过
         private val skipActions = listOf("quality_gate_group_enable")
 
+        // v0有的资源，但是在rbac没有,需要跳过
+        private val skipResourceTypes = listOf(
+            "dev_image", "prod_image", "custom_dir", "gs-apk_task",
+            "cluster_test", "cluster_prod", "namespace", "templates",
+            "metric", "job_template", "script", "scan_task", "wetest_task",
+            "email_group", "xinghai_all", "android", "ios", "macos"
+        )
+
         private val oldResourceTypeMappingNewResourceType = mapOf(
             "quality_gate_group" to "quality_group"
         )
@@ -144,6 +152,10 @@ class MigrateV0PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
+            // 如果发现资源类型是跳过的,则跳过
+            if (skipResourceTypes.contains(permission.resources[0].type)) {
+                return@permission
+            }
             val (resourceCreateActions, resourceActions) = buildRbacActions(
                 actions = permission.actions.map { it.id }
             )
@@ -328,6 +340,10 @@ class MigrateV0PolicyService constructor(
     ): List<Int> {
         val resource = permission.resources[0]
         val resourceType = oldResourceTypeMappingNewResourceType[resource.type] ?: resource.type
+        // 如果发现资源类型是跳过的,则跳过
+        if (skipResourceTypes.contains(resourceType)) {
+            return emptyList()
+        }
         val userActions = permission.actions.map { it.id }
         logger.info("find match resource group|$userId|$projectCode|$resourceType|$userActions")
         val (resourceCreateActions, resourceActions) = buildRbacActions(

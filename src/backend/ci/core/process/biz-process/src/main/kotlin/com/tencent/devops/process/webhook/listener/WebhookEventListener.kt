@@ -47,6 +47,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebhookEventListener constructor(
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate,
     private val webhookRequestService: WebhookRequestService
 ) {
