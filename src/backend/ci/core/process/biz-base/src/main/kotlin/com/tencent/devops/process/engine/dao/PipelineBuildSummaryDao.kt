@@ -494,8 +494,11 @@ class PipelineBuildSummaryDao {
     }
 
     /**
-     * 更新运行中的任务信息摘要
+     * 更新运行中的任务信息摘要,
+     *
+     * 卡片界面上 已经不再展示当前正在执行的插件任务名称, 因此该函数废弃,减少热点流水线的锁竞争.
      */
+    @Suppress("UNUSED")
     fun updateCurrentBuildTask(
         dslContext: DSLContext,
         projectId: String,

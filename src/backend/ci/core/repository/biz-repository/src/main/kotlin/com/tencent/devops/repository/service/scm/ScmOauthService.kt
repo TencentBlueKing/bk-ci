@@ -35,6 +35,7 @@ import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -201,6 +202,9 @@ class ScmOauthService @Autowired constructor(
                 }
                 ScmType.CODE_SVN -> {
                     svnConfig.svnHookUrl
+                }
+                ScmType.CODE_TGIT -> {
+                    gitConfig.tGitHookUrl
                 }
                 else -> {
                     throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
@@ -375,6 +379,28 @@ class ScmOauthService @Autowired constructor(
         ).getProjectInfo(
             projectName = projectName
         )
+    }
+
+    override fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        )
+            .getCommitReviewInfo(crId = crId)
     }
 
     companion object {

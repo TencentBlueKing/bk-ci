@@ -38,12 +38,14 @@ enum class ProjectTipsStatus(val status: Int) {
     SHOW_CREATE_PENDING(1),
     // 项目审批成功
     SHOW_SUCCESSFUL_CREATE(2),
-    // 项目创建波驳回
+    // 项目创建被驳回
     SHOW_CREATE_REJECT(3),
     // 编辑审批中
     SHOW_UPDATE_PENDING(4),
     // 编辑审批成功
     SHOW_SUCCESSFUL_UPDATE(5),
     // 编辑审批驳回
-    SHOW_UPDATE_REJECT(6);
+    SHOW_UPDATE_REJECT(6),
+    // 创建审批撤销
+    SHOW_CREATE_REVOKE(7);
 }

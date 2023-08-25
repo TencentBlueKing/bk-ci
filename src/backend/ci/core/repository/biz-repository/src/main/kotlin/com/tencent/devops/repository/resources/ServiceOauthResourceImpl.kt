@@ -35,14 +35,20 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
+    private val gitOauthService: IGitOauthService,
+    private val tGitOAuthService: TGitOAuthService
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
+    }
+
+    override fun tGitGet(userId: String): Result<GitToken?> {
+        return Result(tGitOAuthService.getAccessToken(userId))
     }
 
     override fun gitCallback(code: String, state: String): Result<GitOauthCallback> {
@@ -63,6 +69,24 @@ class ServiceOauthResourceImpl @Autowired constructor(
                 redirectUrl = redirectUrl,
                 gitProjectId = gitProjectId,
                 refreshToken = refreshToken,
+            )
+        )
+    }
+
+    override fun tGitOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): Result<AuthorizeResult> {
+        return Result(
+            tGitOAuthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                gitProjectId = gitProjectId,
+                refreshToken = refreshToken
             )
         )
     }
