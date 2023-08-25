@@ -357,10 +357,10 @@ interface OpRemoteDevResource {
         status: Int?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
-        page: Int,
+        page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int?
     ): Result<List<Map<String, Any>>>
 
     @ApiOperation("转移工作空间detail数据到db")

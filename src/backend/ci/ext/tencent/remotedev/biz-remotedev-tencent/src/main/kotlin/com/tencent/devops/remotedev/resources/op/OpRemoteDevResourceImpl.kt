@@ -183,18 +183,19 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         zoneId: String?,
         machineType: String?,
         status: Int?,
-        page: Int,
-        pageSize: Int
+        page: Int?,
+        pageSize: Int?
     ): Result<List<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
-
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                 (machineType.isNullOrEmpty() || it.machineType == machineType) &&
                 (status == null || it.status == status)
         }
-        val start = (page - 1) * pageSize
-        val end = (start + pageSize).coerceAtMost(filteredResources.size)
+        val start = (pageNotNull - 1) * pageSizeNotNull
+        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
         return if (start >= filteredResources.size) {
             Result(emptyList())
         } else {
