@@ -61,7 +61,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
@@ -341,10 +340,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         userId: String,
         /*user 或 department*/
         memberType: String,
-        expiredDay: Long,
+        expiredAt: Long,
         groupId: Int
     ): Boolean {
-        val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
         val managerMember = ManagerMember(memberType, userId)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
             .members(listOf(managerMember))

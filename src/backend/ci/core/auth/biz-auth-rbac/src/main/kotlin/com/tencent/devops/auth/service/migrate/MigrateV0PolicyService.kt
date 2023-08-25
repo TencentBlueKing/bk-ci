@@ -50,6 +50,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "NestedBlockDepth", "TooManyFunctions")
 class MigrateV0PolicyService constructor(
@@ -425,7 +426,7 @@ class MigrateV0PolicyService constructor(
             groupService.addGroupMember(
                 userId = member.id,
                 memberType = member.type,
-                expiredDay = expiredDay,
+                expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay),
                 groupId = groupId
             )
         }

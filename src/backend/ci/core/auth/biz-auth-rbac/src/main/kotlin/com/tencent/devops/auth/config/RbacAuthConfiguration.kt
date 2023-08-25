@@ -362,7 +362,8 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        groupService: PermissionResourceGroupService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -376,7 +377,8 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        groupService = groupService
     )
 
     @Bean

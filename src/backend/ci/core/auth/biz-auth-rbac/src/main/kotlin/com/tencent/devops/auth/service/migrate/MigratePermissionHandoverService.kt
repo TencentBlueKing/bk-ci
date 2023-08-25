@@ -63,7 +63,7 @@ class MigratePermissionHandoverService constructor(
                     groupService.addGroupMember(
                         userId = handoverTo,
                         memberType = USER_TYPE,
-                        expiredDay = GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)],
+                        expiredAt = GROUP_EXPIRED_TIME,
                         groupId = projectManagerGroupId!!.relationId.toInt()
                     )
                 }
@@ -98,7 +98,7 @@ class MigratePermissionHandoverService constructor(
                     groupService.addGroupMember(
                         userId = handoverTo,
                         memberType = USER_TYPE,
-                        expiredDay = GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)],
+                        expiredAt = GROUP_EXPIRED_TIME,
                         groupId = resourceManagerGroup!!.relationId.toInt()
                     )
                     v2ManagerService.deleteRoleGroupMemberV2(
@@ -113,8 +113,8 @@ class MigratePermissionHandoverService constructor(
     }
 
     companion object {
-        // v0默认用户组过期时间,2年或者3年
-        private val GROUP_EXPIRED_DAY = listOf(180L, 360L, 720L, 1080L)
+        // 过期时间为永久
+        private const val GROUP_EXPIRED_TIME = 4102444800L
         private const val USER_TYPE = "user"
         private val logger = Logger.getLogger(MigratePermissionHandoverService::class.java)
     }
