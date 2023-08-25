@@ -183,7 +183,7 @@ class DeleteControl @Autowired constructor(
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = workspace.creator,
+                    userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.name,
