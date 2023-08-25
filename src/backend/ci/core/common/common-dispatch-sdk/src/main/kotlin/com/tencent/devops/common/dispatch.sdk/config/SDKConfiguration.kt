@@ -44,6 +44,7 @@ import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
+import org.springframework.context.annotation.Primary
 
 @Configuration
 class SDKConfiguration {
@@ -85,6 +86,7 @@ class SDKConfiguration {
         DockerRoutingSdkService(redisOperation)
 
     @Bean
+    @Primary
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
         return MQEventDispatcher(rabbitTemplate)
     }

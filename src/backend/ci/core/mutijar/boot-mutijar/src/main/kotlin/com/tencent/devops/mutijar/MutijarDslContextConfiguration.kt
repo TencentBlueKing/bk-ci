@@ -74,7 +74,14 @@ class MutijarDslContextConfiguration {
         val packageName = declaringClass.`package`.name
         val serviceName = multiModelService.find { packageName.contains(it) }
             ?: throw NoSuchBeanDefinitionException("no jooq configuration")
-        val configurationName = serviceName.removePrefix(".").plus("JooqConfiguration")
+        val configurationName = if (packageName.contains(".misc")) {
+            val matchResult = miscServiceRegex.find(packageName)
+            "${matchResult?.groupValues?.get(1) ?: "default"}JooqConfiguration"
+        } else if (packageName.contains(".store")){
+            "storeJooqConfiguration"
+        }else {
+            serviceName.plus("JooqConfiguration")
+        }
 
         val configuration: org.jooq.Configuration = configurationMap[configurationName]
             ?: throw NoSuchBeanDefinitionException("no $configurationName")
@@ -84,5 +91,6 @@ class MutijarDslContextConfiguration {
 
     companion object {
         private val multiModelService = System.getProperty("devops.multi.from").split(",")
+        private val miscServiceRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)".toRegex()
     }
 }

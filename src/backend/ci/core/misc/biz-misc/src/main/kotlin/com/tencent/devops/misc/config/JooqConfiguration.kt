@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -55,6 +56,7 @@ import javax.sql.DataSource
  */
 @Configuration
 @Import(DataSourceConfig::class, DBBaseConfiguration::class)
+@ConditionalOnMissingClass("com.tencent.devops.mutijar.MutijarDslContextConfiguration")
 @AutoConfigureAfter(DBBaseConfiguration::class)
 class JooqConfiguration {
 

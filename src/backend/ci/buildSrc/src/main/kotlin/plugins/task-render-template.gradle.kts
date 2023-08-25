@@ -45,6 +45,11 @@ tasks.register("replacePlaceholders") {
     }
 }
 
+tasks.register("deleteApplicationTemplate"){
+    val destDir = joinPath(projectDir.absolutePath, "src", "main", "resources")
+    deleteFiles(destDir)
+}
+
 fun deleteFiles(dir: String) {
     val destDirFile = File(dir)
     destDirFile.listFiles()?.forEach { file ->
