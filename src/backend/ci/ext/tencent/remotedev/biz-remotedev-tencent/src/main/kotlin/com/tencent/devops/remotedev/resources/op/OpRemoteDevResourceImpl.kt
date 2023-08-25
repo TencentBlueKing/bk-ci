@@ -182,7 +182,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         zoneId: String?,
         machineType: String?,
-        status: Int?
+        status: Int?,
+        page: Int,
+        pageSize: Int
     ): Result<List<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
 
@@ -191,8 +193,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
                 (machineType.isNullOrEmpty() || it.machineType == machineType) &&
                 (status == null || it.status == status)
         }
-
-        return Result(filteredResources.map { JsonUtil.toMap(it) })
+        val start = (page - 1) * pageSize
+        val end = (start + pageSize).coerceAtMost(filteredResources.size)
+        return if (start >= filteredResources.size) {
+            Result(emptyList())
+        } else {
+            Result(filteredResources.subList(start, end).map { JsonUtil.toMap(it) })
+        }
     }
 
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
