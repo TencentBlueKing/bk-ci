@@ -48,7 +48,8 @@ import com.tencent.devops.process.yaml.modelCreate.pojo.RdsDispatchInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
 import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -153,9 +154,10 @@ class TXModelContainer @Autowired(required = false) constructor(
                 else -> null
             },
             steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout,
+            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_TIME_OUT),
             env = null,
-            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
+            continueOnError = job.jobControlOption?.continueWhenFailed
+                .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
             } else null,
