@@ -30,15 +30,27 @@ package com.tencent.devops.misc.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.misc.api.OpProcessDbMigrateResource
-import com.tencent.devops.misc.service.process.ProcessDbMigrateService
+import com.tencent.devops.misc.service.process.ProcessDataMigrateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpProcessDbMigrateResourceImpl @Autowired constructor(
-    private val processDbMigrateService: ProcessDbMigrateService
+    private val processDataMigrateService: ProcessDataMigrateService
 ) : OpProcessDbMigrateResource {
 
-    override fun migrateProjectData(userId: String, projectId: String): Result<Boolean> {
-        return Result(processDbMigrateService.migrateProjectData(userId, projectId))
+    override fun migrateProjectData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean,
+        dataTag: String
+    ): Result<Boolean> {
+        return Result(
+            processDataMigrateService.migrateProjectData(
+                userId = userId,
+                projectId = projectId,
+                cancelFlag = cancelFlag,
+                dataTag = dataTag
+            )
+        )
     }
 }

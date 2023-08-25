@@ -73,7 +73,9 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRe
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -104,6 +106,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineWebhookQueueReco
 import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackHistoryRecord
 import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackRecord
 import com.tencent.devops.model.process.tables.records.TReportRecord
+import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.model.process.tables.records.TTemplateTransferHistoryRecord
 import org.jooq.DSLContext
@@ -111,7 +114,7 @@ import org.springframework.stereotype.Repository
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Repository
-class ProcessDbMigrateDao {
+class ProcessDataMigrateDao {
 
     fun getAuditResourceRecords(
         dslContext: DSLContext,
@@ -830,18 +833,18 @@ class ProcessDbMigrateDao {
         projectId: String,
         limit: Int,
         offset: Int
-    ): List<TTemplateRecord> {
+    ): List<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .orderBy(PIPELINE_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TTemplateRecord::class.java)
+                .limit(limit).offset(offset).fetchInto(TTemplatePipelineRecord::class.java)
         }
     }
 
     fun migrateTemplatePipelineData(
         migratingShardingDslContext: DSLContext,
-        templatePipelineRecords: List<TTemplateRecord>
+        templatePipelineRecords: List<TTemplatePipelineRecord>
     ) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val insertRecords = templatePipelineRecords.map { migratingShardingDslContext.newRecord(this, it) }
@@ -1018,17 +1021,17 @@ class ProcessDbMigrateDao {
         dslContext: DSLContext,
         projectId: String,
         buildIds: List<String>
-    ): List<TPipelineBuildRecordContainerRecord> {
+    ): List<TPipelineBuildRecordModelRecord> {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
-                .fetchInto(TPipelineBuildRecordContainerRecord::class.java)
+                .fetchInto(TPipelineBuildRecordModelRecord::class.java)
         }
     }
 
     fun migratePipelineBuildRecordModelData(
         migratingShardingDslContext: DSLContext,
-        buildRecordModelRecords: List<TPipelineBuildRecordContainerRecord>
+        buildRecordModelRecords: List<TPipelineBuildRecordModelRecord>
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             val insertRecords = buildRecordModelRecords.map { migratingShardingDslContext.newRecord(this, it) }
@@ -1062,17 +1065,17 @@ class ProcessDbMigrateDao {
         dslContext: DSLContext,
         projectId: String,
         buildIds: List<String>
-    ): List<TPipelineBuildRecordContainerRecord> {
+    ): List<TPipelineBuildRecordTaskRecord> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
-                .fetchInto(TPipelineBuildRecordContainerRecord::class.java)
+                .fetchInto(TPipelineBuildRecordTaskRecord::class.java)
         }
     }
 
     fun migratePipelineBuildRecordTaskData(
         migratingShardingDslContext: DSLContext,
-        buildRecordTaskRecords: List<TPipelineBuildRecordContainerRecord>
+        buildRecordTaskRecords: List<TPipelineBuildRecordTaskRecord>
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val insertRecords = buildRecordTaskRecords.map { migratingShardingDslContext.newRecord(this, it) }

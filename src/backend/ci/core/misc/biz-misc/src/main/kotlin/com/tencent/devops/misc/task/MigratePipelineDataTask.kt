@@ -4,7 +4,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.misc.dao.process.ProcessDbMigrateDao
+import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -35,7 +35,7 @@ class MigratePipelineDataTask constructor(
             val doneSignal = migratePipelineDataParam.doneSignal
             val dslContext = migratePipelineDataParam.dslContext
             val migratingShardingDslContext = migratePipelineDataParam.migratingShardingDslContext
-            val processDbMigrateDao = migratePipelineDataParam.processDbMigrateDao
+            val processDbMigrateDao = migratePipelineDataParam.processDataMigrateDao
             // 1、获取是否允许执行的信号量
             semaphore.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
@@ -51,7 +51,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.2、迁移构建相关表数据
                 var offset = 0
@@ -82,7 +82,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.4、迁移T_PIPELINE_BUILD_TASK表数据
                 migratePipelineBuildTaskData(
@@ -90,7 +90,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.5、迁移T_PIPELINE_FAVOR表数据
                 migratePipelineFavorData(
@@ -98,7 +98,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.6、迁移T_PIPELINE_BUILD_SUMMARY表数据
                 migratePipelineBuildSummaryData(
@@ -106,7 +106,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.7、迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
@@ -114,7 +114,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.8、迁移T_PIPELINE_LABEL_PIPELINE表数据
                 migratePipelineLabelPipelineData(
@@ -122,7 +122,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.9、迁移T_PIPELINE_MODEL_TASK表数据
                 migratePipelineModelTaskData(
@@ -130,7 +130,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.10、迁移T_PIPELINE_RESOURCE表数据
                 migratePipelineResourceData(
@@ -138,7 +138,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.11、迁移T_PIPELINE_RESOURCE_VERSION表数据
                 migratePipelineResourceVersionData(
@@ -146,7 +146,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.12、迁移T_PIPELINE_SETTING表数据
                 migratePipelineSettingData(
@@ -154,7 +154,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.13、迁移T_PIPELINE_SETTING_VERSION表数据
                 migratePipelineSettingVersionData(
@@ -162,7 +162,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.14、迁移T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL表数据
                 migratePipelineWebhookBuildLogDetailData(
@@ -170,7 +170,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.15、迁移T_PIPELINE_WEBHOOK_QUEUE表数据
                 migratePipelineWebhookQueueData(
@@ -178,7 +178,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.16、迁移T_REPORT表数据
                 migrateReportData(
@@ -186,7 +186,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 3.17、迁移T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO表数据
                 migrateBuildTemplateAcrossInfoData(
@@ -194,11 +194,13 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDbMigrateDao = processDbMigrateDao
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 4、业务逻辑成功执行完后计数器减1
                 doneSignal.countDown()
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] end..............")
+            } catch (ignored: Throwable) {
+                logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] run task fail", ignored)
             } finally {
                 // 5、业务逻辑执行完成后释放信号量
                 semaphore.release()
@@ -207,7 +209,7 @@ class MigratePipelineDataTask constructor(
 
     private fun migrateBuildLinkedData(
         buildHistoryRecords: List<TPipelineBuildHistoryRecord>,
-        processDbMigrateDao: ProcessDbMigrateDao,
+        processDataMigrateDao: ProcessDataMigrateDao,
         dslContext: DSLContext,
         projectId: String,
         migratingShardingDslContext: DSLContext
@@ -216,97 +218,97 @@ class MigratePipelineDataTask constructor(
         // 由于detail表的流水线模型字段可能比较大，故一次迁移3条记录
         ListUtils.partition(buildIds, SHORT_PAGE_SIZE).forEach { rids ->
             // 3.2.1、迁移T_PIPELINE_BUILD_DETAIL相关表数据
-            val buildDetailRecords = processDbMigrateDao.getPipelineBuildDetailRecords(
+            val buildDetailRecords = processDataMigrateDao.getPipelineBuildDetailRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildDetailRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildDetailData(
+                processDataMigrateDao.migratePipelineBuildDetailData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineBuildDetailRecords = buildDetailRecords
                 )
             }
             // 3.2.2、迁移T_PIPELINE_BUILD_VAR相关表数据
-            val buildVarRecords = processDbMigrateDao.getPipelineBuildVarRecords(
+            val buildVarRecords = processDataMigrateDao.getPipelineBuildVarRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildVarRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildVarData(
+                processDataMigrateDao.migratePipelineBuildVarData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineBuildVarRecords = buildVarRecords
                 )
             }
             // 3.2.3、迁移T_PIPELINE_PAUSE_VALUE相关表数据
-            val pipelinePauseValueRecords = processDbMigrateDao.getPipelinePauseValueRecords(
+            val pipelinePauseValueRecords = processDataMigrateDao.getPipelinePauseValueRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (pipelinePauseValueRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelinePauseValueData(
+                processDataMigrateDao.migratePipelinePauseValueData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelinePauseValueRecords = pipelinePauseValueRecords
                 )
             }
             // 3.2.4、迁移T_PIPELINE_WEBHOOK_BUILD_PARAMETER相关表数据
-            val webhookBuildParameterRecords = processDbMigrateDao.getPipelineWebhookBuildParameterRecords(
+            val webhookBuildParameterRecords = processDataMigrateDao.getPipelineWebhookBuildParameterRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (webhookBuildParameterRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineWebhookBuildParameterData(
+                processDataMigrateDao.migratePipelineWebhookBuildParameterData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     webhookBuildParameterRecords = webhookBuildParameterRecords
                 )
             }
             // 3.2.5、迁移T_PIPELINE_BUILD_RECORD_CONTAINER相关表数据
-            val buildRecordContainerRecords = processDbMigrateDao.getPipelineBuildRecordContainerRecords(
+            val buildRecordContainerRecords = processDataMigrateDao.getPipelineBuildRecordContainerRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildRecordContainerRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildRecordContainerData(
+                processDataMigrateDao.migratePipelineBuildRecordContainerData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     buildRecordContainerRecords = buildRecordContainerRecords
                 )
             }
             // 3.2.6、迁移T_PIPELINE_BUILD_RECORD_MODEL相关表数据
-            val buildRecordModelRecords = processDbMigrateDao.getPipelineBuildRecordModelRecords(
+            val buildRecordModelRecords = processDataMigrateDao.getPipelineBuildRecordModelRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildRecordModelRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildRecordModelData(
+                processDataMigrateDao.migratePipelineBuildRecordModelData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     buildRecordModelRecords = buildRecordModelRecords
                 )
             }
             // 3.2.7、迁移T_PIPELINE_BUILD_RECORD_STAGE相关表数据
-            val buildRecordStageRecords = processDbMigrateDao.getPipelineBuildRecordStageRecords(
+            val buildRecordStageRecords = processDataMigrateDao.getPipelineBuildRecordStageRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildRecordStageRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildRecordStageData(
+                processDataMigrateDao.migratePipelineBuildRecordStageData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     buildRecordStageRecords = buildRecordStageRecords
                 )
             }
             // 3.2.8、迁移T_PIPELINE_BUILD_RECORD_TASK相关表数据
-            val buildRecordTaskRecords = processDbMigrateDao.getPipelineBuildRecordTaskRecords(
+            val buildRecordTaskRecords = processDataMigrateDao.getPipelineBuildRecordTaskRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildIds = rids
             )
             if (buildRecordTaskRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildRecordTaskData(
+                processDataMigrateDao.migratePipelineBuildRecordTaskData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     buildRecordTaskRecords = buildRecordTaskRecords
                 )
@@ -319,11 +321,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val buildContainerRecords = processDbMigrateDao.getPipelineBuildContainerRecords(
+            val buildContainerRecords = processDataMigrateDao.getPipelineBuildContainerRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -331,7 +333,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (buildContainerRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildContainerData(
+                processDataMigrateDao.migratePipelineBuildContainerData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineBuildContainerRecords = buildContainerRecords
                 )
@@ -345,11 +347,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val buildStageRecords = processDbMigrateDao.getPipelineBuildStageRecords(
+            val buildStageRecords = processDataMigrateDao.getPipelineBuildStageRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -357,7 +359,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (buildStageRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildStageData(
+                processDataMigrateDao.migratePipelineBuildStageData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineBuildStageRecords = buildStageRecords
                 )
@@ -371,11 +373,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val buildTaskRecords = processDbMigrateDao.getPipelineBuildTaskRecords(
+            val buildTaskRecords = processDataMigrateDao.getPipelineBuildTaskRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -383,7 +385,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (buildTaskRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineBuildTaskData(
+                processDataMigrateDao.migratePipelineBuildTaskData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineBuildTaskRecords = buildTaskRecords
                 )
@@ -397,11 +399,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val pipelineFavorRecords = processDbMigrateDao.getPipelineFavorRecords(
+            val pipelineFavorRecords = processDataMigrateDao.getPipelineFavorRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -409,7 +411,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if(pipelineFavorRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineFavorData(migratingShardingDslContext, pipelineFavorRecords)
+                processDataMigrateDao.migratePipelineFavorData(migratingShardingDslContext, pipelineFavorRecords)
             }
             offset += LONG_PAGE_SIZE
         } while (pipelineFavorRecords.size == LONG_PAGE_SIZE)
@@ -420,15 +422,15 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
-        val buildSummaryRecord = processDbMigrateDao.getPipelineBuildSummaryRecord(
+        val buildSummaryRecord = processDataMigrateDao.getPipelineBuildSummaryRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
         if (buildSummaryRecord != null) {
-            processDbMigrateDao.migratePipelineBuildSummaryData(
+            processDataMigrateDao.migratePipelineBuildSummaryData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 buildSummaryRecord = buildSummaryRecord
             )
@@ -440,15 +442,15 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
-        val pipelineInfoRecord = processDbMigrateDao.getPipelineInfoRecord(
+        val pipelineInfoRecord = processDataMigrateDao.getPipelineInfoRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
         if (pipelineInfoRecord != null) {
-            processDbMigrateDao.migratePipelineInfoData(
+            processDataMigrateDao.migratePipelineInfoData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineInfoRecord = pipelineInfoRecord
             )
@@ -460,11 +462,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val pipelineLabelPipelineRecords = processDbMigrateDao.getPipelineLabelPipelineRecords(
+            val pipelineLabelPipelineRecords = processDataMigrateDao.getPipelineLabelPipelineRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -472,7 +474,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (pipelineLabelPipelineRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineLabelPipelineData(
+                processDataMigrateDao.migratePipelineLabelPipelineData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineLabelPipelineRecords = pipelineLabelPipelineRecords
                 )
@@ -486,15 +488,15 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
-        val pipelineModelTaskRecords = processDbMigrateDao.getPipelineModelTaskRecords(
+        val pipelineModelTaskRecords = processDataMigrateDao.getPipelineModelTaskRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
         if (pipelineModelTaskRecords.isNotEmpty()) {
-            processDbMigrateDao.migratePipelineModelTaskData(
+            processDataMigrateDao.migratePipelineModelTaskData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineModelTaskRecords = pipelineModelTaskRecords
             )
@@ -506,15 +508,15 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
-        val pipelineResourceRecord = processDbMigrateDao.getPipelineResourceRecord(
+        val pipelineResourceRecord = processDataMigrateDao.getPipelineResourceRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
         if (pipelineResourceRecord != null) {
-            processDbMigrateDao.migratePipelineResourceData(
+            processDataMigrateDao.migratePipelineResourceData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineResourceRecord = pipelineResourceRecord
             )
@@ -526,11 +528,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val pipelineResourceVersionRecords = processDbMigrateDao.getPipelineResourceVersionRecords(
+            val pipelineResourceVersionRecords = processDataMigrateDao.getPipelineResourceVersionRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -538,7 +540,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (pipelineResourceVersionRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineResourceVersionData(
+                processDataMigrateDao.migratePipelineResourceVersionData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineResourceVersionRecords = pipelineResourceVersionRecords
                 )
@@ -552,15 +554,15 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
-        val pipelineSettingRecord = processDbMigrateDao.getPipelineSettingRecord(
+        val pipelineSettingRecord = processDataMigrateDao.getPipelineSettingRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
         if (pipelineSettingRecord != null) {
-            processDbMigrateDao.migratePipelineSettingData(
+            processDataMigrateDao.migratePipelineSettingData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineSettingRecord = pipelineSettingRecord
             )
@@ -572,11 +574,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val pipelineSettingVersionRecords = processDbMigrateDao.getPipelineSettingVersionRecords(
+            val pipelineSettingVersionRecords = processDataMigrateDao.getPipelineSettingVersionRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -584,7 +586,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (pipelineSettingVersionRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineSettingVersionData(
+                processDataMigrateDao.migratePipelineSettingVersionData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineSettingVersionRecords = pipelineSettingVersionRecords
                 )
@@ -598,11 +600,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val webhookBuildLogDetailRecords = processDbMigrateDao.getPipelineWebhookBuildLogDetailRecords(
+            val webhookBuildLogDetailRecords = processDataMigrateDao.getPipelineWebhookBuildLogDetailRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -610,7 +612,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (webhookBuildLogDetailRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineWebhookBuildLogDetailData(
+                processDataMigrateDao.migratePipelineWebhookBuildLogDetailData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     webhookBuildLogDetailRecords = webhookBuildLogDetailRecords
                 )
@@ -624,11 +626,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val webhookQueueRecords = processDbMigrateDao.getPipelineWebhookQueueRecords(
+            val webhookQueueRecords = processDataMigrateDao.getPipelineWebhookQueueRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -636,7 +638,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (webhookQueueRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineWebhookQueueData(
+                processDataMigrateDao.migratePipelineWebhookQueueData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     webhookQueueRecords = webhookQueueRecords
                 )
@@ -650,11 +652,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val reportRecords = processDbMigrateDao.getReportRecords(
+            val reportRecords = processDataMigrateDao.getReportRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -662,7 +664,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (reportRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateReportData(
+                processDataMigrateDao.migrateReportData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     reportRecords = reportRecords
                 )
@@ -676,11 +678,11 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDbMigrateDao: ProcessDbMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         var offset = 0
         do {
-            val buildTemplateAcrossInfoRecords = processDbMigrateDao.getBuildTemplateAcrossInfoRecords(
+            val buildTemplateAcrossInfoRecords = processDataMigrateDao.getBuildTemplateAcrossInfoRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -688,7 +690,7 @@ class MigratePipelineDataTask constructor(
                 offset = offset
             )
             if (buildTemplateAcrossInfoRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateBuildTemplateAcrossInfoData(
+                processDataMigrateDao.migrateBuildTemplateAcrossInfoData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     buildTemplateAcrossInfoRecords = buildTemplateAcrossInfoRecords
                 )

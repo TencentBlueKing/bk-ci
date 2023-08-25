@@ -9,6 +9,7 @@ object KubernetesUtils {
     private val chartName = System.getenv("CHART_NAME")
     private val multiCluster = BooleanUtils.toBoolean(System.getenv("MULTI_CLUSTER"))
     private val defaultNamespace = System.getenv("DEFAULT_NAMESPACE")
+    private val msName = System.getenv("MS_NAME")
 
     /**
      * 服务是否在容器中
@@ -30,6 +31,8 @@ object KubernetesUtils {
             "$releaseName-$chartName-$serviceName.$namespace"
         }
     }
+
+    fun getMsName() = msName
 
     /**
      * 是否开启多集群模式

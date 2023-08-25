@@ -39,13 +39,16 @@ import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.dao.process.ProcessDbMigrateDao
+import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
+import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.service.project.DataSourceService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -56,19 +59,20 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import javax.annotation.Resource
 
-@Suppress("TooManyFunctions", "LongMethod", "LargeClass")
+@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList")
 @Service
-class ProcessDbMigrateService @Autowired constructor(
+class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
     @Resource(name = MIGRATING_SHARDING_DSL_CONTEXT) private val migratingShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
-    private val processDbMigrateDao: ProcessDbMigrateDao,
+    private val processDataMigrateDao: ProcessDataMigrateDao,
+    private val processDataDeleteDao: ProcessDataDeleteDao,
     private val dataSourceService: DataSourceService,
     private val redisOperation: RedisOperation
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProcessDbMigrateService::class.java)
+        private val logger = LoggerFactory.getLogger(ProcessDataMigrateService::class.java)
         private const val DEFAULT_THREAD_NUM = 10
         private const val DEFAULT_PAGE_SIZE = 20
         private const val DEFAULT_MIGRATION_TIMEOUT = 20L
@@ -84,8 +88,10 @@ class ProcessDbMigrateService @Autowired constructor(
         userId: String,
         projectId: String,
         cancelFlag: Boolean = false,
-        dataTag: String? = null
+        dataTag: String
     ): Boolean {
+        // 锁定项目,不允许用户发起新构建等操作
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
         // 为项目分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
         // 开启异步任务迁移项目的数据
@@ -133,7 +139,7 @@ class ProcessDbMigrateService @Autowired constructor(
                                 dslContext = dslContext,
                                 migratingShardingDslContext = migratingShardingDslContext,
                                 processDao = processDao,
-                                processDbMigrateDao = processDbMigrateDao
+                                processDataMigrateDao = processDataMigrateDao
                             )
                         )
                     )
@@ -142,17 +148,80 @@ class ProcessDbMigrateService @Autowired constructor(
             try {
                 // 迁移与项目直接相关的数据
                 doMigrationBus(projectId)
+            } catch (ignored: Throwable) {
+                logger.warn("migrateProjectData doMigrationBus fail|params:[$userId|$projectId]", ignored)
+                // 删除迁移库的数据
+                migratingShardingDslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    deleteProjectDirectlyRelData(context, projectId)
+                }
+                return@submit
+            }
+            try {
                 // 等待所有任务执行完成
                 doneSignal.await(migrationTimeout, TimeUnit.HOURS)
                 // 执行迁移完成后的逻辑
                 doAfterMigrationBus(userId, projectId, routingRuleMap)
             } catch (ignored: Throwable) {
                 logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=${ignored.message}", ignored)
-                // todo 删除迁移库的数据
+                // 删除迁移库的数据
+                migratingShardingDslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    deleteAllProjectData(context, projectId)
+                }
+                return@submit
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
+    }
+
+    private fun deleteAllProjectData(context: DSLContext, projectId: String) {
+        deleteProjectDirectlyRelData(context, projectId)
+        processDataDeleteDao.deletePipelineBuildContainer(context, projectId)
+        processDataDeleteDao.deletePipelineBuildDetail(context, projectId)
+        processDataDeleteDao.deletePipelineBuildVar(context, projectId)
+        processDataDeleteDao.deletePipelinePauseValue(context, projectId)
+        processDataDeleteDao.deletePipelineWebhookBuildParameter(context, projectId)
+        processDataDeleteDao.deletePipelineBuildRecordContainer(context, projectId)
+        processDataDeleteDao.deletePipelineBuildRecordModel(context, projectId)
+        processDataDeleteDao.deletePipelineBuildRecordStage(context, projectId)
+        processDataDeleteDao.deletePipelineBuildRecordTask(context, projectId)
+        processDataDeleteDao.deletePipelineBuildHistory(context, projectId)
+        processDataDeleteDao.deletePipelineBuildStage(context, projectId)
+        processDataDeleteDao.deletePipelineBuildTask(context, projectId)
+        processDataDeleteDao.deletePipelineFavor(context, projectId)
+        processDataDeleteDao.deletePipelineBuildSummary(context, projectId)
+        processDataDeleteDao.deletePipelineInfo(context, projectId)
+        processDataDeleteDao.deletePipelineLabelPipeline(context, projectId)
+        processDataDeleteDao.deletePipelineModelTask(context, projectId)
+        processDataDeleteDao.deletePipelineResource(context, projectId)
+        processDataDeleteDao.deletePipelineResourceVersion(context, projectId)
+        processDataDeleteDao.deletePipelineSetting(context, projectId)
+        processDataDeleteDao.deletePipelineSettingVersion(context, projectId)
+        processDataDeleteDao.deletePipelineWebhookBuildLogDetail(context, projectId)
+        processDataDeleteDao.deletePipelineWebhookQueue(context, projectId)
+        processDataDeleteDao.deleteReport(context, projectId)
+        processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(context, projectId)
+    }
+
+    private fun deleteProjectDirectlyRelData(context: DSLContext, projectId: String) {
+        processDataDeleteDao.deleteAuditResource(context, projectId)
+        processDataDeleteDao.deletePipelineGroup(context, projectId)
+        processDataDeleteDao.deletePipelineJobMutexGroup(context, projectId)
+        processDataDeleteDao.deletePipelineLabel(context, projectId)
+        processDataDeleteDao.deletePipelineTransferHistory(context, projectId)
+        processDataDeleteDao.deletePipelineView(context, projectId)
+        processDataDeleteDao.deletePipelineViewUserLastView(context, projectId)
+        processDataDeleteDao.deletePipelineViewUserSettings(context, projectId)
+        processDataDeleteDao.deleteProjectPipelineCallback(context, projectId)
+        processDataDeleteDao.deleteProjectPipelineCallbackHistory(context, projectId)
+        processDataDeleteDao.deleteTemplate(context, projectId)
+        processDataDeleteDao.deleteTemplatePipeline(context, projectId)
+        processDataDeleteDao.deleteTemplateTransferHistory(context, projectId)
+        processDataDeleteDao.deletePipelineViewGroup(context, projectId)
+        processDataDeleteDao.deletePipelineViewTop(context, projectId)
+        processDataDeleteDao.deletePipelineRecentUse(context, projectId)
     }
 
     private fun doMigrationBus(projectId: String) {
@@ -206,9 +275,17 @@ class ProcessDbMigrateService @Autowired constructor(
                     defaultMessage = updateResult.message
                 )
             }
-        }
+            // todo 判断process微服务所有服务器的缓存是否已经全部更新完成
 
-        // todo 异步删除原库的数据
+
+        }
+        // 解锁项目,允许用户发起新构建等操作
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        // 删除原库的数据
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            deleteAllProjectData(context, projectId)
+        }
         // todo 发送迁移成功消息
     }
 
@@ -246,14 +323,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateAuditResourceData(projectId: String) {
         var offset = 0
         do {
-            val auditResourceRecords = processDbMigrateDao.getAuditResourceRecords(
+            val auditResourceRecords = processDataMigrateDao.getAuditResourceRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if(auditResourceRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
+                processDataMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
             }
             offset += LONG_PAGE_SIZE
         } while (auditResourceRecords.size == LONG_PAGE_SIZE)
@@ -262,40 +339,40 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineGroupData(projectId: String) {
         var offset = 0
         do {
-            val pipelineGroupRecords = processDbMigrateDao.getPipelineGroupRecords(
+            val pipelineGroupRecords = processDataMigrateDao.getPipelineGroupRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if(pipelineGroupRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineGroupData(migratingShardingDslContext, pipelineGroupRecords)
+                processDataMigrateDao.migratePipelineGroupData(migratingShardingDslContext, pipelineGroupRecords)
             }
             offset += LONG_PAGE_SIZE
         } while (pipelineGroupRecords.size == LONG_PAGE_SIZE)
     }
 
     private fun migratePipelineJobMutexGroupData(projectId: String) {
-        val jobMutexGroupRecords = processDbMigrateDao.getPipelineJobMutexGroupRecords(
+        val jobMutexGroupRecords = processDataMigrateDao.getPipelineJobMutexGroupRecords(
             dslContext = dslContext,
             projectId = projectId
         )
         if(jobMutexGroupRecords.isNotEmpty()) {
-            processDbMigrateDao.migratePipelineJobMutexGroupData(migratingShardingDslContext, jobMutexGroupRecords)
+            processDataMigrateDao.migratePipelineJobMutexGroupData(migratingShardingDslContext, jobMutexGroupRecords)
         }
     }
 
     private fun migratePipelineLabelData(projectId: String) {
         var offset = 0
         do {
-            val pipelineLabelRecords = processDbMigrateDao.getPipelineLabelRecords(
+            val pipelineLabelRecords = processDataMigrateDao.getPipelineLabelRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineLabelRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineLabelData(migratingShardingDslContext, pipelineLabelRecords)
+                processDataMigrateDao.migratePipelineLabelData(migratingShardingDslContext, pipelineLabelRecords)
             }
             offset += LONG_PAGE_SIZE
         } while (pipelineLabelRecords.size == LONG_PAGE_SIZE)
@@ -304,14 +381,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineTransferHistoryData(projectId: String) {
         var offset = 0
         do {
-            val pipelineTransferHistoryRecords = processDbMigrateDao.getPipelineTransferHistoryRecords(
+            val pipelineTransferHistoryRecords = processDataMigrateDao.getPipelineTransferHistoryRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineTransferHistoryRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineTransferHistoryData(
+                processDataMigrateDao.migratePipelineTransferHistoryData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineTransferHistoryRecords = pipelineTransferHistoryRecords
                 )
@@ -323,14 +400,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineViewData(projectId: String) {
         var offset = 0
         do {
-            val pipelineViewRecords = processDbMigrateDao.getPipelineViewRecords(
+            val pipelineViewRecords = processDataMigrateDao.getPipelineViewRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineViewRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineViewData(
+                processDataMigrateDao.migratePipelineViewData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineViewRecords = pipelineViewRecords
                 )
@@ -342,14 +419,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineViewUserLastViewData(projectId: String) {
         var offset = 0
         do {
-            val pipelineViewUserLastViewRecords = processDbMigrateDao.getPipelineViewUserLastViewRecords(
+            val pipelineViewUserLastViewRecords = processDataMigrateDao.getPipelineViewUserLastViewRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineViewUserLastViewRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineViewUserLastViewData(
+                processDataMigrateDao.migratePipelineViewUserLastViewData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineViewUserLastViewRecords = pipelineViewUserLastViewRecords
                 )
@@ -361,14 +438,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineViewUserSettingsData(projectId: String) {
         var offset = 0
         do {
-            val pipelineViewUserSettingsRecords = processDbMigrateDao.getPipelineViewUserSettingsRecords(
+            val pipelineViewUserSettingsRecords = processDataMigrateDao.getPipelineViewUserSettingsRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineViewUserSettingsRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineViewUserSettingsData(
+                processDataMigrateDao.migratePipelineViewUserSettingsData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineViewUserSettingsRecords = pipelineViewUserSettingsRecords
                 )
@@ -380,14 +457,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateProjectPipelineCallbackData(projectId: String) {
         var offset = 0
         do {
-            val projectPipelineCallbackRecords = processDbMigrateDao.getProjectPipelineCallbackRecords(
+            val projectPipelineCallbackRecords = processDataMigrateDao.getProjectPipelineCallbackRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = MEDIUM_PAGE_SIZE,
                 offset = offset
             )
             if (projectPipelineCallbackRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateProjectPipelineCallbackData(
+                processDataMigrateDao.migrateProjectPipelineCallbackData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     projectPipelineCallbackRecords = projectPipelineCallbackRecords
                 )
@@ -399,14 +476,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateProjectPipelineCallbackHistoryData(projectId: String) {
         var offset = 0
         do {
-            val pipelineCallbackHistoryRecords = processDbMigrateDao.getProjectPipelineCallbackHistoryRecords(
+            val pipelineCallbackHistoryRecords = processDataMigrateDao.getProjectPipelineCallbackHistoryRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = MEDIUM_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineCallbackHistoryRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateProjectPipelineCallbackHistoryData(
+                processDataMigrateDao.migrateProjectPipelineCallbackHistoryData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineCallbackHistoryRecords = pipelineCallbackHistoryRecords
                 )
@@ -418,14 +495,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateTemplateData(projectId: String) {
         var offset = 0
         do {
-            val templateRecords = processDbMigrateDao.getTemplateRecords(
+            val templateRecords = processDataMigrateDao.getTemplateRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = SHORT_PAGE_SIZE,
                 offset = offset
             )
             if (templateRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateTemplateData(
+                processDataMigrateDao.migrateTemplateData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     templateRecords = templateRecords
                 )
@@ -437,14 +514,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateTemplatePipelineData(projectId: String) {
         var offset = 0
         do {
-            val templatePipelineRecords = processDbMigrateDao.getTemplatePipelineRecords(
+            val templatePipelineRecords = processDataMigrateDao.getTemplatePipelineRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = SHORT_PAGE_SIZE,
                 offset = offset
             )
             if (templatePipelineRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateTemplatePipelineData(
+                processDataMigrateDao.migrateTemplatePipelineData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     templatePipelineRecords = templatePipelineRecords
                 )
@@ -456,14 +533,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migrateTemplateTransferHistoryData(projectId: String) {
         var offset = 0
         do {
-            val templateTransferHistoryRecords = processDbMigrateDao.getTemplateTransferHistoryRecords(
+            val templateTransferHistoryRecords = processDataMigrateDao.getTemplateTransferHistoryRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (templateTransferHistoryRecords.isNotEmpty()) {
-                processDbMigrateDao.migrateTemplateTransferHistoryData(
+                processDataMigrateDao.migrateTemplateTransferHistoryData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     templateTransferHistoryRecords = templateTransferHistoryRecords
                 )
@@ -475,14 +552,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineViewGroupData(projectId: String) {
         var offset = 0
         do {
-            val pipelineViewGroupRecords = processDbMigrateDao.getPipelineViewGroupRecords(
+            val pipelineViewGroupRecords = processDataMigrateDao.getPipelineViewGroupRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineViewGroupRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineViewGroupData(
+                processDataMigrateDao.migratePipelineViewGroupData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineViewGroupRecords = pipelineViewGroupRecords
                 )
@@ -494,14 +571,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineViewTopData(projectId: String) {
         var offset = 0
         do {
-            val pipelineViewTopRecords = processDbMigrateDao.getPipelineViewTopRecords(
+            val pipelineViewTopRecords = processDataMigrateDao.getPipelineViewTopRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineViewTopRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineViewTopData(
+                processDataMigrateDao.migratePipelineViewTopData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineViewTopRecords = pipelineViewTopRecords
                 )
@@ -513,14 +590,14 @@ class ProcessDbMigrateService @Autowired constructor(
     private fun migratePipelineRecentUseData(projectId: String) {
         var offset = 0
         do {
-            val pipelineRecentUseRecords = processDbMigrateDao.getPipelineRecentUseRecords(
+            val pipelineRecentUseRecords = processDataMigrateDao.getPipelineRecentUseRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
             if (pipelineRecentUseRecords.isNotEmpty()) {
-                processDbMigrateDao.migratePipelineRecentUseData(
+                processDataMigrateDao.migratePipelineRecentUseData(
                     migratingShardingDslContext = migratingShardingDslContext,
                     pipelineRecentUseRecords = pipelineRecentUseRecords
                 )

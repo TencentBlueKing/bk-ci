@@ -38,6 +38,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROCESS_DB_MIGRATE"], description = "OP-process数据库迁移")
@@ -55,6 +56,12 @@ interface OpProcessDbMigrateResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("取消正在运行构建标识", required = true)
+        @QueryParam("cancelFlag")
+        cancelFlag: Boolean = false,
+        @ApiParam("数据标签", required = true)
+        @QueryParam("dataTag")
+        dataTag: String
     ): Result<Boolean>
 }
