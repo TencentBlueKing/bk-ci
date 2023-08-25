@@ -185,7 +185,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         status: Int?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<Map<String, Any>>> {
+    ): Result<Page<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
@@ -197,9 +197,18 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
         return if (start >= filteredResources.size) {
-            Result(emptyList())
+            Result(
+                Page(
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
+                    records = emptyList()
+            ))
         } else {
-            Result(filteredResources.subList(start, end).map { JsonUtil.toMap(it) })
+            Result(
+                Page(
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
+                    records = filteredResources.subList(start, end).map { JsonUtil.toMap(it) }
+            )
+            )
         }
     }
 

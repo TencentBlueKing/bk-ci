@@ -361,7 +361,7 @@ interface OpRemoteDevResource {
         @ApiParam("每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<Map<String, Any>>>
+    ): Result<Page<Map<String, Any>>>
 
     @ApiOperation("获取CGS资源池的区域和机型列表")
     @GET
@@ -371,8 +371,6 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Page<ProjectWorkspace>>
-
-
 
     @ApiOperation("转移工作空间detail数据到db")
     @GET
