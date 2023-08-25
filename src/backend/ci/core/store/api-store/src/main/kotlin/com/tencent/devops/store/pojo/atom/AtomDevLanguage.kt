@@ -33,5 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("研发商店-工作台-插件语言")
 data class AtomDevLanguage(
     @ApiModelProperty("语言")
-    val language: String
+    val language: String,
+    @ApiModelProperty("名称")
+    val name: String
 )
