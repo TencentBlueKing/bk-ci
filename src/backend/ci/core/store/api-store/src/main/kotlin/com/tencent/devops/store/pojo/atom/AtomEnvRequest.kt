@@ -43,13 +43,13 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件开发语言", required = false)
     val language: String?,
     @ApiModelProperty("支持插件开发语言的最低版本", required = false)
-    val minVersion: String?,
+    val minVersion: String? = null,
     @ApiModelProperty("插件执行入口", required = false)
-    val target: String?,
+    val target: String? = "",
     @ApiModelProperty("插件SHA签名串", required = false)
-    var shaContent: String?,
+    var shaContent: String? = null,
     @ApiModelProperty("插件执行前置命令", required = false)
-    var preCmd: String?,
+    var preCmd: String? = null,
     @ApiModelProperty("插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
     @ApiModelProperty("支持的操作系统名称", required = false)
