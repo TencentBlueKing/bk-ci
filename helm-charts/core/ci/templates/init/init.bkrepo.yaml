@@ -101,7 +101,7 @@ spec:
                 done
                 echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done
-              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d "{\"showProjectList\": true,\"showNav\": true,\"status\": \"ok\",\"deleted\": false,\"iframeUrl\": \"http://{{ .Values.config.bkRepoHost }}/ui/\"}" "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "http://{{ .Values.config.bkRepoHost }}/ui/"}" "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo
       restartPolicy: Never
 {{- end -}}
 {{- end -}}
