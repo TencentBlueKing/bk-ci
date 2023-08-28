@@ -68,7 +68,7 @@ data class GitNotices(
 ) : Notices {
 
     constructor(subscription: Subscription, ifField: String?) : this(
-        type = subscription.types.map { PacNotices.toNotifyType(it) }.toMutableList().also {
+        type = subscription.types.map { PacNotices.toNotifyType(it) }.toMutableList().apply { sort() }.also {
             if (subscription.wechatGroupFlag) it.add(NotifyType.RTX_GROUP.yamlText)
         }.first(),
         receivers = subscription.users.split(",").ifEmpty { null }?.toSet(),
@@ -124,11 +124,11 @@ data class PacNotices(
 ) : Notices {
 
     constructor(subscription: Subscription, ifField: String?) : this(
-        type = subscription.types.map { toNotifyType(it) }.toMutableList().also {
+        type = subscription.types.map { toNotifyType(it) }.toMutableList().apply { sort() }.also {
             if (subscription.wechatGroupFlag) it.add(NotifyType.RTX_GROUP.yamlText)
         },
         receivers = subscription.users.ifBlank { null }?.split(",")?.toSet()?.toList(),
-        groups = subscription.groups.ifEmpty { null }?.toList(),
+        groups = subscription.groups.ifEmpty { null }?.sorted(),
         content = subscription.content.ifEmpty { null },
         ifField = ifField,
         chatId = subscription.wechatGroup.ifBlank { null }?.split(",")?.toSet()?.toList(),

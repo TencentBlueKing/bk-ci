@@ -368,7 +368,7 @@ class GithubPushActionGit(
         userId: String,
         pipelineId: String
     ): Boolean {
-        if (triggerOn.schedules == null) {
+        if (triggerOn.schedules.isNullOrEmpty()) {
             // 新流水线没有定时任务就没注册过定时任务
             if (pipelineId.isBlank()) {
                 return false
@@ -379,7 +379,7 @@ class GithubPushActionGit(
                 return false
             }
         } else {
-            if (triggerOn.schedules?.cron.isNullOrBlank()) {
+            if (triggerOn.schedules?.firstOrNull()?.cron.isNullOrBlank()) {
                 logger.info("The schedules cron is invalid($eventBranch)")
                 return false
             }

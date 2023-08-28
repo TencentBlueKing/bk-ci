@@ -42,6 +42,8 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.image.Pool
@@ -82,22 +84,54 @@ class DispatchTransfer @Autowired(required = false) constructor(
         job: Job,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): DispatchType {
+        // linux构建机
+        dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return it }
         // 第三方构建机
         dispatcherThirdPartyAgent(job, buildTemplateAcrossInfo)?.let { return it }
         // windows构建机
         dispatcherWindows(job)?.let { return it }
         // macos构建机
         dispatcherMacos(job)?.let { return it }
-        // linux构建机
-        dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return it }
         // 转换失败
         throw CustomException(
-            Response.Status.NOT_FOUND,
+            Response.Status.BAD_REQUEST,
             MessageUtil.getMessageByLocale(
                 messageCode = CommonMessageCode.PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
+    }
+
+    fun makeRunsOn(
+        job: VMBuildContainer
+    ): RunsOn? {
+        val dispatchType = job.dispatchType
+        if (dispatchType == null) {
+            logger.warn("job.dispatchType can not be null")
+            return null
+        }
+        val runsOn = dispatch2RunsOn(dispatchType) ?: RunsOn(
+            selfHosted = null,
+            poolName = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
+            ),
+            container = null,
+            agentSelector = null
+        )
+        if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+            runsOn.agentSelector = when (job.baseOS) {
+                VMBaseOS.WINDOWS -> listOf("windows")
+                VMBaseOS.LINUX -> listOf("linux")
+                VMBaseOS.MACOS -> listOf("macos")
+                else -> null
+            }
+        }
+        runsOn.needs = job.buildEnv?.ifEmpty { null }
+        runsOn.queueTimeoutMinutes = job.jobControlOption?.prepareTimeout?.nullIfDefault(DEFAULT_JOB_PREPARE_TIMEOUT)
+        if (JSONObject(runsOn).similar(defaultRunsOn)) {
+            return null
+        }
+        return runsOn
     }
 
     fun dispatcherLinux(
@@ -183,38 +217,6 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 imagePullPolicy = info.imagePullPolicy
             )
         } else null
-    }
-
-    fun makeRunsOn(
-        job: VMBuildContainer
-    ): RunsOn? {
-        val dispatchType = job.dispatchType
-        if (dispatchType == null) {
-            logger.warn("job.dispatchType can not be null")
-            return null
-        }
-        val runsOn = dispatch2RunsOn(dispatchType) ?: RunsOn(
-            selfHosted = null,
-            poolName = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
-            ),
-            container = null,
-            agentSelector = null
-        )
-        if (dispatchType is ThirdPartyAgentEnvDispatchType) {
-            runsOn.agentSelector = when (job.baseOS) {
-                VMBaseOS.WINDOWS -> listOf("windows")
-                VMBaseOS.LINUX -> listOf("linux")
-                VMBaseOS.MACOS -> listOf("macos")
-                else -> null
-            }
-        }
-        runsOn.needs = job.buildEnv
-        runsOn.queueTimeoutMinutes = job.jobControlOption?.prepareTimeout
-        if (JSONObject(runsOn).similar(defaultRunsOn)) {
-            return null
-        }
-        return runsOn
     }
 
     fun dispatch2RunsOn(dispatcher: DispatchType) =

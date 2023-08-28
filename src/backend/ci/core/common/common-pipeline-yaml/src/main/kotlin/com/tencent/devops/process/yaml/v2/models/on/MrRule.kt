@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
+    val enable: Boolean? = true,
     @ApiModelProperty(name = "source-branches")
     @JsonProperty("source-branches")
     val sourceBranches: List<String>? = null,
@@ -72,5 +73,9 @@ data class MrRule(
 
     val webhookQueue: Boolean? = null,
 
-    val enableCheck: Boolean? = null
+    val enableCheck: Boolean? = null,
+
+    @ApiModelProperty(name = "path-filter-type")
+    @JsonProperty("path-filter-type")
+    val pathFilterType: String? = null
 )

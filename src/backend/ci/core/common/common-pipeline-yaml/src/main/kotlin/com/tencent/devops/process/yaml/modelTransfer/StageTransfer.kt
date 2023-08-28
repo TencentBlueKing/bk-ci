@@ -81,7 +81,7 @@ class StageTransfer @Autowired(required = false) constructor(
     fun yaml2TriggerStage(yamlInput: YamlTransferInput, stageIndex: Int): Stage {
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
-        modelElement.yaml2Triggers(yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType), triggerElementList)
+        modelElement.yaml2Triggers(yamlInput, triggerElementList)
 
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -186,11 +186,12 @@ class StageTransfer @Autowired(required = false) constructor(
     }
 
     fun model2YamlStage(
-        stage: Stage
+        stage: Stage,
+        projectId: String
     ): PreStage {
         val jobs = stage.containers.associate { job ->
 
-            val steps = modelElement.model2YamlSteps(job)
+            val steps = modelElement.model2YamlSteps(job, projectId)
 
             (job.jobId ?: "job_${job.id}") to when (job.getClassType()) {
                 NormalContainer.classType -> modelContainer.addYamlNormalContainer(job as NormalContainer, steps)
@@ -316,7 +317,7 @@ class StageTransfer @Autowired(required = false) constructor(
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
-                    required = false,
+                    required = variable.allowModifyAtStartup ?: true,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = variable.value ?: "",
                     options = null,
@@ -327,7 +328,8 @@ class StageTransfer @Autowired(required = false) constructor(
                     containerType = null,
                     glob = null,
                     properties = null,
-                    readOnly = variable.readonly
+                    readOnly = variable.readonly,
+                    valueNotEmpty = variable.valueNotEmpty
                 )
             )
         }

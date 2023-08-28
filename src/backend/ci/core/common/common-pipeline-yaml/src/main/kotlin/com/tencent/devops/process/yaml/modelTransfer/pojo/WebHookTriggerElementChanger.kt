@@ -30,6 +30,9 @@ package com.tencent.devops.process.yaml.modelTransfer.pojo
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
@@ -95,7 +98,9 @@ data class WebHookTriggerElementChanger(
     @ApiModelProperty("第三方应用地址")
     val thirdUrl: String? = null,
     @ApiModelProperty("第三方应用鉴权token")
-    val thirdSecretToken: String? = null
+    val thirdSecretToken: String? = null,
+    @ApiModelProperty("是否启用插件")
+    val enable: Boolean
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         name = data.name,
@@ -127,7 +132,8 @@ data class WebHookTriggerElementChanger(
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
         thirdUrl = data.thirdUrl,
-        thirdSecretToken = data.thirdSecretToken
+        thirdSecretToken = data.thirdSecretToken,
+        enable = data.isElementEnable()
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
@@ -158,7 +164,8 @@ data class WebHookTriggerElementChanger(
         includeIssueAction = data.data.input.includeIssueAction,
         includeMrAction = data.data.input.includeMrAction,
         includePushAction = data.data.input.includePushAction,
-        enableThirdFilter = data.data.input.enableThirdFilter
+        enableThirdFilter = data.data.input.enableThirdFilter,
+        enable = data.isElementEnable()
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
@@ -188,6 +195,53 @@ data class WebHookTriggerElementChanger(
         includeIssueAction = data.includeIssueAction,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enableThirdFilter = data.enableThirdFilter
+        enableThirdFilter = data.enableThirdFilter,
+        enable = data.isElementEnable()
+    )
+
+    constructor(data: CodeSVNWebHookTriggerElement) : this(
+        name = data.name,
+        repositoryHashId = data.repositoryHashId,
+        pathFilterType = data.pathFilterType,
+        includePaths = data.relativePath,
+        excludePaths = data.excludePaths,
+        includeUsers = data.includeUsers,
+        excludeUsers = data.excludeUsers,
+        eventType = CodeEventType.POST_COMMIT,
+        repositoryType = data.repositoryType,
+        repositoryName = data.repositoryName,
+        enable = data.isElementEnable()
+    )
+
+    constructor(data: CodeP4WebHookTriggerElement) : this(
+        name = data.name,
+        repositoryHashId = data.data.input.repositoryHashId,
+        includePaths = data.data.input.includePaths,
+        excludePaths = data.data.input.excludePaths,
+        eventType = data.data.input.eventType,
+        repositoryType = data.data.input.repositoryType,
+        repositoryName = data.data.input.repositoryName,
+        enable = data.isElementEnable()
+    )
+
+    constructor(data: CodeGitlabWebHookTriggerElement) : this(
+        name = data.name,
+        repositoryHashId = data.repositoryHashId,
+        branchName = data.branchName,
+        excludeBranchName = data.excludeBranchName,
+        pathFilterType = data.pathFilterType,
+        includePaths = data.includePaths,
+        excludePaths = data.excludePaths,
+        includeUsers = data.includeUsers,
+        excludeUsers = data.excludeUsers,
+        eventType = data.eventType,
+        block = data.block,
+        repositoryType = data.repositoryType,
+        repositoryName = data.repositoryName,
+        tagName = data.tagName,
+        excludeTagName = data.excludeTagName,
+        excludeSourceBranchName = data.excludeSourceBranchName,
+        includeSourceBranchName = data.includeSourceBranchName,
+        enable = data.isElementEnable()
     )
 }
