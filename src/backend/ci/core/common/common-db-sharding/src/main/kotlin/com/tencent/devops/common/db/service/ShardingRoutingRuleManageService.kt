@@ -28,13 +28,19 @@
 package com.tencent.devops.common.db.service
 
 import com.tencent.devops.common.api.enums.CrudEnum
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
+import com.tencent.devops.common.service.utils.CommonUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ShardingRoutingRuleManageService {
+class ShardingRoutingRuleManageService @Autowired constructor(
+    private val redisOperation: RedisOperation
+) {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(ShardingRoutingRuleManageService::class.java)
@@ -52,28 +58,40 @@ class ShardingRoutingRuleManageService {
         routingRule: String? = null,
         actionType: CrudEnum
     ): Boolean {
+        val ip = CommonUtils.getInnerIP()
         when (actionType) {
             CrudEnum.CREATAE -> {
                 routingRule?.let {
                     BkShardingRoutingCacheUtil.put(routingName, routingRule)
                 }
-                logger.info("[add shardingRoutingRule localCache success，params[$routingName|$routingRule]")
+                logger.info(
+                    "[host[$ip] add shardingRoutingRule localCache success，" +
+                        "params[$routingName|$routingRule]"
+                )
             }
 
             CrudEnum.DELETE -> {
                 BkShardingRoutingCacheUtil.invalidate(routingName)
-                logger.info("[delete shardingRoutingRule localCache success，params[$routingName|$routingRule]")
+                logger.info(
+                    "[host[$ip] delete shardingRoutingRule localCache success，" +
+                        "params[$routingName|$routingRule]"
+                )
             }
 
             CrudEnum.UPDATE -> {
                 routingRule?.let {
                     BkShardingRoutingCacheUtil.put(routingName, routingRule)
                 }
-                logger.info("[update shardingRoutingRule localCache success，params[$routingName|$routingRule]")
+                logger.info(
+                    "[host[$ip] update shardingRoutingRule localCache success，" +
+                        "params[$routingName|$routingRule]"
+                )
             }
 
             else -> {}
         }
+        // 将缓存操作完成的IP写入redis
+        redisOperation.sadd(BkServiceUtil.getServiceRoutingRuleActionFinishKey(routingName, actionType), ip)
         return true
     }
 }

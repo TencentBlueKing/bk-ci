@@ -25,7 +25,7 @@ object ShardingUtil {
     }
 
     /**
-     * 获取路由规则存在缓存中的key
+     * 获取迁移库路由规则存在缓存中的key
      * @param clusterName 集群名称
      * @param moduleCode 模块标识
      * @param ruleType 规则类型

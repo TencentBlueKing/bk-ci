@@ -28,6 +28,8 @@
 package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
@@ -36,7 +38,9 @@ import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.MIGRATING_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
@@ -46,6 +50,8 @@ import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.service.project.DataSourceService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -68,7 +74,8 @@ class ProcessDataMigrateService @Autowired constructor(
     private val processDataMigrateDao: ProcessDataMigrateDao,
     private val processDataDeleteDao: ProcessDataDeleteDao,
     private val dataSourceService: DataSourceService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
 
     companion object {
@@ -76,9 +83,15 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val DEFAULT_THREAD_NUM = 10
         private const val DEFAULT_PAGE_SIZE = 20
         private const val DEFAULT_MIGRATION_TIMEOUT = 20L
+        private const val DEFAULT_THREAD_SLEEP_TIMEOUT = 10L
         private const val SHORT_PAGE_SIZE = 5
         private const val MEDIUM_PAGE_SIZE = 100
         private const val LONG_PAGE_SIZE = 1000
+        private const val RETRY_NUM = 3
+        private const val MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE = "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
+        private const val FAIL_MSG = "failMsg"
+        private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
+            "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
     }
 
     @Value("\${sharding.migrationTimeout:#{20}}")
@@ -169,6 +182,17 @@ class ProcessDataMigrateService @Autowired constructor(
                     val context = DSL.using(t)
                     deleteAllProjectData(context, projectId)
                 }
+                // 发送迁移失败消息
+                val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+                val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (ignored.message ?: ""))
+                val request = SendNotifyMessageTemplateRequest(
+                    templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
+                    receivers = mutableSetOf(userId),
+                    titleParams = titleParams,
+                    bodyParams = bodyParams,
+                    notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
+                )
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
                 return@submit
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
@@ -252,6 +276,7 @@ class ProcessDataMigrateService @Autowired constructor(
         )
         val migratingShardingRoutingRule = redisOperation.get(key)
         val shardingRoutingRule = routingRuleMap[migratingShardingRoutingRule]
+        var cacheUpdateFinishFlag = true
         if (migratingShardingRoutingRule != null && shardingRoutingRule != null) {
             // 清除缓存中项目的迁移DB路由规则
             redisOperation.delete(key)
@@ -275,9 +300,22 @@ class ProcessDataMigrateService @Autowired constructor(
                     defaultMessage = updateResult.message
                 )
             }
-            // todo 判断process微服务所有服务器的缓存是否已经全部更新完成
-
-
+            // 判断process微服务所有服务器的缓存是否已经全部更新完成
+            cacheUpdateFinishFlag = confirmCacheIsUpdated(key, RETRY_NUM)
+        }
+        if (!cacheUpdateFinishFlag) {
+            // 服务器缓存更新失败，发送迁移失败消息
+            val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+            val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to "update host cache fail")
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
+                receivers = mutableSetOf(userId),
+                titleParams = titleParams,
+                bodyParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
+            )
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            return
         }
         // 解锁项目,允许用户发起新构建等操作
         redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
@@ -286,7 +324,37 @@ class ProcessDataMigrateService @Autowired constructor(
             val context = DSL.using(t)
             deleteAllProjectData(context, projectId)
         }
-        // todo 发送迁移成功消息
+        // 发送迁移成功消息
+        val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+        val bodyParams = mapOf(KEY_PROJECT_ID to projectId)
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE,
+            receivers = mutableSetOf(userId),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
+        )
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+    }
+
+    private fun confirmCacheIsUpdated(cacheKey: String, retryNum: Int): Boolean {
+        // 判断重试次数是否超限，如果超限就返回false
+        if (retryNum < 1) {
+            return false
+        }
+        // 睡眠一会儿等待服务器缓存更新
+        Thread.sleep(DEFAULT_THREAD_SLEEP_TIMEOUT)
+        // 获取当前微服务服务器IP列表
+        val serviceIps = redisOperation.getSetMembers(BkServiceUtil.getServiceHostKey())?.toMutableSet()
+        val finishServiceIps =
+            redisOperation.getSetMembers(BkServiceUtil.getServiceRoutingRuleActionFinishKey(cacheKey, CrudEnum.UPDATE))
+        // 判断所有服务器缓存是否已经更新成功
+        finishServiceIps?.let { serviceIps?.removeAll(finishServiceIps) }
+        return if (serviceIps.isNullOrEmpty()) {
+            true
+        } else {
+            confirmCacheIsUpdated(cacheKey, retryNum - 1)
+        }
     }
 
     private fun assignShardingRoutingRule(

@@ -1,9 +1,11 @@
 package com.tencent.devops.common.web.runner
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.BkServiceUtil
+import com.tencent.devops.common.service.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
@@ -29,15 +31,25 @@ class BkServiceInstanceApplicationRunner constructor(
             override fun run() {
                 val serviceName = BkServiceUtil.findServiceName()
                 logger.info("initServiceHostInfo serviceName:$serviceName begin")
+                val cacheKey = BkServiceUtil.getServiceHostKey(serviceName)
+                logger.info("initServiceHostInfo serviceName:$serviceName cacheKey:$cacheKey")
+                // 清空redis中微服务的主机IP列表
+                redisOperation.delete(cacheKey)
                 val discoveryTag = bkTag.getFinalTag()
                 val namespace = discoveryTag.replace("kubernetes-", "")
                 val svrName = KubernetesUtils.getSvrName(serviceName, namespace)
                 // 睡眠一会儿以便从注册最新拿到微服务最新的IP列表
                 sleep(THREAD_SLEEP_TIMEOUT)
                 val serviceHosts = compositeDiscoveryClient.getInstances(svrName).map { it.host }.toTypedArray()
-                logger.info("initServiceHostInfo serviceName[$serviceName] serviceHosts:$serviceHosts")
+                logger.info(
+                    "initServiceHostInfo serviceName:[$serviceName],IP:[${CommonUtils.getInnerIP()}],serviceHosts:${
+                        JsonUtil.toJson(
+                            serviceHosts
+                        )
+                    }"
+                )
                 // 把微服务的主机IP列表写入redis中
-                redisOperation.sadd(BkServiceUtil.getServiceHostKey(serviceName), *serviceHosts)
+                redisOperation.sadd(cacheKey, *serviceHosts)
             }
         }.start()
     }

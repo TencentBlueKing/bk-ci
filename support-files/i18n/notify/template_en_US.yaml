@@ -626,3 +626,35 @@
       PC-side review: ${reviewUrl} Mobile-side review: ${reviewAppUrl}
   creator: "system"
   modifior: "system"
+- index: 40
+  id: "ea98239a51a74f8db0a012a809bc2016"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
+  templateName: "Reminder of failure to migrate project data in PROCESS database"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2001"
+    sender: "DevOps"
+    title: "Failed to migrate the data of the project [${projectId}] in the PROCESS database"
+    body: "Failed to migrate the data of the project [${projectId}] in the PROCESS database，failure reason: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 41
+  id: "ea98239a51a74f8db0a012a809bc2017"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2002"
+    sender: "DevOps"
+    title: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
+    body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
+  creator: "system"
+  modifior: "system"

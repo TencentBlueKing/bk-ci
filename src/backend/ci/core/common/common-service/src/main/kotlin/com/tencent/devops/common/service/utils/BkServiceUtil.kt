@@ -2,7 +2,9 @@ package com.tencent.devops.common.service.utils
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.Profile
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.core.env.Environment
 import java.util.concurrent.ConcurrentHashMap
@@ -12,8 +14,27 @@ object BkServiceUtil {
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
-    fun getServiceHostKey(serviceName: String): String {
-        return "SERVICE:$serviceName:HOSTS"
+    fun getServiceHostKey(serviceName: String? = null): String {
+        val profileName = getProfileName()
+        val finalServiceName = if (serviceName.isNullOrBlank()) {
+            serviceName
+        } else {
+            findServiceName()
+        }
+        return "ENV:$profileName:SERVICE:$finalServiceName:HOSTS"
+    }
+
+    fun getServiceRoutingRuleActionFinishKey(
+        routingName: String,
+        actionType: CrudEnum
+    ): String {
+        val profileName = getProfileName()
+        return "ENV:$profileName:SHARDING_ROUTING_RULE_UPDATE_FINISH:$routingName:${actionType.name}"
+    }
+
+    private fun getProfileName(): String {
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        return profile.getActiveProfiles().joinToString().trim()
     }
 
     fun findServiceName(clz: KClass<*>? = null): String {
