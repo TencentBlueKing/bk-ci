@@ -40,8 +40,8 @@ class ControlPointPosition private constructor(
         const val AFTER_POSITION = "AFTER"
 
         fun create(name: String): ControlPointPosition {
-            val cnName = POSITION_NAME_MAP[name]?.let { I18nUtil.getCodeLanMessage(it) } ?: name
-            return ControlPointPosition(name, cnName)
+            val cnName = POSITION_NAME_MAP[name]?.let { I18nUtil.getCodeLanMessage(it) }
+            return ControlPointPosition(name, if (cnName.isNullOrBlank()) name else cnName)
         }
 
         private val POSITION_NAME_MAP = mapOf(

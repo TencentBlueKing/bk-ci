@@ -105,11 +105,20 @@ class GitConfig {
     val githubAppUrl: String = ""
 
     /* tGit config */
-    @Value("\${scm.git.tGitUrl:}")
+    @Value("\${scm.external.tGit.url:}")
     val tGitUrl: String = ""
 
     @Value("\${scm.external.tGit.apiUrl:}")
     val tGitApiUrl: String = ""
+
+    @Value("\${scm.external.tGit.clientId:}")
+    val tGitClientId: String = ""
+
+    @Value("\${scm.external.tGit.clientSecret:}")
+    val tGitClientSecret: String = ""
+
+    @Value("\${scm.external.tGit.webhookUrl:}")
+    val tGitWebhookUrl: String = ""
 
     @Value("\${scm.git.frontendSampleProjectUrl:}")
     val frontendSampleProjectUrl: String = ""

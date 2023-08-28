@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -40,6 +41,12 @@ data class PipelineDetail(
     val hasCollect: Boolean,
     @ApiModelProperty("是否可以手动触发")
     val canManualStartup: Boolean,
+    @ApiModelProperty("是否从模板实例化")
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("最新的发布版本（只有草稿则为空）")
+    val version: Int?,
+    @ApiModelProperty("最新的发布版本名称（只有草稿则为空）")
+    val versionName: String?,
     @ApiModelProperty("是否有编辑权限")
     val hasPermission: Boolean,
     @ApiModelProperty("流水线描述")
@@ -51,5 +58,7 @@ data class PipelineDetail(
     @ApiModelProperty("更新时间")
     val updateTime: Long = 0,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+    var viewNames: List<String>? = null,
+    @ApiModelProperty("Lock 类型", required = false)
+    val runLockType: PipelineRunLockType? = null
 )

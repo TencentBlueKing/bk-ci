@@ -36,7 +36,6 @@ import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
-import com.tencent.devops.remotedev.service.StartCloudService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -53,7 +52,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val bkgptService: BKGPTService,
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
-    private val startCloudService: StartCloudService,
     private val windowsResourceConfigService: WindowsResourceConfigService
 ) : UserRemoteDevResource {
 
@@ -105,10 +103,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         agentId: String
     ): Result<Boolean> {
         return Result(workspaceService.preCiAgent(agentId, workspaceName))
-    }
-
-    override fun afterStartCloudInit(userId: String, workspaceName: String?, agentId: String): Result<Boolean> {
-        return Result(startCloudService.afterStartCloudInit(userId, workspaceName, agentId))
     }
 
     override fun getUser(userId: String): Result<String> {

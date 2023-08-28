@@ -148,6 +148,33 @@ class ProjectApprovalDao {
         }
     }
 
+    fun update(
+        dslContext: DSLContext,
+        projectApprovalInfo: ProjectApprovalInfo
+    ): Int {
+        return with(TProjectApproval.T_PROJECT_APPROVAL) {
+            dslContext.update(this)
+                .set(PROJECT_NAME, projectApprovalInfo.projectName)
+                .set(DESCRIPTION, projectApprovalInfo.description)
+                .set(BG_ID, projectApprovalInfo.bgId?.toLong())
+                .set(BG_NAME, projectApprovalInfo.bgName)
+                .set(DEPT_ID, projectApprovalInfo.deptId?.toLong())
+                .set(DEPT_NAME, projectApprovalInfo.deptName)
+                .set(CENTER_ID, projectApprovalInfo.centerId?.toLong())
+                .set(CENTER_NAME, projectApprovalInfo.centerName)
+                .set(LOGO_ADDR, projectApprovalInfo.logoAddr)
+                .set(SUBJECT_SCOPES, projectApprovalInfo.subjectScopes?.let { JsonUtil.toJson(it) })
+                .set(AUTH_SECRECY, projectApprovalInfo.authSecrecy)
+                .set(APPROVAL_STATUS, projectApprovalInfo.approvalStatus)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, projectApprovalInfo.updator)
+                .set(TIPS_STATUS, projectApprovalInfo.tipsStatus)
+                .set(PROJECT_TYPE, projectApprovalInfo.projectType)
+                .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
+                .execute()
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         projectId: String

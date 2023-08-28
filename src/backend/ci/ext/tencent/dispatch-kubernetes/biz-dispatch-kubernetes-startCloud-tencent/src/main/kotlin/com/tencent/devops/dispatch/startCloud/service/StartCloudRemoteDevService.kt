@@ -75,7 +75,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(5)}"
+        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val res = workspaceClient.createWorkspace(
             userId,
@@ -84,11 +84,11 @@ class StartCloudRemoteDevService @Autowired constructor(
                 appName = appName,
                 pipeLineId = pipeLineId,
                 zoneId = event.devFile.zoneId,
-                machineType = event.devFile.machineType
+                machineType = event.devFile.machineType,
+                cgsId = event.devFile.cgsId
             )
         )
-
-        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toInt())
+        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toIntOrNull() ?: 0)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {

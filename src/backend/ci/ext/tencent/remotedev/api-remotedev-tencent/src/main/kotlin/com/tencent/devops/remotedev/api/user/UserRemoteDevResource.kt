@@ -114,21 +114,6 @@ interface UserRemoteDevResource {
         agentId: String
     ): Result<Boolean>
 
-    @ApiOperation("云桌面专用。容器初始化完成后调此接口进行后台初始化")
-    @POST
-    @Path("/after_start_cloud_init")
-    fun afterStartCloudInit(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String?,
-        @ApiParam(value = "agentId", required = true)
-        @QueryParam("agentId")
-        agentId: String
-    ): Result<Boolean>
-
     @ApiOperation("根据bi_ticket或bk_token获取用户名称")
     @GET
     @Path("/get_user")

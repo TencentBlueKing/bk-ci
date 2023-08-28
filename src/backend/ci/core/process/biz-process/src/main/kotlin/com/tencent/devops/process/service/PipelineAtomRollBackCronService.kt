@@ -254,7 +254,9 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 signPipelineId = pipelineId,
                 userId = pipelineInfo.lastModifyUser,
                 channelCode = pipelineInfo.channelCode,
+                yamlStr = null,
                 description = null,
+                baseVersion = null,
                 create = false
             )
             pipelineAtomReplaceHistoryDao.updateAtomReplaceHistory(

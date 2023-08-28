@@ -35,7 +35,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.pipeline.PipelineModelAndYaml
+import com.tencent.devops.common.pipeline.PipelineModelWithYaml
+import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
@@ -43,19 +44,22 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
@@ -64,6 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserPipelineVersionResourceImpl @Autowired constructor(
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
@@ -72,8 +77,56 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineOperationLogService: PipelineOperationLogService,
     private val transferService: PipelineTransferYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineVersionResource {
+
+    override fun getPipelineDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        includeDraft: Boolean?
+    ): Result<PipelineDetail> {
+        checkParam(userId, projectId)
+        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                params = arrayOf(pipelineId)
+            )
+        val latestResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeDraft = includeDraft
+        )
+        val setting = latestResource?.let {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = latestResource.settingVersion ?: latestResource.version,
+                detailInfo = detailInfo
+            )
+        }
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(
+            PipelineDetail(
+                pipelineId = detailInfo.pipelineId,
+                pipelineName = detailInfo.pipelineName,
+                hasCollect = detailInfo.hasCollect,
+                instanceFromTemplate = detailInfo.instanceFromTemplate,
+                canManualStartup = detailInfo.canManualStartup,
+                hasPermission = detailInfo.hasPermission,
+                pipelineDesc = detailInfo.pipelineDesc,
+                creator = detailInfo.creator,
+                createTime = detailInfo.createTime,
+                updateTime = detailInfo.updateTime,
+                viewNames = detailInfo.viewNames,
+                version = latestResource?.version,
+                versionName = latestResource?.versionName,
+                runLockType = setting?.runLockType
+            )
+        )
+    }
 
     override fun createPipelineFromTemplate(
         userId: String,
@@ -112,7 +165,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineModelAndYaml> {
+    ): Result<PipelineModelWithYaml> {
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -157,12 +210,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             data = TransferBody(modelAndSetting)
         ).newYaml
         return Result(
-            PipelineModelAndYaml(
+            PipelineModelWithYaml(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
                 description = resource.description,
-                baseVersion = resource.version,
-                baseVersionName = resource.versionName
+                version = resource.version,
+                versionName = resource.versionName
             )
         )
     }
@@ -199,7 +252,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        modelAndYaml: PipelineModelAndYaml
+        modelAndYaml: PipelineModelWithYamlRequest
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -315,7 +368,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         description: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<PipelineResVersion>> {
+    ): Result<Page<PipelineVersionInfo>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(

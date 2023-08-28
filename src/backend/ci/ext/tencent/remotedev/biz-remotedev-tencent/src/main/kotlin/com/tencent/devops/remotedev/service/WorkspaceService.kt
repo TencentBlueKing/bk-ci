@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -117,7 +118,7 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -129,9 +130,17 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
+    fun shareWorkspace(
+        userId: String,
+        workspaceName: String,
+        sharedUser: String,
+        needPermission: Boolean = true
+    ): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
-        permissionService.checkPermission(userId, workspaceName)
+        if (needPermission) {
+            permissionService.checkOwnerPermission(userId, workspaceName)
+        }
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
@@ -142,12 +151,6 @@ class WorkspaceService @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)
                 )
-            if (userId != workspace.creator) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                    params = arrayOf("only workspace creator can share")
-                )
-            }
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START.name) {
                 client.get(ServiceStartCloudResource::class)
@@ -191,15 +194,13 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countUserWorkspace(
+        val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
-            ownerType = WorkspaceOwnerType.PROJECT
+            projectId = projectId
         )
-        val result = workspaceDao.limitFetchUserWorkspace(
+        val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
-            creator = projectId,
-            ownerType = WorkspaceOwnerType.PROJECT,
+            projectId = projectId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -222,8 +223,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = redisCache.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -288,8 +289,8 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
-                val detail = redisCache.getWorkspaceDetail(it.name)
                 val status = WorkspaceStatus.values()[it.status]
+                val detail = workspaceCommon.getWorkspaceDetail(it.name)
                 ProjectWorkspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
@@ -350,10 +351,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countUserWorkspace(dslContext, userId)
+        val count = workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId)
         val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
-            creator = userId,
+            userId = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -462,7 +463,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
         if (checkPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkViewerPermission(userId, workspaceName)
         }
         val now = LocalDateTime.now()
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
@@ -512,21 +513,28 @@ class WorkspaceService @Autowired constructor(
 
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
-        val detail = redisCache.getWorkspaceDetail(workspaceName)
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(workspaceName)
             )
         }
-        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!, detail.regionId)
+        return WorkspaceStartCloudDetail(
+            ip = detail.environmentIP,
+            curLaunchId = detail.curLaunchId!!,
+            regionId = detail.regionId,
+            projectId = workspace.projectId,
+            name = workspace.name,
+            creator = workspace.creator
+        )
     }
 
     fun getWorkspaceTimeline(
@@ -536,7 +544,7 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         logger.info("$userId get workspace time line from id $workspaceName")
-        permissionService.checkPermission(userId, workspaceName)
+        permissionService.checkViewerPermission(userId, workspaceName)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
@@ -560,13 +568,24 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        return redisCache.getWorkspaceDetail(workspaceName)?.let {
-            WorkspaceProxyDetail(
-                workspaceName = workspaceName,
-                podIp = it.environmentIP,
-                sshKey = it.sshKey,
-                environmentHost = it.environmentHost
-            )
+        val workspace = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
+
+        return workspace?.let {
+            workspaceCommon.getOrSaveWorkspaceDetail(
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            ).let {
+                WorkspaceProxyDetail(
+                    workspaceName = workspaceName,
+                    podIp = it.environmentIP,
+                    sshKey = it.sshKey,
+                    environmentHost = it.environmentHost
+                )
+            }
         } ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode
         )
@@ -592,9 +611,11 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.curLaunchId,
                 workspaceInfo.regionId
             )
-            redisCache.saveWorkspaceDetail(
-                it.name,
-                cache
+
+            workspaceDao.saveOrUpdateWorkspaceDetail(
+                dslContext = dslContext,
+                workspaceName = it.name,
+                detail = JsonUtil.toJson(cache)
             )
         }
     }

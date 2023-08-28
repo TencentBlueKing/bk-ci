@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -406,4 +407,25 @@ interface ServiceScmResource {
         @QueryParam("token")
         token: String?
     ): Result<GitProjectInfo?>
+
+    @ApiOperation("查询合并请求的代码变更")
+    @GET
+    @Path("getCrReviewInfo")
+    fun getCrReviewInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("crId", required = true)
+        @QueryParam("crId")
+        crId: Long
+    ): Result<GitCommitReviewInfo?>
 }

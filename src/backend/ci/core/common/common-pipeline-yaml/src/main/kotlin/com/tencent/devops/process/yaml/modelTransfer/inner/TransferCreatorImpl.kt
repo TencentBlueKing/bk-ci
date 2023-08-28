@@ -39,8 +39,7 @@ import javax.ws.rs.core.Response
 
 @Primary
 @Component
-class TransferCreatorImpl @Autowired constructor(
-) : TransferCreator {
+class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     @Value("\${marketRun.enable:#{false}}")
     private val marketRunTaskData: Boolean = false
 

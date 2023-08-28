@@ -89,7 +89,7 @@ class SleepControl @Autowired constructor(
     fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
         if (needPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName)
         }
         RedisCallLimit(
             redisOperation,
@@ -216,7 +216,12 @@ class SleepControl @Autowired constructor(
             )
         }
 
-        if (!workspaceCommon.checkProjectRouter(workspace.creator, workspaceName)) return false
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.creator,
+                workspaceName = workspaceName,
+                workspaceOwnerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            )
+        ) return false
 
         RedisCallLimit(
             redisOperation,
@@ -285,8 +290,6 @@ class SleepControl @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
-            // 清缓存
-            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
@@ -335,7 +338,11 @@ class SleepControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+            remoteDevBillingDao.endBilling(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name
+            )
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

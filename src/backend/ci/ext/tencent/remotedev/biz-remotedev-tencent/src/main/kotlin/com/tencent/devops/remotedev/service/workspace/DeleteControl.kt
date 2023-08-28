@@ -101,7 +101,7 @@ class DeleteControl @Autowired constructor(
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
         if (needPermission) {
-            permissionService.checkPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName)
         }
         RedisCallLimit(
             redisOperation,
@@ -156,6 +156,44 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    fun deleteWorkspace4OP(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        logger.info("$userId delete workspace $workspaceName")
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds
+        ).tryLock().use {
+
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            // 创建操作历史记录
+            createDeleteOperationHistoryRecord(workspace, userId)
+
+            // 如果需要立即删除，则执行删除操作
+            doDeleteWS(true, userId, workspaceName, null)
+
+            val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+
+            // 发送处理事件
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = userId,
+                    traceId = bizId,
+                    type = UpdateEventType.DELETE,
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                )
+            )
+            return true
+        }
+    }
+
     // 获取已休眠(status:3)且过期14天的工作空间
     fun deleteInactivityWorkspace() {
         logger.info("getTimeOutInactivityWorkspace")
@@ -199,7 +237,12 @@ class DeleteControl @Autowired constructor(
             )
         }
 
-        if (!workspaceCommon.checkProjectRouter(workspace.creator, workspace.name)) return false
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.creator,
+                workspaceName = workspace.name,
+                workspaceOwnerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            )
+        ) return false
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.name}",
@@ -280,8 +323,6 @@ class DeleteControl @Autowired constructor(
                         "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
-            // 清缓存
-            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
@@ -329,7 +370,11 @@ class DeleteControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+            remoteDevBillingDao.endBilling(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name
+            )
         }
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = operator,

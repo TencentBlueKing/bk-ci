@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.api.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -58,4 +59,25 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/startCloud/resourece/list")
     fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
+
+    @ApiOperation("根据cgsId获取资源信息")
+    @GET
+    @Path("/startCloud/cgs")
+    fun getCgsData(
+        @ApiParam("cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<EnvironmentResourceData?>
+
+    @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
+    @GET
+    @Path("/workspace/check")
+    fun checkCgsRunning(
+        @ApiParam("cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String,
+        @ApiParam("status", required = true)
+        @QueryParam("status")
+        status: EnvStatusEnum? = EnvStatusEnum.running
+    ): Result<Boolean>
 }

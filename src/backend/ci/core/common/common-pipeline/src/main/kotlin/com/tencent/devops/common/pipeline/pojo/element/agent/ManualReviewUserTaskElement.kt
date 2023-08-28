@@ -57,7 +57,9 @@ data class ManualReviewUserTaskElement(
     @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false,
     @ApiModelProperty("企业微信群id", required = false)
-    var notifyGroup: MutableList<String>? = null
+    var notifyGroup: MutableList<String>? = null,
+    @ApiModelProperty("审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
+    var reminderTime: Int? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"

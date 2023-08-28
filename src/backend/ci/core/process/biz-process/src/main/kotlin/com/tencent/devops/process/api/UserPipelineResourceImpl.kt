@@ -49,7 +49,7 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.PipelineResVersion
+import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -57,7 +57,6 @@ import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
-import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
@@ -72,7 +71,6 @@ import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineResourceAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -360,51 +358,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
-    }
-
-    override fun getPipelineResourceAndSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        includeDraft: Boolean?
-    ): Result<PipelineResourceAndSetting> {
-        checkParam(userId, projectId)
-        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-        val resource = pipelineInfoFacadeService.getPipelineResourceVersion(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            includeDraft = includeDraft,
-            channelCode = ChannelCode.BS
-        )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: resource.version,
-            detailInfo = detailInfo
-        )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(
-            PipelineResourceAndSetting(
-                pipelineInfo = detailInfo?.let {
-                    PipelineDetail(
-                        pipelineId = it.pipelineId,
-                        pipelineName = it.pipelineName,
-                        hasCollect = it.hasCollect,
-                        canManualStartup = it.canManualStartup,
-                        hasPermission = it.hasPermission,
-                        pipelineDesc = it.pipelineDesc,
-                        creator = it.creator,
-                        createTime = it.createTime,
-                        updateTime = it.updateTime,
-                        viewNames = it.viewNames
-                    )
-                },
-                pipelineResource = resource,
-                setting = setting
-            )
-        )
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
@@ -715,7 +668,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<PipelineResVersion>> {
+    ): Result<Page<PipelineVersionInfo>> {
         checkParam(userId, projectId)
         return Result(
             pipelineVersionFacadeService.listPipelineVersion(
