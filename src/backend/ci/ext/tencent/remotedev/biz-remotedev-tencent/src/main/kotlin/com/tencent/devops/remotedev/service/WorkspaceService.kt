@@ -53,6 +53,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -132,26 +133,26 @@ class WorkspaceService @Autowired constructor(
 
     fun shareWorkspace4OP(
         userId: String,
-        workspaceName: String,
-        sharedUser: List<String>,
-        opType: String
+        shareWorkspace: ShareWorkspace
     ): Boolean {
-        if (sharedUser.isEmpty()) return false
-        when (opType) {
-            "add" -> sharedUser.forEach { user ->
+        if (shareWorkspace.sharedUser.isEmpty()) return false
+        when (shareWorkspace.opType) {
+            ShareWorkspace.OpType.ADD -> shareWorkspace.sharedUser.forEach { user ->
                 shareWorkspace(
                     userId = userId,
-                    workspaceName = workspaceName,
+                    workspaceName = shareWorkspace.workspaceName,
                     sharedUser = user,
                     needPermission = false
                 )
             }
-            "delete" -> sharedUser.forEach { user ->
+            ShareWorkspace.OpType.DELETE -> shareWorkspace.sharedUser.forEach { user ->
                 deleteSharedWorkspace(
-                    workspaceName = workspaceName,
+                    workspaceName = shareWorkspace.workspaceName,
                     sharedUser = user
                 )
             }
+
+            else -> Unit
         }
 
         return true

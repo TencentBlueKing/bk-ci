@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -162,15 +163,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun shareWorkspace4OP(
         userId: String,
-        workspaceName: String,
-        sharedUser: List<String>,
-        opType: String
+        shareWorkspace: ShareWorkspace
     ): Result<Boolean> {
         return Result(workspaceService.shareWorkspace4OP(
                 userId = userId,
-                workspaceName = workspaceName,
-                sharedUser = sharedUser,
-                opType = opType
+                shareWorkspace = shareWorkspace
             ))
     }
 
