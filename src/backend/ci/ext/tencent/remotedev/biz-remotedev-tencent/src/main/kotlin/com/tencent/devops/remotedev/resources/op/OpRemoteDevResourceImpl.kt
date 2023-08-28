@@ -212,6 +212,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         }
     }
 
+    override fun getCgsConfig(userId: String): Result<Page<ProjectWorkspace>> {
+        TODO("Not yet implemented")
+    }
+
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
         // 先获取工作空间信息
         val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
@@ -220,4 +224,5 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
         return Result(true)
     }
+
 }
