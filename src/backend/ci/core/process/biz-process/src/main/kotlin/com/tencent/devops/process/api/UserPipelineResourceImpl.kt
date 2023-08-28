@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
@@ -243,7 +244,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = pipeline,
             yaml = null,
-            saveDraft = saveDraft,
+            versionStatus = VersionStatus.RELEASED,
             channelCode = ChannelCode.BS
         )
         auditService.createAudit(
@@ -279,7 +280,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            saveDraft = saveDraft,
+            versionStatus = VersionStatus.RELEASED,
             channelCode = ChannelCode.BS
         )
         auditService.createAudit(

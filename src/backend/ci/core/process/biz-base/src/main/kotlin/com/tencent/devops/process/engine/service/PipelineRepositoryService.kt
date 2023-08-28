@@ -206,7 +206,7 @@ class PipelineRepositoryService constructor(
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         description: String? = null
     ): DeployPipelineResult {
 
@@ -252,7 +252,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode,
                 setting = pipelineSetting,
                 updateLastModifyUser = updateLastModifyUser,
-                saveDraft = saveDraft,
+                versionStatus = versionStatus,
                 description = description,
                 baseVersion = baseVersion
             )
@@ -261,7 +261,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = result.version,
-                operationLogType = if (saveDraft == true) {
+                operationLogType = if (versionStatus != VersionStatus.RELEASED) {
                     OperationLogType.UPDATE_DRAFT_VERSION
                 } else {
                     OperationLogType.NORMAL_SAVE_OPERATION
@@ -286,7 +286,7 @@ class PipelineRepositoryService constructor(
                 useLabelSettings = useLabelSettings,
                 useConcurrencyGroup = useConcurrencyGroup,
                 templateId = templateId,
-                saveDraft = saveDraft,
+                versionStatus = versionStatus,
                 description = description,
                 baseVersion = baseVersion
             )
@@ -295,7 +295,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = result.version,
-                operationLogType = if (saveDraft == true) {
+                operationLogType = if (versionStatus != VersionStatus.RELEASED) {
                     OperationLogType.CREATE_PIPELINE_AND_DRAFT
                 } else {
                     OperationLogType.NORMAL_SAVE_OPERATION
@@ -589,7 +589,7 @@ class PipelineRepositoryService constructor(
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         description: String?
     ): DeployPipelineResult {
         val modelVersion = 1
@@ -711,7 +711,7 @@ class PipelineRepositoryService constructor(
                 versionName = PipelineVersionUtils.getVersionName(
                     pipelineVersion, triggerVersion, settingVersion
                 )
-                if (saveDraft != true) pipelineResourceDao.create(
+                if (versionStatus == VersionStatus.RELEASED) pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -737,7 +737,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED,
+                    versionStatus = versionStatus,
                     description = description
                 )
                 // 初始化流水线构建统计表
@@ -781,14 +781,14 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         setting: PipelineSetting? = null,
         updateLastModifyUser: Boolean? = true,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         baseVersion: Int?,
         description: String?
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
-        val watcher = Watcher(id = "updatePipeline#$pipelineId#$saveDraft")
+        val watcher = Watcher(id = "updatePipeline#$pipelineId#$versionStatus")
         var versionName: String? = null
         try {
             lock.lock()
@@ -856,7 +856,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion, triggerVersion, settingVersion
                 )
                 watcher.start("updatePipelineResource")
-                if (saveDraft != true) pipelineResourceDao.create(
+                if (versionStatus == VersionStatus.RELEASED) pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -881,7 +881,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    status = if (saveDraft == true) VersionStatus.COMMITTING else VersionStatus.RELEASED,
+                    versionStatus = versionStatus,
                     description = description,
                     baseVersion = baseVersion ?: (version - 1)
                 )
@@ -914,7 +914,7 @@ class PipelineRepositoryService constructor(
                             pipelineVersion = null,
                             triggerVersion = null,
                             settingVersion = null,
-                            status = VersionStatus.RELEASED,
+                            versionStatus = VersionStatus.RELEASED,
                             description = description,
                             baseVersion = (version - 1).coerceAtLeast(0)
                         )

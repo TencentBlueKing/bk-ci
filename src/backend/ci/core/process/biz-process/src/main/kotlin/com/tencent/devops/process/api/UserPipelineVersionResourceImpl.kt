@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
@@ -214,6 +215,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
                 description = resource.description,
+                canDebug = resource.status == VersionStatus.COMMITTING,
                 version = resource.version,
                 versionName = resource.versionName
             )
@@ -288,14 +290,14 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 oldYaml = baseVersion?.yaml ?: ""
             )
         )
+        // TODO #8161 模板的草稿如何处理
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = transferResult.modelAndSetting?.setting ?: modelAndYaml.modelAndSetting.setting,
             checkPermission = false,
-            dispatchPipelineUpdateEvent = false,
-            saveDraft = true
+            dispatchPipelineUpdateEvent = false
         )
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
@@ -305,7 +307,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             channelCode = ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false,
-            saveDraft = true,
+            versionStatus = VersionStatus.COMMITTING,
             description = modelAndYaml.description,
             yaml = transferResult.newYaml,
             savedSetting = savedSetting

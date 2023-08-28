@@ -57,7 +57,7 @@ class PipelineResourceVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        status: VersionStatus?,
+        versionStatus: VersionStatus?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         return create(
@@ -73,7 +73,7 @@ class PipelineResourceVersionDao {
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
-            status = status,
+            versionStatus = versionStatus,
             description = description
         )
     }
@@ -91,7 +91,7 @@ class PipelineResourceVersionDao {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
-        status: VersionStatus?,
+        versionStatus: VersionStatus?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
@@ -107,7 +107,7 @@ class PipelineResourceVersionDao {
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
-                .set(STATUS, status?.name)
+                .set(STATUS, versionStatus?.name)
                 .set(DESCRIPTION, description)
                 .set(BASE_VERSION, baseVersion)
                 .onDuplicateKeyUpdate()
@@ -118,7 +118,7 @@ class PipelineResourceVersionDao {
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
-                .set(STATUS, status?.name)
+                .set(STATUS, versionStatus?.name)
                 .set(DESCRIPTION, description)
                 .returning()
                 .fetchOne()

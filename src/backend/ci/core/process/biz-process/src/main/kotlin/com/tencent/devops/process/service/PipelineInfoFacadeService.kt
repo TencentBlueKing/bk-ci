@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -679,7 +680,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         description: String? = null,
         baseVersion: Int? = null
     ): DeployPipelineResult {
@@ -762,7 +763,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 create = false,
                 updateLastModifyUser = updateLastModifyUser,
                 savedSetting = savedSetting,
-                saveDraft = saveDraft,
+                versionStatus = versionStatus,
                 description = description,
                 yamlStr = yaml,
                 baseVersion = baseVersion
@@ -827,16 +828,16 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true,
-        saveDraft: Boolean? = false
+        versionStatus: VersionStatus? = VersionStatus.RELEASED
     ): DeployPipelineResult {
+        // TODO #8161 模板的草稿如何处理
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting,
             checkPermission = false,
-            dispatchPipelineUpdateEvent = false,
-            saveDraft = saveDraft
+            dispatchPipelineUpdateEvent = false
         )
         val pipelineResult = editPipeline(
             userId = userId,
@@ -848,7 +849,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate,
             savedSetting = savedSetting,
-            saveDraft = saveDraft
+            versionStatus = versionStatus
         )
         if (setting.projectId.isBlank()) {
             setting.projectId = projectId

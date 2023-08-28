@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
@@ -79,7 +80,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = true,
-            saveDraft = true,
+            versionStatus = VersionStatus.COMMITTING,
             description = description
         )
         auditService.createAudit(
