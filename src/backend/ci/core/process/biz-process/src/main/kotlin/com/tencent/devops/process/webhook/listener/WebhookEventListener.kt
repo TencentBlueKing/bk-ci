@@ -32,6 +32,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.WebhookRequestService
+import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
@@ -224,6 +225,10 @@ class WebhookEventListener constructor(
             }
             MDC.remove(TraceTag.BIZID)
         }
+    }
+
+    fun handleReplayRequest(replayEvent: WebhookRequestReplayEvent) {
+        webhookRequestService.replay(replayEvent = replayEvent)
     }
 
     companion object {

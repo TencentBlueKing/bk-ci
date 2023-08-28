@@ -26,19 +26,15 @@
  *
  */
 
-package com.tencent.devops.common.webhook.pojo
+package com.tencent.devops.process.webhook.pojo.event
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 
-@ApiModel
-class WebhookRequestReplay(
-    @ApiModelProperty("用户ID")
+data class WebhookRequestReplayEvent(
     val userId: String,
-    @ApiModelProperty("项目ID")
     val projectId: String,
-    @ApiModelProperty("webhook请求ID")
     val hookRequestId: Long,
-    @ApiModelProperty("重试流水线ID")
+    val scmType: ScmType,
     val pipelineId: String? = null
-)
+): ITraceEvent()

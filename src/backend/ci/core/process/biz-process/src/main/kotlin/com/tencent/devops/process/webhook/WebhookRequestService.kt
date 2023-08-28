@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
-import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.trigger.WebhookTriggerService
+import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import org.slf4j.LoggerFactory
@@ -89,30 +89,31 @@ class WebhookRequestService(
         )
     }
 
-    fun replay(scmType: ScmType, request: WebhookRequestReplay) {
-        val repoWebhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-            requestId = request.hookRequestId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND,
-            params = arrayOf(request.hookRequestId.toString())
-        )
-        val webhookRequest = WebhookRequest(
-            headers = repoWebhookRequest.requestHeader,
-            body = repoWebhookRequest.requestBody
-        )
-        val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
-            logger.warn("Failed to parse webhook event")
-            return
-        }
-        val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
+    fun replay(replayEvent: WebhookRequestReplayEvent) {
+        with(replayEvent) {
+            val repoWebhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = hookRequestId
+            ).data ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND,
+                params = arrayOf(hookRequestId.toString())
+            )
+            val webhookRequest = WebhookRequest(
+                headers = repoWebhookRequest.requestHeader,
+                body = repoWebhookRequest.requestBody
+            )
+            val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
+                logger.warn("Failed to parse webhook event")
+                return
+            }
+            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
-        val eventTime = LocalDateTime.now()
-        webhookTriggerService.replay(
-            scmType = scmType,
-            request = request,
-            matcher = matcher,
-            eventTime = eventTime
-        )
+            val eventTime = LocalDateTime.now()
+            webhookTriggerService.replay(
+                replayEvent = replayEvent,
+                matcher = matcher,
+                eventTime = eventTime
+            )
+        }
     }
 
     private fun githubRetry(event: GithubCheckRunEvent) {
