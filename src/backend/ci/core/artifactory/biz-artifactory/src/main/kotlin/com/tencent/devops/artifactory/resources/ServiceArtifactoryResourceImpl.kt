@@ -93,7 +93,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         userId: String,
         path: String,
         ttl: Int,
-        directed: Boolean?
+        directed: Boolean?,
+        useForExperience: Boolean
     ): Result<Url> {
         TODO("not implemented")
     }

@@ -68,6 +68,27 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun getExternalUrl(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ttl: Int
+    ): Result<Url> {
+        logger.info("OPENAPI_ARTIFACTORY_V4|get external url|$userId|$projectId|$artifactoryType|$path|$ttl")
+        return client.get(ServiceArtifactoryResource::class).externalUrl(
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            creatorId = userId,
+            userId = userId,
+            path = path,
+            ttl = ttl,
+            directed = false
+        )
+    }
+
     override fun getAppDownloadUrl(
         appCode: String?,
         apigwType: String?,

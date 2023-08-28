@@ -166,7 +166,10 @@ interface ServiceArtifactoryResource {
         ttl: Int,
         @ApiParam("是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
         @QueryParam("directed")
-        directed: Boolean?
+        directed: Boolean?,
+        @ApiParam("是否用于版本体验APP", required = false)
+        @QueryParam("useForExperience")
+        useForExperience: Boolean = true
     ): Result<Url>
 
     @ApiOperation("APP构件跳转链接")
