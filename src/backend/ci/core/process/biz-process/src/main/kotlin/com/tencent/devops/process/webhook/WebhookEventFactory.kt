@@ -34,10 +34,12 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.webhook.parser.GithubWebhookEventParser
 import com.tencent.devops.process.webhook.parser.GitlabWebhookEventParser
 import com.tencent.devops.process.webhook.parser.P4WebhookEventParser
 import com.tencent.devops.process.webhook.parser.SvnWebhookEventParser
@@ -65,6 +67,9 @@ class WebhookEventFactory @Autowired constructor(
             ScmType.CODE_GITLAB ->
                 GitlabWebhookEventParser(objectMapper = objectMapper)
 
+            ScmType.GITHUB ->
+                GithubWebhookEventParser(objectMapper = objectMapper)
+
             else ->
                 throw InvalidParamException("Unknown scm type($scmType)")
         }
@@ -84,6 +89,9 @@ class WebhookEventFactory @Autowired constructor(
 
             ScmType.CODE_GITLAB ->
                 scmWebhookMatcherBuilder.createGitlabWebHookMatcher(event = event as GitEvent)
+
+            ScmType.GITHUB ->
+                scmWebhookMatcherBuilder.createGithubWebHookMatcher(event = event as GithubEvent)
 
             else ->
                 throw InvalidParamException("Unknown scm type($scmType)")
