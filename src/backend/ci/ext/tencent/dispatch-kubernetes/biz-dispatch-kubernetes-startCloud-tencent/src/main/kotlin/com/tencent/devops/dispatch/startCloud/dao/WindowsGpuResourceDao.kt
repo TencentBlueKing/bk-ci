@@ -36,6 +36,7 @@ import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWork
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -109,6 +110,18 @@ class WindowsGpuResourceDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .fetchAny()
+        }
+    }
+
+    /**
+     * 获取cgs的机型和区域列表
+     */
+    fun getCgsConfig(
+        dslContext: DSLContext
+    ): List<Record2<String, String>> {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            return dslContext.select(ZONE_ID, MACHINE_TYPE).from(this)
+                .fetch()
         }
     }
 }

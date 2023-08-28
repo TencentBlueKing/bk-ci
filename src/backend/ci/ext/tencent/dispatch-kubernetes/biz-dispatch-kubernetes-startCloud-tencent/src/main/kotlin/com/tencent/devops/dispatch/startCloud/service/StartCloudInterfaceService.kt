@@ -105,4 +105,24 @@ class StartCloudInterfaceService @Autowired constructor(
             status = status
         )?.let { false } ?: true
     }
+
+    /**
+     * 获取cgs资源池的机型和区域列表
+     */
+    fun getCgsConfig(): Map<String, List<String>> {
+        val machineTypeList = mutableListOf<String>()
+        val zoneList = mutableListOf<String>()
+        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
+        cgsConfigList.forEach { cgs ->
+            if (!machineTypeList.contains(cgs.value2())) {
+                machineTypeList.add(cgs.value2())
+            }
+            if (!zoneList.contains(cgs.value1())) {
+                zoneList.add(cgs.value1())
+            }
+        }
+        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
+
+        return mapOf("zoneList" to zoneList, "machineTypeList" to machineTypeList)
+    }
 }

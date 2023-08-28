@@ -212,8 +212,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getCgsConfig(userId: String): Result<Page<ProjectWorkspace>> {
-        TODO("Not yet implemented")
+    override fun getCgsConfig(userId: String): Result<Map<String, List<String>>?> {
+        return Result(workspaceCommon.getCgsConfig())
     }
 
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {

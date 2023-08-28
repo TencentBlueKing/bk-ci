@@ -80,4 +80,9 @@ interface ServiceStartCloudResource {
         @QueryParam("status")
         status: EnvStatusEnum? = EnvStatusEnum.running
     ): Result<Boolean>
+
+    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @GET
+    @Path("/windows/pool/config")
+    fun getCgsConfig(): Result<Map<String, List<String>>>
 }

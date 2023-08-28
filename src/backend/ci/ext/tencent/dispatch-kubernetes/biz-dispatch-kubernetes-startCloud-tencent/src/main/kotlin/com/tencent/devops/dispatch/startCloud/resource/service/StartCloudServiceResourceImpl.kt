@@ -55,4 +55,8 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     override fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Result<Boolean> {
         return Result(startCloudInterfaceService.checkCgsRunning(cgsId, status))
     }
+
+    override fun getCgsConfig(): Result<Map<String, List<String>>> {
+        return Result(startCloudInterfaceService.getCgsConfig())
+    }
 }

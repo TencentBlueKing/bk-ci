@@ -411,4 +411,14 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("Error check cgs running: ${it.message}")
         }.getOrNull() ?: false
     }
+
+    // 获取cgs机型、区域
+    fun getCgsConfig(): Map<String, List<String>>? {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .getCgsConfig().data
+        }.onFailure {
+            logger.warn("Error get cgs config: ${it.message}")
+        }.getOrNull()
+    }
 }
