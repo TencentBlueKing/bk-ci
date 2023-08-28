@@ -4,11 +4,11 @@ on:
   push:
     branches: [ master ]
     paths: 
-      - 'src/agent/**'
+      - 'src/agent/agent/**'
   pull_request:
     branches: [ master, release-* ]
     paths: 
-      - 'src/agent/**'
+      - 'src/agent/agent/**'
 
 jobs:
   build:
@@ -19,8 +19,8 @@ jobs:
           go-version: 1.19.6
       - uses: actions/checkout@v2
       - run: make clean all
-        working-directory: src/agent/
+        working-directory: src/agent/agent/
       - uses: actions/upload-artifact@v1
         with:
           name: agent
-          path: src/agent/bin/
+          path: src/agent/agent/bin/
