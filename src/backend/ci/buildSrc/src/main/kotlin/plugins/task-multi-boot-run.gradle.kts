@@ -37,7 +37,9 @@ tasks.register<BootRun>("multiBootRun") {
         systemProperty("jasypt.encryptor.bootstrap", "false")
         systemProperty("sun.jnu.encoding", "UTF-8")
         systemProperty("file.encoding", "UTF-8")
-        systemProperty("spring.cloud.consul.host", "localhost")
+        systemProperty("spring.cloud.consul.enabled", "false")
+        systemProperty("spring.cloud.consul.discovery.enabled", "false")
+        systemProperty("server.port", "8080")
         systemProperty("service.log.dir", joinPath(projectDir.absolutePath, "log"))
     }
     dependsOn("multiBootJar")
