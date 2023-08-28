@@ -145,7 +145,7 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
-    fun updateSetting4Op(userId: String, data: OPUserSetting) {
+    fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
         // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
