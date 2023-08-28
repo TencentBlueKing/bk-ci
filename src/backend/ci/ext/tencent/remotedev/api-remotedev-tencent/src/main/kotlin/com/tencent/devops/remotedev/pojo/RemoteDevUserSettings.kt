@@ -24,5 +24,9 @@ data class RemoteDevUserSettings(
     @ApiModelProperty("设置linux构建集群类型")
     var mountType: WorkspaceMountType? = null,
     @ApiModelProperty("START云桌面体验时长")
-    var startCloudExperienceDuration: Int? = null
+    var startCloudExperienceDuration: Int? = null,
+    @ApiModelProperty("是否加入client白名单")
+    var clientWhiteList: Boolean? = true,
+    @ApiModelProperty("是否加入START云桌面白名单")
+    var startWhiteList: Boolean? = false
 )
