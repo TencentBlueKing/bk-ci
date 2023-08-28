@@ -224,5 +224,4 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
         return Result(true)
     }
-
 }
