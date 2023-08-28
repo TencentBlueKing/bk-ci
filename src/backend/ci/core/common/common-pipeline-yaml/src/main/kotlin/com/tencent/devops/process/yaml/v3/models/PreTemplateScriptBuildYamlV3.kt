@@ -64,8 +64,8 @@ data class PreTemplateScriptBuildYamlV3(
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override val notices: List<PacNotices>?,
     override var finally: Map<String, Any>?,
+    override val notices: List<PacNotices>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
     override fun yamlVersion() = YamlVersion.Version.V3_0
@@ -97,9 +97,20 @@ data class PreTemplateScriptBuildYamlV3(
         return preYaml.variables ?: emptyMap()
     }
 
-    override fun formatTriggerOn(default: ScmType): Map<ScmType, TriggerOn> {
-        return makeRunsOn()?.associateBy({ ScmType.parse(it.type) ?: default }, { ScriptYmlUtils.formatTriggerOn(it) })
-            ?: emptyMap()
+    override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
+        val runsOn = makeRunsOn() ?: return listOf(
+            TriggerType.parse(default) to ScriptYmlUtils.formatTriggerOn(null)
+        )
+
+        val res = mutableListOf<Pair<TriggerType, TriggerOn>>()
+        runsOn.forEach {
+            if (it.repoName == null && it.repoHashId == null && it.type == null) {
+                res.add(TriggerType.BASE to ScriptYmlUtils.formatTriggerOn(it))
+                return@forEach
+            }
+            res.add((TriggerType.parse(it.type) ?: TriggerType.parse(default)) to ScriptYmlUtils.formatTriggerOn(it))
+        }
+        return res
     }
 
     override fun formatStages(): List<Stage> {

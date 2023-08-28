@@ -25,33 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.on
+package com.tencent.devops.process.yaml.v3.models
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.ScmType
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class TagRule(
-    val enable: Boolean? = true,
-    val tags: List<String>? = null,
+enum class TriggerType(val alis: String) {
+    CODE_SVN("svn"),
+    CODE_GIT("git"),
+    CODE_GITLAB("gitlab"),
+    GITHUB("github"),
+    CODE_TGIT("tgit"),
+    CODE_P4("p4"),
+    BASE("base")
+    ;
 
-    @ApiModelProperty(name = "tags-ignore")
-    @JsonProperty("tags-ignore")
-    val tagsIgnore: List<String>? = null,
+    companion object {
 
-    @ApiModelProperty(name = "from-branches")
-    @JsonProperty("from-branches")
-    val fromBranches: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @ApiModelProperty(name = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null
-)
+        fun parse(alis: String?): TriggerType? {
+            values().forEach {
+                if (alis == it.alis) return it
+            }
+            return null
+        }
+        fun parse(scm: ScmType): TriggerType {
+            values().forEach {
+                if (scm.name == it.name) return it
+            }
+            return BASE
+        }
+    }
+}

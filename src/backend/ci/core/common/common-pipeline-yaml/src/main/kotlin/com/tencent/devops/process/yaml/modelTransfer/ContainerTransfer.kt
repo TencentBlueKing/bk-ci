@@ -139,7 +139,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             name = job.name,
             runsOn = RunsOn(
                 selfHosted = null,
-                poolName = JobRunsOnType.AGENT_LESS.type
+                poolName = JobRunsOnType.AGENT_LESS.type,
+                poolType = null
             ),
             mutex = getMutexYaml(job.mutexGroup),
             container = null,

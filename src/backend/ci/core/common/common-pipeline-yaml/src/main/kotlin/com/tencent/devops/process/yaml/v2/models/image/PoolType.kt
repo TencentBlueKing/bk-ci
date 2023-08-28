@@ -66,6 +66,7 @@ enum class PoolType {
         override fun transfer(dispatcher: DispatchType): RunsOn? {
             if (dispatcher is DockerDispatchType) {
                 return RunsOn(
+                    selfHosted = null,
                     poolName = JobRunsOnType.DOCKER.type,
                     container = when (dispatcher.imageType) {
                         ImageType.BKSTORE, ImageType.THIRD -> Container2(
@@ -153,7 +154,7 @@ enum class PoolType {
                 credentials = with(dockerInfo.credential) {
                     when {
                         this == null -> null
-                        credentialId != null -> dockerInfo.credential?.credentialId
+                        credentialId != null -> dockerInfo.credential?.credentialId?.ifBlank { null }
                         user != null && password != null -> Credentials(user!!, password!!)
                         else -> null
                     }
