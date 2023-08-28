@@ -25,18 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-misc"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-db-sharding"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:project:api-project"))
-    api(project(":core:misc:api-misc"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-websocket"))
-    api("org.json:json")
+package com.tencent.devops.misc.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.misc.api.OpProcessDbMigrateResource
+import com.tencent.devops.misc.service.process.ProcessDataMigrateService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpProcessDbMigrateResourceImpl @Autowired constructor(
+    private val processDataMigrateService: ProcessDataMigrateService
+) : OpProcessDbMigrateResource {
+
+    override fun migrateProjectData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean,
+        dataTag: String
+    ): Result<Boolean> {
+        return Result(
+            processDataMigrateService.migrateProjectData(
+                userId = userId,
+                projectId = projectId,
+                cancelFlag = cancelFlag,
+                dataTag = dataTag
+            )
+        )
+    }
 }

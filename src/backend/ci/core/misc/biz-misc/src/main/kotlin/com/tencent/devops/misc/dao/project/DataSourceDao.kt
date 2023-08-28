@@ -25,18 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-misc"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-db-sharding"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:project:api-project"))
-    api(project(":core:misc:api-misc"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-websocket"))
-    api("org.json:json")
+package com.tencent.devops.misc.dao.project
+
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.project.tables.TDataSource
+import com.tencent.devops.model.project.tables.records.TDataSourceRecord
+import com.tencent.devops.project.pojo.DataSource
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class DataSourceDao {
+
+    fun listByModule(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        fullFlag: Boolean? = false,
+        dataTag: String? = null
+    ): Result<TDataSourceRecord>? {
+        return with(TDataSource.T_DATA_SOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(CLUSTER_NAME.eq(clusterName))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            if (fullFlag != null) {
+                conditions.add(FULL_FLAG.eq(fullFlag))
+            }
+            if (dataTag != null) {
+                conditions.add(TAG.eq(dataTag))
+            } else {
+                conditions.add(TAG.isNull)
+            }
+            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
+        }
+    }
 }

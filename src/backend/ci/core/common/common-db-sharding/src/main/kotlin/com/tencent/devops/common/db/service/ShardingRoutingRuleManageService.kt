@@ -54,22 +54,22 @@ class ShardingRoutingRuleManageService {
     ): Boolean {
         when (actionType) {
             CrudEnum.CREATAE -> {
-                logger.info("[add shardingRoutingRule localCache，params[$routingName|$routingRule]")
                 routingRule?.let {
                     BkShardingRoutingCacheUtil.put(routingName, routingRule)
                 }
+                logger.info("[add shardingRoutingRule localCache success，params[$routingName|$routingRule]")
             }
 
             CrudEnum.DELETE -> {
-                logger.info("[delete shardingRoutingRule localCache，params[$routingName|$routingRule]")
                 BkShardingRoutingCacheUtil.invalidate(routingName)
+                logger.info("[delete shardingRoutingRule localCache success，params[$routingName|$routingRule]")
             }
 
             CrudEnum.UPDATE -> {
-                logger.info("[update shardingRoutingRule localCache，params[$routingName|$routingRule]")
                 routingRule?.let {
                     BkShardingRoutingCacheUtil.put(routingName, routingRule)
                 }
+                logger.info("[update shardingRoutingRule localCache success，params[$routingName|$routingRule]")
             }
 
             else -> {}

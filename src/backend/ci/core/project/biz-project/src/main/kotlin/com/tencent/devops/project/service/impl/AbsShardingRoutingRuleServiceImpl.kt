@@ -128,7 +128,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
      * 更新分片路由规则
      * @param userId 用户ID
      * @param id 规则ID
-     * @param shardingRoutingRule 片路由规则
+     * @param shardingRoutingRule 路由规则
      * @return 布尔值
      */
     override fun updateShardingRoutingRule(
@@ -183,6 +183,30 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             )
         } finally {
             lock.unlock()
+        }
+        return true
+    }
+
+    /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
+    override fun updateShardingRoutingRule(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Boolean {
+        val record = shardingRoutingRuleDao.get(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = shardingRoutingRule.routingName,
+            tableName = shardingRoutingRule.tableName
+        )
+        record?.let {
+            updateShardingRoutingRule(userId, record.id, shardingRoutingRule)
         }
         return true
     }

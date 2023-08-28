@@ -24,46 +24,51 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.resources
+
+package com.tencent.devops.misc.service.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.pojo.ShardingRoutingRule
-import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
-import com.tencent.devops.project.service.ShardingRoutingRuleFacadeService
-import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.misc.dao.project.DataSourceDao
+import com.tencent.devops.project.pojo.DataSource
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleFacadeService: ShardingRoutingRuleFacadeService,
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
-) : ServiceShardingRoutingRuleResource {
+@Service
+class DataSourceService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val dataSourceDao: DataSourceDao
+) {
 
-    override fun getShardingRoutingRuleByName(
-        routingName: String,
+    fun listByModule(
+        clusterName: String,
         moduleCode: SystemModuleEnum,
-        ruleType: ShardingRuleTypeEnum,
-        tableName: String?
-    ): Result<ShardingRoutingRule?> {
-        return Result(
-            shardingRoutingRuleFacadeService.getShardingRoutingRuleByName(
-                moduleCode = moduleCode,
-                ruleType = ruleType,
-                routingName = routingName,
-                tableName = tableName
-            )
+        fullFlag: Boolean? = false,
+        dataTag: String? = null
+    ): List<DataSource>? {
+        val dataSourceRecords = dataSourceDao.listByModule(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            fullFlag = false,
+            dataTag = dataTag
         )
-    }
-
-    override fun updateShardingRoutingRule(
-        userId: String,
-        shardingRoutingRule: ShardingRoutingRule
-    ): Result<Boolean> {
-        return Result(
-            shardingRoutingRuleService.updateShardingRoutingRule(userId, shardingRoutingRule)
-        )
+        return if (dataSourceRecords == null) {
+            null
+        } else {
+            val dataSourceList = mutableListOf<DataSource>()
+            dataSourceRecords.forEach { dataSourceRecord ->
+                dataSourceList.add(
+                    DataSource(
+                        clusterName = clusterName,
+                        moduleCode = moduleCode,
+                        dataSourceName = dataSourceRecord.dataSourceName,
+                        fullFlag = dataSourceRecord.fullFlag,
+                        dsUrl = dataSourceRecord.dsUrl
+                    )
+                )
+            }
+            dataSourceList
+        }
     }
 }
