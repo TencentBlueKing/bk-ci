@@ -25,42 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.p4
+package com.tencent.devops.scm.code.p4.api
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class P4ChangeEvent(
-    val change: Int,
-    val p4Port: String,
-    @JsonProperty("event_type")
-    val eventType: String,
-    val user: String? = null,
-    @ApiModelProperty("文件变更列表")
-    val files: List<String>? = null,
-    @ApiModelProperty("路径是否区分大小写，默认区分大小写")
-    val caseSensitive: Boolean? = true,
-    // 指定项目触发
-    override val projectId: String? = null,
-    @ApiModelProperty("提交描述", required = false)
-    var description: String? = DEFAULT_CHANGE_DESCRIPTION
-) : P4Event(projectId = projectId) {
-    companion object {
-        const val CHANGE_COMMIT = "change-commit"
-        const val CHANGE_CONTENT = "change-content"
-        const val CHANGE_SUBMIT = "change-submit"
-        const val DEFAULT_CHANGE_DESCRIPTION = ""
-    }
-
-    /**
-     * 是否由用户自己配置触发器,2.0以后的插件,都由用户配置p4 trigger,插件不再主动注册
-     */
-    override fun isCustomTrigger(): Boolean {
-        return when (eventType) {
-            CHANGE_COMMIT, CHANGE_CONTENT, CHANGE_SUBMIT -> true
-            else -> false
-        }
-    }
-}
+@ApiModel("P4提交列表")
+@JsonIgnoreProperties
+data class P4ChangeList(
+    @ApiModelProperty("提交信息", required = true)
+    val description: String,
+    @ApiModelProperty("提交文件列表", required = true)
+    val fileList: List<P4FileSpec>
+)
