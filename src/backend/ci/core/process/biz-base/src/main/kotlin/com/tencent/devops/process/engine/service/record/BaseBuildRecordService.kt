@@ -183,7 +183,7 @@ open class BaseBuildRecordService(
                 pipelineId = pipelineId,
                 handlePostFlag = false
             )
-            val baseModelMap = JsonUtil.toMutableMap(fullModel)
+            val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
