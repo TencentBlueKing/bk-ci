@@ -115,12 +115,8 @@ class StartCloudInterfaceService @Autowired constructor(
         val zoneList = mutableListOf<String>()
         val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
         cgsConfigList.forEach { cgs ->
-            if (!machineTypeList.contains(cgs.value2())) {
-                machineTypeList.add(cgs.value2())
-            }
-            if (!zoneList.contains(cgs.value1())) {
-                zoneList.add(cgs.value1())
-            }
+                machineTypeList.add(cgs.value2()).takeIf { !machineTypeList.contains(cgs.value2()) }
+                zoneList.add(cgs.value1()).takeIf { !zoneList.contains(cgs.value1()) }
         }
         logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
 
