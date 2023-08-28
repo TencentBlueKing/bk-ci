@@ -32,4 +32,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
+
+    @ApiOperation("提供给wesec获取项目下云桌面信息")
+    @GET
+    @Path("/project/workspace")
+    fun getProjectWorkspace(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<Boolean>
 }
