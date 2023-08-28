@@ -432,6 +432,21 @@ class WorkspaceDao {
         }
     }
 
+    fun deleteSharedWorkspace(
+        dslContext: DSLContext,
+        workspaceName: String,
+        shareUser: String
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.delete(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(shareUser))
+                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
+                .limit(1)
+                .execute()
+        }
+    }
+
     private fun mixCondition(
         userId: String? = null,
         workspaceName: String? = null,

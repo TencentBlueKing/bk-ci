@@ -130,6 +130,33 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
+    fun shareWorkspace4OP(
+        userId: String,
+        workspaceName: String,
+        sharedUser: List<String>,
+        opType: String
+    ): Boolean {
+        if (sharedUser.isEmpty()) return false
+        when (opType) {
+            "add" -> sharedUser.forEach { user ->
+                shareWorkspace(
+                    userId = userId,
+                    workspaceName = workspaceName,
+                    sharedUser = user,
+                    needPermission = false
+                )
+            }
+            "delete" -> sharedUser.forEach { user ->
+                deleteSharedWorkspace(
+                    workspaceName = workspaceName,
+                    sharedUser = user
+                )
+            }
+        }
+
+        return true
+    }
+
     fun shareWorkspace(
         userId: String,
         workspaceName: String,
@@ -732,6 +759,17 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext
         )
         return true
+    }
+
+    fun deleteSharedWorkspace(
+        workspaceName: String,
+        sharedUser: String
+    ) {
+        workspaceDao.deleteSharedWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            shareUser = sharedUser
+        )
     }
 
     fun notifyWinBeforeSleep() {

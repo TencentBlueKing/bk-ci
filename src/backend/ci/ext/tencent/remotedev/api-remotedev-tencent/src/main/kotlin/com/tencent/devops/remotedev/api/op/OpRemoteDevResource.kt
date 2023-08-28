@@ -295,6 +295,21 @@ interface OpRemoteDevResource {
         workspaceShared: WorkspaceShared
     ): Result<Boolean>
 
+    @ApiOperation("分享或删除工作空间")
+    @POST
+    @Path("/workspace/share/update")
+    fun shareWorkspace4OP(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间名称", required = true)
+        workspaceName: String,
+        @ApiParam(value = "共享用户", required = true)
+        sharedUser: List<String>,
+        @ApiParam(value = "操作类型，新增或删除", required = true)
+        opType: String
+    ): Result<Boolean>
+
     @ApiOperation("获取分享工作空间列表")
     @GET
     @Path("/workspace/share/list")

@@ -160,6 +160,20 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
+    override fun shareWorkspace4OP(
+        userId: String,
+        workspaceName: String,
+        sharedUser: List<String>,
+        opType: String
+    ): Result<Boolean> {
+        return Result(workspaceService.shareWorkspace4OP(
+                userId = userId,
+                workspaceName = workspaceName,
+                sharedUser = sharedUser,
+                opType = opType
+            ))
+    }
+
     override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
         return Result(workspaceService.getShareWorkspace(workspaceName))
     }
