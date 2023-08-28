@@ -12,4 +12,9 @@ class ServiceRemoteDevResourceImpl(
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(bkTicketService.validateUserTicket(userId, isOffshore, ticket))
     }
+
+    override fun getProjectWorkspace(userId: String, projectId: String?): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
 }
