@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -302,12 +303,8 @@ interface OpRemoteDevResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工作空间名称", required = true)
-        workspaceName: String,
-        @ApiParam(value = "共享用户", required = true)
-        sharedUser: List<String>,
-        @ApiParam(value = "操作类型，新增或删除", required = true)
-        opType: String
+        @ApiParam(value = "工作空间共享信息", required = true)
+        shareWorkspace: ShareWorkspace
     ): Result<Boolean>
 
     @ApiOperation("获取分享工作空间列表")
