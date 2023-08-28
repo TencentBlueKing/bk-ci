@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReviewRule(
+    val enable: Boolean? = true,
     val types: List<String>? = null,
     val states: List<String>? = null
 )

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.modelTransfer
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -41,7 +42,13 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
@@ -53,9 +60,13 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
+import com.tencent.devops.process.yaml.v2.models.on.ManualRule
+import com.tencent.devops.process.yaml.v2.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.TriggerType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -72,17 +83,57 @@ class ElementTransfer @Autowired(required = false) constructor(
         private val logger = LoggerFactory.getLogger(ElementTransfer::class.java)
     }
 
-    fun yaml2Triggers(triggerOns: Map<ScmType, TriggerOn>, elements: MutableList<Element>) {
-        triggerOns.forEach {
-            when (it.key) {
-                ScmType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.value, elements)
-                ScmType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.value, elements)
-                ScmType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.value, elements)
+    fun yaml2Triggers(yamlInput: YamlTransferInput, elements: MutableList<Element>) {
+        yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
+            when (it.first) {
+                TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(it.second, elements)
+                TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
+                TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
+                TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
+                TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
+                TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
             }
         }
     }
 
-    fun triggers2Yaml(elements: List<Element>): Map<ScmType, TriggerOn> {
+    fun baseTriggers2yaml(elements: List<Element>): TriggerOn? {
+        val triggerOn = lazy { TriggerOn() }
+        val schedules = mutableListOf<SchedulesRule>()
+        elements.forEach { element ->
+            if (element is ManualTriggerElement) {
+                triggerOn.value.manual = ManualRule(
+                    canElementSkip = element.canElementSkip.nullIfDefault(true),
+                    useLatestParameters = element.useLatestParameters.nullIfDefault(false)
+                )
+                return@forEach
+            }
+            if (element is TimerTriggerElement) {
+                schedules.add(
+                    SchedulesRule(
+                        cron = element.newExpression?.firstOrNull(),
+                        advanceCron = element.advanceExpression?.ifEmpty { null },
+                        always = (element.noScm != true).nullIfDefault(false),
+                        enable = element.isElementEnable().nullIfDefault(true)
+                    )
+                )
+                return@forEach
+            }
+            if (element is RemoteTriggerElement) {
+                triggerOn.value.remote = if (element.isElementEnable()) {
+                    EnableType.TRUE.value
+                } else {
+                    EnableType.FALSE.value
+                }
+            }
+        }
+        if (schedules.isNotEmpty()) {
+            triggerOn.value.schedules = schedules
+        }
+        if (triggerOn.isInitialized()) return triggerOn.value
+        return null
+    }
+
+    fun scmTriggers2Yaml(elements: List<Element>, projectId: String): Map<ScmType, TriggerOn> {
         val res = mutableMapOf<ScmType, TriggerOn>()
         val fix = elements.groupBy { it.getClassType() }
 
@@ -90,7 +141,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeGitWebHookTriggerElement)
         }
         if (!gitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement, projectId)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_GIT })
         }
 
@@ -98,7 +149,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeTGitWebHookTriggerElement)
         }
         if (!tGitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement, projectId)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_TGIT })
         }
 
@@ -106,8 +157,32 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeGithubWebHookTriggerElement)
         }
         if (!githubElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement, projectId)
             res.putAll(gitTrigger.associateBy { ScmType.GITHUB })
+        }
+
+        val svnElement = fix[CodeSVNWebHookTriggerElement.classType]?.map {
+            WebHookTriggerElementChanger(it as CodeSVNWebHookTriggerElement)
+        }
+        if (!svnElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(svnElement, projectId)
+            res.putAll(gitTrigger.associateBy { ScmType.CODE_SVN })
+        }
+
+        val p4Element = fix[CodeP4WebHookTriggerElement.classType]?.map {
+            WebHookTriggerElementChanger(it as CodeP4WebHookTriggerElement)
+        }
+        if (!p4Element.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(p4Element, projectId)
+            res.putAll(gitTrigger.associateBy { ScmType.CODE_P4 })
+        }
+
+        val gitlabElement = fix[CodeGitlabWebHookTriggerElement.classType]?.map {
+            WebHookTriggerElementChanger(it as CodeGitlabWebHookTriggerElement)
+        }
+        if (!gitlabElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId)
+            res.putAll(gitTrigger.associateBy { ScmType.CODE_P4 })
         }
         return res
     }
@@ -230,11 +305,12 @@ class ElementTransfer @Autowired(required = false) constructor(
     }
 
     fun model2YamlSteps(
-        job: Container
+        job: Container,
+        projectId: String
     ): List<PreStep> {
         val stepList = mutableListOf<PreStep>()
         job.elements.forEach { element ->
-            val step = element2YamlStep(element)
+            val step = element2YamlStep(element, projectId)
             if (step != null) {
                 stepList.add(step)
             }
@@ -243,8 +319,10 @@ class ElementTransfer @Autowired(required = false) constructor(
     }
 
     @Suppress("ComplexMethod")
-    fun element2YamlStep(element: Element): PreStep? {
-        val retryTimes = element.additionalOptions?.retryCount.nullIfDefault(VariableDefault.DEFAULT_RETRY_COUNT)
+    fun element2YamlStep(element: Element, projectId: String): PreStep? {
+        val retryTimes = if (element.additionalOptions?.retryWhenFailed == true) {
+            element.additionalOptions?.retryCount
+        } else null
         val timeoutMinutes = element.additionalOptions?.timeout?.toInt()
             .nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)
         val continueOnError = element.additionalOptions?.continueWhenFailed
@@ -288,7 +366,24 @@ class ElementTransfer @Autowired(required = false) constructor(
             }
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
-                val url = input[CheckoutAtomParam::repositoryUrl.name].toString().ifBlank { null }
+                val repositoryType = input[CheckoutAtomParam::repositoryType.name].toString().ifBlank { null }?.let {
+                    CheckoutAtomParam.CheckoutRepositoryType.valueOf(it)
+                }
+                val repositoryHashId = input[CheckoutAtomParam::repositoryHashId.name].toString().ifBlank { null }
+                val repositoryName = input[CheckoutAtomParam::repositoryName.name].toString().ifBlank { null }
+                val repositoryUrl = input[CheckoutAtomParam::repositoryUrl.name].toString().ifBlank { null }
+                val checkout = when {
+                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.ID && repositoryHashId != null -> {
+                        transferCache.getGitRepository(projectId, RepositoryType.ID, repositoryHashId)?.url
+                    }
+                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.NAME && repositoryName != null -> {
+                        transferCache.getGitRepository(projectId, RepositoryType.NAME, repositoryName)?.url
+                    }
+                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.URL && repositoryUrl != null -> {
+                        repositoryUrl
+                    }
+                    else -> null
+                } ?: "self"
                 // todo 等待checkout插件新增self参数
                 PreStep(
                     name = element.name,
@@ -302,7 +397,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     retryTimes = retryTimes,
                     env = env,
                     run = null,
-                    checkout = url,
+                    checkout = checkout,
                     shell = null
                 )
             }

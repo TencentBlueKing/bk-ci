@@ -41,6 +41,7 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.Stage
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.TriggerType
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -63,7 +64,7 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
 
     fun formatVariables(): Map<String, Variable>
 
-    fun formatTriggerOn(default: ScmType): Map<ScmType, TriggerOn>
+    fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>>
 
     fun formatStages(): List<Stage>
 
@@ -106,8 +107,8 @@ data class PreTemplateScriptBuildYaml(
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override val notices: List<GitNotices>?,
     override var finally: Map<String, Any>?,
+    override val notices: List<GitNotices>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
     override fun yamlVersion() = YamlVersion.Version.V2_0
@@ -136,8 +137,8 @@ data class PreTemplateScriptBuildYaml(
         return preYaml.variables ?: emptyMap()
     }
 
-    override fun formatTriggerOn(default: ScmType): Map<ScmType, TriggerOn> {
-        return mapOf(default to ScriptYmlUtils.formatTriggerOn(triggerOn))
+    override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
+        return listOf(TriggerType.parse(default) to ScriptYmlUtils.formatTriggerOn(triggerOn))
     }
 
     override fun formatStages(): List<Stage> {

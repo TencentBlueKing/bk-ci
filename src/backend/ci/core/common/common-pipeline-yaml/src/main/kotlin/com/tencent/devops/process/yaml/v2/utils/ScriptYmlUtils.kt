@@ -73,6 +73,7 @@ import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
+import com.tencent.devops.process.yaml.v2.models.on.ManualRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
@@ -658,7 +659,8 @@ object ScriptYmlUtils {
                 note = noteRule(repoPreTriggerOn),
                 repoHook = repoHookRule(repositoryHook),
                 manual = manualRule(repoPreTriggerOn),
-                openapi = openapiRule(repoPreTriggerOn)
+                openapi = openapiRule(repoPreTriggerOn),
+                remote = remoteRule(repoPreTriggerOn)
             )
         }
         logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
@@ -695,11 +697,12 @@ object ScriptYmlUtils {
             review = reviewRule(preTriggerOn),
             note = noteRule(preTriggerOn),
             manual = manualRule(preTriggerOn),
-            openapi = openapiRule(preTriggerOn)
+            openapi = openapiRule(preTriggerOn),
+            remote = remoteRule(preTriggerOn)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
-            res.name = preTriggerOn.name
+            res.repoName = preTriggerOn.repoName
             res.credentials = preTriggerOn.credentials
         }
 
@@ -745,16 +748,23 @@ object ScriptYmlUtils {
 
     private fun manualRule(
         preTriggerOn: IPreTriggerOn
-    ): String? {
+    ): ManualRule? {
         if (preTriggerOn.manual == null) {
-            return null
+            return ManualRule()
         }
 
-        if (preTriggerOn.manual != EnableType.TRUE.value && preTriggerOn.manual != EnableType.FALSE.value) {
-            throw YamlFormatException("not allow manual type ${preTriggerOn.manual}")
+        return when {
+            preTriggerOn.manual is String && preTriggerOn.manual == EnableType.TRUE.value -> {
+                return ManualRule()
+            }
+            preTriggerOn.manual is String && preTriggerOn.manual == EnableType.FALSE.value -> {
+                return null
+            }
+            preTriggerOn.manual is Map<*, *> -> kotlin.runCatching {
+                JsonUtil.anyTo(preTriggerOn.manual, object : TypeReference<ManualRule>() {})
+            }.getOrElse { ManualRule() }
+            else -> ManualRule()
         }
-
-        return preTriggerOn.manual
     }
 
     private fun openapiRule(
@@ -769,6 +779,20 @@ object ScriptYmlUtils {
         }
 
         return preTriggerOn.openapi
+    }
+
+    private fun remoteRule(
+        preTriggerOn: IPreTriggerOn
+    ): String? {
+        if (preTriggerOn.remote == null) {
+            return null
+        }
+
+        if (preTriggerOn.remote != EnableType.TRUE.value && preTriggerOn.remote != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow remote type ${preTriggerOn.openapi}")
+        }
+
+        return preTriggerOn.remote
     }
 
     private fun noteRule(
@@ -841,17 +865,16 @@ object ScriptYmlUtils {
 
     private fun schedulesRule(
         preTriggerOn: IPreTriggerOn
-    ): SchedulesRule? {
+    ): List<SchedulesRule>? {
         if (preTriggerOn.schedules != null) {
             val schedules = preTriggerOn.schedules!!
-            return try {
-                YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(schedules),
-                    SchedulesRule::class.java
-                )
-            } catch (e: MismatchedInputException) {
-                null
-            }
+            return kotlin.runCatching {
+                when (schedules) {
+                    is Map<*, *> -> listOf(JsonUtil.anyTo(schedules, object : TypeReference<SchedulesRule>() {}))
+                    is List<*> -> JsonUtil.anyTo(schedules, object : TypeReference<List<SchedulesRule>>() {})
+                    else -> null
+                }
+            }.getOrNull()
         }
         return null
     }

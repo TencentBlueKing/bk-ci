@@ -149,7 +149,7 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         data: Element
     ): String {
-        val yml = elementTransfer.element2YamlStep(data) ?: throw ErrorCodeException(errorCode = "")
+        val yml = elementTransfer.element2YamlStep(data, projectId) ?: throw ErrorCodeException(errorCode = "")
         return TransferMapper.toYaml(yml)
     }
 
