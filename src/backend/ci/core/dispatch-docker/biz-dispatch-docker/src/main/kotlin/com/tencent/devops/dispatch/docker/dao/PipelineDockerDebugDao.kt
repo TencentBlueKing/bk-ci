@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.dao
 
 import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerDebug
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerDebugRecord
@@ -169,6 +170,7 @@ class PipelineDockerDebugDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -182,6 +184,7 @@ class PipelineDockerDebugDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
+                .skipCheck()
                 .fetchOne()
         }
     }
@@ -195,6 +198,7 @@ class PipelineDockerDebugDao {
                 .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.eq("")).and(PROJECT_ID.notIn(projectIds))
                 .orderBy(UPDATED_TIME.asc())
+                .skipCheck()
                 .fetch()
         }
     }
@@ -208,6 +212,7 @@ class PipelineDockerDebugDao {
                 .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.eq("")).and(PROJECT_ID.`in`(projectIds))
                 .orderBy(UPDATED_TIME.asc())
+                .skipCheck()
                 .fetch()
         }
     }
@@ -222,6 +227,7 @@ class PipelineDockerDebugDao {
                 .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.notIn(projectIds))
                 .orderBy(UPDATED_TIME.asc())
+                .skipCheck()
                 .fetch()
         }
     }
@@ -236,6 +242,7 @@ class PipelineDockerDebugDao {
                 .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.`in`(projectIds))
                 .orderBy(UPDATED_TIME.asc())
+                .skipCheck()
                 .fetch()
         }
     }
@@ -250,6 +257,7 @@ class PipelineDockerDebugDao {
                 .where(statusCond)
                 .and(HOST_TAG.eq(hostTag))
                 .orderBy(UPDATED_TIME.asc())
+                .skipCheck()
                 .fetch()
         }
     }
@@ -279,6 +287,7 @@ class PipelineDockerDebugDao {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
                 .where(timestampDiff(DatePart.HOUR, UPDATED_TIME.cast(Timestamp::class.java)).greaterOrEqual(1))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -299,6 +308,7 @@ class PipelineDockerDebugDao {
                     .cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -322,6 +332,7 @@ class PipelineDockerDebugDao {
                     .cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual(""))
+                .skipCheck()
                 .fetch()
         }
     }
