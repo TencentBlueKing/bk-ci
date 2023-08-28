@@ -35,7 +35,6 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
-import org.apache.commons.lang3.RandomUtils
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
