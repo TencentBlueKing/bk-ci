@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
@@ -121,6 +122,7 @@ class WindowsGpuResourceDao {
     ): List<Record2<String, String>> {
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             return dslContext.select(ZONE_ID, MACHINE_TYPE).from(this)
+                .skipCheck()
                 .fetch()
         }
     }

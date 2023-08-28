@@ -5,8 +5,8 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("工作空间共享信息")
 data class CgsResourceConfig(
-    @JsonProperty("zoneList")
+    @JsonProperty("zone")
     val zoneList: List<String>,
-    @JsonProperty("machineTypeList")
+    @JsonProperty("machineType")
     val machineTypeList: List<String>
 )
