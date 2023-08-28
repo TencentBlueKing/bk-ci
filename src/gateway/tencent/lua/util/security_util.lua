@@ -65,6 +65,7 @@ function _M:isSafe()
         and string.find(path, "^/ms/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
         and string.find(path, "^/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
         and string.find(path, "^/ms/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
+        and string.find(path, "^/ms/artifactory/api/external/url/visit") == nil -- 短链接
         then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false

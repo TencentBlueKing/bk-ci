@@ -66,7 +66,7 @@ jooq {
     configurations {
         moduleNames.forEach { moduleName ->
             val databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
-                println("jooq build env : $mysqlPrefix")
+                logger.debug("jooq build env : $mysqlPrefix")
                 mysqlPrefix + moduleName
             } else {
                 "${project.extra["DB_PREFIX"]}$moduleName"
@@ -96,16 +96,16 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
-                            println("use default properties.")
+                            logger.debug("use default properties.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
                         }
 
-                        println("moduleName : $moduleName")
-                        println("mysqlURL : $mysqlURL")
-                        println("mysqlUser : $mysqlUser")
-                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
+                        logger.debug("moduleName : $moduleName")
+                        logger.debug("mysqlURL : $mysqlURL")
+                        logger.debug("mysqlUser : $mysqlUser")
+                        logger.debug("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"

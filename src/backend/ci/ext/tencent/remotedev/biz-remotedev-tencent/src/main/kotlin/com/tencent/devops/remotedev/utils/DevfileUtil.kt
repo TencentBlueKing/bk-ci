@@ -22,7 +22,7 @@ object DevfileUtil {
             logger.warn("yaml parse error $fileContent|${it.message}")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                params = arrayOf("Please check the file content. Error message: ${it.message}")
+                params = arrayOf("devfile文件语法有误，解析失败。")
             )
         }
 
@@ -71,7 +71,7 @@ object DevfileUtil {
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
                 params = arrayOf(
                     "An error was reported when parsing the runs-on information, " +
-                        "please check the file content. Error message ${it.message}"
+                        "please check the file content."
                 )
             )
         }

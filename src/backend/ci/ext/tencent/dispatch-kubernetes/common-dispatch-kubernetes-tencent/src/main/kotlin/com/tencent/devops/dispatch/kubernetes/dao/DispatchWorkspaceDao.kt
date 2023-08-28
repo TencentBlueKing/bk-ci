@@ -48,12 +48,14 @@ class DispatchWorkspaceDao {
         event: WorkspaceCreateEvent,
         environmentUid: String,
         regionId: Int,
+        taskId: String? = "",
         status: EnvStatusEnum,
         dslContext: DSLContext
     ): Long {
         return with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.insertInto(
                 this,
+                USER_ID,
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
@@ -61,9 +63,11 @@ class DispatchWorkspaceDao {
                 BRANCH,
                 IMAGE,
                 STATUS,
-                REGION_ID
+                REGION_ID,
+                TASK_ID
             )
                 .values(
+                    userId,
                     event.projectId,
                     event.workspaceName,
                     environmentUid,
@@ -71,7 +75,8 @@ class DispatchWorkspaceDao {
                     event.branch,
                     event.devFile.runsOn?.container?.image ?: "",
                     status.ordinal,
-                    regionId
+                    regionId,
+                    taskId
                 )
                 .returning(ID)
                 .fetchOne()!!.id

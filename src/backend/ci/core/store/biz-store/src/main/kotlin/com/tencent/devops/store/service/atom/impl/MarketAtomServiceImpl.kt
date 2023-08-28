@@ -1018,7 +1018,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         records?.forEach {
             ret.add(
                 AtomDevLanguage(
-                    language = it.language
+                    language = it.language,
+                    name = I18nUtil.getCodeLanMessage(it.language)
                 )
             )
         }

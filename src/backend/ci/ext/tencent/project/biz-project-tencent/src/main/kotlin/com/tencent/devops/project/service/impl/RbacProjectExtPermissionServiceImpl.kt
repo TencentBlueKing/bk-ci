@@ -69,21 +69,29 @@ class RbacProjectExtPermissionServiceImpl constructor(
         checkManager: Boolean
     ): Boolean {
         // 校验项目是否存在
-        projectDao.getByEnglishName(dslContext, projectCode)
+        val projectInfo = (projectDao.getByEnglishName(dslContext, projectCode)
             ?: throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-            )
+            ))
+        val currencyCreateUser = if (!checkManager || createUser.isBlank()) {
+            projectInfo.creator
+        } else {
+            createUser
+        }
         if (checkManager) {
             val isProjectManager = authProjectApi.checkProjectManager(
-                userId = createUser,
+                userId = currencyCreateUser,
                 serviceCode = projectAuthServiceCode,
                 projectCode = projectCode
             )
             if (!isProjectManager) {
-                logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
+                logger.warn(
+                    "BKSystemMonitor| createUser2Project| " +
+                        "$currencyCreateUser is not manager for project[$projectCode]"
+                )
                 throw ErrorCodeException(
                     errorCode = ProjectMessageCode.NOT_MANAGER,
-                    params = arrayOf(createUser, projectCode)
+                    params = arrayOf(currencyCreateUser, projectCode)
                 )
             }
         }
@@ -92,7 +100,7 @@ class RbacProjectExtPermissionServiceImpl constructor(
             ?: BkAuthGroup.DEVELOPER.value
         client.get(ServiceProjectAuthResource::class).batchCreateProjectUser(
             token = tokenService.getSystemToken(null)!!,
-            userId = createUser,
+            userId = currencyCreateUser,
             projectCode = projectCode,
             roleCode = roleCode,
             members = userIds
