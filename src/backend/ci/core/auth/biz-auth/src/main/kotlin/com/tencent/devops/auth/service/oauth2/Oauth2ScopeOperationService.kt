@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.dao.AuthOauth2ScopeOperationDao
-import com.tencent.devops.model.auth.tables.records.TAuthOauth2ScopeOperationInformationRecord
+import com.tencent.devops.model.auth.tables.records.TAuthOauth2ScopeOperationRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
@@ -12,7 +12,7 @@ class Oauth2ScopeOperationService constructor(
 ) {
     fun get(
         operationId: String
-    ): TAuthOauth2ScopeOperationInformationRecord? {
+    ): TAuthOauth2ScopeOperationRecord? {
         return oauth2ScopeOperationDao.get(
             dslContext = dslContext,
             operationId = operationId
