@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
@@ -103,8 +104,9 @@ class WebAutoConfiguration {
     @Bean
     fun bkServiceInstanceApplicationRunner(
         compositeDiscoveryClient: CompositeDiscoveryClient,
-        bkTag: BkTag
-    ) = BkServiceInstanceApplicationRunner(compositeDiscoveryClient, bkTag)
+        bkTag: BkTag,
+        redisOperation: RedisOperation
+    ) = BkServiceInstanceApplicationRunner(compositeDiscoveryClient, bkTag, redisOperation)
 
     @Bean
     @ConditionalOnProperty(

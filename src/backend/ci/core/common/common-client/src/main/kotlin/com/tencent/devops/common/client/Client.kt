@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Contract
@@ -188,7 +189,7 @@ class Client @Autowired constructor(
             .retryer(WithoutRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -224,7 +225,7 @@ class Client @Autowired constructor(
      */
     fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
             .client(feignClient)
@@ -239,7 +240,7 @@ class Client @Autowired constructor(
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
         // 获取为feign定义的拦截器
         val requestInterceptor = SpringContextUtil.getBeansWithClass(RequestInterceptor::class.java)
         return Feign.builder()
@@ -272,7 +273,7 @@ class Client @Autowired constructor(
             .retryer(HttpGetRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -282,39 +283,11 @@ class Client @Autowired constructor(
 
     fun getServiceUrl(clz: KClass<*>): String {
         return MicroServiceTarget(
-            serviceName = findServiceName(clz),
+            serviceName = BkServiceUtil.findServiceName(clz),
             type = clz.java,
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
         ).url()
-    }
-
-    private fun findServiceName(clz: KClass<*>): String {
-        // 单体结构，不分微服务的方式
-        if (!assemblyServiceName.isNullOrBlank()) {
-            return assemblyServiceName
-        }
-        val serviceName = interfaces.getOrPut(clz) {
-            val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
-            if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
-                serviceInterface.value
-            } else {
-                val packageName = clz.qualifiedName.toString()
-                val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
-                val matches = regex.find(packageName)
-                    ?: throw ErrorCodeException(
-                        errorCode = SERVICE_COULD_NOT_BE_ANALYZED,
-                        params = arrayOf(packageName)
-                    )
-                matches.groupValues[1]
-            }
-        }
-
-        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
-            serviceName
-        } else {
-            "$serviceName$serviceSuffix"
-        }
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
