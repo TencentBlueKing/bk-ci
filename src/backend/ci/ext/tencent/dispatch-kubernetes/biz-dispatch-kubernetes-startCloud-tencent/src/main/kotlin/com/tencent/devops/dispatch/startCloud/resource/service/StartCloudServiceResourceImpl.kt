@@ -33,6 +33,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.service.StartCloudInterfaceService
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -56,7 +57,7 @@ class StartCloudServiceResourceImpl @Autowired constructor(
         return Result(startCloudInterfaceService.checkCgsRunning(cgsId, status))
     }
 
-    override fun getCgsConfig(): Result<Map<String, List<String>>> {
+    override fun getCgsConfig(): Result<CgsResourceConfig> {
         return Result(startCloudInterfaceService.getCgsConfig())
     }
 }

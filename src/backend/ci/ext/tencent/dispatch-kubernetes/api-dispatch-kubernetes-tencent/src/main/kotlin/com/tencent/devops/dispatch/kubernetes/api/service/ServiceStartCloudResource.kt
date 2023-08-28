@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -84,5 +85,5 @@ interface ServiceStartCloudResource {
     @ApiOperation("获取CGS资源池的区域和机型列表")
     @GET
     @Path("/windows/pool/config")
-    fun getCgsConfig(): Result<Map<String, List<String>>>
+    fun getCgsConfig(): Result<CgsResourceConfig>
 }

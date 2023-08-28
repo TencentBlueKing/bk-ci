@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
@@ -413,12 +414,15 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     // 获取cgs机型、区域
-    fun getCgsConfig(): Map<String, List<String>>? {
+    fun getCgsConfig(): CgsResourceConfig {
         return kotlin.runCatching {
             client.get(ServiceStartCloudResource::class)
                 .getCgsConfig().data
         }.onFailure {
             logger.warn("Error get cgs config: ${it.message}")
-        }.getOrNull()
+        }.getOrNull() ?: CgsResourceConfig(
+            zoneList = emptyList(),
+            machineTypeList = emptyList()
+        )
     }
 }

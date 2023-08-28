@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -212,7 +213,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getCgsConfig(userId: String): Result<Map<String, List<String>>?> {
+    override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
     }
 
