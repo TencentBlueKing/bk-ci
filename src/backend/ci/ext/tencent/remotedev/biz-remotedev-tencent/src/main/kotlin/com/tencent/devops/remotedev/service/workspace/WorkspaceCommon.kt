@@ -49,14 +49,17 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
@@ -80,6 +83,7 @@ class WorkspaceCommon @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
+    private val sharedDao: WorkspaceSharedDao,
     private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -224,7 +228,9 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = it.name,
                     workspaceOwnerType = WorkspaceOwnerType.valueOf(it.ownerType)
                 )
-            ) return@forEach
+            ) {
+                return@forEach
+            }
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
                 workspaceName = it.name,
@@ -269,7 +275,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -282,11 +288,11 @@ class WorkspaceCommon @Autowired constructor(
     fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
         val status = WorkspaceStatus.values()[workspace.status]
         return (
-            status.notOk2doNextAction() && Duration.between(
-                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) || status.checkDeleted() || status.workspaceInitializing()
+                status.notOk2doNextAction() && Duration.between(
+                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) || status.checkDeleted() || status.workspaceInitializing()
     }
 
     fun updateLastHistory(
@@ -326,6 +332,7 @@ class WorkspaceCommon @Autowired constructor(
         val projectId = when (workspaceOwnerType) {
             WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
                 .ifBlank { null }
+
             WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.projectId
         } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
@@ -375,7 +382,9 @@ class WorkspaceCommon @Autowired constructor(
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
         return if (operator == ADMIN_NAME) {
             workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
-        } else setOf(operator)
+        } else {
+            setOf(operator)
+        }
     }
 
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
@@ -423,6 +432,59 @@ class WorkspaceCommon @Autowired constructor(
         }.getOrNull() ?: CgsResourceConfig(
             zoneList = emptyList(),
             machineTypeList = emptyList()
+        )
+    }
+
+    fun shareWorkspace(
+        workspaceName: String,
+        operator: String,
+        assigns: List<ProjectWorkspaceAssign>,
+        mountType: WorkspaceMountType
+    ) {
+        val resourceId = if (mountType == WorkspaceMountType.START) {
+            client.get(ServiceStartCloudResource::class)
+                .shareWorkspace(
+                    operator = operator, workspaceName = workspaceName, receivers = assigns.map { it.userId }
+                ).data!!
+        } else {
+            ""
+        }
+        sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
+    }
+
+    fun unShareWorkspace(
+        workspaceName: String,
+        operator: String,
+        sharedUsers: List<String>,
+        mountType: WorkspaceMountType?,
+        assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.VIEWER,
+        forceDelete: Boolean = false
+    ) {
+        val unShareInfo = sharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUsers = sharedUsers,
+            assignType = assignType
+        )
+        if (mountType == WorkspaceMountType.START) {
+            unShareInfo.groupBy { it.resourceId }.forEach { (resourceId, info) ->
+                val receivers = info.map { it.sharedUser }
+                logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
+                kotlin.runCatching {
+                    client.get(ServiceStartCloudResource::class)
+                        .unShareWorkspace(
+                            operator = operator, resourceId = resourceId, receivers = receivers
+                        ).data!!
+                }.onFailure {
+                    if (!forceDelete) throw it
+                }.getOrNull()
+            }
+        }
+        sharedDao.batchDelete(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUsers = sharedUsers,
+            assignType = assignType
         )
     }
 }

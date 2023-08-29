@@ -37,7 +37,8 @@ class WorkspaceSharedDao {
         dslContext: DSLContext,
         workspaceName: String,
         operator: String,
-        assigns: List<ProjectWorkspaceAssign>
+        assigns: List<ProjectWorkspaceAssign>,
+        resourceId: String
     ) {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.batch(
@@ -60,31 +61,39 @@ class WorkspaceSharedDao {
     }
 
     fun existWorkspaceSharedInfo(
-        workspaceShared: WorkspaceShared,
+        workspaceName: String,
+        sharedUser: String,
         dslContext: DSLContext
     ): Boolean {
         return with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.selectCount().from(this)
-                .where(WORKSPACE_NAME.eq(workspaceShared.workspaceName))
-                .and(SHARED_USER.eq(workspaceShared.sharedUser))
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(sharedUser))
                 .fetchOne(0, Int::class.java)!! > 0
         }
     }
 
     fun fetchWorkspaceSharedInfo(
         dslContext: DSLContext,
-        workspaceName: String
+        workspaceName: String,
+        sharedUsers: List<String>? = null,
+        assignType: WorkspaceShared.AssignType? = null
     ): List<WorkspaceShared> {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this).where(WORKSPACE_NAME.eq(workspaceName)).fetch().map {
-                WorkspaceShared(
-                    id = it.id,
-                    workspaceName = it.workspaceName,
-                    operator = it.operator,
-                    sharedUser = it.sharedUser,
-                    type = WorkspaceShared.AssignType.valueOf(it.assignType)
-                )
-            }
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .let { if (!sharedUsers.isNullOrEmpty()) it.and(SHARED_USER.`in`(sharedUsers)) else it }
+                .let { if (assignType != null) it.and(ASSIGN_TYPE.eq(assignType.name)) else it }
+                .fetch().map {
+                    WorkspaceShared(
+                        id = it.id,
+                        workspaceName = it.workspaceName,
+                        operator = it.operator,
+                        sharedUser = it.sharedUser,
+                        type = WorkspaceShared.AssignType.valueOf(it.assignType),
+                        resourceId = it.resourceId
+                    )
+                }
         }
     }
 
@@ -99,7 +108,8 @@ class WorkspaceSharedDao {
                     workspaceName = it.workspaceName,
                     operator = it.operator,
                     sharedUser = it.sharedUser,
-                    type = WorkspaceShared.AssignType.valueOf(it.assignType)
+                    type = WorkspaceShared.AssignType.valueOf(it.assignType),
+                    resourceId = it.resourceId
                 )
             }
         }

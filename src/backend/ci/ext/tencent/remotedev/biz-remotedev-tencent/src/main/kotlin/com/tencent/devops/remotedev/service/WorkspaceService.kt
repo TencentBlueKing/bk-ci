@@ -42,6 +42,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
@@ -52,6 +53,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
@@ -156,15 +158,7 @@ class WorkspaceService @Autowired constructor(
                 client.get(ServiceStartCloudResource::class)
                     .createStartCloudUser(sharedUser)
             }
-
-            val shareInfo = WorkspaceShared(
-                id = null,
-                workspaceName = workspaceName,
-                operator = userId,
-                sharedUser = sharedUser,
-                type = WorkspaceShared.AssignType.VIEWER
-            )
-            if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
+            if (workspaceSharedDao.existWorkspaceSharedInfo(workspaceName, sharedUser, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_SHARE_FAIL.errorCode,
@@ -172,20 +166,22 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                workspaceSharedDao.createWorkspaceSharedInfo(userId, shareInfo, transactionContext)
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = workspaceName,
-                    operator = userId,
-                    action = WorkspaceAction.SHARE,
-                    actionMessage = String.format(
-                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.SHARE),
-                        sharedUser
-                    )
+            workspaceCommon.shareWorkspace(
+                workspaceName,
+                userId,
+                listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            )
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SHARE,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.SHARE),
+                    sharedUser
                 )
-            }
+            )
             return true
         }
     }
@@ -212,6 +208,7 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
@@ -278,6 +275,7 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
@@ -429,7 +427,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -497,7 +495,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -721,17 +719,28 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = it["WORKSPACE_NAME"] as String,
                 operator = it["OPERATOR"] as String,
                 sharedUser = it["SHARED_USER"] as String,
-                type = WorkspaceShared.AssignType.valueOf(it["ASSIGN_TYPE"] as String)
+                type = WorkspaceShared.AssignType.valueOf(it["ASSIGN_TYPE"] as String),
+                resourceId = it["RESOURCE_ID"] as String
             )
         } ?: emptyList()
     }
 
     fun deleteSharedWorkspace(id: Long): Boolean {
-        workspaceDao.deleteSharedWorkspace(
+        val info = workspaceDao.fetchSharedWorkspaceById(
             id = id,
             dslContext = dslContext
         )
-        return true
+        if (info != null) {
+            workspaceCommon.unShareWorkspace(
+                workspaceName = info.workspaceName,
+                operator = ADMIN_NAME,
+                sharedUsers = listOf(info.sharedUser),
+                assignType = WorkspaceShared.AssignType.valueOf(info.assignType),
+                mountType = if (info.resourceId.isNotBlank()) WorkspaceMountType.START else null
+            )
+            return true
+        }
+        return false
     }
 
     fun notifyWinBeforeSleep() {

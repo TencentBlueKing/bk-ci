@@ -34,6 +34,7 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -414,21 +415,21 @@ class WorkspaceDao {
         if (!workspaceName.isNullOrBlank()) {
             conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
         }
-        return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE)
+        return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE, t2.RESOURCE_ID)
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .fetch()
     }
 
-    fun deleteSharedWorkspace(
+    fun fetchSharedWorkspaceById(
         id: Long,
         dslContext: DSLContext
-    ): Int {
+    ): TWorkspaceSharedRecord? {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.delete(this)
+            return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .limit(1)
-                .execute()
+                .fetchAny()
         }
     }
 

@@ -1,0 +1,19 @@
+package com.tencent.devops.dispatch.startCloud.pojo
+
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class EnvironmentShareRep(
+    @JsonProperty("code")
+    val code: Int,
+    @JsonProperty("data")
+    val data: Data,
+    @JsonProperty("message")
+    val message: String
+) {
+    data class Data(
+        @JsonProperty("resourceId")
+        val resourceId: String
+    )
+}

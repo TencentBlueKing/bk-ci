@@ -28,8 +28,10 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -58,6 +60,7 @@ import java.util.concurrent.TimeUnit
 @Service
 @Suppress("LongMethod")
 class DeliverControl @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -161,7 +164,7 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-            sharedDao.batchCreate(dslContext, workspaceName, userId, listOf(assign2Owner))
+                workspaceCommon.shareWorkspace(workspaceName, userId, listOf(assign2Owner), WorkspaceMountType.START)
             softwareManageService.installUserSoftwares(
                 projectId = projectId,
                 userId = assign2Owner.userId,
@@ -178,17 +181,17 @@ class DeliverControl @Autowired constructor(
         val em = alreadyExist.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
-            sharedDao.batchCreate(dslContext, workspaceName, userId, add)
+            workspaceCommon.shareWorkspace(workspaceName, userId, add, WorkspaceMountType.START)
         }
 
         val am = assigns.map { m -> m.userId }
         val reduce = alreadyExist.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.sharedUser !in am }
         if (reduce.isNotEmpty()) {
-            sharedDao.batchDelete(
-                dslContext = dslContext,
+            workspaceCommon.unShareWorkspace(
                 workspaceName = workspaceName,
+                operator = userId,
                 sharedUsers = reduce.map { it.sharedUser },
-                assignType = WorkspaceShared.AssignType.VIEWER
+                mountType = WorkspaceMountType.START
             )
         }
     }
@@ -260,6 +263,7 @@ class DeliverControl @Autowired constructor(
                         }
                     }
                 }
+
                 WorkspaceStatus.DISTRIBUTING -> {
                     if (type != "SYSTEM") {
                         updateStatusAndCreateHistory(
@@ -301,6 +305,7 @@ class DeliverControl @Autowired constructor(
                         ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
                     )
                 }
+
                 else -> {
                     logger.info("${workspace.name} is ${WorkspaceStatus.values()[workspace.status]}, return error.")
                 }
