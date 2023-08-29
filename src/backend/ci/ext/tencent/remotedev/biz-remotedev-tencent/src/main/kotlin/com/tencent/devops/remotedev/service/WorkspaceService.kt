@@ -67,6 +67,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -313,6 +314,29 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun getProjectWorkspaceList4WeSec(
+        projectId: String?
+    ): List<WeSecProjectWorkspace> {
+        logger.info("op get project $projectId workspace list")
+        val result = workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.RUNNING,
+            mountType = WorkspaceMountType.START,
+            projectId = projectId
+        ) ?: emptyList()
+
+        return result.map {
+            val detail = workspaceCommon.getWorkspaceDetail(it.name)
+            WeSecProjectWorkspace(
+                workspaceName = it.name,
+                projectId = it.projectId,
+                creator = it.creator,
+                regionId = detail?.regionId.toString(),
+                innerIp = detail?.hostIP
+                )
+            }
     }
 
     private fun parsingWorkspace(

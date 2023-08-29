@@ -46,5 +46,5 @@ data class WeSecProjectWorkspace(
     val regionId: String,
     @ApiModelProperty("inner_ip")
     @JsonProperty("inner_ip")
-    val innerIp: String
+    val innerIp: String?
 )

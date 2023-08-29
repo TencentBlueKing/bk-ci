@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,5 +44,5 @@ interface ServiceRemoteDevResource {
         @ApiParam("project_id", required = false)
         @QueryParam("project_id")
         projectId: String?
-    ): Result<Boolean>
+    ): Result<List<WeSecProjectWorkspace>>
 }

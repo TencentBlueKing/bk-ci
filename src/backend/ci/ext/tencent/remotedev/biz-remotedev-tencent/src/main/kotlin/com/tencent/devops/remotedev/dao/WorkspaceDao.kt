@@ -363,7 +363,8 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
@@ -436,7 +437,8 @@ class WorkspaceDao {
         userId: String? = null,
         workspaceName: String? = null,
         status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -451,6 +453,9 @@ class WorkspaceDao {
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+            }
+            if (projectId != null) {
+                condition.add(PROJECT_ID.eq(projectId))
             }
         }
         return condition
