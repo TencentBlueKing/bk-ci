@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 class SamplePermissionMigrateService : PermissionMigrateService {
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
@@ -61,6 +62,10 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     }
 
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }
 }
