@@ -472,6 +472,27 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    fun createYamlPipeline(
+        userId: String,
+        projectId: String,
+        yml: String,
+        defaultBranch: Boolean
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
+    }
+
+    fun updateYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yml: String,
+        defaultBranch: Boolean
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
+    }
+
     /**
      * 还原已经删除的流水线
      */
