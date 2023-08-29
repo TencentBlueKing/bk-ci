@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -164,7 +163,7 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-                workspaceCommon.shareWorkspace(workspaceName, userId, listOf(assign2Owner), WorkspaceMountType.START)
+            workspaceCommon.shareWorkspace(workspaceName, userId, listOf(assign2Owner), WorkspaceMountType.START)
             softwareManageService.installUserSoftwares(
                 projectId = projectId,
                 userId = assign2Owner.userId,
