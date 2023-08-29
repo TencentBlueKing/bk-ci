@@ -174,11 +174,11 @@ class BkShardingDataSourceConfiguration {
     fun migratingShardingDataSource(config: DataSourceProperties, registry: MeterRegistry): DataSource {
         val migratingDataSourceConfigs = config.migratingDataSourceConfigs
         val migratingTableRuleConfigs = config.migratingTableRuleConfigs
-        if (migratingDataSourceConfigs == null || migratingTableRuleConfigs == null) {
-            logger.warn("migratingDataSourceConfigs and migratingTableRuleConfigs can not be empty")
+        if (migratingDataSourceConfigs == null) {
+            logger.warn("migratingDataSourceConfigs can not be empty")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "migratingDataSourceConfigs and migratingTableRuleConfigs can not be empty"
+                defaultMessage = "migratingDataSourceConfigs can not be empty"
             )
         }
         return createShardingDataSource(
@@ -197,7 +197,7 @@ class BkShardingDataSourceConfiguration {
         databaseAlgorithmClassName: String? = null,
         tableAlgorithmClassName: String? = null,
         dataSourceConfigs: List<DataSourceConfig>,
-        tableRuleConfigs: List<TableRuleConfig>,
+        tableRuleConfigs: List<TableRuleConfig>? = null,
         bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null,
         registry: MeterRegistry
     ): DataSource {
@@ -205,8 +205,8 @@ class BkShardingDataSourceConfiguration {
         // 设置分片表的路由规则
         val dataSourceSize = dataSourceConfigs.size
         val bkTableRuleConfigs = shardingRuleConfig.tables
-        val shardingTableRuleConfigs = tableRuleConfigs.filter { it.broadcastFlag != true }
-        if (shardingTableRuleConfigs.isNotEmpty()) {
+        val shardingTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag != true }
+        if (!shardingTableRuleConfigs.isNullOrEmpty()) {
             shardingTableRuleConfigs.forEach { shardingTableRuleConfig ->
                 bkTableRuleConfigs.add(
                     getTableRuleConfiguration(
@@ -219,8 +219,8 @@ class BkShardingDataSourceConfiguration {
         }
         // 设置广播表的路由规则
         val broadcastTables = shardingRuleConfig.broadcastTables
-        val broadcastTableRuleConfigs = tableRuleConfigs.filter { it.broadcastFlag == true }
-        if (broadcastTableRuleConfigs.isNotEmpty()) {
+        val broadcastTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag == true }
+        if (!broadcastTableRuleConfigs.isNullOrEmpty()) {
             broadcastTableRuleConfigs.forEach { broadcastTableRuleConfig ->
                 broadcastTables.add(broadcastTableRuleConfig.name)
             }
