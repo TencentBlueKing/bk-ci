@@ -296,4 +296,36 @@ class AuthResourceService @Autowired constructor(
             iamResourceCodes = iamResourceCodes
         ).map { authResourceDao.convert(it) }
     }
+
+    fun updateCreator(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        creator: String
+    ) {
+        authResourceDao.updateCreator(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            creator = creator
+        )
+    }
+
+    fun listByCreator(
+        resourceType: String,
+        projectCode: String? = null,
+        creator: String,
+        offset: Int,
+        limit: Int
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByCreator(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            creator = creator,
+            offset = offset,
+            limit = limit
+        ).map { authResourceDao.convert(it) }
+    }
 }
