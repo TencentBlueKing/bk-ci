@@ -38,9 +38,6 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/workspace")
     fun getProjectWorkspace(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("project_id", required = false)
         @QueryParam("project_id")
         projectId: String?
