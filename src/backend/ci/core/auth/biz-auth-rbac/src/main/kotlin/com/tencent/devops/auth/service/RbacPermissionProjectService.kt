@@ -39,6 +39,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -47,6 +48,8 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -61,7 +64,8 @@ class RbacPermissionProjectService(
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGradeManagerService: PermissionGradeManagerService
+    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val client: Client
 ) : PermissionProjectService {
 
     companion object {
@@ -257,5 +261,25 @@ class RbacPermissionProjectService(
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return emptyList()
+    }
+
+    override fun getProjectPermissionInfo(
+        projectCode: String
+    ): ProjectPermissionInfoVO {
+        val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                params = arrayOf(projectCode),
+                defaultMessage = "project $projectCode not exist"
+            )
+        return ProjectPermissionInfoVO(
+            projectCode = projectCode,
+            projectName = projectInfo.projectName,
+            creator = projectInfo.creator!!,
+            owners = getProjectUsers(
+                projectCode, BkAuthGroup.MANAGER
+            ),
+            members = getProjectUsers(projectCode, null)
+        )
     }
 }
