@@ -85,7 +85,8 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             userId = userId,
             path = path,
             ttl = ttl,
-            directed = false
+            directed = false,
+            useForExperience = false
         )
     }
 
