@@ -35,9 +35,6 @@ interface ApigwAuthProjectResourceV4 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("用户Id", required = true)
-        userId: String,
         @PathParam("projectId")
         @ApiParam("项目ID", required = true)
         projectId: String
