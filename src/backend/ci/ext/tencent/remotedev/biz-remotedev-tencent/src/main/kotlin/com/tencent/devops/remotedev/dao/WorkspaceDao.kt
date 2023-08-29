@@ -391,7 +391,8 @@ class WorkspaceDao {
     ): Result<Record1<String>>? {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectDistinct(PROJECT_ID).from(this)
-                .let { i -> if (mountType != null) { i.where(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
+                .where(PROJECT_ID.ne(""))
+                .let { i -> if (mountType != null) { i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
                 .fetch()
         }
     }
