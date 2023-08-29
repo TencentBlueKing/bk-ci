@@ -83,7 +83,7 @@ interface ApigwArtifactoryResourceV4 {
     ): Result<Url>
 
     @ApiOperation(
-        "获取APP跳转链接",
+        "外部下载链接",
         tags = ["v4_app_artifactory_externalUrl"]
     )
     @Path("/external_url")
