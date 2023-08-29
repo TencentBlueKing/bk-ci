@@ -5,10 +5,12 @@ on:
     branches: [master]
     paths:
     - 'src/agent/agent/**'
+    - 'src/agent/common/**'
   pull_request:
     branches: [master, release-*]
     paths:
     - 'src/agent/agent/**'
+    - 'src/agent/common/**'
   workflow_dispatch:
   workflow_call:
     inputs:
