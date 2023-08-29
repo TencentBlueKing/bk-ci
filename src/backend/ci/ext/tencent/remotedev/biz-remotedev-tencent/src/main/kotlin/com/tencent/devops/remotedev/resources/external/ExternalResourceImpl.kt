@@ -62,12 +62,6 @@ class ExternalResourceImpl @Autowired constructor(
             .build()
     }
 
-    override fun jobCallback(key: String, workspaceName: String): Result<Boolean> {
-        if (key != externalKey) return Result(false)
-        deliverControl.jobCallback(workspaceName)
-        return Result(true)
-    }
-
     override fun softwareInstallCallback(
         type: String,
         key: String,

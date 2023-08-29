@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -182,17 +183,38 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         zoneId: String?,
         machineType: String?,
-        status: Int?
-    ): Result<List<Map<String, Any>>> {
+        status: Int?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
-
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                 (machineType.isNullOrEmpty() || it.machineType == machineType) &&
                 (status == null || it.status == status)
         }
+        val start = (pageNotNull - 1) * pageSizeNotNull
+        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
+        return if (start >= filteredResources.size) {
+            Result(
+                Page(
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
+                    records = emptyList()
+            ))
+        } else {
+            Result(
+                Page(
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
+                    records = filteredResources.subList(start, end).map { JsonUtil.toMap(it) }
+            )
+            )
+        }
+    }
 
-        return Result(filteredResources.map { JsonUtil.toMap(it) })
+    override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
+        return Result(workspaceCommon.getCgsConfig())
     }
 
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {

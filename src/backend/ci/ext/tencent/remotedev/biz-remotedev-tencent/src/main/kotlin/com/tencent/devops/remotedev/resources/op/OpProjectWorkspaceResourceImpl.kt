@@ -34,7 +34,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         ) ?: return Result(false)
         // 调用CreateControl.asyncCreateWorkspace发起创建
         createControl.asyncCreateWorkspace(
-            userId = owner,
+            pmUserId = owner,
             projectId = projectId,
             cgsId = cgsId,
             autoAssign = true,

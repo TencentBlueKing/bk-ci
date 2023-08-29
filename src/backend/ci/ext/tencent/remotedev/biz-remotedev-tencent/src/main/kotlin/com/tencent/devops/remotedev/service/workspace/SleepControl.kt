@@ -216,7 +216,12 @@ class SleepControl @Autowired constructor(
             )
         }
 
-        if (!workspaceCommon.checkProjectRouter(workspace.creator, workspaceName)) return false
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.creator,
+                workspaceName = workspaceName,
+                workspaceOwnerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            )
+        ) return false
 
         RedisCallLimit(
             redisOperation,
@@ -336,7 +341,8 @@ class SleepControl @Autowired constructor(
             remoteDevBillingDao.endBilling(
                 dslContext = transactionContext,
                 workspaceName = workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name)
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name
+            )
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

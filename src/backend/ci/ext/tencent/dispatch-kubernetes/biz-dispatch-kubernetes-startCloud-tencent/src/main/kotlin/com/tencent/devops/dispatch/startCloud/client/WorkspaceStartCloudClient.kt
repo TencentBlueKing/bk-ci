@@ -10,12 +10,14 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startCloud.pojo.CgsQueryReq
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startCloud.pojo.Page
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -39,6 +41,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val HAS_BEEN_DELETED = 32006
         const val APP_NOT_BIND_CGS = 32004
         const val NO_CGS_CHOOSE = 32005
+        private const val DEFAULT_CGS_PER_PAGE = 500
+        private const val DEFAULT_CGS_PAGE = 1
     }
 
     @Value("\${startCloud.appId}")
@@ -98,7 +102,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        " ${environment.machineType}型云桌面资源不足(${environmentRsp.code})"
+                        " ${environment.zoneId}地区${environment.machineType}型云桌面资源不足(${environmentRsp.code})"
                     )
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
@@ -240,8 +244,32 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun getResourceList(): List<EnvironmentResourceData> {
+        var cgsPage = DEFAULT_CGS_PAGE
+        val cgsData = mutableListOf<EnvironmentResourceData>()
+        run outside@{
+            while (true) {
+                val request = CgsQueryReq(
+                    appName = appName,
+                    query = null,
+                    page = Page(
+                        start = cgsPage,
+                        limit = DEFAULT_CGS_PER_PAGE,
+                        sort = null
+                    )
+                )
+                val cgsPageList = queryCgsPageList(request)
+                cgsData.addAll(cgsPageList)
+                if (cgsPageList.size < DEFAULT_CGS_PER_PAGE) {
+                    return@outside
+                }
+                cgsPage++
+            }
+        }
+        return cgsData
+    }
+    fun queryCgsPageList(cgsQueryReq: CgsQueryReq): List<EnvironmentResourceData> {
         val url = "$apiUrl/openapi/cgs/list"
-        val body = JsonUtil.toJson(mapOf("appName" to appName), false)
+        val body = JsonUtil.toJson(cgsQueryReq, false)
         logger.info("getResourceList request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)

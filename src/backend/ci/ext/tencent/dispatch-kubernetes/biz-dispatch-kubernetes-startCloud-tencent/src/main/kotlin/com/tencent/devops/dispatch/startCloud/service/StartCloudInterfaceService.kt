@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -104,5 +105,24 @@ class StartCloudInterfaceService @Autowired constructor(
             cgsId = cgsId,
             status = status
         )?.let { false } ?: true
+    }
+
+    /**
+     * 获取cgs资源池的机型和区域列表
+     */
+    fun getCgsConfig(): CgsResourceConfig {
+        val machineTypeList = mutableListOf<String>()
+        val zoneList = mutableListOf<String>()
+        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
+        cgsConfigList.forEach { cgs ->
+                machineTypeList.add(cgs.value2()).takeIf { !machineTypeList.contains(cgs.value2()) }
+                zoneList.add(cgs.value1()).takeIf { !zoneList.contains(cgs.value1()) }
+        }
+        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
+
+        return CgsResourceConfig(
+            zoneList = zoneList,
+            machineTypeList = machineTypeList
+        )
     }
 }
