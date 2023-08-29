@@ -56,6 +56,6 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @ApiParam("项目ID", required = false)
         @QueryParam("project_id")
-        projectId: String
+        projectId: String?
     ): Result<List<WeSecProjectWorkspace>>
 }
