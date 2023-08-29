@@ -333,8 +333,6 @@ class WorkspaceService @Autowired constructor(
             WeSecProjectWorkspace(
                 workspaceName = it.name,
                 projectId = it.projectId,
-                projectName = client.get(ServiceProjectResource::class).get(it.projectId).let { project -> project.data?.projectName }
-                    ?: "",
                 creator = it.creator,
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP

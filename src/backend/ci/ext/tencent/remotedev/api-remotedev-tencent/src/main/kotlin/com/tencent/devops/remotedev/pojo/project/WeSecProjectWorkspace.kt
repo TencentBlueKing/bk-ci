@@ -39,9 +39,6 @@ data class WeSecProjectWorkspace(
     @ApiModelProperty("项目ID")
     @JsonProperty("project_id")
     val projectId: String,
-    @ApiModelProperty("项目名称")
-    @JsonProperty("project_name")
-    val projectName: String,
     @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val creator: String,
     @ApiModelProperty("region_id")
