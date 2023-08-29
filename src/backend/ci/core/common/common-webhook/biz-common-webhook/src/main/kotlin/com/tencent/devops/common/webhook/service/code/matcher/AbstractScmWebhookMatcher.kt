@@ -92,6 +92,8 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
         return eventHandler.getExternalId(event)
     }
 
+    override fun getSourceEvent() = event as CodeWebhookEvent
+
     override fun retrieveParams(projectId: String?, repository: Repository?): Map<String, Any> {
         return eventHandler.retrieveParams(
             event = event,

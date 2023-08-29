@@ -37,9 +37,9 @@ class BranchFilter(
     private val includedBranches: List<String>,
     private val excludedBranches: List<String>,
     // 包含过滤失败原因
-    private val includedFailedReason: String,
+    private val includedFailedReason: String = "",
     // 排除过滤失败原因
-    private val excludedFailedReason: String
+    private val excludedFailedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
