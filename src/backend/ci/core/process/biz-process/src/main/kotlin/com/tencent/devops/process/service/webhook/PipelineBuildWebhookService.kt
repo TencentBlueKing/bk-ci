@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -68,6 +67,8 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import java.sql.Timestamp
+import java.time.format.DateTimeFormatter
 
 @Suppress("ALL")
 abstract class PipelineBuildWebhookService : ApplicationContextAware {
@@ -294,8 +295,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             userId = userId,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            buildId = buildId,
-                            event = matcher.getSourceEvent()
+                            buildId = buildId
                         )
                     }
                 } catch (ignore: Exception) {
@@ -407,12 +407,12 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     }
 
     private fun dispatchPipelineBuildEvent(
-        event: CodeWebhookEvent,
         projectId: String,
         pipelineId: String,
         buildId: String,
         userId:String
     ) {
+        logger.info("dispatch pipeline build event|${projectId}|${pipelineId}|${buildId}")
         pipelineEventDispatcher.dispatch(
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",

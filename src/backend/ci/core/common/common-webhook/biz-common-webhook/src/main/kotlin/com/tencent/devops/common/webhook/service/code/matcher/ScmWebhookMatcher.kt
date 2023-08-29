@@ -105,8 +105,6 @@ interface ScmWebhookMatcher {
         return emptyList()
     }
 
-    fun getSourceEvent(): CodeWebhookEvent
-
     companion object {
         private val logger = LoggerFactory.getLogger(ScmWebhookMatcher::class.java)
     }

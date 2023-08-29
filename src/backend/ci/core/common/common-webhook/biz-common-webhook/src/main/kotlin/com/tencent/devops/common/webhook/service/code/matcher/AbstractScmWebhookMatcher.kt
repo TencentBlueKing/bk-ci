@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
@@ -91,8 +90,6 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
     override fun getExternalId(): String {
         return eventHandler.getExternalId(event)
     }
-
-    override fun getSourceEvent() = event as CodeWebhookEvent
 
     override fun retrieveParams(projectId: String?, repository: Repository?): Map<String, Any> {
         return eventHandler.retrieveParams(
