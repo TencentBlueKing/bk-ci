@@ -271,7 +271,7 @@ interface BuildListener {
 
             onFailure(dispatchService, event, e)
         } catch (t: Throwable) {
-            logger.error("Fail to handle the start up message - DispatchService($event)", t)
+            logger.warn("Fail to handle the start up message - DispatchService($event)", t)
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
