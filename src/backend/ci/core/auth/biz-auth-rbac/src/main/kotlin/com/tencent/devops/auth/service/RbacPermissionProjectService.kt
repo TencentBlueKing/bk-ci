@@ -273,15 +273,15 @@ class RbacPermissionProjectService(
                 defaultMessage = "project $projectCode not exist"
             )
         val projectGroupAndUserList = getProjectGroupAndUserList(projectCode)
-        val dbGroupInfo = authResourceGroupDao.get(
+        val managerGroupRelationId = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             groupCode = BkAuthGroup.MANAGER.value
-        )
+        )!!.relationId.toInt()
         val owners = projectGroupAndUserList
-            .find { it.roleId == dbGroupInfo!!.relationId.toInt() }?.userIdList ?: emptyList()
+            .find { it.roleId == managerGroupRelationId }?.userIdList ?: emptyList()
         return ProjectPermissionInfoVO(
             projectCode = projectCode,
             projectName = projectInfo.projectName,
