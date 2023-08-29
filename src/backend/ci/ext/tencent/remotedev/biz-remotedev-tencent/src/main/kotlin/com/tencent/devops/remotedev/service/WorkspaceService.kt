@@ -345,7 +345,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("get workspace project list")
         val result = workspaceDao.getWorkspaceProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
+            mountType = WorkspaceMountType.START
         ) ?: emptyList()
         return result.map {
             RemotedevProject(
