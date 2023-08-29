@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.migrate
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -105,5 +106,13 @@ interface OpAuthMigrateResource {
     fun grantGroupAdditionalAuthorization(
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/handoverPermissions")
+    @ApiOperation("权限交接")
+    fun handoverPermissions(
+        @ApiParam("权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
     ): Result<Boolean>
 }
