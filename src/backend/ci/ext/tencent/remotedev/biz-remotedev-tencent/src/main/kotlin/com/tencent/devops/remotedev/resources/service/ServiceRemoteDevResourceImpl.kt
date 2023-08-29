@@ -23,6 +23,6 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.getWorkspaceProject())
     }
 }

@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,5 +41,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId
         )
+    }
+
+    override fun queryWorkspaceProjects(appCode: String?, apigwType: String?): Result<List<RemotedevProject>> {
+        logger.info("Get  workspace projects")
+        return client.get(ServiceRemoteDevResource::class).getRemotedevProjects()
     }
 }
