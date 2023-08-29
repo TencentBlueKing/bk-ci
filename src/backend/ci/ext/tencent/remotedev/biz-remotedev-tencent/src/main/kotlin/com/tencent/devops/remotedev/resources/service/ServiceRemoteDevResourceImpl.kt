@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.resources.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -19,5 +20,9 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getProjectWorkspace(projectId: String?): Result<List<WeSecProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId))
+    }
+
+    override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
+        TODO("Not yet implemented")
     }
 }

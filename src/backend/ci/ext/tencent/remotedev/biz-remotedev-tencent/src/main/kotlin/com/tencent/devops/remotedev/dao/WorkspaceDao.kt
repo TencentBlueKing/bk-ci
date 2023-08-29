@@ -45,6 +45,7 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -370,7 +371,8 @@ class WorkspaceDao {
             val condition = mixCondition(
                 userId = userId,
                 status = status,
-                mountType = mountType
+                mountType = mountType,
+                projectId = projectId
             )
 
             if (condition.isEmpty()) {
@@ -379,6 +381,17 @@ class WorkspaceDao {
 
             return dslContext.selectFrom(this)
                 .where(condition)
+                .fetch()
+        }
+    }
+
+    fun getWorkspaceProject(
+        dslContext: DSLContext,
+        mountType: WorkspaceMountType? = null
+    ): Result<Record1<String>>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectDistinct(PROJECT_ID).from(this)
+                .let { i -> if (mountType != null) { i.where(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
                 .fetch()
         }
     }
