@@ -25,34 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import javax.ws.rs.NotFoundException
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf(),
-    val type: PoolType? = null,
-    val agentName: String? = null,
-    val agentId: String? = null,
-    val envName: String? = null,
-    val envProjectId: String? = null,
-    val envId: String? = null,
-    val os: VMBaseOS? = null,
-    val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
-)
+enum class PersistenceContainerStatus(val status: Int) {
+    PREPARING(1),
+    RUNNING(2),
+    DELETED(3),
+    FAILED(4);
 
-enum class BuildType {
-    DOCKER_VM,
-    DEVCLOUD
+    companion object {
+        fun toStatus(status: Int): PersistenceContainerStatus {
+            PersistenceContainerStatus.values().forEach {
+                if (it.status == status) {
+                    return it
+                }
+            }
+            throw NotFoundException("Can't find the container status($status)")
+        }
+    }
 }

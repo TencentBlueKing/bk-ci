@@ -25,34 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.dispatch.devcloud.service.context
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
+import com.tencent.devops.common.pipeline.type.DispatchType
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf(),
-    val type: PoolType? = null,
-    val agentName: String? = null,
-    val agentId: String? = null,
-    val envName: String? = null,
-    val envProjectId: String? = null,
-    val envId: String? = null,
-    val os: VMBaseOS? = null,
-    val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
+class DcStartupHandlerContext(
+    val vmSeqId: String,
+    val gateway: String,
+    val dispatchMessage: String,
+    val atoms: Map<String, String> = mapOf(),
+    val dispatchType: DispatchType?,
+    val customBuildEnv: Map<String, String>? = null,
+    val containerHashId: String?,
+    val agentId: String,
+    val secretKey: String,
+    val persistence: Boolean = false,
+    var cpu: Int = 16,
+    var memory: String = "32768M",
+    var disk: String = "100G",
+    var buildLogKey: String = "",
+    var containerPool: Pool? = null, // 当前构建容器配置信息
+    var poolNo: Int = 0, // 容器池序号
+    var containerName: String? = null, // 复用的容器池容器
+    var containerChanged: Boolean = true, // 复用的容器池容器配置是否已变更，默认true
+    var persistenceAgentId: String = "",
+    override val executeCount: Int?,
+    override val userId: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String
+) : HandlerContext(
+    projectId, pipelineId, buildId, userId, executeCount
 )
-
-enum class BuildType {
-    DOCKER_VM,
-    DEVCLOUD
-}

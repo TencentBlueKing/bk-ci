@@ -25,34 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.dispatch.devcloud.service.context
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf(),
-    val type: PoolType? = null,
-    val agentName: String? = null,
-    val agentId: String? = null,
-    val envName: String? = null,
-    val envProjectId: String? = null,
-    val envId: String? = null,
-    val os: VMBaseOS? = null,
-    val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
+class DcShutdownHandlerContext(
+    var buildLogKey: String = "",
+    val vmSeqId: String?,
+    val shutdownEvent: PipelineAgentShutdownEvent,
+    override val executeCount: Int?,
+    override val userId: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String
+) : HandlerContext(
+    projectId, pipelineId, buildId, userId, executeCount
 )
-
-enum class BuildType {
-    DOCKER_VM,
-    DEVCLOUD
-}
