@@ -46,6 +46,7 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -356,13 +357,15 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
                 status = status,
-                mountType = mountType
+                mountType = mountType,
+                projectId = projectId
             )
 
             if (condition.isEmpty()) {
@@ -371,6 +374,18 @@ class WorkspaceDao {
 
             return dslContext.selectFrom(this)
                 .where(condition)
+                .fetch()
+        }
+    }
+
+    fun getWorkspaceProject(
+        dslContext: DSLContext,
+        mountType: WorkspaceMountType? = null
+    ): Result<Record1<String>>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectDistinct(PROJECT_ID).from(this)
+                .where(PROJECT_ID.ne(""))
+                .let { i -> if (mountType != null) { i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
                 .fetch()
         }
     }
@@ -429,7 +444,8 @@ class WorkspaceDao {
         userId: String? = null,
         workspaceName: String? = null,
         status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -444,6 +460,9 @@ class WorkspaceDao {
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+            }
+            if (projectId != null) {
+                condition.add(PROJECT_ID.eq(projectId))
             }
         }
         return condition
