@@ -542,8 +542,8 @@ export default {
 }
 .line-split {
   height: 1px;
-  background: #ccc;
-  margin: 10px auto;
+  background: #dcdee5;
+  margin: 10px 15px;
 }
 .add-group-btn {
   display: flex;
