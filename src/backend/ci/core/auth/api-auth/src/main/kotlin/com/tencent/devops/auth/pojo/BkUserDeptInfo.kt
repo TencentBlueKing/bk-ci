@@ -7,10 +7,10 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("用户部门详细信息")
 data class BkUserDeptInfo(
     @ApiModelProperty("id")
-    val id: String,
+    val id: String?,
     @ApiModelProperty("部门名称")
-    val name: String,
+    val name: String?,
     @ApiModelProperty("部门详细名称")
     @JsonProperty("full_name")
-    val fullName: String
+    val fullName: String?
 )
