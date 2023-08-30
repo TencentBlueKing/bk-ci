@@ -27,7 +27,10 @@
 
 package com.tencent.devops.auth.service.v0
 
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -35,10 +38,13 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
 
 class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
-    val authServiceCode: BSCommonAuthServiceCode
+    val authServiceCode: BSCommonAuthServiceCode,
+    val client: Client
 ) : PermissionProjectService {
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
@@ -105,6 +111,24 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
             serviceCode = authServiceCode,
             projectCode = projectCode,
             projectId = projectId
+        )
+    }
+
+    override fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO {
+        val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                params = arrayOf(projectCode),
+                defaultMessage = "project $projectCode not exist"
+            )
+        return ProjectPermissionInfoVO(
+            projectCode = projectCode,
+            projectName = projectInfo.projectName,
+            creator = projectInfo.creator!!,
+            owners = getProjectUsers(
+                projectCode, BkAuthGroup.MANAGER
+            ),
+            members = getProjectUsers(projectCode, null)
         )
     }
 

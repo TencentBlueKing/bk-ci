@@ -25,27 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:common:common-quality"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":core:stream:api-stream"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:sign:api-sign-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-}
+package com.tencent.devops.remotedev.pojo.project
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("提供给安全侧的获取remotedev项目")
+data class RemotedevProject(
+    @ApiModelProperty("项目ID")
+    @JsonProperty("project_id")
+    val projectId: String,
+    @ApiModelProperty("项目名称")
+    @JsonProperty("project_name")
+    val projectName: String
+)
