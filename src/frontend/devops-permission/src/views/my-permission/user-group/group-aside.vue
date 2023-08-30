@@ -450,7 +450,7 @@ export default {
   }
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 210px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
