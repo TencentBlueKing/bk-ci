@@ -5,6 +5,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,4 +44,31 @@ interface ApigwRemoteDevResource {
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
+
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace", "v4_user_project_workspace"])
+    @GET
+    @Path("/project/workspace")
+    fun queryProjectWorkspace(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<List<WeSecProjectWorkspace>>
+
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list", "v4_user_remotedev_project_list"])
+    @GET
+    @Path("/project/list")
+    fun queryWorkspaceProjects(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?
+    ): Result<List<RemotedevProject>>
 }
