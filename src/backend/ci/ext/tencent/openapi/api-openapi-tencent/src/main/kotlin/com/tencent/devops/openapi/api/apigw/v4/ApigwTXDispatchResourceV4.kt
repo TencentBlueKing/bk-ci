@@ -26,7 +26,7 @@ interface ApigwTXDispatchResourceV4 {
     @ApiOperation("销毁devcloud构建容器", tags = ["v4_app_dispatch", "v4_user_dispatch"])
     @POST
     @Path("/devcloud/container/destroy")
-    fun exportPipelineGitCI(
+    fun destroyPersistenceContainer(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
