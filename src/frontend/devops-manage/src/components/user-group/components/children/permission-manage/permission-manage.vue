@@ -8,7 +8,6 @@
       :ajax-prefix="ajaxPrefix"
       @choose-group="handleChooseGroup"
       @create-group="handleCreateGroup"
-      @close-manage="handleCloseManage"
       @change-group-detail-tab="handleChangeGroupDetailTab"
     />
     <iam-iframe
@@ -73,9 +72,6 @@ export default {
     handleCreateGroup() {
       this.activeIndex = '';
       this.path = 'create-user-group';
-    },
-    handleCloseManage() {
-      this.$emit('close-manage');
     },
   },
 };

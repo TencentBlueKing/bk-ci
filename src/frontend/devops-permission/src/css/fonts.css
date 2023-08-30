@@ -65,3 +65,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-edit:before {
 	content: "\e10e";
 }
+.permission-icon-wodexiangmu:before {
+	content: "\e10f";
+}
+.permission-icon-more-fill:before {
+	content: "\e110";
+}
+.permission-icon-add-fill:before {
+	content: "\e111";
+}
+.permission-icon-warning-circle-fill:before {
+	content: "\e112";
+}

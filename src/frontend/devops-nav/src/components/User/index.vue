@@ -91,7 +91,7 @@
                     },
                     {
                         to: '/console/permission',
-                        label: this.$t('myPermission')
+                        label: this.$t('accessCenter')
                     },
                     {
                         cb: this.logout,
