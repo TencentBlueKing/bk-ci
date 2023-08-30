@@ -74,7 +74,9 @@ class WindowsResourceConfigDao {
         return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
-            }.fetch()
+            }
+                .skipCheck()
+                .fetch()
         }
     }
 
@@ -100,7 +102,6 @@ class WindowsResourceConfigDao {
             machineType?.let { conditions.add(SIZE.eq(it)) }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .skipCheck()
                 .fetchAny()
         }
     }
