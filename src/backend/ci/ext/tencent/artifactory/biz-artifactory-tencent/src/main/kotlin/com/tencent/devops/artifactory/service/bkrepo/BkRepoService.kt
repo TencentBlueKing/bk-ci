@@ -581,27 +581,49 @@ class BkRepoService @Autowired constructor(
                 } else if (RepoUtils.isImageFile(it)) {
                     fileInfoList.add(buildImageArtifactInfo(it))
                 } else {
-                    fileInfoList.add(
-                        FileInfo(
-                            name = it.name,
-                            fullName = it.fullPath,
-                            path = it.fullPath, // bug?
-                            fullPath = it.fullPath,
-                            size = it.size,
-                            folder = it.folder,
-                            modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
-                                .timestamp(),
-                            artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
-                            properties = properties,
-                            appVersion = appVersion,
-                            md5 = it.md5
-                        )
-                    )
+                    fileInfoList.add(buildCustomArtifactInfo(it, properties, appVersion))
                 }
             }
             return fileInfoList
         } finally {
             logger.info("transferFileInfo cost: ${System.currentTimeMillis() - startTimestamp}ms")
+        }
+    }
+
+    private fun buildCustomArtifactInfo(
+        nodeInfo: QueryNodeInfo,
+        properties: List<Property>,
+        appVersion: String?
+    ): FileInfo {
+        // 归档插件归档目录时，在目录多归档一个.bkci_pipeline文件, 记录归档目录的信息
+        return if (nodeInfo.name == ".bkci_pipeline") {
+            FileInfo(
+                name = nodeInfo.path.split("/").last { it.isNotBlank() },
+                fullName = nodeInfo.path,
+                path = nodeInfo.path,
+                fullPath = nodeInfo.path,
+                size = nodeInfo.size,
+                folder = true,
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = RepoUtils.getTypeByRepo(nodeInfo.repoName),
+                properties = properties
+            )
+        } else {
+            FileInfo(
+                name = nodeInfo.name,
+                fullName = nodeInfo.fullPath,
+                path = nodeInfo.fullPath, // bug?
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = RepoUtils.getTypeByRepo(nodeInfo.repoName),
+                properties = properties,
+                appVersion = appVersion,
+                md5 = nodeInfo.md5
+            )
         }
     }
 
@@ -626,11 +648,6 @@ class BkRepoService @Autowired constructor(
                 registry = dockerRegistry
             )
         }
-    }
-
-    override fun createDockerUser(projectCode: String): DockerUser {
-        logger.info("createDockerUser, projectCode: $projectCode")
-        throw OperationException("not supported")
     }
 
     override fun listCustomFiles(
@@ -695,11 +712,6 @@ class BkRepoService @Autowired constructor(
                 "$toPath/$fileName"
             )
         }
-    }
-
-    private fun parsePipelineIdAndBuildId(path: String): Pair<String, String> {
-        val splits = path.removePrefix("/").split("/")
-        return Pair(splits[0], splits[1])
     }
 
     override fun acrossProjectCopy(

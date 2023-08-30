@@ -101,8 +101,6 @@ interface RepoService {
         targetPath: String
     ): Count
 
-    fun createDockerUser(projectCode: String): DockerUser
-
     fun listCustomFiles(userId: String, projectId: String, condition: CustomFileSearchCondition): List<String>
 
     fun copyToCustom(
