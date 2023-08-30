@@ -1,6 +1,5 @@
 <template>
   <article
-    v-if="projectList.length"
     class="group-aside"
   >
     <div class="select-project">
