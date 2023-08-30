@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwTXDispatchResourceV4Impl @Autowired constructor(
     val client: Client
 ) : ApigwTXDispatchResourceV4 {
-    override fun exportPipelineGitCI(
+    override fun destroyPersistenceContainer(
         appCode: String?,
         apigwType: String?,
         userId: String,
