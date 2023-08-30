@@ -57,6 +57,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface UserPipelineDebugResource {
 
+    // TODO #8164 是否使用最近一次构建参数值：取上一次调试或取默认值（前端可以主动取默认值，尽量不要点一次改一次）
     @ApiOperation("调试-获取流水线手动启动参数")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/debugStartupInfo")
