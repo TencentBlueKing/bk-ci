@@ -12,7 +12,7 @@ data class BkUserInfo(
     @ApiModelProperty("是否启用")
     val enabled: Boolean,
     @ApiModelProperty("用户额外信息")
-    val extras: BkUserExtras,
+    val extras: BkUserExtras?,
     @ApiModelProperty("用户部门")
-    val departments: List<BkUserDeptInfo>
+    val departments: List<BkUserDeptInfo>?
 )
