@@ -25,6 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:external:biz-external-tencent"))
-}
+package com.tencent.devops.scm.code.p4.api
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("P4提交列表")
+@JsonIgnoreProperties
+data class P4ChangeList(
+    @ApiModelProperty("提交信息", required = true)
+    val description: String,
+    @ApiModelProperty("提交文件列表", required = true)
+    val fileList: List<P4FileSpec>
+)

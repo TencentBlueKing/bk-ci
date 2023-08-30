@@ -25,53 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.external.api
+package com.tencent.devops.remotedev.pojo.project
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["EXTERNAL_GITHUB"], description = "External-Github")
-@Path("/external/github/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalGithubResource {
-
-    @ApiOperation("Github仓库提交")
-    @POST
-    @Path("/webhook/commit")
-    fun webhookCommit(
-        @ApiParam(value = "事件类型", required = true)
-        @HeaderParam("X-GitHub-Event")
-        event: String,
-        @ApiParam(value = "事件ID", required = true)
-        @HeaderParam("X-Github-Delivery")
-        guid: String,
-        @ApiParam(value = "secretKey签名(sha1)", required = true)
-        @HeaderParam("X-Hub-Signature")
-        signature: String,
-        body: String
-    ): Result<Boolean>
-
-    @ApiOperation("Github Oauth回调")
-    @GET
-    @Path("/oauth/callback")
-    fun oauthCallback(
-        @ApiParam(value = "code")
-        @QueryParam("code")
-        code: String,
-        @ApiParam(value = "state")
-        @QueryParam("state")
-        state: String
-    ): Response
-}
+@ApiModel("提供给安全侧的获取remotedev项目")
+data class RemotedevProject(
+    @ApiModelProperty("项目ID")
+    @JsonProperty("project_id")
+    val projectId: String,
+    @ApiModelProperty("项目名称")
+    @JsonProperty("project_name")
+    val projectName: String
+)

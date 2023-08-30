@@ -25,11 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.external.constant
+package com.tencent.devops.remotedev.pojo.project
 
-const val GITHUB_CHECK_RUNS_STATUS_QUEUED = "queued" // default
-const val GITHUB_CHECK_RUNS_STATUS_IN_PROGRES = "in_progress"
-const val GITHUB_CHECK_RUNS_STATUS_COMPLETED = "completed"
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-const val GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS = "success"
-const val GITHUB_CHECK_RUNS_CONCLUSION_FAILURE = "failure"
+@ApiModel("提供给安全侧的项目下云桌面信息")
+data class WeSecProjectWorkspace(
+    @ApiModelProperty("工作空间名称")
+    @JsonProperty("workspace_name")
+    val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    @JsonProperty("project_id")
+    val projectId: String,
+    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val creator: String,
+    @ApiModelProperty("region_id")
+    @JsonProperty("region_id")
+    val regionId: String,
+    @ApiModelProperty("inner_ip")
+    @JsonProperty("inner_ip")
+    val innerIp: String?
+)

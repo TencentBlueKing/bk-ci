@@ -30,7 +30,11 @@ data class Devfile(
     @ApiModelProperty("申请云桌面时指定的区域")
     val zoneId: String? = null,
     @ApiModelProperty("申请云桌面时指定的机型:L、XL等")
-    val machineType: String? = null
+    val machineType: String? = null,
+    @ApiModelProperty("指定云桌面Id")
+    val cgsId: String? = null,
+    @ApiModelProperty("团队空间是否自动分配")
+    val autoAssign: Boolean? = false
 
 ) {
     fun checkWorkspaceMountType(): WorkspaceMountType {

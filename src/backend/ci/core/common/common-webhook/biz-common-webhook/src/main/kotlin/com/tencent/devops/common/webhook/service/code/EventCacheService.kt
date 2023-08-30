@@ -7,6 +7,7 @@ import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -138,6 +139,25 @@ class EventCacheService @Autowired constructor(
                 repositoryId = repositoryId,
                 repositoryType = repositoryType
             ).data
+        }
+    }
+
+    /**
+     * 获取日常评审信息
+     */
+
+    fun getCommitReviewInfo(
+        projectId: String,
+        commitReviewId: Long?,
+        repo: Repository
+    ): GitCommitReviewInfo? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.gitCommitReviewInfo ?: run {
+            gitScmService.getCommitReviewInfo(
+                projectId = projectId,
+                commitReviewId = commitReviewId,
+                repo = repo
+            )
         }
     }
 }

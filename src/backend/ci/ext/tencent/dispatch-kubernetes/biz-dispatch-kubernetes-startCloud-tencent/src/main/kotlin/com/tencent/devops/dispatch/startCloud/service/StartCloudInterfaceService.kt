@@ -28,11 +28,13 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,5 +73,60 @@ class StartCloudInterfaceService @Autowired constructor(
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
         return resourceList
+    }
+
+    // 获取cgs信息
+    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+        logger.info("getCgsData|cgsId|$cgsId")
+        return windowsGpuResourceDao.getCgsResource(
+            dslContext = dslContext,
+            cgsId = cgsId
+        )?.let {
+            EnvironmentResourceData(
+                cgsId = it.cgsId,
+                cgsIp = it.cgsIp,
+                zoneId = it.zoneId,
+                machineType = it.machineType,
+                status = it.status,
+                userInstanceList = null
+            )
+        }
+    }
+
+    /*
+     * 校验cgsId是否已被申请，并在运行中
+     * true:表示可分配
+     * false：表示已被分配使用中
+     */
+    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
+        logger.info("checkCgsRunning|cgsId|$cgsId|status|$status")
+        return windowsGpuResourceDao.getCgsWorkspace(
+            dslContext = dslContext,
+            cgsId = cgsId,
+            status = status
+        )?.let { false } ?: true
+    }
+
+    /**
+     * 获取cgs资源池的机型和区域列表
+     */
+    fun getCgsConfig(): CgsResourceConfig {
+        val machineTypeList = mutableListOf<String>()
+        val zoneList = mutableListOf<String>()
+        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
+        cgsConfigList.forEach { cgs ->
+                if (!machineTypeList.contains(cgs.value2())) {
+                    machineTypeList.add(cgs.value2())
+                }
+                if (!zoneList.contains(cgs.value1())) {
+                    zoneList.add(cgs.value1())
+                }
+        }
+        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
+
+        return CgsResourceConfig(
+            zoneList = zoneList,
+            machineTypeList = machineTypeList
+        )
     }
 }
