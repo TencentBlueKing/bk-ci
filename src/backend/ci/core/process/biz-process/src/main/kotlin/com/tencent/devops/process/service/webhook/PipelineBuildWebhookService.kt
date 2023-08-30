@@ -30,9 +30,6 @@ package com.tencent.devops.process.service.webhook
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -67,8 +64,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
-import java.sql.Timestamp
-import java.time.format.DateTimeFormatter
 
 @Suppress("ALL")
 abstract class PipelineBuildWebhookService : ApplicationContextAware {
@@ -87,7 +82,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
         webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
         pipelineTriggerEventService = applicationContext.getBean(PipelineTriggerEventService::class.java)
-        pipelineEventDispatcher = applicationContext.getBean(PipelineEventDispatcher::class.java)
     }
 
     companion object {
@@ -104,7 +98,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
         lateinit var webhookBuildParameterService: WebhookBuildParameterService
         lateinit var pipelineTriggerEventService: PipelineTriggerEventService
-        lateinit var pipelineEventDispatcher: PipelineEventDispatcher
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -290,13 +283,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             .eventSource(eventSource = repo.repoHashId!!)
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
                             .buildNum(buildDetail?.buildNum.toString())
-                        // 回写检查
-                        dispatchPipelineBuildEvent(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId
-                        )
                     }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
@@ -404,26 +390,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
-    }
-
-    private fun dispatchPipelineBuildEvent(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        userId:String
-    ) {
-        logger.info("dispatch pipeline build event|${projectId}|${pipelineId}|${buildId}")
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildQueueBroadCastEvent(
-                source = "startQueue",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                actionType = ActionType.START,
-                triggerType = StartType.WEB_HOOK.name
-            )
-        )
     }
 
     abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
