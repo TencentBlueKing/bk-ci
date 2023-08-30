@@ -25,11 +25,13 @@ object BkServiceUtil {
     }
 
     fun getServiceRoutingRuleActionFinishKey(
+        serviceName: String,
         routingName: String,
         actionType: CrudEnum
     ): String {
         val profileName = getProfileName()
-        return "ENV:$profileName:SHARDING_ROUTING_RULE_UPDATE_FINISH:$routingName:${actionType.name}"
+        val actionName = actionType.name
+        return "ENV:$profileName:SERVICE:$serviceName:SHARDING_ROUTING_RULE_UPDATE_FINISH:$routingName:$actionName"
     }
 
     private fun getProfileName(): String {
@@ -37,14 +39,17 @@ object BkServiceUtil {
         return profile.getActiveProfiles().joinToString().trim()
     }
 
-    fun findServiceName(clz: KClass<*>? = null): String {
+    fun findServiceName(clz: KClass<*>? = null, serviceName: String? = null): String {
         val environment: Environment = SpringContextUtil.getBean(Environment::class.java)
         val assemblyServiceName: String? = environment.getProperty("spring.cloud.consul.discovery.service-name")
         // 单体结构，不分微服务的方式
         if (!assemblyServiceName.isNullOrBlank()) {
             return assemblyServiceName
         }
-        val serviceName = if (clz != null) {
+        val serviceSuffix: String? = environment.getProperty("service-suffix")
+        val tmpServiceName = if (!serviceName.isNullOrBlank()) {
+            serviceName
+        } else if (clz != null) {
             interfaces.getOrPut(clz) {
                 val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
                 if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
@@ -61,13 +66,16 @@ object BkServiceUtil {
                 }
             }
         } else {
-            environment.getProperty("spring.application.name") ?: KubernetesUtils.getMsName()
+            var applicationName = environment.getProperty("spring.application.name")
+            if (!serviceSuffix.isNullOrBlank()) {
+                applicationName = applicationName?.removeSuffix(serviceSuffix)
+            }
+            applicationName ?: KubernetesUtils.getMsName()
         }
-        val serviceSuffix: String? = environment.getProperty("service-suffix")
         return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
-            serviceName
+            tmpServiceName
         } else {
-            "$serviceName$serviceSuffix"
+            "$tmpServiceName$serviceSuffix"
         }
     }
 }

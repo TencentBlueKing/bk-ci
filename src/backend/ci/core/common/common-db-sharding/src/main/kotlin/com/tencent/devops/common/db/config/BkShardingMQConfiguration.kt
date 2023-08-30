@@ -29,13 +29,18 @@ package com.tencent.devops.common.db.config
 
 import com.tencent.devops.common.db.listener.BkShardingRoutingRuleListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.service.utils.CommonUtils
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -48,6 +53,10 @@ import java.text.MessageFormat
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureAfter(BkShardingRoutingRuleListener::class)
 class BkShardingMQConfiguration {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkShardingMQConfiguration::class.java)
+    }
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -79,4 +88,42 @@ class BkShardingMQConfiguration {
         @Autowired shardingRoutingRuleQueue: Queue,
         @Autowired shardingRoutingRuleExchange: FanoutExchange
     ): Binding = BindingBuilder.bind(shardingRoutingRuleQueue).to(shardingRoutingRuleExchange)
+
+    @Bean
+    fun shardingRoutingRuleListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired messageConverter: Jackson2JsonMessageConverter,
+        @Autowired shardingRoutingRuleQueue: Queue,
+        @Autowired bkShardingRoutingRuleListener: BkShardingRoutingRuleListener
+    ): SimpleMessageListenerContainer {
+        // 增加动态队列清理钩子
+        addDynamicMqQueueClearHook(rabbitAdmin, shardingRoutingRuleQueue)
+        val adapter = MessageListenerAdapter(bkShardingRoutingRuleListener, bkShardingRoutingRuleListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = shardingRoutingRuleQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 10,
+            concurrency = 1,
+            maxConcurrency = 5
+        )
+    }
+
+    private fun addDynamicMqQueueClearHook(rabbitAdmin: RabbitAdmin, shardingRoutingRuleQueue: Queue) {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() {
+                    val queueName = shardingRoutingRuleQueue.name
+                    rabbitAdmin.deleteQueue(queueName)
+                    logger.warn("delete dynamicMqQueue($queueName) success!")
+                }
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add dynamicMqQueueClear shutdown hook", t)
+        }
+    }
 }

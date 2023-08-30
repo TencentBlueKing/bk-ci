@@ -91,7 +91,9 @@ class ShardingRoutingRuleManageService @Autowired constructor(
             else -> {}
         }
         // 将缓存操作完成的IP写入redis
-        redisOperation.sadd(BkServiceUtil.getServiceRoutingRuleActionFinishKey(routingName, actionType), ip)
+        val serviceName = BkServiceUtil.findServiceName()
+        val key = BkServiceUtil.getServiceRoutingRuleActionFinishKey(serviceName, routingName, actionType)
+        redisOperation.sadd(key, ip)
         return true
     }
 }

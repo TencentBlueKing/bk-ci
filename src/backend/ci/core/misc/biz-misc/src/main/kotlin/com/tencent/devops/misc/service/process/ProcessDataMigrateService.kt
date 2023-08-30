@@ -276,7 +276,6 @@ class ProcessDataMigrateService @Autowired constructor(
         )
         val migratingShardingRoutingRule = redisOperation.get(key)
         val shardingRoutingRule = routingRuleMap[migratingShardingRoutingRule]
-        var cacheUpdateFinishFlag = true
         if (migratingShardingRoutingRule != null && shardingRoutingRule != null) {
             // 清除缓存中项目的迁移DB路由规则
             redisOperation.delete(key)
@@ -300,22 +299,28 @@ class ProcessDataMigrateService @Autowired constructor(
                     defaultMessage = updateResult.message
                 )
             }
-            // 判断process微服务所有服务器的缓存是否已经全部更新完成
-            cacheUpdateFinishFlag = confirmCacheIsUpdated(key, RETRY_NUM)
-        }
-        if (!cacheUpdateFinishFlag) {
-            // 服务器缓存更新失败，发送迁移失败消息
-            val titleParams = mapOf(KEY_PROJECT_ID to projectId)
-            val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to "update host cache fail")
-            val request = SendNotifyMessageTemplateRequest(
-                templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
-                receivers = mutableSetOf(userId),
-                titleParams = titleParams,
-                bodyParams = bodyParams,
-                notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
-            )
-            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-            return
+            // 判断微服务所有服务器的缓存是否已经全部更新完成
+            val serviceNames = listOf("process", "engine", "misc", "lambda")
+            serviceNames.forEach { serviceName ->
+                val cacheUpdateFinishFlag = confirmCacheIsUpdated(serviceName, key, RETRY_NUM)
+                if (!cacheUpdateFinishFlag) {
+                    // 服务器缓存更新失败，发送迁移失败消息
+                    val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+                    val bodyParams = mapOf(
+                        KEY_PROJECT_ID to projectId,
+                        FAIL_MSG to "update service($serviceName) cache fail"
+                    )
+                    val request = SendNotifyMessageTemplateRequest(
+                        templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
+                        receivers = mutableSetOf(userId),
+                        titleParams = titleParams,
+                        bodyParams = bodyParams,
+                        notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
+                    )
+                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                    return
+                }
+            }
         }
         // 解锁项目,允许用户发起新构建等操作
         redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
@@ -337,7 +342,7 @@ class ProcessDataMigrateService @Autowired constructor(
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
     }
 
-    private fun confirmCacheIsUpdated(cacheKey: String, retryNum: Int): Boolean {
+    private fun confirmCacheIsUpdated(serviceName: String, cacheKey: String, retryNum: Int): Boolean {
         // 判断重试次数是否超限，如果超限就返回false
         if (retryNum < 1) {
             return false
@@ -345,15 +350,20 @@ class ProcessDataMigrateService @Autowired constructor(
         // 睡眠一会儿等待服务器缓存更新
         Thread.sleep(DEFAULT_THREAD_SLEEP_TIMEOUT)
         // 获取当前微服务服务器IP列表
-        val serviceIps = redisOperation.getSetMembers(BkServiceUtil.getServiceHostKey())?.toMutableSet()
-        val finishServiceIps =
-            redisOperation.getSetMembers(BkServiceUtil.getServiceRoutingRuleActionFinishKey(cacheKey, CrudEnum.UPDATE))
+        val finalServiceName = BkServiceUtil.findServiceName(serviceName = serviceName)
+        val serviceIps = redisOperation.getSetMembers(BkServiceUtil.getServiceHostKey(finalServiceName))?.toMutableSet()
+        val serviceRoutingRuleActionFinishKey = BkServiceUtil.getServiceRoutingRuleActionFinishKey(
+            serviceName = finalServiceName,
+            routingName = cacheKey,
+            actionType = CrudEnum.UPDATE
+        )
+        val finishServiceIps = redisOperation.getSetMembers(serviceRoutingRuleActionFinishKey)
         // 判断所有服务器缓存是否已经更新成功
         finishServiceIps?.let { serviceIps?.removeAll(finishServiceIps) }
         return if (serviceIps.isNullOrEmpty()) {
             true
         } else {
-            confirmCacheIsUpdated(cacheKey, retryNum - 1)
+            confirmCacheIsUpdated(serviceName, cacheKey, retryNum - 1)
         }
     }
 
