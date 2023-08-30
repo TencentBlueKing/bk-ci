@@ -23,6 +23,8 @@ data class RemoteDevUserSettings(
     var autoDeletedDays: Int = 14,
     @ApiModelProperty("设置linux构建集群类型")
     var mountType: WorkspaceMountType? = null,
+    @ApiModelProperty("云桌面剩余体验时长")
+    var remainExperienceDuration: Int? = null,
     @ApiModelProperty("START云桌面体验时长")
     var startCloudExperienceDuration: Int? = null,
     @ApiModelProperty("是否加入client白名单")
