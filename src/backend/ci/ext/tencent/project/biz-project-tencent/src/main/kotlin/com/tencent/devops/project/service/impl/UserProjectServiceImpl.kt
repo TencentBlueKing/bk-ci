@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
@@ -62,7 +63,8 @@ class UserProjectServiceImpl @Autowired constructor(
     private val favoriteDao: FavoriteDao,
     gray: Gray,
     redisOperation: RedisOperation,
-    private val tofService: TOFService
+    private val tofService: TOFService,
+    private val bkTag: BkTag
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
     @Value("\${project.container.url:#{null}}")
@@ -102,7 +104,6 @@ class UserProjectServiceImpl @Autowired constructor(
 
                 val s = groupService[typeId]
                 s?.forEach { it ->
-                    val status = it.status
                     val favor = favorServices.contains(it.id)
                     val (newWindow, newWindowUrl) = getNewWindow(
                         tServiceRecord = it,
@@ -118,7 +119,7 @@ class UserProjectServiceImpl @Autowired constructor(
                                 .ifBlank { it.name },
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
-                            status = status,
+                            status = getPermStatus(it),
                             injectType = it.injectType ?: "",
                             iframeUrl = replaceUrl(
                                 url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
@@ -271,5 +272,16 @@ class UserProjectServiceImpl @Autowired constructor(
             }
         }
         return result
+    }
+
+    private fun getPermStatus(tServiceRecord: TServiceRecord): String {
+        val isRbacCluster = bkTag.getLocalTag().contains("rbac")
+        return when {
+            // 如果是rbac项目,那么旧版权限中心需要隐藏
+            tServiceRecord.englishName == "Perm" && isRbacCluster -> "planning"
+            // 如果不是rbac项目,那么新版权限中心需要隐藏
+            tServiceRecord.englishName == "Permission" && !isRbacCluster -> "planning"
+            else -> tServiceRecord.status
+        }
     }
 }
