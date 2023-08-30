@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
@@ -99,6 +100,7 @@ class WindowsResourceConfigDao {
             machineType?.let { conditions.add(SIZE.eq(it)) }
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .skipCheck()
                 .fetchAny()
         }
     }
