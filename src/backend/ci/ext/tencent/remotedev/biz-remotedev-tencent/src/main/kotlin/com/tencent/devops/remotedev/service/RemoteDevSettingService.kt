@@ -194,6 +194,7 @@ class RemoteDevSettingService @Autowired constructor(
             .mapNotNull {
                 JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.apply {
                     userId = it.userId
+                    remainExperienceDuration = it.winUsageRemainingTime
                     clientWhiteList = whiteListService.checkInWhiteList(it.userId)
                     startWhiteList = whiteListService.checkInGPUWhiteList(it.userId)
                 }
