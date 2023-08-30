@@ -106,7 +106,6 @@ class MigratePermissionHandoverService constructor(
                         handoverFrom
                     )
                 }
-                offset += limit
             } while (resourceList.size == limit)
         }
     }
