@@ -25,20 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status)
+@CodeWebhookHandler
+@Suppress("TooManyFunctions")
+class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubCommitCommentEvent> {
+    companion object {
+        const val SHORT_COMMIT_SHA_LENGTH = 8
+    }
 
-fun WebHookTriggerElement.joinToString(list: List<String>?): String {
-    return if (list.isNullOrEmpty()) {
-        ""
-    } else {
-        list.joinToString(",")
+    override fun eventClass(): Class<GithubCommitCommentEvent> {
+        return GithubCommitCommentEvent::class.java
+    }
+
+    override fun getCommentParam(event: GithubCommitCommentEvent): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        with(event.comment) {
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
+            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
+        }
+        return startParams
     }
 }

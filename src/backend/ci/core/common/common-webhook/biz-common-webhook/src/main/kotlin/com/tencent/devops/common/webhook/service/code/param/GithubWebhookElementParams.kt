@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.param
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.joinToString
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import org.springframework.stereotype.Service
@@ -51,18 +52,28 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
                 variables = variables
             )
         )
-        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
-            ""
-        } else {
-            EnvUtils.parseEnv(element.excludeUsers!!, variables)
+        with(element) {
+            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(excludeUsers!!, variables)
+            }
+            if (element.branchName == null) {
+                return null
+            }
+            params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+            params.eventType = element.eventType
+            params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+            params.codeType = CodeType.GITHUB
+            params.includeUsers = includeUsers
+            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
+            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
+            params.webhookQueue = webhookQueue ?: false
+            params.includeCrState = joinToString(includeCrState)
+            params.includeNoteComment = includeNoteComment
+            params.includeNoteTypes = joinToString(includeNoteTypes)
+            params.includeIssueAction = joinToString(includeIssueAction)
         }
-        if (element.branchName == null) {
-            return null
-        }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.eventType = element.eventType
-        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.codeType = CodeType.GITHUB
         return params
     }
 }

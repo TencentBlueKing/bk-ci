@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -54,7 +55,29 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的github代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
+    @ApiModelProperty("用于包含的路径", required = false)
+    val includePaths: String?,
+    @ApiModelProperty("用于排除的路径", required = false)
+    val excludePaths: String?,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: String? = null,
+    @ApiModelProperty("用于排除的源分支名称", required = false)
+    val excludeSourceBranchName: String? = null,
+    @ApiModelProperty("用于包含的源分支名称", required = false)
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"
