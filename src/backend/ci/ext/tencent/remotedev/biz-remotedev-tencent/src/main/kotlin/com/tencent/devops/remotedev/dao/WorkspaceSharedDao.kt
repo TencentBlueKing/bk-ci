@@ -48,12 +48,14 @@ class WorkspaceSharedDao {
                         WORKSPACE_NAME,
                         OPERATOR,
                         SHARED_USER,
-                        ASSIGN_TYPE
+                        ASSIGN_TYPE,
+                        RESOURCE_ID
                     ).values(
                         workspaceName,
                         operator,
                         it.userId,
-                        it.type.name
+                        it.type.name,
+                        resourceId
                     )
                 }
             ).execute()
