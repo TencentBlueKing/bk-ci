@@ -525,13 +525,21 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
+        val resourceId = if (userId != workspace.creator) {
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                sharedUsers = listOf(userId)
+            ).firstOrNull()?.resourceId
+        } else null
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
             regionId = detail.regionId,
             projectId = workspace.projectId,
             name = workspace.name,
-            creator = workspace.creator
+            creator = workspace.creator,
+            resourceId = resourceId
         )
     }
 
