@@ -85,9 +85,12 @@ class UserProjectServiceImpl @Autowired constructor(
 
             val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext)
 
-            val groupService = serviceDao.getServiceList(dslContext).groupBy { it.serviceTypeId }
+            val serviceList = serviceDao.getServiceList(dslContext)
+            val groupService = serviceList.groupBy { it.serviceTypeId }
 
-            val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
+            val favorServices = favoriteDao.list(dslContext, userId).map {
+                replacePermFavorServiceId(serviceList, it.serviceId)
+            }.toList()
 
             logger.info("listService interface containerUrl:$containerUrl")
             logger.info("listService interface containerbgId:$containerbgId")
@@ -282,6 +285,20 @@ class UserProjectServiceImpl @Autowired constructor(
             // 如果不是rbac项目,那么新版权限中心需要隐藏
             tServiceRecord.englishName == "Permission" && !isRbacCluster -> "planning"
             else -> tServiceRecord.status
+        }
+    }
+
+    private fun replacePermFavorServiceId(serviceRecords: List<TServiceRecord>, favorServiceId: Long): Long {
+        val oldPermService = serviceRecords.first { it.englishName == "Perm" }
+        val newPermService = serviceRecords.first { it.englishName == "Permission" }
+        // 收藏中是否有旧版权限
+        val favor = favorServiceId == oldPermService.id
+        val isRbacCluster = bkTag.getLocalTag().contains("rbac")
+        // 如果收藏中有旧版权限,并且在rbac权限管理中,需要替换成新版权限中心
+        return if (favor && isRbacCluster) {
+            newPermService.id
+        } else {
+            favorServiceId
         }
     }
 }
