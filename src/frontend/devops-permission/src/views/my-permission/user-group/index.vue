@@ -5,7 +5,6 @@
       :project-list="projectList"
       @choose-group="handleChooseGroup"
       @create-group="handleCreateGroup"
-      @close-manage="handleCloseManage"
       @change-group-detail-tab="handleChangeGroupDetailTab"
       @search-project="handleSearchProject"
       @change-project="handleChangeProject"
@@ -93,9 +92,6 @@ export default {
     handleCreateGroup() {
       this.activeIndex = '';
       this.path = 'create-user-group';
-    },
-    handleCloseManage() {
-      this.$emit('close-manage');
     },
     handleSearchProject(val) {
       this.searchProjectKey = val;
