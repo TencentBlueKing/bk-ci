@@ -25,34 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.dispatch.devcloud.client
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.Request
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf(),
-    val type: PoolType? = null,
-    val agentName: String? = null,
-    val agentId: String? = null,
-    val envName: String? = null,
-    val envProjectId: String? = null,
-    val envId: String? = null,
-    val os: VMBaseOS? = null,
-    val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
-)
+@Component
+class FitPersistenceClientProxy : ClientProxy {
 
-enum class BuildType {
-    DOCKER_VM,
-    DEVCLOUD
+    @Value("\${devCloud.fitPersistenceCluster.appId:}")
+    override val devCloudAppId: String = ""
+
+    @Value("\${devCloud.fitPersistenceCluster.token:}")
+    override val devCloudToken: String = ""
+
+    @Value("\${devCloud.fitPersistenceCluster.url:}")
+    override val devCloudUrl: String = ""
+
+    @Value("\${devCloud.smartProxyToken:}")
+    override val smartProxyToken: String = ""
+
+    override fun baseRequest(
+        userId: String,
+        url: String,
+        projectId: String,
+        pipelineId: String
+    ): Request.Builder {
+        return Request.Builder()
+            .url(devCloudUrl + url)
+            .headers(
+                SmartProxyUtil.makeHeaders(
+                    appId = devCloudAppId,
+                    token = devCloudToken,
+                    staffName = userId,
+                    proxyToken = smartProxyToken,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ).toHeaders()
+            )
+    }
 }

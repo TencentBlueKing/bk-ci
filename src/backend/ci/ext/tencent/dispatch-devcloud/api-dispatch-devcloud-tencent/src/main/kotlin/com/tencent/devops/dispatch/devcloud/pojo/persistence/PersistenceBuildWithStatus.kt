@@ -25,34 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.api.pojo.Error
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf(),
-    val type: PoolType? = null,
-    val agentName: String? = null,
-    val agentId: String? = null,
-    val envName: String? = null,
-    val envProjectId: String? = null,
-    val envId: String? = null,
-    val os: VMBaseOS? = null,
-    val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
+@ApiModel("DevCloud持久化容器构建信息模型")
+data class PersistenceBuildWithStatus(
+    @ApiModelProperty("项目id")
+    val projectId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String,
+    @ApiModelProperty("构建环境id")
+    val vmSeqId: String,
+    @ApiModelProperty("工作空间")
+    val workspace: String,
+    @ApiModelProperty("流水线id")
+    val pipelineId: String?,
+    @ApiModelProperty("是否成功")
+    val success: Boolean,
+    @ApiModelProperty("message信息")
+    val message: String?,
+    @ApiModelProperty("错误信息")
+    val error: Error?,
+    @ApiModelProperty("流水线执行次数")
+    val executeCount: Int?
 )
-
-enum class BuildType {
-    DOCKER_VM,
-    DEVCLOUD
-}
