@@ -108,7 +108,7 @@
                     },
                     {
                         to: '/console/permission',
-                        label: this.$t('myPermission')
+                        label: this.$t('accessCenter')
                     },
                     {
                         to: '/console/preci/',

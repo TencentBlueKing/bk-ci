@@ -154,7 +154,7 @@ import tools from '../../utils/tools.js'
 import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
-import scrollLoadList from '@/components/scroll-load-list.vue'
+import scrollLoadList from './scroll-load-list.vue'
 
 export default {
   name: 'searchSelect',
