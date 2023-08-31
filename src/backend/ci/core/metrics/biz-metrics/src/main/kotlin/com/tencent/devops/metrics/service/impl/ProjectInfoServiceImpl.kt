@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.PageUtil.MAX_PAGE_SIZE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
@@ -49,7 +50,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -64,7 +64,8 @@ class ProjectInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectInfoDao: ProjectInfoDao,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val metricsConfig: MetricsConfig
 ) : ProjectInfoManageService {
 
     private val atomCodeCache = Caffeine.newBuilder()
@@ -187,44 +188,44 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncProjectAtomData(userId: String): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            try {
-                val executor = ThreadPoolExecutor(
-                    5,
-                    5,
-                    0L,
-                    TimeUnit.SECONDS,
-                    LinkedBlockingQueue()
-                )
+        val executor = ThreadPoolExecutor(
+            metricsConfig.maxThreadHandleProjectNum,
+            metricsConfig.maxThreadHandleProjectNum,
+            0L,
+            TimeUnit.MILLISECONDS,
+            LinkedBlockingQueue(10),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.DiscardPolicy()
+        )
+        try {
+            logger.info("begin op sync project atom data")
+            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
 
-                executor.prestartAllCoreThreads()
-                logger.info("begin op sync project atom data")
-                var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-                val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-                if (projectMinId != null && projectMaxId != null) {
-
-                    do {
+            if (projectMinId != null && projectMaxId != null) {
+                // 获取清理项目构建数据的线程数量
+                val maxThreadHandleProjectNum = metricsConfig.maxThreadHandleProjectNum
+                val avgProjectNum = projectMaxId / maxThreadHandleProjectNum
+                for (index in 1..maxThreadHandleProjectNum) {
+                    // 计算线程能处理的项目区间
+                    val startProjectPrimaryId = (index - 1) * avgProjectNum + 1
+                    val endProjectPrimaryId = if (index != maxThreadHandleProjectNum) {
+                        index * avgProjectNum
+                    } else {
+                        index * avgProjectNum + projectMinId % maxThreadHandleProjectNum
+                    }
+                    executor.submit(Callable {
                         val projectIds = client.get(ServiceProjectResource::class)
                             .getProjectListById(
-                                minId = projectMinId,
-                                maxId = projectMinId + 10
+                                minId = startProjectPrimaryId,
+                                maxId = endProjectPrimaryId
                             ).data?.map { it.englishName }
-                        if (!projectIds.isNullOrEmpty()) {
-                            val subLists = projectIds.chunked(2)
-                            val latch = CountDownLatch(subLists.size)
-                            subLists.forEach { subList ->
-                                executor.submit(Callable {
-                                    saveProjectAtomInfo(subList)
-                                })
-                            }
-                            latch.await()
-                        }
-                        projectMinId += 11
-                    } while (projectMinId <= projectMaxId)
+                        projectIds?.let { saveProjectAtomInfo(it) }
+                    })
                 }
-            } catch (ignore: Throwable) {
-                logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
             }
+        } catch (ignore: Throwable) {
+            logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
         }
         return true
     }
@@ -264,5 +265,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectInfoServiceImpl::class.java)
+        private var executor: ThreadPoolExecutor? = null
     }
 }
