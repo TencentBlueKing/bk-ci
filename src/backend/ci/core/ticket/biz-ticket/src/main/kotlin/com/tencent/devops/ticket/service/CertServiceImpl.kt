@@ -1520,10 +1520,14 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getCertByIds(certIds: Set<String>): List<Cert>? {
+    override fun getCertByIds(
+        projectId: String?,
+        certIds: Set<String>
+    ): List<Cert>? {
         val certList = mutableListOf<Cert>()
         val records = certDao.listByIds(
             dslContext = dslContext,
+            projectId = projectId,
             certIds = certIds
         )
         records.map {
