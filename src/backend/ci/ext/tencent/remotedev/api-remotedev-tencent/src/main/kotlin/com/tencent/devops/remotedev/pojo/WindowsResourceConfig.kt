@@ -43,7 +43,7 @@ data class WindowsResourceConfig(
     @ApiModelProperty("资源类型：M，L，XL，S")
     val size: String,
     @ApiModelProperty("GPU卡类型")
-    val type: String?,
+    val type: String? = null,
     @ApiModelProperty("vGPU")
     val gpu: Int,
     @ApiModelProperty("CPU")
@@ -53,7 +53,7 @@ data class WindowsResourceConfig(
     @ApiModelProperty("本地SSD盘")
     val disk: Int,
     @ApiModelProperty("云SSD盘")
-    val hdisk: Int?,
+    val hdisk: Int? = 1,
     @ApiModelProperty("描述")
     val description: String
 )
