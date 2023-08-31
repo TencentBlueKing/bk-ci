@@ -86,6 +86,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
+@Suppress("LongParameterList")
 class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,

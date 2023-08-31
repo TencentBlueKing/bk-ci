@@ -487,6 +487,37 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    fun createYamlPipeline(
+        userId: String,
+        projectId: String,
+        yml: String,
+        defaultBranch: Boolean
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(
+            pipelineId = "p-001",
+            pipelineName = "yml-001-pipeline",
+            version = 1,
+            versionName = "1.0"
+        )
+    }
+
+    fun updateYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yml: String,
+        defaultBranch: Boolean
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(
+            pipelineId = "p-001",
+            pipelineName = "yml-001-pipeline",
+            version = 1,
+            versionName = "1.0"
+        )
+    }
+
     /**
      * 还原已经删除的流水线
      */
@@ -668,7 +699,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    // TODO #8161 旧接口传参改造
     fun editPipeline(
         userId: String,
         projectId: String,

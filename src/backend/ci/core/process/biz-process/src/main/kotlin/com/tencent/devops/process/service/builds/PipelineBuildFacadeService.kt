@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -214,8 +215,22 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        // TODO #8164 检查传入版本是否为草稿
-        val model = getModel(projectId, pipelineId, version)
+        val model = if (version != null) {
+            val resource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                includeDraft = true
+            )
+            if (resource == null || resource.status == VersionStatus.COMMITTING) {
+                throw ErrorCodeException(
+
+                )
+            }
+            resource.model
+        } else {
+            getModel(projectId, pipelineId)
+        }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
@@ -232,9 +247,9 @@ class PipelineBuildFacadeService(
         }
 
         // 获取最后一次的构建id
-        val lastTimDebugInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
-        if (lastTimDebugInfo?.buildParameters?.isNotEmpty() == true) {
-            val latestParamsMap = lastTimDebugInfo.buildParameters!!.associate { it.key to it.value }
+        val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
+        if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
+            val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
             triggerContainer.params.forEach { param ->
                 val realValue = latestParamsMap[param.id]
                 if (realValue != null) {
