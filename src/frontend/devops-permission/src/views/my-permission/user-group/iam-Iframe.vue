@@ -45,7 +45,7 @@ export default {
   methods: {
     calcUrl() {
       // 构造 url
-      const url = new URL(`${'https://iam-dev.woa.com'}/${this.path}`);
+      const url = new URL(`${window.BK_IAM_URL_PREFIX}/${this.path}`);
       const query = {
         ...this.commonQuery,
         ...this.query,
