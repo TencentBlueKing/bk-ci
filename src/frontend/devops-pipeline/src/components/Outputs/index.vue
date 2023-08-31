@@ -282,13 +282,22 @@
                 ]
             },
             baseInfoRows () {
-                return [
-                    { key: 'name', name: this.$t('details.name') },
-                    { key: 'fullName', name: this.$t('details.filePath') },
-                    { key: 'size', name: this.$t('details.size') },
-                    { key: 'createdTime', name: this.$t('details.created') },
-                    { key: 'modifiedTime', name: this.$t('details.lastModified') }
-                ]
+                return this.activeOutputDetail.folder
+                    ? [
+                        { key: 'name', name: this.$t('details.directoryName') },
+                        { key: 'fullName', name: this.$t('details.directoryPath') },
+                        { key: 'size', name: this.$t('details.size') },
+                        { key: 'include', name: this.$t('details.include') },
+                        { key: 'createdTime', name: this.$t('details.created') },
+                        { key: 'modifiedTime', name: this.$t('details.lastModified') }
+                    ]
+                    : [
+                        { key: 'name', name: this.$t('details.name') },
+                        { key: 'fullName', name: this.$t('details.filePath') },
+                        { key: 'size', name: this.$t('details.size') },
+                        { key: 'createdTime', name: this.$t('details.created') },
+                        { key: 'modifiedTime', name: this.$t('details.lastModified') }
+                    ]
             },
             checkSumRows () {
                 return [
@@ -338,7 +347,7 @@
 
                     this.outputs = res.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
-                        const icon = isReportOutput ? 'order' : extForFile(item.name)
+                        const icon = isReportOutput ? 'order' : item.folder ? 'folder-open' : extForFile(item.name)
                         const id = isReportOutput ? item.createTime : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
@@ -396,7 +405,8 @@
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: extForFile(res.name)
+                        icon: !output.folder ? extForFile(res.name) : 'folder-open',
+                        include: this.getInclude(output)
                     }
                     this.isLoading = false
                 } catch (err) {
@@ -408,6 +418,19 @@
                             projectId: projectId
                         }
                     ])
+                }
+            },
+            getInclude (payload) {
+                if (!payload.folder) return '--'
+                const fileCount = this.getValuesByKey(payload.properties, 'fileCount')
+                const folderCount = this.getValuesByKey(payload.properties, 'folderCount')
+                return this.$t('details.fileAndFolder', [fileCount, folderCount])
+            },
+            getValuesByKey (data, key) {
+                for (const item of data) {
+                    if (key.includes(item.key)) {
+                        return item.value
+                    }
                 }
             },
             setActiveOutput (output) {
@@ -534,6 +557,7 @@
         }
         &.active,
         &:hover {
+            color: $iconPrimaryColor;
             background: #f5f7fa;
         }
       }
