@@ -65,6 +65,7 @@ metrics:
   queryDaysMax: 180
   queryCountMax: 100000
   defaultLimitNum: 10
+  maxThreadHandleProjectNum: 10
 
 sharding:
   routing:

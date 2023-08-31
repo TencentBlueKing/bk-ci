@@ -53,6 +53,6 @@ class MetricsConfig {
     @Value("\${metrics.unReportClusterTags:}")
     val unReportClusterTags: String = ""
 
-    @Value("\${metrics.maxThreadHandleProjectNum:5}")
-    val maxThreadHandleProjectNum = 5
+    @Value("\${metrics.maxThreadHandleProjectNum:10}")
+    val maxThreadHandleProjectNum = 10
 }
