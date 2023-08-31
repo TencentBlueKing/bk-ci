@@ -670,7 +670,6 @@ class WorkspaceDao {
         }
     }
 
-
     class TWorkspaceRecordJooqMapper : RecordMapper<TWorkspaceRecord, WorkspaceRecord> {
         override fun map(record: TWorkspaceRecord?): WorkspaceRecord? {
             return record?.run {

@@ -384,7 +384,6 @@ interface OpRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-
     @ApiOperation("转移数据到workspace windows 表")
     @GET
     @Path("/windowsWorkspaceDaoInit")

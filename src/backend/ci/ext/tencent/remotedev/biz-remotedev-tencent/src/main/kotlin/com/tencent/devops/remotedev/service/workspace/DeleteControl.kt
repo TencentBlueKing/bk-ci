@@ -186,7 +186,7 @@ class DeleteControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType =workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType
                 )
             )
             return true
@@ -274,7 +274,7 @@ class DeleteControl @Autowired constructor(
                 action = WorkspaceAction.DELETING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType =workspace.ownerType
+                ownerType = workspace.ownerType
             )
             return true
         }
@@ -289,7 +289,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -317,7 +317,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.createUserId}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
             // 清心跳

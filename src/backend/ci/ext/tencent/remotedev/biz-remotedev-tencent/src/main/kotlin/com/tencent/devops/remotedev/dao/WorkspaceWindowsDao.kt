@@ -36,7 +36,6 @@ class WorkspaceWindowsDao {
         }
     }
 
-
     fun fetchAnyWorkspaceSharedInfo(
         dslContext: DSLContext,
         workspaceName: String

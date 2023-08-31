@@ -32,12 +32,9 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

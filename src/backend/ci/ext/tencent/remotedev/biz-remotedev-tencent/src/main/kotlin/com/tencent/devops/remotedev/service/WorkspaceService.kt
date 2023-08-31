@@ -299,11 +299,11 @@ class WorkspaceService @Autowired constructor(
         ) ?: emptyList()
 
         return result.map {
-            val detail = workspaceCommon.getWorkspaceDetail(it.name)
+            val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
             WeSecProjectWorkspace(
-                workspaceName = it.name,
+                workspaceName = it.workspaceName,
                 projectId = it.projectId,
-                creator = it.creator,
+                creator = it.createUserId,
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP
                 )
@@ -371,7 +371,6 @@ class WorkspaceService @Autowired constructor(
         val sharedWorkspace = result.filter { it.createUserId != userId }.ifEmpty { null }?.let {
             workspaceSharedDao.batchSelectAssignType(dslContext, userId, it.map { i -> i.workspaceName })
         } ?: emptyMap()
-
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
             dslContext,
