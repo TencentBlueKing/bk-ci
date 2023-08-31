@@ -30,6 +30,7 @@ package com.tencent.devops.common.db.config
 import com.tencent.devops.common.db.listener.BkShardingRoutingRuleListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
@@ -63,18 +64,8 @@ class BkShardingMQConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
-    /**
-     * 获取动态MQ队列名称
-     * @param queueTemplate 队列模板
-     * @return 动态MQ队列名称
-     */
-    private fun getDynamicMqQueue(queueTemplate: String): String {
-        // 用服务器IP替换占位符
-        return MessageFormat(queueTemplate).format(arrayOf(CommonUtils.getInnerIP()))
-    }
-
     @Bean
-    fun shardingRoutingRuleQueue() = Queue(getDynamicMqQueue(MQ.QUEUE_SHARDING_ROUTING_RULE_EVENT))
+    fun shardingRoutingRuleQueue() = Queue(BkServiceUtil.getDynamicMqQueue())
 
     @Bean
     fun shardingRoutingRuleExchange(): FanoutExchange {
@@ -118,8 +109,17 @@ class BkShardingMQConfiguration {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
                     val queueName = shardingRoutingRuleQueue.name
+                    logger.info("delete dynamicMqQueue($queueName) start!")
+                    rabbitAdmin.purgeQueue(queueName)
                     rabbitAdmin.deleteQueue(queueName)
-                    logger.warn("delete dynamicMqQueue($queueName) success!")
+                    val queueProperties = rabbitAdmin.getQueueProperties(queueName)
+                    logger.info("delete dynamicMqQueue($queueName) queueProperties:$queueProperties")
+                    if (queueProperties != null) {
+                        // 队列属性不为空说明删除未成功，打印失败日志
+                        logger.info("delete dynamicMqQueue($queueName) fail!")
+                        return
+                    }
+                    logger.info("delete dynamicMqQueue($queueName) success!")
                 }
             })
         } catch (t: Throwable) {

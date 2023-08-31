@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.Profile
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.core.env.Environment
+import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
@@ -77,5 +78,16 @@ object BkServiceUtil {
         } else {
             "$tmpServiceName$serviceSuffix"
         }
+    }
+
+    /**
+     * 获取动态MQ队列名称
+     * @return 动态MQ队列名称
+     */
+    fun getDynamicMqQueue(): String {
+        val queueTemplate = "q.sharding.routing.rule.exchange.{0}_{1}_queue"
+        // 用微服务名和服务器IP替换占位符
+        val params = arrayOf(findServiceName(), CommonUtils.getInnerIP())
+        return MessageFormat(queueTemplate).format(params)
     }
 }
