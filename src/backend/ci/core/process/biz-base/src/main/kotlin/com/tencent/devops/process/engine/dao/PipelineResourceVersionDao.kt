@@ -194,6 +194,19 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun clearDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int? {
+        return with(T_PIPELINE_RESOURCE_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.COMMITTING.name))
+                .execute()
+        }
+    }
+
     fun deleteEarlyVersion(
         dslContext: DSLContext,
         projectId: String,

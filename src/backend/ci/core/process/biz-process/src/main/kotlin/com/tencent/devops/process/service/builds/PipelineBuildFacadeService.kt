@@ -187,7 +187,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        version: Int? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -213,41 +214,36 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
-        val model = getModel(projectId, pipelineId)
+        // TODO #8164 检查传入版本是否为草稿
+        val model = getModel(projectId, pipelineId, version)
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
         var canManualStartup = false
         var canElementSkip = false
-        var useLatestParameters = false
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
-                    useLatestParameters = it.useLatestParameters ?: false
                     return@lit
                 }
             }
         }
 
-        // 当使用最近一次参数进行构建的时候，获取并替换container.params中的defaultValue值
-        if (useLatestParameters) {
-            // 获取最后一次的构建id
-            val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
-            if (lastTimeBuildInfo?.buildParameters?.isNotEmpty() == true) {
-                val latestParamsMap = lastTimeBuildInfo.buildParameters!!.associate { it.key to it.value }
-                triggerContainer.params.forEach { param ->
-                    val realValue = latestParamsMap[param.id]
-                    if (realValue != null) {
-                        // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
-                        // 当值是boolean类型的时候，需要转为boolean类型
-                        if (param.defaultValue is Boolean) {
-                            param.defaultValue = realValue.toString().toBoolean()
-                        } else {
-                            param.defaultValue = realValue
-                        }
+        // 获取最后一次的构建id
+        val lastTimDebugInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
+        if (lastTimDebugInfo?.buildParameters?.isNotEmpty() == true) {
+            val latestParamsMap = lastTimDebugInfo.buildParameters!!.associate { it.key to it.value }
+            triggerContainer.params.forEach { param ->
+                val realValue = latestParamsMap[param.id]
+                if (realValue != null) {
+                    // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                    // 当值是boolean类型的时候，需要转为boolean类型
+                    if (param.defaultValue is Boolean) {
+                        param.value = realValue.toString().toBoolean()
+                    } else {
+                        param.value = realValue
                     }
                 }
             }
@@ -260,6 +256,7 @@ class PipelineBuildFacadeService(
                 required = true,
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "",
+                value = "",
                 options = null,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,
@@ -564,7 +561,8 @@ class PipelineBuildFacadeService(
         startByMessage: String? = null,
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        version: Int? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -596,8 +594,8 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val model = getModel(projectId, pipelineId)
+            // TODO #8164 检查传入版本是否为草稿
+            val model = getModel(projectId, pipelineId, version)
 
             /**
              * 验证流水线参数构建启动参数

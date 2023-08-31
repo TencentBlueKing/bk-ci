@@ -42,9 +42,8 @@ data class BuildFormProperty(
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)
     var defaultValue: Any,
-    // TODO #8164 增加上一次的变量记录，前端只需调一次接口
     @ApiModelProperty("上次构建的取值", required = true)
-    var value: Any,
+    var value: Any? = null,
     @ApiModelProperty("下拉框列表", required = false)
     var options: List<BuildFormValue>?,
     @ApiModelProperty("描述", required = false)

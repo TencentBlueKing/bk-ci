@@ -893,7 +893,7 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     version = version - 1
                 )
-                if (version > 1 &&  lastVersionRecord == null) {
+                if (version > 1 && lastVersionRecord == null) {
                     // 当ResVersion表中缺失上一个有效版本时需从Res表迁移数据（版本间流水线模型对比有用）
                     // TODO 将保存时才转移到ResVersion的逻辑改成双写同步写入
                     val lastVersionModelStr = pipelineResourceDao.getVersionModelString(
@@ -1062,6 +1062,55 @@ class PipelineRepositoryService constructor(
                 includeDraft = includeDraft
             )
         }
+    }
+
+    fun rollbackDraftFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineResourceVersion? {
+        var resultVersion: PipelineResourceVersion? = null
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val latestVersion = pipelineResourceDao.getLatestVersionResource(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            // TODO #8161 增加报错逻辑
+            val targetVersion = pipelineResourceVersionDao.getVersionResource(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+            if (latestVersion != null && targetVersion != null) {
+                resultVersion = targetVersion.copy(version = latestVersion.version + 1, versionName = "init")
+                pipelineResourceVersionDao.clearDraftVersion(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+                pipelineResourceVersionDao.create(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    creator = userId,
+                    version = resultVersion!!.version,
+                    versionName = resultVersion!!.versionName ?: "init",
+                    model = resultVersion!!.model,
+                    baseVersion = targetVersion.version,
+                    yaml = resultVersion!!.yaml,
+                    pipelineVersion = resultVersion!!.pipelineVersion,
+                    triggerVersion = resultVersion!!.triggerVersion,
+                    settingVersion = resultVersion!!.settingVersion,
+                    versionStatus = VersionStatus.COMMITTING,
+                    description = null
+                )
+            }
+        }
+        return resultVersion
     }
 
     private fun str2model(

@@ -45,7 +45,6 @@ data class SchedulesRule(
     @JsonProperty("advance-cron")
     val advanceCron: List<String>? = null,
 
-
     val branches: List<String>? = null,
 
     val always: Boolean? = false

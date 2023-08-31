@@ -66,10 +66,18 @@ class UserBuildResourceImpl @Autowired constructor(
     override fun manualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        version: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
+        return Result(
+            pipelineBuildFacadeService.buildManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun getBuildParameters(
@@ -91,7 +99,8 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         values: Map<String, String>,
         buildNo: Int?,
-        triggerReviewers: List<String>?
+        triggerReviewers: List<String>?,
+        version: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         val manualStartup = pipelineBuildFacadeService.buildManualStartup(

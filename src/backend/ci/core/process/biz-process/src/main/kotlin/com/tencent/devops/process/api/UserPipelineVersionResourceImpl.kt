@@ -475,7 +475,26 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Int
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        pipelineRepositoryService.rollbackDraftFromVersion(userId, projectId, pipelineId, version)
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String) {
