@@ -347,6 +347,7 @@ export default {
         elements.splice(atomIndex, 1)
     },
     [PROPERTY_PANEL_VISIBLE]: (state, { showPanelType, isShow, isComplete, editingElementPos = null }) => {
+        console.log(editingElementPos, 'mutation')
         return Object.assign(state, {
             showPanelType,
             isPropertyPanelVisible: isShow,

@@ -20,9 +20,13 @@
 import PipelineEditTab from './PipelineEditTab'
 import BaseSettingTab from './BaseSettingTab'
 import NotifyTab from './NotifyTab'
+import TriggerTab from './TriggerTab'
+import ShowVariable from './ShowVariable'
 
 export {
     PipelineEditTab,
     BaseSettingTab,
-    NotifyTab
+    NotifyTab,
+    TriggerTab,
+    ShowVariable
 }

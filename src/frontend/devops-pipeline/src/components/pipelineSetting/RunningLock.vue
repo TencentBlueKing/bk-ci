@@ -1,104 +1,126 @@
 <template>
-    <bk-form
-        v-if="pipelineSetting"
-        class="bkdevops-running-lock-setting-tab"
-        :model="pipelineSetting"
-        :rules="formRule"
-        form-type="vertical"
-        :label-width="300"
-    >
-        <bk-form-item :label="$t('settings.parallelSetting')">
-            <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
-                <div class="run-lock-radio-item">
-                    <bk-radio
-                        :value="runTypeMap.MULTIPLE"
-                    >
-                        {{$t('settings.runningOption.multiple')}}
-                    </bk-radio>
+    <div v-if="pipelineSetting" class="bkdevops-running-lock-setting-tab">
+        <div class="pipeline-setting-title">{{$t('settings.runLock')}}</div>
+        <bk-form
+            :model="pipelineSetting"
+            :rules="formRule"
+            :label-width="300"
+            form-type="vertical"
+            class="new-ui-form"
+        >
+            <bk-form-item :is-error="errors.has('buildNumRule')" :error-msg="errors.first('buildNumRule')">
+                <div class="layout-label">
+                    <label class="ui-inner-label">
+                        <span class="bk-label-text">{{ $t('settings.buildNumberFormat') }}</span>
+                        <span @click="handleGoDocumentInfo">
+                            <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                        </span>
+                    </label>
                 </div>
-                <div class="run-lock-radio-item">
-                    <bk-radio
-                        :value="runTypeMap.GROUP"
-                    >
-                        {{$t('settings.runningOption.single')}}
-                    </bk-radio>
-                </div>
-            </bk-radio-group>
-        </bk-form-item>
-        <div class="single-lock-sub-form" v-if="isSingleLock">
-            <bk-form-item
-                :required="isSingleLock"
-                property="concurrencyGroup"
-                desc-type="icon"
-                desc-icon="bk-icon icon-info-circle"
-                :label="$t('settings.groupName')"
-                :desc="$t('settings.lockGroupDesc')"
-            >
-                <bk-input
-                    :placeholder="$t('settings.itemPlaceholder')"
-                    v-model="pipelineSetting.concurrencyGroup"
-                />
+                <vuex-input name="buildNumRule" :value="pipelineSetting.buildNumRule" :placeholder="$t('buildDescInputTips')" v-validate.initial="{ buildNumRule: true }" max-length="256" :handle-change="handleBaseInfoChange" />
+                <p class="error-tips"
+                    v-if="errors.has('buildNumRule')">
+                    {{ $t('settings.validatebuildNum') }}
+                </p>
             </bk-form-item>
-
-            <bk-form-item property="concurrencyCancelInProgress">
-                <bk-checkbox
-                    :checked="pipelineSetting.concurrencyCancelInProgress"
-                    @change="handleConCurrencyCancel"
-                >
-                    {{$t('settings.stopWhenNewCome')}}
-                </bk-checkbox>
+            <bk-form-item :label="$t('settings.parallelSetting')">
+                <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
+                    <div class="run-lock-radio-item">
+                        <bk-radio
+                            :value="runTypeMap.MULTIPLE"
+                        >
+                            {{$t('settings.runningOption.multiple')}}
+                        </bk-radio>
+                    </div>
+                    <div class="run-lock-radio-item">
+                        <bk-radio
+                            :value="runTypeMap.GROUP"
+                        >
+                            {{$t('settings.runningOption.single')}}
+                        </bk-radio>
+                    </div>
+                </bk-radio-group>
             </bk-form-item>
-            <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+            <div class="single-lock-sub-form" v-if="isSingleLock">
                 <bk-form-item
-                    :label="$t('settings.largestNum')"
-                    error-display-type="normal"
-                    property="maxQueueSize"
+                    :required="isSingleLock"
+                    property="concurrencyGroup"
+                    desc-type="icon"
+                    desc-icon="bk-icon icon-question-circle-shape"
+                    :label="$t('settings.groupName')"
+                    :desc="$t('settings.lockGroupDesc')"
                 >
                     <bk-input
-                        type="number"
                         :placeholder="$t('settings.itemPlaceholder')"
-                        v-model="pipelineSetting.maxQueueSize"
-                    >
-                        <template slot="append">
-                            <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
-                        </template>
-                    </bk-input>
+                        v-model="pipelineSetting.concurrencyGroup"
+                    />
                 </bk-form-item>
-                <bk-form-item
-                    :label="$t('settings.lagestTime')"
-                    error-display-type="normal"
-                    property="waitQueueTimeMinute"
-                >
-                    <bk-input
-                        type="number"
-                        :placeholder="$t('settings.itemPlaceholder')"
-                        v-model="pipelineSetting.waitQueueTimeMinute"
-                    >
-                        <template slot="append">
-                            <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
-                        </template>
-                    </bk-input>
-                </bk-form-item>
-            </template>
-        </div>
-        <bk-form-item :label="$t('settings.disableSetting')">
-            <span @click="handleLockTypeChange(runTypeMap.LOCK)">
-                <bk-radio
-                    :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
-                    :value="runTypeMap.LOCK"
-                >
-                    {{$t('settings.runningOption.lock')}}
-                </bk-radio>
-            </span>
-        </bk-form-item>
-    </bk-form>
 
+                <bk-form-item property="concurrencyCancelInProgress">
+                    <bk-checkbox
+                        :checked="pipelineSetting.concurrencyCancelInProgress"
+                        @change="handleConCurrencyCancel"
+                    >
+                        <!-- {{$t('settings.stopWhenNewCome')}} -->
+                        {{$t('取消正在运行的构建')}}
+                    </bk-checkbox>
+                </bk-form-item>
+                <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                    <bk-form-item
+                        :label="$t('settings.largestNum')"
+                        error-display-type="normal"
+                        property="maxQueueSize"
+                    >
+                        <bk-input
+                            type="number"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="pipelineSetting.maxQueueSize"
+                        >
+                            <template slot="append">
+                                <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
+                            </template>
+                        </bk-input>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('settings.lagestTime')"
+                        error-display-type="normal"
+                        property="waitQueueTimeMinute"
+                    >
+                        <bk-input
+                            type="number"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="pipelineSetting.waitQueueTimeMinute"
+                        >
+                            <template slot="append">
+                                <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                            </template>
+                        </bk-input>
+                    </bk-form-item>
+                </template>
+            </div>
+
+            <!-- <bk-form-item :label="$t('settings.disableSetting')">
+                <span @click="handleLockTypeChange(runTypeMap.LOCK)">
+                    <bk-radio
+                        :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
+                        :value="runTypeMap.LOCK"
+                    >
+                        {{$t('settings.runningOption.lock')}}
+                    </bk-radio>
+                </span>
+            </bk-form-item> -->
+        </bk-form>
+    </div>
 </template>
 
 <script>
+    import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
+        components: {
+            VuexInput
+        },
         props: {
             pipelineSetting: Object,
             handleRunningLockChange: Function
@@ -151,7 +173,6 @@
             }
         },
         created () {
-            // TODO: hack old data ugly!!!!!!
             if (this.pipelineSetting.runLockType === this.runTypeMap.SINGLE) {
                 this.handleLockTypeChange(this.runTypeMap.GROUP)
             }
@@ -167,6 +188,14 @@
                 this.handleRunningLockChange({
                     concurrencyCancelInProgress: val
                 })
+            },
+            handleBaseInfoChange (val) {
+                this.handleRunningLockChange({
+                    buildNumRule: val
+                })
+            },
+            handleGoDocumentInfo () {
+                window.open(this.$pipelineDocs.ALIAS_BUILD_NO_DOC)
             }
         }
     }
@@ -174,11 +203,24 @@
 
 <style lang="scss">
     .bkdevops-running-lock-setting-tab {
-        .bk-label {
-            font-weight: 900;
+        .bk-form-content {
+            max-width: 560px;
+        }
+        .layout-label {
+            font-size: 12px;
+            i {
+                margin-left: 6px;
+                color: #979BA5;
+                font-size: 14px;
+                cursor: pointer;
+            }
         }
         .single-lock-sub-form {
-            margin: 0 0 10px 20px;
+            margin-bottom: 20px;
+            width: 560px;
+            border-radius: 2px;
+            border: 1px solid #DCDEE5;
+            padding: 16px;
         }
         .run-lock-radio-item {
             margin: 10px 0;
