@@ -65,7 +65,7 @@ class PipelineYamlReferDao {
                 pipelineId,
                 now,
                 now
-            )
+            ).execute()
         }
     }
 

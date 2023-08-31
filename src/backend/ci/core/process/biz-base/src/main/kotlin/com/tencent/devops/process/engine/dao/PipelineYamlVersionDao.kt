@@ -74,7 +74,7 @@ class PipelineYamlVersionDao {
                 versionName,
                 now,
                 now
-            )
+            ).execute()
         }
     }
 
