@@ -13,7 +13,7 @@ data class ApkDefenderRequest(
     @ApiModelProperty("仓库路径", required = true)
     val fullPath: String,
     @ApiModelProperty("用户列表", required = true)
-    val userIds: List<String>,
+    val userIds: Collection<String>,
     @ApiModelProperty("每批多少个", required = true)
     val batchSize: Int
 )

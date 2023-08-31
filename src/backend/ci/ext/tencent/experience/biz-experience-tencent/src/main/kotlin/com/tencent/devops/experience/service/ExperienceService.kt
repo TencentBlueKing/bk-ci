@@ -29,9 +29,11 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
@@ -47,6 +49,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BK_CI_APP_STAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -390,7 +393,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                    "artifactoryType:$artifactoryType , path:${experience.path}"
+                        "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -493,8 +496,7 @@ class ExperienceService @Autowired constructor(
             experienceOuterDao.create(dslContext, experienceId, it)
         }
 
-        // 公开体验表
-        if (isPublic) {
+        if (isPublic) { // 公开体验
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
@@ -508,6 +510,18 @@ class ExperienceService @Autowired constructor(
                 scheme = scheme,
                 version = appVersion
             )
+        } else { // 内部体验
+            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha") {
+                client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+                    ApkDefenderRequest(
+                        projectId = projectId,
+                        artifactoryType = artifactoryType,
+                        fullPath = experience.path,
+                        userIds = experienceInnerUsers,//TODO 组和外部用户?
+                        batchSize = 10
+                    )
+                )
+            }
         }
 
         experiencePermissionService.createTaskResource(
@@ -993,7 +1007,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
-                    "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
+                        "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
                 deptUsers.isEmpty()
@@ -1172,14 +1186,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

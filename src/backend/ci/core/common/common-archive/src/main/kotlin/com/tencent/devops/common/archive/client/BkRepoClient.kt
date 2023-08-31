@@ -725,7 +725,7 @@ class BkRepoClient constructor(
         projectId: String,
         repoName: String,
         fullPath: String,
-        userIds: List<String>,
+        userIds: Collection<String>,
         batchSize: Int
     ): List<ApkDefenderTask> {
         logger.info(

@@ -5,6 +5,6 @@ data class ApkDefenderRequest(
     val repoName: String,
     val fullPath: String,
     val scanner: String,
-    val users: List<String>,
+    val users: Collection<String>,
     val batchSize: Int
 )
