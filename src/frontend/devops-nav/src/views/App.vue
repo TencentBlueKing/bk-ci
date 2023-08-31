@@ -1,5 +1,5 @@
 <template>
-    <div class="devops-app">
+    <div :class="AppClass">
         <div
             v-show="moduleLoading"
             class="bk-loading"
@@ -27,8 +27,14 @@
 
         @Action getAnnouncement
         @Action setAnnouncement
+        serviceName: String = ''
 
         @Watch('fetchError')
+
+        get AppClass (): string {
+            return `devops-app ${this.serviceName}-model`
+        }
+
         handleFetchError (e) {
             if (e.status === 503) {
                 this.$router.replace('/maintaining')
@@ -44,8 +50,8 @@
         }
 
         async created () {
-            const model = location.href.split('/')[4]
-            document.title = this.getDocumentTitle(model)
+            this.serviceName = location.href.split('/')[4]
+            document.title = this.getDocumentTitle(this.serviceName)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
