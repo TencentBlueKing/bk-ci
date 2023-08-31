@@ -59,7 +59,11 @@ class DataTransferService @Autowired constructor(
                 .fetch()
         }
         allWindowsWorkspace.forEach {
-            val count = workspaceWindowsDao.opCreate(dslContext, it.name, it.winConfigId)
+            val count = workspaceWindowsDao.opCreate(
+                dslContext = dslContext,
+                workspaceName = it.name,
+                winConfigId = it.winConfigId
+            )
             if (count > 0 && WorkspaceStatus.values()[it.status].checkInUse()) {
                 val res = client.get(ServiceStartCloudResource::class)
                     .shareWorkspace(

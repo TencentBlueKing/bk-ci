@@ -12,7 +12,7 @@ class WorkspaceWindowsDao {
     fun opCreate(
         dslContext: DSLContext,
         workspaceName: String,
-        winConfigId: Int,
+        winConfigId: Int?,
         resourceId: String = ""
     ): Int {
         return with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
