@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
@@ -214,6 +215,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 modelAndSetting = modelAndSetting,
                 yaml = yaml,
                 description = resource.description,
+                canDebug = resource.status == VersionStatus.COMMITTING,
                 version = resource.version,
                 versionName = resource.versionName
             )
@@ -288,14 +290,14 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 oldYaml = baseVersion?.yaml ?: ""
             )
         )
+        // TODO #8161 模板的草稿如何处理
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = transferResult.modelAndSetting?.setting ?: modelAndYaml.modelAndSetting.setting,
             checkPermission = false,
-            dispatchPipelineUpdateEvent = false,
-            saveDraft = true
+            dispatchPipelineUpdateEvent = false
         )
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
@@ -305,7 +307,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             channelCode = ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false,
-            saveDraft = true,
+            versionStatus = VersionStatus.COMMITTING,
             description = modelAndYaml.description,
             yaml = transferResult.newYaml,
             savedSetting = savedSetting
@@ -473,7 +475,26 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Int
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        pipelineRepositoryService.rollbackDraftFromVersion(userId, projectId, pipelineId, version)
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -68,6 +68,7 @@ import javax.ws.rs.core.Response
 @Suppress("ALL")
 interface UserBuildResource {
 
+    // TODO #8164 增加调试，是否使用最近一次构建参数值：取上一次调试或取默认值（前端可以主动取默认值，尽量不要点一次改一次）
     @ApiOperation("获取流水线手动启动参数")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
@@ -81,7 +82,10 @@ interface UserBuildResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("指定草稿版本", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("获取流水线构建参数")
@@ -124,7 +128,10 @@ interface UserBuildResource {
         buildNo: Int? = null,
         @ApiParam("触发审核人列表", required = false)
         @QueryParam("triggerReviewers")
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        @ApiParam("指定草稿版本", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")

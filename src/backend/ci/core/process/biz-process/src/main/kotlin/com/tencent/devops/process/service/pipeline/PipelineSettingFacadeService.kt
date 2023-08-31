@@ -97,8 +97,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
-        updateLabels: Boolean = true,
-        saveDraft: Boolean? = false
+        updateLabels: Boolean = true
     ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)

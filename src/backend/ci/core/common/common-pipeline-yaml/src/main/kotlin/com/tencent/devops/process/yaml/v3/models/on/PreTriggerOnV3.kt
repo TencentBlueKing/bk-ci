@@ -36,20 +36,19 @@ import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
 import com.tencent.devops.process.yaml.v2.models.on.ReviewRule
-import com.tencent.devops.process.yaml.v2.models.on.SchedulesRule
 import io.swagger.annotations.ApiModelProperty
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTriggerOnV3(
-    val name: String?,
+    val repoName: String?,
     var repoHashId: String?,
     var type: String?,
     val credentials: String?,
     override val push: Any?,
     override val tag: Any?,
     override val mr: Any?,
-    override val schedules: SchedulesRule?,
+    override val schedules: Any?,
     override val delete: DeleteRule?,
     override val issue: IssueRule? = null,
     override val review: ReviewRule? = null,
@@ -57,8 +56,9 @@ data class PreTriggerOnV3(
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
-    override val manual: String? = null,
-    override val openapi: String? = null
+    override val manual: Any? = null,
+    override val openapi: String? = null,
+    override val remote: String? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.Version.V3_0
 }

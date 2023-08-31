@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.modelTransfer
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -47,9 +46,11 @@ import com.tencent.devops.process.yaml.v2.models.Notices
 import com.tencent.devops.process.yaml.v2.models.PacNotices
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
+import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -118,7 +119,7 @@ class ModelTransfer @Autowired constructor(
     private fun prepareYamlGroups(projectId: String, notice: PacNotices): PacNotices {
         if (notice.groups.isNullOrEmpty()) return notice
         val info = transferCache.getProjectGroupAndUsers(projectId)?.associateBy { it.roleName } ?: return notice
-        val groups = notice.groups.mapNotNull { info[it]?.displayName }
+        val groups = notice.groups.mapNotNull { info[it]?.displayName }.ifEmpty { null }
         return notice.copy(groups = groups)
     }
 
@@ -169,22 +170,23 @@ class ModelTransfer @Autowired constructor(
         val stages = mutableListOf<PreStage>()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
-            val ymlStage = modelStage.model2YamlStage(stage)
+            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId)
             stages.add(ymlStage)
         }
         val label = prepareYamlLabels(modelInput.setting).ifEmpty { null }
-        val triggerOn = getTriggerOn(modelInput.model)
-        val variables = getVariableFromModel(modelInput.model)
+        val triggerOn = makeTriggerOn(modelInput)
+        val variables = makeVariableFromModel(modelInput.model)
         val lastStage = modelInput.model.stages.last()
-        val finally = if (lastStage.finally) modelStage.model2YamlStage(lastStage).jobs else null
-        val concurrency = getConcurrency(modelInput.setting)
+        val finally = if (lastStage.finally)
+            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId).jobs else null
+        val concurrency = makeConcurrency(modelInput.setting)
 
         return when (modelInput.version) {
             YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
                 version = "v2.0",
                 name = modelInput.model.name,
                 label = label,
-                triggerOn = triggerOn[modelInput.defaultScmType]?.toPreV2(),
+                triggerOn = triggerOn.firstOrNull() as PreTriggerOn?,
                 variables = variables,
                 stages = TransferMapper.anyTo(stages),
                 extends = null,
@@ -197,9 +199,7 @@ class ModelTransfer @Autowired constructor(
                 version = "v3.0",
                 name = modelInput.model.name,
                 label = label,
-                triggerOn = triggerOn.map { on ->
-                    on.value.toPreV3().also { it.type = on.key.alis }
-                }.ifEmpty { null }?.let { if (it.size == 1) it.first() else it },
+                triggerOn = triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it },
                 variables = variables,
                 stages = TransferMapper.anyTo(stages),
                 extends = null,
@@ -243,7 +243,7 @@ class ModelTransfer @Autowired constructor(
         return res
     }
 
-    private fun getConcurrency(setting: PipelineSetting): Concurrency? {
+    private fun makeConcurrency(setting: PipelineSetting): Concurrency? {
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK) {
             return Concurrency(
                 group = setting.concurrencyGroup,
@@ -257,16 +257,70 @@ class ModelTransfer @Autowired constructor(
         return null
     }
 
-    private fun getTriggerOn(model: Model): Map<ScmType, TriggerOn> {
-        val triggers = (model.stages[0].containers[0] as TriggerContainer).elements
-        return modelElement.triggers2Yaml(triggers)
+    private fun makeTriggerOn(modelInput: ModelTransferInput): List<IPreTriggerOn> {
+        val triggers = (modelInput.model.stages[0].containers[0] as TriggerContainer).elements
+        val baseTrigger = modelElement.baseTriggers2yaml(triggers)?.toPre(modelInput.version)
+        val scmTrigger = modelElement.scmTriggers2Yaml(triggers, modelInput.setting.projectId)
+        when (modelInput.version) {
+            YamlVersion.Version.V2_0 -> {
+                // 融合默认git触发器 + 基础触发器
+                if (scmTrigger[modelInput.defaultScmType] != null) {
+                    val res = scmTrigger[modelInput.defaultScmType]!!.toPre(modelInput.version) as PreTriggerOn
+                    return listOf(
+                        res.copy(
+                            manual = baseTrigger?.manual,
+                            schedules = baseTrigger?.schedules,
+                            remote = baseTrigger?.remote
+                        )
+                    )
+                }
+                // 只带基础触发器
+                if (baseTrigger != null) {
+                    return listOf(baseTrigger)
+                }
+                // 不带触发器
+                return emptyList()
+            }
+            YamlVersion.Version.V3_0 -> {
+                val trigger = mutableListOf<IPreTriggerOn>()
+                val triggerV3 = scmTrigger.map { on ->
+                    on.value.toPre(modelInput.version).also {
+                        it as PreTriggerOnV3
+                        it.type = on.key.alis
+                    }
+                }
+                if (baseTrigger != null) {
+                    when (triggerV3.size) {
+                        // 只带基础触发器
+                        0 -> return listOf(baseTrigger)
+                        // 融合一个git触发器 + 基础触发器
+                        1 -> return listOf(
+                            (triggerV3.first() as PreTriggerOnV3).copy(
+                                manual = baseTrigger.manual,
+                                schedules = baseTrigger.schedules,
+                                remote = baseTrigger.remote
+                            )
+                        )
+                        // 队列首插入基础触发器
+                        else -> trigger.add(0, baseTrigger)
+                    }
+                }
+                trigger.addAll(triggerV3)
+                return trigger
+            }
+        }
     }
 
-    private fun getVariableFromModel(model: Model): Map<String, Variable>? {
+    private fun makeVariableFromModel(model: Model): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
         (model.stages[0].containers[0] as TriggerContainer).params.forEach {
             // todo 启动参数需要更详细的解析
-            result[it.id] = Variable(it.defaultValue.toString())
+            result[it.id] = Variable(
+                it.defaultValue.toString(),
+                readonly = it.readOnly.nullIfDefault(false),
+                allowModifyAtStartup = it.required.nullIfDefault(true),
+                valueNotEmpty = it.valueNotEmpty.nullIfDefault(false)
+            )
         }
         return if (result.isEmpty()) {
             null

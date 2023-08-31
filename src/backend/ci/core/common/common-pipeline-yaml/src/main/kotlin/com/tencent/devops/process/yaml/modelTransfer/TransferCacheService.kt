@@ -3,11 +3,15 @@ package com.tencent.devops.process.yaml.modelTransfer
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
@@ -76,6 +80,24 @@ class TransferCacheService @Autowired constructor(
             }.onFailure { logger.warn("get $projectId default value error.") }.getOrNull()
         }
 
+    private val gitRepository = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, Repository?> { key ->
+            kotlin.runCatching {
+                val (projectId, type, value) = key.split("@@")
+                val repositoryType = RepositoryType.valueOf(type)
+                val config = RepositoryConfig(
+                    if (repositoryType == RepositoryType.ID) value else null,
+                    if (repositoryType == RepositoryType.NAME) value else null,
+                    RepositoryType.valueOf(type)
+                )
+                client.get(ServiceRepositoryResource::class)
+                    .get(projectId, config.getURLEncodeRepositoryId(), config.repositoryType)
+                    .data
+            }.onFailure { logger.warn("get $key value error.") }.getOrNull()
+        }
+
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
 
     fun getStoreImageInfo(imageCode: String, imageVersion: String?) =
@@ -84,4 +106,7 @@ class TransferCacheService @Autowired constructor(
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 
     fun getPipelineLabel(projectId: String) = pipelineLabel.get(projectId)
+
+    fun getGitRepository(projectId: String, repositoryType: RepositoryType, value: String) =
+        gitRepository.get("$projectId@@${repositoryType.name}@@$value")
 }
