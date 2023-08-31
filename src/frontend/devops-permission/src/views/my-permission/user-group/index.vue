@@ -79,7 +79,7 @@ export default {
           this.list = res.data;
           const project = this.list.find(i => i.projectCode === this.projectCode);
           if (project) {
-            this.initPage = project.managePermission === false || !['dev-rbac', 'test-rbac', 'rbac'].includes(project.routerTag);
+            this.initPage = project.managePermission === false || !/rbac/.test(project.routerTag);
           };
         });
     },
