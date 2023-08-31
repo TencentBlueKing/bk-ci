@@ -40,6 +40,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
@@ -69,6 +70,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -282,6 +285,43 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun getProjectWorkspaceList4WeSec(
+        projectId: String?
+    ): List<WeSecProjectWorkspace> {
+        logger.info("op get project $projectId workspace list")
+        val result = workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.RUNNING,
+            mountType = WorkspaceMountType.START,
+            projectId = projectId
+        ) ?: emptyList()
+
+        return result.map {
+            val detail = workspaceCommon.getWorkspaceDetail(it.name)
+            WeSecProjectWorkspace(
+                workspaceName = it.name,
+                projectId = it.projectId,
+                creator = it.creator,
+                regionId = detail?.regionId.toString(),
+                innerIp = detail?.hostIP
+                )
+            }
+    }
+
+    fun getWorkspaceProject(): List<RemotedevProject> {
+        logger.info("get workspace project list")
+        val result = workspaceDao.getWorkspaceProject(
+            dslContext = dslContext,
+            mountType = WorkspaceMountType.START
+        ) ?: emptyList()
+        return result.map {
+            RemotedevProject(
+                projectId = it.value1(),
+                projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
+            )
+        }
     }
 
     private fun parsingWorkspace(
