@@ -200,6 +200,8 @@ class DeliverControl @Autowired constructor(
         softwareList: SoftwareCallbackRes,
         action: WorkspaceAction
     ) {
+        logger.info("updateStatusAndCreateHistory|type|$type|workspace|$workspace|" +
+                        "newStatus|$newStatus|softwareList|$softwareList|action|$action")
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
