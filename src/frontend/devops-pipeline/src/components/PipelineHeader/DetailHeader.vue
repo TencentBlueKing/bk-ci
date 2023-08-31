@@ -43,10 +43,10 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
     import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb'
 
     export default {
         components: {
@@ -78,10 +78,18 @@
                 }
             },
             editRouteName () {
-                return { name: 'pipelinesEdit' }
+                return {
+                    name: 'pipelinesEdit',
+                    params: this.$route.params
+                }
             }
         },
         watch: {
+            '$route.params.buildNo': function (newBuildNum, oldBuildNum) {
+                if (newBuildNum !== oldBuildNum) {
+                    this.loading = false
+                }
+            },
             'execDetail.status': function (newStatus, oldStatus) {
                 if (newStatus !== oldStatus) {
                     this.loading = false

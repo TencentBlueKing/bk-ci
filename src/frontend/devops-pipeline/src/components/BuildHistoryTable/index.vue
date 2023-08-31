@@ -408,7 +408,7 @@
     import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'

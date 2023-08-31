@@ -44,8 +44,8 @@
 
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
     import { bus } from '@/utils/bus'
+    import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
             PipelineBreadCrumb

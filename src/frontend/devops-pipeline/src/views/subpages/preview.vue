@@ -55,7 +55,7 @@
                             }
                         }
                 }
-            }
+            },
         },
         mounted () {
             this.init()
@@ -75,8 +75,6 @@
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
-                'setPipeline',
-                'setPipelineEditing'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',

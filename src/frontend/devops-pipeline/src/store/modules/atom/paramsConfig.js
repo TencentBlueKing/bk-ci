@@ -42,7 +42,8 @@ export const DEFAULT_PARAM = {
         desc: '',
         type: STRING,
         typeDesc: 'string',
-        required: true
+        required: true,
+        readOnly: false
     },
     [TEXTAREA]: {
         id: 'textarea',
@@ -50,7 +51,8 @@ export const DEFAULT_PARAM = {
         desc: '',
         type: TEXTAREA,
         typeDesc: 'textarea',
-        required: true
+        required: true,
+        readOnly: false
     },
     [BOOLEAN]: {
         id: 'bool',
@@ -60,7 +62,8 @@ export const DEFAULT_PARAM = {
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
-        required: true
+        required: true,
+        readOnly: false
     },
     [ENUM]: {
         id: 'enum',
@@ -71,7 +74,8 @@ export const DEFAULT_PARAM = {
         type: ENUM,
         typeDesc: 'enum',
         options: [],
-        required: true
+        required: true,
+        readOnly: false
     },
     [MULTIPLE]: {
         id: 'multiple',
@@ -82,7 +86,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: MULTIPLE,
         typeDesc: 'multiple',
-        required: true
+        required: true,
+        readOnly: false
     },
     [SVN_TAG]: {
         id: 'svntag',
@@ -95,7 +100,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SVN_TAG,
         typeDesc: 'svntag',
-        required: true
+        required: true,
+        readOnly: false
     },
     [GIT_REF]: {
         id: 'gitref',
@@ -107,7 +113,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: GIT_REF,
         typeDesc: 'gitref',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CODE_LIB]: {
         id: 'codelib',
@@ -119,7 +126,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CODE_LIB,
         typeDesc: 'codelib',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CONTAINER_TYPE]: {
         id: 'buildResource',
@@ -134,7 +142,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CONTAINER_TYPE,
         typeDesc: 'buildResource',
-        required: true
+        required: true,
+        readOnly: false
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
@@ -145,7 +154,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CUSTOM_FILE]: {
         id: 'file',
@@ -155,7 +165,8 @@ export const DEFAULT_PARAM = {
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
-        required: true
+        required: true,
+        readOnly: false
     }
 }
 

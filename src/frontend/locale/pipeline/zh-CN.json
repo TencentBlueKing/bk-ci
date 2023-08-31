@@ -56,6 +56,7 @@
   "desc": "描述",
   "success": "成功",
   "creator": "创建人",
+  "created": "创建时间",
   "editSuc": "编辑成功",
   "saveSuc": "保存成功",
   "addSuc": "新建成功",
@@ -196,7 +197,7 @@
     "downLoadLog": "下载日志",
     "emptyLog": "日志内容为空",
     "report": "报告",
-    "artifactory": "构件"
+    "artifactory": "制品"
   },
   "timeMap": {
     "days": "天",
@@ -283,12 +284,17 @@
     "baseInfo": "基本信息",
     "group": "分组",
     "groupName": "分组名称",
-    "buildNumberFormat": "构建号格式",
+    "buildNumberFormat": "自定义构建号格式",
     "validatebuildNum": "只支持[a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "请输入正确的构建号格式",
     "emptyPipelineName": "请输入流水线名称",
     "label": "标签",
+    "manageLabel": "管理标签",
     "runLock": "运行设置",
+    "trigger": "触发器",
+    "enableStatus": "启用状态",
+    "addTrigger": "添加触发器",
+    "selectTrigger": "请选择触发器",
     "namePlaceholder": "请输入流水线名称，长度不超过40个字符",
     "descPlaceholder": "请输入100字符以内的描述内容",
     "largestNum": "最大排队数量",
@@ -817,6 +823,8 @@
     "descTips": "请输入参数描述",
     "showOnStarting": "执行时显示",
     "required": "是否必填",
+    "showOnExec": "是否为入参",
+    "readOnlyOnRun": "运行时只读",
     "defaultValue": "默认值",
     "fileDefaultValueLabel": "自定义仓库路径",
     "customFileLabelTips": "自定义仓库路径+文件名",
@@ -959,7 +967,10 @@
     },
     "stageOption": "流程控制选项",
     "draftVersion": "草稿 (从 {0} 创建) ",
-    "releaseVersion": "{0} 已发布"
+    "releaseVersion": "{0} 已发布",
+    "pipelineVersionSaveAt": "版本{0}保存于{1}",
+    "every": "每隔",
+    "remindTime": "小时提醒一次"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1169,7 +1180,8 @@
   "access": "访问",
   "outputNameSpaceDescTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
   "noReleatedPipeline": "暂无关联流水线",
-  "outputsFilterPlaceholder": "制品名称/报告名称",
+  "artifactsFilterPlaceholder": "制品名称",
+  "reportsFilterPlaceholder": "报告名称",
   "fullScreenView": "全屏查看",
   "exitFullscreen": "退出全屏",
   "skipSuc": "已跳过失败的步骤，继续运行",
@@ -1230,5 +1242,6 @@
   "prev": "上一步",
   "saveDraft": "保存草稿",
   "debug": "调试",
-  "release": "发布"
+  "release": "发布",
+  "nonManual": "非手动"
 }

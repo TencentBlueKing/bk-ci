@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.listener.run.PipelineAtomTaskBuildListener
 import com.tencent.devops.process.engine.listener.run.PipelineTaskPauseListener
 import org.springframework.amqp.core.Binding
@@ -90,44 +89,44 @@ class BuildEngineCoreTaskConfiguration {
             maxConcurrency = 50
         )
     }
+//
+//    /**
+//     * 本机专属任务队列
+//     */
+//    @Bean
+//    fun localPipelineBuildTaskQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_TASK_START + CommonUtils.getInnerIP())
+//
+//    @Bean
+//    fun localPipelineBuildTaskQueueBind(
+//        @Autowired localPipelineBuildTaskQueue: Queue,
+//        @Autowired pipelineCoreExchange: DirectExchange
+//    ): Binding {
+//        return BindingBuilder.bind(localPipelineBuildTaskQueue)
+//            .to(pipelineCoreExchange)
+//            .with(MQ.ROUTE_PIPELINE_BUILD_TASK_START + CommonUtils.getInnerIP())
+//    }
 
-    /**
-     * 本机专属任务队列
-     */
-    @Bean
-    fun localPipelineBuildTaskQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_TASK_START + CommonUtils.getInnerIP())
-
-    @Bean
-    fun localPipelineBuildTaskQueueBind(
-        @Autowired localPipelineBuildTaskQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(localPipelineBuildTaskQueue)
-            .to(pipelineCoreExchange)
-            .with(MQ.ROUTE_PIPELINE_BUILD_TASK_START + CommonUtils.getInnerIP())
-    }
-
-    @Bean
-    fun localPipelineAtomTaskBuildListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired localPipelineBuildTaskQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineAtomTaskBuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = localPipelineBuildTaskQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 1,
-            concurrency = 1,
-            maxConcurrency = 50
-        )
-    }
+//    @Bean
+//    fun localPipelineAtomTaskBuildListenerContainer(
+//        @Autowired connectionFactory: ConnectionFactory,
+//        @Autowired localPipelineBuildTaskQueue: Queue,
+//        @Autowired rabbitAdmin: RabbitAdmin,
+//        @Autowired buildListener: PipelineAtomTaskBuildListener,
+//        @Autowired messageConverter: Jackson2JsonMessageConverter
+//    ): SimpleMessageListenerContainer {
+//
+//        return Tools.createSimpleMessageListenerContainer(
+//            connectionFactory = connectionFactory,
+//            queue = localPipelineBuildTaskQueue,
+//            rabbitAdmin = rabbitAdmin,
+//            buildListener = buildListener,
+//            messageConverter = messageConverter,
+//            startConsumerMinInterval = 5000,
+//            consecutiveActiveTrigger = 1,
+//            concurrency = 1,
+//            maxConcurrency = 50
+//        )
+//    }
 
     /**
      * 流水线暂停操作队列

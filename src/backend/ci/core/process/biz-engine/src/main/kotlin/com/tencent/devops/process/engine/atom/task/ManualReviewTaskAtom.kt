@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_APPROVE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_REJECT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_DESCRIPTION
@@ -59,6 +61,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -66,11 +69,12 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
-import java.time.LocalDateTime
-import java.util.Date
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 人工审核插件
@@ -91,6 +95,7 @@ class ManualReviewTaskAtom(
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
 
+    @Suppress("ComplexMethod")
     override fun execute(
         task: PipelineBuildTask,
         param: ManualReviewUserTaskElement,
@@ -146,12 +151,13 @@ class ManualReviewTaskAtom(
         buildLogPrinter.addLine(
             buildId = buildId,
             message = getI18nByLocal(BK_PARAMS) +
-                    "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+                "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
         val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
         val projectName = runVariables[PROJECT_NAME_CHINESE] ?: projectCode
+        val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
@@ -171,7 +177,7 @@ class ManualReviewTaskAtom(
                     "content" to notifyTitle
                 ),
                 bodyParams = mutableMapOf(
-                    "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
+                    "buildNum" to buildNum,
                     "projectName" to projectName,
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
@@ -194,6 +200,28 @@ class ManualReviewTaskAtom(
                 markdownContent = param.markdownContent
             )
         )
+
+        if (param.reminderTime != null && param.reminderTime!! > 0) {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildReviewReminderEvent(
+                    source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
+                    userId = task.starter, delayMills = TimeUnit.HOURS.toMillis(param.reminderTime!!.toLong()).toInt(),
+                    reviewUsers = reviewUsersList.toSet(),
+                    notifyTitle = notifyTitle.ifBlank {
+                        MessageUtil.getMessageByLocale(
+                            ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS,
+                            I18nUtil.getDefaultLocaleLanguage(),
+                            arrayOf(projectName, pipelineName, buildNum)
+                        )
+                    },
+                    notifyBody = reviewDesc,
+                    weworkGroup = param.notifyGroup?.toSet() ?: emptySet(),
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = task.executeCount ?: 1
+                )
+            )
+        }
 
         return AtomResponse(BuildStatus.REVIEWING)
     }

@@ -57,7 +57,11 @@ request.interceptors.response.use(response => {
         const errorMsg = { httpStatus, message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) || 'service is abnormal' }
         return Promise.reject(errorMsg)
     } else if (httpStatus > 400) {
-        return Promise.reject(response)
+        const err = {
+            message: `unknow Error httpStatus: ${httpStatus}`,
+            httpStatus
+        }
+        return Promise.reject(err)
     }
 
     return response.data

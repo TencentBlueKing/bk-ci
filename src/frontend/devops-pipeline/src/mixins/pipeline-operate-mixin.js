@@ -177,6 +177,7 @@ export default {
                             params: {
                                 projectId,
                                 pipelineId,
+                                type: 'executeDetail',
                                 buildNo: res.id
                             }
                         })

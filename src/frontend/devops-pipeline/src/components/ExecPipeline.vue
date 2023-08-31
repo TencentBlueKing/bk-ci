@@ -1,5 +1,8 @@
 <template>
     <div class="exec-pipeline-wrapper">
+        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
+            <p></p>
+        </div>
         <div class="pipeline-exec-summary">
             <div class="pipeline-exec-count">
                 <span>{{ $t("details.num") }}</span>
@@ -65,27 +68,38 @@
                     {{ $t("history.viewLog") }}
                 </bk-button>
             </header>
-            <div class="exec-pipeline-ui-wrapper">
-                <bk-pipeline
-                    :editable="false"
-                    ref="bkPipeline"
-                    is-exec-detail
-                    :current-exec-count="executeCount"
-                    :cancel-user-id="cancelUserId"
-                    :user-name="userName"
-                    :pipeline="curPipeline"
-                    v-bind="$attrs"
-                    @click="handlePiplineClick"
-                    @stage-check="handleStageCheck"
-                    @stage-retry="handleRetry"
-                    @atom-quality-check="qualityCheck"
-                    @atom-review="reviewAtom"
-                    @atom-continue="handleContinue"
-                    @atom-exec="handleExec"
-                />
-            </div>
+            <simplebar
+                class="exec-pipeline-scroll-box"
+                :class-names="{
+                    track: 'pipeline-scrollbar-track'
+                }"
+                ref="scrollBox"
+                data-simplebar-auto-hide="false"
+            >
+                <div class="exec-pipeline-ui-wrapper">
+                    <bk-pipeline
+                        :editable="false"
+                        ref="bkPipeline"
+                        is-exec-detail
+                        :current-exec-count="executeCount"
+                        :cancel-user-id="cancelUserId"
+                        :user-name="userName"
+                        :pipeline="curPipeline"
+                        v-bind="$attrs"
+                        @click="handlePiplineClick"
+                        @stage-check="handleStageCheck"
+                        @stage-retry="handleRetry"
+                        @atom-quality-check="qualityCheck"
+                        @atom-review="reviewAtom"
+                        @atom-continue="handleContinue"
+                        @atom-exec="handleExec"
+                        @debug-container="debugDocker"
+                    />
+                </div>
+            </simplebar>
             <footer
                 v-if="showErrorPopup"
+                ref="errorPopup"
                 :class="{
                     'exec-errors-popup': true,
                     visible: showErrors
@@ -175,6 +189,13 @@
                 </bk-tab>
             </footer>
         </section>
+        <mini-map
+            v-if="Array.isArray(curPipeline.stages)"
+            ref="miniMap"
+            class="exec-pipeline-mini-map"
+            :stages="curPipeline.stages"
+            :scroll-class="scrollElement"
+        />
         <bk-dialog
             v-model="showRetryStageDialog"
             render-directive="if"
@@ -218,6 +239,7 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
+
     </div>
 </template>
 
@@ -226,15 +248,20 @@
     import ModeSwitch from '@/components/ModeSwitch'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
+    import simplebar from 'simplebar-vue'
+    import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapState } from 'vuex'
     export default {
         components: {
+            simplebar,
             CheckAtomDialog,
             CompleteLog,
             Logo,
-            ModeSwitch
+            ModeSwitch,
+            MiniMap
         },
         props: {
             execDetail: {
@@ -257,7 +284,8 @@
                 errorRow: null,
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
-                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC
+                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
+                scrollElement: '.pipeline-detail-wrapper.biz-content'
             }
         },
         computed: {
@@ -401,6 +429,9 @@
             },
             routerParams () {
                 return this.$route.params
+            },
+            errorPopupHeight () {
+                return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
         watch: {
@@ -412,7 +443,6 @@
             },
             'execDetail.model': function (val) {
                 if (val) {
-                    console.log('cha ge, modle')
                     this.curPipeline = val
                 }
             },
@@ -430,14 +460,27 @@
             }
 
         },
+        updated () {
+            if (this.showErrorPopup) {
+                this.setScrollBarPostion()
+            }
+        },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
-                setTimeout(() => {
-                    this.setAtomLocate(this.errorList[0])
-                    this.setShowErrorPopup()
-                }, 600)
+                this.setScrollBarPostion()
             }
+            this.$nextTick(() => {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const viewportContent = this.$refs.scrollViewPort.querySelector('p')
+                this.$refs.scrollViewPort.style.width = `${this.$refs.scrollBox?.scrollElement?.offsetWidth}px`
+                this.$refs.scrollViewPort.style.height = `${parent.offsetHeight}px`
+
+                viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
+                viewportContent.style.height = `${parent?.scrollHeight}px`
+                this.scrollElement = '.pipeline-model-scroll-viewport'
+                this.initMiniMapScroll()
+            })
         },
         beforeDestroy () {
             this.togglePropertyPanel({
@@ -446,6 +489,9 @@
             if (this.activeErrorAtom?.taskId) {
                 this.locateError(this.activeErrorAtom, false)
             }
+            const rootCssVar = document.querySelector(':root')
+            rootCssVar.style.setProperty('--track-bottom', 0)
+            this.removeMiniMapScroll()
         },
         methods: {
             ...mapActions('atom', [
@@ -487,6 +533,45 @@
                     ]
 
                 )
+            },
+            initMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.addEventListener('scroll', this.handelHerizontalScroll)
+                    parent.addEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.addEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            removeMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
+                    parent.removeEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            handelHerizontalScroll (e) {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                this.$refs.miniMap.scrollTo(e.target.scrollLeft, parent.scrollTop)
+            },
+            handelVerticalScroll (e) {
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                this.$refs.miniMap.scrollTo(scrollEle.scrollLeft, e.target.scrollTop)
+            },
+            handleMiniMapDrag () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                parent.scrollTop = scrollViewPort.scrollTop
+                scrollEle.scrollLeft = scrollViewPort.scrollLeft
+            },
+            setScrollBarPostion () {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
@@ -779,6 +864,16 @@
                         executeCount
                     })
                 })
+            },
+            debugDocker ({ container }) {
+                const vmSeqId = container.id
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             }
         }
     }
@@ -787,6 +882,9 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+:root {
+  --track-bottom: 0;
+}
 .exec-pipeline-wrapper {
   height: 100%;
   display: flex;
@@ -900,11 +998,17 @@
       }
     }
   }
-  .exec-pipeline-ui-wrapper {
-    flex: 1;
-    overflow: auto;
-    padding: 0 24px 42px 24px;
-  }
+    .exec-pipeline-scroll-box {
+        flex: 1;
+        .simplebar-wrapper,
+        .simplebar-content-wrapper {
+            height: 100%;
+        }
+        .exec-pipeline-ui-wrapper {
+            padding: 0 24px 42px 24px;
+            height: 100%;
+        }
+    }
   .exec-errors-popup {
     position: fixed;
     bottom: 0;
@@ -947,11 +1051,11 @@
     }
 
     &.visible {
-      transform: translateY(0);
-      .toggle-error-popup-icon {
-        transition: transform 0.6s ease;
-        transform: rotate(180deg);
-    }
+        transform: translateY(0);
+        .toggle-error-popup-icon {
+            transition: transform 0.6s ease;
+            transform: rotate(180deg);
+        }
     }
     .drag-dot {
       position: absolute;
@@ -1014,7 +1118,7 @@
       color: #979ba5;
       font-weight: normal;
       width: 60px;
-      flex-shrik: 0;
+      flex-shrink: 0;
     }
   }
   &.time-detail-popup .pipeline-time-detail-sum {
@@ -1033,7 +1137,7 @@
       > span:first-child {
         color: #979ba5;
         width: 60px;
-        flex-shrik: 0;
+        flex-shrink: 0;
       }
       &:last-child {
         margin-bottom: 0;
@@ -1048,5 +1152,31 @@
   .exec-count-select-option-user {
     color: #979ba5;
   }
+}
+.pipeline-scrollbar-track {
+    left: 24px;
+    right: 34px;
+    position: fixed;
+    bottom: var(--track-bottom);
+    height: 10px;
+    transition: all 0.3s;
+    .simplebar-scrollbar {
+        height: 12px;
+        &:before {
+            background: #a5a5a5;
+        }
+    }
+}
+.exec-pipeline-mini-map {
+    bottom: 56px;
+}
+.pipeline-model-scroll-viewport {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    z-index: -2;
 }
 </style>

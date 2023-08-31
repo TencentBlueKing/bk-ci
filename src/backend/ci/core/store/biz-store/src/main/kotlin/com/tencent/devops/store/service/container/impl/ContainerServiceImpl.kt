@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_ENV_TYPE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -41,6 +42,8 @@ import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
 import com.tencent.devops.store.dao.container.ContainerResourceRelDao
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
+import com.tencent.devops.store.pojo.common.BK_NORMAL
+import com.tencent.devops.store.pojo.common.BK_TRIGGER
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
@@ -210,7 +213,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             )
             val pipelineContainerResp = ContainerResp(
                 id = it.id,
-                name = it.name,
+                name = getContainerI18nName(it.type, it.os) ?: it.name,
                 type = it.type,
                 baseOS = it.os,
                 required = ContainerRequiredEnum.getContainerRequired(it.required.toInt()),
@@ -227,6 +230,21 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             dataList.add(pipelineContainerResp)
         }
         return Result(dataList)
+    }
+
+    fun getContainerI18nName(type: String, os: String): String? {
+        return when (type) {
+            "normal" -> {
+                I18nUtil.getCodeLanMessage(BK_NORMAL)
+            }
+            "vmBuild" -> {
+                I18nUtil.getCodeLanMessage(BK_BUILD_ENV_TYPE + os)
+            }
+            "trigger" -> {
+                I18nUtil.getCodeLanMessage(BK_TRIGGER)
+            }
+            else -> null
+        }
     }
 
     abstract fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean

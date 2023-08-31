@@ -66,9 +66,6 @@
             this.fetchPipelineList()
         },
         methods: {
-            ...mapActions('atom', [
-                'requestPipeline'
-            ]),
             ...mapActions('pipelines', [
                 'searchPipelineList',
                 'requestPipelineSummary'
@@ -114,11 +111,6 @@
                 const summary = await this.requestPipelineSummary({
                     pipelineId,
                     projectId: $route.params.projectId
-                })
-                this.requestPipeline({
-                    pipelineId,
-                    projectId: $route.params.projectId,
-                    version: summary.version
                 })
                 // 清空搜索
                 this.searchPipelineList({

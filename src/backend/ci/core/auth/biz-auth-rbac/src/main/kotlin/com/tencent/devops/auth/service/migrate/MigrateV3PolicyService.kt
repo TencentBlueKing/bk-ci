@@ -31,11 +31,9 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.dao.AuthMigrationDao
@@ -46,6 +44,7 @@ import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
@@ -76,7 +75,8 @@ class MigrateV3PolicyService constructor(
     private val rbacCacheService: RbacCacheService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val groupService: PermissionResourceGroupService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -104,6 +104,11 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_ENABLE = "project_enable"
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
+        // 流水线查看权限,v3没有pipeline_list权限,迁移至rbac需要添加
+        private const val PIPELINE_VIEW = "pipeline_view"
+        // 项目访问权限
+        private const val PIPELINE_LIST = "pipeline_list"
+
         // 过期用户增加5分钟
         private const val EXPIRED_MEMBER_ADD_TIME = 5L
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
@@ -356,6 +361,10 @@ class MigrateV3PolicyService constructor(
         if (finalUserActions.contains(QUALITY_GROUP_ENABLE)) {
             finalUserActions.remove(QUALITY_GROUP_ENABLE)
         }
+        // v3没有pipeline_list权限,但是rbac有这个权限,迁移时需要补充
+        if (finalUserActions.contains(PIPELINE_VIEW)) {
+            finalUserActions.add(PIPELINE_LIST)
+        }
         return finalUserActions
     }
 
@@ -367,12 +376,12 @@ class MigrateV3PolicyService constructor(
             } else {
                 member.expiredAt
             }
-            val managerMember = ManagerMember(member.type, member.id)
-            val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                .members(listOf(managerMember))
-                .expiredAt(expiredAt)
-                .build()
-            v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+            groupService.addGroupMember(
+                userId = member.id,
+                memberType = member.type,
+                expiredAt = expiredAt,
+                groupId = groupId
+            )
         }
     }
 

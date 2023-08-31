@@ -60,8 +60,11 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -82,7 +85,6 @@ import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
-import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
@@ -105,6 +107,7 @@ import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -121,6 +124,7 @@ import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -230,6 +234,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val handleAtomPackageMap = handleAtomPackageResult.data
         val id = UUIDUtil.generate()
+        val atomEnvRequest = AtomEnvRequest(
+            userId = userId,
+            language = marketAtomCreateRequest.language,
+            defaultFlag = true
+        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 添加插件基本信息
@@ -287,6 +296,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, listOf(atomEnvRequest))
         }
         return Result(id)
     }
@@ -599,9 +609,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
-            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
-                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
-            }
+            marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
@@ -700,13 +708,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     repositoryHashId = repositoryHashId
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
-                val stageCode = qualityDataMap["stage"] as String
-                val stage = when (stageCode) {
-                    "DEVELOP" -> I18nUtil.getCodeLanMessage(DEVELOP)
-                    "TEST" -> I18nUtil.getCodeLanMessage(TEST)
-                    "DEPLOY" -> I18nUtil.getCodeLanMessage(DEPLOY)
-                    "SECURITY" -> I18nUtil.getCodeLanMessage(SECURITY)
-                    else -> throw ErrorCodeException(
+                val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())
+                if (stageCode !in listOf(DEVELOP, TEST, DEPLOY, SECURITY)) {
+                    throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
                     )
@@ -727,7 +731,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
-                    stage = stage,
+                    stage = stageCode,
                     metadataResultMap = metadataResultMap,
                     indicators = indicators
                 )
@@ -738,7 +742,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
-                    stage = stage,
+                    stage = stageCode,
                     projectId = projectCode
                 )
 
@@ -792,8 +796,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 type = atomCode,
                 name = atomName,
                 stage = stage,
-                availablePos = listOf(ControlPointPosition(BEFORE_POSITION), ControlPointPosition(AFTER_POSITION)),
-                defaultPos = ControlPointPosition(BEFORE_POSITION),
+                availablePos = listOf(
+                    ControlPointPosition.create(BEFORE_POSITION),
+                    ControlPointPosition.create(AFTER_POSITION)
+                ),
+                defaultPos = ControlPointPosition.create(BEFORE_POSITION),
                 enable = true,
                 atomVersion = atomVersion,
                 testProject = projectId
@@ -984,7 +991,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
             if (!queryFlag) {
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PERMISSION_DENIED,
+                    errorCode = GET_INFO_NO_PERMISSION,
                     params = arrayOf(atomCode)
                 )
             }
@@ -1024,9 +1031,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
+        val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
         if (!checkResult) {
-            throw ErrorCodeException(errorCode = code)
+            throw ErrorCodeException(
+                errorCode = code,
+                params = params
+            )
         }
         marketAtomDao.setAtomStatusById(
             dslContext = dslContext,
@@ -1073,14 +1083,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val atomStatus = getPreValidatePassTestStatus(atomCode, atomId, atomRecord.atomStatus)
-        val (checkResult, code) = checkAtomVersionOptRight(
+        val (checkResult, code, params) = checkAtomVersionOptRight(
             userId = userId,
             atomId = atomId,
             status = atomStatus,
             isNormalUpgrade = isNormalUpgrade
         )
         if (!checkResult) {
-            throw ErrorCodeException(errorCode = code)
+            throw ErrorCodeException(errorCode = code, params = params)
         }
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
@@ -1207,7 +1217,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomId: String,
         status: Byte,
         isNormalUpgrade: Boolean? = null
-    ): Pair<Boolean, String>
+    ): Triple<Boolean, String, Array<String>?>
 
     /**
      * 处理用户提交的下架插件请求
@@ -1226,7 +1236,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         ) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED)
+            throw ErrorCodeException(errorCode = NO_COMPONENT_ADMIN_PERMISSION)
         }
         val version = atomOfflineReq.version
         val reason = atomOfflineReq.reason
@@ -1278,7 +1288,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf("$atomCode:$version")
             )
         if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED)
+            throw ErrorCodeException(
+                errorCode = VERSION_PUBLISHED,
+                params = arrayOf(atomCode, version)
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)

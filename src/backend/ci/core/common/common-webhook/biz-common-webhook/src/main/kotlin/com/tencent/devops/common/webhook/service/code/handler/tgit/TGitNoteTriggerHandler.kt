@@ -72,9 +72,11 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
+import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -83,7 +85,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 @CodeWebhookHandler
 class TGitNoteTriggerHandler(
     private val eventCacheService: EventCacheService
-) : GitHookTriggerHandler<GitNoteEvent> {
+) : CodeWebhookTriggerHandler<GitNoteEvent> {
 
     override fun eventClass(): Class<GitNoteEvent> {
         return GitNoteEvent::class.java
@@ -111,6 +113,41 @@ class TGitNoteTriggerHandler(
 
     override fun getEventType(): CodeEventType {
         return CodeEventType.NOTE
+    }
+
+    override fun getWebhookFilters(
+        event: GitNoteEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): List<WebhookFilter> {
+        with(webHookParams) {
+            val urlFilter = GitUrlFilter(
+                pipelineId = pipelineId,
+                triggerOnUrl = getUrl(event),
+                repositoryUrl = repository.url,
+                includeHost = includeHost
+            )
+            val eventTypeFilter = EventTypeFilter(
+                pipelineId = pipelineId,
+                triggerOnEventType = getEventType(),
+                eventType = eventType
+            )
+            val typeActionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "noteTypeAction",
+                triggerOn = event.objectAttributes.noteableType,
+                included = WebhookUtils.convert(includeNoteTypes)
+            )
+            val commentActionFilter = RegexContainFilter(
+                pipelineId = pipelineId,
+                filterName = "noteCommentAction",
+                triggerOn = event.objectAttributes.note,
+                included = WebhookUtils.convert(includeNoteComment)
+            )
+            return listOf(urlFilter, eventTypeFilter, typeActionFilter, commentActionFilter)
+        }
     }
 
     override fun getMessage(event: GitNoteEvent): String? {
@@ -200,27 +237,5 @@ class TGitNoteTriggerHandler(
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = targetProjectId
         }
         return startParams
-    }
-
-    override fun getEventFilters(
-        event: GitNoteEvent,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): List<WebhookFilter> {
-        val typeActionFilter = ContainsFilter(
-            pipelineId = pipelineId,
-            filterName = "noteTypeAction",
-            triggerOn = event.objectAttributes.noteableType,
-            included = WebhookUtils.convert(webHookParams.includeNoteTypes)
-        )
-        val commentActionFilter = RegexContainFilter(
-            pipelineId = pipelineId,
-            filterName = "noteCommentAction",
-            triggerOn = event.objectAttributes.note,
-            included = WebhookUtils.convert(webHookParams.includeNoteComment)
-        )
-        return listOf(typeActionFilter, commentActionFilter)
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <pipeline v-if="!isLoading" :pipeline="pipeline" :is-editing="isEditing" :show-header="false"></pipeline>
+    <pipeline v-if="!isLoading" :pipeline="curPipeline" :is-editing="isEditing" :show-header="false"></pipeline>
 </template>
 
 <script>
@@ -20,6 +20,13 @@
             return {
                 showAtomYet: false,
                 showLinkAtomYet: false
+            }
+        },
+        computed: {
+            curPipeline () {
+                return this.pipeline
+                // const stages = this.pipeline?.stages?.slice(1)
+                // return Object.assign(this.pipeline, { stages: this.pipeline.stages })
             }
         },
         watch: {

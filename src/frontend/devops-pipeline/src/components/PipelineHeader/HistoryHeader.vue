@@ -60,7 +60,10 @@
                     }
             },
             editRouteName () {
-                return { name: 'pipelinesEdit' }
+                return {
+                    name: 'pipelinesEdit',
+                    params: this.$route.params
+                }
             }
         },
         methods: {
