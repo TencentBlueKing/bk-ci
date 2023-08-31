@@ -235,6 +235,7 @@ class DeliverControl @Autowired constructor(
         logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (val status = WorkspaceStatus.values()[workspace.status]) {
+                // 交付中安装IOA后
                 WorkspaceStatus.DELIVERING -> {
                     if (type == "SYSTEM") {
                         updateStatusAndCreateHistory(
@@ -260,7 +261,7 @@ class DeliverControl @Autowired constructor(
                         }
                     }
                 }
-                WorkspaceStatus.DISTRIBUTING -> {
+                WorkspaceStatus.RUNNING -> {
                     if (type != "SYSTEM") {
                         updateStatusAndCreateHistory(
                             type = type,
