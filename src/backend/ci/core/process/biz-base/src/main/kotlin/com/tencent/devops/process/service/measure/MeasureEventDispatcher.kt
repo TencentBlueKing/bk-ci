@@ -32,13 +32,11 @@ import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import javax.annotation.Resource
 
-class MeasureEventDispatcher constructor(
-    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
+class MeasureEventDispatcher(
+    private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<IMeasureEvent> {
 
     @SuppressWarnings("NestedBlockDepth")

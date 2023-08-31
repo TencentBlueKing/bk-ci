@@ -1,5 +1,8 @@
 <template>
     <div class="exec-pipeline-wrapper">
+        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
+            <p></p>
+        </div>
         <div class="pipeline-exec-summary">
             <div class="pipeline-exec-count">
                 <span>{{ $t("details.num") }}</span>
@@ -74,6 +77,7 @@
                 :class-names="{
                     track: 'pipeline-scrollbar-track'
                 }"
+                ref="scrollBox"
                 data-simplebar-auto-hide="false"
             >
                 <div class="exec-pipeline-ui-wrapper">
@@ -93,6 +97,7 @@
                         @atom-review="reviewAtom"
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
+                        @debug-container="debugDocker"
                     />
                 </div>
             </simplebar>
@@ -188,6 +193,13 @@
                 </bk-tab>
             </footer>
         </section>
+        <mini-map
+            v-if="Array.isArray(curPipeline.stages)"
+            ref="miniMap"
+            class="exec-pipeline-mini-map"
+            :stages="curPipeline.stages"
+            :scroll-class="scrollElement"
+        />
         <bk-dialog
             v-model="showRetryStageDialog"
             render-directive="if"
@@ -231,6 +243,7 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
+        
     </div>
 </template>
 
@@ -238,18 +251,19 @@
     import CheckAtomDialog from '@/components/CheckAtomDialog'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             simplebar,
             CheckAtomDialog,
             CompleteLog,
-
-            Logo
+            Logo,
+            MiniMap
         },
         props: {
             execDetail: {
@@ -273,7 +287,8 @@
                 errorRow: null,
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
-                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC
+                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
+                scrollElement: '.pipeline-detail-wrapper.biz-content'
             }
         },
         computed: {
@@ -283,7 +298,7 @@
                 'showPanelType',
                 'isPropertyPanelVisible'
             ]),
-
+            
             panels () {
                 return [
                     {
@@ -462,17 +477,25 @@
         },
         updated () {
             if (this.showErrorPopup) {
-                const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                this.setScrollBarPostion()
             }
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
-                setTimeout(() => {
-                    this.setAtomLocate(this.errorList[0])
-                }, 600)
+                this.setScrollBarPostion()
             }
+            this.$nextTick(() => {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const viewportContent = this.$refs.scrollViewPort.querySelector('p')
+                this.$refs.scrollViewPort.style.width = `${this.$refs.scrollBox?.scrollElement?.offsetWidth}px`
+                this.$refs.scrollViewPort.style.height = `${parent.offsetHeight}px`
+                
+                viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
+                viewportContent.style.height = `${parent?.scrollHeight}px`
+                this.scrollElement = '.pipeline-model-scroll-viewport'
+                this.initMiniMapScroll()
+            })
         },
         beforeDestroy () {
             this.togglePropertyPanel({
@@ -483,6 +506,7 @@
             }
             const rootCssVar = document.querySelector(':root')
             rootCssVar.style.setProperty('--track-bottom', 0)
+            this.removeMiniMapScroll()
         },
         methods: {
             ...mapActions('atom', [
@@ -524,6 +548,45 @@
                     ]
 
                 )
+            },
+            initMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.addEventListener('scroll', this.handelHerizontalScroll)
+                    parent.addEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.addEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            removeMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
+                    parent.removeEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            handelHerizontalScroll (e) {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                this.$refs.miniMap.scrollTo(e.target.scrollLeft, parent.scrollTop)
+            },
+            handelVerticalScroll (e) {
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                this.$refs.miniMap.scrollTo(scrollEle.scrollLeft, e.target.scrollTop)
+            },
+            handleMiniMapDrag () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                parent.scrollTop = scrollViewPort.scrollTop
+                scrollEle.scrollLeft = scrollViewPort.scrollLeft
+            },
+            setScrollBarPostion () {
+                const rootCssVar = document.querySelector(':root')
+                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
@@ -816,6 +879,16 @@
                         executeCount
                     })
                 })
+            },
+            debugDocker ({ container }) {
+                const vmSeqId = container.id
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             }
         }
     }
@@ -1108,5 +1181,17 @@
             background: #a5a5a5;
         }
     }
+}
+.exec-pipeline-mini-map {
+    bottom: 56px;
+}
+.pipeline-model-scroll-viewport {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    z-index: -2;
 }
 </style>

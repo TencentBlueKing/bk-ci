@@ -32,7 +32,7 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li v-for="material in visibleMaterial" :key="material.newCommitId">
+                        <li v-for="(material, index) in visibleMaterial" :key="index">
                             <material-item :material="material" />
                         </li>
                     </ul>
@@ -76,15 +76,21 @@
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
-                    <span class="exec-remark" v-else>{{ remark || "--" }}</span>
+                    <span
+                        v-else
+                        v-bk-tooltips="{
+                            content: remark,
+                            disabled: !remark,
+                            allowHTML: false,
+                            delay: [300, 0]
+                        }"
+                        class="exec-remark"
+                    >
+                        {{ remark || "--" }}
+                    </span>
                 </div>
             </div>
         </div>
-        <span @click="collapseSummary" :class="['summary-collapsed-handler', {
-            'is-collapsed': !visible
-        }]">
-            <i class="devops-icon icon-angle-double-up"></i>
-        </span>
     </header>
 </template>
 
@@ -97,6 +103,10 @@
             MaterialItem
         },
         props: {
+            visible: {
+                type: Boolean,
+                default: true
+            },
             execDetail: {
                 type: Object,
                 required: true
@@ -104,7 +114,6 @@
         },
         data () {
             return {
-                visible: true,
                 remarkEditable: false,
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
@@ -143,9 +152,6 @@
             ...mapActions('pipelines', ['updateBuildRemark']),
             showRemarkEdit () {
                 this.remarkEditable = true
-            },
-            collapseSummary () {
-                this.visible = !this.visible
             },
             hideRemarkEdit () {
                 this.remarkEditable = false
@@ -341,11 +347,8 @@
       .exec-remark {
         width: 100%;
         align-items: center;
-        overflow: hidden;
-        display: -webkit-box;
-        text-overflow: ellipsis;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        display: inline-block;
+        @include ellipsis();
 
         .bk-form-textarea,
         .bk-textarea-wrapper {
@@ -356,33 +359,6 @@
           }
         }
       }
-    }
-  }
-
-  .summary-collapsed-handler {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-60px);
-    width: 120px;
-    height: 12px;
-    background: #EAEBF0;
-    border-radius: 2px 2px 0 0;
-    text-align: center;
-    line-height: 12px;
-    font-size: 12px;
-    transition: all 0.3s;
-    z-index: 10;
-    cursor: pointer;
-    &:hover {
-        color: $primaryColor;
-    }
-    &.is-collapsed {
-        bottom: -12px;
-        > i {
-            display: block;
-            transform: rotate(180deg);
-        }
     }
   }
 }

@@ -152,9 +152,9 @@
                         {
                             validator: (val) => {
                                 const intVal = parseInt(val, 10)
-                                return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
+                                return !this.isSingleLock || (intVal <= 200 && intVal >= 0)
                             },
-                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
+                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 200])}`,
                             trigger: 'blur'
                         }
                     ],

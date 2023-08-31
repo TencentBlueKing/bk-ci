@@ -32,6 +32,7 @@ import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,5 +59,31 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
                 migrateProjectConditionDTO = migrateProjectConditionDTO
             )
         )
+    }
+
+    override fun compareResult(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.compareResult(projectCode = projectCode))
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateResource(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                projectCreator
+            )
+        )
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO))
     }
 }

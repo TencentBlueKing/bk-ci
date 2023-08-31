@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 /**
  * 权限中心迁移服务
@@ -54,4 +55,28 @@ interface PermissionMigrateService {
      * 按条件升级到rbac权限
      */
     fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+
+    /**
+     * 对比迁移鉴权结果
+     */
+    fun compareResult(projectCode: String): Boolean
+
+    /**
+     * 迁移特定资源类型资源
+     */
+    fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean
+
+    /**
+     * 授予项目下自定义用户组RBAC新增的权限
+     */
+    fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
+
+    /**
+     * 权限交接
+     */
+    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
 }

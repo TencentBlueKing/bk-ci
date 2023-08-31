@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -70,6 +71,7 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -171,6 +173,46 @@ class RbacPermissionMigrateService constructor(
                 v0ToRbacAuth(projectCodes = v0MigrateProjectCodes)
                 offset += limit
             } while (migrateProjects.size == limit)
+        }
+        return true
+    }
+
+    override fun compareResult(projectCode: String): Boolean {
+        try {
+            migrateResultService.compare(projectCode)
+        } catch (ignored: Exception) {
+            handleException(
+                exception = ignored,
+                projectCode = projectCode
+            )
+            return false
+        }
+        return true
+    }
+
+    override fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean {
+        migrateResourceService.migrateResource(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            projectCreator = projectCreator
+        )
+        return true
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        logger.info("grant group additional authorization|projectCode:$projectCodes")
+        projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        logger.info("handover permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
         }
         return true
     }
@@ -300,8 +342,7 @@ class RbacPermissionMigrateService constructor(
         } catch (ignored: Exception) {
             handleException(
                 exception = ignored,
-                projectCode = projectCode,
-                authType = authType.value
+                projectCode = projectCode
             )
             return false
         } finally {
@@ -392,11 +433,7 @@ class RbacPermissionMigrateService constructor(
         )?.relationId?.toInt()
     }
 
-    private fun handleException(
-        exception: Exception,
-        projectCode: String,
-        authType: String
-    ) {
+    private fun handleException(exception: Exception, projectCode: String) {
         val errorMessage = when (exception) {
             is IamException -> {
                 exception.errorMsg
@@ -411,7 +448,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
+        logger.warn("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,

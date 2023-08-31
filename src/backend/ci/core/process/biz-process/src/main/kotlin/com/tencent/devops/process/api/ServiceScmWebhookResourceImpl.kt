@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildWebhookService,
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
@@ -58,7 +58,7 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
-        return Result(pipelineBuildService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+        return Result(pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
     }
 
     override fun listScmWebhook(

@@ -28,10 +28,15 @@
 package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder
+import io.lettuce.core.metrics.MicrometerOptions
+import io.lettuce.core.resource.ClientResources
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.data.redis.ClientResourcesBuilderCustomizer
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -75,5 +80,16 @@ class RedisAutoConfiguration {
     @Bean
     fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
         return SimpleRateLimiter(redisOperation)
+    }
+
+    @Bean
+    @Primary
+    fun lettuceMetrics(meterRegistry: MeterRegistry): ClientResourcesBuilderCustomizer {
+        val options = MicrometerOptions.builder().build()
+        return ClientResourcesBuilderCustomizer { client: ClientResources.Builder ->
+            client.commandLatencyRecorder(
+                MicrometerCommandLatencyRecorder(meterRegistry, options)
+            )
+        }
     }
 }

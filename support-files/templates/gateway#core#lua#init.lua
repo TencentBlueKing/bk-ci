@@ -69,6 +69,11 @@ config = {
         app_code = "__BK_CI_APP_CODE__",
         app_secret = "__BK_CI_APP_TOKEN__"
     },
+    esb = {
+        enabled = __BK_ESB_ENABLED__,
+        host = "__BK_ESB_HOST__",
+        path = "/api/c/compapi/v2/bk_login/is_login"
+    },
     artifactory = {
         port = "__BK_CI_JFROG_HTTP_PORT__",
         docker = "__BK_CI_DOCKER_PORT__",
