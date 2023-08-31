@@ -102,7 +102,7 @@ interface ServiceStartCloudResource {
     ): Result<String>
 
     @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
-    @GET
+    @POST
     @Path("/workspace/unShare")
     fun unShareWorkspace(
         @ApiParam("operator", required = true)
