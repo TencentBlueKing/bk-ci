@@ -232,7 +232,8 @@ class DeliverControl @Autowired constructor(
         autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
-        logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
+        logger.info("softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
+                        "|projectId|$projectId|userId|$userId|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (val status = WorkspaceStatus.values()[workspace.status]) {
                 // 交付中安装IOA后
