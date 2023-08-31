@@ -511,8 +511,8 @@ class ExperienceService @Autowired constructor(
                 version = appVersion
             )
         } else { // 内部体验
-            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha") {
-                client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha" || userId == "stubenhuang") {// TODO 测试
+                val apkDefenderTasks = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
                     ApkDefenderRequest(
                         projectId = projectId,
                         artifactoryType = artifactoryType,
@@ -521,6 +521,8 @@ class ExperienceService @Autowired constructor(
                         batchSize = 10
                     )
                 )
+                // TODO 通知发送逻辑
+                logger.info("apkDefenders : $apkDefenderTasks")
             }
         }
 
