@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
-import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
@@ -43,10 +42,19 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -55,6 +63,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -64,6 +73,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber")
 open class BkRepoDownloadService @Autowired constructor(
@@ -74,20 +84,19 @@ open class BkRepoDownloadService @Autowired constructor(
     private val commonConfig: CommonConfig,
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
-    override fun serviceGetExternalDownloadUrl(
+    override fun outerDownloadUrlWithToken(
         creatorId: String?,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int,
-        directed: Boolean
+        ttl: Int
     ): Url {
         logger.info(
-            "serviceGetExternalDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed"
+            "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
         )
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        val normalizedPath = getNormalizePath(path, artifactoryType, userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
             creatorId = creatorId ?: userId,
             userId = userId,
@@ -99,19 +108,141 @@ open class BkRepoDownloadService @Autowired constructor(
         return Url(StringUtil.chineseUrlEncode(url))
     }
 
-    override fun serviceGetInnerDownloadUrl(
+    override fun outerPlistContent(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int,
-        directed: Boolean
+        experienceHashId: String?,
+        organization: String?
+    ): String {
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
+        )
+
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
+
+        val creatorId = if (experienceHashId != null) {
+            val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
+            if (experience.isOk() && experience.data != null) {
+                experience.data!!.creator
+            } else {
+                userId
+            }
+        } else {
+            userId
+        }
+
+        // 获取IP下载链接
+        val ipaExternalDownloadUrl = outerDownloadUrlWithToken(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath,
+            ttl = ttl
+        )
+        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url)
+
+        //获取IPA属性
+        val fileProperties = bkRepoClient.listMetadata(
+            creatorId,
+            projectId,
+            RepoUtils.getRepoByType(artifactoryType),
+            argPath
+        )
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+
+        return """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>items</key>
+                <array>
+                    <dict>
+                        <key>assets</key>
+                        <array>
+                            <dict>
+                                <key>kind</key>
+                                <string>software-package</string>
+                                <key>url</key>
+                                <string>${getCdataStr(ipaExternalDownloadUrlEncode)}</string>
+                            </dict>
+                            <dict>
+                                <key>kind</key>
+                                <string>display-image</string>
+                                <key>needs-shine</key>
+                                <false/>
+                                <key>url</key>
+                                <string>${getCdataStr(appIcon)}</string>
+                            </dict>
+                        </array>
+                        <key>metadata</key>
+                        <dict>
+                            <key>bundle-identifier</key>
+                            <string>${getCdataStr(bundleIdentifier)}</string>
+                            <key>bundle-version</key>
+                            <string>${getCdataStr(appVersion)}</string>
+                            <key>title</key>
+                            <string>${getCdataStr(appTitle)}</string>
+                            <key>kind</key>
+                            <string>software</string>
+                        </dict>
+                    </dict>
+                </array>
+            </dict>
+            </plist>
+        """.trimIndent()
+    }
+
+    override fun outerPlistUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
     ): Url {
         logger.info(
-            "serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+            "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        val url =
+            StringUtil.chineseUrlEncode(
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
+                        "$artifactoryType/filePlist?path=$normalizedPath&x-devops-project-id=$projectId"
+            )
+        return Url(url)
+    }
+
+    override fun innerDownloadUrlWithToken(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "innerBkrepoDownloadUrl, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
     }
@@ -144,7 +275,7 @@ open class BkRepoDownloadService @Autowired constructor(
         return urls.map { Url(it) }
     }
 
-    override fun getDownloadUrl(
+    override fun innerDownloadUrlByUser(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -164,7 +295,7 @@ open class BkRepoDownloadService @Autowired constructor(
         return Url(url, url)
     }
 
-    override fun getExternalUrl(
+    override fun outerHtmlUrl4Download(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -175,22 +306,24 @@ open class BkRepoDownloadService @Autowired constructor(
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException(
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = FILE_NOT_EXIST,
-                            params = arrayOf(argPath)
-                        )
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = FILE_NOT_EXIST,
+                        params = arrayOf(argPath)
+                    )
                 )
         val properties = fileInfo.metadata
         properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
             I18nUtil.getCodeLanMessage(
                 messageCode = METADATA_NOT_EXIST,
                 params = arrayOf("pipelineId")
-            ))
+            )
+        )
         properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = METADATA_NOT_EXIST,
-                    params = arrayOf("buildId")
-                ))
+            I18nUtil.getCodeLanMessage(
+                messageCode = METADATA_NOT_EXIST,
+                params = arrayOf("buildId")
+            )
+        )
         val shortUrl = shortUrlService.createShortUrl(
             url = PathUtils.buildDetailLink(
                 projectId = projectId,
@@ -202,7 +335,7 @@ open class BkRepoDownloadService @Autowired constructor(
         return Url(shortUrl)
     }
 
-    override fun shareUrl(
+    override fun sendNotifyWithInnerUrl(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -214,39 +347,7 @@ open class BkRepoDownloadService @Autowired constructor(
             "shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
                     "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
         )
-        val path = PathUtils.checkAndNormalizeAbsPath(argPath)
-
-        when (artifactoryType) {
-            ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        params = arrayOf(userId, projectId)
-                    )
-                )
-            }
-
-            ArtifactoryType.PIPELINE -> {
-                val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId,
-                    AuthPermission.SHARE,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
-                        params = arrayOf(userId, projectId, pipelineId)
-                    )
-                )
-            }
-            // 镜像不支持下载
-            ArtifactoryType.IMAGE -> throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(ArtifactoryType.IMAGE.name)
-            )
-        }
+        val path = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
         val fileDetail = bkRepoClient.getFileDetail(
             userId,
@@ -280,7 +381,7 @@ open class BkRepoDownloadService @Autowired constructor(
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
-    override fun getThirdPartyDownloadUrl(
+    override fun innerCrossDownloadUrl(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -313,10 +414,10 @@ open class BkRepoDownloadService @Autowired constructor(
                     ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BUILD_NOT_EXIST,
-                            params = arrayOf(crossBuildNo)
-                        )
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BUILD_NOT_EXIST,
+                        params = arrayOf(crossBuildNo)
+                    )
                 )).id
             }
         }
@@ -418,6 +519,76 @@ open class BkRepoDownloadService @Autowired constructor(
             }
         }
         return resultList
+    }
+
+    private fun getCdataStr(str: String): String = "<![CDATA[$str]]>"
+
+    private fun getNormalizePath(
+        argPath: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String
+    ): String {
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        checkArtifactoryType(artifactoryType, userId, projectId, normalizedPath)
+        return normalizedPath
+    }
+
+    private fun checkArtifactoryType(
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String,
+        normalizedPath: String
+    ) {
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, projectId)
+                    )
+                )
+            }
+
+            ArtifactoryType.PIPELINE -> {
+                val properties = bkRepoClient.listMetadata(
+                    userId,
+                    projectId,
+                    RepoUtils.getRepoByType(artifactoryType),
+                    normalizedPath
+                )
+                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
+                    throw CustomException(
+                        Response.Status.BAD_REQUEST,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = ArtifactoryMessageCode.METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf("pipelineId")
+                        )
+                    )
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId!!,
+                    AuthPermission.DOWNLOAD,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, projectId, pipelineId)
+                    )
+                )
+            }
+            // 其他类型不支持下载
+            else -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(artifactoryType.name)
+            )
+        }
     }
 
     companion object {

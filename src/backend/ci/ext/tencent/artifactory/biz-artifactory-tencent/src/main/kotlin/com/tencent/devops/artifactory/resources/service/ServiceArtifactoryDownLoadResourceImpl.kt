@@ -58,7 +58,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         checkParam(projectId, path)
         return Result(
-            bkRepoDownloadService.getThirdPartyDownloadUrl(
+            bkRepoDownloadService.innerCrossDownloadUrl(
                 projectId = projectId,
                 pipelineId = pipelineId ?: "",
                 buildId = buildId ?: "",
@@ -83,9 +83,15 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
-        val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl,
-            isDirected))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlWithToken(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = ttl
+            )
+        )
     }
 
     override fun downloadIndexUrl(

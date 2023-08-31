@@ -40,7 +40,7 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
@@ -70,7 +70,7 @@ import javax.ws.rs.BadRequestException
 class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
-    private val bkRepoAppService: BkRepoAppService,
+    private val bkRepoDownloadService: BkRepoDownloadService,
     private val pipelineService: PipelineService,
     private val client: Client
 ) : AppArtifactoryResource {
@@ -275,7 +275,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         checkParameters(userId, projectId, path)
         return if (path.endsWith(".ipa")) {
             Result(
-                bkRepoAppService.getExternalPlistDownloadUrl(
+                bkRepoDownloadService.outerPlistUrl(
                     userId = userId,
                     projectId = projectId,
                     artifactoryType = artifactoryType,
@@ -301,7 +301,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
-        return bkRepoAppService.getPlistFile(
+        return bkRepoDownloadService.outerPlistContent(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -323,12 +323,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoAppService.getExternalDownloadUrl(
+            bkRepoDownloadService.outerDownloadUrlWithToken(
                 creatorId = userId,
                 userId = userId,
                 projectId = projectId,
                 artifactoryType = artifactoryType,
-                argPath = path,
+                path = path,
                 ttl = 24 * 3600
             )
         )
