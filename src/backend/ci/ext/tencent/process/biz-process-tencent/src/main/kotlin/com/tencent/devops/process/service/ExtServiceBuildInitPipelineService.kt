@@ -92,52 +92,87 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val params = mutableListOf<BuildFormProperty>()
         params.add(
             BuildFormProperty(
-                "serviceCode", true, BuildFormPropertyType.STRING, extServiceBaseInfo.serviceCode, null, null,
-                null, null, null, null, null, null
+                id = "serviceCode",
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = extServiceBaseInfo.serviceCode,
+                value = null,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             )
         )
         params.add(
             BuildFormProperty(
-                "version", true, BuildFormPropertyType.STRING, extServiceBaseInfo.version, null, null,
-                null, null, null, null, null, null
+                id = "version",
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = extServiceBaseInfo.version,
+                value = null,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             )
         )
         params.add(
             BuildFormProperty(
-                "extServiceImageInfo",
-                true,
-                BuildFormPropertyType.STRING,
-                JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                id = "extServiceImageInfo",
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo),
+                value = null,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             )
         )
         params.add(
             BuildFormProperty(
-                "extServiceDeployInfo",
-                true,
-                BuildFormPropertyType.STRING,
-                JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                id = "extServiceDeployInfo",
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo),
+                value = null,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             )
         )
         params.add(
             BuildFormProperty(
-                "script", true, BuildFormPropertyType.STRING, script, null, null,
-                null, null, null, null, null, null
+                id = "script",
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = script,
+                value = null,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             )
         )
         val stageFirstContainer = TriggerContainer(
