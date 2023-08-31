@@ -102,35 +102,6 @@ class BsDownloadServiceImpl @Autowired constructor(
             directed = true
 
         ).data?.url
-//        val downloadUrl = when (downloadType) {
-//            "service","build" -> {
-//                client.getGateway(ServiceArtifactoryDownLoadResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
-//                        projectId = signIpaInfoResult.projectId,
-//                        artifactoryType = artifactoryType,
-//                        userId = signIpaInfoResult.userId,
-//                        path = path,
-//                        ttl = 7200,
-//                        directed = true
-//
-//                ).data?.url
-//            }
-//            "user" -> {
-//                client.getGateway(UserArtifactoryResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
-//                        userId = userId,
-//                        projectId = signIpaInfoResult.projectId,
-//                        artifactoryType = artifactoryType,
-//                        path = path
-//                ).data?.url
-//            }
-//            else -> {
-//                client.getGateway(UserArtifactoryResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
-//                        userId = userId,
-//                        projectId = signIpaInfoResult.projectId,
-//                        artifactoryType = artifactoryType,
-//                        path = path
-//                ).data?.url
-//            }
-//        }
         if (downloadUrl == null) {
             logger.error("Failed to create download connection (resign id={$resignId})")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CREATE_DOWNLOAD_URL, defaultMessage = "创建下载连接失败。")

@@ -37,7 +37,7 @@ interface RepoDownloadService {
     /**
      * 外网BKRepo下载地址(鉴权根据token)
      */
-    fun outerDownloadUrlWithToken(
+    fun outerDownloadUrlByToken(
         creatorId: String?,
         userId: String,
         projectId: String,
@@ -49,7 +49,7 @@ interface RepoDownloadService {
     /**
      * 外网BKRepo下载地址(鉴权根据token)
      */
-    fun innerDownloadUrlWithToken(
+    fun innerDownloadUrlByToken(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,

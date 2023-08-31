@@ -71,6 +71,8 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
 import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
 import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
 import com.tencent.devops.common.archive.pojo.replica.ReplicaType
@@ -717,6 +719,33 @@ class BkRepoClient constructor(
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<ShareRecordInfo>>()!!.data!!.shareUrl
+    }
+
+    fun apkDefender(
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        userIds: List<String>,
+        batchSize: Int
+    ): List<ApkDefenderTask> {
+        logger.info(
+            "apkDefender , projectId: $projectId , repoName: $repoName , fullPath: $fullPath , " +
+                    "userIds: $userIds, batchSize: $batchSize"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/analyst/api/ext/apk/defender"
+        val apkDefenderRequest = ApkDefenderRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPath = fullPath,
+            scanner = "mstools-wz",
+            users = userIds,
+            batchSize = batchSize
+        )
+        val request = Request.Builder()
+            .url(url)
+            .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<List<ApkDefenderTask>>>()!!.data!!
     }
 
     fun createTemporaryToken(

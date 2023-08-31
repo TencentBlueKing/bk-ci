@@ -28,11 +28,15 @@
 package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
+import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
+    private val bkRepoClient: BkRepoClient,
     private val commonConfig: CommonConfig
 ) : ServiceArtifactoryDownLoadResource {
 
@@ -84,12 +89,24 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     ): Result<Url> {
         checkParam(projectId, path)
         return Result(
-            bkRepoDownloadService.innerDownloadUrlWithToken(
+            bkRepoDownloadService.innerDownloadUrlByToken(
                 userId = userId,
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 argPath = path,
                 ttl = ttl
+            )
+        )
+    }
+
+    override fun apkDefender(request: ApkDefenderRequest): Result<List<ApkDefenderTask>> {
+        return Result(
+            bkRepoClient.apkDefender(
+                projectId = request.projectId,
+                repoName = RepoUtils.getRepoByType(request.artifactoryType),
+                fullPath = request.fullPath,
+                userIds = request.userIds,
+                batchSize = request.batchSize
             )
         )
     }

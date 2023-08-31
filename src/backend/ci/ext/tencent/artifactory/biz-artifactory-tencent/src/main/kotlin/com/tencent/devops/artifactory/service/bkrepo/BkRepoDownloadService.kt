@@ -84,7 +84,7 @@ open class BkRepoDownloadService @Autowired constructor(
     private val commonConfig: CommonConfig,
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
-    override fun outerDownloadUrlWithToken(
+    override fun outerDownloadUrlByToken(
         creatorId: String?,
         userId: String,
         projectId: String,
@@ -146,7 +146,7 @@ open class BkRepoDownloadService @Autowired constructor(
         }
 
         // 获取IP下载链接
-        val ipaExternalDownloadUrl = outerDownloadUrlWithToken(
+        val ipaExternalDownloadUrl = outerDownloadUrlByToken(
             creatorId = creatorId,
             userId = userId,
             projectId = projectId,
@@ -231,7 +231,7 @@ open class BkRepoDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    override fun innerDownloadUrlWithToken(
+    override fun innerDownloadUrlByToken(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -508,7 +508,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 fullPath = it.fullPath,
                 downloadUsers = listOf(),
                 downloadIps = listOf(),
-                timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
+                timeoutInSeconds = ((ttl ?: (24 * 3600))).toLong()
             )
             if (region == "OPENAPI") {
                 resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")

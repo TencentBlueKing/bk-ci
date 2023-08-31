@@ -113,7 +113,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoDownloadService.outerDownloadUrlWithToken(
+            bkRepoDownloadService.outerDownloadUrlByToken(
                 creatorId = creatorId,
                 userId = userId,
                 projectId = projectId,
@@ -163,7 +163,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoDownloadService.innerDownloadUrlWithToken(
+            bkRepoDownloadService.innerDownloadUrlByToken(
                 userId = userId,
                 projectId = projectId,
                 artifactoryType = artifactoryType,

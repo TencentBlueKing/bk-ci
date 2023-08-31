@@ -323,7 +323,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoDownloadService.outerDownloadUrlWithToken(
+            bkRepoDownloadService.outerDownloadUrlByToken(
                 creatorId = userId,
                 userId = userId,
                 projectId = projectId,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api.service
 
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
@@ -36,6 +37,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -95,7 +97,6 @@ interface ServiceArtifactoryDownLoadResource {
     ): Result<List<String>>
 
     @ApiOperation("创建下载链接")
-    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
@@ -118,6 +119,14 @@ interface ServiceArtifactoryDownLoadResource {
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>
+
+    @ApiOperation("apk包安全加固")
+    @Path("/apkDefender")
+    @POST
+    fun apkDefender(
+        @ApiParam("加固请求", required = true)
+        request: ApkDefenderRequest
+    ): Result<List<ApkDefenderTask>>
 
     @ApiOperation("创建不包含网关的临时分享下载链接")
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
