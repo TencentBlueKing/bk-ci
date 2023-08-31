@@ -80,14 +80,10 @@ object BkServiceUtil {
         }
     }
 
-    /**
-     * 获取动态MQ队列名称
-     * @return 动态MQ队列名称
-     */
-    fun getDynamicMqQueue(): String {
+    fun getDynamicMqQueue(serviceName: String? = null, ip: String? = null): String {
         val queueTemplate = "q.sharding.routing.rule.exchange.{0}_{1}_queue"
         // 用微服务名和服务器IP替换占位符
-        val params = arrayOf(findServiceName(), CommonUtils.getInnerIP())
+        val params = arrayOf(serviceName ?: findServiceName(), ip ?: CommonUtils.getInnerIP())
         return MessageFormat(queueTemplate).format(params)
     }
 }

@@ -60,8 +60,7 @@ class BkServiceInstanceApplicationRunner constructor(
                         deleteDynamicMqQueue(cacheKey, serviceName, serviceHosts)
                     } catch (ignored: Throwable) {
                         logger.warn(
-                            "serviceName:$serviceName delete " +
-                                "dynamicMqQueue(${BkServiceUtil.getDynamicMqQueue()}) fail!", ignored
+                            "serviceName:$serviceName delete dynamicMqQueue fail!", ignored
                         )
                     }
                 }
@@ -80,7 +79,7 @@ class BkServiceInstanceApplicationRunner constructor(
                 }
                 historyServiceHosts.removeAll(serviceHosts.toSet())
                 historyServiceHosts.forEach { historyServiceHost ->
-                    val queueName = BkServiceUtil.getDynamicMqQueue()
+                    val queueName = BkServiceUtil.getDynamicMqQueue(serviceName, historyServiceHost)
                     logger.info("serviceName:$serviceName delete dynamicMqQueue($queueName) start!")
                     var queueProperties = rabbitAdmin.getQueueProperties(queueName)
                     if (queueProperties == null) {
