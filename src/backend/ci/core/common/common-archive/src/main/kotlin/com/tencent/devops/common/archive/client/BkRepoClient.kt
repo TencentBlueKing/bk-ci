@@ -732,7 +732,7 @@ class BkRepoClient constructor(
             "apkDefender , projectId: $projectId , repoName: $repoName , fullPath: $fullPath , " +
                     "userIds: $userIds, batchSize: $batchSize"
         )
-        val url = "${getGatewayUrl()}/bkrepo/api/analyst/api/ext/apk/defender"
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/ext/apk/defender"
         val apkDefenderRequest = ApkDefenderRequest(
             projectId = projectId,
             repoName = repoName,
