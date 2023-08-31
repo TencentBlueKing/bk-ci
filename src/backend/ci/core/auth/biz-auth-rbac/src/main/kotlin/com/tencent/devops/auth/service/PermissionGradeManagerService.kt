@@ -391,7 +391,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 iamResourceCode = projectCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
-                defaultGroup = true,
+                defaultGroup = false,
                 relationId = iamGroupId.toString()
             )
             permissionGroupPoliciesService.grantGroupPermission(
