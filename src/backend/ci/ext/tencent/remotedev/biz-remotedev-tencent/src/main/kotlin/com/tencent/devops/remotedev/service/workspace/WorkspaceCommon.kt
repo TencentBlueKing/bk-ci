@@ -42,7 +42,6 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -58,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -68,13 +68,13 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -221,21 +221,21 @@ class WorkspaceCommon @Autowired constructor(
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
-                "workspace ${it.name} is EXCEPTION, try to fix."
+                "workspace ${it.workspaceName} is EXCEPTION, try to fix."
             )
             if (!checkProjectRouter(
-                    creator = it.creator,
-                    workspaceName = it.name,
-                    workspaceOwnerType = WorkspaceOwnerType.valueOf(it.ownerType)
+                    creator = it.createUserId,
+                    workspaceName = it.workspaceName,
+                    workspaceOwnerType = it.ownerType
                 )
             ) {
                 return@forEach
             }
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
-                workspaceName = it.name,
-                status = WorkspaceStatus.values()[it.status],
-                mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
             )
         }
     }
@@ -285,14 +285,13 @@ class WorkspaceCommon @Autowired constructor(
      * workspace 正在变更状态时，不能新建任务去执行。但如果超过 60s 便不做该限制。 以免因下游某服务节点故障状态未闭环回传导致问题。
      * 如果已经销毁，直接返回false
      */
-    fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
-        val status = WorkspaceStatus.values()[workspace.status]
+    fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-                status.notOk2doNextAction() && Duration.between(
+                workspace.status.notOk2doNextAction() && Duration.between(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
-                ) || status.checkDeleted() || status.workspaceInitializing()
+                ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
     }
 
     fun updateLastHistory(
@@ -348,18 +347,18 @@ class WorkspaceCommon @Autowired constructor(
         return true
     }
 
-    fun getSystemOperator(workspaceOwner: String, mountType: String): String =
+    fun getSystemOperator(workspaceOwner: String, mountType: WorkspaceMountType): String =
         when (mountType) {
-            WorkspaceMountType.START.name -> workspaceOwner
+            WorkspaceMountType.START -> workspaceOwner
             else -> ADMIN_NAME
         }
 
     fun checkWorkspaceAvailability(
         userId: String,
-        type: String
+        type: WorkspaceMountType
     ) {
         when (type) {
-            WorkspaceMountType.START.name -> {
+            WorkspaceMountType.START -> {
                 val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
                 if (timeLeft <= 0) {
                     throw ErrorCodeException(
@@ -367,6 +366,7 @@ class WorkspaceCommon @Autowired constructor(
                     )
                 }
             }
+            else -> {}
         }
     }
 

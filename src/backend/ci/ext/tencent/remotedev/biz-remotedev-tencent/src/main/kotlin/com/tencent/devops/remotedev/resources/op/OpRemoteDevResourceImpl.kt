@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -37,7 +38,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val dataTransferService: DataTransferService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -192,8 +194,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 6666
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
-                (machineType.isNullOrEmpty() || it.machineType == machineType) &&
-                (status == null || it.status == status)
+                    (machineType.isNullOrEmpty() || it.machineType == machineType) &&
+                    (status == null || it.status == status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
@@ -202,13 +204,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
                 Page(
                     page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
                     records = emptyList()
-            ))
+                )
+            )
         } else {
             Result(
                 Page(
                     page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
                     records = filteredResources.subList(start, end).map { JsonUtil.toMap(it) }
-            )
+                )
             )
         }
     }
@@ -223,6 +226,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             ?: return Result(false)
 
         workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
+        return Result(true)
+    }
+
+    override fun windowsWorkspaceDaoInit(userId: String): Result<Boolean> {
+        dataTransferService.windowsWorkspaceDaoInit()
         return Result(true)
     }
 }

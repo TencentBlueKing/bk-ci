@@ -74,7 +74,7 @@ class BkTicketService @Autowired constructor(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            updateBkTicket(userId, bkTicket, it.hostName, WorkspaceMountType.valueOf(it.workspaceMountType))
+            updateBkTicket(userId, bkTicket, it.hostName, it.workspaceMountType)
         }
         return true
     }

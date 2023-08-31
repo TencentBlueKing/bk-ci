@@ -383,4 +383,14 @@ interface OpRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+
+    @ApiOperation("转移数据到workspace windows 表")
+    @GET
+    @Path("/windowsWorkspaceDaoInit")
+    fun windowsWorkspaceDaoInit(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }
