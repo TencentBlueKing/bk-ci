@@ -103,11 +103,13 @@ enum class PoolType {
         override fun transfer(dispatcher: DispatchType): RunsOn? {
             if (dispatcher is PublicDevCloudDispathcType) {
                 return RunsOn(
+                    selfHosted = null,
                     poolName = JobRunsOnType.DOCKER.type,
+                    poolType = null,
                     container = when (dispatcher.imageType) {
                         ImageType.BKSTORE, ImageType.THIRD -> Container2(
                             image = "${dispatcher.dockerBuildVersion}:${dispatcher.imageVersion}",
-                            credentials = dispatcher.credentialId,
+                            credentials = dispatcher.credentialId?.ifBlank { null },
                             imageType = dispatcher.imageType!!.name
                         )
                         else -> null
@@ -208,8 +210,10 @@ enum class PoolType {
         override fun transfer(dispatcher: DispatchType): RunsOn? {
             if (dispatcher is MacOSDispatchType) {
                 return RunsOn(
+                    selfHosted = null,
                     poolName = "macos-${dispatcher.systemVersion}",
-                    xcode = dispatcher.xcodeVersion
+                    xcode = dispatcher.xcodeVersion,
+                    poolType = null
                 )
             }
             return null
@@ -309,7 +313,9 @@ enum class PoolType {
         override fun transfer(dispatcher: DispatchType): RunsOn? {
             if (dispatcher is WindowsDispatchType) {
                 return RunsOn(
-                    poolName = dispatcher.env ?: ""
+                    selfHosted = null,
+                    poolName = dispatcher.env ?: "",
+                    poolType = null
                 )
             }
             return null

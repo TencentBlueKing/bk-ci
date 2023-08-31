@@ -28,11 +28,14 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.CommonPipelineAutoConfiguration
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
@@ -50,12 +53,15 @@ import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.util.ReflectionTestUtils
@@ -63,7 +69,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @ExtendWith(SpringExtension::class)
-@SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
+@SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class, CommonPipelineAutoConfiguration::class])
 internal class ModelTransferTest : BkCiAbstractTest() {
     private val client: Client = mockk()
     private val creator: TransferCreator = TransferCreatorImpl()
@@ -80,10 +86,23 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     )
     private val modelTransfer: ModelTransfer = ModelTransfer(client, stageTransfer, elementTransfer, transferCache)
     private val pipelineInfo = PipelineInfo(
-        projectId = "", pipelineId = "", templateId = "", pipelineName = "",
-        pipelineDesc = "", version = 1, createTime = 1, updateTime = 1, creator = "", lastModifyUser = "",
-        channelCode = ChannelCode.BS, canManualStartup = true, canElementSkip = true,
-        taskCount = 1, versionName = "", id = 1, viewNames = emptyList()
+        projectId = "",
+        pipelineId = "",
+        templateId = "",
+        pipelineName = "",
+        pipelineDesc = "",
+        version = 1,
+        createTime = 1,
+        updateTime = 1,
+        creator = "",
+        lastModifyUser = "",
+        channelCode = ChannelCode.BS,
+        canManualStartup = true,
+        canElementSkip = true,
+        taskCount = 1,
+        versionName = "",
+        id = 1,
+        viewNames = emptyList()
     )
 
     @BeforeEach
@@ -101,18 +120,10 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             listOf(
                 BkAuthGroupAndUserList(
-                    displayName = "管理员",
-                    roleId = 1,
-                    roleName = "manager",
-                    userIdList = emptyList(),
-                    type = ""
+                    displayName = "管理员", roleId = 1, roleName = "manager", userIdList = emptyList(), type = ""
                 ),
                 BkAuthGroupAndUserList(
-                    displayName = "开发人员",
-                    roleId = 2,
-                    roleName = "developer",
-                    userIdList = emptyList(),
-                    type = ""
+                    displayName = "开发人员", roleId = 2, roleName = "developer", userIdList = emptyList(), type = ""
                 )
             )
         )
@@ -122,24 +133,129 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             listOf(
                 PipelineGroup(
-                    id = "qweqwe", projectId = "a", name = "a", createTime = 1, updateTime = 1,
-                    createUser = "superD", updateUser = "superD", labels = listOf(
+                    id = "qweqwe",
+                    projectId = "a",
+                    name = "a",
+                    createTime = 1,
+                    updateTime = 1,
+                    createUser = "superD",
+                    updateUser = "superD",
+                    labels = listOf(
                         PipelineLabel(
-                            id = "a1", groupId = "aa", name = "标签A", createTime = 1, uptimeTime = 1,
-                            createUser = "b", updateUser = "b"
+                            id = "a1",
+                            groupId = "aa",
+                            name = "标签A",
+                            createTime = 1,
+                            uptimeTime = 1,
+                            createUser = "b",
+                            updateUser = "b"
                         ),
                         PipelineLabel(
-                            id = "a2", groupId = "aa", name = "标签B", createTime = 1, uptimeTime = 1,
-                            createUser = "b", updateUser = "b"
+                            id = "a2",
+                            groupId = "aa",
+                            name = "标签B",
+                            createTime = 1,
+                            uptimeTime = 1,
+                            createUser = "b",
+                            updateUser = "b"
                         )
                     )
                 )
             )
         )
 
+        every {
+            transferCache.getGitRepository(any(), any(), any())
+        }.returns(
+            CodeGitRepository(
+                aliasName = "aliasName/xxx",
+                url = "https://git.code.oa.com/XXX/XXX.git",
+                credentialId = "credentialId",
+                projectName = "projectName",
+                userName = "userName",
+                projectId = "projectId",
+                repoHashId = "repoHashId",
+                gitProjectId = 0
+            )
+        )
         ReflectionTestUtils.setField(creator, "marketRunTaskData", true)
         ReflectionTestUtils.setField(creator, "runPlugInAtomCodeData", "run")
         ReflectionTestUtils.setField(creator, "runPlugInVersionData", "1.*")
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "model-yaml-001"
+        ]
+    )
+    fun model2Yaml(value: String) {
+        val file = testReadResourceFile("transfer/$value/model.json")
+        val yamlV2 = testReadResourceFile("transfer/$value/yamlV2.yaml")
+        val yamlV3 = testReadResourceFile("transfer/$value/yamlV3.yaml")
+        val modelAndSetting = JsonUtil.to(file, object : TypeReference<PipelineModelAndSetting>() {})
+
+        val watcher = Watcher(id = "yaml and model transfer watcher")
+        watcher.start("step_1|FULL_MODEL2YAML V3 start")
+        val yml = modelTransfer.model2yaml(
+            ModelTransferInput(
+                modelAndSetting.model, modelAndSetting.setting, YamlVersion.Version.V3_0
+            )
+        )
+        val newYaml = TransferMapper.toYaml(yml)
+        Assertions.assertEquals(newYaml, yamlV3)
+        watcher.start("step_2|FULL_MODEL2YAML V2 start")
+        val ymlV2 = modelTransfer.model2yaml(
+            ModelTransferInput(
+                modelAndSetting.model, modelAndSetting.setting, YamlVersion.Version.V2_0
+            )
+        )
+        val newYamlV2 = TransferMapper.toYaml(ymlV2)
+        Assertions.assertEquals(newYamlV2, yamlV2)
+        watcher.stop()
+        println(watcher.toString())
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "yaml-model-001-v3",
+            "yaml-model-001-v2"
+        ]
+    )
+    fun yaml2model(value: String) {
+        val modelFile = testReadResourceFile("transfer/$value/model.json")
+        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
+
+        val watcher = Watcher(id = "yaml and model transfer watcher")
+        watcher.start("parse PreScriptBuildYaml")
+        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+        watcher.start("normalize Yaml")
+        pYml.replaceTemplate { templateFilter ->
+            YamlTemplate(
+                yamlObject = templateFilter,
+                filePath = TemplatePath("TEMPLATE_ROOT_FILE"),
+                extraParameters = this,
+                getTemplateMethod = ::getTemplate,
+                nowRepo = null,
+                repo = null,
+                resourcePoolMapExt = null,
+                conf = YamlTemplateConf(
+                    useOldParametersExpression = false // todo
+                )
+            ).replace()
+        }
+        watcher.start("yaml2Model")
+        val input = YamlTransferInput(
+            "testUser", "testProject", pipelineInfo, pYml
+        )
+        val model = modelTransfer.yaml2Model(input)
+        val setting = modelTransfer.yaml2Setting(input)
+        watcher.start("last")
+        val newModel = JsonUtil.toJson(PipelineModelAndSetting(model, setting))
+        Assertions.assertEquals(newModel, modelFile)
+        watcher.stop()
+        println(watcher.toString())
     }
 
     @Test
