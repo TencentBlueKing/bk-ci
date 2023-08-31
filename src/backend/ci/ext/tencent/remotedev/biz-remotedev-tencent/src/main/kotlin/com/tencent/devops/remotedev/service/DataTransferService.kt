@@ -65,13 +65,15 @@ class DataTransferService @Autowired constructor(
                 winConfigId = it.winConfigId
             )
             if (count > 0 && WorkspaceStatus.values()[it.status].checkInUse()) {
-                val res = client.get(ServiceStartCloudResource::class)
-                    .shareWorkspace(
-                        operator = Constansts.ADMIN_NAME, workspaceName = it.name, receivers = listOf(it.creator)
-                    ).data!!
+                val res = kotlin.runCatching {
+                    client.get(ServiceStartCloudResource::class)
+                        .shareWorkspace(
+                            operator = Constansts.ADMIN_NAME, workspaceName = it.name, receivers = listOf(it.creator)
+                        ).data!!
+                }.getOrNull()
                 workspaceWindowsDao.updateWindowsResourceId(dslContext, it.name, res)
             }
-            Thread.sleep(100)
+            Thread.sleep(20)
         }
     }
 }
