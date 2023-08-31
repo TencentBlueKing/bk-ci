@@ -55,10 +55,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 @SuppressWarnings("LongMethod")
@@ -69,37 +69,27 @@ class BkRepoAppService @Autowired constructor(
     private val client: Client
 ) : AppService {
     override fun getExternalDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean
-    ): Url {
-        logger.info(
-            "getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
-        )
-        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
-        val url = bkRepoService.externalDownloadUrl(
-            creatorId = userId,
-            userId = userId,
-            projectId = projectId,
-            artifactoryType = artifactoryType,
-            fullPath = normalizedPath,
-            ttl = ttl
-        )
-        return Url(StringUtil.chineseUrlEncode(url))
-    }
-
-    override fun getExternalDownloadUrlDirected(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int
     ): Url {
-        return getExternalDownloadUrl(userId, projectId, artifactoryType, argPath, ttl, true)
+        logger.info(
+            "getExternalDownloadUrl, userId: $userId, creatorId: $creatorId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        val url = bkRepoService.externalDownloadUrl(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            fullPath = normalizedPath,
+            ttl = ttl
+        ).replace(" ", "")
+        return Url(StringUtil.chineseUrlEncode(url))
     }
 
     override fun getExternalPlistDownloadUrl(
@@ -107,12 +97,11 @@ class BkRepoAppService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int,
-        directed: Boolean
+        ttl: Int
     ): Url {
         logger.info(
             "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
         val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val url =
@@ -123,88 +112,33 @@ class BkRepoAppService @Autowired constructor(
         return Url(url)
     }
 
-    private fun getNormalizePath(
-        argPath: String,
-        artifactoryType: ArtifactoryType,
-        userId: String,
-        projectId: String
-    ): String {
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
-        when (artifactoryType) {
-            ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId, projectId)
-                    ))
-            }
-            ArtifactoryType.PIPELINE -> {
-                val properties = bkRepoClient.listMetadata(
-                    userId,
-                    projectId,
-                    RepoUtils.getRepoByType(artifactoryType),
-                    normalizedPath
-                )
-                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(Response.Status.BAD_REQUEST,
-                            MessageUtil.getMessageByLocale(
-                                messageCode = METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
-                                language = I18nUtil.getLanguage(userId),
-                                params = arrayOf("pipelineId")
-                            )
-                        )
-                }
-                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId!!,
-                    AuthPermission.DOWNLOAD,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                            language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, projectId, pipelineId)
-                        )
-                )
-            }
-            // 镜像不支持下载
-            ArtifactoryType.IMAGE -> throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(ArtifactoryType.IMAGE.name)
-            )
-        }
-        return normalizedPath
-    }
-
     override fun getPlistFile(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int,
-        directed: Boolean,
         experienceHashId: String?,
         organization: String?
     ): String {
         logger.info(
             "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                    "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
         )
 
         if (experienceHashId != null) {
             val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
             if (!check.isOk() || !check.data!!) {
-                throw CustomException(Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
-                    messageCode = NO_EXPERIENCE_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                throw CustomException(
+                    Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
+                        messageCode = NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
         }
 
-        val userName = if (experienceHashId != null) {
+        val creatorId = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {
                 experience.data!!.creator
@@ -215,10 +149,20 @@ class BkRepoAppService @Autowired constructor(
             userId
         }
 
-        val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
-        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url.replace(" ", ""))
+        // 获取IP下载链接
+        val ipaExternalDownloadUrl = getExternalDownloadUrl(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            argPath = argPath,
+            ttl = ttl
+        )
+        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url)
+
+        //获取IPA属性
         val fileProperties = bkRepoClient.listMetadata(
-            userName,
+            creatorId,
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
             argPath
@@ -272,6 +216,65 @@ class BkRepoAppService @Autowired constructor(
     }
 
     private fun getCdataStr(str: String): String = "<![CDATA[$str]]>"
+
+    private fun getNormalizePath(
+        argPath: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String
+    ): String {
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, projectId)
+                    )
+                )
+            }
+
+            ArtifactoryType.PIPELINE -> {
+                val properties = bkRepoClient.listMetadata(
+                    userId,
+                    projectId,
+                    RepoUtils.getRepoByType(artifactoryType),
+                    normalizedPath
+                )
+                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
+                    throw CustomException(
+                        Response.Status.BAD_REQUEST,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf("pipelineId")
+                        )
+                    )
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId!!,
+                    AuthPermission.DOWNLOAD,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, projectId, pipelineId)
+                    )
+                )
+            }
+            // 镜像不支持下载
+            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(ArtifactoryType.IMAGE.name)
+            )
+        }
+        return normalizedPath
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoAppService::class.java)

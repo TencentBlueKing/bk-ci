@@ -59,11 +59,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
@@ -139,9 +139,11 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                     it.name.endsWith(topType) -> {
                         topSet.add(it)
                     }
+
                     it.name.endsWith(secondType) -> {
                         secondSet.add(it)
                     }
+
                     else -> {
                         otherSet.add(it)
                     }
@@ -271,13 +273,19 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-
-        val result = if (path.endsWith(".ipa")) {
-            bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
+        return if (path.endsWith(".ipa")) {
+            Result(
+                bkRepoAppService.getExternalPlistDownloadUrl(
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    argPath = path,
+                    ttl = 24 * 3600
+                )
+            )
         } else {
-            bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
+            downloadUrl(userId, projectId, artifactoryType, path)
         }
-        return Result(result)
     }
 
     override fun getFilePlist(
@@ -299,7 +307,6 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             artifactoryType = artifactoryType,
             argPath = path,
             ttl = ttl ?: (24 * 3600),
-            directed = false,
             experienceHashId = experienceHashId,
             organization = organization
         )
@@ -317,8 +324,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
         return Result(
             bkRepoAppService.getExternalDownloadUrl(
-                userId, projectId, artifactoryType, path, 24 * 3600,
-                true
+                creatorId = userId,
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = 24 * 3600
             )
         )
     }

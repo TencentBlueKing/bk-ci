@@ -33,15 +33,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 @SuppressWarnings("LongParameterList")
 interface AppService {
     fun getExternalDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
-
-    fun getExternalDownloadUrlDirected(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -54,8 +46,7 @@ interface AppService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int,
-        directed: Boolean = false
+        ttl: Int
     ): Url
 
     fun getPlistFile(
@@ -64,7 +55,6 @@ interface AppService {
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int,
-        directed: Boolean = false,
         experienceHashId: String?,
         organization: String?
     ): String
