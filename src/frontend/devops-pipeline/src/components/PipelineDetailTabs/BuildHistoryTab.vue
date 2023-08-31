@@ -38,6 +38,10 @@
             ...mapState('atom', [
                 'isPropertyPanelVisible'
             ]),
+            ...mapState('pipelines', [
+                'executeStatus',
+                'pipelineInfo'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -70,8 +74,11 @@
                         loading: this.executeStatus,
                         handler: () => {
                             !this.executeStatus && this.$router.push({
-                                name: 'pipelinesPreview',
-                                ...this.$route.params
+                                name: 'executePreview',
+                                params: {
+                                    ...this.$route.params,
+                                    version: this.pipelineInfo?.version
+                                }
                             })
                         },
                         text: this.$t('history.startBuildTips')

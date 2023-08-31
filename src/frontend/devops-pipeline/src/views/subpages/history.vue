@@ -33,7 +33,6 @@
         TriggerEvent,
         PipelineConfig,
         PermissionConfig,
-        VersionHistory,
         ChangeLog
     } from '@/components/PipelineDetailTabs'
     import Artifactory from '@/components/Outputs'
@@ -44,7 +43,6 @@
             Artifactory,
             PipelineConfig,
             PermissionConfig,
-            VersionHistory,
             ChangeLog,
             Logo
         },
@@ -108,9 +106,6 @@
                         title: this.$t('权限设置'),
                         name: 'permission'
                     }, {
-                        title: this.$t('版本历史'),
-                        name: 'versionHistory'
-                    }, {
                         title: this.$t('操作日志'),
                         name: 'changeLog'
                     }].map(child => ({
@@ -121,7 +116,6 @@
             }
         },
         beforeDestroy () {
-            console.log('destory history')
             this.resetHistoryFilterCondition()
         },
         methods: {

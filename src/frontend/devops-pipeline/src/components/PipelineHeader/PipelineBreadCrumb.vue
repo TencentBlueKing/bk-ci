@@ -10,7 +10,7 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { debounce } from '@/utils/util'
@@ -29,9 +29,11 @@
         },
         computed: {
             ...mapGetters({
-                pipelineList: 'pipelines/getPipelineList',
-                curPipeline: 'pipelines/getCurPipeline'
+                pipelineList: 'pipelines/getPipelineList'
             }),
+            ...mapState('pipelines', [
+                'pipelineInfo'
+            ]),
             breadCrumbs () {
                 return [{
                     icon: 'pipeline',
@@ -42,7 +44,7 @@
                 }, {
                     paramId: 'pipelineId',
                     paramName: 'pipelineName',
-                    selectedValue: this.curPipeline?.pipelineName ?? '--',
+                    selectedValue: this.pipelineInfo?.pipelineName ?? '--',
                     records: this.pipelineList,
                     showTips: true,
                     tipsName: 'switch_pipeline_hint',
@@ -64,25 +66,28 @@
             this.fetchPipelineList()
         },
         methods: {
-            ...mapActions('pipelines', {
-                searchPipelineList: 'searchPipelineList',
-                requestPipelineDetail: 'requestPipelineDetail'
-            }),
+            ...mapActions('atom', [
+                'requestPipeline'
+            ]),
+            ...mapActions('pipelines', [
+                'searchPipelineList',
+                'requestPipelineSummary'
+            ]),
             async fetchPipelineList (searchName) {
                 try {
                     const { projectId, pipelineId } = this.$route.params
-                    const [list, curPipeline] = await Promise.all([
+                    const [list, pipelineInfo] = await Promise.all([
                         this.searchPipelineList({
                             projectId,
                             searchName
                         }),
-                        this.requestPipelineDetail({
+                        this.requestPipelineSummary({
                             projectId,
                             pipelineId
                         })
                     ])
 
-                    this.setBreadCrumbPipelineList(list, curPipeline.pipelineResource)
+                    this.setBreadCrumbPipelineList(list, pipelineInfo)
                 } catch (err) {
                     console.log(err)
                     this.$showTips({
@@ -96,7 +101,7 @@
                     list = [
                         {
                             pipelineId: pipeline.pipelineId,
-                            pipelineName: pipeline.model.name
+                            pipelineName: pipeline.pipelineName
                         },
                         ...list
                     ]
@@ -104,11 +109,16 @@
 
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
-            doSelectPipeline (pipelineId, cur) {
+            async doSelectPipeline (pipelineId, cur) {
                 const { $route } = this
-                this.requestPipelineDetail({
+                const summary = await this.requestPipelineSummary({
                     pipelineId,
                     projectId: $route.params.projectId
+                })
+                this.requestPipeline({
+                    pipelineId,
+                    projectId: $route.params.projectId,
+                    version: summary.version
                 })
                 // 清空搜索
                 this.searchPipelineList({
@@ -119,11 +129,12 @@
                         pipelineName: cur.pipelineName
                     })
                 })
-
                 const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+
                 this.$router.push({
                     name,
                     params: {
+                        ...this.$route.params,
                         projectId: $route.params.projectId,
                         pipelineId
                     }

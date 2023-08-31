@@ -2,7 +2,7 @@
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
             <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
-                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="templateSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
             </form-field>
 
             <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
@@ -24,12 +24,12 @@
             </form-field>
 
             <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
-                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
+                <textarea name="desc" v-model="templateSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
             </form-field>
 
             <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
                 <running-lock
-                    :pipeline-setting="pipelineSetting"
+                    :pipeline-setting="templateSetting"
                     :handle-running-lock-change="handleRunningLockChange"
                 />
             </form-field>
@@ -98,7 +98,7 @@
             </form-field>
 
             <div class="handle-btn" style="margin-left: 146px;">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button @click="saveTemplateSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -155,7 +155,7 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'pipelineSetting'
+                'templateSetting'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -177,7 +177,7 @@
                 return classObj
             },
             labelValues () {
-                const labels = this.pipelineSetting.labels
+                const labels = this.templateSetting.labels
                 return this.tagGroupList.map((tag) => {
                     const currentLables = tag.labels || []
                     const value = []
@@ -197,7 +197,7 @@
                 }
             },
             isSingleLock () {
-                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting.runLockType)
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.templateSetting.runLockType)
             },
             formRule () {
                 const requiredRule = {
@@ -235,16 +235,16 @@
             }
         },
         watch: {
-            pipelineSetting: {
+            templateSetting: {
                 deep: true,
                 handler: function (newVal, oldVal) {
                     // 无权限灰掉保存按钮
-                    if (this.pipelineSetting.hasPermission !== undefined && this.pipelineSetting.hasPermission === false) {
+                    if (this.templateSetting.hasPermission !== undefined && this.templateSetting.hasPermission === false) {
                         this.noPermission = true
                     } else {
                         this.noPermission = false
                     }
-                    this.curNavTab.name === 'success' ? this.pipelineSubscription = this.pipelineSetting.successSubscription : this.pipelineSubscription = this.pipelineSetting.failSubscription
+                    this.curNavTab.name === 'success' ? this.pipelineSubscription = this.templateSetting.successSubscription : this.pipelineSubscription = this.templateSetting.failSubscription
                     this.isLoading = false
                     if (!this.isEditing && JSON.stringify(oldVal) !== '{}' && newVal !== null && !this.resetFlag) {
                         this.isEditing = true
@@ -268,6 +268,9 @@
         methods: {
             ...mapActions('pipelines', [
                 'requestTemplateSetting',
+                'updateTemplateSetting'
+            ]),
+            ...mapActions('atom', [
                 'updatePipelineSetting'
             ]),
             handleLabelSelect (index, arg) {
@@ -276,7 +279,7 @@
                     if (valueIndex === index) labels = labels.concat(arg[0])
                     else labels = labels.concat(value)
                 })
-                this.pipelineSetting.labels = labels
+                this.templateSetting.labels = labels
             },
             isStateChange () {
                 this.$emit('setState', {
@@ -285,7 +288,7 @@
                 })
             },
             handleChangeRunType (name, value) {
-                Object.assign(this.pipelineSetting, { [name]: value })
+                Object.assign(this.templateSetting, { [name]: value })
             },
             handleCheckNoticeType (value) {
                 this.pipelineSubscription.types = value
@@ -297,7 +300,7 @@
                 const tab = this.subscriptionList.find(item => item.name === name)
                 this.setGroupidStorage(this.pipelineSubscription)
                 this.curNavTab = tab
-                this.pipelineSubscription = name === 'success' ? this.pipelineSetting.successSubscription : this.pipelineSetting.failSubscription
+                this.pipelineSubscription = name === 'success' ? this.templateSetting.successSubscription : this.templateSetting.failSubscription
             },
             toggleEnable (name, value) {
                 this.pipelineSubscription[name] = value
@@ -357,20 +360,20 @@
                     })
                 }
             },
-            async savePipelineSetting () {
+            async saveTemplateSetting () {
                 if (this.errors.any()) return
                 this.wechatGroupCompletion()
                 this.isDisabled = true
                 let result
                 let resData
                 try {
-                    const { pipelineSetting } = this
-                    Object.assign(pipelineSetting, { projectId: this.projectId })
-                    resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, pipelineSetting)
+                    const { templateSetting } = this
+                    Object.assign(templateSetting, { projectId: this.projectId })
+                    resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, templateSetting)
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
+                            message: `${templateSetting.pipelineName}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -378,7 +381,7 @@
                         result = true
                     } else {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateFail')}`,
+                            message: `${templateSetting.pipelineName}${this.$t('updateFail')}`,
                             theme: 'error'
                         })
                     }
@@ -397,7 +400,7 @@
             },
             handleRunningLockChange (param) {
                 this.updatePipelineSetting({
-                    container: this.pipelineSetting,
+                    container: this.templateSetting,
                     param
                 })
             }

@@ -29,7 +29,6 @@ export default {
             allPipelineList: 'pipelines/getAllPipelineList',
             pipelineList: 'pipelines/getPipelineList',
             tagGroupList: 'pipelines/getTagGroupList',
-            curPipeline: 'pipelines/getCurPipeline',
             isEditing: 'atom/isEditing',
             checkPipelineInvalid: 'atom/checkPipelineInvalid'
         }),
@@ -37,74 +36,36 @@ export default {
             'curProject'
         ]),
         ...mapState('pipelines', [
-            'pipelineSetting'
+            'pipelineInfo',
+            'executeStatus'
         ]),
         ...mapState('atom', [
             'pipeline',
-            'executeStatus',
+            'pipelineSetting',
             'saveStatus'
         ]),
         isTemplatePipeline () {
-            return this.curPipeline?.model?.instanceFromTemplate ?? false
+            return this.pipelineInfo?.instanceFromTemplate ?? false
+        },
+        pipelineVersion () {
+            return this.pipelineInfo?.version ?? ''
         }
     },
     methods: {
-        ...mapActions('pipelines', {
-            requestExecPipeline: 'requestExecPipeline',
-            requestToggleCollect: 'requestToggleCollect',
-            updatePipelineSetting: 'updatePipelineSetting',
-            requestTerminatePipeline: 'requestTerminatePipeline',
-            requestRetryPipeline: 'requestRetryPipeline',
-            searchPipelineList: 'searchPipelineList',
-            requestPipelineDetail: 'requestPipelineDetail',
-            setPipelineSetting: 'setPipelineSetting'
-        }),
+        ...mapActions('pipelines', [
+            'requestToggleCollect',
+            'requestTerminatePipeline',
+            'requestRetryPipeline'
+        ]),
         ...mapActions('atom', [
             'setPipelineEditing',
-            'setExecuteStatus',
             'setSaveStatus',
             'setPipeline',
             'updateContainer'
         ]),
         ...mapMutations('pipelines', [
-            'updateCurPipelineByKeyValue',
-            'updateCurPipelineInfoByKeyValue'
+            'updatePipelineInfo'
         ]),
-        async fetchPipelineList (searchName) {
-            try {
-                const { projectId, pipelineId } = this.$route.params
-                const [list, curPipeline] = await Promise.all([
-                    this.searchPipelineList({
-                        projectId,
-                        searchName
-                    }),
-                    this.requestPipelineDetail({
-                        projectId,
-                        pipelineId
-                    })
-                ])
-
-                this.setBreadCrumbPipelineList(list, curPipeline.pipelineResource)
-            } catch (err) {
-                console.log(err)
-                this.$showTips({
-                    message: err.message || err,
-                    theme: 'error'
-                })
-            }
-        },
-        async setBreadCrumbPipelineList (list, pipeline) {
-            if (pipeline && list.every(ele => ele.pipelineId !== pipeline.pipelineId)) {
-                list = [
-                    {
-                        pipelineId: pipeline.pipelineId,
-                        pipelineName: pipeline.pipelineName
-                    },
-                    ...list
-                ]
-            }
-            this.$store.commit('pipelines/updatePipelineList', list)
-        },
         /**
              *  终止任务
              */
@@ -139,54 +100,6 @@ export default {
                 }])
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
-            }
-        },
-        async executePipeline (params, goDetail = false) {
-            let message, theme
-            const { projectId, pipelineId } = this.$route.params
-            try {
-                this.setExecuteStatus(true)
-                // 请求执行构建
-                const res = await this.requestExecPipeline({
-                    projectId,
-                    params,
-                    pipelineId
-                })
-
-                if (res && res.id) {
-                    message = this.$t('newlist.sucToStartBuild')
-                    theme = 'success'
-                    this.setExecuteStatus(false)
-                    if (goDetail) {
-                        this.$router.push({
-                            name: 'pipelinesDetail',
-                            params: {
-                                projectId,
-                                pipelineId,
-                                buildNo: res.id
-                            }
-                        })
-                    }
-                } else {
-                    message = this.$t('newlist.failToStartBuild')
-                    theme = 'error'
-                }
-            } catch (err) {
-                this.setExecuteStatus(false)
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.curPipeline?.pipelineName ?? '--'
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         savePipeline () {
@@ -279,7 +192,7 @@ export default {
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
                         id: pipelineId,
-                        name: this.curPipeline?.pipelineName ?? '--'
+                        name: this.pipelineInfo?.pipelineName ?? '--'
                     }],
                     projectId
                 }])
@@ -314,8 +227,8 @@ export default {
                     actionId: this.$permissionActionMap.execute,
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
-                        id: this.curPipeline.pipelineId,
-                        name: this.curPipeline?.pipelineName ?? '--'
+                        id: this.pipelineInfo.pipelineId,
+                        name: this.pipelineInfo?.pipelineName ?? '--'
                     }],
                     projectId: this.$route.params.projectId
                 }])
@@ -376,13 +289,8 @@ export default {
                     theme: 'success'
                 })
 
-                if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
-                    ++this.pipeline.latestVersion
-                    this.updateCurPipelineByKeyValue('version', this.pipeline.latestVersion)
-                }
-
-                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline?.pipelineName) {
-                    this.updateCurPipelineInfoByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
+                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.pipelineInfo?.pipelineName) {
+                    this.updatePipelineInfo('pipelineName', this.pipelineSetting.pipelineName)
                 }
 
                 return {

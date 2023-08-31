@@ -50,11 +50,7 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <!-- <div class="bk-button-group">
-                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
-                        {{ item.label }}
-                    </bk-button>
-                </div> -->
+                <mode-switch />
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -227,6 +223,7 @@
 
 <script>
     import CheckAtomDialog from '@/components/CheckAtomDialog'
+    import ModeSwitch from '@/components/ModeSwitch'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
     import { errorTypeMap } from '@/utils/pipelineConst'
@@ -236,7 +233,8 @@
         components: {
             CheckAtomDialog,
             CompleteLog,
-            Logo
+            Logo,
+            ModeSwitch
         },
         props: {
             execDetail: {
@@ -253,7 +251,6 @@
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
-                pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
@@ -264,6 +261,9 @@
             }
         },
         computed: {
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapState('common', ['ruleList', 'templateRuleList']),
             ...mapState('atom', [
                 'hideSkipExecTask',
@@ -361,21 +361,6 @@
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
-            },
-            pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
             },
             timeSteps () {
                 return [

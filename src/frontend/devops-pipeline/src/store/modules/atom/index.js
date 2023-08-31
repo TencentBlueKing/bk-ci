@@ -26,6 +26,8 @@ export default {
     state: {
         showAtomSelectorPopup: false,
         pipeline: null,
+        pipelineYaml: '',
+        pipelineSetting: null,
         template: null,
         fetchingAtmoModal: false,
         fetchingContainer: false,
@@ -62,7 +64,6 @@ export default {
         execDetail: null,
         hideSkipExecTask: false,
         globalEnvs: null,
-        executeStatus: false,
         saveStatus: false,
         stageTagList: [],
         defaultStageTags: [],

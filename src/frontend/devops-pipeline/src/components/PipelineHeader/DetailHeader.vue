@@ -30,7 +30,11 @@
             <router-link :to="editRouteName">
                 <bk-button>{{ $t("edit") }}</bk-button>
             </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                theme="primary"
+                :loading="executeStatus"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
             </bk-button>
             <more-actions />
@@ -56,16 +60,16 @@
             }
         },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail']),
+            ...mapState('atom', ['execDetail']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline',
                 isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
+            ...mapState('pipelines', ['pipelineInfo', 'executeStatus']),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
             canManualStartup () {
-                return this.curPipeline?.canManualStartup ?? false
+                return this.pipelineInfo?.canManualStartup ?? false
             },
             buildNumConf () {
                 return {
@@ -102,7 +106,7 @@
                             instanceId: [
                                 {
                                     id: this.$route.params.pipelineId,
-                                    name: this.curPipeline.pipelineName
+                                    name: this.pipelineInfo.pipelineName
                                 }
                             ],
                             projectId: this.$route.params.projectId
@@ -161,7 +165,11 @@
             },
             goExecPreview () {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

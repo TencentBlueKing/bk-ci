@@ -1046,6 +1046,7 @@
     display: flex;
     align-items: center;
     margin-top: 15px;
+    grid-gap: 12px;
     .image-name {
       width: 50%;
       display: flex;
@@ -1069,79 +1070,6 @@
           color: #c4c6cc;
           cursor: not-allowed;
         }
-      }
-    }
-    .container-property-panel {
-      font-size: 14px;
-      .bk-image {
-        display: flex;
-        align-items: center;
-        margin-top: 15px;
-        .image-name {
-          width: 50%;
-          display: flex;
-          align-items: center;
-          .not-recommend {
-            text-decoration: line-through;
-          }
-          .image-named {
-            border: 1px solid #c4c6cc;
-            flex: 1;
-            height: 32px;
-            line-height: 32px;
-            font-size: 12px;
-            color: $fontWeightColor;
-            line-height: 32px;
-            padding-left: 10px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            &.disable {
-              color: #c4c6cc;
-              cursor: not-allowed;
-            }
-          }
-        }
-        .image-tag {
-          width: 50%;
-          margin-left: 10px;
-        }
-      }
-      .container-resource-name {
-        display: flex;
-        align-items: center;
-        > input {
-          flex: 1;
-        }
-        .show-build-resource {
-          margin-left: 10px;
-        }
-      }
-      .control-bar {
-        position: absolute;
-        right: 34px;
-        top: 12px;
-      }
-      .debug-btn {
-        position: absolute;
-        right: 34px;
-        top: 12px;
-      }
-      .accordion-checkbox {
-        margin-left: auto;
-      }
-      .bk-form-content span.bk-form-help {
-        padding-top: 5px;
-        display: inline-block;
-        a {
-          color: #3c96ff;
-          &:hover {
-            color: #3c96ff;
-          }
-        }
-      }
-      form .bk-form-item {
-        margin-top: 8px;
       }
     }
   }
@@ -1172,9 +1100,6 @@
         color: #3c96ff;
       }
     }
-  }
-  form .bk-form-item {
-    margin-top: 8px;
   }
 }
 .app-selector-item {

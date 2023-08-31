@@ -23,12 +23,11 @@ import {
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
-import { semverVersionKeySet } from '@/utils/pipelineConst'
 import ajax from '@/utils/request'
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_AUTHORITY_MUTATION, PIPELINE_SETTING_MUTATION, RESET_PIPELINE_SETTING_MUNTATION, UPDATE_PIPELINE_SETTING_MUNTATION } from './constants'
+import { PIPELINE_AUTHORITY_MUTATION, RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION } from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const versionPrefix = `/${PROCESS_API_URL_PREFIX}/user/version`
@@ -41,10 +40,10 @@ function rootCommit (commit, ACTION_CONST, payload) {
 
 const state = {
     pipelineList: [],
-    curPipeline: {},
+    pipelineInfo: null,
     allPipelineList: [],
     hasCreatePermission: false,
-    pipelineSetting: {},
+    templateSetting: {},
     pipelineAuthority: {},
     pipelineActionState: {
         activePipeline: null,
@@ -59,56 +58,14 @@ const state = {
 
 const getters = {
     getPipelineList: state => state.pipelineList,
-    getCurPipeline: state => {
-        return {
-            ...(state.curPipeline?.pipelineResource ?? {}),
-            ...(state.curPipeline?.pipelineInfo ?? {})
-        }
-    },
     isCurPipelineLocked: state => {
-        return state.curPipeline?.setting?.runLockType === 'LOCK'
+        return state.pipelineInfo?.runLockType === 'LOCK'
     },
-    getAllPipelineList: state => state.allPipelineList,
-    getPipelineTriggers: state => {
-        const triggers = state.curPipeline?.pipelineResource?.model?.stages?.[0].containers?.[0].elements ?? []
-        return triggers?.map(trigger => {
-            return {
-                name: trigger.name,
-                isEnable: trigger?.additionalOptions?.enable ?? true
-            }
-        })
+    isDraftPipeline: state => {
+        return state.pipelineInfo?.pipelineResource?.status === 'COMMITTING'
     },
-    getPipelineSubscriptions: state => type => {
-        return state.curPipeline?.setting?.[`${type}SubscriptionList`] ?? []
-    },
-    curPipelineParams: state => {
-        const firstJob = state.curPipeline?.pipelineResource?.model?.stages?.[0].containers?.[0]
-        return firstJob?.params.filter(param => !semverVersionKeySet.has(param.id)) ?? []
-    },
-    curPipelineBuildNoConfig: state => {
-        const firstJob = state.curPipeline?.pipelineResource?.model?.stages?.[0].containers?.[0]
-        const semver = firstJob?.params
-            .filter(param => semverVersionKeySet.has(param.id))
-        return firstJob?.buildNo
-            ? {
-                ...firstJob.buildNo,
-                semver: semver.reduce((acc, cur) => ({
-                    ...acc,
-                    [cur.id]: cur.defaultValue
-                }), {})
-            }
-            : null
-    }
+    getAllPipelineList: state => state.allPipelineList
 }
-
-// function cancellableWrap (commit, actionType) {
-//     const source = CancelToken.source()
-//     commit('setCancelToken', {
-//         token: source,
-//         actionType
-//     }, { root: true })
-//     return source.token
-// }
 
 const mutations = {
     [PIPELINE_AUTHORITY_MUTATION]: (state, { pipelineAuthority }) => {
@@ -119,18 +76,18 @@ const mutations = {
             }
         })
     },
-    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
+    [RESET_TEMPLATE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
-            pipelineSetting: {}
+            templateSetting: {}
         })
     },
-    [PIPELINE_SETTING_MUTATION]: (state, { pipelineSetting }) => {
+    [TEMPLATE_SETTING_MUTATION]: (state, { templateSetting }) => {
         return Object.assign(state, {
-            pipelineSetting
+            templateSetting
         })
     },
-    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
-        Object.assign(container, param)
+    [UPDATE_TEMPLATE_SETTING_MUNTATION]: (state, { templateSetting, param }) => {
+        Object.assign(templateSetting, param)
         return state
     },
     updateCreatePermission (state, hasPermission) {
@@ -179,26 +136,16 @@ const mutations = {
         })
     },
     /**
-     * 更新 store.pipeline 中的 curPipeline
+     * 更新 store.pipeline 中的 pipelineInfo
      *
      * @param {Object} state store state
-     * @param {Object} obj curPipeline 对象
+     * @param {Object} obj pipelineInfo 对象
      */
-    updateCurPipeline (state, obj) {
-        state.curPipeline = obj
+    setPipelineInfo (state, obj) {
+        state.pipelineInfo = obj
     },
-    /**
-     * 更新 store.pipeline 中的 curPipeline 的某个字段
-     *
-     * @param {Object} state store state
-     * @param {Object} obj key-value
-     */
-    updateCurPipelineByKeyValue (state, { key, value }) {
-        state.curPipeline.pipelineResource[key] = value
-    },
-
-    updateCurPipelineInfoByKeyValue (state, { key, value }) {
-        state.curPipeline.pipelineInfo[key] = value
+    updatePipelineInfo (state, { key, value }) {
+        state.pipelineInfo[key] = value
     },
     /**
      * 更新 store.pipeline 中的 pipelineList 中的某一项的某个key的value
@@ -277,33 +224,11 @@ const actions = {
     requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
     },
-
-    resetPipelineSetting: ({ commit }, payload) => {
-        commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
-    },
-    setPipelineSetting: ({ commit }, pipelineSetting) => {
-        commit(PIPELINE_SETTING_MUTATION, {
-            pipelineSetting
-        })
-    },
-    requestPipelineSetting: async ({ commit }, { projectId, pipelineId }) => {
-        try {
-            const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get?pipelineId=${pipelineId}&projectId=${projectId}`)
-            commit(PIPELINE_SETTING_MUTATION, {
-                pipelineSetting: response.data
-            })
-        } catch (e) {
-            if (e.code === 403) {
-                e.message = ''
-            }
-            rootCommit(commit, FETCH_ERROR, e)
-        }
-    },
     requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
         try {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/settings`)
-            commit(PIPELINE_SETTING_MUTATION, {
-                pipelineSetting: response.data
+            commit(TEMPLATE_SETTING_MUTATION, {
+                templateSetting: response.data
             })
         } catch (e) {
             if (e.code === 403) {
@@ -312,8 +237,8 @@ const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    updatePipelineSetting: ({ commit }, payload) => {
-        commit(UPDATE_PIPELINE_SETTING_MUNTATION, payload)
+    updateTemplateSetting: ({ commit }, payload) => {
+        commit(UPDATE_TEMPLATE_SETTING_MUNTATION, payload)
     },
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
@@ -378,11 +303,11 @@ const actions = {
             return response.data
         })
     },
-    requestPipelineDetail ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/pipelines/${pipelineId}/resource`
+    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
 
         return ajax.get(url).then(response => {
-            commit('updateCurPipeline', response.data)
+            commit('setPipelineInfo', response.data)
             return response.data
         })
     },
@@ -554,23 +479,17 @@ const actions = {
             params
         }).then(res => res.data)
     },
-    // 查询流水线历史版本编排内容
-    requestPipelineByVersion: (_, { projectId, pipelineId, version }) => {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/${version}`)
-    },
-    // 查询流水线历史版本设置内容
-    requestPipelineSettingByVersion: (_, { projectId, pipelineId, version }) => {
-        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get`, {
-            params: {
-                projectId,
-                pipelineId,
-                version
-            }
-        })
-    },
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+    async rollbackPipelineVersion ({ rootCommit }, { projectId, pipelineId, version }) {
+        try {
+            const res = await ajax.post(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?version=${version}`)
+            return res.data
+        } catch (error) {
+
+        }
     },
     updateBuildRemark (_, { projectId, pipelineId, buildId, remark }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`, {
@@ -585,6 +504,12 @@ const actions = {
     // 流水线操作日志列表
     requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
+            params
+        }).then(res => res.data)
+    },
+    // 流水线操作日志列表
+    requestPipelineOperatorList (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`, {
             params
         }).then(res => res.data)
     },

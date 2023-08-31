@@ -24,7 +24,7 @@
                 theme="primary"
                 @click="triggerEvent(event)"
             >
-                {{$t('重新触发')}}
+                {{$t('reTrigger')}}
             </bk-button>
         </li>
     </ul>
@@ -59,7 +59,7 @@
                     if (res) {
                         this.$bkMessage({
                             theme: 'success',
-                            message: this.$t('触发成功')
+                            message: this.$t('reTriggerSuc')
                         })
                     }
                 } catch (error) {

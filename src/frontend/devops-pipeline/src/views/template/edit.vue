@@ -140,7 +140,7 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
             this.removeLeaveListenr()
             this.errors.clear()
         },

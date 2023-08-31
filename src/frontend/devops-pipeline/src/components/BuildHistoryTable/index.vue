@@ -403,7 +403,7 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import Logo from '@/components/Logo'
     import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
@@ -454,9 +454,11 @@
         },
         computed: {
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline',
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
+            ...mapState('pipelines', [
+                'pipelineInfo'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -467,7 +469,7 @@
                 return this.historyPageStatus?.isQuerying ?? false
             },
             canManualStartup () {
-                return this.curPipeline?.canManualStartup ?? true
+                return this.pipelineInfo?.canManualStartup ?? true
             },
             versionToolTipsConf () {
                 return {
@@ -912,7 +914,11 @@
             },
             buildNow () {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

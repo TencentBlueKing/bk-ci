@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { buildEnvMap, jobConst } from '@/utils/pipelineConst'
+import { buildEnvMap, jobConst, semverVersionKeySet } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -27,6 +27,43 @@ function isSkip (status) {
 }
 
 export default {
+    getPipelineTriggers: state => {
+        const triggers = state.pipeline?.stages?.[0].containers?.[0].elements ?? []
+        return triggers?.map(trigger => {
+            return {
+                name: trigger.name,
+                isEnable: trigger?.additionalOptions?.enable ?? true
+            }
+        })
+    },
+    getPipelineSubscriptions: state => type => {
+        return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
+    },
+    pipelineWithoutTrigger: state => {
+        return state.pipeline
+            ? {
+                ...state.pipeline,
+                stages: state.pipeline?.stages?.length > 0 ? state.pipeline?.stages.slice(1) : []
+            }
+            : null
+    },
+    curPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
+    },
+    curPipelineBuildNoConfig: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        const semver = firstJob?.params?.filter(param => semverVersionKeySet.has(param.id))
+        return firstJob?.buildNo
+            ? {
+                ...firstJob.buildNo,
+                semver: semver.reduce((acc, cur) => ({
+                    ...acc,
+                    [cur.id]: cur.defaultValue
+                }), {})
+            }
+            : null
+    },
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
             const atom = state.atomMap[atomCode]
@@ -335,7 +372,7 @@ export default {
         if (!state.hideSkipExecTask) {
             return state.execDetail
         }
-        console.time('getExecDetail')
+
         const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
             const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
                 const elements = container.elements.filter(
@@ -366,7 +403,6 @@ export default {
                 containers
             }
         })
-        console.timeEnd('getExecDetail')
         return Object.assign({}, state.execDetail, {
             model: {
                 ...state.execDetail.model,

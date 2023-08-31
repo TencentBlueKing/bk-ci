@@ -19,25 +19,20 @@
 <template>
     <div
         v-bkloading="{ isLoading }"
-        :style="{ 'height': calcSize(height), 'width': calcSize(width) }"
+        :style="{
+            height: '100%',
+            width: '100%'
+        }"
     >
     </div>
 </template>
 <script>
-
+    import ciYamlTheme from '@/utils/ciYamlTheme'
     export default {
         props: {
             value: {
                 type: String,
                 default: ''
-            },
-            width: {
-                type: [Number, String],
-                default: 500
-            },
-            height: {
-                type: [Number, String],
-                default: 300
             },
             readOnly: {
                 type: Boolean,
@@ -50,6 +45,10 @@
             hasError: {
                 type: Boolean,
                 default: false
+            },
+            highlightRanges: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -67,13 +66,6 @@
                     }
                 }
             },
-
-            lang (newVal) {
-                if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
-                }
-            },
-
             theme (newVal) {
                 if (this.editor) {
                     this.monaco.editor.setTheme(newVal)
@@ -82,6 +74,9 @@
 
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
+            },
+            highlightRanges () {
+                this.highlightBlocks(this.highlightRanges)
             }
         },
         async mounted () {
@@ -93,10 +88,11 @@
                 /* webpackChunkName: "monaco-editor" */
                 'monaco-editor'
             )
+            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
             this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
-                language: this.getLang(this.lang),
-                theme: 'vs-dark',
+                language: 'yaml',
+                theme: 'ciYamlTheme',
                 automaticLayout: true,
                 minimap: {
                     enabled: false
@@ -104,7 +100,7 @@
                 readOnly: this.readOnly
             })
             this.isLoading = false
-
+            this.highlightBlocks(this.highlightRanges)
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -118,22 +114,34 @@
             this.editor?.dispose?.()
         },
         methods: {
-            getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    batchfile: 'bat'
+            highlightBlocks (blocks) {
+                if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {
+                    const ranges = blocks.map(({ startMark, endMark }) => ({
+                        range: new this.monaco.Range(
+                            startMark.line,
+                            startMark.column,
+                            endMark.line,
+                            endMark.column
+                        ),
+                        options: {
+                            isWholeLine: true,
+                            className: 'code-highlight-block',
+                            marginClassName: 'code-highlight-block'
+                        }
+                    }))
+                    this.collections?.clear?.()
+                    this.collections = this.editor.createDecorationsCollection(ranges)
+                    this.editor.revealRangeInCenterIfOutsideViewport(ranges[0].range, this.monaco.editor.ScrollType.Smooth)
                 }
-
-                return langMap[lang] || lang
-            },
-            calcSize (size) {
-                const _size = size.toString()
-
-                if (_size.match(/^\d*$/)) return `${size}px`
-                if (_size.match(/^[0-9]?%$/)) return _size
-
-                return '100%'
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .code-highlight-block {
+        background: #3A84FF;
+        opacity: .1;
+
+    }
+</style>

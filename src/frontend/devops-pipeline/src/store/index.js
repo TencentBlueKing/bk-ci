@@ -24,12 +24,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import ajax from '../utils/ajax'
-import pipelines from './modules/pipelines/'
-import common from './modules/common/'
 import atom from './modules/atom'
+import common from './modules/common/'
+import pipelines from './modules/pipelines/'
 
 import {
-    FETCH_ERROR
+    BKUI_LS_PIPELINE_MODE,
+    FETCH_ERROR,
+    UPDATE_PIPELINE_MODE
 } from './constants'
 Vue.use(Vuex)
 
@@ -49,7 +51,8 @@ export default new Vuex.Store({
         // fetch error
         fetchError: null,
 
-        cancelTokenMap: {}
+        cancelTokenMap: {},
+        pipelineMode: localStorage.getItem('pipelineMode') || 'uiMode'
     },
     // 公共 mutations
     mutations: {
@@ -73,6 +76,11 @@ export default new Vuex.Store({
             return Object.assign(state, {
                 fetchError
             })
+        },
+        [UPDATE_PIPELINE_MODE]: (state, mode) => {
+            return Object.assign(state, {
+                pipelineMode: mode
+            })
         }
     },
     // 公共 actions
@@ -88,9 +96,19 @@ export default new Vuex.Store({
                 }
                 commit('updateCurProject', data)
             })
+        },
+        updatePipelineMode ({ commit }, mode) {
+            localStorage.setItem(BKUI_LS_PIPELINE_MODE, mode)
+            commit(UPDATE_PIPELINE_MODE, mode)
         }
     },
     // 公共 getters
     getters: {
+        isUiMode: state => {
+            return state.pipelineMode === 'uiMode'
+        },
+        isCodeMode: state => {
+            return state.pipelineMode === 'codeMode'
+        }
     }
 })

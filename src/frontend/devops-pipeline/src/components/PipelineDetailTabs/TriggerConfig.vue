@@ -30,7 +30,7 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', {
+            ...mapGetters('atom', {
                 triggerList: 'getPipelineTriggers'
             })
         }

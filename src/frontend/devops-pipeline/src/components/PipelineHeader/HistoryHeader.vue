@@ -25,7 +25,7 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import MoreActions from './MoreActions.vue'
     import PacTag from '@/components/PacTag.vue'
@@ -39,15 +39,15 @@
             MoreActions
         },
         computed: {
+            ...mapState('pipelines', ['pipelineInfo']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline',
                 isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
             executable () {
-                return !(this.isCurPipelineLocked || !this.canManualStartup)
+                return !this.isCurPipelineLocked && this.canManualStartup
             },
             canManualStartup () {
-                return this.curPipeline?.canManualStartup ?? true
+                return this.pipelineInfo?.canManualStartup ?? true
             },
             tooltip () {
                 return this.executable
@@ -66,7 +66,11 @@
         methods: {
             goExecPreview () {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

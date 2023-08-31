@@ -12,7 +12,7 @@
         @cancel="handleCancel"
     >
         <template v-if="templatePipeline && isShow">
-            <mode-switch v-model="pipelineMode" />
+            <mode-switch />
             <bk-tab
                 v-model="activePanel"
                 type="unborder-card"
@@ -24,7 +24,9 @@
                     :name="panel.name"
                     render-directive="if"
                 >
-                    <Ace v-if="pipelineMode === 'codeMode'" height="100%" width="100%" />
+                    <YamlEditor
+                        v-if="isCodeMode"
+                    />
                     <component
                         v-else
                         v-bind="panel.props"
@@ -37,8 +39,9 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
-    import Ace from '@/components/common/ace-editor'
+    import YamlEditor from '@/components/YamlEditor'
     import Pipeline from '@/components/Pipeline'
     import TriggerConfig from '@/components/PipelineDetailTabs/TriggerConfig'
     import NotificationConfig from '@/components/PipelineDetailTabs/NotificationConfig'
@@ -54,7 +57,7 @@
             NotificationConfig,
             // eslint-disable-next-line vue/no-unused-components
             BaseConfig,
-            Ace
+            YamlEditor
 
         },
         props: {
@@ -66,11 +69,11 @@
         },
         data () {
             return {
-                pipelineMode: 'uiMode',
                 activePanel: 'pipelineModel'
             }
         },
         computed: {
+            ...mapGetters(['isCodeMode']),
             panels () {
                 return [
                     {

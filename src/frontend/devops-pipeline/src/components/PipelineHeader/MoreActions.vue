@@ -19,7 +19,7 @@
         </bk-dropdown-menu>
         <rename-dialog
             :is-show="isRenameDialogShow"
-            v-bind="curPipeline"
+            v-bind="pipelineInfo"
             :project-id="$route.params.projectId"
             @close="toggleRenameDialog"
             @done="renameDone"
@@ -50,7 +50,7 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+    import { mapState, mapMutations, mapActions } from 'vuex'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
@@ -80,16 +80,13 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
-            }),
+            ...mapState('pipelines', ['pipelineActionState', 'pipelineInfo']),
             isTemplatePipeline () {
-                return this.curPipeline?.model?.instanceFromTemplate ?? false
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
                 const pipeline = {
-                    ...this.curPipeline,
+                    ...this.pipelineInfo,
                     projectId: this.$route.params.projectId
                 }
                 return [
@@ -101,7 +98,7 @@
                             }
                         },
                         {
-                            label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
+                            label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
                         }
                     ],
@@ -143,15 +140,15 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
-            ...mapActions('pipelines', ['setPipelineSetting', 'requestToggleCollect']),
-            ...mapMutations('pipelines', ['updateCurPipelineInfoByKeyValue']),
+            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom', 'updatePipelineSetting']),
+            ...mapActions('pipelines', ['requestToggleCollect']),
+            ...mapMutations('pipelines', ['updatePipelineInfo']),
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
             renameDone (name) {
                 this.$nextTick(() => {
-                    this.updateCurPipelineInfoByKeyValue({
+                    this.updatePipelineInfo({
                         key: 'pipelineName',
                         value: name
                     })
@@ -212,14 +209,8 @@
                 this.showImportDialog = false
                 this.setEditFrom(true)
                 this.$nextTick(() => {
-                    const pipelineVersion = this.curPipeline?.version
-                    const pipelineName = this.curPipeline?.pipelineName
-                    this.setPipelineSetting({
-                        ...result.setting,
-                        pipelineName,
-                        pipelineId: this.curPipeline.pipelineId,
-                        projectId: this.$route.params.projectId
-                    })
+                    const pipelineVersion = this.pipelineInfo?.version
+                    const pipelineName = this.pipelineInfo?.pipelineName
                     this.setPipeline({
                         ...result.model,
                         name: pipelineName,
@@ -234,16 +225,16 @@
             },
 
             async toggleCollect () {
-                const isCollect = !this.curPipeline.hasCollect
+                const isCollect = !this.pipelineInfo?.hasCollect
                 let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
                 let theme = 'success'
                 try {
                     await this.requestToggleCollect({
                         projectId: this.$route.params.projectId,
-                        ...this.curPipeline,
+                        ...this.pipelineInfo,
                         isCollect
                     })
-                    this.updateCurPipelineInfoByKeyValue({
+                    this.updatePipelineInfo({
                         key: 'hasCollect',
                         value: isCollect
                     })

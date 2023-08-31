@@ -52,14 +52,17 @@ const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../c
 
 const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
+const DraftDebugRecord = () => import(/* webpackChunkName: "draftDebug" */'../views/subpages/DraftDebugRecord.vue')
+const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../components/PipelineHeader/DraftDebugHeader.vue')
+
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
+
 // 插件前端task.json在线调试
 // docker console
 const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
-const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
 
 const routes = [
     {
@@ -167,30 +170,6 @@ const routes = [
                 component: atomDebug
             },
             {
-                path: 'import',
-                component: ImportPipelineEdit,
-                children: [
-                    {
-                        path: '',
-                        redirect: {
-                            name: 'pipelineImportEdit'
-                        }
-                    },
-                    {
-                        // 流水线编辑
-                        path: 'edit/:tab?',
-                        name: 'pipelineImportEdit',
-                        meta: {
-                            icon: 'pipeline',
-                            title: 'pipeline',
-                            header: 'pipeline',
-                            to: 'PipelineManageList'
-                        },
-                        component: pipelinesEdit
-                    }
-                ]
-            },
-            {
                 path: ':pipelineId',
                 component: pipelinesEntry,
                 children: [
@@ -253,8 +232,8 @@ const routes = [
                     },
                     {
                         // 流水线执行可选插件
-                        path: 'preview',
-                        name: 'pipelinesPreview',
+                        path: 'preview/:version?',
+                        name: 'executePreview',
                         components: {
                             header: PreviewHeader,
                             default: pipelinesPreview
@@ -264,6 +243,20 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
+                        }
+                    },
+                    {
+                        path: 'draftDebug',
+                        name: 'draftDebugRecord',
+                        meta: {
+                            icon: 'pipeline',
+                            title: 'pipeline',
+                            header: 'pipeline',
+                            to: 'PipelineManageList'
+                        },
+                        components: {
+                            header: DraftDebugHeader,
+                            default: DraftDebugRecord
                         }
                     }
                 ]

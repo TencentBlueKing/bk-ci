@@ -35,11 +35,9 @@ import {
     QUALITY_ATOM_MUTATION,
     REFRESH_QUALITY_LOADING_MUNTATION,
     REPOSITORY_MUTATION,
-    RESET_PIPELINE_SETTING_MUNTATION,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
-    TEMPLATE_MUTATION,
-    UPDATE_PIPELINE_SETTING_MUNTATION
+    TEMPLATE_MUTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -54,7 +52,6 @@ export const state = {
     template: null,
     reposList: null,
     appNodes: {},
-    pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
     qualityAtom: []
@@ -119,15 +116,6 @@ export const mutations = {
             reposList: records
         })
         return state
-    },
-    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
-        Object.assign(container, param)
-        return state
-    },
-    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
-        return Object.assign(state, {
-            pipelineSetting: {}
-        })
     },
     [REFRESH_QUALITY_LOADING_MUNTATION]: (state, status) => {
         const refreshLoading = status

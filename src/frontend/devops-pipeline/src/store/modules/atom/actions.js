@@ -38,7 +38,9 @@ import {
     FETCHING_ATOM_MORE_LOADING,
     FETCHING_ATOM_VERSION,
     INSERT_ATOM,
+    PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_PIPELINE_SETTING_MUNTATION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
     SET_ATOM_MODAL,
@@ -51,7 +53,6 @@ import {
     SET_CONTAINER_DETAIL,
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
-    SET_EXECUTE_STATUS,
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_IMPORTED_JSON,
@@ -61,6 +62,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_STAGE,
+    SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -116,9 +118,6 @@ export default {
             console.log(error)
         }
     },
-    setExecuteStatus ({ commit }, status) {
-        commit(SET_EXECUTE_STATUS, status)
-    },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
@@ -164,21 +163,26 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId }) => {
+    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId, version }) => {
         try {
             const [pipelineRes, atomPropRes] = await Promise.all([
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`),
+                request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
                 request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
             ])
-            const pipeline = pipelineRes.data
+            const { setting, model } = pipelineRes.data.modelAndSetting
             const atomProp = atomPropRes.data
-            const elements = getters.getAllElements(pipeline.stages)
+            const elements = getters.getAllElements(model.stages)
             elements.forEach(element => { // 将os属性设置到model内
                 Object.assign(element, {
                     ...atomProp[element.atomCode]
                 })
             })
-            dispatch('setPipeline', pipeline)
+            dispatch('setPipeline', {
+                ...model,
+                version
+            })
+            commit(PIPELINE_SETTING_MUTATION, setting)
+            commit(SET_PIPELINE_YAML, pipelineRes.data.yaml)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -186,7 +190,12 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}`).then(res => {
+            console.log(res)
+            return res.data?.modelAndSetting?.model
+        })
+    },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -196,6 +205,8 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
+    resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
@@ -215,14 +226,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    // 获取流水线Yaml
-    getPipelineYaml (_, { projectId, pipelineId }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/transfer/${projectId}/preview_code`, {
-            params: {
-                pipelineId
-            }
-        }).then(res => res.data)
-    },
+
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },

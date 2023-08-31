@@ -17,69 +17,72 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { hashID } from '@/utils/util'
 import Vue from 'vue'
 import {
-    SET_STAGE_TAG_LIST,
-    SET_PIPELINE_STAGE,
-    SET_COMMON_SETTING,
-    SET_PIPELINE_CONTAINER,
-    SET_TEMPLATE,
-    SET_ATOMS,
-    SET_ATOM_MODAL_FETCHING,
-    SET_ATOM_MODAL,
-    SET_CONTAINER_FETCHING,
-    UPDATE_ATOM_TYPE,
-    SET_CONTAINER_DETAIL,
-    ADD_CONTAINER,
-    PROPERTY_PANEL_VISIBLE,
-    INSERT_ATOM,
-    DELETE_ATOM,
-    DELETE_CONTAINER,
-    UPDATE_CONTAINER,
-    DELETE_STAGE,
-    UPDATE_STAGE,
-    ADD_STAGE,
-    SET_INSERT_STAGE_STATE,
-    UPDATE_ATOM,
-    SET_PIPELINE_EDITING,
-    SET_PIPELINE,
-    DELETE_ATOM_PROP,
-    SET_PIPELINE_EXEC_DETAIL,
-    SET_REMOTE_TRIGGER_TOKEN,
-    SET_GLOBAL_ENVS,
-    TOGGLE_ATOM_SELECTOR_POPUP,
-    UPDATE_ATOM_INPUT,
-    UPDATE_WHOLE_ATOM_INPUT,
-    UPDATE_ATOM_OUTPUT,
-    UPDATE_ATOM_OUTPUT_NAMESPACE,
-    FETCHING_ATOM_LIST,
-    SET_REQUEST_ATOM_DATA,
-    SET_STORE_LOADING,
-    SET_STORE_SEARCH,
-    FETCHING_ATOM_VERSION,
-    SET_ATOM_VERSION_LIST,
-    SET_EXECUTE_STATUS,
-    SET_SAVE_STATUS,
-    SET_DEFAULT_STAGE_TAG,
-    TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON,
-    SET_ATOMS_CLASSIFY,
-    SET_EDIT_FROM,
-    FETCHING_ATOM_MORE_LOADING,
-    SET_COMMEND_ATOM_COUNT,
-    SET_ATOM_PAGE_OVER,
-    CLEAR_ATOM_DATA,
-    SET_COMMEND_ATOM_PAGE_OVER,
-    SET_HIDE_SKIP_EXEC_TASK
-} from './constants'
-import {
-    getAtomModalKey,
-    getAtomDefaultValue,
-    getAtomOutputObj,
     diffAtomVersions,
+    getAtomDefaultValue,
+    getAtomModalKey,
+    getAtomOutputObj,
     isNewAtomTemplate
 } from './atomUtil'
-import { hashID } from '@/utils/util'
+import {
+    ADD_CONTAINER,
+    ADD_STAGE,
+    CLEAR_ATOM_DATA,
+    DELETE_ATOM,
+    DELETE_ATOM_PROP,
+    DELETE_CONTAINER,
+    DELETE_STAGE,
+    FETCHING_ATOM_LIST,
+    FETCHING_ATOM_MORE_LOADING,
+    FETCHING_ATOM_VERSION,
+    INSERT_ATOM,
+    PIPELINE_SETTING_MUTATION,
+    PROPERTY_PANEL_VISIBLE,
+    RESET_PIPELINE_SETTING_MUNTATION,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
+    SET_ATOM_MODAL,
+    SET_ATOM_MODAL_FETCHING,
+    SET_ATOM_PAGE_OVER,
+    SET_ATOM_VERSION_LIST,
+    SET_COMMEND_ATOM_COUNT,
+    SET_COMMEND_ATOM_PAGE_OVER,
+    SET_COMMON_SETTING,
+    SET_CONTAINER_DETAIL,
+    SET_CONTAINER_FETCHING,
+    SET_DEFAULT_STAGE_TAG,
+    SET_EDIT_FROM,
+    SET_GLOBAL_ENVS,
+    SET_HIDE_SKIP_EXEC_TASK,
+    SET_IMPORTED_JSON,
+    SET_INSERT_STAGE_STATE,
+    SET_PIPELINE,
+    SET_PIPELINE_CONTAINER,
+    SET_PIPELINE_EDITING,
+    SET_PIPELINE_EXEC_DETAIL,
+    SET_PIPELINE_STAGE,
+    SET_PIPELINE_YAML,
+    SET_REMOTE_TRIGGER_TOKEN,
+    SET_REQUEST_ATOM_DATA,
+    SET_SAVE_STATUS,
+    SET_STAGE_TAG_LIST,
+    SET_STORE_LOADING,
+    SET_STORE_SEARCH,
+    SET_TEMPLATE,
+    TOGGLE_ATOM_SELECTOR_POPUP,
+    TOGGLE_STAGE_REVIEW_PANEL,
+    UPDATE_ATOM,
+    UPDATE_ATOM_INPUT,
+    UPDATE_ATOM_OUTPUT,
+    UPDATE_ATOM_OUTPUT_NAMESPACE,
+    UPDATE_ATOM_TYPE,
+    UPDATE_CONTAINER,
+    UPDATE_PIPELINE_SETTING_MUNTATION,
+    UPDATE_STAGE,
+    UPDATE_WHOLE_ATOM_INPUT
+} from './constants'
 
 export default {
     [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
@@ -119,11 +122,6 @@ export default {
             state.pipeline.stages.splice(stageIndex, 1)
         }
     },
-    [SET_EXECUTE_STATUS]: (state, status) => {
-        return Object.assign(state, {
-            executeStatus: status
-        })
-    },
     [SET_SAVE_STATUS]: (state, status) => {
         return Object.assign(state, {
             saveStatus: status
@@ -140,6 +138,24 @@ export default {
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
         Vue.set(state, 'pipeline', pipeline)
+        return state
+    },
+    [SET_PIPELINE_YAML]: (state, yaml = '') => {
+        Vue.set(state, 'pipelineYaml', yaml)
+        return state
+    },
+    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
+        return Object.assign(state, {
+            pipelineSetting: null
+        })
+    },
+    [PIPELINE_SETTING_MUTATION]: (state, pipelineSetting) => {
+        return Object.assign(state, {
+            pipelineSetting
+        })
+    },
+    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
+        Object.assign(setting, param)
         return state
     },
     [SET_EDIT_FROM]: (state, editfromImport = false) => {

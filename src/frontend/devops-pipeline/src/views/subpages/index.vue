@@ -16,7 +16,9 @@
             })
         },
         beforeDestroy () {
-            this.$store.commit('pipelines/updateCurPipeline', {})
+            this.$store.dispatch('atom/setPipeline', null)
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit('pipelines/setPipelineInfo', null)
             this.$store.commit('pipelines/updatePipelineList', [])
         }
     }

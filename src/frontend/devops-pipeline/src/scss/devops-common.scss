@@ -58,6 +58,8 @@
 .text-link {
     font-size: 12px;
     color: $primaryColor;
+    display: inline-flex;
+    align-items: center;
     &.disabled {
         color: #ccc;
         cursor: not-allowed;

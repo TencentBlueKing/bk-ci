@@ -37,7 +37,8 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['curPipeline']),
+            ...mapState('pipelines', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineSetting']),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -48,8 +49,7 @@
                 }]
             },
             baseInfoRows () {
-                console.log(this.curPipeline)
-                const { pipelineInfo, setting } = this.curPipeline
+                const { pipelineInfo, setting } = this
                 return [
                     {
                         key: 'pipelineName',
@@ -78,15 +78,14 @@
                 ]
             },
             executeConfRows () {
-                const info = this.curPipeline.setting
                 return [
                     {
                         key: 'customBuildNum',
-                        value: info?.buildNumRule ?? '${{DATE:”yyyyMMdd”}}.${{BUILD_NO_OF_DAY}}'
+                        value: this.pipelineSetting?.buildNumRule ?? '${{DATE:”yyyyMMdd”}}.${{BUILD_NO_OF_DAY}}'
                     },
                     {
                         key: 'parallelSetting',
-                        value: this.$t(`settings.runningOption.${info?.runLockType.toLowerCase()}`)
+                        value: this.$t(`settings.runningOption.${this.pipelineSetting?.runLockType.toLowerCase()}`)
                     }
                 ]
             }

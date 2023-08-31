@@ -107,8 +107,8 @@
                             label: this.$t('settings.notify'),
                             component: 'NotifyTab',
                             bindData: {
-                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
-                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
+                                failSubscription: this.pipelineSetting?.failSubscription ?? null,
+                                successSubscription: this.pipelineSetting?.successSubscription ?? null,
                                 updateSubscription: (container, name, value) => {
                                     this.setPipelineEditing(true)
                                     this.updatePipelineSetting({
@@ -135,12 +135,19 @@
             }
         },
         watch: {
-            '$route.params.pipelineId': function (pipelineId, oldId) {
-                this.init()
+            pipelineId (pipelineId, oldId) {
+                this.$nextTick(() => {
+                    this.init()
+                })
+            },
+            pipelineVersion (pipelineId, oldId) {
+                this.$nextTick(() => {
+                    this.init()
+                })
             },
             pipeline (val) {
                 this.isLoading = false
-                this.requestInterceptAtom()
+                this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
@@ -151,15 +158,13 @@
             }
         },
         mounted () {
-            if (!this.editfromImport) {
+            if (!this.editfromImport && this.pipeline?.version !== this.pipelineVersion) {
                 this.init()
-                this.requestQualityAtom()
             }
+            this.getQualityAtom()
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.setPipeline(null)
-            this.resetPipelineSetting()
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
@@ -180,25 +185,23 @@
             ...mapActions('atom', [
                 'requestPipeline',
                 'togglePropertyPanel',
-                'setPipeline',
                 'setPipelineEditing',
                 'setSaveStatus',
-                'setEditFrom'
-            ]),
-            ...mapActions('pipelines', [
-                'requestPipelineSetting',
-                'updatePipelineSetting',
-                'resetPipelineSetting'
+                'setEditFrom',
+                'updatePipelineSetting'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',
-                'requestInterceptAtom'
+                'requestInterceptAtom',
+                'requestMatchTemplateRuleList'
             ]),
             init () {
-                if (!this.isDraftEdit) {
+                if (!this.isDraftEdit && this.pipelineVersion) {
                     this.isLoading = true
-                    this.requestPipeline(this.$route.params)
-                    this.requestPipelineSetting(this.$route.params)
+                    this.requestPipeline({
+                        ...this.$route.params,
+                        version: this.pipelineVersion
+                    })
                 }
             },
             switchTab (tab) {
@@ -236,21 +239,21 @@
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
             },
-            requestQualityAtom () {
-                this.$store.dispatch('common/requestQualityAtom', {
+            getQualityAtom () {
+                this.requestQualityAtom({
                     projectId: this.projectId
                 })
             },
-            requestInterceptAtom () {
+            getInterceptAtom () {
                 if (this.projectId && this.pipelineId) {
-                    this.$store.dispatch('common/requestInterceptAtom', {
+                    this.requestInterceptAtom({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     })
                 }
             },
             requestMatchTemplateRules (templateId) {
-                this.$store.dispatch('common/requestMatchTemplateRuleList', {
+                this.requestMatchTemplateRuleList({
                     projectId: this.projectId,
                     templateId
                 })

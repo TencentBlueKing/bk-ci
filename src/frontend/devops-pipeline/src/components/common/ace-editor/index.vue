@@ -94,10 +94,6 @@
 
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
-            },
-            highlightRanges () {
-                console.log('watchs')
-                this.highlightBlocks(this.highlightRanges)
             }
         },
         async mounted () {
@@ -120,7 +116,6 @@
                 readOnly: this.readOnly
             })
             this.isLoading = false
-            this.highlightBlocks(this.highlightRanges)
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -150,26 +145,6 @@
                 if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
-            },
-            highlightBlocks (blocks) {
-                if (this.monaco && this.editor) {
-                    const ranges = blocks.map(({ startMark, endMark }) => ({
-                        range: new this.monaco.Range(
-                            startMark.line,
-                            startMark.column,
-                            endMark.line,
-                            endMark.column
-                        ),
-                        options: {
-                            isWholeLine: true,
-                            className: 'code-highlight-block',
-                            marginClassName: 'code-highlight-block'
-                        }
-                    }))
-                    this.collections?.clear?.()
-                    this.collections = this.editor.createDecorationsCollection(ranges)
-                    this.editor.revealRangeInCenterIfOutsideViewport(ranges[0].range, this.monaco.editor.ScrollType.Smooth)
-                }
             }
         }
     }

@@ -15,51 +15,73 @@
         >
             <span @click="toggleParamsAside" class="pipeline-params-entry">
                 <i class="devops-icon icon-angle-double-right"></i>
-                变量
+                {{$t('var')}}
             </span>
-            <div class="pipeline-params-aside-content">
-                <div v-if="params.length > 0">
-                    <h6>
-                        {{ $t('流水线变量') }}
-                        <i class="devops-icon icon-question-circle-shape"></i>
-                    </h6>
-                    <ul class="pipeline-params-list">
+            <bk-tab class="pipeline-params-aside-content" type="unborder-card">
+                <bk-tab-panel
+                    name="build-params"
+                    :label="$t('template.pipelineVar')"
+                >
+                    <bk-alert
+                        type="info"
+                        :title="$t('refParamsTips')"
+                    />
+
+                    <p class="param-type-desc">
+                        <span class="param-indicator">
+                            <i class="visible-param-dot" />
+                            {{ $t('buildParams') }}
+                        </span>
+                        <span class="param-indicator">
+                            <i class="required-param-dot" />
+                            {{ $t('requiredParams') }}
+                        </span>
+                        <span class="param-indicator">
+                            <i class="readonly-param-dot" />
+                            {{ $t('readonlyParams') }}
+                        </span>
+                    </p>
+                    <ul v-if="params.length > 0" class="pipeline-params-list">
                         <li v-for="item in params" :key="item.id">
-                            <label>
-                                {{ item.id }}
-                                <i
-                                    v-if="item.desc"
-                                    v-bk-tooltips="item.descTips"
-                                    class="devops-icon icon-info-circle"
-                                />
-                            </label>
+                            <p>
+                                <label v-bk-tooltips="item.descTips" :class="{
+                                    'has-param-desc': item.desc
+                                }">
+                                    {{ item.id }}
+                                </label>
+                                <span>
+                                    {{ item.defaultValue || '--' }}
+                                </span>
+                            </p>
                             <span>
-                                {{ $t(item.type) }}
-                            </span>
-                            <span>
-                                <bk-tag theme="success">{{ $t('入参') }}</bk-tag>
-                                <bk-tag v-if="item.required" theme="danger">{{ $t('必填') }}</bk-tag>
-                                <bk-tag v-if="item.readOnly">{{ $t('只读') }}</bk-tag>
+                                <i class="visible-param-dot" />
+                                <i v-if="item.required" class="required-param-dot" />
+                                <i v-if="item.readOnly" class="readonly-param-dot" />
                             </span>
                         </li>
                     </ul>
-                </div>
-                <h6>
-                    {{ $t('推荐版本号') }}
-                    <i class="devops-icon icon-question-circle-shape"></i>
-                </h6>
-                <ul class="pipeline-reccomend-version-conf">
-                    <li v-for="(item, index) in versionConf" :key="index">
-                        <label>
-                            {{ item.label }}
-                            <span v-if="item.labelDesc">
-                                {{ item.labelDesc }}
-                            </span>
-                        </label>
-                        <component :is="item.component" v-bind="item.props" v-on="item.listeners" />
-                    </li>
-                </ul>
-            </div>
+                </bk-tab-panel>
+                <bk-tab-panel
+                    name="build-version"
+                    :label="$t('history.tableMap.recommendVersion')"
+                >
+                    <bk-alert
+                        type="info"
+                        :title="$t('refVersionTips')"
+                    />
+                    <ul class="pipeline-reccomend-version-conf">
+                        <li v-for="(item, index) in versionConf" :key="index">
+                            <label>
+                                {{ item.label }}
+                                <span v-if="item.labelDesc">
+                                    {{ item.labelDesc }}
+                                </span>
+                            </label>
+                            <component :is="item.component" v-bind="item.props" v-on="item.listeners" />
+                        </li>
+                    </ul>
+                </bk-tab-panel>
+            </bk-tab>
         </aside>
     </div>
 </template>
@@ -87,12 +109,10 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', [
+            ...mapGetters('atom', [
+                'buildNoRules',
                 'curPipelineParams',
                 'curPipelineBuildNoConfig'
-            ]),
-            ...mapGetters('atom', [
-                'buildNoRules'
             ]),
             params () {
                 return this.curPipelineParams.map(item => ({
@@ -106,15 +126,15 @@
             },
             versionConf () {
                 return [{
-                    label: '版本号',
-                    labelDesc: ' (主版本.特性版本.修正版本)',
+                    label: this.$t('versionNum'),
+                    labelDesc: this.$t('mainMinorPatch'),
                     component: 'BuildVersion',
                     props: {
                         disabled: true,
                         value: this.curPipelineBuildNoConfig?.semver
                     }
                 }, {
-                    label: '构建号',
+                    label: this.$t('buildNum'),
                     component: 'bk-input',
                     props: {
                         disabled: true,
@@ -142,6 +162,7 @@
 </script>
 
 <style lang="scss">
+    @import "@/scss/mixins/ellipsis";
     .pipeline-model-arrangement {
         height: 100%;
         overflow: hidden;
@@ -154,7 +175,7 @@
         height: 100%;
         font-size: 12px;
         transform: translateX(100%);
-        z-index: 9999;
+        z-index: 999;
         border-left: 1px solid #DCDEE5;
         transition: all .3s ease;
         &.params-aside-visible {
@@ -183,36 +204,69 @@
         }
         .pipeline-params-aside-content {
             height: 100%;
-            padding: 8px 24px;
             background: white;
-            > h6 {
+            .param-type-desc {
+                display: flex;
+                grid-gap: 12px;
+                justify-content: flex-end;
+                margin: 24px 0;
+            }
+            .param-indicator {
                 display: flex;
                 align-items: center;
                 grid-gap: 8px;
-                padding: 8px 0;
-                margin: 0 0 16px 0;
-                color: #313238;
-                font-size: 14px;
-                font-weight: 700;
-                border-bottom: 1px solid #DCDEE5;
-                > i {
-                    color: #979BA5;
+            }
+            .visible-param-dot,
+            .required-param-dot,
+            .readonly-param-dot {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                &.visible-param-dot {
+                    background: #2DCB9D;
+                }
+                &.required-param-dot {
+                    background: #FF5656;
+                }
+                &.readonly-param-dot {
+                    background: #C4C6CC;
                 }
             }
             .pipeline-params-list {
                 border: 1px solid #DCDEE5;
-                margin-bottom: 24px;
                 > li {
                     border-bottom: 1px solid #DCDEE5;
-                    height: 42px;
-                    padding: 0 16px;
+                    padding: 10px 16px;
                     display: grid;
-                    grid-gap: 16px;
+                    grid-gap: 24px;
                     grid-auto-flow: column;
                     grid-template-columns: 1fr auto;
                     align-items: center;
                     &:last-child {
                         border-bottom: none;
+                    }
+                    > p {
+                        display: flex;
+                        flex-direction: column;
+                        grid-gap: 6px;
+                        overflow: hidden;
+                        > label {
+                            margin-right: auto;
+                            @include ellipsis();
+                            max-width: 100%;
+                            &.has-param-desc {
+                                border-bottom: 1px dashed #979BA5;
+                            }
+                        }
+                        > span {
+                            color: #979BA5;
+                            @include ellipsis();
+                        }
+                    }
+                    > span {
+                        display: flex;
+                        grid-gap: 8px;
                     }
                 }
             }
@@ -220,6 +274,7 @@
                 display: flex;
                 flex-direction: column;
                 grid-gap: 16px;
+                margin-top: 24px;
                 > li {
                     display: flex;
                     flex-direction: column;

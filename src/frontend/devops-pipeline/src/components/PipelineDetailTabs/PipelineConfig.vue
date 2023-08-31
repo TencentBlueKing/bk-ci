@@ -1,25 +1,38 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <header class="pipeline-config-header">
-            <mode-switch v-model="pipelineMode" />
-            <span
-                class="text-link"
-            >
-                <logo name="edit-conf" size="16"></logo>
-                {{$t('edit')}}
-            </span>
+            <mode-switch />
+            <VersionSideslider
+                v-model="activePipelineVersion"
+                @change="init"
+            />
+            <template v-if="!isCurrentVersion">
+                <RollbackEntry
+                    :version="activePipelineVersion"
+                >
+                    <i class="devops-icon icon-rollback" />
+                    {{$t('rollback')}}
+                </RollbackEntry>
+                <VersionDiffEntry
+                    :version="activePipelineVersion"
+                    :release-version="releaseVersion"
+                    :current-yaml="pipelineYaml"
+                >
+                    <i class="devops-icon icon-diff" />
+                    {{$t('diff')}}
+                </VersionDiffEntry>
+            </template>
+
         </header>
-        <section v-if="pipeline" class="pipeline-model-content">
-            <Ace
+        <section class="pipeline-model-content">
+            <YamlEditor
                 v-if="isCodeMode"
                 ref="editor"
-                lang="yaml"
-                height="100%"
-                width="100%"
-                :value="yaml"
+                :value="pipelineYaml"
                 :highlight-ranges="yamlHighlightBlock"
                 read-only
             />
+
             <component
                 v-else-if="dynamicComponentConf"
                 v-bind="dynamicComponentConf.props"
@@ -31,14 +44,17 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
-    import Ace from '@/components/common/ace-editor'
+    import YamlEditor from '@/components/YamlEditor'
     import TriggerConfig from './TriggerConfig'
     import PipelineModel from './PipelineModel'
     import NotificationConfig from './NotificationConfig'
     import BaseConfig from './BaseConfig'
+    import VersionSideslider from './VersionSideslider'
     import Logo from '@/components/Logo'
+    import VersionDiffEntry from './VersionDiffEntry'
+    import RollbackEntry from './RollbackEntry'
     export default {
         components: {
             ModeSwitch,
@@ -50,27 +66,41 @@
             NotificationConfig,
             // eslint-disable-next-line vue/no-unused-components
             BaseConfig,
-            Ace,
-            Logo
+            YamlEditor,
+            Logo,
+            VersionSideslider,
+            VersionDiffEntry,
+            RollbackEntry
         },
         data () {
             return {
                 isLoading: false,
                 yaml: '',
+                activePipelineVersion: null,
                 yamlHighlightBlockMap: {},
-                yamlHighlightBlock: [],
-                pipelineMode: 'codeMode' // 'uiMode'
+                yamlHighlightBlock: []
             }
         },
         computed: {
-            ...mapState('atom', [
-                'pipeline'
+            ...mapState('pipelines', [
+                'pipelineInfo'
             ]),
+            ...mapState('atom', [
+                'pipeline',
+                'pipelineYaml'
+            ]),
+            ...mapGetters({
+                pipelineWithoutTrigger: 'atom/pipelineWithoutTrigger',
+                isCodeMode: 'isCodeMode'
+            }),
             pipelineType () {
                 return this.$route.params.type
             },
-            isCodeMode () {
-                return this.pipelineMode === 'codeMode'
+            releaseVersion () {
+                return this.pipelineInfo?.version
+            },
+            isCurrentVersion () {
+                return this.activePipelineVersion === this.releaseVersion
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
@@ -78,7 +108,7 @@
                         return {
                             is: PipelineModel,
                             props: {
-                                pipeline: this.pipeline
+                                pipeline: this.pipelineWithoutTrigger
                             }
                         }
                     case 'trigger':
@@ -102,30 +132,50 @@
         watch: {
             pipelineType (type) {
                 this.yamlHighlightBlock = this.yamlHighlightBlockMap[type]
+            },
+            isCodeMode (val) {
+                if (val) {
+                    this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType] ?? []
+                }
+            },
+            releaseVersion (version) {
+                console.log(123, version, 'pipelineInfo.version')
+                this.activePipelineVersion = version
+                this.init()
             }
         },
         created () {
-            this.init()
+            if (this.releaseVersion) {
+                this.activePipelineVersion = this.releaseVersion
+                this.init()
+            }
         },
         methods: {
             ...mapActions('atom', [
-                'getPipelineYaml',
                 'requestPipeline'
+            ]),
+            ...mapActions('pipelines', [
+                'rollbackPipelineVersion'
             ]),
             async init () {
                 try {
-                    this.isLoading = true
-                    const [, { yaml, ...yamlHighlightBlockMap }] = await Promise.all([
-                        this.requestPipeline(this.$route.params),
-                        this.getPipelineYaml(this.$route.params)
-                    ])
-                    this.yaml = yaml
-                    this.yamlHighlightBlockMap = yamlHighlightBlockMap
-                    if (this.isCodeMode) {
-                        this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
+                    console.log('11111', this.activePipelineVersion)
+                    if (this.activePipelineVersion) {
+                        this.isLoading = true
+                        await this.requestPipeline({
+                            ...this.$route.params,
+                            version: this.activePipelineVersion
+                        })
+                        // this.yamlHighlightBlockMap = yamlHighlightBlockMap
+                        // if (this.isCodeMode) {
+                        //     this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
+                        // }
                     }
                 } catch (error) {
-
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isLoading = false
                 }
@@ -144,13 +194,15 @@
         .pipeline-config-header {
             display: flex;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             flex-shrink: 0;
+            grid-gap: 16px;
             .text-link {
                 display: flex;
                 align-items: center;
-                margin-left: 24px;
                 font-size: 14px;
+                grid-gap: 8px;
+
                 cursor: pointer;
             }
         }

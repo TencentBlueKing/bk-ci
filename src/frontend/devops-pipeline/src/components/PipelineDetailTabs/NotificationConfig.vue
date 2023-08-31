@@ -54,7 +54,7 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', [
+            ...mapGetters('atom', [
                 'getPipelineSubscriptions'
             ]),
             panels () {

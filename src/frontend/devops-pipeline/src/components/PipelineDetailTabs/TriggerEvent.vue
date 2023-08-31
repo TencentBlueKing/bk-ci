@@ -1,5 +1,5 @@
 <template>
-    <infiniteScroll
+    <InfiniteScroll
         ref="infiniteScroll"
         class="trigger-event-wrapper"
         :data-fetcher="fetchTriggerEventList"
@@ -13,7 +13,7 @@
         <header class="trigger-event-filter-bar">
             <bk-date-picker
                 v-model="dateTimeRange"
-                :placeholder="$t('选择日期时间范围')"
+                :placeholder="$t('pickTimeRange')"
                 type="datetimerange"
                 @change="handleFilterChange(queryList)"
             />
@@ -34,13 +34,13 @@
             />
         </div>
 
-    </infiniteScroll>
+    </InfiniteScroll>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
     import TriggerEventChildren from './TriggerEventChildren.vue'
-    import infiniteScroll from '@/components/infiniteScroll'
+    import InfiniteScroll from '@/components/InfiniteScroll'
     import SearchSelect from '@blueking/search-select'
     import moment from 'moment'
 
@@ -50,7 +50,7 @@
             // eslint-disable-next-line vue/no-unused-components
             TriggerEventChildren,
             SearchSelect,
-            infiniteScroll
+            InfiniteScroll
         },
         data () {
             return {
@@ -60,7 +60,7 @@
                 triggerTypeList: [],
                 eventTypeList: [],
                 page: 1,
-                pageSize: 26,
+                pageSize: 36,
                 isLoading: false
             }
         },

@@ -628,11 +628,11 @@ export function getQueryParamString (query) {
     return params.join('&')
 }
 
-export function getParamsValuesMap (params = []) {
+export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
         if (param.id) {
-            values[param.id] = param.defaultValue
+            values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values
     }, {})

@@ -1,9 +1,9 @@
 <template>
     <main class="pipeline-changelog" v-bkloading="{ isLoading }">
         <header class="pipeline-changelog-header">
-            <bk-select v-model="filterCreator" @change="init(1)">
+            <bk-select v-model="filterCreator" @change="getChangelogs(1)">
                 <bk-option
-                    v-for="creator in creators"
+                    v-for="creator in operatorList"
                     :key="creator"
                     :id="creator"
                     :name="creator"
@@ -30,6 +30,7 @@
             return {
                 isLoading: false,
                 operateLogs: [],
+                operatorList: [],
                 filterCreator: '',
                 pagination: {
                     limit: 20,
@@ -39,11 +40,6 @@
             }
         },
         computed: {
-            creators () {
-                return [
-                    'lockiechen'
-                ]
-            },
             columns () {
                 return [{
                     prop: 'operator',
@@ -65,36 +61,50 @@
         },
         methods: {
             ...mapActions('pipelines', [
-                'requestPipelineChangelogs'
+                'requestPipelineChangelogs',
+                'requestPipelineOperatorList'
             ]),
-            async init (page, limit) {
+            async getChangelogs (page, limit) {
                 try {
                     this.isLoading = true
                     const { projectId, pipelineId } = this.$route.params
                     const { limit: pageSize, current } = this.pagination
-                    const res = await this.requestPipelineChangelogs({
+                    const changeLogs = await this.requestPipelineChangelogs({
                         projectId,
                         pipelineId,
                         creator: this.filterCreator,
                         page: page ?? current,
                         pageSize: limit ?? pageSize
                     })
-                    console.log(res)
                     Object.assign(this.pagination, {
-                        current: res.page,
-                        limit: res.pageSize,
-                        count: res.count
+                        current: changeLogs.page,
+                        limit: changeLogs.pageSize,
+                        count: changeLogs.count
                     })
-                    this.operateLogs = res.records
-                    console.log(this.operateLogs)
-                    console.log(res)
+                    this.operateLogs = changeLogs.records
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    this.isLoading = false
+                }
+            },
+            async init (page, limit) {
+                try {
+                    const { projectId, pipelineId } = this.$route.params
+
+                    const [, operatorList] = await Promise.all([
+                        this.getChangelogs(page, limit),
+                        this.requestPipelineOperatorList({
+                            projectId,
+                            pipelineId
+                        })
+                    ])
+                    this.operatorList = operatorList
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message ?? error
                     })
-                } finally {
-                    this.isLoading = false
                 }
             }
         }
