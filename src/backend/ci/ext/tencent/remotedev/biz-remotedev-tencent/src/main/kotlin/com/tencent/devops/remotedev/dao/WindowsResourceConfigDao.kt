@@ -60,12 +60,12 @@ class WindowsResourceConfigDao {
                 config.zone,
                 config.zoneShortName,
                 config.size,
-                config.type,
+                config.type ?: "",
                 config.gpu,
                 config.cpu,
                 config.memory,
                 config.disk,
-                config.hdisk,
+                config.hdisk ?: 1,
                 config.description
             ).returning(ID).fetchOne()!!.id
         }
@@ -120,12 +120,12 @@ class WindowsResourceConfigDao {
                 .set(ZONE, config.zone)
                 .set(SHORT_NAME, config.zoneShortName)
                 .set(SIZE, config.size)
-                .set(TYPE, config.type)
+                .set(TYPE, config.type ?: "")
                 .set(GPU, config.gpu)
                 .set(CPU, config.cpu)
                 .set(MEMORY, config.memory)
                 .set(DISK, config.disk)
-                .set(HDISK, config.hdisk)
+                .set(HDISK, config.hdisk ?: 1)
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())
