@@ -16,7 +16,7 @@ abstract class GithubBaseInfo(
     @JsonProperty("node_id")
     open val nodeId: String,
     @JsonProperty("created_at")
-    open val createdAt: String, // 2022-06-21T08:45:41Z
+    open val createdAt: String? = "", // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    open val updatedAt: String
+    open val updatedAt: String? = ""
 )

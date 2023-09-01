@@ -117,9 +117,9 @@ data class GithubUser(
 //    @JsonProperty("url")
     override val url: String, // https://api.github.com/users/yongyiduan,
     @JsonProperty("created_at")
-    override val createdAt: String, // 2022-06-21T08:45:41Z
+    override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    override val updatedAt: String // 2022-06-21T08:45:41Z
+    override val updatedAt: String? // 2022-06-21T08:45:41Z
 ) : GithubBaseInfo(
     id = id,
     url = url,
