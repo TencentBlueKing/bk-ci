@@ -163,7 +163,7 @@ data class GithubMilestone(
     @JsonProperty("creator")
     val creator: GithubUser,
     @JsonProperty("description")
-    val description: String, // Tracking milestone for version 1.0
+    val description: String?, // Tracking milestone for version 1.0
     @JsonProperty("due_on")
     val dueOn: String?, // 2012-10-09T23:39:01Z
     @JsonProperty("html_url")

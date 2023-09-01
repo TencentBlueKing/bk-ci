@@ -78,7 +78,7 @@ data class GithubIssue(
     @ApiModelProperty("Issue/Pull Request标签信息")
     val labels: List<GithubLabel>,
     @ApiModelProperty("issues/Pull Request 状态信息")
-    val state: GithubIssuesState,
+    val state: String,
     val locked: String,
     @ApiModelProperty("issues/Pull Request 受理人")
     val assignees: List<GithubUser>?,
@@ -89,7 +89,7 @@ data class GithubIssue(
     @JsonProperty("pull_request")
     @ApiModelProperty("issues 关联的pull request信息，为空时代表仅在issue上操作")
     val pullRequest: GithubPullRequestUrl?,
-    val milestone:GithubMilestone
+    val milestone: GithubMilestone?
 ):GithubBaseInfo(
     id = id,
     url = url,
