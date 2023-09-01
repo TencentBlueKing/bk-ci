@@ -66,9 +66,9 @@ data class GithubIssue(
     @JsonProperty("node_id")
     override val nodeId: String,
     @JsonProperty("created_at")
-    override val createdAt: String, // 2022-06-21T08:45:41Z
+    override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    override val updatedAt: String, // 2022-06-21T08:45:41Z
+    override val updatedAt: String?, // 2022-06-21T08:45:41Z
     @ApiModelProperty("Issue/Pull Request编号")
     val number: Long,
     @ApiModelProperty("Issue/Pull Request标题信息")
@@ -83,7 +83,7 @@ data class GithubIssue(
     @ApiModelProperty("issues/Pull Request 受理人")
     val assignees: List<GithubUser>?,
     @JsonProperty("closed_at")
-    val closedAt: String,
+    val closedAt: String?,
     @JsonProperty("Issues/Pull Request 描述信息")
     val body: String?,
     @JsonProperty("pull_request")
