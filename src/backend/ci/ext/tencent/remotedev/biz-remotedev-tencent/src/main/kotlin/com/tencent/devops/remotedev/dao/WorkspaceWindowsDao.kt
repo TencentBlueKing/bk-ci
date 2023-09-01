@@ -52,7 +52,7 @@ class WorkspaceWindowsDao {
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
-                .set(RESOURCE_ID, resourceId)
+                .set(RESOURCE_ID, resourceId ?: "")
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }

@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -45,7 +46,8 @@ class DataTransferService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
 
     companion object {
@@ -72,6 +74,18 @@ class DataTransferService @Autowired constructor(
                         ).data!!
                 }.getOrNull()
                 workspaceWindowsDao.updateWindowsResourceId(dslContext, it.name, res)
+
+                val shareUsers = workspaceSharedDao.fetchWorkspaceSharedInfo(
+                    dslContext = dslContext,
+                    workspaceName = it.name
+                ).filter { it.resourceId.isNullOrBlank() }.map { it.sharedUser }
+                val shareRes = kotlin.runCatching {
+                    client.get(ServiceStartCloudResource::class)
+                        .shareWorkspace(
+                            operator = Constansts.ADMIN_NAME, workspaceName = it.name, receivers = shareUsers
+                        ).data!!
+                }.getOrNull()
+                workspaceSharedDao.updateResourceId(dslContext, it.name, shareUsers, shareRes)
             }
             Thread.sleep(20)
         }

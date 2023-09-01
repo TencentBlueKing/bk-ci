@@ -62,6 +62,19 @@ class WorkspaceSharedDao {
         }
     }
 
+    fun updateResourceId(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUser: List<String>,
+        resourceId: String? = ""
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.update(this)
+                .set(RESOURCE_ID, resourceId ?: "")
+                .where(WORKSPACE_NAME.equal(workspaceName).and(SHARED_USER.`in`(sharedUser))).execute()
+        }
+    }
+
     fun existWorkspaceSharedInfo(
         workspaceName: String,
         sharedUser: String,
