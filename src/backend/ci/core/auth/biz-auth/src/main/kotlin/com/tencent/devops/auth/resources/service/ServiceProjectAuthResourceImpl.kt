@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -155,6 +156,17 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.getProjectRoles(
                 projectCode = projectCode,
                 projectId = projectId
+            )
+        )
+    }
+
+    override fun getProjectPermissionInfo(
+        token: String,
+        projectCode: String
+    ): Result<ProjectPermissionInfoVO> {
+        return Result(
+            permissionProjectService.getProjectPermissionInfo(
+                projectCode = projectCode
             )
         )
     }

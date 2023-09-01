@@ -41,7 +41,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             projectId = projectId
         )
 
-        if (result.code == 0 && result.data != null) {
+        if (result.status == 0 && result.data != null) {
             val dcUserPerformanceOptionsVO = result.data!!
             return UserDockerResourceOptionsVO(
                 default = dcUserPerformanceOptionsVO.default,

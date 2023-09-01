@@ -3,14 +3,15 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
+
 @Service
 class UserRefreshService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
@@ -56,24 +57,24 @@ class UserRefreshService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth", "ComplexCondition")
-    private fun updateInfoByTof(userInfo: List<TWorkspaceRecord>) {
+    private fun updateInfoByTof(userInfo: List<WorkspaceRecord>) {
         userInfo.forEach {
             try {
                 Thread.sleep(5)
                 try {
                     val userInfo = kotlin.runCatching {
-                        client.get(ServiceTxUserResource::class).get(it.creator)
+                        client.get(ServiceTxUserResource::class).get(it.createUserId)
                     }.onFailure { logger.warn("get user info error") }.getOrElse { null }?.data
 
                     if (userInfo == null) {
-                        logger.info("user ${it.creator} not in t_user")
+                        logger.info("user ${it.createUserId} not in t_user")
                     } else if (
                         userInfo.bgName != it.creatorBgName ||
                         userInfo.deptName != it.creatorDeptName ||
                         userInfo.centerName != it.creatorCenterName ||
                         userInfo.groupName != it.creatorGroupName) {
                         logger.info(
-                            "${it.creator} cent id is diff, " +
+                            "${it.createUserId} cent id is diff, " +
                                 "tof ${userInfo.bgName} ${userInfo.deptName} " +
                                 "${userInfo.centerName} ${userInfo.groupName}, " +
                                 "local ${it.creatorBgName} ${it.creatorDeptName} " +
@@ -81,8 +82,8 @@ class UserRefreshService @Autowired constructor(
                         )
                         workspaceDao.updateWorkspaceCreatorInfo(
                             dslContext = dslContext,
-                            workspaceName = it.name,
-                            creator = it.creator,
+                            workspaceName = it.workspaceName,
+                            creator = it.createUserId,
                             bgName = userInfo.bgName,
                             deptName = userInfo.deptName,
                             centerName = userInfo.centerName,
@@ -90,10 +91,10 @@ class UserRefreshService @Autowired constructor(
                         )
                     }
                 } catch (oe: OperationException) {
-                    logger.warn("getUserDept fail: ${it.creator}|$oe")
+                    logger.warn("getUserDept fail: ${it.createUserId}|$oe")
                 }
             } catch (e: Exception) {
-                logger.warn("updateInfoByTof ${it.creator} fail: $e")
+                logger.warn("updateInfoByTof ${it.createUserId} fail: $e")
             }
         }
     }

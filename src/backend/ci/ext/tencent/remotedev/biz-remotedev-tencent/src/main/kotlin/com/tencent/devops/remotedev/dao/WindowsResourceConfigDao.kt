@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
@@ -73,7 +74,9 @@ class WindowsResourceConfigDao {
         return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
-            }.fetch()
+            }
+                .skipCheck()
+                .fetch()
         }
     }
 

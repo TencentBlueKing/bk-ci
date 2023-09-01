@@ -68,6 +68,7 @@ class WorkspaceListener @Autowired constructor(
             backEvent.environmentUid = workspaceResponse.environmentUid
             backEvent.environmentHost = workspaceResponse.environmentHost
             backEvent.environmentIp = workspaceResponse.environmentIp
+            backEvent.resourceId = workspaceResponse.resourceId
             backEvent.status = true
         } catch (e: BuildFailureException) {
             backEvent.errorMsg = e.formatErrorMessage + e.message

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -366,8 +367,23 @@ interface OpRemoteDevResource {
         machineType: String?,
         @ApiParam(value = "status", required = false)
         @QueryParam("status")
-        status: Int?
-    ): Result<List<Map<String, Any>>>
+        status: Int?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<Map<String, Any>>>
+
+    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @GET
+    @Path("/windows/pool/config")
+    fun getCgsConfig(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<CgsResourceConfig>
 
     @ApiOperation("转移工作空间detail数据到db")
     @GET
@@ -378,5 +394,14 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("转移数据到workspace windows 表")
+    @GET
+    @Path("/windowsWorkspaceDaoInit")
+    fun windowsWorkspaceDaoInit(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Boolean>
 }

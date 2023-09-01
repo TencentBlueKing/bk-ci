@@ -28,12 +28,16 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShare
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +48,8 @@ import org.springframework.stereotype.Service
 class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -63,6 +68,33 @@ class StartCloudInterfaceService @Autowired constructor(
             }
         }
         return true
+    }
+
+    fun shareWorkspace(userId: String, workspaceName: String, receivers: List<String>): String {
+        val workspaceInfo = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+            ?: throw BuildFailureException(
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
+            )
+        return workspaceClient.shareWorkspace(
+            userId,
+            EnvironmentShare(
+                cgsId = workspaceInfo.environmentUid, expireTime = 0,
+                receivers = receivers, sharer = userId
+            )
+        )
+    }
+
+    fun unShareWorkspace(userId: String, resourceId: String, receivers: List<String>): Boolean {
+        return workspaceClient.unShareWorkspace(
+            userId,
+            EnvironmentUnShare(
+                resourceId = resourceId,
+                receivers = receivers, unSharer = userId
+            )
+        )
     }
 
     // 同步更新云桌面资源池列表
@@ -104,5 +136,28 @@ class StartCloudInterfaceService @Autowired constructor(
             cgsId = cgsId,
             status = status
         )?.let { false } ?: true
+    }
+
+    /**
+     * 获取cgs资源池的机型和区域列表
+     */
+    fun getCgsConfig(): CgsResourceConfig {
+        val machineTypeList = mutableListOf<String>()
+        val zoneList = mutableListOf<String>()
+        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
+        cgsConfigList.forEach { cgs ->
+                if (!machineTypeList.contains(cgs.value2())) {
+                    machineTypeList.add(cgs.value2())
+                }
+                if (!zoneList.contains(cgs.value1())) {
+                    zoneList.add(cgs.value1())
+                }
+        }
+        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
+
+        return CgsResourceConfig(
+            zoneList = zoneList,
+            machineTypeList = machineTypeList
+        )
     }
 }
