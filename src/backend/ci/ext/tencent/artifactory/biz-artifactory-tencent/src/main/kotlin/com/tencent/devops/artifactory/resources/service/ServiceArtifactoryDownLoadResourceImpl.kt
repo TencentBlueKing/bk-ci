@@ -36,7 +36,7 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -99,7 +99,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         )
     }
 
-    override fun apkDefender(userId: String, request: ApkDefenderRequest): Result<List<ApkDefenderTask>> {
+    override fun apkDefender(userId: String, request: ApkDefenderRequest): Result<ApkDefenderTasks> {
         return Result(
             bkRepoClient.apkDefender(
                 userId = userId,

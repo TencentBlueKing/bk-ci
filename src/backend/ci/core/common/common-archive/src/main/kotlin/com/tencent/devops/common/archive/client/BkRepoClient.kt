@@ -72,7 +72,7 @@ import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
-import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
 import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
 import com.tencent.devops.common.archive.pojo.replica.ReplicaType
@@ -728,7 +728,7 @@ class BkRepoClient constructor(
         fullPath: String,
         userIds: Collection<String>,
         batchSize: Int
-    ): List<ApkDefenderTask> {
+    ): ApkDefenderTasks {
         logger.info(
             "apkDefender , projectId: $projectId , repoName: $repoName , fullPath: $fullPath , " +
                     "userIds: $userIds, batchSize: $batchSize"
@@ -747,7 +747,7 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<List<ApkDefenderTask>>>()!!.data!!
+        return doRequest(request).resolveResponse<Response<ApkDefenderTasks>>()!!.data!!
     }
 
     fun createTemporaryToken(

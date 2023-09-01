@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTask
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -129,7 +129,7 @@ interface ServiceArtifactoryDownLoadResource {
         userId: String,
         @ApiParam("加固请求", required = true)
         request: ApkDefenderRequest
-    ): Result<List<ApkDefenderTask>>
+    ): Result<ApkDefenderTasks>
 
     @ApiOperation("创建不包含网关的临时分享下载链接")
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
