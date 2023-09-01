@@ -124,6 +124,9 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/apkDefender")
     @POST
     fun apkDefender(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("加固请求", required = true)
         request: ApkDefenderRequest
     ): Result<List<ApkDefenderTask>>

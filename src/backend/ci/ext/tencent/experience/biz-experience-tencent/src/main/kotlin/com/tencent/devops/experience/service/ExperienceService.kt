@@ -513,6 +513,7 @@ class ExperienceService @Autowired constructor(
         } else { // 内部体验
             if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha" || userId == "stubenhuang") {// TODO 测试
                 val apkDefenderTasks = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+                    userId,
                     ApkDefenderRequest(
                         projectId = projectId,
                         artifactoryType = artifactoryType,

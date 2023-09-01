@@ -99,9 +99,10 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         )
     }
 
-    override fun apkDefender(request: ApkDefenderRequest): Result<List<ApkDefenderTask>> {
+    override fun apkDefender(userId: String, request: ApkDefenderRequest): Result<List<ApkDefenderTask>> {
         return Result(
             bkRepoClient.apkDefender(
+                userId = userId,
                 projectId = request.projectId,
                 repoName = RepoUtils.getRepoByType(request.artifactoryType),
                 fullPath = request.fullPath,

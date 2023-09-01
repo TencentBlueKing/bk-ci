@@ -722,6 +722,7 @@ class BkRepoClient constructor(
     }
 
     fun apkDefender(
+        userId: String,
         projectId: String,
         repoName: String,
         fullPath: String,
@@ -743,6 +744,7 @@ class BkRepoClient constructor(
         )
         val request = Request.Builder()
             .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<List<ApkDefenderTask>>>()!!.data!!
