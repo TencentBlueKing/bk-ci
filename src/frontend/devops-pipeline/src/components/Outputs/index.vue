@@ -90,7 +90,7 @@
                                 v-if="activeOutputDetail.isApp"
                             />
 
-                            <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
+                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
                         </p>
                     </div>
                     <div class="pipeline-exec-output-artifact">
@@ -260,6 +260,16 @@
                 ]
             },
             infoBlocks () {
+                if (this.activeOutputDetail.folder) {
+                    return [
+                        {
+                            key: 'baseInfo',
+                            title: this.$t('settings.baseInfo'),
+                            block: this.baseInfoRows,
+                            value: this.activeOutputDetail
+                        }
+                    ]
+                }
                 return [
                     {
                         key: 'baseInfo',
@@ -278,7 +288,6 @@
                         block: this.checkSumRows,
                         value: this.activeOutputDetail.checksums
                     }
-                    
                 ]
             },
             baseInfoRows () {
@@ -347,7 +356,7 @@
 
                     this.outputs = res.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
-                        const icon = isReportOutput ? 'order' : item.folder ? 'folder-open' : extForFile(item.name)
+                        const icon = isReportOutput ? 'order' : item.folder ? 'folder' : extForFile(item.name)
                         const id = isReportOutput ? item.createTime : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
@@ -405,7 +414,7 @@
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: !output.folder ? extForFile(res.name) : 'folder-open',
+                        icon: !output.folder ? extForFile(res.name) : 'folder',
                         include: this.getInclude(output)
                     }
                     this.isLoading = false
@@ -616,7 +625,7 @@
             color: #979ba5;
             text-align: right;
             @include ellipsis();
-            width: 100px;
+            width: 110px;
             flex-shrink: 0;
           }
           .pipeline-exec-output-block-row-value {
