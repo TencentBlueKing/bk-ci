@@ -78,7 +78,7 @@ class P4ShelveTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ShelveEvent) = ""
+    override fun getMessage(event: P4ShelveEvent) = event.description
 
     override fun getWebhookFilters(
         event: P4ShelveEvent,

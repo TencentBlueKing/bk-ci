@@ -31,11 +31,9 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -45,6 +43,7 @@ import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -65,6 +64,7 @@ class MigrateV0PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
+    private val groupService: PermissionResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService
@@ -427,13 +427,12 @@ class MigrateV0PolicyService constructor(
                 // 自定义用户组,半年或者一年过期
                 V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
             }
-            val expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
-            val managerMember = ManagerMember(member.type, member.id)
-            val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                .members(listOf(managerMember))
-                .expiredAt(expiredAt)
-                .build()
-            v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+            groupService.addGroupMember(
+                userId = member.id,
+                memberType = member.type,
+                expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay),
+                groupId = groupId
+            )
         }
     }
 

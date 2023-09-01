@@ -31,11 +31,9 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.dao.AuthMigrationDao
@@ -46,6 +44,7 @@ import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
@@ -76,7 +75,8 @@ class MigrateV3PolicyService constructor(
     private val rbacCacheService: RbacCacheService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val groupService: PermissionResourceGroupService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -376,12 +376,12 @@ class MigrateV3PolicyService constructor(
             } else {
                 member.expiredAt
             }
-            val managerMember = ManagerMember(member.type, member.id)
-            val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                .members(listOf(managerMember))
-                .expiredAt(expiredAt)
-                .build()
-            v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+            groupService.addGroupMember(
+                userId = member.id,
+                memberType = member.type,
+                expiredAt = expiredAt,
+                groupId = groupId
+            )
         }
     }
 
