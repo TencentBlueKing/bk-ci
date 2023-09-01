@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
@@ -80,21 +79,22 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getEventDesc(event: GithubCreateEvent): String {
+        var i18Code = WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC
         val linkUrl = if (event.ref_type == "tag") {
             "https://github.com/${event.repository.fullName}/releases/tag/${event.ref}"
         } else {
+            i18Code = WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC
             "https://github.com/${event.repository.fullName}/tree/${event.ref}"
         }
-        val i18Variable = I18Variable(
-            code = WebhookI18nConstants.GITHUB_CREATE_EVENT_DESC,
+        return I18Variable(
+            code = i18Code,
             params = listOf(
                 getBranchName(event),
                 linkUrl,
                 getUsername(event),
                 DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GithubCreateEvent): String {

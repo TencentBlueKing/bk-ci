@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -57,7 +54,6 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -68,7 +64,6 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -116,16 +111,14 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         } else {
             "https://github.com/${event.repository.fullName}/commit/${getBranchName(event)}"
         }
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
                 linkUrl,
-                getUsername(event),
-                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+                getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GithubPushEvent): String {
@@ -154,17 +147,29 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
                 triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers),
-                includedFailedReason = "on.push.users trigger user($userId) not match",
-                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val triggerOnBranchName = getBranchName(event)
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = triggerOnBranchName,
                 includedBranches = WebhookUtils.convert(branchName),
                 excludedBranches = WebhookUtils.convert(excludeBranchName),
-                includedFailedReason = "on.push.branches branch($triggerOnBranchName) not match",
-                excludedFailedReason = "on.push.branches-ignore branch($triggerOnBranchName) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
             )
             return listOf(userFilter, branchFilter)
         }

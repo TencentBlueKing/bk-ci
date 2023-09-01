@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -135,17 +132,15 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     }
 
     override fun getEventDesc(event: GithubPullRequestEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
             params = listOf(
-                event.pullRequest.title,
-                event.pullRequest.url,
+                event.pullRequest.htmlUrl,
+                event.pullRequest.number.toString(),
                 getUsername(event),
-                DateTimeUtil.formatMilliTime(event.pullRequest.updatedAt?.let {
-                    DateTimeUtil.zoneDateToTimestamp(it)
-                } ?: LocalDateTime.now().timestampmilli()))
-        )
-        return JsonUtil.toJson(i18Variable)
+                event.action
+            )
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GithubPullRequestEvent): String {
@@ -186,17 +181,29 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers),
-                includedFailedReason = "on.push.users trigger user($userId) not match",
-                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(getUsername(event))
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(getUsername(event))
+                ).toJsonStr()
             )
             val targetBranch = getBranchName(event)
             val targetBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = targetBranch,
                 includedBranches = WebhookUtils.convert(branchName),
                 excludedBranches = WebhookUtils.convert(excludeBranchName),
-                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
-                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
             )
             return listOf(userFilter, targetBranchFilter)
         }

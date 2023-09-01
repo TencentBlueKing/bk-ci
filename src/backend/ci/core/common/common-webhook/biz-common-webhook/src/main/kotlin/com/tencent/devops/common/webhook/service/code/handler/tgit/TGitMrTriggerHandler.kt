@@ -30,7 +30,6 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -97,8 +96,6 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Date
 
 @CodeWebhookHandler
@@ -164,15 +161,14 @@ class TGitMrTriggerHandler(
     }
 
     override fun getEventDesc(event: GitMergeRequestEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = getI18Code(event),
             params = listOf(
                 "${event.object_attributes.url}",
                 event.object_attributes.iid.toString(),
                 getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GitMergeRequestEvent): String {
@@ -213,17 +209,29 @@ class TGitMrTriggerHandler(
                 triggerOnUser = getUsername(event),
                 includedUsers = convert(includeUsers),
                 excludedUsers = convert(excludeUsers),
-                includedFailedReason = "on.mr.users trigger user($userId) not match",
-                excludedFailedReason = "on.mr.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val targetBranch = getBranchName(event)
             val targetBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = targetBranch,
                 includedBranches = convert(branchName),
                 excludedBranches = convert(excludeBranchName),
-                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
-                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
             )
             val sourceBranch = getBranch(event.object_attributes.source_branch)
             val sourceBranchFilter = BranchFilter(
@@ -231,8 +239,14 @@ class TGitMrTriggerHandler(
                 triggerOnBranchName = sourceBranch,
                 includedBranches = convert(includeSourceBranchName),
                 excludedBranches = convert(excludeSourceBranchName),
-                includedFailedReason = "on.mr.source-branches source branch($sourceBranch) not match",
-                excludedFailedReason = "on.mr.source-branches-ignore source branch($sourceBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(sourceBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    params = listOf(sourceBranch)
+                ).toJsonStr()
             )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
@@ -268,8 +282,14 @@ class TGitMrTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = convert(includePaths),
                             excludedPaths = convert(excludePaths),
-                            includedFailedReason = "on.mr.paths change path($includePaths) not match",
-                            excludedFailedReason = "on.mr.paths-ignore change path($excludePaths) match"
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }

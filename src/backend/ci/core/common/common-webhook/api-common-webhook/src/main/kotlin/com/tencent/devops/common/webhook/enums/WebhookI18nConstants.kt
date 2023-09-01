@@ -47,53 +47,76 @@ object WebhookI18nConstants {
     const val TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC = "bkTgitReviewChangeDeniedEventDesc"
     const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
     const val TGIT_TAG_PUSH_EVENT_DESC = "bkTgitTagPushEventDesc"
+
     // Github事件描述
     const val GITHUB_PUSH_EVENT_DESC = "bkGithubPushEventDesc"
-    const val GITHUB_CREATE_EVENT_DESC = "bkGithubCreateEventDesc"
+    const val GITHUB_CREATE_TAG_EVENT_DESC = "bkGithubCreateTagEventDesc"
+    const val GITHUB_CREATE_BRANCH_EVENT_DESC = "bkGithubCreateBranchEventDesc"
     const val GITHUB_PR_EVENT_DESC = "bkGithubPrEventDesc"
+
     // P4事件描述
-    const val P4_Change_EVENT_DESC = "bkP4CreateEventDesc"
-    const val P4_Shelve_EVENT_DESC = "bkP4ShelveEventDesc"
+    const val P4_EVENT_DESC = "bkP4EventDesc"
+
     // SVN事件描述
-    const val SVN_COMMIT_EVENT_DESC = "bkSvnShelveEventDesc"
+    const val SVN_COMMIT_EVENT_DESC = "bkSvnCommitEventDesc"
+
     // 手动触发
     const val MANUAL_START_EVENT_DESC = "bkManualStartEventDesc"
+
     // 远程触发
-    const val REMOTE_START_EVENT_DESC = "bkManualStartEventDesc"
+    const val REMOTE_START_EVENT_DESC = "bkRemoteStartEventDesc"
+
     // openApi触发
-    const val SERVICE_START_EVENT_DESC = "bkManualStartEventDesc"
+    const val SERVICE_START_EVENT_DESC = "bkServiceStartEventDesc"
+
     // 事件类型匹配
-    const val EVENT_TYPE_MATCHED="bkRepoTriggerEventTypeMatched"
+    const val EVENT_TYPE_MATCHED = "bkRepoTriggerEventTypeMatched"
+
     // 事件类型不匹配
-    const val EVENT_TYPE_NOT_MATCH="bkRepoTriggerEventTypeNotMatch"
+    const val EVENT_TYPE_NOT_MATCH = "bkRepoTriggerEventTypeNotMatch"
+
     // 目标分支不匹配
     const val TARGET_BRANCH_NOT_MATCH = "bkRepoTriggerTargetBranchNotMatch"
+
     // 目标分支被排除
     const val TARGET_BRANCH_IGNORED = "bkRepoTriggerTargetBranchIgnored"
+
     // 源分支不匹配
     const val SOURCE_BRANCH_NOT_MATCH = "bkRepoTriggerSourceBranchNotMatch"
+
     // 源分支被排除
     const val SOURCE_BRANCH_IGNORED = "bkRepoTriggerSourceBranchIgnored"
+
     // 用户不匹配
     const val USER_NOT_MATCH = "bkRepoTriggerUserNotMatch"
+
     // 用户被排除
     const val USER_IGNORED = "bkRepoTriggerUserIgnored"
+
     // 路径不匹配
     const val PATH_NOT_MATCH = "bkRepoTriggerPathNotMatch"
+
     // 路径被排除
     const val PATH_IGNORED = "bkRepoTriggerPathIgnored"
+
     // Tag名称不匹配
     const val TAG_NAME_NOT_MATCH = "bkRepoTriggerTagNameNotMatch"
+
     // Tag名称被排除
     const val TAG_NAME_IGNORED = "bkRepoTriggerTagNameIgnored"
+
     // Tag来源分支不匹配
     const val TAG_SOURCE_BRANCH_NOT_MATCH = "bkRepoTriggerTagSourceBranchNotMatch"
+
     // 评论内容不匹配
-    const val NOTE_CONTENT_IGNORED = "bkRepoTriggerNoteContentNotMatch"
+    const val NOTE_CONTENT_NOT_MATCH = "bkRepoTriggerNoteContentNotMatch"
+
     // 评论类型不匹配
-    const val NOTE_ACTION_IGNORED = "bkRepoTriggerNoteActionNotMatch"
+    const val NOTE_ACTION_NOT_MATCH = "bkRepoTriggerNoteActionNotMatch"
+
     // 评审操作类型不匹配
-    const val REVIEW_ACTION_IGNORED = "bkRepoTriggerReviewActionNotMatch"
+    const val REVIEW_ACTION_NOT_MATCH = "bkRepoTriggerReviewActionNotMatch"
+
     // issues操作类型不匹配
-    const val ISSUES_ACTION_IGNORED = "bkRepoTriggerNoteActionNotMatch"
+    const val ISSUES_ACTION_NOT_MATCH = "bkRepoTriggerIssueActionNotMatch"
 }

@@ -39,7 +39,8 @@ class RegexContainFilter(
     // 过滤器名字
     private val filterName: String,
     private val triggerOn: String,
-    private val included: List<String>
+    private val included: List<String>,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -48,18 +49,31 @@ class RegexContainFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
-        if (included.isEmpty()) {
-            return true
-        }
-        included.forEach {
-            try {
-                if (Pattern.compile(it).matcher(triggerOn).find()) {
-                    return true
+        return buildFilterFailedReason(
+            action = {
+                if (included.isEmpty()) {
+                    true
                 }
-            } catch (e: PatternSyntaxException) {
-                logger.warn("($it) syntax error :$e ")
-            }
+                included.forEach {
+                    try {
+                        if (Pattern.compile(it).matcher(triggerOn).find()) {
+                            true
+                        }
+                    } catch (e: PatternSyntaxException) {
+                        logger.warn("($it) syntax error :$e ")
+                    }
+                }
+                false
+            },
+            response = response
+        )
+    }
+
+    private fun buildFilterFailedReason(action: () -> Boolean, response: WebhookFilterResponse): Boolean {
+        val filterResult = action.invoke()
+        if (!filterResult && failedReason.isNotBlank()) {
+            response.failedReason = failedReason
         }
-        return false
+        return filterResult
     }
 }

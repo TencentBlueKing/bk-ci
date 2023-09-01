@@ -30,7 +30,6 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -41,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TGIT_PUSH_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
@@ -78,7 +78,6 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
 import java.util.Date
 
 @CodeWebhookHandler
@@ -132,7 +131,7 @@ class TGitPushTriggerHandler(
     }
 
     override fun getEventDesc(event: GitPushEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = TGIT_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
@@ -140,8 +139,7 @@ class TGitPushTriggerHandler(
                 "${event.checkout_sha}".substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH),
                 event.user_name
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GitPushEvent): String {
@@ -178,17 +176,29 @@ class TGitPushTriggerHandler(
                 triggerOnUser = userId,
                 includedUsers = convert(includeUsers),
                 excludedUsers = convert(excludeUsers),
-                includedFailedReason = "on.push.users trigger user($userId) not match",
-                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val triggerOnBranchName = getBranchName(event)
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = triggerOnBranchName,
                 includedBranches = convert(branchName),
                 excludedBranches = convert(excludeBranchName),
-                includedFailedReason = "on.push.branches branch($triggerOnBranchName) not match",
-                excludedFailedReason = "on.push.branches-ignore branch($triggerOnBranchName) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
             )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
@@ -225,8 +235,14 @@ class TGitPushTriggerHandler(
                             triggerOnPath = eventPaths.toList(),
                             includedPaths = convert(includePaths),
                             excludedPaths = convert(excludePaths),
-                            includedFailedReason = "on.push.paths change path($includePaths) not match",
-                            excludedFailedReason = "on.push.paths-ignore change path($excludePaths) match"
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }

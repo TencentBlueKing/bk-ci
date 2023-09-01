@@ -28,7 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
@@ -60,7 +59,6 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
@@ -102,7 +100,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getEventDesc(event: GitTagPushEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC,
             params = listOf(
                 "${event.create_from}",
@@ -110,8 +108,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 getBranchName(event),
                 getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GitTagPushEvent): String {
@@ -177,8 +174,14 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 triggerOnBranchName = eventTag,
                 includedBranches = WebhookUtils.convert(tagName),
                 excludedBranches = WebhookUtils.convert(excludeTagName),
-                includedFailedReason = "on.tag.tags tag($eventTag) not match",
-                excludedFailedReason = "on.tag.tags-ignore tag($eventTag) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_NAME_NOT_MATCH,
+                    params = listOf(eventTag)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_NAME_IGNORED,
+                    params = listOf(eventTag)
+                ).toJsonStr()
             )
             val userId = getUsername(event)
             val userFilter = UserFilter(
@@ -186,20 +189,25 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 triggerOnUser = getUsername(event),
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers),
-                includedFailedReason = "on.tag.users trigger user($userId) not match",
-                excludedFailedReason = "on.tag.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
-            val fromBranch = event.create_from
+            val fromBranch = event.create_from ?: ""
             val fromBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = event.create_from ?: "",
+                triggerOnBranchName = fromBranch,
                 includedBranches = WebhookUtils.convert(fromBranches),
                 excludedBranches = emptyList(),
-                includedFailedReason = if (fromBranch.isNullOrBlank()) {
-                    "on.tag.from-branches client push tag not support from-branches"
-                } else {
-                    "on.tag.from-branches tag from branch($fromBranch) not match"
-                },
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(fromBranch)
+                ).toJsonStr(),
                 excludedFailedReason = ""
             )
             return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)

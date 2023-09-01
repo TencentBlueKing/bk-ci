@@ -87,16 +87,14 @@ class P4ShelveTriggerHandler(
     override fun getMessage(event: P4ShelveEvent) = event.description
 
     override fun getEventDesc(event: P4ShelveEvent): String {
-        val i18Variable = I18Variable(
-            code = WebhookI18nConstants.P4_Shelve_EVENT_DESC,
+        return I18Variable(
+            code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                "",
-                getUsername(event),
-                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+                event.eventType,
+                getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: P4ShelveEvent): String {
@@ -161,8 +159,14 @@ class P4ShelveTriggerHandler(
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
                             caseSensitive = caseSensitive,
-                            includedFailedReason = "on.shelve-commit.paths change path($includePaths) not match",
-                            excludedFailedReason = "on.shelve-commit.paths-ignore change path($excludePaths) match"
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }

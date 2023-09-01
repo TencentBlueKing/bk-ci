@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
@@ -102,15 +99,14 @@ class TGitReviewTriggerHandler(
     }
 
     override fun getEventDesc(event: GitReviewEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = getI18Code(event),
             params = listOf(
                 "${event.repository.homepage}/reviews/${event.iid}",
                 event.iid,
                 getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GitReviewEvent): String {
@@ -227,7 +223,11 @@ class TGitReviewTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "crState",
                 triggerOn = event.state,
-                included = WebhookUtils.convert(includeCrState)
+                included = WebhookUtils.convert(includeCrState),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             val crTypeFilter = ContainsFilter(
                 pipelineId = pipelineId,

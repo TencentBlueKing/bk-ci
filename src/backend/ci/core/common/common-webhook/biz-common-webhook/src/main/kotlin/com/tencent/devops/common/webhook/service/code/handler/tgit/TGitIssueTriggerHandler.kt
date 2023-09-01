@@ -28,7 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
@@ -128,15 +127,14 @@ class TGitIssueTriggerHandler(
     }
 
     override fun getEventDesc(event: GitIssueEvent): String {
-        val i18Variable = I18Variable(
+        return I18Variable(
             code = getI18Code(event),
             params = listOf(
                 "${event.objectAttributes.url}",
                 event.objectAttributes.iid,
                 getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: GitIssueEvent): String {
@@ -158,7 +156,15 @@ class TGitIssueTriggerHandler(
             pipelineId = pipelineId,
             filterName = "issueAction",
             triggerOn = event.objectAttributes.action ?: "",
-            included = WebhookUtils.convert(webHookParams.includeIssueAction)
+            included = WebhookUtils.convert(webHookParams.includeIssueAction),
+            failedReason = I18Variable(
+                code = WebhookI18nConstants.ISSUES_ACTION_NOT_MATCH,
+                params = listOf(
+                    "${event.objectAttributes.url}",
+                    event.objectAttributes.iid,
+                    getUsername(event)
+                )
+            ).toJsonStr()
         )
         return listOf(actionFilter)
     }

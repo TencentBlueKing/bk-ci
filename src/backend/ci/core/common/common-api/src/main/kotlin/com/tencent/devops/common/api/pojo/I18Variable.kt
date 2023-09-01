@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.util.JsonUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,4 +40,6 @@ data class I18Variable(
     val params: List<String>,
     @ApiModelProperty("默认信息")
     val defaultMessage: String? = null
-)
+){
+    fun toJsonStr() = JsonUtil.toJson(this,false)
+}

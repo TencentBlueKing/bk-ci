@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
@@ -48,7 +45,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterRespon
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -86,16 +82,14 @@ class P4ChangeTriggerHandler(
     override fun getMessage(event: P4ChangeEvent) = event.description
 
     override fun getEventDesc(event: P4ChangeEvent): String {
-        val i18Variable = I18Variable(
-            code = WebhookI18nConstants.P4_Change_EVENT_DESC,
+        return I18Variable(
+            code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                "",
-                getUsername(event),
-                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+                event.eventType,
+                getUsername(event)
             )
-        )
-        return JsonUtil.toJson(i18Variable)
+        ).toJsonStr()
     }
 
     override fun getExternalId(event: P4ChangeEvent): String {
@@ -164,8 +158,14 @@ class P4ChangeTriggerHandler(
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
                             caseSensitive = caseSensitive,
-                            includedFailedReason = "on.change-commit.paths change path($includePaths) not match",
-                            excludedFailedReason = "on.change-commit.paths-ignore change path($excludePaths) match"
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
