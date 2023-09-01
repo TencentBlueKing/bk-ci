@@ -215,6 +215,8 @@ class DeliverControl @Autowired constructor(
         softwareList: SoftwareCallbackRes,
         action: WorkspaceAction
     ) {
+        logger.info("updateStatusAndCreateHistory|type|$type|workspace|$workspace|" +
+                        "newStatus|$newStatus|softwareList|$softwareList|action|$action")
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
             workspaceName = workspace.workspaceName,
@@ -246,9 +248,11 @@ class DeliverControl @Autowired constructor(
         autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
-        logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
+        logger.info("softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
+                        "|projectId|$projectId|userId|$userId|softwareList|$softwareList")
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (workspace.status) {
+                // 交付中安装IOA后
                 WorkspaceStatus.DELIVERING -> {
                     if (type == "SYSTEM") {
                         updateStatusAndCreateHistory(
@@ -274,8 +278,7 @@ class DeliverControl @Autowired constructor(
                         }
                     }
                 }
-
-                WorkspaceStatus.DISTRIBUTING -> {
+                WorkspaceStatus.RUNNING -> {
                     if (type != "SYSTEM") {
                         updateStatusAndCreateHistory(
                             type = type,
