@@ -14,7 +14,9 @@ data class WorkspaceShared(
     @ApiModelProperty("共享用户")
     val sharedUser: String,
     @ApiModelProperty("分配类型")
-    val type: AssignType
+    val type: AssignType,
+    @ApiModelProperty("start resourceId")
+    val resourceId: String
 ) {
     enum class AssignType {
         OWNER,

@@ -29,7 +29,7 @@ class RemoteDevGitTransfer @Autowired constructor(
         .maximumSize(10000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build { workspaceName ->
-            workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName)?.url?.let {
+            workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName)?.repositoryUrl?.let {
                 RemoteDevGitType.load4Url(it)
             }
         }
