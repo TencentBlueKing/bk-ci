@@ -168,10 +168,12 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         shareWorkspace: ShareWorkspace
     ): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace4OP(
+        return Result(
+            workspaceService.shareWorkspace4OP(
                 userId = userId,
                 shareWorkspace = shareWorkspace
-            ))
+            )
+        )
     }
 
     override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {

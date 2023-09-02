@@ -456,13 +456,17 @@ class WorkspaceService @Autowired constructor(
             it.usageTime + if (it.status.checkRunning()) {
                 // 如果正在运行，需要加上目前距离该次启动的时间
                 Duration.between(latestHistory[it.workspaceName]?.startTime ?: now, now).seconds
-            } else 0
+            } else {
+                0
+            }
         }
         val sleepingTime = workspaces.sumOf {
             it.sleepingTime + if (it.status.checkSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
                 Duration.between(latestSleepHistory[it.workspaceName]?.endTime ?: now, now).seconds
-            } else 0
+            } else {
+                0
+            }
         }
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
@@ -523,12 +527,16 @@ class WorkspaceService @Autowired constructor(
         val usageTime = workspace.usageTime + if (workspace.status.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
             Duration.between(lastHistory?.startTime ?: now, now).seconds
-        } else 0
+        } else {
+            0
+        }
 
         val sleepingTime = workspace.sleepingTime + if (workspace.status.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
             Duration.between(lastHistory?.endTime ?: now, now).seconds
-        } else 0
+        } else {
+            0
+        }
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
             Duration.between(it, now).seconds
@@ -804,12 +812,23 @@ class WorkspaceService @Autowired constructor(
     fun deleteSharedWorkspace(
         workspaceName: String,
         sharedUser: String
-    ) {
-        workspaceDao.deleteSharedWorkspace(
+    ): Boolean {
+        logger.info("deleteSharedWorkspace|workspaceName|$workspaceName|sharedUser|$sharedUser")
+        workspaceDao.fetchSharedWorkspaceByUser(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            shareUser = sharedUser
-        )
+            sharedUser = sharedUser
+        )?.let {
+            workspaceCommon.unShareWorkspace(
+                workspaceName = it.workspaceName,
+                operator = ADMIN_NAME,
+                sharedUsers = listOf(it.sharedUser),
+                assignType = WorkspaceShared.AssignType.valueOf(it.assignType),
+                mountType = if (it.resourceId.isNotBlank()) WorkspaceMountType.START else null
+            )
+            return true
+        }
+        return false
     }
 
     fun notifyWinBeforeSleep() {

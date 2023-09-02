@@ -461,6 +461,18 @@ class WorkspaceDao {
                 .fetchAny()
         }
     }
+    fun fetchSharedWorkspaceByUser(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUser: String
+    ): TWorkspaceSharedRecord? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(sharedUser))
+                .fetchAny()
+        }
+    }
 
     fun deleteSharedWorkspace(
         dslContext: DSLContext,
