@@ -84,7 +84,7 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String = "init",
+        versionName: String? = null,
         modelStr: String,
         baseVersion: Int,
         yamlStr: String?,

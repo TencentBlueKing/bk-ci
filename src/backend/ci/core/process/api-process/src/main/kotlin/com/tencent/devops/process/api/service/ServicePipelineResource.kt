@@ -115,10 +115,7 @@ interface ServicePipelineResource {
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
         @DefaultValue("true")
-        updateLastModifyUser: Boolean? = true,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -177,10 +174,7 @@ interface ServicePipelineResource {
         modelAndSetting: PipelineModelAndSetting,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        channelCode: ChannelCode
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")

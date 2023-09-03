@@ -153,7 +153,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 channelCode = ChannelCode.BS,
                 checkPermission = false,
                 instanceType = request.instanceType,
-                saveDraft = true,
+                versionStatus = VersionStatus.COMMITTING,
                 useSubscriptionSettings = request.useSubscriptionSettings,
                 useLabelSettings = request.useLabelSettings,
                 useConcurrencyGroup = request.useConcurrencyGroup

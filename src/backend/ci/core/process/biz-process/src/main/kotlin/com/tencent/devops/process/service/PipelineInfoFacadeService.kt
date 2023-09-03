@@ -241,7 +241,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
-    // TODO #8161 旧接口传参改造
     fun createPipeline(
         userId: String,
         projectId: String,
@@ -254,7 +253,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
         fixTemplateVersion: Long? = null,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.COMMITTING,
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false

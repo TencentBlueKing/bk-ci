@@ -39,7 +39,6 @@ import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -126,8 +125,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         pipeline: Model,
         channelCode: ChannelCode,
-        updateLastModifyUser: Boolean?,
-        saveDraft: Boolean?
+        updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         val deployPipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -218,8 +216,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         modelAndSetting: PipelineModelAndSetting,
-        channelCode: ChannelCode,
-        saveDraft: Boolean?
+        channelCode: ChannelCode
     ): Result<DeployPipelineResult> {
         modelAndSetting.setting.checkParam()
         val buildNumRule = modelAndSetting.setting.buildNumRule
@@ -232,7 +229,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            versionStatus = VersionStatus.RELEASED,
             channelCode = ChannelCode.BS
         )
 

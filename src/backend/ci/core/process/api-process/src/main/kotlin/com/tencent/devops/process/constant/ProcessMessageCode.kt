@@ -281,7 +281,8 @@ object ProcessMessageCode {
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
     const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
     const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
-    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101183" // 流水线[{0}]不存在
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101183" // 流水线版本[{0}]不存在
+    const val ERROR_NO_PIPELINE_DRAFT_EXISTS = "2101184" // 该流水不存在草稿版本
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

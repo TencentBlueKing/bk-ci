@@ -224,7 +224,8 @@ class PipelineBuildFacadeService(
             )
             if (resource == null || resource.status == VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
-
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                 )
             }
             resource.model
@@ -609,8 +610,23 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            // TODO #8164 检查传入版本是否为草稿
-            val model = getModel(projectId, pipelineId, version)
+            val model = if (version != null) {
+                val resource = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    includeDraft = true
+                )
+                if (resource == null || resource.status == VersionStatus.COMMITTING) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.NOT_FOUND.statusCode,
+                        errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
+                    )
+                }
+                resource.model
+            } else {
+                getModel(projectId, pipelineId)
+            }
 
             /**
              * 验证流水线参数构建启动参数

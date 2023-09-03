@@ -201,10 +201,7 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        pipeline: Model
     ): Result<Boolean>
 
     @ApiOperation("编辑流水线编排以及设置")
@@ -223,10 +220,7 @@ interface UserPipelineResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean>
 
     @ApiOperation("保存流水线设置")

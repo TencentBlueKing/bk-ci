@@ -235,7 +235,6 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
-        // TODO #8161 保存接口的 saveDraft 字段变成status枚举参数
         return if (!create) {
             val pipelineSetting = savedSetting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
@@ -1077,38 +1076,43 @@ class PipelineRepositoryService constructor(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(version.toString())
             )
-            // TODO #8161 增加报错逻辑
             val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+                params = arrayOf(version.toString())
             )
-            if (latestVersion != null && targetVersion != null) {
-                resultVersion = targetVersion.copy(version = latestVersion.version + 1, versionName = "init")
-                pipelineResourceVersionDao.clearDraftVersion(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-                pipelineResourceVersionDao.create(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    creator = userId,
-                    version = resultVersion!!.version,
-                    versionName = resultVersion!!.versionName ?: "init",
-                    model = resultVersion!!.model,
-                    baseVersion = targetVersion.version,
-                    yaml = resultVersion!!.yaml,
-                    pipelineVersion = resultVersion!!.pipelineVersion,
-                    triggerVersion = resultVersion!!.triggerVersion,
-                    settingVersion = resultVersion!!.settingVersion,
-                    versionStatus = VersionStatus.COMMITTING,
-                    description = null
-                )
-            }
+            resultVersion = targetVersion.copy(version = latestVersion.version + 1, versionName = "init")
+            pipelineResourceVersionDao.clearDraftVersion(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            pipelineResourceVersionDao.create(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = resultVersion!!.version,
+                versionName = resultVersion!!.versionName ?: "init",
+                model = resultVersion!!.model,
+                baseVersion = targetVersion.version,
+                yaml = resultVersion!!.yaml,
+                pipelineVersion = resultVersion!!.pipelineVersion,
+                triggerVersion = resultVersion!!.triggerVersion,
+                settingVersion = resultVersion!!.settingVersion,
+                versionStatus = VersionStatus.COMMITTING,
+                description = null
+            )
         }
         return resultVersion
     }
