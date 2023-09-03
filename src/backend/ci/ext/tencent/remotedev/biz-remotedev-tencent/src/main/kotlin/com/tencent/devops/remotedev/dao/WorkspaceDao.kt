@@ -43,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -212,13 +213,19 @@ class WorkspaceDao {
         dslContext: DSLContext,
         projectId: String?,
         status: Set<WorkspaceStatus>? = null,
-        systemType: WorkspaceSystemType? = null
+        systemType: WorkspaceSystemType? = null,
+        queryType: QueryType? = QueryType.WEB
     ): Long {
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.like("%$projectId%"))
+            projectId?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(PROJECT_ID.like("%$it%"))
+                } else {
+                    conditions.add(PROJECT_ID.eq(it))
+                }
             }
+
             return dslContext.selectCount().from(this)
                 .where(conditions)
                 .let {
@@ -229,7 +236,7 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                .let { if (queryType == QueryType.WEB) it.and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name)) else it }
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -298,19 +305,24 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
-        systemType: WorkspaceSystemType? = null
+        systemType: WorkspaceSystemType? = null,
+        queryType: QueryType? = QueryType.WEB
     ): List<WorkspaceRecord>? {
         val conditions = mutableListOf<Condition>()
 
         with(TWorkspace.T_WORKSPACE) {
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.like("%$projectId%"))
+            projectId?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(PROJECT_ID.like("%$it%"))
+                } else {
+                    conditions.add(PROJECT_ID.eq(it))
+                }
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
-                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                .let { if (queryType == QueryType.WEB) it.and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name)) else it }
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch(workspaceMapper)

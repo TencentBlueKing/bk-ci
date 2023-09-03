@@ -71,6 +71,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -224,11 +225,13 @@ class WorkspaceService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 6666
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            queryType = QueryType.WEB
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -247,12 +250,14 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
-            systemType = systemType
+            systemType = systemType,
+            queryType = QueryType.OP
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             systemType = systemType,
+            queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
