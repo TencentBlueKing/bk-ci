@@ -48,6 +48,7 @@
     <div class="line-split" />
     <span class="group-title">{{ $t('权限角色') }}</span>
     <scroll-load-list
+      v-if="projectCode"
       class="group-list"
       ref="loadList"
       :list="groupList"
