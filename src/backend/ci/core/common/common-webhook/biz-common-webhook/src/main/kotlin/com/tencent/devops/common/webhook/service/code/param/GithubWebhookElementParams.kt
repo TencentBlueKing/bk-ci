@@ -58,10 +58,11 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             } else {
                 EnvUtils.parseEnv(excludeUsers!!, variables)
             }
-            if (element.branchName == null) {
-                return null
+            params.branchName = if (element.branchName.isNullOrEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(element.branchName!!, variables)
             }
-            params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
             params.eventType = element.eventType
             params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
             params.codeType = CodeType.GITHUB
