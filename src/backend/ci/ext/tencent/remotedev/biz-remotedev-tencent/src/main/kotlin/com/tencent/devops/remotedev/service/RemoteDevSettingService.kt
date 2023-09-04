@@ -42,6 +42,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GithubTransferService
+import com.tencent.devops.remotedev.service.transfer.GitTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -58,6 +59,7 @@ class RemoteDevSettingService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevFileDao: RemoteDevFileDao,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val gitTransferService: GitTransferService,
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
     private val redisCacheService: RedisCacheService
@@ -85,7 +87,8 @@ class RemoteDevSettingService @Autowired constructor(
 
         return setting.copy(
             envsForFile = remoteDevFileDao.fetchFile(dslContext, userId),
-            gitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
+            gitAttached = kotlin.runCatching { gitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
+            tGitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
             githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
         )
     }

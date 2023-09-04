@@ -46,6 +46,7 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -644,6 +645,16 @@ open class GitApi {
         return JsonUtil.getObjectMapper().readValue(
             getBody(
                 getMessageByLocale(CommonMessageCode.GET_PROJECT_INFO),
+                request
+            )
+        )
+    }
+
+    fun getCommitReviewInfo(host: String, token: String, url: String): GitCommitReviewInfo {
+        val request = get(host, token, url, StringUtils.EMPTY)
+        return JsonUtil.getObjectMapper().readValue(
+            getBody(
+                getMessageByLocale(CommonMessageCode.GET_COMMIT_REVIEW_INFO),
                 request
             )
         )

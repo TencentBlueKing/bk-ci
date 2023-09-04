@@ -200,6 +200,7 @@
                 flex-direction: column;
                 flex: 1;
                 overflow: hidden;
+                z-index: 150;
 
                 > h3 {
                     color: $primaryColor;
@@ -242,6 +243,7 @@
                     cursor: pointer;
                     margin: 0 8px;
                     font-size: 16px;
+                    color: #979BA5;
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
@@ -268,12 +270,12 @@
                 }
                 .bk-pipeline-card-collect-btn {
                     position: absolute;
-                    top: -34px;
+                    top: -35px;
                     left: -5px;
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
-                    font-size: 12px;
+                    font-size: 14px;
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;

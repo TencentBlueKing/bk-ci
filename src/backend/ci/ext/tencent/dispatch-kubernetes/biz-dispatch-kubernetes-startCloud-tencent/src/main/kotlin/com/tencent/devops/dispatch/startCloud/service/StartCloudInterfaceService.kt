@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
@@ -71,5 +72,37 @@ class StartCloudInterfaceService @Autowired constructor(
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
         return resourceList
+    }
+
+    // 获取cgs信息
+    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+        logger.info("getCgsData|cgsId|$cgsId")
+        return windowsGpuResourceDao.getCgsResource(
+            dslContext = dslContext,
+            cgsId = cgsId
+        )?.let {
+            EnvironmentResourceData(
+                cgsId = it.cgsId,
+                cgsIp = it.cgsIp,
+                zoneId = it.zoneId,
+                machineType = it.machineType,
+                status = it.status,
+                userInstanceList = null
+            )
+        }
+    }
+
+    /*
+     * 校验cgsId是否已被申请，并在运行中
+     * true:表示可分配
+     * false：表示已被分配使用中
+     */
+    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
+        logger.info("checkCgsRunning|cgsId|$cgsId|status|$status")
+        return windowsGpuResourceDao.getCgsWorkspace(
+            dslContext = dslContext,
+            cgsId = cgsId,
+            status = status
+        )?.let { false } ?: true
     }
 }

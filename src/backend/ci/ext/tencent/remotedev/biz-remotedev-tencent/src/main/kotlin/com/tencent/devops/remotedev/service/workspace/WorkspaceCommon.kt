@@ -27,7 +27,10 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
@@ -88,7 +91,8 @@ class WorkspaceCommon @Autowired constructor(
     @org.springframework.context.annotation.Lazy
     private val sleepControl: SleepControl,
     @org.springframework.context.annotation.Lazy
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -105,9 +109,9 @@ class WorkspaceCommon @Autowired constructor(
         type: WebSocketActionType,
         status: Boolean?,
         action: WorkspaceAction,
-        systemType: WorkspaceSystemType,
-        workspaceMountType: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
+        systemType: WorkspaceSystemType? = null,
+        workspaceMountType: WorkspaceMountType? = null,
+        ownerType: WorkspaceOwnerType? = null
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -145,7 +149,12 @@ class WorkspaceCommon @Autowired constructor(
         } ?: key.default
 
     fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
-        return redisCache.getWorkspaceDetail(workspaceName) ?: run {
+        return getWorkspaceDetail(workspaceName) ?: run {
+            return updateWorkspaceDetail(workspaceName, mountType)
+        }
+    }
+
+    fun updateWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
                 workspaceName
@@ -164,12 +173,13 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceInfo.curLaunchId,
                 workspaceInfo.regionId
             )
-            redisCache.saveWorkspaceDetail(
-                workspaceName,
-                cache
+
+            workspaceDao.saveOrUpdateWorkspaceDetail(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                detail = JsonUtil.toJson(cache)
             )
             return cache
-        }
     }
 
     fun checkAndFixExceptionWS(
@@ -355,5 +365,40 @@ class WorkspaceCommon @Autowired constructor(
         return if (operator == ADMIN_NAME) {
             workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
         } else setOf(operator)
+    }
+
+    fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
+        return try {
+            val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
+            if (result != null) {
+                objectMapper.readValue<WorkSpaceCacheInfo>(result)
+            } else {
+                null
+            }
+        } catch (ignore: Exception) {
+            logger.warn(
+                "get workspace detail from redis error|$workspaceName",
+                ignore
+            )
+            null
+        }
+    }
+
+    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .getCgsData(cgsId).data
+        }.onFailure {
+            logger.warn("Error syncing start cloud resource list: ${it.message}")
+        }.getOrNull()
+    }
+
+    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class)
+                .checkCgsRunning(cgsId, status).data
+        }.onFailure {
+            logger.warn("Error check cgs running: ${it.message}")
+        }.getOrNull() ?: false
     }
 }

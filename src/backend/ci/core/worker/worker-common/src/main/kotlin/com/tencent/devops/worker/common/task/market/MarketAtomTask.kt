@@ -181,14 +181,12 @@ open class MarketAtomTask : ITask() {
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
         var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
-            if (!asCodeEnabled) {
-                vars.map {
-                    it.key to it.value.parseCredentialValue(
-                        context = buildTask.buildVariable,
-                        acrossProjectId = acrossInfo?.targetProjectId
-                    )
-                }.toMap()
-            } else vars
+            vars.map {
+                it.key to it.value.parseCredentialValue(
+                    context = buildTask.buildVariable,
+                    acrossProjectId = acrossInfo?.targetProjectId
+                )
+            }.toMap()
         }
 
         // 解析输入输出字段模板
@@ -416,7 +414,7 @@ open class MarketAtomTask : ITask() {
                         contextPair = customReplacement,
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
-                    )
+                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }
             } else {
                 inputMap.forEach { (name, value) ->

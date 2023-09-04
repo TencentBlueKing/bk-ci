@@ -50,7 +50,8 @@ data class PipelineStatus(
     @ApiModelProperty("最后构建版本号", required = false)
     val latestBuildNum: Int?,
     @ApiModelProperty("最后构建任务名称", required = false)
-    val latestBuildTaskName: String?,
+    @Deprecated("无用.不再提供任何信息")
+    val latestBuildTaskName: String? = null,
     @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
     @ApiModelProperty("最后构建实例ID", required = false)

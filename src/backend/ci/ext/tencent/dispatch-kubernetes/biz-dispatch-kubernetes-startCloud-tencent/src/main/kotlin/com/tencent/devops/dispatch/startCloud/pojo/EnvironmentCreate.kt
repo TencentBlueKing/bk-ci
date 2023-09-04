@@ -14,5 +14,7 @@ data class EnvironmentCreate(
     @JsonProperty("ZoneId")
     val zoneId: String?,
     @JsonProperty("MachineType")
-    val machineType: String?
+    val machineType: String?,
+    @JsonProperty("CgsId")
+    val cgsId: String?
 )
