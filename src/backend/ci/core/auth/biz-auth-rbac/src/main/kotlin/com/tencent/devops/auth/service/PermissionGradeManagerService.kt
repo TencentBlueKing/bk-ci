@@ -32,12 +32,6 @@ import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmScheme
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
@@ -46,15 +40,8 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AUTH_SECRECY
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT_APPLICATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_ORGANIZATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_DESC
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_ID
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_NAME
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REVISE_BKCI_PROJECT_APPLICATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_SUBJECT_SCOPES
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -77,12 +64,10 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
-import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Arrays
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(

@@ -183,7 +183,7 @@ class ItsmService @Autowired constructor(
             ).type(URL_TYPE).iframe(true).build(),
             ItsmColumn.builder().key("validityPeriod").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_VALIDITY_PERIOD)
-            ).type(TEXT_TYPE).build(),
+            ).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()

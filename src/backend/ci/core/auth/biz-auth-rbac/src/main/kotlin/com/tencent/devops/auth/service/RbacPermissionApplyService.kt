@@ -302,7 +302,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         resourceRedirectUri = generateResourceRedirectUri(
                             projectCode = resourceGroupInfo.projectCode,
                             resourceType = resourceGroupInfo.resourceType,
-                            resourceCode = resourceGroupInfo.resourceCode,
+                            resourceCode = resourceGroupInfo.resourceCode
                         ),
                         groupPermissionDetailRedirectUri = "xxxx"
                     )
