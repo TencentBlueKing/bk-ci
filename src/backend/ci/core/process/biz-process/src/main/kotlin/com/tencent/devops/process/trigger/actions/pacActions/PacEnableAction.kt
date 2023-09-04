@@ -67,6 +67,7 @@ class PacEnableAction : BaseAction {
             projectName = data.setting.projectName,
             scmType = event.scmType
         )
+        this.data.context.defaultBranch = defaultBranch
         return this
     }
 

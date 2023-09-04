@@ -92,11 +92,13 @@ class PacYamlResourceService @Autowired constructor(
         entry: YamlPathListEntry
     ) {
         val yamlContent = action.getYamlContent(entry.yamlPath)
+        val branch = action.data.eventCommon.branch
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             yml = yamlContent.content,
-            defaultBranch = true
+            branchName = branch,
+            isDefaultBranch = branch == action.data.context.defaultBranch
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -128,12 +130,14 @@ class PacYamlResourceService @Autowired constructor(
         entry: YamlPathListEntry
     ) {
         val yamlContent = action.getYamlContent(entry.yamlPath)
+        val branch = action.data.eventCommon.branch
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             pipelineId = pipelineId,
             yml = yamlContent.content,
-            defaultBranch = true
+            branchName = branch,
+            isDefaultBranch = branch == action.data.context.defaultBranch
         )
         pipelineYamlVersionDao.save(
             dslContext = dslContext,

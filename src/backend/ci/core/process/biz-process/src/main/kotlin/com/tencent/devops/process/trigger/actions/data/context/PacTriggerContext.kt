@@ -40,6 +40,8 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 data class PacTriggerContext(
     var hookRequestId: Long? = null,
     var eventId: Long? = null,
+    // 默认分支
+    var defaultBranch: String? = null,
     // 缓存
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null

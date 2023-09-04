@@ -476,7 +476,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         yml: String,
-        defaultBranch: Boolean
+        branchName: String,
+        isDefaultBranch: Boolean
     ): DeployPipelineResult {
         // TODO 待补充
         return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
@@ -487,7 +488,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yml: String,
-        defaultBranch: Boolean
+        branchName: String,
+        isDefaultBranch: Boolean
     ): DeployPipelineResult {
         // TODO 待补充
         return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
