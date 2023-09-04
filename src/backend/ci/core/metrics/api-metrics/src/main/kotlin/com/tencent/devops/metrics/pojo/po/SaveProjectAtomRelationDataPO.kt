@@ -25,29 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.resources.op
+package com.tencent.devops.metrics.pojo.po
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.metrics.api.op.OpProjectInfoResource
-import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
-import com.tencent.devops.metrics.service.ProjectInfoManageService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class OpProjectInfoResourceImpl @Autowired constructor(
-    private val projectInfoManageService: ProjectInfoManageService,
-    private val errorCodeInfoManageService: ErrorCodeInfoManageService
-) : OpProjectInfoResource {
-    override fun syncPipelineLabelData(userId: String): Result<Boolean> {
-        return Result(projectInfoManageService.syncPipelineLabelData(userId))
-    }
-
-    override fun syncAtomErrorCodeRel(userId: String): Result<Boolean> {
-        return Result(errorCodeInfoManageService.syncAtomErrorCodeRel(userId))
-    }
-
-    override fun syncProjectAtomData(userId: String): Boolean {
-        return projectInfoManageService.syncProjectAtomData(userId)
-    }
-}
+@ApiModel("保存项目插件关联数据")
+data class SaveProjectAtomRelationDataPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
+    @ApiModelProperty("插件名称")
+    val atomName: String,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String
+)
