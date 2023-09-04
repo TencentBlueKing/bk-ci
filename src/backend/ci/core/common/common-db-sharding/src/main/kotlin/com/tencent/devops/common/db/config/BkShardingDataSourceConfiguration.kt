@@ -186,8 +186,8 @@ class BkShardingDataSourceConfiguration {
             databaseAlgorithmClassName = migratingDatabaseAlgorithmClassName,
             tableAlgorithmClassName = migratingTableAlgorithmClassName,
             dataSourceConfigs = migratingDataSourceConfigs,
-            tableRuleConfigs = migratingTableRuleConfigs,
-            bindingTableGroupConfigs = config.migratingBindingTableGroupConfigs,
+            tableRuleConfigs = migratingTableRuleConfigs ?: config.tableRuleConfigs,
+            bindingTableGroupConfigs = config.migratingBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
             registry = registry
         )
     }

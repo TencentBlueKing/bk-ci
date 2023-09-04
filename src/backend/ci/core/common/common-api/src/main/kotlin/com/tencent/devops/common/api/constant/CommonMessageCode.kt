@@ -155,7 +155,6 @@ object CommonMessageCode {
     const val ENGINEERING_REPO_NOT_EXIST = "2100100" // 工程仓库不存在
     const val ENGINEERING_REPO_CALL_ERROR = "2100101" // 工程仓库访问异常
     const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100102" // 非项目成员且项目为非开源项目
-    // 2100108
     const val USER_NO_PIPELINE_PERMISSION = "2100108" // 流水线: 用户无{0}权限
     const val SERVICE_COULD_NOT_BE_ANALYZED = "2100109" // 无法根据接口"{0}"分析所属的服务
     const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
@@ -172,6 +171,7 @@ object CommonMessageCode {
     // {0}Env单变量{1}长度超过{2}字符!({3})
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
     const val ERROR_PROJECT_API_ACCESS_NO_PERMISSION = "2100122" // 项目[{0}]没有接口[{1}]的访问权限
+    const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息

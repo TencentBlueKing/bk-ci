@@ -82,8 +82,9 @@ class ProcessDataMigrateService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProcessDataMigrateService::class.java)
         private const val DEFAULT_THREAD_NUM = 10
         private const val DEFAULT_PAGE_SIZE = 20
-        private const val DEFAULT_MIGRATION_TIMEOUT = 20L
-        private const val DEFAULT_THREAD_SLEEP_TIMEOUT = 10L
+        private const val DEFAULT_MIGRATION_TIMEOUT = 2L
+        private const val DEFAULT_MIGRATION_MAX_PROJECT_COUNT = 5
+        private const val DEFAULT_THREAD_SLEEP_TIMEOUT = 5000L
         private const val SHORT_PAGE_SIZE = 5
         private const val MEDIUM_PAGE_SIZE = 100
         private const val LONG_PAGE_SIZE = 1000
@@ -92,10 +93,14 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val FAIL_MSG = "failMsg"
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
+        private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET"
     }
 
-    @Value("\${sharding.migrationTimeout:#{20}}")
+    @Value("\${sharding.migration.timeout:#{2}}")
     private val migrationTimeout: Long = DEFAULT_MIGRATION_TIMEOUT
+
+    @Value("\${sharding.migration.maxProjectCount:#{5}}")
+    private val migrationMaxProjectCount: Int = DEFAULT_MIGRATION_MAX_PROJECT_COUNT
 
     fun migrateProjectData(
         userId: String,
@@ -103,13 +108,43 @@ class ProcessDataMigrateService @Autowired constructor(
         cancelFlag: Boolean = false,
         dataTag: String
     ): Boolean {
+        // 判断同时迁移的项目数量是否超过限制
+        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
+        if (migrationProjectCount >= migrationMaxProjectCount) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
+                params = arrayOf(RETRY_NUM.toString())
+            )
+        }
+        // 判断项目是否超过规定的重试次数
+        val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
+        val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
+        if (projectExecuteCount >= RETRY_NUM) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
+                params = arrayOf(RETRY_NUM.toString())
+            )
+        }
         // 锁定项目,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
+        confirmAllServiceCacheIsUpdated(projectId)
         // 为项目分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
+        // 把项目数据迁移次数存入redis中
+        if (projectExecuteCount == 0) {
+            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1")
+        } else {
+            redisOperation.increment(migrateProjectExecuteCountKey, 1)
+        }
         // 开启异步任务迁移项目的数据
         Executors.newFixedThreadPool(1).submit {
             logger.info("migrateProjectData begin,params:[$userId|$projectId]")
+            // 删除迁移库的数据以保证迁移接口的幂等性
+            migratingShardingDslContext.transaction { t ->
+                val context = DSL.using(t)
+                deleteAllProjectData(context, projectId)
+            }
             // 查询项目下流水线数量
             val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
             // 根据流水线数量计算线程数量
@@ -141,6 +176,7 @@ class ProcessDataMigrateService @Autowired constructor(
                     )?.id ?: 0L) + 1
                 }
                 pipelineIdList?.forEach { pipelineId ->
+                    // 开启异步任务迁移项目下流水线数据
                     executor.submit(
                         MigratePipelineDataTask(
                             migratePipelineDataParam = MigratePipelineDataParam(
@@ -170,6 +206,12 @@ class ProcessDataMigrateService @Autowired constructor(
                 }
                 return@submit
             }
+            val historyShardingRoutingRule =
+                client.get(ServiceShardingRoutingRuleResource::class).getShardingRoutingRuleByName(
+                    routingName = projectId,
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    ruleType = ShardingRuleTypeEnum.DB
+                ).data
             try {
                 // 等待所有任务执行完成
                 doneSignal.await(migrationTimeout, TimeUnit.HOURS)
@@ -177,12 +219,17 @@ class ProcessDataMigrateService @Autowired constructor(
                 doAfterMigrationBus(userId, projectId, routingRuleMap)
             } catch (ignored: Throwable) {
                 logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=${ignored.message}", ignored)
-                // 删除迁移库的数据
-                migratingShardingDslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    deleteAllProjectData(context, projectId)
+                // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
+                val projectCurrentExecuteCount = projectExecuteCount + 1
+                val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
+                if (projectCurrentExecuteCount != projectLatestExecuteCount) {
+                    logger.warn(
+                        "migrateProjectData project:[$projectId] executeCount validate fail|" +
+                            "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
+                            "projectLatestExecuteCount:$projectLatestExecuteCount"
+                    )
+                    return@submit
                 }
-                // 发送迁移失败消息
                 val titleParams = mapOf(KEY_PROJECT_ID to projectId)
                 val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (ignored.message ?: ""))
                 val request = SendNotifyMessageTemplateRequest(
@@ -190,14 +237,41 @@ class ProcessDataMigrateService @Autowired constructor(
                     receivers = mutableSetOf(userId),
                     titleParams = titleParams,
                     bodyParams = bodyParams,
-                    notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
+                    notifyType = mutableSetOf(NotifyType.WEWORK.name)
                 )
-                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-                return@submit
+                try {
+                    // 删除迁移库的数据
+                    migratingShardingDslContext.transaction { t ->
+                        val context = DSL.using(t)
+                        deleteAllProjectData(context, projectId)
+                    }
+                    // 把项目路由规则还原
+                    historyShardingRoutingRule?.let {
+                        client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
+                            userId = userId,
+                            shardingRoutingRule = historyShardingRoutingRule
+                        )
+                    }
+                } catch (ignored: Throwable) {
+                    logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
+                }
+                try {
+                    // 发送迁移失败消息
+                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                } catch (ignored: Throwable) {
+                    logger.warn(
+                        "migrateProjectData project:[$projectId] send msg" +
+                            " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
+                    )
+                }
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
+    }
+
+    fun getMigrateProjectExecuteCountKey(projectId: String): String {
+        return "MIGRATE_PROJECT_PROCESS_DATA_EXECUTE_COUNT:$projectId"
     }
 
     private fun deleteAllProjectData(context: DSLContext, projectId: String) {
@@ -268,6 +342,42 @@ class ProcessDataMigrateService @Autowired constructor(
     }
 
     private fun doAfterMigrationBus(userId: String, projectId: String, routingRuleMap: Map<String, String>) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            // 删除原库的数据
+            deleteAllProjectData(context, projectId)
+            // 更新项目的路由规则
+            updateShardingRoutingRule(projectId, routingRuleMap, userId)
+        }
+        // 删除项目执行次数记录
+        redisOperation.delete(getMigrateProjectExecuteCountKey(projectId))
+        // 解锁项目,允许用户发起新构建等操作
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        // 发送迁移成功消息
+        val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+        val bodyParams = mapOf(KEY_PROJECT_ID to projectId)
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE,
+            receivers = mutableSetOf(userId),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.WEWORK.name)
+        )
+        try {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        } catch (ignored: Throwable) {
+            logger.info(
+                "migrateProjectData project:[$projectId] send msg" +
+                    " template(MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE) fail!"
+            )
+        }
+    }
+
+    private fun updateShardingRoutingRule(
+        projectId: String,
+        routingRuleMap: Map<String, String>,
+        userId: String
+    ) {
         val key = ShardingUtil.getMigratingShardingRoutingRuleKey(
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = SystemModuleEnum.PROCESS.name,
@@ -300,46 +410,30 @@ class ProcessDataMigrateService @Autowired constructor(
                 )
             }
             // 判断微服务所有服务器的缓存是否已经全部更新完成
-            val serviceNames = listOf("process", "engine", "misc", "lambda")
-            serviceNames.forEach { serviceName ->
-                val cacheUpdateFinishFlag = confirmCacheIsUpdated(serviceName, key, RETRY_NUM)
-                if (!cacheUpdateFinishFlag) {
-                    // 服务器缓存更新失败，发送迁移失败消息
-                    val titleParams = mapOf(KEY_PROJECT_ID to projectId)
-                    val bodyParams = mapOf(
-                        KEY_PROJECT_ID to projectId,
-                        FAIL_MSG to "update service($serviceName) cache fail"
-                    )
-                    val request = SendNotifyMessageTemplateRequest(
-                        templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
-                        receivers = mutableSetOf(userId),
-                        titleParams = titleParams,
-                        bodyParams = bodyParams,
-                        notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
-                    )
-                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-                    return
-                }
+            confirmAllServiceCacheIsUpdated(projectId)
+        }
+    }
+
+    private fun confirmAllServiceCacheIsUpdated(projectId: String) {
+        val serviceNames = listOf("process", "engine", "misc", "lambda")
+        serviceNames.forEach { serviceName ->
+            logger.info("service[$serviceName] confirmCacheIsUpdated start")
+            val cacheKey = ShardingUtil.getShardingRoutingRuleKey(
+                clusterName = CommonUtils.getDbClusterName(),
+                moduleCode = SystemModuleEnum.PROCESS.name,
+                ruleType = ShardingRuleTypeEnum.DB.name,
+                routingName = projectId
+            )
+            val cacheUpdateFinishFlag = confirmCacheIsUpdated(serviceName, cacheKey, RETRY_NUM)
+            logger.info("service[$serviceName] cacheUpdateFinishFlag:$cacheUpdateFinishFlag")
+            if (!cacheUpdateFinishFlag) {
+                // 服务器缓存更新失败，抛出错误提示
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.SYSTEM_ERROR,
+                    defaultMessage = "update service($serviceName) rule cache fail"
+                )
             }
         }
-        // 解锁项目,允许用户发起新构建等操作
-        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
-        // 删除原库的数据
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            deleteAllProjectData(context, projectId)
-        }
-        // 发送迁移成功消息
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId)
-        val request = SendNotifyMessageTemplateRequest(
-            templateCode = MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE,
-            receivers = mutableSetOf(userId),
-            titleParams = titleParams,
-            bodyParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name)
-        )
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
     }
 
     private fun confirmCacheIsUpdated(serviceName: String, cacheKey: String, retryNum: Int): Boolean {
@@ -351,7 +445,8 @@ class ProcessDataMigrateService @Autowired constructor(
         Thread.sleep(DEFAULT_THREAD_SLEEP_TIMEOUT)
         // 获取当前微服务服务器IP列表
         val finalServiceName = BkServiceUtil.findServiceName(serviceName = serviceName)
-        val serviceIps = redisOperation.getSetMembers(BkServiceUtil.getServiceHostKey(finalServiceName))?.toMutableSet()
+        val serviceHostKey = BkServiceUtil.getServiceHostKey(finalServiceName)
+        val serviceIps = redisOperation.getSetMembers(serviceHostKey)?.toMutableSet()
         val serviceRoutingRuleActionFinishKey = BkServiceUtil.getServiceRoutingRuleActionFinishKey(
             serviceName = finalServiceName,
             routingName = cacheKey,
@@ -360,6 +455,10 @@ class ProcessDataMigrateService @Autowired constructor(
         val finishServiceIps = redisOperation.getSetMembers(serviceRoutingRuleActionFinishKey)
         // 判断所有服务器缓存是否已经更新成功
         finishServiceIps?.let { serviceIps?.removeAll(finishServiceIps) }
+        logger.info(
+            "confirmCacheIsUpdated service[$serviceName] cacheKey:$cacheKey retryNum:$retryNum " +
+                "serviceIps:$serviceIps finishServiceIps:$finishServiceIps"
+        )
         return if (serviceIps.isNullOrEmpty()) {
             true
         } else {

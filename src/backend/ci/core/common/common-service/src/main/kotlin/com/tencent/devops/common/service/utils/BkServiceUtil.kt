@@ -17,7 +17,7 @@ object BkServiceUtil {
 
     fun getServiceHostKey(serviceName: String? = null): String {
         val profileName = getProfileName()
-        val finalServiceName = if (serviceName.isNullOrBlank()) {
+        val finalServiceName = if (!serviceName.isNullOrBlank()) {
             serviceName
         } else {
             findServiceName()
