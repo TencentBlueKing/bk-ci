@@ -828,8 +828,18 @@ class ExperienceService @Autowired constructor(
      */
     @SuppressWarnings("ComplexMethod")
     fun batchNotification(projectId: String, req: ExperienceNotificationReq) {
+
         threadPool.submit {
-            val experienceIds = req.experienceIds.map { HashUtil.decodeIdToLong(it) }
+            val apkDefenderEIds = redisOperation
+                .listRange(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, 0, -1)
+                .map { it.toLong() }
+            val experienceIds = req.experienceIds
+                .map { HashUtil.decodeIdToLong(it) }
+                .filterNot { apkDefenderEIds.contains(it) }
+            if (experienceIds.isEmpty()) {
+                logger.warn("batchNotification , experiences [$experienceIds] are empty")
+                return@submit
+            }
             val experienceRecords =
                 experienceDao.list(dslContext, experienceIds).filterNot { DateUtil.isExpired(it.endDate) }
             if (experienceRecords.isEmpty()) {

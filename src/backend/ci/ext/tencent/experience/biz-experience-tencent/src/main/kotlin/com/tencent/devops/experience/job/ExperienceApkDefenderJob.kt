@@ -26,11 +26,11 @@ class ExperienceApkDefenderJob @Autowired constructor(
     fun checkTask() {
         redisOperation.rightPop(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS)?.let { e ->
             try {
+                logger.info("check apk defender : $e")
                 val data = e.split(",")
                 val experienceId = data[0].toLong()
                 val ddl = data[1].toLong()
                 val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
-                logger.info("check apk defender : $experienceId")
                 if (LocalDateTime.now().timestamp() > ddl) {
                     logger.warn("checkTask , time is ddl , e: $e")
                     redisOperation.delete(apkDefendersKey)
