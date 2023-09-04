@@ -8,7 +8,7 @@ defineProps<{
 }>();
 
 const goToManage = () => {
-  window.parent.location.href = `${location.origin}/console/pm`
+  window.parent.location.href = `${location.origin}/console/pm`;
 };
 </script>
 
@@ -55,6 +55,14 @@ const goToManage = () => {
 }
 .manage-breadcrumb {
   position: absolute;
+  max-width: 40%;
+  .bk-breadcrumb-item {
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
 }
 .manage-icon {
   font-size: 18px;
