@@ -48,7 +48,7 @@ data class GithubIssuesEvent(
     }
 
     fun convertAction() = when (action) {
-        GithubIssuesAction.CREATED.value -> "open"
+        GithubIssuesAction.OPENED.value -> "open"
         GithubIssuesAction.CLOSED.value -> "close"
         GithubIssuesAction.REOPENED.value -> "reopen"
         GithubIssuesAction.EDITED.value -> "update"
@@ -90,7 +90,7 @@ data class GithubIssue(
     @ApiModelProperty("issues 关联的pull request信息，为空时代表仅在issue上操作")
     val pullRequest: GithubPullRequestUrl?,
     val milestone: GithubMilestone?
-):GithubBaseInfo(
+) : GithubBaseInfo(
     id = id,
     url = url,
     htmlUrl = htmlUrl,
@@ -127,7 +127,7 @@ enum class GithubIssuesAction(val value: String) {
     CLOSED("closed"),
 
     @ApiModelProperty("创建")
-    CREATED("created"),
+    OPENED("opened"),
 
     @ApiModelProperty("指派受理人")
     ASSIGNED("assigned"),

@@ -46,7 +46,7 @@ abstract class GithubCommentEvent(
     open val repository: GithubRepository,
     open val comment: GithubComment,
     override val sender: GithubUser
-) : GithubEvent(sender){
+) : GithubEvent(sender) {
     open fun getCommentType(): String = ""
 }
 
@@ -64,6 +64,7 @@ data class GithubCommitCommentEvent(
 ) {
     companion object {
         const val classType = "commit_comment"
+
         // 评论类型：基于Commit进行评论
         const val commentType = "Commit"
     }
@@ -91,6 +92,7 @@ data class GithubReviewCommentEvent(
 ) {
     companion object {
         const val classType = "pull_request_review_comment"
+
         // 评论类型：基于Pull Request Review进行评论
         const val commentType = "Review"
     }
@@ -183,11 +185,15 @@ abstract class GithubComment(
 open class GithubCommitComment(
     override val id: Long,
     override val url: String,
+    @JsonProperty("html_url")
     override val htmlUrl: String,
+    @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
     override val user: GithubUser,
+    @JsonProperty("created_at")
     override val createdAt: String,
+    @JsonProperty("updated_at")
     override val updatedAt: String,
     @JsonProperty("commit_id")
     @ApiModelProperty("commit sha")
@@ -207,11 +213,15 @@ open class GithubCommitComment(
 data class GithubIssueComment(
     override val id: Long,
     override val url: String,
+    @JsonProperty("html_url")
     override val htmlUrl: String,
+    @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
     override val user: GithubUser,
+    @JsonProperty("created_at")
     override val createdAt: String,
+    @JsonProperty("updated_at")
     override val updatedAt: String,
     @JsonProperty("issue_url")
     @ApiModelProperty("评论链接[API链接]")

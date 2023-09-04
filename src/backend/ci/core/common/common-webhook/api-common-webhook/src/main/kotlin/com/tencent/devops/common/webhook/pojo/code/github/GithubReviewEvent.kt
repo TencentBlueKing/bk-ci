@@ -112,7 +112,7 @@ data class GithubReviewThreadCommit(
     val body: String,
     @JsonProperty("author_association")
     val authorAssociation: String
-):GithubBaseInfo(
+) : GithubBaseInfo(
     id = id,
     url = url,
     htmlUrl = htmlUrl,
@@ -139,9 +139,9 @@ data class GithubReview(
     @ApiModelProperty("评审地址[网页地址]")
     override val htmlUrl: String,
     @JsonProperty("created_at")
-    override val createdAt: String, // 2022-06-21T08:45:41Z
+    override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    override val updatedAt: String, // 2022-06-21T08:45:41Z
+    override val updatedAt: String?, // 2022-06-21T08:45:41Z
     val user: GithubUser,
     @ApiModelProperty("评审内容")
     val body: String,
