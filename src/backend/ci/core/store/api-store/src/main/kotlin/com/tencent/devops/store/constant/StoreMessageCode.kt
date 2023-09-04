@@ -48,7 +48,7 @@ package com.tencent.devops.store.constant
 object StoreMessageCode {
 
     const val MSG_CODE_BUILD_TYPE_PREFIX = "buildType." // 构建资源类型国际化前缀
-    // 插件相关的错误提示
+
     const val USER_QUERY_ATOM_PERMISSION_IS_INVALID = "2120001" // 研发商店：没有插件的查看权限
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 研发商店：没有项目的查看权限
     const val USER_CREATE_REPOSITORY_FAIL = "2120003" // 研发商店：创建代码库失败，请稍后再试
@@ -65,7 +65,7 @@ object StoreMessageCode {
     const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
     const val USER_COMPONENT_ADMIN_COUNT_ERROR = "2120016" // 研发商店：管理员个数不能少于1个
-    const val ADD_PLUGIN_PLATFORM_INFO_FAILED = "2120017" // 添加插件对接平台信息失败
+    const val ADD_ATOM_PLATFORM_INFO_FAILED = "2120017" // 添加插件对接平台信息失败
     const val USER_ATOM_QUALITY_CONF_INVALID = "2120018" // 研发商店：插件配置文件[quality.json]{0}格式不正确，请检查
     const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
@@ -87,9 +87,8 @@ object StoreMessageCode {
     const val USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE = "2120036" // 研发商店：插件配置文件[error.json]errorCode字段数据重复，请检查{0}
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
     const val TASK_JSON_CONFIGURE_FORMAT_ERROR = "2120038" // 参数[{0}] 的{1} ,请检查task.json配置格式是否正确 \n
-    const val GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
+    const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
 
-    // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
     const val USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID = "2120203" // 研发商店：模板的可见范围不在插件{0}的可见范围之内，如有需要请联系插件的发布者
@@ -101,7 +100,6 @@ object StoreMessageCode {
     const val USER_TEMPLATE_IMAGE_IS_INVALID = "2120209" // 研发商店：模版下的镜像{0}不可用，请联系模板发布者
     const val USER_INSTALL_TEMPLATE_CODE_IS_INVALID = "2120210" // 研发商店： 商店模板{0}安装到项目[{1}]失败，模板已安装或项目下存在与模板{0}同名的自定义模板，若有同名的自定义模板请修改模板名称后再安装商店模版。
 
-    // 镜像相关的错误提示
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
     const val USER_IMAGE_RELEASE_STEPS_ERROR = "2120303" // 研发商店：镜像发布流程中状态变更顺序不正确
@@ -114,7 +112,6 @@ object StoreMessageCode {
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
     const val USER_IMAGE_PROJECT_IS_INVALID = "2120311" // 研发商店：容器镜像[{0}]在项目[{1}]下不可用，请联系镜像发布者调整可见范围，调整后手动安装镜像
 
-    // 扩展服务相关的错误提示
     const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120401" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
     const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120402" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除
     const val USER_SERVICE_VERSION_IS_INVALID = "2120403" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
@@ -126,7 +123,6 @@ object StoreMessageCode {
     const val USER_SERVICE_NOT_EXIST = "2120409" // 研发商店：扩展服务不存在{0}
     const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120410" // 研发商店：扩展点下还有可用的扩展服务，不能删除
 
-    // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 研发商店：你没有权限将组件安装到项目：{0}
     const val USER_COMMENT_IS_INVALID = "2120903" // 研发商店：你已评论过，无法继续添加评论。但可以修改原有评论
@@ -143,6 +139,16 @@ object StoreMessageCode {
     const val USER_UPLOAD_FILE_PATH_ERROR = "2120914" // 研发商店：文件路径[{0}]错误
     const val USER_ERROR_CODE_INVALID = "2120915" // 研发商店：错误码{0}格式错误
     const val USER_LOCALE_FILE_NOT_EXIST = "2120916" // 研发商店：未提供系统[{0}]语言的配置文件
+
+    const val NO_COMPONENT_ADMIN_PERMISSION = "2120917" // 无组件{0}管理员权限，请联系组件管理员。
+    const val GET_INFO_NO_PERMISSION = "2120918" // 无权限访问组件{0}信息，请联系组件管理员获取权限
+    const val PROJECT_NO_PERMISSION = "2120919" // 无权限，非项目{0}成员或非插件{1}安装人
+    const val IMAGE_ADD_NO_PROJECT_MEMBER = "2120920" // 无权限新增镜像，不是项目{0}成员
+    const val IMAGE_PUBLISH_REPO_NO_PERMISSION = "2120921" // 无权限操作公共镜像仓库
+    const val COMMENT_UPDATE_NO_PERMISSION = "2120922" // 不是该评论的发表人，无权限更新该评论
+    const val BUILD_VISIT_NO_PERMISSION = "2120923" // 接口请求中的插件【{0}】不是当前当前构建运行的插件
+    const val VERSION_PUBLISHED = "2120924" // 组件{0}版本({1})已发布
+    const val NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION = "2120925" // 无组件{0}管理员或当前版本创建者权限，请联系组件管理员。
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

@@ -24,12 +24,12 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
-    import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
+    import { BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
+    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { navConfirm } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -144,6 +144,7 @@
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
                     this.hasNoPermission = true
                     this.removeLeaveListenr()

@@ -56,8 +56,15 @@ class PipelineTaskPauseService @Autowired constructor(
         pipelinePauseValueDao.save(dslContext, pipelinePauseValue)
     }
 
-    fun getPauseTask(projectId: String, buildId: String, taskId: String): PipelinePauseValue? {
-        return pipelinePauseValueDao.convert(pipelinePauseValueDao.get(dslContext, projectId, buildId, taskId))
+    fun getPauseTask(
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int?
+    ): PipelinePauseValue? {
+        return pipelinePauseValueDao.convert(
+            pipelinePauseValueDao.get(dslContext, projectId, buildId, taskId, executeCount)
+        )
     }
 
     @Suppress("NestedBlockDepth")
@@ -86,7 +93,7 @@ class PipelineTaskPauseService @Autowired constructor(
             }
 
             if (ControlUtils.pauseFlag(element.additionalOptions)) {
-                val defaultElement = getPauseTask(projectId, buildId, element.id!!)
+                val defaultElement = getPauseTask(projectId, buildId, element.id!!, element.executeCount)
                 if (defaultElement != null) {
                     logger.info("Refresh element| $buildId|${element.id}")
                     // 恢复detail表model内的对应element为默认值
