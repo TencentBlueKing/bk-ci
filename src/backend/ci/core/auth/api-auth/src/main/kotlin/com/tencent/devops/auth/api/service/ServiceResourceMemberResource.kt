@@ -54,6 +54,9 @@ interface ServiceResourceMemberResource {
         projectCode: String,
         @QueryParam("resourceType")
         @ApiParam("资源类型", required = false)
-        resourceType: String
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源code", required = false)
+        resourceCode: String,
     ): Result<List<BkAuthGroupAndUserList>>
 }

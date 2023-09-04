@@ -31,13 +31,14 @@ class ServiceResourceMemberResourceImpl constructor(
     override fun getResourceGroupAndMembers(
         token: String,
         projectCode: String,
-        resourceType: String
+        resourceType: String,
+        resourceCode: String
     ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
             permissionResourceMemberService.getResourceGroupAndMembers(
                 projectCode = projectCode,
                 resourceType = resourceType,
-                resourceCode = projectCode
+                resourceCode = resourceCode
             )
         )
     }
