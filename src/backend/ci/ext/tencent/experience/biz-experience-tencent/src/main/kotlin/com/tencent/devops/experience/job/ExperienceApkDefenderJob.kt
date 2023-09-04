@@ -27,14 +27,8 @@ class ExperienceApkDefenderJob @Autowired constructor(
         redisOperation.rightPop(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS)?.let { e ->
             try {
                 logger.info("check apk defender : $e")
-                val data = e.split(",")
-                val experienceId = data[0].toLong()
-                val ddl = data[1].toLong()
+                val experienceId = e.toLong()
                 val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
-                if (LocalDateTime.now().timestamp() > ddl) {
-                    logger.warn("checkTask , time is ddl , e: $e")
-                    redisOperation.delete(apkDefendersKey)
-                }
                 val experience = experienceDao.get(dslContext, experienceId)
                 redisOperation.getSetMembers(apkDefendersKey)?.forEach { t ->
                     val success = client.get(ServiceArtifactoryDownLoadResource::class).checkApkDefenderTask(

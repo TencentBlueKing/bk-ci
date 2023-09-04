@@ -828,7 +828,6 @@ class ExperienceService @Autowired constructor(
      */
     @SuppressWarnings("ComplexMethod")
     fun batchNotification(projectId: String, req: ExperienceNotificationReq) {
-
         threadPool.submit {
             val apkDefenderEIds = redisOperation
                 .listRange(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, 0, -1)
@@ -1332,9 +1331,10 @@ class ExperienceService @Autowired constructor(
         val taskIds = tasksResult.data!!.tasks.map { it.id }.toTypedArray()
         logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
 
-        val ddl = LocalDateTime.now().plusHours(1).timestamp()
-        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId,$ddl")
-        redisOperation.sadd(ExperienceConstant.apkDefendersKey(experienceId), *taskIds)
+        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
+        val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
+        redisOperation.sadd(apkDefendersKey, *taskIds)
+        redisOperation.expire(apkDefendersKey, 3600)
     }
 
     companion object {
