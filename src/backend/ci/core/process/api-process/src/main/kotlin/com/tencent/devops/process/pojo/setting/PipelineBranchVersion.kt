@@ -25,16 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("构建模型-ID")
-data class TransferBody(
-    @ApiModelProperty("modelAndSetting")
-    val modelAndSetting: PipelineModelAndSetting? = null,
-    @ApiModelProperty("当前yaml内容")
-    val oldYaml: String = ""
+@ApiModel("")
+data class PipelineBranchVersion(
+    @ApiModelProperty("项目id", required = false)
+    val projectId: String,
+    @ApiModelProperty("流水线id", required = false)
+    val pipelineId: String,
+    @ApiModelProperty("分支名", required = false)
+    var branch: String,
+    @ApiModelProperty("版本号", required = false)
+    var version: Int,
+    @ApiModelProperty("创建者", required = false)
+    var creator: String,
+    @ApiModelProperty("更新者", required = false)
+    var updater: String,
+    @ApiModelProperty("创建时间", required = false)
+    var createTime: LocalDateTime,
+    @ApiModelProperty("更新时间", required = false)
+    var updateTime: LocalDateTime
 )

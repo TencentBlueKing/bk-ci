@@ -47,6 +47,7 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val transferService: PipelineTransferYamlService
 ) : UserPipelineTransferResource {
+
     override fun transfer(
         userId: String,
         projectId: String,

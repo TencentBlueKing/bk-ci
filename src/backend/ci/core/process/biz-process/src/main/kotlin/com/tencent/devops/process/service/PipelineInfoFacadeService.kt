@@ -76,8 +76,11 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.transfer.TransferActionType
+import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -111,6 +114,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val transferService: PipelineTransferYamlService,
+    private val pipelineBranchVersionService: PipelineBranchVersionService,
     private val redisOperation: RedisOperation,
     private val pipelineRecentUseService: PipelineRecentUseService
 ) {
@@ -490,15 +495,60 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         yml: String,
+        branchName: String,
         defaultBranch: Boolean
     ): DeployPipelineResult {
-        // TODO 待补充
-        return DeployPipelineResult(
-            pipelineId = "p-001",
-            pipelineName = "yml-001-pipeline",
-            version = 1,
-            versionName = "1.0"
+
+        val (newModel, newYaml) = try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.newYaml == null || result.modelAndSetting == null) {
+                logger.warn(
+                    "TRANSFER_YAML|$projectId|$userId|$defaultBranch|newYaml=\n${result.newYaml}\n" +
+                        "modelAndSetting=${result.modelAndSetting}"
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            Pair(result.modelAndSetting!!, result.newYaml!!)
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                // TODO #8161 增加错误码配置
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
+        val versionStatus = if (defaultBranch) {
+            VersionStatus.RELEASED
+        } else {
+
+            VersionStatus.BRANCH
+        }
+        val result = createPipeline(
+            userId = userId,
+            projectId = projectId,
+            model = newModel.model,
+            channelCode = ChannelCode.BS,
+            yaml = newYaml,
+            versionStatus = versionStatus
         )
+        if (!defaultBranch) {
+            pipelineBranchVersionService.saveBranchVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = result.pipelineId,
+                branchName = branchName,
+                version = result.version
+            )
+        }
+        return result
     }
 
     fun updateYamlPipeline(
@@ -506,6 +556,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yml: String,
+        branchName: String,
         defaultBranch: Boolean
     ): DeployPipelineResult {
         // TODO 待补充
