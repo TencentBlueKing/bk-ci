@@ -48,10 +48,10 @@ data class GithubReviewEvent(
         const val classType = "pull_request_review"
     }
 
-    fun convertState() = when (GithubReviewState.valueOf(review.state)) {
-        GithubReviewState.APPROVED -> "approved"
-        GithubReviewState.CHANGES_REQUESTED -> "change_required"
-        GithubReviewState.DISMISSED -> "change_denied"
+    fun convertState() = when (review.state) {
+        GithubReviewState.APPROVED.value -> "approved"
+        GithubReviewState.CHANGES_REQUESTED.value -> "change_required"
+        GithubReviewState.DISMISSED.value -> "change_denied"
         else -> ""
     }
 }

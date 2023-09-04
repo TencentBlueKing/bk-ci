@@ -47,11 +47,11 @@ data class GithubIssuesEvent(
         const val classType = "issues"
     }
 
-    fun convertAction() = when (GithubIssuesAction.valueOf(action)) {
-        GithubIssuesAction.CREATED -> "open"
-        GithubIssuesAction.CLOSED -> "close"
-        GithubIssuesAction.REOPENED -> "reopen"
-        GithubIssuesAction.EDITED -> "update"
+    fun convertAction() = when (action) {
+        GithubIssuesAction.CREATED.value -> "open"
+        GithubIssuesAction.CLOSED.value -> "close"
+        GithubIssuesAction.REOPENED.value -> "reopen"
+        GithubIssuesAction.EDITED.value -> "update"
         else -> ""
     }
 }
