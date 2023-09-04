@@ -10,6 +10,7 @@ import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -130,19 +131,19 @@ class ItsmService @Autowired constructor(
     ): ItsmContentDTO {
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type("text").build(),
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
-            ).type("text").build(),
+            ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("desc").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)
-            ).type("text").build(),
+            ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("organization")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type("text").build(),
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("authSecrecy")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type("text").build(),
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("subjectScopes")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type("text").build()
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
@@ -168,11 +169,21 @@ class ItsmService @Autowired constructor(
 
     fun buildGroupApplyItsmContentDTO(): ItsmContentDTO {
         val itsmColumns = listOf(
-            ItsmColumn.builder().key("projectName")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type("text").build(),
-            ItsmColumn.builder().key("projectId").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
-            ).type("text").build()
+            ItsmColumn.builder().key("projectName").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)
+            ).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("resourceTypeName").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_RESOURCE_TYPE_NAME)
+            ).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("resourceName").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_RESOURCE_NAME)
+            ).type(URL_TYPE).build(),
+            ItsmColumn.builder().key("groupName").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_GROUP_NAME)
+            ).type(URL_TYPE).iframe(true).build(),
+            ItsmColumn.builder().key("validityPeriod").name(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_VALIDITY_PERIOD)
+            ).type(TEXT_TYPE).build(),
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
@@ -181,24 +192,16 @@ class ItsmService @Autowired constructor(
         return ItsmContentDTO.builder().formData(emptyList()).schemes(scheme).build()
     }
 
-    @Suppress("LongParameterList")
-    fun buildGroupApplyItsmValue(
-        projectName: String,
-        projectId: String,
-        resourceType: String,
-        resourceName: String,
-        resourceCode: String,
-        groupId: String,
-        groupName: String
-    ): ItsmValue {
+    fun buildGroupApplyItsmValue(formData: ApplyJoinGroupFormDataInfo): ItsmValue {
         val value = HashMap<String, ItsmStyle>()
-        value["projectName"] = ItsmStyle.builder().value(projectName).build()
-        value["projectId"] = ItsmStyle.builder().value(projectId).build()
+        value["projectName"] = ItsmStyle.builder().value(formData.projectName).build()
+        value["resourceTypeName"] = ItsmStyle.builder().value(formData.resourceTypeName).build()
+        value["resourceName"] = ItsmStyle.builder().label(formData.resourceName).value(formData.resourceName).build()
+        value["groupName"] = ItsmStyle.builder().label(formData.groupName)
+            .value(formData.groupPermissionDetailRedirectUri).build()
+        value["validityPeriod"] = ItsmStyle.builder().value(formData.validityPeriod).build()
         return ItsmValue.builder()
             .scheme("content_table")
-            .lable(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
-            )
             .value(listOf(value))
             .build()
     }
@@ -208,5 +211,7 @@ class ItsmService @Autowired constructor(
         private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
         private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
         private const val ITSM_TICKET_STATUS_URL_SUFFIX = "/get_ticket_status?sn=%s"
+        private const val TEXT_TYPE = "text"
+        private const val URL_TYPE = "url"
     }
 }
