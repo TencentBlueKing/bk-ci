@@ -43,6 +43,7 @@
 </template>
 
 <script>
+    import emptyTips from '@/components/common/empty'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
     import { PipelineEditTab, BaseSettingTab, TriggerTab, NotifyTab, ShowVariable } from '@/components/PipelineEditTabs/'
