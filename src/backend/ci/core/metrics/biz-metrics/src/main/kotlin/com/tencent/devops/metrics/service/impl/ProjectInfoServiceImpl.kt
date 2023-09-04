@@ -187,7 +187,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun syncProjectAtomData(userId: String): Boolean {
+    override fun syncProjectAtomData(userId: String) : Boolean {
         val executor = ThreadPoolExecutor(
             metricsConfig.maxThreadHandleProjectNum,
             metricsConfig.maxThreadHandleProjectNum,
@@ -199,21 +199,13 @@ class ProjectInfoServiceImpl @Autowired constructor(
         )
         try {
             logger.info("begin op sync project atom data")
-            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMinId = client.get(ServiceProjectResource::class).getMinId().data
             val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
 
             if (projectMinId != null && projectMaxId != null) {
-                // 获取清理项目构建数据的线程数量
-                val maxThreadHandleProjectNum = metricsConfig.maxThreadHandleProjectNum
-                val avgProjectNum = projectMaxId / maxThreadHandleProjectNum
-                for (index in 1..maxThreadHandleProjectNum) {
-                    // 计算线程能处理的项目区间
-                    val startProjectPrimaryId = (index - 1) * avgProjectNum + 1
-                    val endProjectPrimaryId = if (index != maxThreadHandleProjectNum) {
-                        index * avgProjectNum
-                    } else {
-                        index * avgProjectNum + projectMinId % maxThreadHandleProjectNum
-                    }
+                val projectRanges =
+                    calculateProjectRanges(projectMinId, projectMaxId, metricsConfig.maxThreadHandleProjectNum)
+                projectRanges.forEach { (startProjectPrimaryId, endProjectPrimaryId) ->
                     executor.submit(Callable {
                         val projectIds = client.get(ServiceProjectResource::class)
                             .getProjectListById(
@@ -228,6 +220,23 @@ class ProjectInfoServiceImpl @Autowired constructor(
             logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
         }
         return true
+    }
+
+    private fun calculateProjectRanges(
+        projectMinId: Long,
+        projectMaxId: Long,
+        maxThreadHandleProjectNum: Int
+    ): List<Pair<Long, Long>> {
+        val avgProjectNum = projectMaxId / maxThreadHandleProjectNum
+        return (1..maxThreadHandleProjectNum).map { index ->
+            val startProjectPrimaryId = (index - 1) * avgProjectNum + 1
+            val endProjectPrimaryId = if (index != maxThreadHandleProjectNum) {
+                index * avgProjectNum
+            } else {
+                index * avgProjectNum + projectMinId % maxThreadHandleProjectNum
+            }
+            Pair(startProjectPrimaryId, endProjectPrimaryId)
+        }
     }
 
     private fun saveProjectAtomInfo(projectIds: List<String>) {
