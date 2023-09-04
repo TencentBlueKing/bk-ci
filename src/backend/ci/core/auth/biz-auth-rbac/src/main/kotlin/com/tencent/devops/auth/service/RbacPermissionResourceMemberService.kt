@@ -106,9 +106,9 @@ class RbacPermissionResourceMemberService constructor(
     }
 
     private fun getUsersUnderGroup(groupInfo: V2ManagerRoleGroupInfo): BkAuthGroupAndUserList {
-        val pageInfoDTO = PageInfoDTO().apply {
-            limit = 1000
-            offset = 0
+        val pageInfoDTO = V2PageInfoDTO().apply {
+            pageSize = 1000
+            page = 1
         }
         val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
         logger.info(
