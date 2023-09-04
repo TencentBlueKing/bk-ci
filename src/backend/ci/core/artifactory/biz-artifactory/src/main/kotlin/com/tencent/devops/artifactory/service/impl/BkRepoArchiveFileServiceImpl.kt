@@ -295,16 +295,37 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 )
             }
         } else {
+            buildGenericFileInfo(it)
+        }
+    }
+
+    private fun buildGenericFileInfo(nodeInfo: QueryNodeInfo): FileInfo {
+        // 归档插件归档目录时，在目录多归档一个.bkci_pipeline文件, 记录归档目录的信息
+        return if (nodeInfo.name == ".bkci_pipeline") {
             FileInfo(
-                name = it.name,
-                fullName = it.name,
-                path = it.fullPath,
-                fullPath = it.fullPath,
-                size = it.size,
-                folder = it.folder,
-                properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
-                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                artifactoryType = parseArtifactoryType(it.repoName)
+                name = nodeInfo.name,
+                fullName = nodeInfo.name,
+                path = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
+            )
+        } else {
+            FileInfo(
+                name = nodeInfo.name,
+                fullName = nodeInfo.name,
+                path = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
             )
         }
     }
