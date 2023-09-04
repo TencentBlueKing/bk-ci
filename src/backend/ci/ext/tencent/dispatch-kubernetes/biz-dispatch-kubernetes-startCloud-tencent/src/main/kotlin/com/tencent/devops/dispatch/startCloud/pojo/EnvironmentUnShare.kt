@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class EnvironmentUserCreate(
-    @JsonProperty("UserID")
-    val userId: String,
-    @JsonProperty("ContentProviderName")
-    val appName: String
+data class EnvironmentUnShare(
+    @JsonProperty("receivers")
+    val receivers: List<String>,
+    @JsonProperty("resourceId")
+    val resourceId: String,
+    @JsonProperty("unsharer")
+    val unSharer: String
 )

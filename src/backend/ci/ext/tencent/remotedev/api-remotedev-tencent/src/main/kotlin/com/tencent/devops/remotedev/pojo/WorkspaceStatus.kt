@@ -56,6 +56,9 @@ enum class WorkspaceStatus {
     fun checkDistributing() = this == DISTRIBUTING
 
     fun workspaceInitializing() = checkDelivering() || checkDistributing()
+
+    fun checkInUse() = !checkDeleted() && !checkException()
+
     /**
      * 当正在做某事时，不能新建任务去执行
      */

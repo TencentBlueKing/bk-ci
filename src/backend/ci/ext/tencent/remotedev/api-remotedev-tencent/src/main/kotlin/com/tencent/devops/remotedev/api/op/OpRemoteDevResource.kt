@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
@@ -248,6 +249,7 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceConfig>>
+
     @ApiOperation("新增windows硬件配置")
     @POST
     @Path("/windowsResource/add")
@@ -293,7 +295,7 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "工作空间共享", required = true)
-        workspaceShared: WorkspaceShared
+        workspaceShared: WorkspaceSharedOpUse
     ): Result<Boolean>
 
     @ApiOperation("获取分享工作空间列表")
@@ -382,5 +384,14 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("转移数据到workspace windows 表")
+    @GET
+    @Path("/windowsWorkspaceDaoInit")
+    fun windowsWorkspaceDaoInit(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Boolean>
 }
