@@ -51,22 +51,27 @@ class RegexContainFilter(
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
         return buildFilterFailedReason(
             action = {
-                if (included.isEmpty()) {
-                    true
-                }
-                included.forEach {
-                    try {
-                        if (Pattern.compile(it).matcher(triggerOn).find()) {
-                            true
-                        }
-                    } catch (e: PatternSyntaxException) {
-                        logger.warn("($it) syntax error :$e ")
-                    }
-                }
-                false
+                filterAction()
             },
             response = response
         )
+    }
+
+    @SuppressWarnings("ReturnCount")
+    private fun filterAction(): Boolean {
+        if (included.isEmpty()) {
+            return true
+        }
+        included.forEach {
+            try {
+                if (Pattern.compile(it).matcher(triggerOn).find()) {
+                    return true
+                }
+            } catch (e: PatternSyntaxException) {
+                logger.warn("($it) syntax error :$e ")
+            }
+        }
+        return false
     }
 
     private fun buildFilterFailedReason(action: () -> Boolean, response: WebhookFilterResponse): Boolean {

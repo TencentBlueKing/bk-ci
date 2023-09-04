@@ -223,8 +223,9 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDetailDesc(language)
+            it.eventDesc = it.getI18nEventDesc(language)
             it.buildNum = it.getBuildNumUrl()
+            it.reasonDetailList = it.getI18nReasonDetailDesc(language)
             it
         }
         val count = pipelineTriggerEventDao.countTriggerEvent(
@@ -394,14 +395,21 @@ class PipelineTriggerEventService @Autowired constructor(
     /**
      * 获取国际化构建事件详情描述
      */
-    private fun PipelineTriggerEventVo.getI18nEventDetailDesc(language: String) = try {
-        val detailDescList = JsonUtil.to(
-            json = eventDesc,
-            typeReference = object : TypeReference<List<I18Variable>>() {})
-        detailDescList.joinToString(separator = "\n") { it.getCodeLanMessage(language) }
+    private fun PipelineTriggerEventVo.getI18nReasonDetailDesc(language: String): List<String> = try {
+        logger.info("get pipeline trigger event detail desc,source[$eventDesc]")
+        if (reasonDetailList.isNullOrEmpty()) {
+            listOf()
+        } else {
+            reasonDetailList!!.map {
+                JsonUtil.to(
+                    json = it,
+                    typeReference = object : TypeReference<I18Variable>() {}
+                ).getCodeLanMessage(language)
+            }
+        }
     } catch (ignored: Exception) {
-        logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
-        eventDesc
+        logger.warn("Failed to resolve repo trigger event detail|source[$eventDesc]", ignored)
+        listOf()
     }
 
     /**
