@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.trigger
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -222,7 +223,7 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDesc(language)
+            it.eventDesc = it.getI18nEventDetailDesc(language)
             it.buildNum = it.getBuildNumUrl()
             it
         }
@@ -385,6 +386,19 @@ class PipelineTriggerEventService @Autowired constructor(
      */
     private fun PipelineTriggerEventVo.getI18nEventDesc(language: String) = try {
         JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+    } catch (ignored: Exception) {
+        logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
+        eventDesc
+    }
+
+    /**
+     * 获取国际化构建事件详情描述
+     */
+    private fun PipelineTriggerEventVo.getI18nEventDetailDesc(language: String) = try {
+        val detailDescList = JsonUtil.to(
+            json = eventDesc,
+            typeReference = object : TypeReference<List<I18Variable>>() {})
+        detailDescList.joinToString(separator = "\n") { it.getCodeLanMessage(language) }
     } catch (ignored: Exception) {
         logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
         eventDesc
