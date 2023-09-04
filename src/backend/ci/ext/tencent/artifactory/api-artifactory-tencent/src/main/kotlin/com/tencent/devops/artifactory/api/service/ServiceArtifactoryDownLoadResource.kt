@@ -131,6 +131,21 @@ interface ServiceArtifactoryDownLoadResource {
         request: ApkDefenderRequest
     ): Result<ApkDefenderTasks>
 
+    @ApiOperation("检查apk安全加固任务是否完成")
+    @Path("/apkDefenderTask/check")
+    @GET
+    fun checkApkDefenderTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("任务ID", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<Boolean>
+
     @ApiOperation("创建不包含网关的临时分享下载链接")
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
     @POST

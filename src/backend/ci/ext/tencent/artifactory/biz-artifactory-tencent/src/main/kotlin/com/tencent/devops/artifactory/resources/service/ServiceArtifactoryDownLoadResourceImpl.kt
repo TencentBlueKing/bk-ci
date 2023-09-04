@@ -112,6 +112,12 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         )
     }
 
+    override fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Result<Boolean> {
+        return Result(
+            bkRepoClient.checkApkDefenderTask(projectId,userId,taskId)
+        )
+    }
+
     override fun downloadIndexUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,

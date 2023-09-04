@@ -116,6 +116,7 @@ import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import kotlin.math.ceil
 
 @Service
 @SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
@@ -485,7 +486,15 @@ class ExperienceService @Autowired constructor(
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
 
-        // 加上权限
+        // IAM权限
+        experiencePermissionService.createTaskResource(
+            userId,
+            projectId,
+            experienceId,
+            "${experience.name}（$appVersion）"
+        )
+
+        // 体验权限
         experienceGroups.forEach {
             experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
         }
@@ -496,6 +505,7 @@ class ExperienceService @Autowired constructor(
             experienceOuterDao.create(dslContext, experienceId, it)
         }
 
+        var delayNotify = false
         if (isPublic) { // 公开体验
             onlinePublicExperience(
                 projectId = projectId,
@@ -511,35 +521,19 @@ class ExperienceService @Autowired constructor(
                 version = appVersion
             )
         } else { // 内部体验
-            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha" || userId == "stubenhuang") {// TODO 测试
-                val apkDefenderTasks = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
-                    userId,
-                    ApkDefenderRequest(
-                        projectId = projectId,
-                        artifactoryType = artifactoryType,
-                        fullPath = experience.path,
-                        userIds = experienceInnerUsers,//TODO 组和外部用户?
-                        batchSize = 10
-                    )
-                )
-                // TODO 通知发送逻辑
-                logger.info("apkDefenders : $apkDefenderTasks")
+            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha") {
+                apkDefend(userId, projectId, artifactoryType, experienceId, experience.path)
+                delayNotify = true
             }
         }
 
-        experiencePermissionService.createTaskResource(
-            userId,
-            projectId,
-            experienceId,
-            "${experience.name}（$appVersion）"
-        )
-
-        if (experience.sendNotification) {
+        if (experience.sendNotification && !delayNotify) {
             sendNotification(experienceId)
         }
 
         return experienceId
     }
+
 
     private fun onlinePublicExperience(
         projectId: String,
@@ -974,7 +968,7 @@ class ExperienceService @Autowired constructor(
     }
 
     @SuppressWarnings("ComplexCondition")
-    private fun sendNotification(experienceId: Long) {
+    fun sendNotification(experienceId: Long) {
         threadPool.submit {
             val experienceRecord = experienceDao.get(dslContext, experienceId)
             if (DateUtil.isExpired(experienceRecord.endDate)) {
@@ -1290,6 +1284,46 @@ class ExperienceService @Autowired constructor(
                 experienceId = encodeLongId
             )
         }
+    }
+
+    /**
+     * 对APK进行安全加固
+     */
+    private fun apkDefend(
+        userId: String,
+        projectId: String,
+        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
+        experienceId: Long,
+        fullPath: String
+    ) {
+        val userIdsForDefend = mutableSetOf<String>()
+        // 临时内部
+        experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
+        // 临时外部
+        experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
+        // 体验组
+        val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
+        userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
+        userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
+        userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
+
+        // 保存加固任务
+        val taskNum = 100.0
+        val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+            userId = userId,
+            request = ApkDefenderRequest(
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                fullPath = fullPath,
+                userIds = userIdsForDefend,
+                batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+            )
+        )
+        val taskIds = tasksResult.data!!.tasks.map { it.id }.toTypedArray()
+        logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
+
+        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, experienceId.toString())
+        redisOperation.sadd(ExperienceConstant.apkDefendersKey(experienceId), *taskIds)
     }
 
     companion object {

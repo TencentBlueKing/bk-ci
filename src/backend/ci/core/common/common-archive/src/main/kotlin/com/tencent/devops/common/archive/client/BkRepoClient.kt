@@ -73,6 +73,7 @@ import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
+import com.tencent.devops.common.archive.pojo.defender.ScanTask
 import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
 import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
 import com.tencent.devops.common.archive.pojo.replica.ReplicaType
@@ -748,6 +749,18 @@ class BkRepoClient constructor(
             .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<ApkDefenderTasks>>()!!.data!!
+    }
+
+    fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Boolean {
+        logger.info("checkApkDefenderTask , taskId : $taskId")
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/scan/tasks/$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        val data = doRequest(request).resolveResponse<Response<ScanTask>>()!!.data!!
+        return data.status == "FINISHED"
     }
 
     fun createTemporaryToken(
