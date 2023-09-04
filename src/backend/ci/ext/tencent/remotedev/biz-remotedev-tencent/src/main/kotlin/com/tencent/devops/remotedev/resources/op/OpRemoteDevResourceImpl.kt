@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.DataTransferService
@@ -152,7 +153,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
     }
 
-    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceShared): Result<Boolean> {
+    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
         return Result(
             workspaceService.shareWorkspace(
                 workspaceShared.operator,
