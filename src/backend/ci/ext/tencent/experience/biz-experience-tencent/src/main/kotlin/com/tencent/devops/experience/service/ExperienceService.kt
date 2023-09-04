@@ -1322,7 +1322,8 @@ class ExperienceService @Autowired constructor(
         val taskIds = tasksResult.data!!.tasks.map { it.id }.toTypedArray()
         logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
 
-        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, experienceId.toString())
+        val ddl = LocalDateTime.now().plusHours(1).timestamp()
+        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId,$ddl")
         redisOperation.sadd(ExperienceConstant.apkDefendersKey(experienceId), *taskIds)
     }
 
