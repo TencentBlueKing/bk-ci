@@ -71,7 +71,7 @@
                             @change="toggleAllSelect"
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">IP</div>
-                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
                         <div class="table-node-item node-item-operator">{{ $t('environment.operator') }}</div>
                         <div class="table-node-item node-item-operator">{{ $t('environment.bkOperator') }}</div>
                         <div class="table-node-item node-item-agstatus">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>

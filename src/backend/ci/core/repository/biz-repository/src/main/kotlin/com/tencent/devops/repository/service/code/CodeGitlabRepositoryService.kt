@@ -112,7 +112,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        var gitProjectId = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (record.url != repository.url) {
             logger.info(

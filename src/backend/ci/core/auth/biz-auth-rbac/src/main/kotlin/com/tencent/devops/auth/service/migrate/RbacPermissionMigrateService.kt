@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -70,6 +71,7 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -198,6 +200,20 @@ class RbacPermissionMigrateService constructor(
             resourceType = resourceType,
             projectCreator = projectCreator
         )
+        return true
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
+        logger.info("grant group additional authorization|projectCode:$projectCodes")
+        projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        logger.info("handover permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
         return true
     }
 
@@ -432,7 +448,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode", exception)
+        logger.warn("Failed to migrate $projectCode", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,

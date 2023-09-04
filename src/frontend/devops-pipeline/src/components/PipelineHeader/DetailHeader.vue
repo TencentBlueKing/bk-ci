@@ -8,19 +8,60 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
-                :disabled="loading || (!isRunning && !canManualStartup)"
+                v-if="isRunning"
+                :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
-                :theme="isRunning ? 'warning' : 'default'"
+                theme="warning"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("cancel") : $t("history.reBuild") }}
+                {{ $t("cancel") }}
+            </bk-button>
+            <bk-button
+                v-else
+                :disabled="loading"
+                :icon="loading ? 'loading' : ''"
+                outline
+                theme="default"
+                key="reBuild"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="handleClick"
+            >
+                {{ $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
+            <bk-button
+                theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
             </bk-button>
             <more-actions />
@@ -29,6 +70,9 @@
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
     import MoreActions from './MoreActions.vue'
@@ -50,26 +94,25 @@
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
-            },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
             },
             buildNumConf () {
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1
                 }
-            },
-            editRouteName () {
-                return { name: 'pipelinesEdit' }
             }
         },
         watch: {
+            '$route.params.buildNo': function (newBuildNum, oldBuildNum) {
+                if (newBuildNum !== oldBuildNum) {
+                    this.loading = false
+                }
+            },
             'execDetail.status': function (newStatus, oldStatus) {
                 if (newStatus !== oldStatus) {
                     this.loading = false
@@ -154,6 +197,11 @@
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
                 })
             }
         }

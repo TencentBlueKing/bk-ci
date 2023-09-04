@@ -589,13 +589,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title, ...restProps }) {
+export function navConfirm ({ content, title, cancelText, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title, ...restProps })
+        window.globalVue.$leaveConfirm({ content, title, cancelText, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 
@@ -744,4 +744,24 @@ export function getMaterialIconByType (type) {
         CODE_P4: 'CODE_P4'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
+}
+
+export const prettyDateTimeFormat = (target) => {
+    if (!target) {
+        return ''
+    }
+    const formatStr = (str) => {
+        if (String(str).length === 1) {
+            return `0${str}`
+        }
+        return str
+    }
+    const d = new Date(target)
+    const year = d.getFullYear()
+    const month = formatStr(d.getMonth() + 1)
+    const date = formatStr(d.getDate())
+    const hours = formatStr(d.getHours())
+    const minutes = formatStr(d.getMinutes())
+    const seconds = formatStr(d.getSeconds())
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
 }

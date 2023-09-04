@@ -27,6 +27,11 @@ const menuList = [
     code: 'apply',
     icon: 'permission-icon-quanxianshenqing',
   },
+  {
+    name: t('我的项目'),
+    code: 'my-project',
+    icon: 'permission-icon-wodexiangmu',
+  }
 ];
 
 const handleChangeMenu = (menu: any) => {

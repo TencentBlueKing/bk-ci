@@ -218,6 +218,7 @@ object CommonMessageCode {
     const val DELETE_BRANCH = "bkDeleteBranch" // 删除分支
 
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
+    const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签
@@ -241,7 +242,9 @@ object CommonMessageCode {
     const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
-    const val BK_BUILD_MSG_MANUAL = "bkBuildMsgManual" // 手动触发
-    const val BK_BUILD_MSG_TRIGGERS = "bkBuildMsgTriggers" // 构建触发
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+
+    const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
+    const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
+    const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
 }

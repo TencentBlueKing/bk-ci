@@ -27,6 +27,7 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
@@ -36,6 +37,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
+import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
@@ -46,6 +48,7 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
@@ -65,6 +68,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.math.roundToLong
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.exception.TooManyRowsException
@@ -72,7 +76,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.math.roundToLong
 
 @Service
 @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod", "LongParameterList")
@@ -80,6 +83,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
+    private val projectInfoDao: ProjectInfoDao,
     private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
     private val redisOperation: RedisOperation
@@ -106,6 +110,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
             val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
             val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
+            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
             val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
             val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
             val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
@@ -135,7 +140,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             atomOverviewDataRecords = atomOverviewDataRecords,
                             updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
                             currentTime = currentTime,
-                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs
+                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
+                            saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
                         )
                         atomFailSummaryDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
@@ -179,6 +185,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
                 }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
                 }
@@ -198,6 +207,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         } finally {
             lock.unlock()
         }
+
         return true
     }
 
@@ -362,7 +372,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         atomOverviewDataRecords: Result<TAtomOverviewDataRecord>?,
         updateAtomOverviewDataPOs: MutableList<UpdateAtomOverviewDataPO>,
         currentTime: LocalDateTime,
-        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>
+        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>,
+        saveProjectAtomRelationPOs: MutableList<SaveProjectAtomRelationDataPO>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -482,6 +493,24 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
+        if (projectInfoDao.projectAtomRelationCountByAtomCode(
+                dslContext = dslContext,
+                projectId = projectId,
+                atomCode = atomCode,
+                atomName = taskMetricsData.atomCode
+            ) <= 0) {
+            saveProjectAtomRelationPOs.add(
+                SaveProjectAtomRelationDataPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                    projectId = projectId,
+                    atomCode = atomCode,
+                    atomName = taskMetricsData.atomName,
+                    creator = SYSTEM,
+                    modifier = SYSTEM
+                )
+            )
+        }
         metricsDataReportDao.saveAtomMonitorDailyData(
             dslContext = dslContext,
             saveAtomMonitorDailyPO = SaveAtomMonitorDailyPO(

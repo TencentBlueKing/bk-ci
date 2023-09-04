@@ -1024,29 +1024,6 @@ class BkRepoClient constructor(
         return query(userId, projectId, rule, page, pageSize)
     }
 
-    private fun query(
-        userId: String,
-        projectId: String,
-        rule: Rule,
-        page: Int,
-        pageSize: Int,
-        sortBy: String? = null,
-        direction: Sort.Direction? = null
-    ): QueryData {
-        logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
-        val queryModel = QueryModel(
-            page = PageLimit(page, pageSize),
-            sort = if (!sortBy.isNullOrBlank() && direction != null) {
-                Sort(listOf(sortBy), direction)
-            } else {
-                Sort(listOf("fullPath"), Sort.Direction.ASC)
-            },
-            select = mutableListOf(),
-            rule = rule
-        )
-        return query(userId, projectId, queryModel)
-    }
-
     fun createReplicaTask(
         userId: String,
         projectId: String,
@@ -1073,12 +1050,33 @@ class BkRepoClient constructor(
             setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
             remoteClusterIds = emptySet()
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    private fun query(
+        userId: String,
+        projectId: String,
+        rule: Rule,
+        page: Int,
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
+    ): QueryData {
+        logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
+        val queryModel = QueryModel(
+            page = PageLimit(page, pageSize),
+            sort = if (!sortBy.isNullOrBlank() && direction != null) {
+                Sort(listOf(sortBy), direction)
+            } else {
+                Sort(listOf("fullPath"), Sort.Direction.ASC)
+            },
+            select = mutableListOf(),
+            rule = rule
+        )
+        return query(userId, projectId, queryModel)
     }
 
     private fun query(userId: String, projectId: String, queryModel: QueryModel): QueryData {

@@ -5,7 +5,6 @@
             <bk-input :placeholder="$t('restore.restoreSearchTips')" />
         </div>
         <template v-else>
-
             <h5 class="current-pipeline-group-name">
                 <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
                 <span>{{currentViewName}}</span>
@@ -37,14 +36,13 @@
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
-                        
                         <bk-button
                             v-perm="{
                                 hasPermission: !canNotMangeProjectedGroup,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: 'project',
                                     resourceCode: projectId,
                                     action: PROJECT_RESOURCE_ACTION.MANAGE
                                 }
@@ -160,33 +158,33 @@
     </main>
 </template>
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import webSocketMessage from '@/utils/webSocketMessage'
-    import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
-    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import PipelineSearcher from './PipelineSearcher'
-    import PipelineTableView from '@/components/pipelineList/PipelineTableView'
-    import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
-    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
+    import PipelineTableView from '@/components/pipelineList/PipelineTableView'
+    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
+    import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import { mapActions, mapState } from 'vuex'
+    import PipelineSearcher from './PipelineSearcher'
 
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
-    import { PIPELINE_SORT_FILED, ORDER_ENUM } from '@/utils/pipelineConst'
-    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
-    import { getCacheViewId } from '@/utils/util'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import { ADD_TO_PIPELINE_GROUP, bus } from '@/utils/bus'
     import {
-        handlePipelineNoPermission,
+        PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
-        PROJECT_RESOURCE_ACTION
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { getCacheViewId } from '@/utils/util'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -527,6 +525,7 @@
         @include ellipsis();
         flex-shrink: 0;
         max-width: 100px;
+        cursor: pointer;
     }
     .pipeline-list-box {
         flex: 1;

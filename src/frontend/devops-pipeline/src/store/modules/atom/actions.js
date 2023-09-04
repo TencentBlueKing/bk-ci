@@ -195,7 +195,9 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    setPipeline: actionCreator(SET_PIPELINE),
+    setPipeline: ({ commit }, payload = null) => {
+        commit(SET_PIPELINE, payload)
+    },
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {

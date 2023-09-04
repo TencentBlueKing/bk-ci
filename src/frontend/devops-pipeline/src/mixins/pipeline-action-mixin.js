@@ -20,12 +20,8 @@
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
-import { mapActions, mapGetters, mapMutations } from 'vuex'
+import { mapActions, mapState, mapGetters, mapMutations } from 'vuex'
 
-import {
-    RESOURCE_ACTION,
-    PROJECT_RESOURCE_ACTION
-} from '@/utils/permission'
 import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
@@ -34,6 +30,11 @@ import {
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import {
+    PROJECT_RESOURCE_ACTION,
+    RESOURCE_ACTION,
+    handleProjectNoPermission
+} from '@/utils/permission'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
@@ -46,7 +47,9 @@ export default {
     },
     computed: {
         ...mapGetters('pipelines', [
-            'groupMap',
+            'groupMap'
+        ]),
+        ...mapState('pipelines', [
             'isManage'
         ]),
         currentGroup () {
@@ -261,7 +264,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
-
+                pipeline.hasCollect = !pipeline.hasCollect
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
@@ -439,8 +442,6 @@ export default {
          * 恢复流水线
          */
         async restore ({ projectId, pipelineId, pipelineName }) {
-            let message = this.$t('restore.restoreSuc')
-            let theme = 'success'
             await navConfirm({
                 content: this.$t('restorePipelineConfirm', [pipelineName])
             })
@@ -449,16 +450,25 @@ export default {
                     projectId,
                     pipelineId
                 })
+                this.$showTips({
+                    message: this.$t('restore.restoreSuc'),
+                    theme: 'success'
+                })
                 return true
             } catch (err) {
-                message = err.message || err
-                theme = 'error'
+                if (err.code === 403) {
+                    handleProjectNoPermission({
+                        projectId: projectId,
+                        resourceCode: projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    })
+                } else {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
                 return false
-            } finally {
-                this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         updatePipelineStatus (data, isFirst = false) {

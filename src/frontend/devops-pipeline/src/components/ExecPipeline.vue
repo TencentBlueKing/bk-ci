@@ -1,5 +1,8 @@
 <template>
     <div class="exec-pipeline-wrapper">
+        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
+            <p></p>
+        </div>
         <div class="pipeline-exec-summary">
             <div class="pipeline-exec-count">
                 <span>{{ $t("details.num") }}</span>
@@ -38,10 +41,13 @@
                     v-for="step in timeSteps"
                     :key="step.title"
                 >
-                    <span>
-                        {{ step.title }}
+                    <span class="title-item">
+                        <p>{{ step.title }}</p>
+                        <span v-bk-tooltips="step.popup" class="time-step-divider">
+                            <p></p>
+                        </span>
                     </span>
-                    <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
+                    <!-- <p v-bk-tooltips="step.popup" class="time-step-divider"></p> -->
                     <p class="constant-width-num">
                         {{ step.description }}
                     </p>
@@ -74,6 +80,7 @@
                 :class-names="{
                     track: 'pipeline-scrollbar-track'
                 }"
+                ref="scrollBox"
                 data-simplebar-auto-hide="false"
             >
                 <div class="exec-pipeline-ui-wrapper">
@@ -189,6 +196,13 @@
                 </bk-tab>
             </footer>
         </section>
+        <mini-map
+            v-if="Array.isArray(curPipeline.stages)"
+            ref="miniMap"
+            class="exec-pipeline-mini-map"
+            :stages="curPipeline.stages"
+            :scroll-class="scrollElement"
+        />
         <bk-dialog
             v-model="showRetryStageDialog"
             render-directive="if"
@@ -232,6 +246,7 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
+        
     </div>
 </template>
 
@@ -239,6 +254,7 @@
     import CheckAtomDialog from '@/components/CheckAtomDialog'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
     import simplebar from 'simplebar-vue'
@@ -249,7 +265,8 @@
             simplebar,
             CheckAtomDialog,
             CompleteLog,
-            Logo
+            Logo,
+            MiniMap
         },
         props: {
             execDetail: {
@@ -273,7 +290,8 @@
                 errorRow: null,
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
-                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC
+                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
+                scrollElement: '.pipeline-detail-wrapper.biz-content'
             }
         },
         computed: {
@@ -283,7 +301,7 @@
                 'showPanelType',
                 'isPropertyPanelVisible'
             ]),
-
+            
             panels () {
                 return [
                     {
@@ -469,10 +487,18 @@
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
                 this.setScrollBarPostion()
-                setTimeout(() => {
-                    this.setAtomLocate(this.errorList[0])
-                }, 600)
             }
+            this.$nextTick(() => {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const viewportContent = this.$refs.scrollViewPort.querySelector('p')
+                this.$refs.scrollViewPort.style.width = `${this.$refs.scrollBox?.scrollElement?.offsetWidth}px`
+                this.$refs.scrollViewPort.style.height = `${parent.offsetHeight}px`
+                
+                viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
+                viewportContent.style.height = `${parent?.scrollHeight}px`
+                this.scrollElement = '.pipeline-model-scroll-viewport'
+                this.initMiniMapScroll()
+            })
         },
         beforeDestroy () {
             this.togglePropertyPanel({
@@ -483,6 +509,7 @@
             }
             const rootCssVar = document.querySelector(':root')
             rootCssVar.style.setProperty('--track-bottom', 0)
+            this.removeMiniMapScroll()
         },
         methods: {
             ...mapActions('atom', [
@@ -524,6 +551,41 @@
                     ]
 
                 )
+            },
+            initMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.addEventListener('scroll', this.handelHerizontalScroll)
+                    parent.addEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.addEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            removeMiniMapScroll () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                if (scrollEle && scrollViewPort) {
+                    scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
+                    parent.removeEventListener('scroll', this.handelVerticalScroll)
+                    scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
+                }
+            },
+            handelHerizontalScroll (e) {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                this.$refs.miniMap.scrollTo(e.target.scrollLeft, parent.scrollTop)
+            },
+            handelVerticalScroll (e) {
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                this.$refs.miniMap.scrollTo(scrollEle.scrollLeft, e.target.scrollTop)
+            },
+            handleMiniMapDrag () {
+                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
+                const scrollViewPort = this.$refs.scrollViewPort
+                parent.scrollTop = scrollViewPort.scrollTop
+                scrollEle.scrollLeft = scrollViewPort.scrollLeft
             },
             setScrollBarPostion () {
                 const rootCssVar = document.querySelector(':root')
@@ -903,26 +965,29 @@
         background: white;
         border: 2px solid #d8d8d8;
       }
-
-      &:not(:last-child) .time-step-divider {
-        display: block;
-        position: absolute;
-        width: calc(100% - 24px);
-        height: 24px;
-        top: 0;
-        &:hover {
-          &:before {
-            background: $primaryColor;
+      &:not(:last-child) {
+          .title-item {
+            display: flex;
+            .time-step-divider {
+                flex: 1;
+                height: 16px;
+                cursor: pointer;
+                &:hover {
+                    p {
+    
+                        background: $primaryColor;
+                    }
+                }
+                p {
+                    position: relative;
+                    top: 8px;
+                    left: 4px;
+                    width: 96%;
+                    height: 1px;
+                    background: #d8d8d8;
+                }
+            }
           }
-        }
-        &:before {
-          content: "";
-          position: absolute;
-          height: 1px;
-          width: 100%;
-          top: 8px;
-          background: #d8d8d8;
-        }
       }
     }
   }
@@ -1122,5 +1187,17 @@
             background: #a5a5a5;
         }
     }
+}
+.exec-pipeline-mini-map {
+    bottom: 56px;
+}
+.pipeline-model-scroll-viewport {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    z-index: -2;
 }
 </style>

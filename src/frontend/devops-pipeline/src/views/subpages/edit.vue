@@ -24,16 +24,16 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
-    import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab, AuthorityTab } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
+    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { navConfirm } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -52,6 +52,7 @@
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -157,6 +158,7 @@
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
+                this.isLoading = false
                 if (error.code === 403) {
                     this.hasNoPermission = true
                     this.removeLeaveListenr()
@@ -226,7 +228,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning' })
+                        navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                             .then(() => {
                                 next(true)
                                 this.leaving = false

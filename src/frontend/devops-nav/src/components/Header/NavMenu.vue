@@ -1,7 +1,7 @@
 <template>
     <nav
         v-clickoutside="hideNavMenu"
-        :class="{ &quot;devops-header-nav&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-header-nav': true, 'active': show }"
     >
         <p
             class="nav-entry"
@@ -77,15 +77,15 @@
 </template>
 
 <script lang="ts">
+    import { mapDocumnetTitle } from '@/utils/constants'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Getter, Action } from 'vuex-class'
-    import { getServiceLogoByPath, urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
+    import { Action, Getter, State } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         name: 'nav-menu',

@@ -11,7 +11,7 @@
                 class="create-node-btn"
                 @click="toCreateFn"
             >
-                {{$t('quality.新增')}}
+                {{ emptyInfo.btnText || $t('quality.新增') }}
             </bk-button>
         </div>
     </div>
@@ -45,10 +45,6 @@
 
         .create-node-row {
             margin-top: 28px;
-
-            .bk-button {
-                width: 120px;
-            }
 
             .create-node-btn {
                 margin-right: 4px;

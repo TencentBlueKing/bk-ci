@@ -36,9 +36,11 @@
                         :name="item.projectName"
                     >
                         <template>
-                            <div
-                                class="option-item">
-                                <div class="project-name">
+                            <div class="option-item">
+                                <div
+                                    class="project-name"
+                                    v-bk-tooltips="{ content: item.projectName, allowHTML: false, delay: [300, 0] }"
+                                >
                                     {{ item.projectName }}
                                 </div>
                                 <span
@@ -49,7 +51,8 @@
                                         'is-disabled': !item.managePermission
                                     }"
                                     v-bk-tooltips="$t('userManage')"
-                                    @click.stop.prevent="goToUserManage(item)">
+                                    @click.stop.prevent="goToUserManage(item)"
+                                >
                                     <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
                                     <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
                                 </span>
@@ -91,13 +94,41 @@
             </h3>
         </div>
         <div class="header-right-bar">
-            <locale-switcher v-if="!isInIframe"></locale-switcher>
-            <span class="seperate-line">|</span>
-            <!-- <feed-back class='feed-back-icon'></feed-back> -->
-            <i
-                class="devops-icon icon-helper"
-                @click.stop="goToDocs"
-            />
+            <bk-popover
+                v-if="!isInIframe"
+                theme="light navigation-message"
+                placement="bottom"
+                :arrow="false"
+                ref="popoverRef"
+            >
+                <div class="flag-box">
+                    <Icon :name="curLang.icon" size="20" />
+                </div>
+                <template slot="content">
+                    <li
+                        v-for="(item, index) in langs"
+                        :key="index"
+                        :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
+                        @click="handleChangeLang(item)">
+                        <Icon class="mr5" :name="item.icon" size="20" />
+                        {{item.name}}
+                    </li>
+                </template>
+            </bk-popover>
+            <bk-popover
+                theme="light navigation-message"
+                placement="bottom"
+                :arrow="false"
+                ref="popoverRef">
+                <div class="flag-box">
+                    <Icon name="help-fill" size="20" />
+                </div>
+                <template slot="content">
+                    <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
+                    <li class="bkci-dropdown-item" @click.stop="goToFeedBack">{{ $t('feedback') }}</li>
+                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('community') }}</li>
+                </template>
+            </bk-popover>
             <User
                 class="user-info"
                 v-bind="user"
@@ -151,7 +182,19 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
-
+        langs: Array<any> = [
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
+            },
+            {
+                icon: 'chinese',
+                name: '中文',
+                id: 'zh-CN'
+            }
+        ]
+ 
         get headerLogoName (): string {
             const logoArr = ['devops-logo']
             const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
@@ -193,6 +236,10 @@
 
         get isInIframe () {
             return top !== window
+        }
+
+        get curLang () {
+            return this.langs.find(item => item.id === this.$i18n.locale) || { id: 'zh-CN', icon: 'chinese' }
         }
 
         $refs: {
@@ -268,7 +315,6 @@
             const { projectId } = this.$route.params
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
-            sessionStorage.removeItem('group-apply-query')
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
@@ -294,6 +340,14 @@
             this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
+        goToFeedBack (): void {
+            this.to(this.BKCI_DOCS.FEED_BACK_URL)
+        }
+
+        goToGithubSource (): void {
+            this.to(this.BKCI_DOCS.BKAPP_NAV_OPEN_SOURCE_URL)
+        }
+
         goToPm (): void {
             this.to('/console/pm')
         }
@@ -316,6 +370,12 @@
 
         setDocumentTitle () {
             document.title = String(this.$t('documentTitleHome'))
+        }
+
+        handleChangeLang (item) {
+            this.$setLocale(item.id).then(() => {
+                location.reload()
+            })
         }
     }
 </script>
@@ -355,7 +415,7 @@
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontColor;
+                color: $fontLigtherColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 
@@ -418,7 +478,7 @@
             >.feed-back-icon.active,
             >.user-info.active {
                 color: white;
-                background-color: black;
+                cursor: pointer;
             }
 
             > .seperate-line {
@@ -466,6 +526,7 @@
             cursor: pointer;
             position: relative;
             top: 5px;
+            flex-shrink: 0;
         }
         
         .is-selected {
@@ -505,5 +566,51 @@
         height: 16px;
         margin: 0 10px;
         background: #DCDEE5;
+    }
+</style>
+<style lang="scss">
+    .navigation-message-theme {
+        position: relative;
+        top: 5px;
+        padding: 0 !important;
+    }
+    .bkci-dropdown-item {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        line-height: 33px;
+        padding: 0 16px;
+        color: #63656e;
+        font-size: 12px;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: #fff;
+        cursor: pointer;
+        &:hover {
+            background-color: #f5f7fb;
+        }
+        &.disabled {
+            color: #dcdee5;
+            cursor: not-allowed;
+        }
+        &.active {
+            background-color: #f5f7fb;
+        }
+    }
+    .flag-box {
+        align-items: center;
+        border-radius: 50%;
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 16px;
+        height: 32px;
+        justify-content: center;
+        position: relative;
+        width: 32px;
+        margin-right: 8px;
+        &:hover {
+            background: linear-gradient(270deg,#253047,#263247);
+            color: #d3d9e4;
+        }
     }
 </style>

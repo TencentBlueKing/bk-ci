@@ -12,7 +12,7 @@
                         action: ENV_RESOURCE_ACTION.CREATE
                     }
                 }"
-                theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+                theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.newPool') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
             <bk-button

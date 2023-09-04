@@ -1,7 +1,7 @@
-{   
+{
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
-    "logout": "Log out",
+    "logout": "Sign out",
     "close": "Close",
     "accessCenter": "Access center",
     "recentVisiteService": "Recent service",
@@ -38,8 +38,8 @@
         "noOperateAccess": "No operate access",
         "noOperateAccessTip": "Rejected，no operate access"
     },
-    "projectManage": "Project management",
-    "myPermission": "My permission",
+    "projectManage": "Project Management",
+    "myPermission": "My Permission",
     "recommendationLabel": "Google chrome is recommended for the best viewing experience",
     "dismiss": "Dismiss",
     "exception": {
@@ -68,21 +68,20 @@
         "pipelineStepDesc": "We have provided various pipeline packages based on different code library projects，now SVN, Git library and blue whale Gitlab library of Code platform are supported",
         "previewPipeline": "Preview pipeline",
         "previewTips": "We recommend the following pipeline for continous delivery based on the code library you selected",
-        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",            
+        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",
         "codelib": "Code library：",
         "getStarted": "Get the pipeline started"
-                
     },
     "accessGuide": "User guide",
     "configProject": "Configure project",
     "configPipeline": "Configure pipeline",
     "complete": "Complete",
     "noProjectFtind": "Lease select project accordingly",
-    "projectName": "Project name",
+    "projectName": "Project Name",
     "showDisableProject": "Show disabled project",
-    "projectDesc": "Project description",
+    "projectDesc": "Project Description",
     "projectCreator": "Creator",
-    "projectOperation": "Operation",
+    "projectOperation": "Actions",
     "disableLabel": "Disable",
     "enableLabel": "Enable",
     "waitforReview": "Pending review, no access to operate",
@@ -98,9 +97,9 @@
     "newProject": "New Project",
     "selectProjectPlaceholder": "Select project",
     "service": "Service",
-    "collection": "My collection",
-    "noCollection": "No collection",
-    "outofCollectionTips": "Clear unused links to add new ones：）",
+    "collection": "MY FAVORITES",
+    "noCollection": "No Favorite",
+    "outofCollectionTips": "Clear unused service to add new ones：）",
     "DevopsMobile": "Mobile",
     "scanToDownload": "Scan to download BK DevOps App",
     "changeLogo": "Change LOGO",
@@ -109,8 +108,8 @@
     "changeLogoSuccessTips": "LOGO change successfully",
     "supportExtTips": "Png、jpg only",
     "logoSizelimit": "Size is less than 2M",
-    "toCollect": "Collect",
-    "collected": "Collected",
+    "toCollect": "Add to Favorite",
+    "collected": "Cancel Favorite",
     "editProject": "Edit project",
     "englishName": "English abbreviation",
     "projectNamePlaceholder": "Please enter project name in 1-32 characters",
@@ -232,5 +231,7 @@
         "execute": "Execute",
         "enable/disable": "Enable/Disable",
         "manage": "Manage"
-    }
+    },
+    "documentation": "Documentation",
+    "community": "Community"
 }

@@ -154,6 +154,7 @@ interface ArchiveFileService {
      */
     fun getFileDownloadUrls(
         userId: String,
+        projectId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,

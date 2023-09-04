@@ -29,6 +29,7 @@
         @Action setAnnouncement
 
         @Watch('fetchError')
+
         handleFetchError (e) {
             if (e.status === 503) {
                 this.$router.replace('/maintaining')

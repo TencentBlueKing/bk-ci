@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomService
@@ -127,13 +128,19 @@ class OpAtomResourceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        publisher: String?,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
     ): Result<Boolean> {
         return opAtomService.releaseAtom(
             userId = userId,
             atomCode = atomCode,
             inputStream = inputStream,
-            disposition = disposition
+            disposition = disposition,
+            publisher = publisher,
+            releaseType = releaseType,
+            version = version
         )
     }
 

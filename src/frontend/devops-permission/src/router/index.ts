@@ -9,6 +9,7 @@ const PermissionEntry = () => import(/* webpackChunkName: "Permission" */ '../vi
 const MyApply = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-apply.vue');
 const MyApproval = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-approval.vue');
 const MyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-permission.vue');
+const MyProject = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-project.vue');
 
 const router = createRouter({
   history: createWebHistory('permission'),
@@ -42,6 +43,11 @@ const router = createRouter({
               name: 'my-approval',
               component: MyApproval,
             },
+            {
+              path: 'my-project',
+              name: 'my-project',
+              component: MyProject,
+            },
           ],
         },
       ],
@@ -52,7 +58,7 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.path);
+  window.$syncUrl?.(to.fullPath);
 });
 
 // 导出默认数据

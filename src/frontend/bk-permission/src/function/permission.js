@@ -273,6 +273,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
         .map(column => h(
           ui.TableColumn,
           {
+            showOverflowTooltip: true,
             label: column.label,
             prop: column.prop,
           },

@@ -54,7 +54,7 @@
                 <template v-if="projectApprovalStatus === 1">
                     <section class="devops-empty-tips">
                         <bk-exception
-                            class="exception-wrap-item exception-part"
+                            class="exception-wrap-item project-exception-part"
                             :type="403"
                             scene="part"
                         >
@@ -202,20 +202,22 @@
             max-height: 32px;
         }
     }
-    ::v-deep .bk-exception-img {
-        width: 480px !important;
-        height: 240px !important;
-    }
-    .bk-exception-title {
-        margin-top: 18px;
-        font-size: 24px;
-        line-height: 32px;
-        color: #313238;
-    }
-    .bk-exception-description {
-        margin-top: 16px;
-        font-size: 14px;
-        line-height: 22px;
-        color: #63656e;
+    .project-exception-part {
+        .bk-exception-img {
+            width: 480px !important;
+            height: 240px !important;
+        }
+        .bk-exception-title {
+            margin-top: 18px;
+            font-size: 24px;
+            line-height: 32px;
+            color: #313238;
+        }
+        .bk-exception-description {
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 22px;
+            color: #63656e;
+        }
     }
 </style>

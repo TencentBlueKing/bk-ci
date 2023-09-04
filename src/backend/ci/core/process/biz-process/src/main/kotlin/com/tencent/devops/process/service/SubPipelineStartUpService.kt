@@ -65,10 +65,10 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
 @Service
@@ -206,12 +206,13 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
-            pipelineId = parentPipelineId,
-            channelCode = channelCode
+            pipelineId = parentPipelineId
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
+            params = arrayOf(parentPipelineId),
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
 
@@ -241,7 +242,7 @@ class SubPipelineStartUpService @Autowired constructor(
                 }
             }
             // 校验父流水线最后修改人是否有子流水线执行权限
-            checkPermission(parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
+            checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(

@@ -76,6 +76,7 @@
                                 </li>
                             </ul>
                         </template>
+                        <div v-else class="no-data">{{ $t('noData') }}</div>
                         <bk-pipeline v-if="showPreview && tempPipeline" class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
@@ -130,7 +131,7 @@
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('new') }}</bk-button>
                             <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
@@ -745,6 +746,12 @@
                             }
                         }
                     }
+                }
+                .no-data {
+                    display: flex;
+                    height: 100%;
+                    align-items: center;
+                    justify-content: space-around;
                 }
             }
             .right-temp-info {
