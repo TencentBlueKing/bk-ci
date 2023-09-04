@@ -73,7 +73,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
     private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
     private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
-    private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/group/permission/detail?groupId=%s"
+    private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s"
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
     }
