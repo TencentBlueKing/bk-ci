@@ -187,7 +187,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun syncProjectAtomData(userId: String) : Boolean {
+    override fun syncProjectAtomData(userId: String): Boolean {
         val executor = ThreadPoolExecutor(
             metricsConfig.maxThreadHandleProjectNum,
             metricsConfig.maxThreadHandleProjectNum,
