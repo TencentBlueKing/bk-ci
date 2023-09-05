@@ -1327,12 +1327,12 @@ class ExperienceService @Autowired constructor(
                 batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
             )
         )
-        val taskIds = tasksResult.data!!.tasks.map { it.id }.toTypedArray()
+        val taskIds = tasksResult.data!!.tasks.map { it.id }
         logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
 
         redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
         val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
-        redisOperation.sadd(apkDefendersKey, *taskIds)
+        redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
         redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
     }
 
