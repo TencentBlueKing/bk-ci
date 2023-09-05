@@ -26,6 +26,7 @@ class RbacPermissionResourceMemberService constructor(
         resourceCode: String,
         group: String?
     ): List<String> {
+        logger.info("[RBAC-IAM] get resource group members:$projectCode|$resourceType|$resourceCode|$group")
         return when (group) {
             // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员
             BkAuthGroup.CIADMIN.value, BkAuthGroup.CI_MANAGER.value -> emptyList()
