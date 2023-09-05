@@ -317,6 +317,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 .contentTemplate(itsmService.buildGroupApplyItsmContentDTO())
                 .groupContent(groupContent)
                 .expiredAt(applyJoinGroupInfo.expiredAt.toLong())
+                .titlePrefix(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_APPLY_TO_JOIN_PROJECT) + "[${projectInfo.projectName}]")
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
