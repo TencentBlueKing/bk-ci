@@ -1333,7 +1333,7 @@ class ExperienceService @Autowired constructor(
         redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
         val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
         redisOperation.sadd(apkDefendersKey, *taskIds)
-        redisOperation.expire(apkDefendersKey, 3700)// 多100秒缓冲
+        redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
     }
 
     companion object {
