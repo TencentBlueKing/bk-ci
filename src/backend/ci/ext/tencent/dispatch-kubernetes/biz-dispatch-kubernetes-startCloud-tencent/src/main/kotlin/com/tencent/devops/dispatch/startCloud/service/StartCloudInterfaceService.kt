@@ -78,6 +78,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
+        createStartCloudUser(userId)
         return workspaceClient.shareWorkspace(
             userId,
             EnvironmentShare(
