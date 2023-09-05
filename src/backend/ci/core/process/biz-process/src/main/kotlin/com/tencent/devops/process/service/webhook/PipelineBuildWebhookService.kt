@@ -60,6 +60,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewCommentEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewEvent
+import com.tencent.devops.common.webhook.pojo.code.github.convertGithubReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
@@ -191,6 +192,8 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 return true
             }
         }
+        // Reopen pull request需同步触发Review事件
+        externalGithubReviewBuild(event)
         val githubWebHookMatcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
         if (!githubWebHookMatcher.preMatch().isMatch) {
             return true
@@ -219,6 +222,21 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             return true
         }
         return startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
+    }
+
+    private fun externalGithubReviewBuild(event: GithubEvent) {
+        if (event is GithubPullRequestEvent && event.convertGithubReviewEvent() != null) {
+            val githubWebHookMatcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
+            if (!githubWebHookMatcher.preMatch().isMatch) {
+                logger.info("fail to pre match github review event[$event]")
+                return
+            }
+            try {
+                startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
+            } catch (ignored: Exception) {
+                logger.info("fail to start process by github review event[$event]", ignored)
+            }
+        }
     }
 
     fun externalP4Build(body: String): Boolean {

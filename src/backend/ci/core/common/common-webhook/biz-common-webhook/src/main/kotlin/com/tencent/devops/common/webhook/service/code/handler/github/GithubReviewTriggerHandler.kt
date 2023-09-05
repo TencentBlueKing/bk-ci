@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TA
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewState
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
@@ -50,10 +51,14 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
-class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> {
+class GithubReviewTriggerHandler @Autowired constructor(
+    val eventCacheService: EventCacheService
+): CodeWebhookTriggerHandler<GithubReviewEvent> {
     override fun eventClass(): Class<GithubReviewEvent> {
         return GithubReviewEvent::class.java
     }
@@ -79,7 +84,7 @@ class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> 
     }
 
     override fun getEventType(): CodeEventType {
-        return CodeEventType.ISSUES
+        return CodeEventType.REVIEW
     }
 
     override fun getMessage(event: GithubReviewEvent): String? {
@@ -88,8 +93,8 @@ class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> 
 
     override fun preMatch(event: GithubReviewEvent): ScmWebhookMatcher.MatchResult {
         // Review事件仅提交操作才触发，评审通过、拒绝、要求修改
-        val result = event.action == "submitted" &&
-            event.convertState().isNotBlank()
+        val result = (event.action == "submitted" || event.action == "dismissed") &&
+            event.review.state != GithubReviewState.COMMENTED.value
         return ScmWebhookMatcher.MatchResult(result)
     }
 
@@ -101,6 +106,16 @@ class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> 
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            eventCacheService.getPrInfo(
+                githubRepoName = event.repository.fullName,
+                pullNumber = event.pullRequest.number.toString(),
+                repo = repository,
+                projectId = projectId
+            )?.run {
+                event.pullRequest.mergeable = this.mergeable
+                event.pullRequest.mergeableState = this.mergeableState
+            }
+            logger.info("github review event[$event]")
             val urlFilter = GitUrlFilter(
                 pipelineId = pipelineId,
                 triggerOnUrl = getUrl(event),
@@ -151,5 +166,9 @@ class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> 
             }
         }
         return startParams
+    }
+
+    companion object{
+        private val logger = LoggerFactory.getLogger(GithubReviewTriggerHandler::class.java)
     }
 }

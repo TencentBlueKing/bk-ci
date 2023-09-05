@@ -48,89 +48,27 @@ data class GithubReviewEvent(
         const val classType = "pull_request_review"
     }
 
-    fun convertState() = when (review.state) {
-        GithubReviewState.APPROVED.value -> "approved"
-        GithubReviewState.CHANGES_REQUESTED.value -> "change_required"
-        GithubReviewState.DISMISSED.value -> "change_denied"
+    fun convertState() = when {
+        isApproved() -> "approved"
+        isChangeRequired()-> "change_required"
+        isChangeDenied() -> "change_denied"
+        isApproving() -> "approving"
         else -> ""
     }
+
+    // 当存在多个必要评审人时,一个用户评审通过不算通过,需判断合并状态
+    private fun isApproved() = pullRequest.mergeable == true && pullRequest.mergeableState == "clean"
+
+    private fun isChangeRequired() = review.state == GithubReviewState.CHANGES_REQUESTED.value
+
+    private fun isChangeDenied() = action == GithubReviewState.DISMISSED.value
+
+    // 当存在多个必要评审人时,一个用户评审通过但仍不允许merge，次状态为approving
+    private fun isApproving() =
+        (review.state == GithubReviewState.APPROVING.value || review.state == GithubReviewState.APPROVED.value) &&
+            pullRequest.mergeable != true &&
+            pullRequest.mergeableState != "clean"
 }
-
-@ApiModel("Github Review 会话事件")
-data class GithubReviewThreadEvent(
-    val action: String,
-    @JsonProperty("pull_request")
-    @ApiModelProperty("Issues相关信息")
-    val pullRequest: GithubPullRequest,
-    @ApiModelProperty("Github仓库相关信息")
-    val repository: GithubRepository,
-    @ApiModelProperty("操作人信息")
-    override val sender: GithubUser,
-    @ApiModelProperty("评审信息")
-    val thread: GithubReviewThread
-) : GithubEvent(sender) {
-    companion object {
-        const val classType = "pull_request_review_thread"
-    }
-}
-
-
-data class GithubReviewThread(
-    @JsonProperty("node_id")
-    val nodeId: String,
-    val comments: List<GithubReviewThreadCommit>
-)
-
-@ApiModel("Github Review Thread Commit，PR上的会话信息")
-data class GithubReviewThreadCommit(
-    @ApiModelProperty("会话ID")
-    override val id: Long,
-    //https://api.github.com/repos/xxx/xxx/pulls/comments/{{GithubReviewThreadCommit.id}}
-    @ApiModelProperty("会话地址[Api地址]")
-    override val url: String,
-    @ApiModelProperty("节点Id")
-    @JsonProperty("node_id")
-    override val nodeId: String,
-    @JsonProperty("html_url")
-    @ApiModelProperty("会话链接[网页链接]")
-    override val htmlUrl: String,
-    @JsonProperty("created_at")
-    override val createdAt: String, // 2022-06-21T08:45:41Z
-    @JsonProperty("updated_at")
-    override val updatedAt: String, // 2022-06-21T08:45:41Z
-    @ApiModelProperty("Github PR Review Id")
-    @JsonProperty("pull_request_review_id")
-    val pullRequestReviewId: Long,
-    @ApiModelProperty("会话对应的文件路径")
-    val path: String,
-    @JsonProperty("commit_id")
-    val commitId: String,
-    @JsonProperty("original_commit_id")
-    val originalCommitId: String,
-    val user: GithubUser,
-    @ApiModelProperty("会话内容")
-    val body: String,
-    @JsonProperty("author_association")
-    val authorAssociation: String
-) : GithubBaseInfo(
-    id = id,
-    url = url,
-    htmlUrl = htmlUrl,
-    nodeId = nodeId,
-    updatedAt = updatedAt,
-    createdAt = createdAt
-)
-
-@ApiModel("Github Review Thread 状态")
-enum class GithubReviewThreadAction(val value: String) {
-    @ApiModelProperty("解决")
-    RESOLVED("resolved"),
-
-    @ApiModelProperty("未解决")
-    UNRESOLVED("unresolved")
-}
-
-
 data class GithubReview(
     override val id: Long,
     @JsonProperty("node_id")
@@ -180,5 +118,8 @@ enum class GithubReviewState(val value: String) {
     DISMISSED("dismissed"),
 
     @ApiModelProperty("尚未提交的评审报告")
-    PENDING("pending")
+    PENDING("pending"),
+
+    @ApiModelProperty("评审中【自定义枚举项，实际不存在】")
+    APPROVING("approving")
 }

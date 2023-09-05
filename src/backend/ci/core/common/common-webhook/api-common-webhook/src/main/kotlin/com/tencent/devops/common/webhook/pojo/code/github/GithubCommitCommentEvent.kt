@@ -103,11 +103,15 @@ data class GithubReviewCommentEvent(
 data class GithubReviewComment(
     override val id: Long,
     override val url: String,
+    @JsonProperty("html_url")
     override val htmlUrl: String,
+    @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
     override val user: GithubUser,
+    @JsonProperty("created_at")
     override val createdAt: String,
+    @JsonProperty("updated_at")
     override val updatedAt: String,
     @ApiModelProperty("Github PR Review Id")
     @JsonProperty("pull_request_review_id")

@@ -1,5 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.pojo
 
+import com.tencent.devops.common.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -18,5 +19,6 @@ data class EventRepositoryCache(
     var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
     var repoAuthUser: String? = null,
     var p4ChangeFiles: List<String>? = null,
-    val serverInfo: P4ServerInfo? = null
+    var serverInfo: P4ServerInfo? = null,
+    var githubPrInfo: PullRequestResponse? = null
 )
