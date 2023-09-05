@@ -27,6 +27,10 @@
 
 package com.tencent.devops.auth.resources.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.constants.AuditAttributeNames
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
@@ -54,6 +58,17 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         return Result(permissionService.validateUserActionPermission(userId, action))
     }
 
+    @AuditEntry(actionId = "validateUserResourcePermission")
+    @ActionAuditRecord(
+        actionId = "validateUserResourcePermission",
+        instance = AuditInstanceRecord(
+            resourceType = "test",
+            instanceIds = "#projectCode",
+            instanceNames = "#$?.data"
+        ),
+        content = "getProjectGroupAndUserList [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     override fun validateUserResourcePermission(
         userId: String,
         token: String,

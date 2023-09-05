@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
-    <property name="pattern" value="%d{&quot;yyyy.MM.dd HH:mm:ss,SSS&quot;}|%X{bizId}|%mdc{trace_id}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable"/>
+    <property name="pattern"
+              value="%d{&quot;yyyy.MM.dd HH:mm:ss,SSS&quot;}|%X{bizId}|%mdc{trace_id}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable"/>
+    <property name="AUDIT_EVENT_LOG_PATTERN" value="%m%n"/>
+    <property name="AUDIT_EVENT_LOG_FILE" value="${service.log.dir}/audit_event.log"/>
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -52,6 +55,21 @@
         <discardingThreshold>0</discardingThreshold>
         <neverBlock>false</neverBlock>
         <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- 审计事件日志 -->
+    <appender name="audit-event-appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${AUDIT_EVENT_LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${AUDIT_EVENT_LOG_FILE}-%d{yyyy-MM-dd}.log.%i</fileNamePattern>
+            <maxFileSize>1GB</maxFileSize>
+            <maxHistory>1</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${AUDIT_EVENT_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
     </appender>
 
 </included>
