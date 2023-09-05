@@ -10,7 +10,7 @@ data class QueryLogsResult(
     @ApiModelProperty(value = "日志类型", notes = "1-脚本执行任务日志，2-文件分发任务日志", required = true)
     val logType: Int,
     @ApiModelProperty(value = "脚本执行任务日志", allowEmptyValue = true)
-    val scriptTaskLogs: List<ScriptExcuteLog>?,
+    val scriptTaskLogs: List<ScriptExcuteLog>? = null,
     @ApiModelProperty(value = "文件分发任务日志", allowEmptyValue = true)
-    val fileTaskLogs: List<FileDistributeLog>?
+    val fileTaskLogs: List<FileDistributeLog>? = null
 )
