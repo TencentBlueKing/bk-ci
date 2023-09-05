@@ -32,6 +32,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.QueryLogsReq
+import com.tencent.devops.environment.pojo.job.QueryLogsResult
 import com.tencent.devops.environment.pojo.job.QueryStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
@@ -47,6 +49,10 @@ class ServiceJobResourceImpl : ServiceJobResource {
     }
 
     override fun queryStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryStatusResult> {
+        TODO("Not yet implemented")
+    }
+
+    override fun queryLogs(userId: String, projectId: String, queryLogsReq: QueryLogsReq): Result<QueryLogsResult> {
         TODO("Not yet implemented")
     }
 }
