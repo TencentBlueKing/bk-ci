@@ -34,4 +34,3 @@ data class ApkDefenderTasks(
         val users: List<String>
     )
 }
-
