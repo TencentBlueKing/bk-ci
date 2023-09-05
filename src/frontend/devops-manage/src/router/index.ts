@@ -30,6 +30,11 @@ const router = createRouter({
           component: ApplyProject,
         },
         {
+          path: 'user-group',
+          name: 'user-group',
+          component: UserGroup,
+        },
+        {
           path: '/:projectCode',
           component: ManageEntry,
           props: true,
