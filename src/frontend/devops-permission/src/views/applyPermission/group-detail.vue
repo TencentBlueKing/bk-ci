@@ -144,30 +144,38 @@ const handleHidden = () => {
     padding: 20px;
     height: 100%;
   }
-  .resources-tips {
-    padding: 10px;
+  .resources-table {
+    ::v-deep .cell {
+      line-height: 30px !important;
+    }
   }
   .resources-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .resources-content {
-      overflow: hidden;
-      margin-right: 10px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .path-item {
-      height: 30px;
-      line-height: 30px;
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal !important;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    &.show {
+      -webkit-line-clamp: 1000;
     }
   }
-  .review-icon {
-    margin-right: 20px;
-    color: #3a84ff;
-    cursor: pointer;
+  .resources-content {
+      .item {
+          position: relative;
+          display: inline-block;
+      }
+      .expand-btn {
+          position: absolute;
+          top: 10px;
+          left: calc(100% + 20px);
+      }
   }
-  .detail-side {
-    z-index: 1111;
+  .expand-btn {
+      color: #3c96ff;
+  }
+  .resources-tips {
+    padding: 10px;
   }
 </style>
